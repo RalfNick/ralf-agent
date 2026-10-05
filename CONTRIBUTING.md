@@ -2,6 +2,8 @@
 
 This repository is an early Python preview. Read [architecture/design.md](architecture/design.md), the three runtime specifications, and [implementation status](docs/implementation-status.md) before changing execution guarantees.
 
+For application development, start with [getting started](docs/getting-started.md) and the generated standalone Agent. The [M1 acceptance protocol](docs/m1-acceptance.md) lists the remaining experiments; an offline regression is not a live model quality result. File an issue in the repository with the version, a minimal reproduction, expected/actual behavior and redacted events. See [SECURITY.md](SECURITY.md) for security reports and [the release guide](docs/releasing.md) for preview packaging.
+
 Use Python 3.11+ on Linux or macOS:
 
 ```bash

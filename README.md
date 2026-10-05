@@ -4,37 +4,52 @@
 
 Ralf-Agent 是 Python 优先的开源 Agent 运行时。它把模型决策、工具动作、审批与结果保存为明确的执行步骤，让任务在重启后继续，并核验可能已经发生的业务操作。
 
-当前版本：**0.1.0.dev4，M1 核心预览**。已经提供原生 Agent SDK、顺序 Workflow、SQLite 持久执行、可信 Python 工具、审批／取消、效果核验、事件分页、独立可替换的会话与长期记忆，以及 Chat Completions 模型 Provider。执行存储、协调器、上下文装配和异步记忆可显式接入。完整支持状态和剩余工作见 [实现清单](docs/implementation-status.md)。预览 API 尚未稳定。
+当前版本：**0.1.0.dev5，M1 核心预览**。已经提供原生 Agent SDK、顺序 Workflow、SQLite 持久执行、可信 Python 工具、审批／取消、效果核验、事件分页、独立可替换的会话与长期记忆，以及 Chat Completions 模型 Provider。执行存储、协调器、上下文装配和异步记忆可显式接入。完整 M1 尚未验收；当前适合开发者试点和验证有限业务流程。完整支持状态和剩余工作见 [实现清单](docs/implementation-status.md)。预览 API 尚未稳定。
 
 ## 快速开始
 
-Python 3.11+，Linux／macOS。本地模式无需 Redis、模型密钥或调度服务。
+Python 3.11+，Linux／macOS。本地模式无需 Redis、模型密钥或调度服务。从源码安装：
 
 ```bash
+git clone https://github.com/RalfNick/ralf-agent.git
+cd ralf-agent
 python3 -m venv .venv
 source .venv/bin/activate
 python -m pip install -e '.[dev]'
-ralf --db .ralf/demo.sqlite demo --ticket INC-001
+ralf --db .ralf/demo.sqlite --format text demo --ticket INC-001
 ```
 
-Demo 使用明确标注的离线脚本 Provider，读取工单、提出测试变更并停在 `waiting_approval`。输出包括 `run_id` 和 `pending`；测试业务服务使用独立 SQLite 保存真实效果回执。Demo 不调用付费模型或生产系统。
+Demo 使用明确标注的离线脚本 Provider，读取工单、提出测试变更并停在 `waiting_approval`。可读输出包括工具参数、Action、摘要及可复制的批准／拒绝命令；测试业务服务使用独立 SQLite 保存真实效果回执。Demo 不调用付费模型或生产系统。
 
-复制输出中的 Run、Action 和摘要，显式批准后继续：
+检查变更参数，复制输出中的批准命令后再运行恢复命令。也可以随时重新查看：
 
 ```bash
-ralf --db .ralf/demo.sqlite approve RUN_ID ACTION_ID --digest OPERATION_DIGEST --command-id approve-001
-ralf --db .ralf/demo.sqlite resume RUN_ID
+ralf --db .ralf/demo.sqlite --format text inspect RUN_ID
+ralf --db .ralf/demo.sqlite --format text resume RUN_ID
 ralf --db .ralf/demo.sqlite status RUN_ID
 ralf --db .ralf/demo.sqlite events RUN_ID --after 0
 ```
 
-重复同一 `command-id` 和内容返回原回执；同 ID 改内容返回冲突。审批回执 `applied` 表示审批决定已消费，执行结果由 `resume`／`status` 获取。`events` 每页最多 1000 项，下一页用已收到的最后 `seq`。
+省略 `--format text` 时保持 JSON 输出，便于脚本读取。重复同一 `command-id` 和内容返回原回执；同 ID 改内容返回冲突。审批回执 `applied` 表示审批决定已消费，执行结果由 `resume`／`status` 获取。`events` 每页最多 1000 项，下一页用已收到的最后 `seq`。
 
 ```bash
 ralf --db .ralf/demo.sqlite cancel RUN_ID --command-id cancel-001
 ```
 
-SDK 示例：`python examples/oncall.py`。它等待用户输入 `APPROVE`，不会自动批准。
+安装 wheel 后也能创建独立工程，无需源码或 `examples`：
+
+```bash
+ralf --format text init ../my-agent
+cd ../my-agent
+python -m agent_app --ticket INC-001
+ralf --factory agent_app.runtime:create_engine --format text inspect RUN_ID
+# 检查参数并运行 inspect 输出的批准命令
+ralf --factory agent_app.runtime:create_engine --format text resume RUN_ID
+```
+
+生成的 `agent_app/runtime.py` 是可编辑的离线 Provider、Python 工具、业务回执和恢复工厂，默认数据库为 `.ralf/runs.sqlite`。`init` 拒绝覆盖非空目录。安装 wheel、接入自己的工具及真实 Provider 的步骤见 [首用教程](docs/getting-started.md)；wheel 不包含仓库示例。本轮未核验公开 PyPI／GitHub Release 状态。
+
+源码中的 SDK 示例：`python examples/oncall.py`。它等待用户输入 `APPROVE`，不会自动批准。
 
 自建 Agent 的 CLI 恢复使用原配置工厂，不能用 Demo 配置代替。仓库内提供可运行示例：
 
@@ -45,7 +60,7 @@ PYTHONPATH=. ralf --db .ralf/custom.sqlite --factory examples.custom_runtime:cre
 ralf --db .ralf/custom.sqlite status RUN_ID
 ```
 
-工厂是使用者显式指定的可信本地 Python 代码，接收数据库路径并返回 `LocalEngine`。审批和取消也可以使用同一 `--factory`。`status/events` 使用只读 SQLite 观察模式，不取得执行租约，不创建缺失的数据库。CLI 观察当前限定默认本地 Scope。
+工厂是使用者显式指定的可信本地 Python 代码，接收数据库路径并返回 `LocalEngine`。审批和取消也可以使用同一 `--factory`；从工程目录执行即可导入本地工厂。`status/inspect/events` 使用只读 SQLite 观察模式，不取得执行租约，不执行工厂，不创建缺失的数据库。CLI 观察当前限定默认本地 Scope。
 
 ## 编写自己的 Agent
 
@@ -137,7 +152,7 @@ facts = InMemoryMemory(backend_id="demo-facts:v1")
 
 短期消息和长期事实使用作用域及 CAS 版本；长期记忆是显式确认的数据。自动记忆提取、向量索引和知识源撤权链路尚未交付。
 
-更多接入约束、组件生命周期和测试方法见 [扩展指南](docs/extending.md)。
+常用 SDK 和 CLI 见 [API 指引](docs/api-reference.md)；更多接入约束、组件生命周期和测试方法见 [扩展指南](docs/extending.md)。
 
 ## 执行与恢复保证
 
@@ -150,6 +165,8 @@ facts = InMemoryMemory(backend_id="demo-facts:v1")
 核验结果只采纳一次，晚到的核验证据不会覆盖原结果或重复插入工具消息。运行终态也不会被晚到异常重新打开。可选记忆按上下文额度选择，保留当前任务及完整的最新工具结果；Manifest 记录真正选入的事实版本。
 
 预算单位为整数 **execution credits**：模型／工具每次真实尝试分别原子预留与结算。未知尝试继续占用额度，实际 Token 报告独立保存，缺失明确标记未知。这里没有硬货币预算、实际 Token 计费或外部硬停止的保证。
+
+遇到审批、配置不匹配、未知效果或关闭失败时，按 [恢复与排障教程](docs/recovery-guide.md) 处理，保留原 Run、Action 和业务证据。
 
 ## 开发与验证
 
@@ -168,6 +185,8 @@ python examples/evaluate.py
 - [完整设计](architecture/design.md)与 [review 取舍](architecture/review-resolution.md)。
 - [Run 命令](architecture/specs/run-command-contract.md)、[Action 恢复](architecture/specs/action-recovery-contract.md)、[Runner 能力](architecture/specs/runner-capability-contract.md)。
 - [实现状态与下一步](docs/implementation-status.md)。M1 后续完成更完整的命令／等待契约、模型质量基线及 Temporal 内部验证；v0.2 验证 Codex、并行和多进程；v1.0 完成企业私有部署目标。
-- [本轮授权与关闭 Review](architecture/reviews/2026-10-05-authorization-shutdown.md)、[可靠性与架构门槛](architecture/reviews/2026-10-05-reliability-boundaries.md)、[扩展性 Review](architecture/reviews/2026-10-05-runtime-extensibility.md)。dev4 保留 `local-3` 固定发布身份及 dev3 提交摘要，与合法 dev3 Run／回执兼容；dev1／dev2 Run 可按 ID 观察、取消及人工核验，继续执行和历史提交重放需要原版本。运行及命令摘要尚不支持自动迁移。
+- [M1 验收与对等比较协议](docs/m1-acceptance.md)：真实模型任务集、故障窗口、Temporal 和外部开发者首用门槛；未执行的实验不记为通过。
+- [授权与关闭 Review](architecture/reviews/2026-10-05-authorization-shutdown.md)、[可靠性与架构门槛](architecture/reviews/2026-10-05-reliability-boundaries.md)、[扩展性 Review](architecture/reviews/2026-10-05-runtime-extensibility.md)。dev5 保留 dev4 的 `local-3` 固定发布身份及 dev3 提交摘要，与合法 dev3／dev4 Run／回执兼容；dev1／dev2 Run 可按 ID 观察、取消及人工核验，继续执行和历史提交重放需要原版本。运行及命令摘要尚不支持自动迁移。
+- [变更记录](CHANGELOG.md)、[贡献说明](CONTRIBUTING.md)、[发布流程](docs/releasing.md)和[安全反馈](SECURITY.md)。
 
 SDK、运行时和基础治理按 [Apache-2.0](LICENSE) 开源。外部模型／Harness 的服务和许可独立适用。

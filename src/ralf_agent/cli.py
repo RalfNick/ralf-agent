@@ -7,8 +7,10 @@ import inspect
 import json
 import sys
 from dataclasses import asdict
+from pathlib import Path
 
 from . import __version__
+from .cli_views import inspection, render_inspection, render_result
 from .demo import create_demo_engine, demo_spec
 from .engine import LocalEngine
 from .errors import AuthorizationDenied, DefinitionMismatch, RalfError, ValidationError
@@ -23,6 +25,11 @@ def load_engine(db, factory_path=None):
     module, separator, name = factory_path.partition(":")
     if not separator or not module or not name or ":" in name:
         raise ValidationError("Engine factory must use the form module:callable")
+    # An explicitly selected factory is trusted local code. Console entry points
+    # otherwise search venv/bin rather than the user's project directory.
+    project_path = str(Path.cwd())
+    if project_path not in sys.path:
+        sys.path.insert(0, project_path)
     try:
         factory = getattr(importlib.import_module(module), name)
     except Exception as exc:
@@ -44,6 +51,7 @@ def main(argv=None):
     parser = argparse.ArgumentParser(prog="ralf", description="Ralf-Agent local runtime preview")
     parser.add_argument("--db", default=".ralf/runs.sqlite", help="Local execution database")
     parser.add_argument("--version", action="version", version=f"Ralf-Agent {__version__}")
+    parser.add_argument("--format", choices=("json", "text"), default="json", help="Output format")
     parser.add_argument(
         "--factory",
         help="Trusted local module:callable accepting db_path and returning LocalEngine",
@@ -52,7 +60,9 @@ def main(argv=None):
     demo = commands.add_parser("demo", help="Run the offline Oncall fixture until approval")
     demo.add_argument("--ticket", default="INC-001")
     demo.add_argument("--command-id")
-    for command in ("status", "events", "resume", "cancel"):
+    init = commands.add_parser("init", help="Create a standalone, offline Agent starter")
+    init.add_argument("directory")
+    for command in ("status", "inspect", "events", "resume", "cancel"):
         subparser = commands.add_parser(command)
         subparser.add_argument("run_id")
         if command == "events":
@@ -68,18 +78,28 @@ def main(argv=None):
     approve.add_argument("--reject", action="store_true")
     args = parser.parse_args(argv)
     try:
-        if args.command in {"status", "events"}:
+        if args.command == "init":
+            from .starter import create_starter
+
+            result = asdict(create_starter(args.directory))
+        elif args.command in {"status", "inspect", "events"}:
             with SQLiteStore(args.db, readonly=True) as store:
+                # A read transaction keeps the summary and credit totals in one
+                # SQLite snapshot while another process advances the Run.
+                store.conn.execute("BEGIN")
                 run = store.run(args.run_id)
                 if run["scope"] != asdict(Scope()):
                     raise AuthorizationDenied("CLI local owner cannot access this Run")
-                result = (
-                    asdict(RunSnapshot.from_record(run))
-                    if args.command == "status"
-                    else [
+                if args.command == "inspect" or (
+                    args.command == "status" and args.format == "text"
+                ):
+                    result = inspection(run, store.budget(args.run_id), args.db, args.factory)
+                elif args.command == "status":
+                    result = asdict(RunSnapshot.from_record(run))
+                else:
+                    result = [
                         asdict(event) for event in store.events(args.run_id, args.after, args.limit)
                     ]
-                )
         else:
             if args.command == "demo" and args.factory:
                 raise ValidationError(
@@ -115,12 +135,21 @@ def main(argv=None):
                     )
                 else:
                     result = asdict(engine.cancel(args.run_id, command_id=args.command_id))
-        print(json.dumps(result, ensure_ascii=False, allow_nan=False))
+                if args.format == "text" and args.command in {"demo", "resume"}:
+                    run = engine.store.run(result["run_id"])
+                    result = inspection(run, engine.store.budget(run["id"]), args.db, args.factory)
+        if args.format == "text":
+            print(render_inspection(result) if "release" in result else render_result(result))
+        else:
+            print(json.dumps(result, ensure_ascii=False, allow_nan=False))
         return 0
     except RalfError as exc:
-        print(
-            json.dumps({"code": exc.code, "message": str(exc)}, ensure_ascii=False), file=sys.stderr
+        message = (
+            f"{exc.code}: {exc}"
+            if args.format == "text"
+            else json.dumps({"code": exc.code, "message": str(exc)}, ensure_ascii=False)
         )
+        print(message, file=sys.stderr)
         return 2
 
 

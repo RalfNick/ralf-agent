@@ -1,6 +1,6 @@
-# Implementation status — 0.1.0.dev4
+# Implementation status — 0.1.0.dev5
 
-2026-10-05. This is the M1 core preview after the architecture/implementation review, not the completed enterprise architecture or a production-ready v0.1 release. Public interfaces are experimental; the fixed kernel identity is now local-3.
+2026-10-05. This is the M1 core preview after the architecture/implementation and adoption review. Full M1 acceptance, the enterprise architecture and a production-ready v0.1 release have not been completed. Public interfaces are experimental; the fixed kernel identity remains local-3.
 
 | Capability | Delivered in this increment | Boundary / next work |
 | --- | --- | --- |
@@ -20,10 +20,12 @@
 | Evaluation | Offline runtime regression report and process-crash tests | Live AI task quality, compression fact retention and statistical baseline pending |
 | Temporal | Not delivered | Minimal internal contract probe is remaining M1 work; full backend follows enterprise stage |
 | External Runner | Not delivered | Codex isolated profile in v0.2; other adapters subject to individual conformance |
-| CLI | Custom trusted factory for resume/approve/cancel, version/page size, read-only SQLite status/events | Observation uses default Scope and SQLite; general read API/enterprise identity pending |
+| CLI / first use | Standalone packaged offline starter via init; custom trusted factory for resume/approve/cancel; JSON default and text output; read-only SQLite inspect/status/events with reviewable approval commands | Observation uses default Scope and SQLite; external developer trial and general read API/enterprise identity pending |
 | Enterprise | Not delivered | OIDC, API/console, multi-workspace resource ACL, MQ/A2A, KB/production Oncall and restore exercise remain roadmap |
 
 ## Immediate next increments
+
+The [M1 acceptance protocol](m1-acceptance.md) turns these gates into reproducible experiments: real-model tasks, a same-scenario LangGraph comparison, external developer onboarding and independent Temporal authority. The task fixtures are a specification, not an executed benchmark. The [getting started](getting-started.md), [recovery](recovery-guide.md), [API](api-reference.md) and [release](releasing.md) guides cover the local preview. dev5 improves adoption without completing the outstanding runtime gates below.
 
 1. Separate pure Harness proposals and controlled ToolExecutor calls from Run advancement. Persist full model responses before DecisionCommit and independent effect receipts before ResultCommit; validate both windows with real process crashes. Storage v1 is now explicit; migrations and complete command outcomes remain.
 2. Complete pending input/deadline/approval expiry, explicit unknown model retry policy and stronger resource lifecycle handling.
@@ -48,4 +50,4 @@ The third review reproduced seven gaps left by the 141-test baseline: unsafe dat
 
 The fourth review reproduced context-manager policy bypasses, cancelled Tasks hiding running executor threads, and Store close failures releasing ownership too early. dev4 enforces the sole None-return authorization contract, tracks actual framework-managed tool/reconciler/memory threads independently of Tasks, and keeps failed-close Engines quiesced under their lease. See the [authorization/shutdown disposition](../architecture/reviews/2026-10-05-authorization-shutdown.md). This lifecycle work does not implement capacity limits, sandbox termination, separate receipt persistence or Temporal authority.
 
-Callable registration limitations from the initial review are resolved. Monetary budgets, enterprise authorization, sandbox isolation, Temporal and live-model quality still require their own implementation and validation; local review does not certify them. dev1/dev2 Runs remain observable/cancellable/reconcilable by Run ID, but continuation and historical submit replay require their original version and configuration. dev4 retains local-3 and dev3 caller request digests, so valid dev3 Runs/receipts remain compatible. These digests exclude the resolved Manifest; old submit digests have not been migrated. Automatic Run/command migration is not supported.
+Callable registration limitations from the initial review are resolved. Monetary budgets, enterprise authorization, sandbox isolation, Temporal and live-model quality still require their own implementation and validation; local review does not certify them. dev1/dev2 Runs remain observable/cancellable/reconcilable by Run ID, but continuation and historical submit replay require their original version and configuration. dev5 retains dev4's local-3 kernel and dev3 caller request digests, so valid dev3/dev4 Runs/receipts remain compatible. These digests exclude the resolved Manifest; old submit digests have not been migrated. Automatic Run/command migration is not supported.

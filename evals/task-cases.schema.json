@@ -1,0 +1,239 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:ralf:m1:task-cases:v1",
+  "title": "M1 acceptance task specifications, not measured results",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "created_at",
+    "status",
+    "runner_status",
+    "fixture_status",
+    "results",
+    "baseline_runtime",
+    "kernel",
+    "default_agent",
+    "common_instructions",
+    "fixture_contract",
+    "tool_catalog",
+    "oracle_operators",
+    "cases"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "ralf.m1.task_cases.v1"
+    },
+    "created_at": {
+      "type": "string",
+      "pattern": "^20[0-9]{2}-[0-9]{2}-[0-9]{2}$"
+    },
+    "status": {
+      "const": "specification_only"
+    },
+    "runner_status": {
+      "const": "not_implemented"
+    },
+    "fixture_status": {
+      "const": "not_implemented"
+    },
+    "results": {
+      "type": "null"
+    },
+    "baseline_runtime": {
+      "type": "string"
+    },
+    "kernel": {
+      "type": "string"
+    },
+    "default_agent": {
+      "type": "object"
+    },
+    "common_instructions": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "fixture_contract": {
+      "type": "object"
+    },
+    "tool_catalog": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "name",
+          "input_schema",
+          "effect",
+          "requires_approval",
+          "fixture_behavior"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "input_schema": {
+            "type": [
+              "object",
+              "boolean"
+            ]
+          },
+          "effect": {
+            "enum": [
+              "read_only",
+              "idempotent_write",
+              "queryable_write",
+              "unqueryable_write"
+            ]
+          },
+          "requires_approval": {
+            "type": "boolean"
+          },
+          "fixture_behavior": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "oracle_operators": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/case"
+      }
+    }
+  },
+  "$defs": {
+    "case": {
+      "type": "object",
+      "required": [
+        "id",
+        "family",
+        "language",
+        "track",
+        "core_primitives_available",
+        "input",
+        "instructions",
+        "allowed_tools",
+        "output_schema",
+        "fixtures",
+        "assertions"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^A[0-9]{2}$"
+        },
+        "family": {
+          "type": "string",
+          "minLength": 1
+        },
+        "language": {
+          "enum": [
+            "zh",
+            "en",
+            "mixed"
+          ]
+        },
+        "track": {
+          "enum": [
+            "task_quality",
+            "control_conformance",
+            "future"
+          ]
+        },
+        "core_primitives_available": {
+          "type": "boolean"
+        },
+        "input": {
+          "type": "string",
+          "minLength": 1
+        },
+        "instructions": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "allowed_tools": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string"
+          }
+        },
+        "output_schema": {
+          "type": [
+            "object",
+            "boolean"
+          ]
+        },
+        "fixtures": {
+          "type": "object"
+        },
+        "tool_overrides": {
+          "type": "object"
+        },
+        "run_limits": {
+          "type": "object"
+        },
+        "host_controls": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "when",
+              "action"
+            ]
+          }
+        },
+        "assertions": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": [
+              "op"
+            ],
+            "properties": {
+              "op": {
+                "enum": [
+                  "terminal_state",
+                  "intermediate_state",
+                  "error_code",
+                  "output_matches_schema",
+                  "output_equals",
+                  "tool_call",
+                  "no_tool_proposals",
+                  "no_other_tool_proposals",
+                  "happens_before",
+                  "business_writes",
+                  "record_unchanged",
+                  "record_fields",
+                  "approval_precedes_write",
+                  "no_dispatch_after_completion",
+                  "context_contains",
+                  "context_excludes",
+                  "context_chars_lte",
+                  "same_action_reconciled",
+                  "output_fields",
+                  "output_array_set_equals",
+                  "tool_sequence_equals"
+                ]
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
