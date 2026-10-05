@@ -1,8 +1,11 @@
 """Trusted Python tools with explicit effect contracts and fixed definitions."""
 
+import asyncio
 import copy
 import inspect
+import threading
 from collections.abc import Callable
+from contextvars import ContextVar
 from dataclasses import asdict, dataclass, field
 from functools import partial
 from typing import Any
@@ -12,6 +15,123 @@ from jsonschema.exceptions import SchemaError
 
 from .errors import DefinitionMismatch, ValidationError
 from .types import canonical, credits, digest
+
+
+class ThreadExecutionTracker:
+    """Keep execution ownership until a synchronous callable really exits.
+
+    Cancelling an asyncio Future does not stop its running executor thread.
+    Pending calls may be withdrawn, but only the worker can finish a call
+    that has begun. Neither transition depends on event-loop callbacks.
+    """
+
+    def __init__(self):
+        self._lock = threading.Lock()
+        self._calls: dict[object, tuple[str | None, bool]] = {}
+        self._waiters: set[tuple[asyncio.AbstractEventLoop, asyncio.Future]] = set()
+
+    @property
+    def has_active(self) -> bool:
+        return self.active_count > 0
+
+    @property
+    def active_count(self) -> int:
+        with self._lock:
+            return len(self._calls)
+
+    def has_active_for(self, group: str) -> bool:
+        with self._lock:
+            return any(owner == group for owner, _ in self._calls.values())
+
+    def _register(self, group):
+        token = object()
+        with self._lock:
+            self._calls[token] = (group, False)
+        return token
+
+    def _begin(self, token):
+        with self._lock:
+            call = self._calls.get(token)
+            if call is None:
+                return False
+            self._calls[token] = (call[0], True)
+            return True
+
+    def _finish(self, token):
+        with self._lock:
+            self._calls.pop(token, None)
+            waiters = tuple(self._waiters)
+        self._notify(waiters)
+
+    def _withdraw_pending(self, token):
+        with self._lock:
+            call = self._calls.get(token)
+            if call is not None and not call[1]:
+                self._calls.pop(token)
+                waiters = tuple(self._waiters)
+            else:
+                waiters = ()
+        self._notify(waiters)
+
+    @staticmethod
+    def _notify(waiters):
+        def wake(future):
+            if not future.done():
+                future.set_result(None)
+
+        for loop, future in waiters:
+            try:
+                loop.call_soon_threadsafe(wake, future)
+            except RuntimeError:
+                # Execution ownership has already been cleared in the worker.
+                # A closed loop cannot receive a drain notification.
+                pass
+
+    async def run(self, function, *args, group: str | None = None, **kwargs):
+        token = self._register(group)
+
+        def call():
+            # The executor can already be running while cancellation withdraws
+            # the pending call. Never start the handler after that withdrawal.
+            if not self._begin(token):
+                return None
+            try:
+                return function(*args, **kwargs)
+            finally:
+                self._finish(token)
+
+        try:
+            return await asyncio.to_thread(call)
+        except BaseException:
+            self._withdraw_pending(token)
+            raise
+
+    async def drain(self, group: str | None = None):
+        loop = asyncio.get_running_loop()
+        while True:
+            with self._lock:
+                active = (
+                    self._calls
+                    if group is None
+                    else any(owner == group for owner, _ in self._calls.values())
+                )
+                if not active:
+                    return
+                waiter = (loop, loop.create_future())
+                self._waiters.add(waiter)
+            try:
+                await waiter[1]
+            finally:
+                with self._lock:
+                    self._waiters.discard(waiter)
+
+
+current_thread_tracker: ContextVar[ThreadExecutionTracker | None] = ContextVar(
+    "ralf_thread_execution_tracker", default=None
+)
+current_thread_group: ContextVar[str | None] = ContextVar(
+    "ralf_thread_execution_group", default=None
+)
 
 
 @dataclass(frozen=True)
@@ -130,13 +250,19 @@ def _callable_identity(function):
     return {"module": target.__module__, "name": target.__qualname__, "source": source}
 
 
-async def invoke(function, arguments: dict, context) -> Any:
-    import asyncio
-
+async def invoke(
+    function, arguments: dict, context, *, thread_tracker: ThreadExecutionTracker | None = None
+) -> Any:
     if inspect.iscoroutinefunction(function):
         return await function(copy.deepcopy(arguments), context)
     # A trusted sync handler cannot block the coordinator's event loop.
-    result = await asyncio.to_thread(function, copy.deepcopy(arguments), context)
+    tracker = thread_tracker or current_thread_tracker.get()
+    if tracker is None:
+        result = await asyncio.to_thread(function, copy.deepcopy(arguments), context)
+    else:
+        result = await tracker.run(
+            function, copy.deepcopy(arguments), context, group=context.run_id
+        )
     if inspect.isawaitable(result):
         return await result
     return result

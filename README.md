@@ -4,7 +4,7 @@
 
 Ralf-Agent 是 Python 优先的开源 Agent 运行时。它把模型决策、工具动作、审批与结果保存为明确的执行步骤，让任务在重启后继续，并核验可能已经发生的业务操作。
 
-当前版本：**0.1.0.dev3，M1 核心预览**。已经提供原生 Agent SDK、顺序 Workflow、SQLite 持久执行、可信 Python 工具、审批／取消、效果核验、事件分页、独立可替换的会话与长期记忆，以及 Chat Completions 模型 Provider。执行存储、协调器、上下文装配和异步记忆可显式接入。完整支持状态和剩余工作见 [实现清单](docs/implementation-status.md)。预览 API 尚未稳定。
+当前版本：**0.1.0.dev4，M1 核心预览**。已经提供原生 Agent SDK、顺序 Workflow、SQLite 持久执行、可信 Python 工具、审批／取消、效果核验、事件分页、独立可替换的会话与长期记忆，以及 Chat Completions 模型 Provider。执行存储、协调器、上下文装配和异步记忆可显式接入。完整支持状态和剩余工作见 [实现清单](docs/implementation-status.md)。预览 API 尚未稳定。
 
 ## 快速开始
 
@@ -124,7 +124,7 @@ flow = WorkflowSpec(
 - **工具：** `ToolRegistry.register(ToolSpec, handler, reconciler=...)`。handler 接收 JSON 参数和可信 `InvocationContext`，支持普通同步／异步函数、实例、绑定方法和 `functools.partial`。状态、绑定参数和依赖变更应更新 `ToolSpec.version/config`，不要把秘密写入配置；代码摘要和配置一起绑定运行。Registry／policy 返回的描述是独立副本。
 - **记忆：** `SessionStore`／`LongTermMemoryStore` 及对应异步 Protocol 通过 `session_store`／`memory_store` 独立注入。SQLite 和内存后端留在创建线程；远程后端优先实现异步方法。线程安全的同步远程客户端可用 `ThreadedMemoryAdapter` 显式桥接。`backend_id` 必须识别后端／配置／版本，已有 Run 不静默切换后端。
 - **执行与上下文：** `ExecutionStore` 不暴露 SQL／连接，`CoordinatorLease` 负责执行权归属；自定义存储需显式提供租约和记忆组件。`context_assembler` 接收具有版本身份的 `ContextBuilder`，内核仍检查上下文额度和实际快照摘要。这些是 Local 的组件端口，多进程和 Temporal 尚未实现。
-- **治理：** 本版本为可信宿主配置的本地所有者模式。可注入同步 `policy(scope, tool_spec, arguments)`，授权失败时抛 `AuthorizationDenied`；每次工具执行／恢复重新检查。企业 OIDC、资源 ACL 和凭据代理尚未交付。
+- **治理：** 本版本为可信宿主配置的本地所有者模式。可注入同步 `policy(scope, tool_spec, arguments) -> None`，拒绝时抛 `AuthorizationDenied`；其他返回值一律拒绝；每次工具执行／恢复重新检查。企业 OIDC、资源 ACL 和凭据代理尚未交付。
 
 ```python
 from ralf_agent import InMemoryMemory
@@ -168,6 +168,6 @@ python examples/evaluate.py
 - [完整设计](architecture/design.md)与 [review 取舍](architecture/review-resolution.md)。
 - [Run 命令](architecture/specs/run-command-contract.md)、[Action 恢复](architecture/specs/action-recovery-contract.md)、[Runner 能力](architecture/specs/runner-capability-contract.md)。
 - [实现状态与下一步](docs/implementation-status.md)。M1 后续完成更完整的命令／等待契约、模型质量基线及 Temporal 内部验证；v0.2 验证 Codex、并行和多进程；v1.0 完成企业私有部署目标。
-- [本轮可靠性 Review 与后续门槛](architecture/reviews/2026-10-05-reliability-boundaries.md)、[上一轮扩展性 Review](architecture/reviews/2026-10-05-runtime-extensibility.md)。dev3 使用 `local-3` 固定发布身份；dev1／dev2 Run 可按 ID 观察、取消及人工核验，继续执行和历史提交重放需要原版本。运行及命令摘要尚不支持自动迁移。
+- [本轮授权与关闭 Review](architecture/reviews/2026-10-05-authorization-shutdown.md)、[可靠性与架构门槛](architecture/reviews/2026-10-05-reliability-boundaries.md)、[扩展性 Review](architecture/reviews/2026-10-05-runtime-extensibility.md)。dev4 保留 `local-3` 固定发布身份及 dev3 提交摘要，与合法 dev3 Run／回执兼容；dev1／dev2 Run 可按 ID 观察、取消及人工核验，继续执行和历史提交重放需要原版本。运行及命令摘要尚不支持自动迁移。
 
 SDK、运行时和基础治理按 [Apache-2.0](LICENSE) 开源。外部模型／Harness 的服务和许可独立适用。

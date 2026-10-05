@@ -13,6 +13,7 @@ from typing import Protocol
 
 from .errors import IdempotencyConflict, MemoryBackendError, RalfError, ValidationError
 from .storage import SQLiteStore
+from .tools import current_thread_group, current_thread_tracker
 from .types import Scope, canonical
 
 
@@ -138,16 +139,22 @@ class ThreadedMemoryAdapter:
         return f"threaded:{self.backend.backend_id}"
 
     async def read(self, *args, **kwargs):
-        return await asyncio.to_thread(self.backend.read, *args, **kwargs)
+        return await self._call(self.backend.read, *args, **kwargs)
 
     async def append(self, *args, **kwargs):
-        return await asyncio.to_thread(self.backend.append, *args, **kwargs)
+        return await self._call(self.backend.append, *args, **kwargs)
 
     async def facts(self, *args, **kwargs):
-        return await asyncio.to_thread(self.backend.facts, *args, **kwargs)
+        return await self._call(self.backend.facts, *args, **kwargs)
 
     async def put_fact(self, *args, **kwargs):
-        return await asyncio.to_thread(self.backend.put_fact, *args, **kwargs)
+        return await self._call(self.backend.put_fact, *args, **kwargs)
+
+    async def _call(self, method, *args, **kwargs):
+        tracker = current_thread_tracker.get()
+        if tracker is None:
+            return await asyncio.to_thread(method, *args, **kwargs)
+        return await tracker.run(method, *args, group=current_thread_group.get(), **kwargs)
 
 
 class InMemoryMemory:

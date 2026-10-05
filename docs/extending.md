@@ -1,6 +1,6 @@
 # Ralf-Agent 扩展指南
 
-版本：0.1.0.dev3；日期：2026-10-05。面向 SDK／适配器开发者。本指南描述已经运行的 Local 端口；企业适配仍按 [实现清单](implementation-status.md) 分期。
+版本：0.1.0.dev4；日期：2026-10-05。面向 SDK／适配器开发者。本指南描述已经运行的 Local 端口；企业适配仍按 [实现清单](implementation-status.md) 分期。
 
 ## 1. 装配组件
 
@@ -13,7 +13,9 @@
 | ContextBuilder | `context_assembler=` | identity 与确定性 assemble；返回实际消息和 JSON Manifest |
 | ExecutionStore v1 | 第一个构造参数 | 原子命令／事务、Run CAS、事件、预算、活跃 Session 和未知效果查询；不另建调度器 |
 | CoordinatorLease | `coordinator=` | 同一执行权威只允许一个持有者，活跃调用结束前不能交出归属 |
-| 当前工具授权 | `policy=` | 可信宿主同步授权函数；异步／惰性函数或返回值明确拒绝，否决抛 AuthorizationDenied |
+| 当前工具授权 | `policy=` | 可信宿主同步授权函数，只允许返回 None；拒绝抛 AuthorizationDenied，任何其他返回值均拒绝 |
+
+同步返回 `None` 表示检查已经执行并完成授权。上下文管理器、awaitable、generator、True／False、字典等不能表示授权；框架不进入它们，也不调用它们的任意生命周期方法。对已识别的 coroutine／generator 仅做关闭清理，然后报配置错误。
 
 默认 `LocalEngine(SQLiteStore(path), ...)` 会创建 POSIX 文件租约和共享 SQLite 记忆。自定义存储通过端口接入，不需要 `.conn`／`.path`；同时显式注入 `coordinator`、`session_store`、`memory_store`。当前 ExecutionStore 方法是 Coordinator 线程内的同步事务操作；远程数据库需单独验证延迟、原子性和失败语义。
 
@@ -64,7 +66,13 @@ ExecutionStore 的 `run()` 返回与底层记录分离的 JSON 快照；`save_ru
 
 ## 5. 生命周期与 CLI
 
-Engine 成功构造后拥有 execution store 与 coordinator；`close()` 等待条件由调用者满足，活跃工具／记忆调用或排队的 drive 尚未结束时会拒绝关闭。完成调用和无调用者的 Run 锁会释放；取消后的实际调用未结束前仍保留归属。传入的 Provider、HTTP client、session_store、memory_store 由调用者管理，Engine 不隐式关闭它们。构造失败会释放已获得租约，直接传入的 store 仍由调用者关闭。
+Engine 成功构造后拥有 execution store 与 coordinator；`close()` 等待条件由调用者满足，活跃工具／记忆调用或排队的 drive 尚未结束时会拒绝关闭。框架托管的同步工具、核验函数与 ThreadedMemoryAdapter 调用按实际工作线程退出追踪；取消全部 Task 或关闭事件循环不表示线程已停止。同 Run 的线程尚活跃时拒绝 drive，cancel 不提前把实际执行判成遗失 Attempt。完成调用和无调用者的 Run 锁会释放。传入的 Provider、HTTP client、session_store、memory_store 由调用者管理，Engine 不隐式关闭它们。构造失败会释放已获得租约，直接传入的 store 仍由调用者关闭。
+
+服务关闭时先停止接收新请求，完成或取消并 await 自己管理的驱动 Task，再 `await engine.wait_for_threads()`，最后 `engine.close()`。等待方法不取消 Task，也不释放租约；取消等待不会丢弃线程归属，已经关闭旧事件循环时可以在新循环等待。线程结束仅表示本地执行已退出；若取消使回执没有采纳，未知效果仍需按执行日志核验。同步线程不能被 asyncio 强制终止，需要 handler 自身的超时／协作退出策略。
+
+存储 close 抛异常时，Engine 进入 close_failed，保留租约并拒绝 submit／drive／控制／读取操作；可以重试 close。存储已关闭但租约释放失败时只重试释放，不重复关闭存储。成功 close 可重复调用，原 Engine 始终不可再执行。自定义存储应允许部分关闭失败后的安全重试，自定义租约应按原持有者身份幂等释放。
+
+追踪只覆盖框架托管的同步调用。自定义 async 适配器内部直接使用 asyncio.to_thread、创建自己的后台线程或交出外部调用后，必须自行保证取消、真实完成与资源归属契约；不能把仅取消等待当作实际工作已结束。
 
 自建 Agent 的跨进程控制使用 `--factory module:callable`。同步工厂接收 db_path，返回相同固定配置的 LocalEngine；工厂应放在可导入包中，或在仓库目录使用 `PYTHONPATH=.`。完整可运行示例见 [custom_runtime.py](../examples/custom_runtime.py)。
 
@@ -76,4 +84,4 @@ CLI 的 `status/events` 使用只读 SQLite 和默认 Scope；不载入工厂、
 
 新的适配器至少覆盖：隔离 Scope、重启后稳定身份、CAS 冲突、重复请求去重、未知成本保留、已确认效果不重跑、取消期间不新增后续调用、晚到证据不覆盖原结果、组件变化拒绝恢复。参考 `tests/test_memory.py`、`tests/test_extension_contracts.py`、`tests/test_engine.py` 中的真实数据库和异步测试。
 
-dev3 内核固定身份为 `local-3`，SQLite Schema 仍为 v1。dev1／dev2 的记录可以按 Run ID 观察、取消及人工核验；继续执行须使用原版本和原配置。稳定的调用方摘要从 dev3 首次接受的提交起生效；旧版 submit 摘要包含 Manifest，直接用 dev3 重放会得到冲突，应使用原版本找回回执。自动 Run／命令摘要迁移尚未实现。未知效果应先在原执行日志里核验，不能通过创建新日志或新 Run 绕过恢复约束。
+dev4 对 local-3 做兼容的安全修复，保留内核身份 `local-3`、SQLite Schema v1 和 dev3 调用方摘要；合法 dev3 Run／回执无需迁移即可继续使用。返回 True／False 等的 policy 需改为同步返回 None 或抛拒绝异常。dev1／dev2 的记录可以按 Run ID 观察、取消及人工核验；继续执行须使用原版本和原配置。稳定的调用方摘要从 dev3 首次接受的提交起生效；旧版 submit 摘要包含 Manifest，直接用 dev3／dev4 重放会得到冲突，应使用原版本找回回执。自动 Run／命令摘要迁移尚未实现。未知效果应先在原执行日志里核验，不能通过创建新日志或新 Run 绕过恢复约束。

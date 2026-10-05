@@ -4,6 +4,7 @@ import asyncio
 import copy
 import inspect
 import uuid
+from collections.abc import Callable
 from dataclasses import asdict
 
 from jsonschema import Draft202012Validator
@@ -19,7 +20,13 @@ from .errors import (
 )
 from .memory import memory_call
 from .ports import ContextBuilder, CoordinatorLease, ExecutionStore
-from .tools import invoke
+from .tools import (
+    ThreadExecutionTracker,
+    ToolSpec,
+    current_thread_group,
+    current_thread_tracker,
+    invoke,
+)
 from .types import (
     AgentSpec,
     InvocationContext,
@@ -45,7 +52,7 @@ class LocalEngine:
         scope=None,
         session_store=None,
         memory_store=None,
-        policy=None,
+        policy: Callable[[Scope, ToolSpec, dict], None] | None = None,
         coordinator: CoordinatorLease | None = None,
         context_assembler: ContextBuilder | None = None,
     ):
@@ -68,6 +75,8 @@ class LocalEngine:
         self._inflight = {}
         self._locks = {}
         self._drive_users = {}
+        self._threads = ThreadExecutionTracker()
+        self._lifecycle = "open"
         if coordinator is None:
             factory = getattr(store, "create_coordinator", None)
             if factory is None:
@@ -114,20 +123,52 @@ class LocalEngine:
             raise
 
     def __enter__(self):
+        self._ensure_open()
         return self
 
     def __exit__(self, *args):
         self.close()
 
     def close(self):
-        if self._drive_users or any(not task.done() for task in self._inflight.values()):
-            raise ValidationError("Finish active drive tasks before closing the coordinator")
-        try:
-            self.store.close()
-        finally:
-            self.coordinator.release()
+        if self._lifecycle == "closed":
+            return
+        if self._lifecycle == "closing":
+            raise ValidationError("Engine is already closing")
+        if (
+            self._drive_users
+            or any(not task.done() for task in self._inflight.values())
+            or self._threads.has_active
+        ):
+            raise ValidationError(
+                "Finish active drive tasks and synchronous calls before closing the coordinator"
+            )
+        if self._lifecycle != "store_closed":
+            self._lifecycle = "closing"
+            try:
+                self.store.close()
+            except BaseException:
+                self._lifecycle = "close_failed"
+                raise
+            self._lifecycle = "store_closed"
+        # A failed close keeps ownership and permits only a close retry. Once
+        # storage is closed, a failed lease release must not reopen the Engine.
+        self.coordinator.release()
+        self._lifecycle = "closed"
+
+    async def wait_for_threads(self):
+        """Wait for owned synchronous calls; this does not cancel drive tasks."""
+        await self._threads.drain()
+
+    def _ensure_open(self):
+        if self._lifecycle != "open":
+            raise ValidationError("Engine is not open; only close may be retried")
+
+    def _operation_active(self, run_id):
+        task = self._inflight.get(run_id)
+        return (task is not None and not task.done()) or self._threads.has_active_for(run_id)
 
     def _authorized(self, run_id):
+        self._ensure_open()
         run = self.store.run(run_id)
         if run["scope"] != asdict(self.scope):
             raise AuthorizationDenied("Run belongs to another workspace or principal")
@@ -195,6 +236,7 @@ class LocalEngine:
         return messages, manifest
 
     def submit(self, spec, input, *, command_id, budget=32, session_id=None):
+        self._ensure_open()
         if isinstance(spec, AgentSpec):
             definition = {
                 "kind": "agent",
@@ -309,9 +351,7 @@ class LocalEngine:
 
         def apply():
             run = self._authorized(run_id)
-            active = run_id in self._active or (
-                run_id in self._inflight and not self._inflight[run_id].done()
-            )
+            active = run_id in self._active or self._operation_active(run_id)
             if not active and self._normalize_abandoned(run):
                 self._commit(run, "abandoned_attempts_unknown")
             if run["state"] in {"succeeded", "failed"}:
@@ -388,7 +428,8 @@ class LocalEngine:
                 self._commit(run, "run_failed", {"code": code})
 
     async def drive(self, run_id):
-        if run_id in self._inflight and not self._inflight[run_id].done():
+        self._ensure_open()
+        if self._operation_active(run_id):
             raise CoordinatorBusy("The previous Action is still running; wait for its result")
         lock = self._locks.setdefault(run_id, asyncio.Lock())
         self._drive_users[run_id] = self._drive_users.get(run_id, 0) + 1
@@ -416,7 +457,7 @@ class LocalEngine:
         # A queued caller may have passed the check between two Actions while
         # another drive still owned this lock. Recheck before recovery mutates
         # any attempt: a shielded executor may still be alive after caller cancellation.
-        if run_id in self._inflight and not self._inflight[run_id].done():
+        if self._operation_active(run_id):
             raise CoordinatorBusy("The previous Action is still running; wait for its result")
         run = self._authorized(run_id)
         if run["state"] in TERMINAL:
@@ -486,7 +527,13 @@ class LocalEngine:
 
     async def _guarded(self, run_id, operation):
         # Caller cancellation must not discard an in-flight effect or free its coordinator.
-        task = asyncio.create_task(operation)
+        tracker_token = current_thread_tracker.set(self._threads)
+        group_token = current_thread_group.set(run_id)
+        try:
+            task = asyncio.create_task(operation)
+        finally:
+            current_thread_group.reset(group_token)
+            current_thread_tracker.reset(tracker_token)
         self._inflight[run_id] = task
 
         def completed(finished):
@@ -753,14 +800,10 @@ class LocalEngine:
             policy = self.policy
             self._validate_policy(policy)
             decision = policy(self.scope, tool.spec, copy.deepcopy(action["arguments"]))
-            if (
-                inspect.isawaitable(decision)
-                or inspect.isasyncgen(decision)
-                or inspect.isgenerator(decision)
-            ):
+            if decision is not None:
                 if inspect.iscoroutine(decision) or inspect.isgenerator(decision):
                     decision.close()
-                raise ValidationError("Authorization policy returned a deferred decision")
+                raise ValidationError("Synchronous authorization policy must return None")
             self._check_release(self._authorized(run_id))
             run = self._authorized(run_id)
             if run["state"] in TERMINAL or run["state"] == "cancelling":
@@ -795,7 +838,9 @@ class LocalEngine:
         if action["status"] == "outcome_unknown":
             if tool.reconciler is not None:
                 try:
-                    result = await invoke(tool.reconciler, action["arguments"], context)
+                    result = await invoke(
+                        tool.reconciler, action["arguments"], context, thread_tracker=self._threads
+                    )
                 except Exception:
                     result = None
                 with self.store.transaction():
@@ -840,7 +885,9 @@ class LocalEngine:
             self.scope, run_id, action_id, attempt_id, action["effect_key"], self.owner
         )
         try:
-            result = await invoke(tool.handler, action["arguments"], context)
+            result = await invoke(
+                tool.handler, action["arguments"], context, thread_tracker=self._threads
+            )
             with self.store.transaction():
                 run = self._authorized(run_id)
                 action = next(a for a in run["actions"] if a["id"] == action_id)
