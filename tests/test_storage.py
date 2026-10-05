@@ -2,7 +2,7 @@ from concurrent.futures import ThreadPoolExecutor
 
 import pytest
 
-from ralf_agent.errors import BudgetExceeded, IdempotencyConflict
+from ralf_agent.errors import BudgetExceeded, IdempotencyConflict, NotFound, ValidationError
 from ralf_agent.storage import SQLiteStore
 from ralf_agent.types import Scope
 
@@ -71,3 +71,31 @@ def test_invalid_budget_amounts_are_rejected(tmp_path, amount):
     with SQLiteStore(tmp_path / "runs.db") as store:
         with pytest.raises(ValueError):
             store.create_budget("r1", amount)
+
+
+def test_readonly_observation_never_creates_a_missing_database(tmp_path):
+    path = tmp_path / "missing" / "runs.db"
+    with pytest.raises(NotFound):
+        SQLiteStore(path, readonly=True)
+    assert not path.parent.exists()
+
+
+def test_readonly_observation_cannot_write_or_upgrade_schema(tmp_path):
+    path = tmp_path / "runs.db"
+    with SQLiteStore(path) as store:
+        store.create_budget("r1", 3)
+    with SQLiteStore(path, readonly=True) as observer:
+        assert observer.budget("r1") == {"limit": 3, "held": 0, "spent": 0}
+        with pytest.raises(ValidationError):
+            observer.create_budget("new", 1)
+
+
+def test_failed_compare_and_swap_does_not_mutate_the_callers_revision(tmp_path):
+    with SQLiteStore(tmp_path / "revision.db") as store:
+        record = {"id": "r1", "revision": 0}
+        store.insert_run(record)
+        stale = dict(record)
+        store.save_run(record)
+        with pytest.raises(ValidationError):
+            store.save_run(stale)
+        assert stale["revision"] == 0

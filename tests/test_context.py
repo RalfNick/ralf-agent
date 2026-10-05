@@ -34,3 +34,35 @@ def test_oversized_latest_evidence_is_rejected_instead_of_silently_truncated():
             [],
             256,
         )
+
+
+def test_optional_memory_is_selected_by_budget_with_an_accurate_manifest():
+    history = [{"role": "system", "content": "x"}, {"role": "user", "content": "hello"}]
+    references = [
+        {"key": "large", "version": 1, "value": "z" * 1000},
+        {"key": "language", "version": 2, "value": "Chinese"},
+    ]
+    messages, manifest = ContextAssembler().assemble(history, references, 512)
+    assert "Chinese" in messages[-1]["content"]
+    assert "z" * 1000 not in messages[-1]["content"]
+    assert manifest["reference_versions"] == [{"key": "language", "version": 2}]
+    assert manifest["dropped_references"] == 1
+
+
+def test_old_memory_cannot_displace_latest_tool_evidence():
+    history = [
+        {"role": "system", "content": "x"},
+        {"role": "user", "content": "hello"},
+        {
+            "role": "assistant",
+            "tool_calls": [
+                {"id": "c", "type": "function", "function": {"name": "x", "arguments": "{}"}}
+            ],
+        },
+        {"role": "tool", "tool_call_id": "c", "content": "confirmed effect"},
+    ]
+    messages, manifest = ContextAssembler().assemble(
+        history, [{"key": "old", "value": "z" * 1000}], 512
+    )
+    assert messages[-2:] == history[-2:]
+    assert manifest["reference_versions"] == []

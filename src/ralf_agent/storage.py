@@ -2,6 +2,7 @@
 
 import json
 import sqlite3
+import uuid
 from contextlib import contextmanager
 from pathlib import Path
 
@@ -10,8 +11,35 @@ from .types import CommandReceipt, RunEvent, canonical, credits, digest
 
 
 class SQLiteStore:
-    def __init__(self, path):
+    def __init__(self, path, *, readonly=False):
         self.path = str(path)
+        self.readonly = readonly
+        self.backend_id = (
+            f"sqlite-memory:{uuid.uuid4().hex}"
+            if self.path == ":memory:"
+            else f"sqlite:{Path(self.path).resolve()}"
+        )
+        self._coordinator = None
+        if readonly:
+            if self.path == ":memory:" or not Path(self.path).is_file():
+                raise NotFound("Execution database not found; submit a Run first")
+            self.conn = sqlite3.connect(
+                Path(self.path).resolve().as_uri() + "?mode=ro",
+                uri=True,
+                isolation_level=None,
+                timeout=10,
+            )
+            self.conn.row_factory = sqlite3.Row
+            try:
+                row = self.conn.execute(
+                    "SELECT value FROM metadata WHERE key='schema_version'"
+                ).fetchone()
+                if row is None or row[0] != "1":
+                    raise ValidationError("Unsupported execution database Schema")
+            except (sqlite3.DatabaseError, ValidationError) as exc:
+                self.close()
+                raise ValidationError("Unsupported execution database Schema") from exc
+            return
         if self.path != ":memory:":
             Path(self.path).parent.mkdir(parents=True, exist_ok=True)
         self.conn = sqlite3.connect(self.path, isolation_level=None, timeout=10)
@@ -42,8 +70,30 @@ class SQLiteStore:
     def close(self):
         self.conn.close()
 
+    def create_coordinator(self):
+        from .coordinator import FileCoordinator, InProcessCoordinator
+
+        if self.readonly:
+            raise ValidationError("Observation stores cannot own an execution coordinator")
+        if self._coordinator is None:
+            self._coordinator = (
+                InProcessCoordinator()
+                if self.path == ":memory:"
+                else FileCoordinator(str(Path(self.path).resolve()) + ".coordinator")
+            )
+        return self._coordinator
+
+    def create_memory(self):
+        from .memory import SQLiteMemory
+
+        if self.readonly:
+            raise ValidationError("Observation stores cannot initialize memory tables")
+        return SQLiteMemory(self)
+
     @contextmanager
     def transaction(self):
+        if self.readonly:
+            raise ValidationError("Execution database was opened for observation only")
         if self.conn.in_transaction:
             yield
             return
@@ -99,13 +149,44 @@ class SQLiteStore:
 
     def save_run(self, data):
         expected = data["revision"]
-        data["revision"] += 1
+        next_data = {**data, "revision": expected + 1}
         cursor = self.conn.execute(
             "UPDATE runs SET revision=?,data=? WHERE id=? AND revision=?",
-            (data["revision"], canonical(data), data["id"], expected),
+            (next_data["revision"], canonical(next_data), data["id"], expected),
         )
         if cursor.rowcount != 1:
             raise ValidationError("Run state revision conflict")
+        data["revision"] = next_data["revision"]
+
+    def _scoped_runs(self, scope):
+        for row in self.conn.execute("SELECT data FROM runs"):
+            run = json.loads(row[0])
+            if run["scope"] == {"workspace": scope.workspace, "principal": scope.principal}:
+                yield run
+
+    def session_owner(self, scope, session_id):
+        return next(
+            (
+                run["id"]
+                for run in self._scoped_runs(scope)
+                if run["session_id"] == session_id
+                and run["state"] not in {"succeeded", "failed", "cancelled"}
+            ),
+            None,
+        )
+
+    def unresolved_effect(self, scope, tool, arguments, exclude_action_id):
+        for run in self._scoped_runs(scope):
+            for action in run["actions"]:
+                if (
+                    action["kind"] == "tool"
+                    and action["id"] != exclude_action_id
+                    and action["tool"] == tool
+                    and action["arguments"] == arguments
+                    and action["status"] in {"outcome_unknown", "executing"}
+                ):
+                    return {"run_id": run["id"], "action_id": action["id"]}
+        return None
 
     def emit(self, run_id, kind, data=None):
         row = self.conn.execute(

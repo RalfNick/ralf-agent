@@ -1,6 +1,8 @@
 """Independent, replaceable short-term and explicit long-term memory ports."""
 
+import asyncio
 import copy
+import inspect
 import json
 import threading
 import time
@@ -8,7 +10,7 @@ import uuid
 from pathlib import Path
 from typing import Protocol
 
-from .errors import IdempotencyConflict, ValidationError
+from .errors import IdempotencyConflict, MemoryBackendError, RalfError, ValidationError
 from .storage import SQLiteStore
 from .types import Scope, canonical
 
@@ -44,6 +46,92 @@ class LongTermMemoryStore(Protocol):
         expected_version: int,
         expires_at: float | None = None,
     ) -> int: ...
+
+
+class AsyncSessionStore(Protocol):
+    backend_id: str
+
+    async def read(self, scope: Scope, session_id: str) -> tuple[int, list[dict]]: ...
+    async def append(
+        self,
+        scope: Scope,
+        session_id: str,
+        message: dict,
+        *,
+        expected_revision: int,
+        message_id: str,
+    ) -> int: ...
+
+
+class AsyncLongTermMemoryStore(Protocol):
+    backend_id: str
+
+    async def facts(self, scope: Scope, namespace: str) -> list[dict]: ...
+    async def put_fact(
+        self,
+        scope: Scope,
+        namespace: str,
+        key: str,
+        value,
+        *,
+        expected_version: int,
+        expires_at: float | None = None,
+    ) -> int: ...
+
+
+async def memory_call(method, *args, **kwargs):
+    """Sync local adapters stay on the coordinator; async remote adapters suspend."""
+    try:
+        result = method(*args, **kwargs)
+        return await result if inspect.isawaitable(result) else result
+    except RalfError:
+        raise
+    except Exception as exc:
+        raise MemoryBackendError("Memory backend operation failed") from exc
+
+
+class ThreadedMemoryAdapter:
+    """Explicit bridge for a thread-safe synchronous remote client.
+
+    The underlying backend is caller-owned. SQLiteMemory is thread-affine and
+    must stay on the coordinator. Prefer native async adapters for remote I/O.
+    """
+
+    def __init__(self, backend):
+        self.backend = backend
+
+    @property
+    def backend(self):
+        return self._backend
+
+    @backend.setter
+    def backend(self, backend):
+        if isinstance(backend, SQLiteMemory):
+            raise ValidationError("SQLiteMemory must remain on its creating thread")
+        if not isinstance(getattr(backend, "backend_id", None), str) or not backend.backend_id:
+            raise ValidationError("Memory backends require a stable backend_id")
+        if any(
+            inspect.iscoroutinefunction(getattr(backend, name, None))
+            for name in ("read", "append", "facts", "put_fact")
+        ):
+            raise ValidationError("Use native async memory directly without the threaded bridge")
+        self._backend = backend
+
+    @property
+    def backend_id(self):
+        return f"threaded:{self.backend.backend_id}"
+
+    async def read(self, *args, **kwargs):
+        return await asyncio.to_thread(self.backend.read, *args, **kwargs)
+
+    async def append(self, *args, **kwargs):
+        return await asyncio.to_thread(self.backend.append, *args, **kwargs)
+
+    async def facts(self, *args, **kwargs):
+        return await asyncio.to_thread(self.backend.facts, *args, **kwargs)
+
+    async def put_fact(self, *args, **kwargs):
+        return await asyncio.to_thread(self.backend.put_fact, *args, **kwargs)
 
 
 class InMemoryMemory:
@@ -106,7 +194,11 @@ class SQLiteMemory:
     def __init__(self, path_or_store):
         self._owns_store = not isinstance(path_or_store, SQLiteStore)
         self.store = SQLiteStore(path_or_store) if self._owns_store else path_or_store
-        self.backend_id = f"sqlite-memory:{Path(self.store.path).resolve()}"
+        self.backend_id = (
+            self.store.backend_id
+            if self.store.path == ":memory:"
+            else f"sqlite-memory:{Path(self.store.path).resolve()}"
+        )
         self.store.conn.executescript("""
             CREATE TABLE IF NOT EXISTS memory_sessions (workspace TEXT, principal TEXT, session TEXT, data TEXT NOT NULL, PRIMARY KEY(workspace,principal,session));
             CREATE TABLE IF NOT EXISTS memory_facts (workspace TEXT, principal TEXT, namespace TEXT, key TEXT, value TEXT NOT NULL, version INTEGER NOT NULL, expires_at REAL, PRIMARY KEY(workspace,principal,namespace,key));

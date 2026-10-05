@@ -384,3 +384,117 @@ def test_cancelling_drive_cannot_release_coordinator_while_tool_is_running(tmp_p
             runtime.close()
 
     asyncio.run(exercise())
+
+
+@pytest.mark.parametrize("late_failure", [False, True])
+def test_queued_driver_rechecks_live_attempt_after_acquiring_run_lock(tmp_path, late_failure):
+    async def exercise():
+        model_completed, started, release = asyncio.Event(), asyncio.Event(), asyncio.Event()
+
+        class NotifyingProvider(ScriptedProvider):
+            async def complete(self, messages, tools):
+                model_completed.set()
+                return await super().complete(messages, tools)
+
+        async def change(args, ctx):
+            started.set()
+            await release.wait()
+            if late_failure:
+                raise ConnectionError("Response was lost after cancellation")
+            return {"ok": True}
+
+        with engine(
+            tmp_path / "queued.db",
+            NotifyingProvider([tool_response()]),
+            registry(change, approval=False),
+        ) as runtime:
+            run = runtime.submit(AgentSpec("a", "x", ("change",)), "x", command_id="s")
+
+            async def queued_driver():
+                await model_completed.wait()
+                return await runtime.drive(run.run_id)
+
+            queued = asyncio.create_task(queued_driver())
+            first = asyncio.create_task(runtime.drive(run.run_id))
+            await asyncio.wait_for(started.wait(), 2)
+            first.cancel()
+            with pytest.raises(asyncio.CancelledError):
+                await first
+            try:
+                with pytest.raises(CoordinatorBusy):
+                    await queued
+                snapshot = runtime.status(run.run_id)
+                assert snapshot.state == "cancelling"
+                assert snapshot.actions[-1]["status"] == "executing"
+            finally:
+                release.set()
+                for _ in range(100):
+                    if runtime._inflight[run.run_id].done():
+                        break
+                    await asyncio.sleep(0)
+                else:
+                    pytest.fail("Cancelled tool did not finish")
+            assert (await runtime.drive(run.run_id)).state == "cancelled"
+
+    asyncio.run(exercise())
+
+
+@pytest.mark.parametrize("automatic_result", [{"source": "automatic"}, None])
+def test_manual_reconciliation_wins_over_late_automatic_evidence(tmp_path, automatic_result):
+    async def exercise():
+        started, release = asyncio.Event(), asyncio.Event()
+
+        async def uncertain(args, ctx):
+            raise ConnectionError("Response was lost")
+
+        async def reconcile(args, ctx):
+            started.set()
+            await release.wait()
+            return automatic_result
+
+        provider = ScriptedProvider([tool_response(), ModelResponse(output="done")])
+        with engine(
+            tmp_path / "reconciliation.db",
+            provider,
+            registry(uncertain, approval=False, effect="queryable_write", reconciler=reconcile),
+        ) as runtime:
+            run = runtime.submit(AgentSpec("a", "x", ("change",)), "x", command_id="s")
+            assert (await runtime.drive(run.run_id)).state == "waiting_reconciliation"
+            action = runtime.status(run.run_id).actions[-1]
+            drive = asyncio.create_task(runtime.drive(run.run_id))
+            await asyncio.wait_for(started.wait(), 2)
+            runtime.reconcile(
+                run.run_id, action["id"], {"source": "manual"}, command_id="manual-confirm"
+            )
+            release.set()
+            snapshot = await drive
+            assert snapshot.state == "succeeded"
+            assert snapshot.actions[1]["result"] == {"source": "manual"}
+            tool_messages = [m for m in provider.messages[-1] if m["role"] == "tool"]
+            assert len(tool_messages) == 1
+            assert tool_messages[0]["content"] == '{"source":"manual"}'
+
+    asyncio.run(exercise())
+
+
+@pytest.mark.parametrize("current_cost", [2, None])
+def test_manual_reconciliation_settles_pinned_cost_without_current_tool(tmp_path, current_cost):
+    async def uncertain(args, ctx):
+        raise ConnectionError("Response was lost")
+
+    path = tmp_path / "pinned-cost.db"
+    with engine(
+        path, ScriptedProvider([tool_response()]), registry(uncertain, approval=False)
+    ) as runtime:
+        run = runtime.submit(AgentSpec("a", "x", ("change",)), "x", command_id="s")
+        assert asyncio.run(runtime.drive(run.run_id)).state == "waiting_reconciliation"
+        action = runtime.status(run.run_id).actions[-1]
+    current = ToolRegistry()
+    if current_cost is not None:
+        current.register(
+            ToolSpec("change", "Changed configuration", SCHEMA, cost=current_cost), uncertain
+        )
+    with engine(path, ScriptedProvider([]), current) as runtime:
+        runtime.reconcile(run.run_id, action["id"], {"confirmed": True}, command_id="confirm")
+        assert runtime.status(run.run_id).actions[-1]["status"] == "completed"
+        assert runtime.store.budget(run.run_id) == {"limit": 32, "held": 0, "spent": 2}

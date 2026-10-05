@@ -2,10 +2,10 @@
 
 import asyncio
 import copy
+import inspect
 import json
 import uuid
 from dataclasses import asdict
-from pathlib import Path
 
 from jsonschema import Draft202012Validator
 
@@ -17,7 +17,8 @@ from .errors import (
     RalfError,
     ValidationError,
 )
-from .memory import SQLiteMemory
+from .memory import memory_call
+from .ports import ContextBuilder, CoordinatorLease, ExecutionStore
 from .tools import invoke
 from .types import (
     AgentSpec,
@@ -37,7 +38,7 @@ TERMINAL = {"succeeded", "failed", "cancelled"}
 class LocalEngine:
     def __init__(
         self,
-        store,
+        store: ExecutionStore,
         *,
         providers,
         tools,
@@ -45,7 +46,17 @@ class LocalEngine:
         session_store=None,
         memory_store=None,
         policy=None,
+        coordinator: CoordinatorLease | None = None,
+        context_assembler: ContextBuilder | None = None,
     ):
+        # Python 3.12's Protocol isinstance check ignores proxy __getattr__.
+        # Validate the declared public operations so delegating adapters work too.
+        if any(
+            not callable(getattr(store, name, None))
+            for name in vars(ExecutionStore)
+            if not name.startswith("_")
+        ):
+            raise ValidationError("Store must implement the version 1 ExecutionStore port")
         self.store = store
         self.providers = dict(providers)
         self.tools = tools
@@ -55,24 +66,50 @@ class LocalEngine:
         self._active = set()
         self._inflight = {}
         self._locks = {}
-        self._lock_file = None
-        if store.path != ":memory:":
-            try:
-                import fcntl
-            except ImportError as exc:
+        if coordinator is None:
+            factory = getattr(store, "create_coordinator", None)
+            if factory is None:
                 raise ValidationError(
-                    "File-backed LocalEngine currently requires POSIX file locks"
-                ) from exc
-            self._lock_file = open(str(Path(store.path).resolve()) + ".coordinator", "a+b")
-            try:
-                fcntl.flock(self._lock_file, fcntl.LOCK_EX | fcntl.LOCK_NB)
-            except BlockingIOError as exc:
-                self._lock_file.close()
-                raise CoordinatorBusy("Another coordinator owns this execution database") from exc
-        self._default_memory = SQLiteMemory(store)
-        self.sessions = session_store or self._default_memory
-        self.memory = memory_store or self._default_memory
-        self.context = ContextAssembler()
+                    "Custom execution stores require an explicit coordinator lease"
+                )
+            coordinator = factory()
+        if not all(callable(getattr(coordinator, name, None)) for name in ("acquire", "release")):
+            raise ValidationError("Coordinator must implement acquire and release")
+        self.coordinator = coordinator
+        self.coordinator.acquire()
+        try:
+            self._default_memory = None
+            if session_store is None or memory_store is None:
+                factory = getattr(store, "create_memory", None)
+                if factory is None:
+                    raise ValidationError(
+                        "Custom stores require explicit session_store and memory_store"
+                    )
+                self._default_memory = factory()
+            self.sessions = self._default_memory if session_store is None else session_store
+            self.memory = self._default_memory if memory_store is None else memory_store
+            for backend, methods in (
+                (self.sessions, ("read", "append")),
+                (self.memory, ("facts",)),
+            ):
+                if (
+                    not isinstance(getattr(backend, "backend_id", None), str)
+                    or not backend.backend_id
+                ):
+                    raise ValidationError("Memory backends require a non-empty stable backend_id")
+                if any(not callable(getattr(backend, name, None)) for name in methods):
+                    raise ValidationError("Memory backend does not implement its configured port")
+            self.context = ContextAssembler() if context_assembler is None else context_assembler
+            if (
+                not callable(getattr(self.context, "assemble", None))
+                or not isinstance(getattr(self.context, "identity", None), dict)
+                or not self.context.identity
+            ):
+                raise ValidationError("Context assembler requires identity and assemble")
+            canonical(self.context.identity)
+        except BaseException:
+            self.coordinator.release()
+            raise
 
     def __enter__(self):
         return self
@@ -83,10 +120,10 @@ class LocalEngine:
     def close(self):
         if self._active or any(not task.done() for task in self._inflight.values()):
             raise ValidationError("Finish active drive tasks before closing the coordinator")
-        self.store.close()
-        if self._lock_file is not None:
-            self._lock_file.close()
-            self._lock_file = None
+        try:
+            self.store.close()
+        finally:
+            self.coordinator.release()
 
     def _authorized(self, run_id):
         run = self.store.run(run_id)
@@ -95,26 +132,7 @@ class LocalEngine:
         return run
 
     def status(self, run_id):
-        run = self._authorized(run_id)
-        pending = tuple(
-            {
-                "action_id": action["id"],
-                "digest": action["digest"],
-                "tool": action["tool"],
-                "arguments": copy.deepcopy(action["arguments"]),
-            }
-            for action in run["actions"]
-            if action["status"] == "waiting_approval"
-        )
-        return RunSnapshot(
-            run_id,
-            run["state"],
-            run["revision"],
-            run["result"],
-            run["error"],
-            pending,
-            tuple(run["actions"]),
-        )
+        return RunSnapshot.from_record(self._authorized(run_id))
 
     def events(self, run_id, *, after=0, limit=1000):
         self._authorized(run_id)
@@ -127,16 +145,37 @@ class LocalEngine:
             provider = self.providers.get(step["provider"])
             if provider is None:
                 raise DefinitionMismatch(f"Model provider not configured: {step['provider']}")
+            if not inspect.iscoroutinefunction(getattr(provider, "complete", None)):
+                raise ValidationError("ModelProvider.complete must be an async method")
+            if not isinstance(getattr(provider, "identity", None), dict) or not provider.identity:
+                raise ValidationError("ModelProvider.identity must be a non-empty JSON object")
             providers[step["provider"]] = copy.deepcopy(provider.identity)
             if step["output_schema"] is not None:
                 Draft202012Validator.check_schema(step["output_schema"])
         return {
-            "kernel": "local-1",
+            "kernel": "local-2",
             "tools": self.tools.manifests(names),
             "providers": providers,
             "session_backend": self.sessions.backend_id,
             "memory_backend": self.memory.backend_id,
+            "context_builder": copy.deepcopy(self.context.identity),
         }
+
+    def _assemble_context(self, history, references, max_chars):
+        try:
+            messages, manifest = self.context.assemble(history, references, max_chars)
+        except RalfError:
+            raise
+        except Exception as exc:
+            raise ValidationError("Context assembler failed to build a valid snapshot") from exc
+        if not isinstance(messages, list) or not isinstance(manifest, dict):
+            raise ValidationError("Context assembler must return messages and a JSON manifest")
+        size = len(canonical(messages))
+        if size > max_chars:
+            raise ValidationError("Context assembler exceeded the configured character limit")
+        manifest = {**manifest, "digest": digest(messages), "chars": size}
+        canonical(manifest)
+        return messages, manifest
 
     def submit(self, spec, input, *, command_id, budget=32, session_id=None):
         if isinstance(spec, AgentSpec):
@@ -166,22 +205,15 @@ class LocalEngine:
         }
         # Validate the immutable task before accepting anything.
         canonical(payload)
-        self.context.assemble(
+        self._assemble_context(
             self._initial_messages(definition["steps"][0], input),
             [],
             definition["steps"][0]["max_context_chars"],
         )
 
         def apply():
-            if session_id is not None:
-                for row in self.store.conn.execute("SELECT data FROM runs"):
-                    previous = json.loads(row[0])
-                    if (
-                        previous["scope"] == asdict(self.scope)
-                        and previous["session_id"] == session_id
-                        and previous["state"] not in TERMINAL
-                    ):
-                        raise ValidationError("Session already belongs to an active Run")
+            if session_id is not None and self.store.session_owner(self.scope, session_id):
+                raise ValidationError("Session already belongs to an active Run")
             data = {
                 "id": run_id,
                 "revision": 0,
@@ -343,6 +375,11 @@ class LocalEngine:
             raise CoordinatorBusy("The previous Action is still running; wait for its result")
         lock = self._locks.setdefault(run_id, asyncio.Lock())
         async with lock:
+            # A queued caller may have passed the check between two Actions while
+            # another drive still owned this lock. Recheck before recovery mutates
+            # any attempt: a shielded executor may still be alive after caller cancellation.
+            if run_id in self._inflight and not self._inflight[run_id].done():
+                raise CoordinatorBusy("The previous Action is still running; wait for its result")
             run = self._authorized(run_id)
             if run["state"] in TERMINAL:
                 with self.store.transaction():
@@ -394,7 +431,9 @@ class LocalEngine:
                             None,
                         )
                         if adopted and not adopted["response"]["tool_calls"]:
-                            self._finish_node(run_id, adopted["response"]["output"])
+                            await self._guarded(
+                                run_id, self._finish_node(run_id, adopted["response"]["output"])
+                            )
                         else:
                             if not await self._guarded(run_id, self._model(run_id)):
                                 if self._authorized(run_id)["state"] == "cancelling":
@@ -420,8 +459,10 @@ class LocalEngine:
             self.cancel(run_id, command_id=f"drive-cancel:{uuid.uuid4().hex}")
             raise
 
-    def _finish_node(self, run_id, result):
+    async def _finish_node(self, run_id, result):
         run = self._authorized(run_id)
+        if run["state"] in TERMINAL or run["state"] == "cancelling":
+            return
         step = run["definition"]["steps"][run["node"]]
         if step["output_schema"] is not None:
             if isinstance(result, str):
@@ -431,8 +472,13 @@ class LocalEngine:
                     raise ValidationError("Model output is not valid JSON") from exc
             if not Draft202012Validator(step["output_schema"]).is_valid(result):
                 raise ValidationError("Model output does not match the required Schema")
-        revision, _ = self.sessions.read(self.scope, run["session_id"])
-        self.sessions.append(
+        revision, _ = await memory_call(self.sessions.read, self.scope, run["session_id"])
+        current = self._authorized(run_id)
+        if current["state"] in TERMINAL or current["state"] == "cancelling":
+            return
+        self._check_release(current)
+        await memory_call(
+            self.sessions.append,
             self.scope,
             run["session_id"],
             {"role": "assistant", "content": result, "task": run["input"], "agent": step["name"]},
@@ -475,11 +521,10 @@ class LocalEngine:
             action = existing
             messages = copy.deepcopy(action["snapshot"])
         else:
-            _, session = self.sessions.read(self.scope, run["session_id"])
-            references = self.memory.facts(self.scope, step["name"]) + (
-                [{"session": session}] if session else []
-            )
-            messages, manifest = self.context.assemble(
+            _, session = await memory_call(self.sessions.read, self.scope, run["session_id"])
+            references = await memory_call(self.memory.facts, self.scope, step["name"])
+            references = references + ([{"session": session}] if session else [])
+            messages, manifest = self._assemble_context(
                 run["messages"], references, step["max_context_chars"]
             )
             action = {
@@ -496,6 +541,7 @@ class LocalEngine:
             run = self._authorized(run_id)
             if run["state"] in TERMINAL or run["state"] == "cancelling":
                 return True
+            self._check_release(run)
             if existing is not None:
                 action = next(a for a in run["actions"] if a["id"] == action["id"])
             self.store.reserve(run_id, attempt_id, step["model_credits"])
@@ -511,6 +557,7 @@ class LocalEngine:
             response = await self.providers[step["provider"]].complete(
                 copy.deepcopy(messages), self.tools.descriptions(step["tools"])
             )
+            self._check_release(self._authorized(run_id))
             if not isinstance(response, ModelResponse):
                 raise ValidationError("Model provider must return ModelResponse")
             encoded = asdict(response)
@@ -601,18 +648,36 @@ class LocalEngine:
                 run["error"] = {
                     "code": exc.code if isinstance(exc, RalfError) else "model_call_unknown"
                 }
-                run["state"] = (
-                    "cancelled"
-                    if run["state"] == "cancelling"
-                    else "failed"
-                    if isinstance(exc, (ValidationError, AuthorizationDenied))
-                    else "waiting_reconciliation"
-                )
+                if run["state"] not in TERMINAL:
+                    run["state"] = (
+                        "cancelled"
+                        if run["state"] == "cancelling"
+                        else "failed"
+                        if isinstance(
+                            exc, (ValidationError, AuthorizationDenied, DefinitionMismatch)
+                        )
+                        else "waiting_reconciliation"
+                    )
                 self._commit(run, "model_attempt_unknown", {"action_id": action["id"]})
             return False
 
     def _tool_result(self, run, action, result, receipt):
         canonical(result)
+        if action["status"] == "completed":
+            # Evidence can arrive from a handler, automatic query and operator
+            # concurrently. The first ResultCommit is immutable; later evidence
+            # is retained for audit without remerging the model's tool message.
+            self.store.emit(
+                run["id"],
+                "late_effect_evidence",
+                {
+                    "action_id": action["id"],
+                    "source": receipt["source"],
+                    "result_digest": digest(result),
+                    "matches_committed_result": digest(result) == digest(action["result"]),
+                },
+            )
+            return False
         action["status"] = "completed"
         action["result"] = copy.deepcopy(result)
         action["receipt"] = receipt
@@ -620,11 +685,14 @@ class LocalEngine:
             attempt = action["attempts"][-1]
             attempt["status"] = "completed"
             self.store.settle(
-                attempt["id"], self.tools.get(action["tool"]).spec.cost, {"effect": "confirmed"}
+                attempt["id"],
+                run["manifest"]["tools"][action["tool"]]["cost"],
+                {"effect": "confirmed"},
             )
         run["messages"].append(
             {"role": "tool", "tool_call_id": action["call_id"], "content": canonical(result)}
         )
+        return True
 
     async def _tool(self, run_id, action_id):
         run = self._authorized(run_id)
@@ -636,37 +704,21 @@ class LocalEngine:
         tool.validate(action["arguments"])
         if self.policy is not None:
             self.policy(self.scope, tool.spec, copy.deepcopy(action["arguments"]))
+            self._check_release(self._authorized(run_id))
             run = self._authorized(run_id)
             if run["state"] in TERMINAL or run["state"] == "cancelling":
                 return True
             action = next(a for a in run["actions"] if a["id"] == action_id)
         if tool.spec.effect != "read_only":
-            for row in self.store.conn.execute("SELECT data FROM runs"):
-                previous = json.loads(row[0])
-                if previous["scope"] != run["scope"]:
-                    continue
-                unresolved = next(
-                    (
-                        a
-                        for a in previous["actions"]
-                        if a["kind"] == "tool"
-                        and a["id"] != action_id
-                        and a["tool"] == action["tool"]
-                        and a["status"] in {"outcome_unknown", "executing"}
-                        and a["arguments"] == action["arguments"]
-                    ),
-                    None,
-                )
-                if unresolved:
-                    with self.store.transaction():
-                        run["state"] = "waiting_reconciliation"
-                        run["error"] = {
-                            "code": "prior_effect_unknown",
-                            "run_id": previous["id"],
-                            "action_id": unresolved["id"],
-                        }
-                        self._commit(run, "prior_effect_blocks_write", run["error"])
-                    return False
+            unresolved = self.store.unresolved_effect(
+                self.scope, action["tool"], action["arguments"], action_id
+            )
+            if unresolved:
+                with self.store.transaction():
+                    run["state"] = "waiting_reconciliation"
+                    run["error"] = {"code": "prior_effect_unknown", **unresolved}
+                    self._commit(run, "prior_effect_blocks_write", run["error"])
+                return False
         if tool.spec.requires_approval and not action["approved"]:
             with self.store.transaction():
                 action["status"] = "waiting_approval"
@@ -689,17 +741,21 @@ class LocalEngine:
                     result = await invoke(tool.reconciler, action["arguments"], context)
                 except Exception:
                     result = None
-                if result is not None:
-                    with self.store.transaction():
-                        run = self._authorized(run_id)
-                        action = next(a for a in run["actions"] if a["id"] == action_id)
+                with self.store.transaction():
+                    run = self._authorized(run_id)
+                    action = next(a for a in run["actions"] if a["id"] == action_id)
+                    if action["status"] == "completed":
+                        if result is not None:
+                            self._tool_result(run, action, result, {"source": "tool-reconciler"})
+                        return True
+                    if result is not None:
                         self._tool_result(run, action, result, {"source": "tool-reconciler"})
                         self._commit(run, "effect_reconciled", {"action_id": action_id})
-                    return True
+                        return True
             if tool.spec.effect not in {"read_only", "idempotent_write"}:
                 with self.store.transaction():
                     run = self._authorized(run_id)
-                    if run["state"] != "cancelling":
+                    if run["state"] not in TERMINAL and run["state"] != "cancelling":
                         run["state"] = "waiting_reconciliation"
                     self._commit(run, "effect_unknown", {"action_id": action_id})
                 return False
@@ -708,6 +764,7 @@ class LocalEngine:
             run = self._authorized(run_id)
             if run["state"] == "cancelling" or run["state"] in TERMINAL:
                 return True
+            self._check_release(run)
             action = next(a for a in run["actions"] if a["id"] == action_id)
             self.store.reserve(run_id, attempt_id, tool.spec.cost)
             action["attempts"].append({"id": attempt_id, "status": "executing"})
@@ -730,20 +787,29 @@ class LocalEngine:
             with self.store.transaction():
                 run = self._authorized(run_id)
                 action = next(a for a in run["actions"] if a["id"] == action_id)
-                self._tool_result(
+                committed = self._tool_result(
                     run, action, result, {"source": "tool-handler", "attempt_id": attempt_id}
                 )
-                self._commit(run, "tool_result_committed", {"action_id": action_id})
+                if committed:
+                    self._commit(run, "tool_result_committed", {"action_id": action_id})
             return True
         except Exception:
             with self.store.transaction():
                 run = self._authorized(run_id)
                 action = next(a for a in run["actions"] if a["id"] == action_id)
+                if action["status"] == "completed":
+                    self.store.emit(
+                        run_id,
+                        "late_effect_error",
+                        {"action_id": action_id, "attempt_id": attempt_id},
+                    )
+                    return False
                 action["status"] = "outcome_unknown"
                 action["attempts"][-1]["status"] = "unknown"
                 self.store.mark_unknown(attempt_id)
-                run["state"] = (
-                    "cancelled" if run["state"] == "cancelling" else "waiting_reconciliation"
-                )
+                if run["state"] not in TERMINAL:
+                    run["state"] = (
+                        "cancelled" if run["state"] == "cancelling" else "waiting_reconciliation"
+                    )
                 self._commit(run, "effect_unknown", {"action_id": action_id})
             return False

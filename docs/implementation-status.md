@@ -1,30 +1,31 @@
-# Implementation status — 0.1.0.dev1
+# Implementation status — 0.1.0.dev2
 
-2026-10-05. This is the first M1 increment, not the completed enterprise architecture or a production-ready v0.1 release. Public interfaces are experimental.
+2026-10-05. This is the M1 core preview after the architecture/implementation review, not the completed enterprise architecture or a production-ready v0.1 release. Public interfaces are experimental; the fixed kernel identity is now local-2.
 
 | Capability | Delivered in this increment | Boundary / next work |
 | --- | --- | --- |
 | Native Agent | Model/tool loop, fixed AgentSpec, decision limit, output Schema | One-shot model calls; provider does not run tools |
 | Workflow | Sequential AgentSpec steps with verified result handoff | Branches/parallel/dynamic planning/child Runs pending |
-| Local execution | SQLite journal, asyncio, one POSIX coordinator, OS lock | No Windows coordinator, multi-process pool or distributed scheduler |
+| Local execution | ExecutionStore v1, CoordinatorLease, SQLite reference authority, asyncio, one POSIX coordinator | Store/lease ports require atomicity and ownership conformance; no multi-process pool or distributed scheduler |
 | Commands | Scoped idempotent submit/approve/reject/cancel/reconcile | Local record/apply share transaction; send_input/auth, pending outbox receipts and deadlines pending |
 | Recovery | Adopted response reuse, stable Action IDs, effect intent/result, unknown-write reconciliation | Model response before adoption and independent receipt-before-result need further separation; recovery does not guarantee external exactly-once effects |
 | Effects | Four declared categories; exact-key reconciler; same tool/args unresolved writes block resubmission | Reconciler returns confirmed result or unknown; richer not-executed/in-progress proof pending |
 | Approvals | Persistent pending object, operation digest and explicit local-owner decision | Expiration, resource-level authorization and enterprise actors pending |
 | Budget | Atomic integer execution-credit reservations, per-Attempt settlement, unknown holds | Monetary budgets, shared child-run accounts and hard provider limits pending |
-| Memory | Independent SessionStore/LongTermMemoryStore, SQLite and memory implementations, scoped CAS/TTL facts | Full deletion/export/migration, Redis/PostgreSQL adapters and vector ports pending |
-| Context | Persisted actual message snapshot/manifest, character bound, complete tool-group trimming | Token-aware accounting, large-content offload, automatic summary and source authorization catalog pending |
-| Tools | Trusted Python functions, Schema, fixed manifests/code digest, optional policy/reconciler | Callable objects/partial require a named wrapper; CLI/MCP/HTTP providers, activation lifecycle, sandbox and resource leases pending |
-| Models | Chat Completions Provider, normalized tool calls/usage, redacted errors, no hidden retries | HTTP fixture tests passed; live-provider/model conformance and quality runs pending |
+| Memory | Independent sync/async Session and long-term ports, explicit thread bridge, SQLite/in-memory, scoped CAS/TTL facts | Full namespace/session reads; budgeted recall/pagination, deletion/export/migration, Redis/PostgreSQL/vector adapters pending |
+| Context | Pinned replaceable ContextBuilder, persisted actual snapshot, character bound, complete tool-group trimming, optional memory selection | Token-aware accounting, large-content offload, automatic summary and source authorization catalog pending |
+| Tools | Trusted functions/callable instances/bound methods/partial, detached descriptors, Schema, fixed manifest/code digest, policy/reconciler | Captured state belongs in explicit version/config; CLI/MCP/HTTP providers, lifecycle, sandbox and resource leases pending |
+| Models | Async Provider preflight, dynamic request identity, normalized calls/usage, redacted errors, one-shot built-in HTTP requests | Integrators own injected clients and retries; live-provider/model conformance and quality runs pending |
 | Events | Durable per-Run sequence, stable composite event ID, pagination | Retention/cursor-expiry snapshot, streaming API and OTel pending |
 | Evaluation | Offline runtime regression report and process-crash tests | Live AI task quality, compression fact retention and statistical baseline pending |
 | Temporal | Not delivered | Minimal internal contract probe is remaining M1 work; full backend follows enterprise stage |
 | External Runner | Not delivered | Codex isolated profile in v0.2; other adapters subject to individual conformance |
+| CLI | Custom trusted factory for resume/approve/cancel, version/page size, read-only SQLite status/events | Observation uses default Scope and SQLite; general read API/enterprise identity pending |
 | Enterprise | Not delivered | OIDC, API/console, multi-workspace resource ACL, MQ/A2A, KB/production Oncall and restore exercise remain roadmap |
 
 ## Immediate next increments
 
-1. Separate full model-response persistence from decision adoption and effect receipts from result commits; broaden crash-window tests. Add versioned storage ports and reliable command outcomes.
+1. Separate full model-response persistence from decision adoption and effect receipts from result commits; broaden crash-window tests. Storage v1 is now explicit; migrations, indexed authority queries and complete command outcomes remain.
 2. Complete pending input/deadline/approval expiry, explicit unknown model retry policy and stronger resource lifecycle handling.
 3. Validate real model task completion/tool choice/stopping and context retention against a fixed scenario set; retain the offline regression suite separately.
 4. Run the minimum Temporal contract probe using the same approval/cancel/unknown-effect cases. Do not advertise Temporal support before actual tests pass.
@@ -40,6 +41,6 @@ File-backed coordinator locking currently supports Linux/macOS. The context limi
 
 ## Review disposition
 
-The implementation review found three important issues: cancelling a crashed Run could hide an unresolved effect, scheduled work could overwrite cancellation, and empty/refused/incomplete HTTP responses could be accepted as success. Regression tests first reproduced these failures; the recovery, scheduling and provider fixes now pass. Host policy/memory callbacks are also checked before dispatch and final result commitment.
+The initial review fixed crash/cancel effect loss, scheduled cancellation overrides and empty/refused/incomplete model response success. The second review verified the complete implementation and extension paths, fixed late result/cancellation races, pinned historical settlements, mutable configuration and backend identity, and introduced storage/lease/context/async memory ports. Custom SDK profiles are now resumable through the CLI factory. See the [review report](../architecture/reviews/2026-10-05-runtime-extensibility.md) and [extension guide](extending.md) for evidence, ownership, capability limits and the remaining architectural work.
 
-The minor callable-object registration limitation remains tracked: ordinary named functions are the supported registration form for this increment. Monetary budgets, enterprise authorization, sandbox isolation, Temporal and live-model quality still require their own implementation and validation; the local review does not certify them.
+Callable registration limitations from the initial review are resolved. Monetary budgets, enterprise authorization, sandbox isolation, Temporal and live-model quality still require their own implementation and validation; local review does not certify them. dev1 Runs remain observable/cancellable/reconcilable, but continuation requires their original version and configuration. Automatic Run migration is not supported.

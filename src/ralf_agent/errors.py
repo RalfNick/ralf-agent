@@ -5,7 +5,7 @@ class RalfError(Exception):
     code = "ralf_error"
 
 
-class ValidationError(RalfError):
+class ValidationError(RalfError, ValueError):
     code = "validation_error"
 
 
@@ -35,3 +35,7 @@ class NotFound(RalfError):
 
 class ProviderError(RalfError):
     code = "provider_error"
+
+
+class MemoryBackendError(RalfError):
+    code = "memory_backend_error"

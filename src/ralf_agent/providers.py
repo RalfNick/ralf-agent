@@ -1,6 +1,7 @@
 """One-shot model calls; providers do not execute tools or retry business calls."""
 
 import json
+import math
 import os
 from typing import Protocol
 from urllib.parse import urlsplit
@@ -29,7 +30,28 @@ class OpenAIChatProvider:
         timeout=60,
         client=None,
     ):
-        url = urlsplit(base_url)
+        self.model = model
+        self.api_key = api_key or os.environ.get("OPENAI_API_KEY")
+        if not isinstance(self.api_key, str) or not self.api_key:
+            raise ValidationError("Provide api_key or set OPENAI_API_KEY")
+        self.base_url = base_url.rstrip("/") if isinstance(base_url, str) else base_url
+        self.max_output_tokens = max_output_tokens
+        self.token_parameter = token_parameter
+        self.timeout = timeout
+        self.client = client
+        _ = self.identity  # Validate before an engine accepts this provider.
+
+    @property
+    def identity(self):
+        """A fresh identity of the same configuration used for actual requests."""
+        if not isinstance(self.model, str) or not self.model.strip():
+            raise ValidationError("Model must be a non-empty string")
+        if not isinstance(self.base_url, str):
+            raise ValidationError("Base URL must be HTTP(S) without embedded credentials or query")
+        try:
+            url = urlsplit(self.base_url)
+        except ValueError as exc:
+            raise ValidationError("Invalid model provider base URL") from exc
         if (
             url.scheme not in {"http", "https"}
             or not url.netloc
@@ -40,52 +62,52 @@ class OpenAIChatProvider:
         ):
             raise ValidationError("Base URL must be HTTP(S) without embedded credentials or query")
         if (
-            token_parameter not in {"max_tokens", "max_completion_tokens"}
-            or type(max_output_tokens) is not int
-            or max_output_tokens < 1
+            not isinstance(self.token_parameter, str)
+            or self.token_parameter not in {"max_tokens", "max_completion_tokens"}
+            or type(self.max_output_tokens) is not int
+            or self.max_output_tokens < 1
         ):
             raise ValidationError("Invalid output token configuration")
-        self.model = model
-        self.api_key = api_key or os.environ.get("OPENAI_API_KEY")
-        if not self.api_key:
-            raise ValidationError("Provide api_key or set OPENAI_API_KEY")
-        self.base_url = base_url.rstrip("/")
-        self.max_output_tokens = max_output_tokens
-        self.token_parameter = token_parameter
-        self.timeout = timeout
-        self.client = client
-        self.identity = {
+        if self.timeout is not None and (
+            type(self.timeout) not in {int, float}
+            or not math.isfinite(self.timeout)
+            or self.timeout <= 0
+        ):
+            raise ValidationError("Timeout must be positive finite seconds or None")
+        return {
             "kind": "openai-chat-completions",
             "version": "1",
-            "model": model,
+            "model": self.model,
             "base_url": self.base_url,
-            "max_output_tokens": max_output_tokens,
-            "token_parameter": token_parameter,
+            "max_output_tokens": self.max_output_tokens,
+            "token_parameter": self.token_parameter,
+            "timeout": self.timeout,
         }
 
     async def complete(self, messages, tools):
+        configuration = self.identity
         body = {
-            "model": self.model,
+            "model": configuration["model"],
             "messages": messages,
-            self.token_parameter: self.max_output_tokens,
+            configuration["token_parameter"]: configuration["max_output_tokens"],
         }
         if tools:
             body["tools"] = tools
         try:
             if self.client is not None:
                 response = await self.client.post(
-                    self.base_url + "/chat/completions",
+                    configuration["base_url"].rstrip("/") + "/chat/completions",
                     headers={"Authorization": f"Bearer {self.api_key}"},
                     json=body,
-                    timeout=self.timeout,
+                    timeout=configuration["timeout"],
                 )
             else:
                 async with httpx.AsyncClient(follow_redirects=False) as client:
                     response = await client.post(
-                        self.base_url + "/chat/completions",
+                        configuration["base_url"].rstrip("/") + "/chat/completions",
                         headers={"Authorization": f"Bearer {self.api_key}"},
                         json=body,
-                        timeout=self.timeout,
+                        timeout=configuration["timeout"],
                     )
             if not 200 <= response.status_code < 300:
                 raise ProviderError(f"Model provider returned HTTP {response.status_code}")
