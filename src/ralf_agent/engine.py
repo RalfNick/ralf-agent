@@ -260,13 +260,18 @@ class LocalEngine:
 
         def apply():
             run = self._authorized(run_id)
+            active = run_id in self._active or (
+                run_id in self._inflight and not self._inflight[run_id].done()
+            )
+            if not active and self._normalize_abandoned(run):
+                self._commit(run, "abandoned_attempts_unknown")
             if run["state"] in {"succeeded", "failed"}:
                 return {"rejected": True, "reason": "too_late"}
             if run["state"] in {"cancelled", "cancelling"}:
                 return {
                     "reason": "already_terminal" if run["state"] == "cancelled" else "applied_noop"
                 }
-            run["state"] = "cancelling" if run_id in self._active else "cancelled"
+            run["state"] = "cancelling" if active else "cancelled"
             self.store.save_run(run)
             self.store.emit(run_id, "cancel_applied", {"state": run["state"]})
             return {"state_revision": run["revision"]}
@@ -315,6 +320,16 @@ class LocalEngine:
         self.store.save_run(run)
         self.store.emit(run["id"], kind, data)
 
+    def _normalize_abandoned(self, run):
+        changed = False
+        for action in run["actions"]:
+            if action["status"] == "executing":
+                action["status"] = "outcome_unknown"
+                action["attempts"][-1]["status"] = "unknown"
+                self.store.mark_unknown(action["attempts"][-1]["id"])
+                changed = True
+        return changed
+
     def _fail(self, run_id, code):
         with self.store.transaction():
             run = self._authorized(run_id)
@@ -330,17 +345,16 @@ class LocalEngine:
         async with lock:
             run = self._authorized(run_id)
             if run["state"] in TERMINAL:
+                with self.store.transaction():
+                    if self._normalize_abandoned(run):
+                        self._commit(run, "abandoned_attempts_unknown")
                 return self.status(run_id)
             self._check_release(run)
             self._active.add(run_id)
             try:
                 with self.store.transaction():
                     run = self._authorized(run_id)
-                    for action in run["actions"]:
-                        if action["status"] == "executing":
-                            action["status"] = "outcome_unknown"
-                            action["attempts"][-1]["status"] = "unknown"
-                            self.store.mark_unknown(action["attempts"][-1]["id"])
+                    self._normalize_abandoned(run)
                     if run["state"] != "cancelling":
                         run["state"] = "running"
                     self._commit(run, "run_resumed")
@@ -365,6 +379,8 @@ class LocalEngine:
                     )
                     if pending:
                         if not await self._guarded(run_id, self._tool(run_id, pending["id"])):
+                            if self._authorized(run_id)["state"] == "cancelling":
+                                continue
                             break
                     else:
                         adopted = next(
@@ -381,6 +397,8 @@ class LocalEngine:
                             self._finish_node(run_id, adopted["response"]["output"])
                         else:
                             if not await self._guarded(run_id, self._model(run_id)):
+                                if self._authorized(run_id)["state"] == "cancelling":
+                                    continue
                                 break
                 return self.status(run_id)
             except RalfError as exc:
@@ -423,6 +441,8 @@ class LocalEngine:
         )
         with self.store.transaction():
             run = self._authorized(run_id)
+            if run["state"] in TERMINAL or run["state"] == "cancelling":
+                return
             run["node"] += 1
             if run["node"] == len(run["definition"]["steps"]):
                 run["state"] = "succeeded"
@@ -437,6 +457,8 @@ class LocalEngine:
 
     async def _model(self, run_id):
         run = self._authorized(run_id)
+        if run["state"] in TERMINAL or run["state"] == "cancelling":
+            return True
         step = run["definition"]["steps"][run["node"]]
         existing = next(
             (
@@ -471,6 +493,11 @@ class LocalEngine:
             }
         attempt_id = f"{action['id']}:{len(action['attempts']) + 1}"
         with self.store.transaction():
+            run = self._authorized(run_id)
+            if run["state"] in TERMINAL or run["state"] == "cancelling":
+                return True
+            if existing is not None:
+                action = next(a for a in run["actions"] if a["id"] == action["id"])
             self.store.reserve(run_id, attempt_id, step["model_credits"])
             action["attempts"].append({"id": attempt_id, "status": "executing"})
             action["status"] = "executing"
@@ -601,12 +628,18 @@ class LocalEngine:
 
     async def _tool(self, run_id, action_id):
         run = self._authorized(run_id)
+        if run["state"] in TERMINAL or run["state"] == "cancelling":
+            return True
         action = next(a for a in run["actions"] if a["id"] == action_id)
         tool = self.tools.get(action["tool"])
         self._check_release(run)
         tool.validate(action["arguments"])
         if self.policy is not None:
             self.policy(self.scope, tool.spec, copy.deepcopy(action["arguments"]))
+            run = self._authorized(run_id)
+            if run["state"] in TERMINAL or run["state"] == "cancelling":
+                return True
+            action = next(a for a in run["actions"] if a["id"] == action_id)
         if tool.spec.effect != "read_only":
             for row in self.store.conn.execute("SELECT data FROM runs"):
                 previous = json.loads(row[0])
@@ -619,7 +652,7 @@ class LocalEngine:
                         if a["kind"] == "tool"
                         and a["id"] != action_id
                         and a["tool"] == action["tool"]
-                        and a["status"] == "outcome_unknown"
+                        and a["status"] in {"outcome_unknown", "executing"}
                         and a["arguments"] == action["arguments"]
                     ),
                     None,

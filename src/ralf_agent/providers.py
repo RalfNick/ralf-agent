@@ -90,13 +90,41 @@ class OpenAIChatProvider:
             if not 200 <= response.status_code < 300:
                 raise ProviderError(f"Model provider returned HTTP {response.status_code}")
             data = response.json()
-            message = data["choices"][0]["message"]
+            if not isinstance(data, dict):
+                raise ValueError("Response must be an object")
+            choice = data["choices"][0]
+            message = choice["message"]
+            if not isinstance(message, dict) or message.get("role", "assistant") != "assistant":
+                raise ValueError("Unsupported message shape")
+            if message.get("refusal") is not None or (
+                "finish_reason" in choice and choice["finish_reason"] not in {"stop", "tool_calls"}
+            ):
+                raise ProviderError("Model response was refused or incomplete")
+            native_calls = message.get("tool_calls") or []
+            if not isinstance(native_calls, list):
+                raise ValueError("Tool calls must be a list")
             calls = []
-            for call in message.get("tool_calls") or []:
+            for call in native_calls:
+                if (
+                    not isinstance(call, dict)
+                    or not isinstance(call.get("id"), str)
+                    or not call["id"]
+                    or not isinstance(call.get("function"), dict)
+                ):
+                    raise ValueError("Invalid tool-call identity")
+                if (
+                    not isinstance(call["function"].get("name"), str)
+                    or not call["function"]["name"]
+                ):
+                    raise ValueError("Invalid tool name")
                 arguments = json.loads(call["function"]["arguments"])
                 if not isinstance(arguments, dict):
                     raise ValueError("Tool arguments must be an object")
                 calls.append(ToolCall(call["function"]["name"], arguments, call["id"]))
+            if not calls and (
+                not isinstance(message.get("content"), str) or not message["content"].strip()
+            ):
+                raise ProviderError("Model response contained no final content or tool calls")
             usage = data.get("usage")
             if usage is not None:
                 usage = {

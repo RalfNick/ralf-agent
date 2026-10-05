@@ -33,10 +33,10 @@
 
 **Interfaces:** ToolSpec/ToolRegistry; SQLiteStore.transaction(), command(), run(), events(), reserve(), settle(); Scope and CommandReceipt. Amounts are non-negative integer credits. Command keys are scoped by workspace and principal.
 
-- [ ] Write behavioral tests for idempotent budget reservations, concurrent reservations, unknown occupancy and command conflicts.
-- [ ] Run `python3 -m pytest tests/test_storage.py -q`: expected missing-package/feature failure before implementation.
-- [ ] Implement typed definitions and SQL constraints/BEGIN IMMEDIATE transactions; no external I/O inside a transaction.
-- [ ] Run the storage tests: expected all pass. Commit the tested domain and storage unit.
+- [x] Write behavioral tests for idempotent budget reservations, concurrent reservations, unknown occupancy and command conflicts.
+- [x] Run `python3 -m pytest tests/test_storage.py -q`: expected missing-package/feature failure before implementation.
+- [x] Implement typed definitions and SQL constraints/BEGIN IMMEDIATE transactions; no external I/O inside a transaction.
+- [x] Run the storage tests: expected all pass. Commit the tested domain and storage unit.
 
 Representative contract:
 
@@ -54,10 +54,10 @@ assert store.budget("run-1")["held"] == 2
 
 **Interfaces:** LocalEngine(store, providers, tools, scope, session_store, memory_store); submit(AgentSpec|WorkflowSpec, input, command_id) -> RunHandle; async drive(run_id) -> RunSnapshot; approve(), cancel(), reconcile(); close(). Providers implement identity and async complete(messages, tools) -> ModelResponse.
 
-- [ ] Write tests using actual SQLite: approval survives reopening, adopted response is reused, terminal cancellation races, unknown writes, schema validation, sequential workflow and fixed-release recovery.
-- [ ] Run `python3 -m pytest tests/test_engine.py -q`: expected missing Engine behavior.
-- [ ] Implement immutable decision/action snapshots, stable identities, serialized command commits and safe recovery; recoverable provider retries keep prior usage unknown.
-- [ ] Run the complete current suite: expected all pass. Commit the native loop.
+- [x] Write tests using actual SQLite: approval survives reopening, adopted response is reused, terminal cancellation races, unknown writes, schema validation, sequential workflow and fixed-release recovery.
+- [x] Run `python3 -m pytest tests/test_engine.py -q`: expected missing Engine behavior.
+- [x] Implement immutable decision/action snapshots, stable identities, serialized command commits and safe recovery; recoverable provider retries keep prior usage unknown.
+- [x] Run the complete current suite: expected all pass. Commit the native loop.
 
 Representative recovery contract:
 
@@ -75,10 +75,10 @@ engine.close()
 
 **Interfaces:** SessionStore and LongTermMemoryStore protocols; SQLiteMemory and InMemoryMemory; OpenAIChatProvider(identity, complete). HTTP client injectable, hidden business retries disabled.
 
-- [ ] Write tests for scoped reads, CAS fact updates, expiration, namespace isolation, tool-call normalization, invalid responses and redacted provider errors.
-- [ ] Run the focused files: expected missing memory/provider features.
-- [ ] Implement storage adapters and Chat Completions provider; keys stay outside persisted definitions and errors.
-- [ ] Run all tests: expected pass. Commit memory/provider implementations.
+- [x] Write tests for scoped reads, CAS fact updates, expiration, namespace isolation, tool-call normalization, invalid responses and redacted provider errors.
+- [x] Run the focused files: expected missing memory/provider features.
+- [x] Implement storage adapters and Chat Completions provider; keys stay outside persisted definitions and errors.
+- [x] Run all tests: expected pass. Commit memory/provider implementations.
 
 ## Task 4: CLI, sample and process-crash verification
 
@@ -86,16 +86,16 @@ engine.close()
 
 **Interfaces:** ralf demo/status/events/approve/resume/cancel; --db selects execution database. Demo business service has its own SQLite receipt table keyed by effect_key; the scripted provider is explicitly offline, not an AI quality benchmark.
 
-- [ ] Write subprocess tests for separate submit/approve/resume commands and os._exit immediately after a downstream business commit.
-- [ ] Run tests: expected missing CLI/process behavior.
-- [ ] Implement commands with JSON output, typed error exit codes and no automatic approval. Add runnable SDK sample.
-- [ ] Run complete suite and the documented demo: expected one approved business write and stable run identity after restart. Commit CLI/sample.
+- [x] Write subprocess tests for separate submit/approve/resume commands and os._exit immediately after a downstream business commit.
+- [x] Run tests: expected missing CLI/process behavior.
+- [x] Implement commands with JSON output, typed error exit codes and no automatic approval. Add runnable SDK sample.
+- [x] Run complete suite and the documented demo: expected one approved business write and stable run identity after restart. Commit CLI/sample.
 
 ## Task 5: Open-source packaging, evaluation and verification
 
 **Files:** README.md, LICENSE, CONTRIBUTING.md, docs/implementation-status.md, examples/evaluate.py, .github/workflows/ci.yml.
 
-- [ ] Add offline scenario evaluation reporting completion, approved write count, budget and recovery; distinguish runtime regression metrics from live-model AI quality.
-- [ ] Document install/use, extension interfaces, actual supported capabilities and remaining M1 work including Temporal probe.
-- [ ] Run `python3 -m pytest -q`, `python3 -m ruff check .`, `python3 -m ruff format --check .`, `python3 -m build` and installed-wheel CLI checks: expected pass.
-- [ ] Review the whole change against spec and these five Review Focus cases, fix important findings with regression tests, then commit verified work. Do not push a shared remote branch without an explicit request.
+- [x] Add offline scenario evaluation reporting completion, approved write count, budget and recovery; distinguish runtime regression metrics from live-model AI quality.
+- [x] Document install/use, extension interfaces, actual supported capabilities and remaining M1 work including Temporal probe.
+- [x] Run `python3 -m pytest -q`, `python3 -m ruff check .`, `python3 -m ruff format --check .`, `python3 -m build` and installed-wheel CLI checks: expected pass.
+- [x] Review the whole change against spec and these five Review Focus cases, fix important findings with regression tests, then commit verified work. Do not push a shared remote branch without an explicit request.

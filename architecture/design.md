@@ -2,9 +2,9 @@
 
 版本：0.2（架构 review 合并版；文档版本独立于产品版本）  
 日期：2026-10-05（Asia/Shanghai）  
-状态：架构设计；以下接口、后端与交付项是实施目标，尚未实现。  
+状态：完整架构目标；当前已交付的 v0.1 开发增量及剩余工作见 [实现状态](../docs/implementation-status.md)，不宣称以下能力已全部实现。
 读者：项目维护者、SDK 开发者、架构师与企业实施团队。  
-项目名称：RALF 暂用当前工作目录名称，不绑定最终品牌。
+项目名称：Ralf-Agent；RALF 表示 Reliable Agent Lifecycle Framework。仓库：[RalfNick/ralf-agent](https://github.com/RalfNick/ralf-agent)。
 
 ## 1. 项目定位与已确定决策
 

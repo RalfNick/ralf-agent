@@ -79,6 +79,29 @@ def test_invalid_provider_responses_fail_before_tools_can_run(body):
     asyncio.run(exercise())
 
 
+@pytest.mark.parametrize(
+    "choice",
+    [
+        {"message": {}},
+        {"message": {"content": None, "refusal": "Cannot comply"}},
+        {"message": {"content": "partial"}, "finish_reason": "length"},
+        {"message": {"tool_calls": [{"id": 1, "function": {"name": "x", "arguments": "{}"}}]}},
+    ],
+)
+def test_empty_refused_incomplete_or_invalid_calls_do_not_become_success(choice):
+    async def exercise():
+        async with httpx.AsyncClient(
+            transport=httpx.MockTransport(
+                lambda request: httpx.Response(200, json={"choices": [choice]})
+            )
+        ) as client:
+            provider = OpenAIChatProvider("test", api_key="secret", client=client)
+            with pytest.raises(ProviderError):
+                await provider.complete([], [])
+
+    asyncio.run(exercise())
+
+
 def test_provider_failure_does_not_leak_upstream_error_or_key():
     async def exercise():
         async with httpx.AsyncClient(

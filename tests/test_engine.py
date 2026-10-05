@@ -4,6 +4,7 @@ import pytest
 
 from ralf_agent import (
     AgentSpec,
+    InMemoryMemory,
     LocalEngine,
     ModelResponse,
     Scope,
@@ -43,6 +44,102 @@ def registry(handler, *, effect="unqueryable_write", approval=True, reconciler=N
 
 def engine(path, provider, tools, **kwargs):
     return LocalEngine(SQLiteStore(path), providers={"default": provider}, tools=tools, **kwargs)
+
+
+def test_cancel_in_model_scheduling_window_prevents_provider_dispatch(tmp_path):
+    async def exercise():
+        provider = ScriptedProvider([ModelResponse(output="should not run")])
+        with engine(tmp_path / "runs.db", provider, ToolRegistry()) as runtime:
+            run = runtime.submit(AgentSpec("a", "x"), "x", command_id="s")
+            drive = asyncio.create_task(runtime.drive(run.run_id))
+            await asyncio.sleep(0)
+            runtime.cancel(run.run_id, command_id="cancel")
+            await drive
+            assert runtime.status(run.run_id).state == "cancelled"
+            assert provider.calls == 0
+
+    asyncio.run(exercise())
+
+
+@pytest.mark.parametrize("delay", range(6))
+def test_cancel_cannot_be_overwritten_by_scheduled_approval_wait(tmp_path, delay):
+    async def change(args, ctx):
+        return args
+
+    async def exercise():
+        with engine(
+            tmp_path / "runs.db", ScriptedProvider([tool_response()]), registry(change)
+        ) as runtime:
+            run = runtime.submit(AgentSpec("a", "x", ("change",)), "x", command_id="s")
+            drive = asyncio.create_task(runtime.drive(run.run_id))
+            for _ in range(100):
+                if any(e.kind == "decision_adopted" for e in runtime.events(run.run_id)):
+                    break
+                await asyncio.sleep(0)
+            else:
+                pytest.fail("Model decision was not adopted")
+            for _ in range(delay):
+                await asyncio.sleep(0)
+            runtime.cancel(run.run_id, command_id="cancel")
+            await drive
+            assert runtime.status(run.run_id).state == "cancelled"
+
+    asyncio.run(exercise())
+
+
+@pytest.mark.parametrize("approval", [True, False])
+def test_host_policy_cancellation_prevents_approval_or_dispatch(tmp_path, approval):
+    effects = []
+
+    def change(args, ctx):
+        effects.append(ctx.effect_key)
+        return args
+
+    def policy(scope, spec, arguments):
+        runtime.cancel(run.run_id, command_id="policy-cancel")
+
+    with engine(
+        tmp_path / "policy.db",
+        ScriptedProvider([tool_response()]),
+        registry(change, approval=approval),
+        policy=policy,
+    ) as runtime:
+        run = runtime.submit(AgentSpec("a", "x", ("change",)), "x", command_id="s")
+        snapshot = asyncio.run(runtime.drive(run.run_id))
+        assert snapshot.state == "cancelled"
+        assert snapshot.error is None
+        assert not snapshot.pending
+        assert effects == []
+
+
+@pytest.mark.parametrize("stage", ["context", "result"])
+def test_memory_callback_cancellation_cannot_be_overwritten(tmp_path, stage):
+    class CancellingMemory(InMemoryMemory):
+        def facts(self, scope, namespace):
+            if stage == "context":
+                runtime.cancel(run.run_id, command_id="memory-cancel")
+            return super().facts(scope, namespace)
+
+        def append(self, scope, session_id, message, **kwargs):
+            if stage == "result":
+                runtime.cancel(run.run_id, command_id="memory-cancel")
+            return super().append(scope, session_id, message, **kwargs)
+
+    memory = CancellingMemory(backend_id="test:cancel-memory")
+    provider = ScriptedProvider([ModelResponse(output="completed")])
+    with engine(
+        tmp_path / "memory.db",
+        provider,
+        ToolRegistry(),
+        session_store=memory,
+        memory_store=memory,
+    ) as runtime:
+        run = runtime.submit(AgentSpec("a", "x"), "x", command_id="s")
+        snapshot = asyncio.run(runtime.drive(run.run_id))
+        assert snapshot.state == "cancelled"
+        assert snapshot.result is None
+        assert snapshot.error is None
+        assert provider.calls == (0 if stage == "context" else 1)
 
 
 def test_approval_and_adopted_decision_survive_restart(tmp_path):
