@@ -4,6 +4,7 @@ import asyncio
 import copy
 import inspect
 import json
+import math
 import threading
 import time
 import uuid
@@ -13,6 +14,21 @@ from typing import Protocol
 from .errors import IdempotencyConflict, MemoryBackendError, RalfError, ValidationError
 from .storage import SQLiteStore
 from .types import Scope, canonical
+
+
+def _validate_expires_at(expires_at):
+    """Normalize optional Unix seconds before either backend changes a fact."""
+    if expires_at is None:
+        return None
+    if isinstance(expires_at, bool) or not isinstance(expires_at, (int, float)):
+        raise ValidationError("expires_at must be a finite int or float Unix timestamp, or None")
+    try:
+        timestamp = float(expires_at)
+    except OverflowError as exc:
+        raise ValidationError("expires_at must be a finite Unix timestamp") from exc
+    if not math.isfinite(timestamp):
+        raise ValidationError("expires_at must be a finite Unix timestamp")
+    return timestamp
 
 
 class SessionStore(Protocol):
@@ -172,6 +188,7 @@ class InMemoryMemory:
             ]
 
     def put_fact(self, scope, namespace, key, value, *, expected_version, expires_at=None):
+        expires_at = _validate_expires_at(expires_at)
         canonical(value)
         identity = (scope.workspace, scope.principal, namespace, key)
         with self._lock:
@@ -247,6 +264,7 @@ class SQLiteMemory:
         ]
 
     def put_fact(self, scope, namespace, key, value, *, expected_version, expires_at=None):
+        expires_at = _validate_expires_at(expires_at)
         with self.store.transaction():
             row = self.store.conn.execute(
                 "SELECT version FROM memory_facts WHERE workspace=? AND principal=? AND namespace=? AND key=?",

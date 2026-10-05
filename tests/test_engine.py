@@ -429,7 +429,8 @@ def test_queued_driver_rechecks_live_attempt_after_acquiring_run_lock(tmp_path, 
             finally:
                 release.set()
                 for _ in range(100):
-                    if runtime._inflight[run.run_id].done():
+                    task = runtime._inflight.get(run.run_id)
+                    if task is None or task.done():
                         break
                     await asyncio.sleep(0)
                 else:

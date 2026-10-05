@@ -2,6 +2,7 @@
 
 import json
 import sqlite3
+import stat
 import uuid
 from contextlib import contextmanager
 from pathlib import Path
@@ -12,25 +13,29 @@ from .types import CommandReceipt, RunEvent, canonical, credits, digest
 
 class SQLiteStore:
     def __init__(self, path, *, readonly=False):
-        self.path = str(path)
+        # Resolve once: a later chdir or an input symlink must not move the WAL,
+        # backend identity, or coordinator away from this execution database.
+        self.path = ":memory:" if str(path) == ":memory:" else str(Path(path).resolve())
         self.readonly = readonly
         self.backend_id = (
             f"sqlite-memory:{uuid.uuid4().hex}"
             if self.path == ":memory:"
-            else f"sqlite:{Path(self.path).resolve()}"
+            else f"sqlite:{self.path}"
         )
         self._coordinator = None
+        self._path_identity = self._file_identity(required=False)
         if readonly:
-            if self.path == ":memory:" or not Path(self.path).is_file():
+            if self.path == ":memory:" or self._path_identity is None:
                 raise NotFound("Execution database not found; submit a Run first")
             self.conn = sqlite3.connect(
-                Path(self.path).resolve().as_uri() + "?mode=ro",
+                Path(self.path).as_uri() + "?mode=ro",
                 uri=True,
                 isolation_level=None,
                 timeout=10,
             )
             self.conn.row_factory = sqlite3.Row
             try:
+                self._assert_file_identity()
                 row = self.conn.execute(
                     "SELECT value FROM metadata WHERE key='schema_version'"
                 ).fetchone()
@@ -44,6 +49,13 @@ class SQLiteStore:
             Path(self.path).parent.mkdir(parents=True, exist_ok=True)
         self.conn = sqlite3.connect(self.path, isolation_level=None, timeout=10)
         self.conn.row_factory = sqlite3.Row
+        try:
+            # Check again after creation/open and before SQLite may attach WAL.
+            # Hard-linked names share the main file but not their WAL sidecars.
+            self._assert_file_identity()
+        except BaseException:
+            self.close()
+            raise
         self.conn.execute("PRAGMA journal_mode=WAL")
         self.conn.execute("PRAGMA synchronous=FULL")
         self.conn.executescript("""
@@ -61,6 +73,29 @@ class SQLiteStore:
             raise ValidationError("Unsupported execution database Schema")
         self.conn.execute("INSERT OR IGNORE INTO metadata VALUES ('schema_version','1')")
 
+    def _file_identity(self, *, required=True):
+        if self.path == ":memory:":
+            return None
+        try:
+            info = Path(self.path).lstat()
+        except FileNotFoundError as exc:
+            if not required:
+                return None
+            raise ValidationError("Execution database file identity changed") from exc
+        if not stat.S_ISREG(info.st_mode):
+            raise ValidationError("Execution database must be a regular file")
+        if info.st_nlink != 1:
+            raise ValidationError(
+                "Execution database hard links are unsupported; use one file path"
+            )
+        return info.st_dev, info.st_ino
+
+    def _assert_file_identity(self):
+        identity = self._file_identity()
+        if self._path_identity is not None and identity != self._path_identity:
+            raise ValidationError("Execution database file identity changed")
+        self._path_identity = identity
+
     def __enter__(self):
         return self
 
@@ -75,11 +110,14 @@ class SQLiteStore:
 
         if self.readonly:
             raise ValidationError("Observation stores cannot own an execution coordinator")
+        self._assert_file_identity()
         if self._coordinator is None:
             self._coordinator = (
                 InProcessCoordinator()
                 if self.path == ":memory:"
-                else FileCoordinator(str(Path(self.path).resolve()) + ".coordinator")
+                else FileCoordinator(
+                    self.path + ".coordinator", resource_validator=self._assert_file_identity
+                )
             )
         return self._coordinator
 
@@ -94,6 +132,7 @@ class SQLiteStore:
     def transaction(self):
         if self.readonly:
             raise ValidationError("Execution database was opened for observation only")
+        self._assert_file_identity()
         if self.conn.in_transaction:
             yield
             return

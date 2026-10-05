@@ -1,19 +1,19 @@
 # Ralf-Agent 扩展指南
 
-版本：0.1.0.dev2；日期：2026-10-05。面向 SDK／适配器开发者。本指南描述已经运行的 Local 端口；企业适配仍按 [实现清单](implementation-status.md) 分期。
+版本：0.1.0.dev3；日期：2026-10-05。面向 SDK／适配器开发者。本指南描述已经运行的 Local 端口；企业适配仍按 [实现清单](implementation-status.md) 分期。
 
 ## 1. 装配组件
 
 | 扩展点 | 注入位置 | 必须满足的约束 |
 | --- | --- | --- |
-| ModelProvider | `providers={name: provider}` | `identity` 非空有限 JSON；`async complete` 返回 ModelResponse；不执行工具 |
+| ModelProvider | `providers={name: provider}` | `identity` 非空有限 JSON；`async complete` 返回 ModelResponse；最终输出在公共采纳边界校验，不执行工具 |
 | 工具与核验 | `tools=ToolRegistry()` | 参数 Schema、效果类别、version/config、稳定幂等键；单次调用不隐藏业务重试 |
 | SessionStore／AsyncSessionStore | `session_store=` | `backend_id`、read、append；CAS 与 message_id 去重同时成立 |
 | LongTermMemoryStore／AsyncLongTermMemoryStore | `memory_store=` | `backend_id`、facts、put_fact；范围、版本及到期语义一致 |
 | ContextBuilder | `context_assembler=` | identity 与确定性 assemble；返回实际消息和 JSON Manifest |
 | ExecutionStore v1 | 第一个构造参数 | 原子命令／事务、Run CAS、事件、预算、活跃 Session 和未知效果查询；不另建调度器 |
 | CoordinatorLease | `coordinator=` | 同一执行权威只允许一个持有者，活跃调用结束前不能交出归属 |
-| 当前工具授权 | `policy=` | 可信宿主同步授权函数；失败抛 AuthorizationDenied，不自行提交运行状态 |
+| 当前工具授权 | `policy=` | 可信宿主同步授权函数；异步／惰性函数或返回值明确拒绝，否决抛 AuthorizationDenied |
 
 默认 `LocalEngine(SQLiteStore(path), ...)` 会创建 POSIX 文件租约和共享 SQLite 记忆。自定义存储通过端口接入，不需要 `.conn`／`.path`；同时显式注入 `coordinator`、`session_store`、`memory_store`。当前 ExecutionStore 方法是 Coordinator 线程内的同步事务操作；远程数据库需单独验证延迟、原子性和失败语义。
 
@@ -38,29 +38,33 @@ from ralf_agent import ThreadedMemoryAdapter
 
 `read(scope, session_id)` 返回 `(revision, messages)`；`append(..., expected_revision, message_id)` 使用比较交换，并在重复 message_id 时返回原提交，不同内容则冲突。会话消息、长期事实与执行状态分别存储，替换记忆不会替换审批／效果／预算日志。
 
+`expires_at` 使用 Unix 秒，仅接受 `None` 或可表示为有限浮点数的 int／float；`None` 表示永不过期，过去时间合法，NaN／无穷／布尔／字符串等在写入前拒绝，不改变 CAS 版本。
+
 `facts(scope, namespace)` 只返回当前 Scope 下未过期的已确认事实；`put_fact(..., expected_version)` 不静默覆盖其他写入。当前是全量 namespace／会话读取，下一步需要预算化 RecallQuery／分页；向量检索和来源授权尚未作为代码端口发布。Redis、PostgreSQL、向量数据库不因接口存在就被列为已支持。
 
 ## 3. 身份与不可变发布
 
 identity／backend_id 表达端点、数据库／namespace、模型、版本及影响行为的非秘密配置。不要存入 API key、连接凭据或用户隐私。独立内存实例默认具有不同身份；人为指定同一身份时，使用者负责后端语义保持一致。
 
-工具实例状态、partial 绑定参数、闭包和外部依赖不会自动序列化；改变它们时同步更新 `ToolSpec.version/config` 并构造新的 Registry。Provider／ContextBuilder／记忆的 identity 应反映实际当前配置。内核在恢复、异步装配后的派发、模型响应采纳及工具授权后复核固定发布。
+工具实例状态、partial 绑定参数、闭包和外部依赖不会自动序列化；改变它们时同步更新 `ToolSpec.version/config` 并构造新的 Registry。Provider／ContextBuilder／记忆的 identity 应反映实际当前配置。内核在恢复、异步装配后的派发、模型响应采纳、工具授权后，以及最终会话写入完成后、提交节点／Run 成功前复核固定发布。会话读取和保存固定使用同一执行组件；若适配器在等待期间更换实际后端，Run 失败，已发生的外部写入仍可能存在。
+
+没有工具提案的 ModelResponse 必须给出完整最终结果：缺少输出或空白文本会在采纳前拒绝；False、0、空对象／数组属于合法 JSON。配置输出 Schema 时，文本按 JSON 解析后再校验；Schema 允许 null 时可返回 None 或 JSON null，编码后的空白文本仍拒绝。
 
 Registry 的 Schema/config 描述是独立副本，policy 可以读取它们；修改副本不会改变登记的工具或原审批。核验历史未知效果使用原 Manifest 成本，不要求当前工具仍注册。
 
 ## 4. 存储及租约
 
-ExecutionStore 的 `run()` 返回与底层记录分离的 JSON 快照；`save_run()` 原子比较 revision，只在成功时更新传入 revision。`command()` 的 apply、Run／事件／预算及回执在同一原子事务中提交。事务中不能 await 外部 I/O。
+ExecutionStore 的 `run()` 返回与底层记录分离的 JSON 快照；`save_run()` 原子比较 revision，只在成功时更新传入 revision。`command()` 的 apply、Run／事件／预算及回执在同一原子事务中提交。submit 的摘要只包含调用方的 definition、input、budget 和 session_id；回执去重先于当前 Provider／工具／记忆／上下文配置解析，首次接受才固定 Release。相同请求重提不更新原发布、事件或预算，不同请求保持 idempotency_conflict。事务中不能 await 外部 I/O。
 
 `session_owner()` 和 `unresolved_effect()` 必须按可信 Scope 查询当前权威事实，在同一事务内与提交保持一致。当前 SQLite 实现扫描聚合记录；企业实现需要索引、保留与数据迁移方案，这仍是后续工作。
 
-`FileCoordinator` 使用数据库解析后的实际路径获取 OS 锁。自定义 lease 必须协调同一存储的所有使用者；只有 TTL 的 Redis 锁不满足“旧执行者仍能提交时不能交接”的约束。多进程／分布式需要执行 epoch、Worker 交接和独立能力验收。
+`SQLiteStore` 在构造时固定 canonical 绝对路径。连接前及开启 WAL 前拒绝硬链接和非普通主文件，取得租约／开始事务时复核文件身份；普通 symlink 使用同一实际路径和锁，后续 chdir 不改变它。数据库目录、主文件及 WAL／锁文件由运行方管理；不支持网络文件系统或任意外部并发替换。`FileCoordinator` 使用这个固定路径获取 OS 锁。自定义 lease 必须协调同一存储的所有使用者；只有 TTL 的 Redis 锁不满足“旧执行者仍能提交时不能交接”的约束。多进程／分布式需要执行 epoch、Worker 交接和独立能力验收。
 
 这些是 Local 的存储与所有权端口。TemporalEngine 会以 Workflow／History 作为执行权威，需实现独立后端及相同外部契约，不能仅把 SQLiteStore 换成远程数据库就宣称支持分布式执行。
 
 ## 5. 生命周期与 CLI
 
-Engine 成功构造后拥有 execution store 与 coordinator；`close()` 等待条件由调用者满足，活跃工具／记忆调用尚未结束时会拒绝关闭。传入的 Provider、HTTP client、session_store、memory_store 由调用者管理，Engine 不隐式关闭它们。构造失败会释放已获得租约，直接传入的 store 仍由调用者关闭。
+Engine 成功构造后拥有 execution store 与 coordinator；`close()` 等待条件由调用者满足，活跃工具／记忆调用或排队的 drive 尚未结束时会拒绝关闭。完成调用和无调用者的 Run 锁会释放；取消后的实际调用未结束前仍保留归属。传入的 Provider、HTTP client、session_store、memory_store 由调用者管理，Engine 不隐式关闭它们。构造失败会释放已获得租约，直接传入的 store 仍由调用者关闭。
 
 自建 Agent 的跨进程控制使用 `--factory module:callable`。同步工厂接收 db_path，返回相同固定配置的 LocalEngine；工厂应放在可导入包中，或在仓库目录使用 `PYTHONPATH=.`。完整可运行示例见 [custom_runtime.py](../examples/custom_runtime.py)。
 
@@ -72,4 +76,4 @@ CLI 的 `status/events` 使用只读 SQLite 和默认 Scope；不载入工厂、
 
 新的适配器至少覆盖：隔离 Scope、重启后稳定身份、CAS 冲突、重复请求去重、未知成本保留、已确认效果不重跑、取消期间不新增后续调用、晚到证据不覆盖原结果、组件变化拒绝恢复。参考 `tests/test_memory.py`、`tests/test_extension_contracts.py`、`tests/test_engine.py` 中的真实数据库和异步测试。
 
-dev2 内核固定身份为 `local-2`，SQLite Schema 仍为 v1。dev1 的记录可以观察、取消及人工核验；继续执行须使用原版本和原配置。自动 Run 迁移尚未实现。未知效果应先在原执行日志里核验，不能通过创建新日志或新 Run 绕过恢复约束。
+dev3 内核固定身份为 `local-3`，SQLite Schema 仍为 v1。dev1／dev2 的记录可以按 Run ID 观察、取消及人工核验；继续执行须使用原版本和原配置。稳定的调用方摘要从 dev3 首次接受的提交起生效；旧版 submit 摘要包含 Manifest，直接用 dev3 重放会得到冲突，应使用原版本找回回执。自动 Run／命令摘要迁移尚未实现。未知效果应先在原执行日志里核验，不能通过创建新日志或新 Run 绕过恢复约束。

@@ -175,6 +175,8 @@ Actor／异步 handler 可以并发等待 I/O，但改变运行状态前必须�
 
 submit 首次接受时解析并保存不可变 ReleaseManifest。重复同一请求返回原 Run 和原 Release，即使配置别名已移动。恢复、等待唤醒、重投递与 Continue-As-New 继续使用固定兼容版本；升级与后端替换遵循[发布与兼容](../design.md#13-发布兼容与开发体验)，不能在恢复时静默解析最新版本。
 
+调用方请求身份与解析后的 Release 分开：Scope 和 command_id 绑定命令去重；Agent／Workflow 定义、input、budget 和显式 session_id 参与请求摘要，默认组件别名解析出的 Manifest 不参与。先查原回执，再在首次接受的事务内解析和固定 Release；同请求重提不能要求当前组件仍可用，也不能重建预算或产生新事件。修改调用方请求仍为 idempotency_conflict。Local dev3 已实现这个顺序；dev1／dev2 的旧摘要没有自动迁移，历史重提须使用原版本。
+
 | 重试类型 | 唯一所有者 | 边界 |
 | --- | --- | --- |
 | 请求传输重试 | 调用端 | 同 command_id、同请求，取得原回执，不产生新业务操作 |

@@ -3,13 +3,13 @@
 import asyncio
 import copy
 import inspect
-import json
 import uuid
 from dataclasses import asdict
 
 from jsonschema import Draft202012Validator
 
 from .context import ContextAssembler
+from .decisions import final_output
 from .errors import (
     AuthorizationDenied,
     CoordinatorBusy,
@@ -57,6 +57,7 @@ class LocalEngine:
             if not name.startswith("_")
         ):
             raise ValidationError("Store must implement the version 1 ExecutionStore port")
+        self._validate_policy(policy)
         self.store = store
         self.providers = dict(providers)
         self.tools = tools
@@ -66,6 +67,7 @@ class LocalEngine:
         self._active = set()
         self._inflight = {}
         self._locks = {}
+        self._drive_users = {}
         if coordinator is None:
             factory = getattr(store, "create_coordinator", None)
             if factory is None:
@@ -118,7 +120,7 @@ class LocalEngine:
         self.close()
 
     def close(self):
-        if self._active or any(not task.done() for task in self._inflight.values()):
+        if self._drive_users or any(not task.done() for task in self._inflight.values()):
             raise ValidationError("Finish active drive tasks before closing the coordinator")
         try:
             self.store.close()
@@ -130,6 +132,21 @@ class LocalEngine:
         if run["scope"] != asdict(self.scope):
             raise AuthorizationDenied("Run belongs to another workspace or principal")
         return run
+
+    @staticmethod
+    def _validate_policy(policy):
+        # Inspect async callable instances as well as ordinary async functions.
+        method = getattr(policy, "__call__", None)  # noqa: B004
+        if policy is not None and (
+            not callable(policy)
+            or any(
+                inspect.iscoroutinefunction(candidate)
+                or inspect.isasyncgenfunction(candidate)
+                or inspect.isgeneratorfunction(candidate)
+                for candidate in (policy, method)
+            )
+        ):
+            raise ValidationError("Authorization policy must execute synchronously")
 
     def status(self, run_id):
         return RunSnapshot.from_record(self._authorized(run_id))
@@ -153,7 +170,7 @@ class LocalEngine:
             if step["output_schema"] is not None:
                 Draft202012Validator.check_schema(step["output_schema"])
         return {
-            "kernel": "local-2",
+            "kernel": "local-3",
             "tools": self.tools.manifests(names),
             "providers": providers,
             "session_backend": self.sessions.backend_id,
@@ -194,24 +211,24 @@ class LocalEngine:
             }
         else:
             raise ValidationError("Submit an AgentSpec or sequential WorkflowSpec")
-        manifest = self._manifest(definition["steps"])
         run_id = uuid.uuid4().hex
         payload = {
             "definition": definition,
-            "manifest": manifest,
-            "input": input,
+            "input": copy.deepcopy(input),
             "budget": budget,
             "session_id": session_id,
         }
-        # Validate the immutable task before accepting anything.
+        # Request identity contains only caller-controlled data. Configuration
+        # aliases are resolved inside first acceptance, after receipt lookup.
         canonical(payload)
-        self._assemble_context(
-            self._initial_messages(definition["steps"][0], input),
-            [],
-            definition["steps"][0]["max_context_chars"],
-        )
 
         def apply():
+            manifest = self._manifest(definition["steps"])
+            self._assemble_context(
+                self._initial_messages(definition["steps"][0], payload["input"]),
+                [],
+                definition["steps"][0]["max_context_chars"],
+            )
             if session_id is not None and self.store.session_owner(self.scope, session_id):
                 raise ValidationError("Session already belongs to an active Run")
             data = {
@@ -222,13 +239,13 @@ class LocalEngine:
                 "definition": definition,
                 "manifest": manifest,
                 "release_digest": digest({"definition": definition, "manifest": manifest}),
-                "input": input,
+                "input": payload["input"],
                 "result": None,
                 "error": None,
                 "node": 0,
                 "decisions": 0,
                 "actions": [],
-                "messages": self._initial_messages(definition["steps"][0], input),
+                "messages": self._initial_messages(definition["steps"][0], payload["input"]),
                 "session_id": session_id or run_id,
             }
             self.store.insert_run(data)
@@ -374,85 +391,112 @@ class LocalEngine:
         if run_id in self._inflight and not self._inflight[run_id].done():
             raise CoordinatorBusy("The previous Action is still running; wait for its result")
         lock = self._locks.setdefault(run_id, asyncio.Lock())
-        async with lock:
-            # A queued caller may have passed the check between two Actions while
-            # another drive still owned this lock. Recheck before recovery mutates
-            # any attempt: a shielded executor may still be alive after caller cancellation.
-            if run_id in self._inflight and not self._inflight[run_id].done():
-                raise CoordinatorBusy("The previous Action is still running; wait for its result")
-            run = self._authorized(run_id)
-            if run["state"] in TERMINAL:
-                with self.store.transaction():
-                    if self._normalize_abandoned(run):
-                        self._commit(run, "abandoned_attempts_unknown")
-                return self.status(run_id)
-            self._check_release(run)
-            self._active.add(run_id)
-            try:
-                with self.store.transaction():
-                    run = self._authorized(run_id)
-                    self._normalize_abandoned(run)
-                    if run["state"] != "cancelling":
-                        run["state"] = "running"
-                    self._commit(run, "run_resumed")
-                while True:
-                    run = self._authorized(run_id)
-                    if run["state"] in TERMINAL:
+        self._drive_users[run_id] = self._drive_users.get(run_id, 0) + 1
+        try:
+            async with lock:
+                return await self._drive_locked(run_id)
+        finally:
+            users = self._drive_users[run_id] - 1
+            if users:
+                self._drive_users[run_id] = users
+            else:
+                self._drive_users.pop(run_id)
+            self._cleanup_execution(run_id)
+
+    def _cleanup_execution(self, run_id):
+        task = self._inflight.get(run_id)
+        if task is not None and task.done():
+            self._inflight.pop(run_id)
+        # Count owners and queued callers, including cancelled waiters. Removing
+        # a lock with waiters would let a new caller create a second Run owner.
+        if run_id not in self._drive_users and run_id not in self._inflight:
+            self._locks.pop(run_id, None)
+
+    async def _drive_locked(self, run_id):
+        # A queued caller may have passed the check between two Actions while
+        # another drive still owned this lock. Recheck before recovery mutates
+        # any attempt: a shielded executor may still be alive after caller cancellation.
+        if run_id in self._inflight and not self._inflight[run_id].done():
+            raise CoordinatorBusy("The previous Action is still running; wait for its result")
+        run = self._authorized(run_id)
+        if run["state"] in TERMINAL:
+            with self.store.transaction():
+                if self._normalize_abandoned(run):
+                    self._commit(run, "abandoned_attempts_unknown")
+            return self.status(run_id)
+        self._check_release(run)
+        self._active.add(run_id)
+        try:
+            with self.store.transaction():
+                run = self._authorized(run_id)
+                self._normalize_abandoned(run)
+                if run["state"] != "cancelling":
+                    run["state"] = "running"
+                self._commit(run, "run_resumed")
+            while True:
+                run = self._authorized(run_id)
+                if run["state"] in TERMINAL:
+                    break
+                if run["state"] == "cancelling":
+                    with self.store.transaction():
+                        run["state"] = "cancelled"
+                        self._commit(run, "run_cancelled")
+                    break
+                pending = next(
+                    (
+                        a
+                        for a in run["actions"]
+                        if a["node"] == run["node"]
+                        and a["kind"] == "tool"
+                        and a["status"] != "completed"
+                    ),
+                    None,
+                )
+                if pending:
+                    if not await self._guarded(run_id, self._tool(run_id, pending["id"])):
+                        if self._authorized(run_id)["state"] == "cancelling":
+                            continue
                         break
-                    if run["state"] == "cancelling":
-                        with self.store.transaction():
-                            run["state"] = "cancelled"
-                            self._commit(run, "run_cancelled")
-                        break
-                    pending = next(
+                else:
+                    adopted = next(
                         (
                             a
-                            for a in run["actions"]
+                            for a in reversed(run["actions"])
                             if a["node"] == run["node"]
-                            and a["kind"] == "tool"
-                            and a["status"] != "completed"
+                            and a["kind"] == "model"
+                            and a["status"] == "completed"
                         ),
                         None,
                     )
-                    if pending:
-                        if not await self._guarded(run_id, self._tool(run_id, pending["id"])):
+                    if adopted and not adopted["response"]["tool_calls"]:
+                        await self._guarded(
+                            run_id, self._finish_node(run_id, adopted["response"]["output"])
+                        )
+                    else:
+                        if not await self._guarded(run_id, self._model(run_id)):
                             if self._authorized(run_id)["state"] == "cancelling":
                                 continue
                             break
-                    else:
-                        adopted = next(
-                            (
-                                a
-                                for a in reversed(run["actions"])
-                                if a["node"] == run["node"]
-                                and a["kind"] == "model"
-                                and a["status"] == "completed"
-                            ),
-                            None,
-                        )
-                        if adopted and not adopted["response"]["tool_calls"]:
-                            await self._guarded(
-                                run_id, self._finish_node(run_id, adopted["response"]["output"])
-                            )
-                        else:
-                            if not await self._guarded(run_id, self._model(run_id)):
-                                if self._authorized(run_id)["state"] == "cancelling":
-                                    continue
-                                break
-                return self.status(run_id)
-            except RalfError as exc:
-                self._fail(run_id, exc.code)
-                return self.status(run_id)
-            finally:
-                self._active.discard(run_id)
+            return self.status(run_id)
+        except RalfError as exc:
+            self._fail(run_id, exc.code)
+            return self.status(run_id)
+        finally:
+            self._active.discard(run_id)
 
     async def _guarded(self, run_id, operation):
         # Caller cancellation must not discard an in-flight effect or free its coordinator.
         task = asyncio.create_task(operation)
         self._inflight[run_id] = task
-        task.add_done_callback(
-            lambda finished: None if finished.cancelled() else finished.exception()
-        )
+
+        def completed(finished):
+            if not finished.cancelled():
+                finished.exception()
+            if self._inflight.get(run_id) is finished:
+                self._inflight.pop(run_id)
+            self._cleanup_execution(run_id)
+
+        task.add_done_callback(completed)
         try:
             return await asyncio.shield(task)
         except asyncio.CancelledError:
@@ -464,21 +508,17 @@ class LocalEngine:
         if run["state"] in TERMINAL or run["state"] == "cancelling":
             return
         step = run["definition"]["steps"][run["node"]]
-        if step["output_schema"] is not None:
-            if isinstance(result, str):
-                try:
-                    result = json.loads(result)
-                except ValueError as exc:
-                    raise ValidationError("Model output is not valid JSON") from exc
-            if not Draft202012Validator(step["output_schema"]).is_valid(result):
-                raise ValidationError("Model output does not match the required Schema")
-        revision, _ = await memory_call(self.sessions.read, self.scope, run["session_id"])
+        result = final_output(result, step["output_schema"])
+        sessions = self.sessions
+        revision, _ = await memory_call(sessions.read, self.scope, run["session_id"])
         current = self._authorized(run_id)
         if current["state"] in TERMINAL or current["state"] == "cancelling":
             return
         self._check_release(current)
+        if sessions.backend_id != current["manifest"]["session_backend"]:
+            raise DefinitionMismatch("The executing session backend differs from this Run")
         await memory_call(
-            self.sessions.append,
+            sessions.append,
             self.scope,
             run["session_id"],
             {"role": "assistant", "content": result, "task": run["input"], "agent": step["name"]},
@@ -489,6 +529,11 @@ class LocalEngine:
             run = self._authorized(run_id)
             if run["state"] in TERMINAL or run["state"] == "cancelling":
                 return
+            # An append may already have committed externally. A changed backend
+            # cannot be silently confirmed as completing the pinned Release.
+            self._check_release(run)
+            if sessions.backend_id != run["manifest"]["session_backend"]:
+                raise DefinitionMismatch("The executing session backend differs from this Run")
             run["node"] += 1
             if run["node"] == len(run["definition"]["steps"]):
                 run["state"] = "succeeded"
@@ -562,6 +607,8 @@ class LocalEngine:
                 raise ValidationError("Model provider must return ModelResponse")
             encoded = asdict(response)
             canonical(encoded)
+            if not response.tool_calls:
+                final_output(response.output, step["output_schema"])
             proposals = []
             call_ids = set()
             for call in response.tool_calls:
@@ -703,7 +750,17 @@ class LocalEngine:
         self._check_release(run)
         tool.validate(action["arguments"])
         if self.policy is not None:
-            self.policy(self.scope, tool.spec, copy.deepcopy(action["arguments"]))
+            policy = self.policy
+            self._validate_policy(policy)
+            decision = policy(self.scope, tool.spec, copy.deepcopy(action["arguments"]))
+            if (
+                inspect.isawaitable(decision)
+                or inspect.isasyncgen(decision)
+                or inspect.isgenerator(decision)
+            ):
+                if inspect.iscoroutine(decision) or inspect.isgenerator(decision):
+                    decision.close()
+                raise ValidationError("Authorization policy returned a deferred decision")
             self._check_release(self._authorized(run_id))
             run = self._authorized(run_id)
             if run["state"] in TERMINAL or run["state"] == "cancelling":

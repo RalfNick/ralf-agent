@@ -6,13 +6,18 @@ from .errors import CoordinatorBusy, ValidationError
 
 
 class FileCoordinator:
-    def __init__(self, path):
+    def __init__(self, path, *, resource_validator=None):
         self.path = Path(path).resolve()
+        if resource_validator is not None and not callable(resource_validator):
+            raise ValidationError("Coordinator resource validator must be callable")
+        self._resource_validator = resource_validator
         self._file = None
 
     def acquire(self):
         if self._file is not None:
             raise CoordinatorBusy("Coordinator lease is already owned")
+        if self._resource_validator is not None:
+            self._resource_validator()
         try:
             import fcntl
         except ImportError as exc:
@@ -21,6 +26,8 @@ class FileCoordinator:
         lock_file = self.path.open("a+b")
         try:
             fcntl.flock(lock_file, fcntl.LOCK_EX | fcntl.LOCK_NB)
+            if self._resource_validator is not None:
+                self._resource_validator()
         except BlockingIOError as exc:
             lock_file.close()
             raise CoordinatorBusy("Another coordinator owns this execution database") from exc
