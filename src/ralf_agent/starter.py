@@ -691,17 +691,88 @@ adapter code and data for accepted Runs. Use a new command ID for a new task.
 }
 
 
+_GRAPH_FILES = {
+    **_CONFIG_FILES,
+    "agent_app/__main__.py": _CONFIG_FILES["agent_app/__main__.py"]
+    .replace("Offline configuration example", "Offline static graph example")
+    .replace('default="config-demo"', 'default="graph-demo"')
+    .replace('"agent.toml"', '"graph.json"'),
+    "runtime.toml": _CONFIG_FILES["runtime.toml"]
+    .replace('label = "config-v1"', 'label = "graph-demo"')
+    .replace('label = "config-v2"', 'label = "graph-demo-v2"'),
+    "graph.json": """{
+  "kind": "graph",
+  "name": "triage",
+  "nodes": [
+    {"id": "normalize", "transform": "identity"},
+    {
+      "id": "urgent", "depends_on": ["normalize"],
+      "agent": {"name": "urgent", "instructions": "Handle the urgent request."},
+      "input": {"kind": "ref", "source": "normalize"},
+      "when": {"value": {"kind": "ref", "source": "normalize"}, "equals": "urgent"}
+    },
+    {
+      "id": "routine", "depends_on": ["normalize"],
+      "agent": {"name": "routine", "instructions": "Handle the routine request."},
+      "input": {"kind": "ref", "source": "normalize"},
+      "when": {"value": {"kind": "ref", "source": "normalize"}, "equals": "urgent", "negate": true}
+    },
+    {
+      "id": "join", "transform": "identity",
+      "depends_on": ["urgent", "routine"], "allow_skipped_dependencies": true,
+      "input": {"kind": "object", "fields": {
+        "urgent": {"kind": "ref", "source": "urgent", "required": false},
+        "routine": {"kind": "ref", "source": "routine", "required": false}
+      }}
+    }
+  ],
+  "output": {"kind": "ref", "source": "join"}
+}
+""",
+    "README.md": """# Static graph Workflow
+
+This standalone application runs a serial dependency graph using the installed
+SDK and an offline echo Provider. It chooses one branch and combines its result
+with an explicit null for the skipped branch. No model service is contacted.
+
+```sh
+python -m agent_app --input urgent --command-id urgent-task
+python -m agent_app --input hello --command-id routine-task
+python -m agent_app --input urgent --command-id queued-task --submit-only
+ralf --config runtime.toml resume RUN_ID
+ralf --config runtime.toml --format text inspect RUN_ID
+```
+
+Replace RUN_ID with the submitted run_id. Edit graph.json for Agent instructions,
+dependencies, branch conditions and input/output bindings. Register custom pure
+transforms or compiler/interpreter components in an explicit Python factory.
+Use the same database and original runtime profile to resume; keep old profile
+versions when selecting a new default in runtime.toml.
+
+Transforms are trusted synchronous data computations. Business I/O uses Agent
+tools and their approval/effect contracts. This template provides static serial
+execution; parallel scheduling, dynamic plans and child Agents are later features.
+For real task quality, configure a real Provider and evaluate it separately.
+""",
+}
+_GRAPH_FILES.pop("agent.toml")
+
+
 def create_starter(destination, *, template="oncall") -> StarterProject:
     """Create the application atomically in a new or empty directory.
 
     A file or nonempty destination is rejected, including hidden user files.
     Templates are contained in the installed package and need no source checkout.
     """
-    if template not in ("oncall", "rag", "config", "model"):
-        raise ValidationError("Starter template must be oncall, rag, config or model")
-    files = {"oncall": _FILES, "rag": _RAG_FILES, "config": _CONFIG_FILES, "model": _MODEL_FILES}[
-        template
-    ]
+    if template not in ("oncall", "rag", "config", "model", "graph"):
+        raise ValidationError("Starter template must be oncall, rag, config, model or graph")
+    files = {
+        "oncall": _FILES,
+        "rag": _RAG_FILES,
+        "config": _CONFIG_FILES,
+        "model": _MODEL_FILES,
+        "graph": _GRAPH_FILES,
+    }[template]
     try:
         directory = Path(destination).expanduser().resolve()
         if directory == Path.cwd().resolve():

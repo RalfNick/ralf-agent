@@ -1,6 +1,6 @@
 # 可替换端口与版本化配置装配
 
-dev8 提供公共 ExecutionEngine、知识上下文端口与动态召回规划，并提供 JSON／TOML 配置、显式适配器注册和历史配置解析。默认仍是本地单 Coordinator；这些端口不代表 Graph Workflow、Temporal、多进程或 MCP 已交付。
+dev8 建立公共执行／知识／召回端口及版本化配置，dev9 增加模型协议，dev10 增加可装配的串行静态图。默认仍是本地单 Coordinator；Temporal、多进程和 MCP 尚未交付。配置版本固定与运行中热更新分开。
 
 ## 1. 无需修改 Python 的离线开始路径
 
@@ -119,4 +119,10 @@ dev8 保留 local-4、执行 Schema v1、默认 Manifest 与调用方摘要。�
 
 默认 SQLiteRunReader 在激活运行实例前查询 submit／approve／cancel／reconcile 原回执，按可信 Scope 和完整调用参数校验。重放不会关闭正在执行的新版本，也不要求旧 profile 仍可装配；参数变化仍报 idempotency_conflict。自定义 RunReader 可实现 CommandReceiptReader 获得控制回执的独立读取；仅实现基础端口时，控制请求交给原实例处理。diagnostics 是可选能力，缺失时 CLI 仍输出普通结果。
 
-Workflow 仍是固定顺序 AgentSpec。图节点、分支、并行、子 Run、多 Agent、模型流式／能力协商、MCP／CLI 沙箱、企业身份与 Temporal 仍未交付。公共端口支持扩展方向，实际后端必须另做契约验证。
+Workflow 支持原有顺序入口和 dev10 串行静态图。图节点、条件、输入映射与纯变换已交付，模型流式／能力预检在 dev9 交付；并行、循环、子 Run、多 Agent、MCP／CLI 沙箱、企业身份与 Temporal 仍未交付。实际外部后端必须另做契约验证。
+
+## 图工作流组件
+
+Profile 的 components 可配置 `workflow_compiler`（adapter=`static`）、`workflow_interpreter`（adapter=`static`）和 `workflow_transforms`（adapter=`identity`），默认实现均接受空配置。自定义工厂显式注册同类组件，`workflow_transforms` 工厂返回名称到 NodeTransform 的映射。它们目前作用于 Graph 入口，旧 Agent／sequence 保留兼容执行路径；主动转成新图声明使用 `GraphWorkflowSpec.from_plan`。
+
+计划只在首次接受命令时编译；恢复固定原计划、组件身份与 profile。Python 自定义组件、分支合并、串行边界与[静态 Workflow 教程](static-workflows.md)一致。未被图使用的变换不进入其执行 Manifest；已启用的 profile 声明仍须完整保留。

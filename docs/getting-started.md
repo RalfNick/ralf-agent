@@ -1,6 +1,6 @@
 # 第一次使用 Ralf-Agent
 
-本文面向 **0.1.0.dev9，M1 核心预览**。需要 Python 3.11+ 和 Linux／macOS。先用离线项目完成提交、审批和恢复，再接入自己的模型与工具。知识问答可从 [RAG 模板教程](recall-and-rag.md) 开始；无需改 Python 的版本配置从 [运行装配模板](runtime-assembly.md) 开始。
+本文面向 **0.1.0.dev10，M1 核心预览**。需要 Python 3.11+ 和 Linux／macOS。先用离线项目完成提交、审批和恢复，再接入自己的模型与工具。知识问答可从 [RAG 模板教程](recall-and-rag.md) 开始；无需改 Python 的版本配置从 [运行装配模板](runtime-assembly.md) 开始。
 
 真实模型可用 `ralf init my-model-agent --template model` 生成独立项目，先替换 model/协议/凭据环境变量；配置限制与验证等级见 [模型接入](model-adapters.md)。生成模板不执行收费请求，也不表示账户与型号已验证。
 
@@ -15,7 +15,7 @@
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
-python -m pip install "/path/to/ralf_agent-0.1.0.dev9-py3-none-any.whl"
+python -m pip install "/path/to/ralf_agent-0.1.0.dev10-py3-none-any.whl"
 ralf --version
 ```
 
@@ -72,7 +72,7 @@ ralf --db .ralf/runs.sqlite --format text inspect RUN_ID
 
 | 修改内容 | 需要保持的契约 |
 | --- | --- |
-| AgentSpec | 指令、允许工具、最大决策数和输出 Schema 明确；Workflow 当前只支持顺序步骤 |
+| AgentSpec／Workflow | 指令、工具、决策限制和输出 Schema 明确；顺序入口或串行静态图，图可自定义依赖、条件与输入映射 |
 | Python 工具 | JSON 参数 Schema；读／写效果类别；写操作的 effect_key、审批和核验方式 |
 | 授权 policy | 同步执行，成功返回 None，拒绝抛 AuthorizationDenied；其他返回值拒绝 |
 | Provider | 异步 complete 返回 ModelResponse；只提出决策，工具由引擎执行 |

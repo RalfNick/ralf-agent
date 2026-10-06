@@ -2,6 +2,14 @@
 
 记录用户可见行为和兼容边界。版本为开发预览；此记录不表示已经上传 PyPI、创建 Git 标签或发布 GitHub Release。
 
+## 0.1.0.dev10 — Unreleased
+
+新增不可变 ExecutionPlan v1、GraphWorkflowSpec、值引用／映射／条件、纯 WorkflowCompiler／WorkflowInterpreter／NodeTransform；提供 static 编译／解释和 identity 变换默认实现。图支持依赖、跳过传播、显式可选分支合并与 Schema 验收，当前串行调度。
+
+图首次接受时固定计划与组件身份，保存节点输入／结果，恢复不重新编译。Agent 节点沿用审批、预算、效果核验和独立证据采纳；纯变换与节点完成原子提交。新增 JSON/TOML graph、组件工厂注册、只读计划／节点诊断和可编辑 graph starter。
+
+默认旧 Agent／sequence 的请求摘要、local-4 Manifest、ExecutionStore v1 和原有 starter 文件保持兼容；工作流组件通过 Graph 入口启用。Graph 增加工作流 Manifest，dev9 不能继续这些新 Run。并行、循环、动态 Plan、ChildRun、通用异步自定义节点、流式数据编排及完整 M1 仍未交付或未验收。
+
 ## 0.1.0.dev9 — Unreleased
 
 新增 ModelCapabilities、StreamingModelProvider 和 ModelStreamEvent。Chat Completions 支持 temperature/top_p/stop/seed 和 SSE；默认 identity 保持 dev8。流文本为临时展示，工具参数只在完整结束/JSON 校验后返回，Engine 仍独立接收完整响应。可选纯请求预检在预算预留和实际调用前执行，旧 Provider 保持兼容。

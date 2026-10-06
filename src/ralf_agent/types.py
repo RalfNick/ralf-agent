@@ -102,7 +102,11 @@ class WorkflowSpec:
 
 def submission_request(spec, input, *, budget=32, session_id=None):
     """Caller-controlled identity shared by native acceptance and read-only replay."""
-    if isinstance(spec, AgentSpec):
+    from .workflow import GraphWorkflowSpec
+
+    if isinstance(spec, GraphWorkflowSpec):
+        definition = spec.to_dict()
+    elif isinstance(spec, AgentSpec):
         definition = {
             "kind": "agent",
             "name": spec.name,
@@ -117,7 +121,7 @@ def submission_request(spec, input, *, budget=32, session_id=None):
             "steps": [asdict(step) for step in spec.steps],
         }
     else:
-        raise ValidationError("Submit an AgentSpec or sequential WorkflowSpec")
+        raise ValidationError("Submit an AgentSpec, WorkflowSpec or GraphWorkflowSpec")
     payload = {
         "definition": definition,
         "input": copy.deepcopy(input),
@@ -232,6 +236,7 @@ class RunDiagnostics:
     manifest: dict
     release_digest: str
     budget: dict
+    workflow: dict | None = None
 
     def __post_init__(self):
         if not isinstance(self.snapshot, RunSnapshot):
@@ -239,10 +244,13 @@ class RunDiagnostics:
         if not isinstance(self.manifest, dict) or not isinstance(self.budget, dict):
             raise ValidationError("Diagnostics require JSON manifest and budget objects")
         _require_text(self.release_digest, "Release digest")
+        if self.workflow is not None and not isinstance(self.workflow, dict):
+            raise ValidationError("Workflow diagnostics must be a JSON object")
         canonical(asdict(self))
         object.__setattr__(self, "snapshot", copy.deepcopy(self.snapshot))
         object.__setattr__(self, "manifest", copy.deepcopy(self.manifest))
         object.__setattr__(self, "budget", copy.deepcopy(self.budget))
+        object.__setattr__(self, "workflow", copy.deepcopy(self.workflow))
 
 
 @dataclass(frozen=True)

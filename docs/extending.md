@@ -1,8 +1,8 @@
 # Ralf-Agent 扩展指南
 
-版本：0.1.0.dev9；日期：2026-10-06。面向 SDK／适配器开发者。本指南描述执行、装配、召回和知识端口；企业适配与完整 M1 验收仍按 [实现清单](implementation-status.md) 分期。
+版本：0.1.0.dev10；日期：2026-10-06。面向 SDK／适配器开发者。本指南描述执行、装配、召回和知识端口；企业适配与完整 M1 验收仍按 [实现清单](implementation-status.md) 分期。
 
-完整目标要求每层交付公共契约、默认实现、替换示例和共同验收，见[通用框架能力矩阵](../architecture/viewpoints/framework-capabilities.md)。该矩阵包含尚未实现的编排、规划、团队及数据端口；下表只列当前可接入 SDK 的能力。
+完整目标要求每层交付公共契约、默认实现、替换示例和共同验收，见[通用框架能力矩阵](../architecture/viewpoints/framework-capabilities.md)。该矩阵保留 dev9 基线，规划、团队及高级数据端口仍未交付；下表列当前 SDK 能力，新增串行图见[静态 Workflow](static-workflows.md)。
 
 ## 1. 装配组件
 
@@ -13,6 +13,8 @@
 | ModelProvider | `providers={name: provider}` | `identity` 非空有限 JSON；`async complete` 返回 ModelResponse；可选纯同步 validate_request 返回 None，最终输出在公共采纳边界校验，不执行工具 |
 | StreamingModelProvider／ModelCapabilities | `provider.stream`／`capabilities` | 实现的协议能力可禁用，不能凭声明打开；片段仅展示，完整 response 才返回工具，提前退出须 aclose |
 | Harness | `harness=`，默认 NativeHarness | 非空有限 JSON identity；同步纯 prepare／propose 返回 ModelRequest／DecisionProposal；不执行工具或提交状态 |
+| WorkflowCompiler／WorkflowInterpreter | `workflow_compiler=`／`workflow_interpreter=`；默认 static | Graph 首次编译后固定 ExecutionPlan；解释器只选择合格节点，公共边界检查输入、跳过和完成；同步纯端口 |
+| NodeTransform | `workflow_transforms={name: component}`；默认 identity | transform(input, config) 返回已完成有限 JSON；版本固定、同步纯计算，不执行外部 I/O |
 | ToolExecutor | `tool_executor=`，默认 PythonToolExecutor | 非空有限 JSON identity；async execute／reconcile 接收固定 DispatchEnvelope，返回 EffectObservation 或核验未知 None |
 | 工具与核验 | `tools=ToolRegistry()` | 参数 Schema、效果类别、version/config、稳定幂等键；单次调用不隐藏业务重试 |
 | SessionStore／AsyncSessionStore | `session_store=` | `backend_id`、read、append；CAS 与 message_id 去重同时成立 |

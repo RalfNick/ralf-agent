@@ -4,7 +4,7 @@
 
 Ralf-Agent 是 Python 优先的开源 Agent 运行时。它把模型决策、工具动作、审批与结果保存为明确的执行步骤，让任务在重启后继续，并核验可能已经发生的业务操作。
 
-当前版本：**0.1.0.dev9，M1 核心预览**。提供原生 Agent SDK、顺序 Workflow、SQLite 持久执行、可信 Python 工具、审批／取消、效果核验、记忆分页与本地 RAG。模型层新增生成参数、能力预检、完整流式响应、原生 Anthropic/Gemini 文本和 DeepSeek 非思考模式适配。执行器、知识上下文、模型、上下文、记忆及检索都有公共扩展端口；JSON／TOML 可以装配默认组件，历史任务按原配置版本恢复。完整 M1 尚未验收，适合开发者试点；支持范围见 [实现清单](docs/implementation-status.md)。预览 API 尚未稳定。
+当前版本：**0.1.0.dev10，M1 核心预览**。提供原生 Agent SDK、顺序 Workflow 与串行静态图、SQLite 持久执行、可信 Python 工具、审批／取消、效果核验、记忆分页与本地 RAG。图支持依赖、条件、输入映射、纯变换和可替换编译器／解释器；有独立 Graph starter。模型层支持生成参数、能力预检、完整流式响应、原生 Anthropic/Gemini 文本和 DeepSeek 非思考模式适配。JSON／TOML 装配默认组件，历史任务按原配置版本恢复。完整 M1 尚未验收，适合开发者试点；支持范围见 [实现清单](docs/implementation-status.md)。预览 API 尚未稳定。
 
 ## 快速开始
 
@@ -153,10 +153,19 @@ flow = WorkflowSpec(
 # engine.submit(flow, input, command_id="workflow-001")
 ```
 
-前一步通过输出验收后，结果成为下一步输入。分支、并行、动态计划及子 Agent 属于后续阶段。
+前一步通过输出验收后，结果成为下一步输入。需要依赖、条件分支和输入映射时，使用 `GraphWorkflowSpec`。默认串行调度，图计划及节点状态持久保存；并行、动态计划与子 Agent 尚未交付。
+
+```sh
+ralf init my-graph --template graph
+cd my-graph
+python -m agent_app --input urgent --command-id first-graph
+```
+
+Python 图定义、自定义纯变换、编译器／解释器、分支合并与恢复见[静态 Workflow 教程](docs/static-workflows.md)。
 
 ## 扩展与替换
 
+- **图编排：** `WorkflowCompiler`／`WorkflowInterpreter` 与 `NodeTransform` 是同步纯端口，默认有静态编译／解释和复制输入实现。可直接注入或用显式工厂注册；输入、跳过集合与结束结果仍由公共边界校验。
 - **模型：** 实现 `ModelProvider.identity` 与异步 `complete(messages, tools) -> ModelResponse`，通过 `providers` 注入。Provider 只产生决策，不自行执行工具。
 - **Agent 策略：** 默认 `NativeHarness`；自定义同步 `prepare(spec, messages, tools) -> ModelRequest` 与 `propose(spec, response) -> DecisionProposal`，通过 `harness` 注入。可以按 AgentSpec 选择策略；内核继续验收工具白名单、参数和最终输出。
 - **工具：** `ToolRegistry.register(ToolSpec, handler, reconciler=...)`。handler 接收 JSON 参数和可信 `InvocationContext`，支持普通同步／异步函数、实例、绑定方法和 `functools.partial`。状态、绑定参数和依赖变更应更新 `ToolSpec.version/config`，不要把秘密写入配置；代码摘要和配置一起绑定运行。Registry／policy 返回的描述是独立副本。

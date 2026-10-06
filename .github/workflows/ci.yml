@@ -32,3 +32,9 @@ jobs:
           ralf --format text init wheel-starter
           cd wheel-starter
           python -m agent_app --ticket CI-STARTER
+      - name: Installed graph starter outside checkout
+        working-directory: ${{ runner.temp }}
+        run: |
+          ralf init wheel-graph --template graph
+          cd wheel-graph
+          python -m agent_app --input urgent --command-id CI-GRAPH

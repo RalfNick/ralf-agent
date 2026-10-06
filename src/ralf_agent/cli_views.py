@@ -5,6 +5,7 @@ import shlex
 
 from .engine import TERMINAL
 from .types import RunDiagnostics, RunSnapshot, digest
+from .workflow_runtime import workflow_details
 
 
 def command_hint(db, factory, command, *arguments, config=None):
@@ -19,7 +20,11 @@ def command_hint(db, factory, command, *arguments, config=None):
 def inspection(run, budget, db, factory=None, *, config=None):
     return diagnostics_inspection(
         RunDiagnostics(
-            RunSnapshot.from_record(run), run["manifest"], run["release_digest"], budget
+            RunSnapshot.from_record(run),
+            run["manifest"],
+            run["release_digest"],
+            budget,
+            workflow_details(run),
         ),
         db,
         factory,
@@ -31,7 +36,9 @@ def diagnostics_inspection(details, db, factory=None, *, config=None):
     snapshot = details.snapshot
     manifest = details.manifest
     providers = manifest["providers"]
-    is_demo = all(value.get("kind") == "offline-scripted-oncall" for value in providers.values())
+    is_demo = bool(providers) and all(
+        value.get("kind") == "offline-scripted-oncall" for value in providers.values()
+    )
     needs_factory = factory is None and config is None and not is_demo
     configured_factory = factory or ("YOUR_MODULE:create_engine" if needs_factory else None)
     pending = []
@@ -81,7 +88,7 @@ def diagnostics_inspection(details, db, factory=None, *, config=None):
         for action in snapshot.actions
         if action["status"] in {"response_received", "receipt_received"}
     ]
-    return {
+    report = {
         "run_id": snapshot.run_id,
         "state": snapshot.state,
         "state_revision": snapshot.state_revision,
@@ -100,6 +107,9 @@ def diagnostics_inspection(details, db, factory=None, *, config=None):
         ),
         "events_command": command_hint(db, None, "events", snapshot.run_id, "--after", "0"),
     }
+    if details.workflow is not None:
+        report["workflow"] = details.workflow
+    return report
 
 
 def render_inspection(report):
@@ -116,6 +126,9 @@ def render_inspection(report):
         lines.append("Set YOUR_MODULE:create_engine to the original trusted runtime factory.")
     if report["error"]:
         lines.append("Error: " + json.dumps(report["error"], ensure_ascii=False))
+    if report.get("workflow") is not None:
+        for node_id, node in report["workflow"]["nodes"].items():
+            lines.append(f"Node: {node_id} ({node['state']})")
     for item in report["pending"]:
         lines.extend(
             [
@@ -159,7 +172,7 @@ def render_result(result):
         template = result.get("template", "oncall")
         entry_arguments = (
             ["--input", "hello"]
-            if template in {"config", "model"}
+            if template in {"config", "model", "graph"}
             else (
                 ["--query", "缓存连接失败怎么恢复"]
                 if template == "rag"

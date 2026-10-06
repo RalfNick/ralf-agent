@@ -5,8 +5,9 @@
 日期：2026-10-06（Asia/Shanghai）
 
 状态：完整架构目标；当前已交付的 v0.1 开发增量及剩余工作见 [实现状态](../docs/implementation-status.md)，不宣称以下能力已全部实现。
-2026-10-06 实现更新：dev8 已交付结构化 ExecutionEngine、知识上下文与纯召回规划端口、显式适配器注册、JSON/TOML 装配及原 profile 恢复，见 [运行装配指南](../docs/runtime-assembly.md)。默认 local-4／执行 Schema v1 保留；配置版本解析不等于 Worker 版本路由、热迁移或分布式调度。Workflow 当前仍为固定顺序步骤。
+2026-10-06 实现更新：dev8 已交付结构化 ExecutionEngine、知识上下文与纯召回规划端口、显式适配器注册、JSON/TOML 装配及原 profile 恢复，见 [运行装配指南](../docs/runtime-assembly.md)。默认 local-4／执行 Schema v1 保留；配置版本解析不等于 Worker 版本路由、热迁移或分布式调度。Workflow 在 dev8 中仍为固定顺序步骤。
 dev9 模型增量增加生成参数、能力预检、完整 SSE、原生 Anthropic/Gemini 文本及 DeepSeek 非思考 preset，见 [模型指南](../docs/model-adapters.md)。流片段不成为执行事实，工具仍在完整响应采纳后派发；线上模型兼容、质量、Gemini 签名工具、多模态与模型路由尚未验收或实现。
+dev10 编排增量已交付计划 v1、可替换纯编译器／解释器／变换、串行静态图的依赖／条件／输入映射与持久节点状态，以及 JSON/TOML 和 Graph starter，见[静态 Workflow 指南](../docs/static-workflows.md)。默认旧入口保留兼容路径，Graph 通过新 Manifest 固定计划；并行、动态 Plan、ChildRun 与数据流尚未交付。
 读者：项目维护者、SDK 开发者、架构师与企业实施团队。  
 项目名称：Ralf-Agent；RALF 表示 Reliable Agent Lifecycle Framework。仓库：[RalfNick/ralf-agent](https://github.com/RalfNick/ralf-agent)。
 
@@ -16,7 +17,7 @@ RALF 提供 Python 优先的通用 Agent 框架，包含可组合 Harness、单�
 
 每层基础能力必须同时交付公共行为契约、可运行默认实现、独立替换入口和共同验收，让开发者通过配置、组件注入和流程组合快速实现业务。同一份 Agent／Workflow 定义在不同运行模式下保持明确的执行、授权、恢复与审计语义；审批及效果核验贯穿整个框架。适配器公开能力差异，通过测试验证兼容程度。项目价值通过实际采用成本、任务成功率、成本、延迟、人工介入与恢复结果证明。
 
-用户明确的完整目标、逐层默认／适配矩阵、三种静态编排、动态 Plan、多 Agent 和 AgentScope 对标要求见[通用框架能力与扩展验收](viewpoints/framework-capabilities.md)。该文细化目标和建设顺序；当前 dev9 的顺序 Workflow、已交付组件与剩余缺口仍按实现清单公开。
+用户明确的完整目标、逐层默认／适配矩阵、三种静态编排、动态 Plan、多 Agent 和 AgentScope 对标要求见[通用框架能力与扩展验收](viewpoints/framework-capabilities.md)。该文细化目标和建设顺序；当前发行版的已交付组件与剩余缺口按实现清单公开。
 
 本文描述完整企业架构目标。v0.1／v0.2 是逐步验证核心契约的工程预览，v1.0 是完成企业验收的首个正式版本；接口预留、内部验证和已支持能力分别标识。review 对团队规模的假设不作为删减企业目标的依据，建设范围按第 15 节分期。
 

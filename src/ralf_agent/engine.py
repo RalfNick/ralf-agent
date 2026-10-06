@@ -1,4 +1,4 @@
-"""Single-coordinator, durable native Agent and sequential Workflow execution."""
+"""Single-coordinator native Agents, sequences and durable serial static graphs."""
 
 from __future__ import annotations
 
@@ -46,6 +46,7 @@ from .types import (
     runtime_profile_identity,
     submission_request,
 )
+from .workflow_runtime import StaticWorkflowRuntime, agent_step, is_graph, workflow_details
 
 TERMINAL = {"succeeded", "failed", "cancelled"}
 
@@ -73,6 +74,9 @@ class LocalEngine:
         knowledge: KnowledgeContextPort | None = None,
         recall_planner: RecallPlanner | None = None,
         runtime_profile: dict | None = None,
+        workflow_compiler=None,
+        workflow_interpreter=None,
+        workflow_transforms=None,
     ):
         # Python 3.12's Protocol isinstance check ignores proxy __getattr__.
         # Validate the declared public operations so delegating adapters work too.
@@ -114,6 +118,9 @@ class LocalEngine:
             self._component_identity(recall_policy, (), True, "Recall policy")
         if knowledge is not None:
             self._component_identity(knowledge, ("references", "validate"), False, "Knowledge")
+        self._workflow = StaticWorkflowRuntime(
+            self, workflow_compiler, workflow_interpreter, workflow_transforms
+        )
         self.scope = scope or Scope()
         self.policy = policy
         self.owner = uuid.uuid4().hex
@@ -286,6 +293,7 @@ class LocalEngine:
                 run["manifest"],
                 run["release_digest"],
                 self.store.budget(run_id),
+                workflow_details(run),
             )
 
     def _manifest(self, steps):
@@ -358,12 +366,25 @@ class LocalEngine:
         canonical(payload)
 
         def apply():
-            manifest = self._manifest(definition["steps"])
-            self._assemble_context(
-                self._initial_messages(definition["steps"][0], payload["input"]),
-                [],
-                definition["steps"][0]["max_context_chars"],
+            graph = definition["kind"] == "graph"
+            plan = self._workflow.compile(definition) if graph else None
+            manifest = (
+                self._workflow.manifest(plan) if graph else self._manifest(definition["steps"])
             )
+            messages = (
+                [] if graph else self._initial_messages(definition["steps"][0], payload["input"])
+            )
+            if not graph:
+                self._assemble_context(messages, [], definition["steps"][0]["max_context_chars"])
+            execution_definition = definition
+            if graph:
+                # Old native kernels can read this shape and reject the new
+                # workflow Manifest before scheduling. It is not a second plan
+                # and never mutates the caller's idempotency payload.
+                execution_definition = {
+                    **definition,
+                    "steps": [node["agent"] for node in plan["nodes"] if node["agent"] is not None],
+                }
             if session_id is not None and self.store.session_owner(self.scope, session_id):
                 raise ValidationError("Session already belongs to an active Run")
             data = {
@@ -371,18 +392,26 @@ class LocalEngine:
                 "revision": 0,
                 "scope": asdict(self.scope),
                 "state": "queued",
-                "definition": definition,
+                "definition": execution_definition,
                 "manifest": manifest,
-                "release_digest": digest({"definition": definition, "manifest": manifest}),
+                "release_digest": digest(
+                    {"definition": execution_definition, "manifest": manifest}
+                ),
                 "input": payload["input"],
                 "result": None,
                 "error": None,
-                "node": 0,
+                "node": None if graph else 0,
                 "decisions": 0,
                 "actions": [],
-                "messages": self._initial_messages(definition["steps"][0], payload["input"]),
+                "messages": messages,
                 "session_id": session_id or run_id,
             }
+            if graph:
+                data["plan"] = plan
+                data["workflow"] = {
+                    "current": None,
+                    "nodes": {node["id"]: {"state": "pending"} for node in plan["nodes"]},
+                }
             self.store.insert_run(data)
             self.store.create_budget(run_id, budget)
             self.store.emit(run_id, "run_submitted", {"release_digest": data["release_digest"]})
@@ -454,6 +483,10 @@ class LocalEngine:
                     "reason": "already_terminal" if run["state"] == "cancelled" else "applied_noop"
                 }
             run["state"] = "cancelling" if active else "cancelled"
+            if is_graph(run):
+                for node in run["workflow"]["nodes"].values():
+                    if node["state"] in {"pending", "running"}:
+                        node["state"] = "cancelled"
             self.store.save_run(run)
             self.store.emit(run_id, "cancel_applied", {"state": run["state"]})
             return {"state_revision": run["revision"]}
@@ -493,7 +526,12 @@ class LocalEngine:
         )
 
     def _check_release(self, run):
-        if digest(self._manifest(run["definition"]["steps"])) != digest(run["manifest"]):
+        manifest = (
+            self._workflow.manifest(run["plan"])
+            if is_graph(run)
+            else self._manifest(run["definition"]["steps"])
+        )
+        if digest(manifest) != digest(run["manifest"]):
             raise DefinitionMismatch(
                 "Pinned tool, provider or memory backend differs from this Run"
             )
@@ -518,6 +556,10 @@ class LocalEngine:
             if run["state"] not in TERMINAL:
                 run["state"] = "cancelled" if run["state"] == "cancelling" else "failed"
                 run["error"] = {"code": code}
+                if is_graph(run) and run["workflow"]["current"] is not None:
+                    run["workflow"]["nodes"][run["workflow"]["current"]]["state"] = (
+                        "failed" if run["state"] == "failed" else "cancelled"
+                    )
                 self._commit(run, "run_failed", {"code": code})
 
     async def drive(self, run_id):
@@ -578,6 +620,13 @@ class LocalEngine:
                         run["state"] = "cancelled"
                         self._commit(run, "run_cancelled")
                     break
+                if is_graph(run):
+                    if not self._workflow.prepare(run_id):
+                        continue
+                    run = self._authorized(run_id)
+                    if run["plan"]["nodes"][run["node"]]["transform"] is not None:
+                        await self._guarded(run_id, self._workflow.transform(run_id))
+                        continue
                 pending = next(
                     (
                         a
@@ -649,8 +698,12 @@ class LocalEngine:
         run = self._authorized(run_id)
         if run["state"] in TERMINAL or run["state"] == "cancelling":
             return
-        step = run["definition"]["steps"][run["node"]]
+        step = agent_step(run)
         result = final_output(result, step["output_schema"])
+        if is_graph(run):
+            from .workflow import validate_output
+
+            result = validate_output(result, run["plan"]["nodes"][run["node"]]["output_schema"])
         sessions = self.sessions
         revision, _ = await memory_call(sessions.read, self.scope, run["session_id"])
         current = self._authorized(run_id)
@@ -663,7 +716,14 @@ class LocalEngine:
             sessions.append,
             self.scope,
             run["session_id"],
-            {"role": "assistant", "content": result, "task": run["input"], "agent": step["name"]},
+            {
+                "role": "assistant",
+                "content": result,
+                "agent": step["name"],
+                "task": run["workflow"]["nodes"][run["workflow"]["current"]]["input"]
+                if is_graph(run)
+                else run["input"],
+            },
             expected_revision=revision,
             message_id=f"{run_id}:{run['node']}:result",
         )
@@ -676,6 +736,9 @@ class LocalEngine:
             self._check_release(run)
             if sessions.backend_id != run["manifest"]["session_backend"]:
                 raise DefinitionMismatch("The executing session backend differs from this Run")
+            if is_graph(run):
+                self._workflow.complete(run, result)
+                return
             run["node"] += 1
             if run["node"] == len(run["definition"]["steps"]):
                 run["state"] = "succeeded"
@@ -683,9 +746,7 @@ class LocalEngine:
                 self._commit(run, "run_succeeded")
             else:
                 run["decisions"] = 0
-                run["messages"] = self._initial_messages(
-                    run["definition"]["steps"][run["node"]], result
-                )
+                run["messages"] = self._initial_messages(agent_step(run), result)
                 self._commit(run, "workflow_node_completed", {"node": run["node"] - 1})
 
     def _prepare_model_request(self, run, step, messages, context_manifest):
@@ -746,7 +807,7 @@ class LocalEngine:
             action["received_response"] = copy.deepcopy(encoded)
             action["status"] = "response_received"
             action["attempts"][-1]["status"] = "completed"
-            step = run["definition"]["steps"][action["node"]]
+            step = agent_step(run, action["node"])
             self.store.settle(
                 attempt_id, step["model_credits"], encoded.get("usage") or {"usage": "unknown"}
             )
@@ -770,7 +831,7 @@ class LocalEngine:
         proposals = []
         if not closed:
             self._check_release(run)
-            step = run["definition"]["steps"][action["node"]]
+            step = agent_step(run, action["node"])
             harness = self.harness
             try:
                 response = ModelResponse(
@@ -1072,7 +1133,7 @@ class LocalEngine:
         if not callable(method):
             method = LegacyMemoryRecallAdapter(memory).validate_facts
         owner, backend_id = _method_backend(method)
-        namespace = run["definition"]["steps"][run["node"]]["name"]
+        namespace = agent_step(run)["name"]
         result = await memory_call(method, self.scope, namespace, copy.deepcopy(references))
         self._component_result(result, type(None), "Memory reference validation")
         if owner is not None and owner.backend_id != backend_id:
@@ -1105,7 +1166,7 @@ class LocalEngine:
         run = self._authorized(run_id)
         if run["state"] in TERMINAL or run["state"] == "cancelling":
             return True
-        step = run["definition"]["steps"][run["node"]]
+        step = agent_step(run)
         existing = next(
             (
                 item

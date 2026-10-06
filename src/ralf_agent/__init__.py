@@ -87,9 +87,39 @@ from .vector import (
     VectorIndex,
     VectorRetriever,
 )
+from .workflow import (
+    BranchCondition,
+    ExecutionPlan,
+    GraphNode,
+    GraphWorkflowSpec,
+    IdentityTransform,
+    InputMap,
+    Literal,
+    NodeTransform,
+    StaticWorkflowCompiler,
+    StaticWorkflowInterpreter,
+    ValueRef,
+    WorkflowCompiler,
+    WorkflowInterpreter,
+    WorkflowSelection,
+)
 
-__version__ = "0.1.0.dev9"
+__version__ = "0.1.0.dev10"
 __all__ = [
+    "BranchCondition",
+    "ExecutionPlan",
+    "GraphNode",
+    "GraphWorkflowSpec",
+    "IdentityTransform",
+    "InputMap",
+    "Literal",
+    "NodeTransform",
+    "StaticWorkflowCompiler",
+    "StaticWorkflowInterpreter",
+    "ValueRef",
+    "WorkflowCompiler",
+    "WorkflowInterpreter",
+    "WorkflowSelection",
     "AgentSpec",
     "AsyncLongTermMemoryStore",
     "AsyncSessionStore",

@@ -20,6 +20,9 @@ COMPONENT_KINDS = frozenset(
         "recall_policy",
         "recall_planner",
         "knowledge",
+        "workflow_compiler",
+        "workflow_interpreter",
+        "workflow_transforms",
     }
 )
 
@@ -200,6 +203,10 @@ def load_spec(path):
             if not isinstance(steps, list):
                 raise ValidationError("Workflow steps must be Agent declarations")
             return WorkflowSpec(steps=[AgentSpec(**step) for step in steps], **value)
+        if kind == "graph":
+            from .workflow import GraphWorkflowSpec
+
+            return GraphWorkflowSpec.from_dict(value)
     except (KeyError, TypeError) as exc:
         raise ValidationError("Invalid Agent/Workflow declaration fields") from exc
-    raise ValidationError("Spec kind must be agent or sequence")
+    raise ValidationError("Spec kind must be agent, sequence or graph")

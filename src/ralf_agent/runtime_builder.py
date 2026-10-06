@@ -269,6 +269,26 @@ class ComponentRegistry:
             self.register(kind, "sqlite", _sqlite_memory)
             self.register(kind, "in-memory", lambda c, ctx: InMemoryMemory(**c))
         self.register("knowledge", "sqlite-lexical", _lexical)
+        from .workflow import IdentityTransform, StaticWorkflowCompiler, StaticWorkflowInterpreter
+
+        self.register(
+            "workflow_compiler",
+            "static",
+            lambda c, ctx: StaticWorkflowCompiler(),
+            validator=lambda c: _fields(c, {}),
+        )
+        self.register(
+            "workflow_interpreter",
+            "static",
+            lambda c, ctx: StaticWorkflowInterpreter(),
+            validator=lambda c: _fields(c, {}),
+        )
+        self.register(
+            "workflow_transforms",
+            "identity",
+            lambda c, ctx: {"identity": IdentityTransform()},
+            validator=lambda c: _fields(c, {}),
+        )
 
     def register(self, kind, name, factory, *, validator=None):
         if (

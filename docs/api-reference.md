@@ -1,6 +1,6 @@
 # 常用 API 与 CLI 参考
 
-版本：0.1.0.dev9／local-4。公开 API 为预览契约；模型协议、有界召回、本地 RAG、版本化装配和独立接收／采纳有本地行为证据，完整 M1 未完成。已交付边界见 [实现清单](implementation-status.md)，适配器要求见 [扩展指南](extending.md)。以下为常用入口，不替代端口契约。
+版本：0.1.0.dev10／local-4。公开 API 为预览契约；模型协议、有界召回、本地 RAG、版本化装配和独立接收／采纳有本地行为证据，完整 M1 未完成。已交付边界见 [实现清单](implementation-status.md)，适配器要求见 [扩展指南](extending.md)。以下为常用入口，不替代端口契约。
 
 ## 定义与装配
 
@@ -28,6 +28,10 @@ from ralf_agent import (
 | --- | --- |
 | `AgentSpec(name, instructions, tools=(), ...)` | 允许工具名与 Provider 别名固定；默认最多 8 次决策；output_schema 为可选 JSON Schema |
 | `WorkflowSpec(name, steps, version="1")` | 非空 AgentSpec 顺序步骤；前步验收后的输出作为下一步输入 |
+| `GraphWorkflowSpec(name, nodes, version="1", output=None, output_schema=None)` | 不可变串行静态图；依赖、条件、输入／结果绑定与节点状态持久恢复 |
+| `GraphNode`／`ValueRef`／`Literal`／`InputMap`／`BranchCondition` | Agent 或纯变换节点；明确缺失／null、依赖祖先引用与分支合并 |
+| `ExecutionPlan`／`WorkflowCompiler`／`WorkflowInterpreter`／`WorkflowSelection` | 计划 v1 与纯编译／选择端口；默认 static，公共边界验证选择语义 |
+| `NodeTransform`／`IdentityTransform` | 同步纯 JSON 计算；通过 workflow_transforms 注册，不执行外部效果 |
 | `SQLiteStore(path, readonly=False)` | 本地执行事实；固定文件身份，拒绝硬链接；默认写模式启用 WAL |
 | `LocalEngine(store, providers=..., tools=..., ...)` | 默认租约／记忆、NativeHarness 与 PythonToolExecutor；scope/session_store/memory_store/policy/context_assembler/harness/tool_executor 可注入；可选 recall_policy、recall_planner、knowledge、runtime_profile 默认 None |
 | `ExecutionEngine` | 公共 submit/drive/status/events/approve/cancel/reconcile/wait_for_threads/close，不要求具体继承关系 |
@@ -37,7 +41,7 @@ from ralf_agent import (
 | `ComponentRegistry.register(kind, name, factory)`／`RuntimeBuilder.build(profile, db_path)` | 显式构造适配器；BuildContext.own 接管同步关闭资源，返回 RuntimeInstance |
 | `ProfiledEngine(catalog, db_path, builder=None, ...)` | 按原 profile 路由任务；一次一个本地实例，缺失版本不回退新默认 |
 | `RunReader`／`CommandReceiptReader` | 可替换只读任务端口；后者是可选控制回执查询能力，默认 SQLiteRunReader 两者均实现 |
-| `load_spec(path)` | JSON/TOML Agent 或固定顺序 Workflow 声明 |
+| `load_spec(path)` | 严格 JSON/TOML Agent、sequence 或 graph 声明；完整用法见[静态 Workflow](static-workflows.md) |
 | `Scope(workspace="default", principal="local-owner")` | 可信宿主传入的作用域；不是企业身份认证 |
 | `OpenAIChatProvider(model, ...)` | 异步 Chat Completions；base_url/timeout/token_parameter、temperature/top_p/stop/seed、stream/capabilities 可配置；密钥通过 api_key 或环境传入 |
 | `DeepSeekChatProvider`／`AnthropicProvider`／`GeminiProvider` | 明确非思考 preset、原生 Messages 文本/工具、原生 Gemini 文本；签名工具与多模态不支持 |

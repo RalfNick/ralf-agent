@@ -83,12 +83,12 @@ def main(argv=None):
     init = commands.add_parser("init", help="Create a standalone, offline Agent starter")
     init.add_argument("directory")
     init.add_argument(
-        "--template", default="oncall", help="Starter template: oncall, rag, config or model"
+        "--template", default="oncall", help="Starter template: oncall, rag, config, model or graph"
     )
     run = commands.add_parser(
-        "run", help="Submit an Agent/sequence declaration using a runtime config or factory"
+        "run", help="Submit an Agent/Workflow declaration using a runtime config or factory"
     )
-    run.add_argument("--spec", required=True, help="JSON/TOML Agent or sequential Workflow spec")
+    run.add_argument("--spec", required=True, help="JSON/TOML Agent, sequence or graph spec")
     inputs = run.add_mutually_exclusive_group(required=True)
     inputs.add_argument("--input", help="Text task input")
     inputs.add_argument("--input-json", help="Structured JSON task input")
