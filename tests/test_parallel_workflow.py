@@ -561,3 +561,234 @@ def test_parallel_conditional_join_uses_skipped_default(tmp_path):
         handle = engine.submit(spec, "right", command_id="s")
         assert asyncio.run(engine.drive(handle.run_id)).result == {"left": None, "right": "right"}
         assert engine.diagnostics(handle.run_id).workflow["nodes"]["left"]["state"] == "skipped"
+
+
+@pytest.mark.parametrize("parallel", [True, False])
+def test_policy_reconciliation_never_redispatches_confirmed_write(tmp_path, parallel):
+    calls = []
+
+    async def handler(arguments, ctx):
+        calls.append(arguments["i"])
+        if calls.count(0) == 1:
+            raise RuntimeError("response lost after commit")
+        return {"source": "handler"}
+
+    with runtime(tmp_path / "run.db", handler, effect="unqueryable_write") as engine:
+        spec = GraphWorkflowSpec(
+            "confirmed",
+            [GraphNode("write", tool="work", input=Literal({"i": 0}))],
+            max_concurrency=2 if parallel else 1,
+        )
+        handle = engine.submit(spec, {}, command_id="s")
+        assert asyncio.run(engine.drive(handle.run_id)).state == "waiting_reconciliation"
+
+        def policy(scope, spec, arguments):
+            action = next(
+                a for a in engine.store.run(handle.run_id)["actions"] if a["kind"] == "tool"
+            )
+            if action["status"] == "outcome_unknown":
+                engine.reconcile(
+                    handle.run_id, action["id"], {"source": "operator"}, command_id="confirmed"
+                )
+
+        engine.policy = policy
+        result = asyncio.run(engine.drive(handle.run_id))
+        assert result.state == "succeeded" and result.result == {"write": {"source": "operator"}}
+        action = engine.store.run(handle.run_id)["actions"][0]
+        assert (
+            calls == [0]
+            and len(action["attempts"]) == 1
+            and action["result"] == {"source": "operator"}
+        )
+
+
+def test_failed_parallel_run_holds_sessions_until_append_finishes(tmp_path):
+    from ralf_agent import InMemoryMemory
+
+    async def run():
+        entered, release = asyncio.Event(), asyncio.Event()
+
+        class Sessions(InMemoryMemory):
+            async def append(self, *args, **kwargs):
+                if args[2]["agent"] == "slow":
+                    entered.set()
+                    await release.wait()
+                return super().append(*args, **kwargs)
+
+        class Provider:
+            identity = {"kind": "held-session", "version": "1"}
+
+            async def complete(self, messages, tools):
+                if messages[0]["content"] == "fail":
+                    await entered.wait()
+                    return ModelResponse(output="bad")
+                return ModelResponse(output="ok")
+
+        sessions = Sessions(backend_id="held-sessions")
+        with runtime(tmp_path / "run.db", provider=Provider(), session_store=sessions) as engine:
+            spec = GraphWorkflowSpec(
+                "held",
+                [
+                    GraphNode("slow", agent=AgentSpec("slow", "slow")),
+                    GraphNode(
+                        "fail", agent=AgentSpec("fail", "fail"), output_schema={"type": "integer"}
+                    ),
+                ],
+                max_concurrency=2,
+            )
+            handle = engine.submit(spec, "one", command_id="s", session_id="chat")
+            task = asyncio.create_task(engine.drive(handle.run_id))
+            await asyncio.wait_for(entered.wait(), 2)
+            for _ in range(40):
+                await asyncio.sleep(0)
+                if engine.status(handle.run_id).state == "failed":
+                    break
+            try:
+                assert engine.status(handle.run_id).state == "failed" and not task.done()
+                assert engine.store.session_owner(engine.scope, "chat:node:slow") == handle.run_id
+                with pytest.raises(ValidationError, match="Session"):
+                    engine.submit(
+                        AgentSpec("new", "new"), "two", command_id="s2", session_id="chat:node:slow"
+                    )
+            finally:
+                release.set()
+                await task
+            assert engine.store.session_owner(engine.scope, "chat:node:slow") is None
+            assert len(sessions.read(engine.scope, "chat:node:slow")[1]) == 1
+            second = engine.submit(
+                AgentSpec("new", "new"), "two", command_id="s2", session_id="chat:node:slow"
+            )
+            assert (await engine.drive(second.run_id)).state == "succeeded"
+
+    asyncio.run(run())
+
+
+def test_branch_failure_emits_parent_failure_exactly_once(tmp_path):
+    spec = GraphWorkflowSpec(
+        "fail",
+        [
+            GraphNode("bad", transform="identity", output_schema={"type": "integer"}),
+            GraphNode("sibling", transform="identity"),
+        ],
+        max_concurrency=2,
+    )
+    with runtime(tmp_path / "run.db") as engine:
+        handle = engine.submit(spec, "wrong", command_id="s")
+        assert asyncio.run(engine.drive(handle.run_id)).state == "failed"
+        asyncio.run(engine.drive(handle.run_id))
+        events = [e for e in engine.events(handle.run_id) if e.kind == "run_failed"]
+        assert len(events) == 1 and events[0].data["code"] == "validation_error"
+
+
+def test_failed_parallel_sessions_survive_bulk_cancel_until_real_memory_thread_exits(tmp_path):
+    from ralf_agent import InMemoryMemory, ThreadedMemoryAdapter
+
+    entered, release = threading.Event(), threading.Event()
+
+    class Sessions(InMemoryMemory):
+        def append(self, *args, **kwargs):
+            if args[2]["agent"] == "slow":
+                entered.set()
+                release.wait(5)
+            return super().append(*args, **kwargs)
+
+    class Provider:
+        identity = {"kind": "memory-thread", "version": "1"}
+
+        async def complete(self, messages, tools):
+            if messages[0]["content"] == "fail":
+                for _ in range(100):
+                    if entered.is_set():
+                        break
+                    await asyncio.sleep(0.01)
+                return ModelResponse(output="bad")
+            return ModelResponse(output="ok")
+
+    sessions = Sessions(backend_id="thread-sessions")
+    engine = runtime(
+        tmp_path / "run.db", provider=Provider(), session_store=ThreadedMemoryAdapter(sessions)
+    )
+    spec = GraphWorkflowSpec(
+        "held",
+        [
+            GraphNode("slow", agent=AgentSpec("slow", "slow")),
+            GraphNode("fail", agent=AgentSpec("fail", "fail"), output_schema={"type": "integer"}),
+        ],
+        max_concurrency=2,
+    )
+    handle = engine.submit(spec, "task", command_id="s", session_id="chat")
+    loop = asyncio.new_event_loop()
+
+    async def reach_failure():
+        for _ in range(100):
+            if engine.status(handle.run_id).state == "failed":
+                return
+            await asyncio.sleep(0.01)
+        raise AssertionError("sibling did not fail")
+
+    try:
+        loop.create_task(engine.drive(handle.run_id))
+        loop.run_until_complete(reach_failure())
+        for task in asyncio.all_tasks(loop):
+            task.cancel()
+        loop.run_until_complete(asyncio.gather(*asyncio.all_tasks(loop), return_exceptions=True))
+        assert engine.store.session_owner(engine.scope, "chat:node:slow") == handle.run_id
+        with pytest.raises(ValidationError, match="Session"):
+            engine.submit(
+                AgentSpec("new", "new"), "task", command_id="new", session_id="chat:node:slow"
+            )
+        release.set()
+        loop.run_until_complete(engine.wait_for_threads())
+        assert engine.store.session_owner(engine.scope, "chat:node:slow") is None
+    finally:
+        release.set()
+        loop.run_until_complete(engine.wait_for_threads())
+        engine.close()
+        loop.close()
+
+
+def test_crashed_terminal_quiescence_reservation_is_cleared_by_recovery(tmp_path):
+    path = tmp_path / "run.db"
+    with runtime(path) as engine:
+        spec = GraphWorkflowSpec(
+            "failed", [GraphNode("a", transform="identity", output_schema=False)], max_concurrency=2
+        )
+        handle = engine.submit(spec, "task", command_id="s", session_id="chat")
+        assert asyncio.run(engine.drive(handle.run_id)).state == "failed"
+        # Recreate the durable state at the failure-before-worker-drain window.
+        with engine.store.transaction():
+            run = engine.store.run(handle.run_id)
+            run["workflow"]["quiescent"] = False
+            engine.store.save_run(run)
+    with runtime(path) as engine:
+        assert engine.store.session_owner(engine.scope, "chat:node:a") == handle.run_id
+        assert asyncio.run(engine.drive(handle.run_id)).state == "failed"
+        assert engine.store.session_owner(engine.scope, "chat:node:a") is None
+
+
+def test_parallel_approval_rejection_emits_parent_failure_once(tmp_path):
+    with runtime(
+        tmp_path / "run.db", lambda a, c: a, effect="unqueryable_write", approval=True
+    ) as engine:
+        handle = engine.submit(graph(), {}, command_id="s")
+        action = asyncio.run(engine.drive(handle.run_id)).pending[0]
+        receipt = engine.approve(
+            handle.run_id,
+            action["action_id"],
+            action["digest"],
+            command_id="reject",
+            approved=False,
+        )
+        assert (
+            engine.approve(
+                handle.run_id,
+                action["action_id"],
+                action["digest"],
+                command_id="reject",
+                approved=False,
+            )
+            == receipt
+        )
+        asyncio.run(engine.drive(handle.run_id))
+        failed = [e for e in engine.events(handle.run_id) if e.kind == "run_failed"]
+        assert len(failed) == 1 and failed[0].data["code"] == "approval_rejected"

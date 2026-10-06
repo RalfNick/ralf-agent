@@ -108,6 +108,7 @@ class NodeExecutionStore:
 
                 parent["state"], parent["error"] = "failed", copy.deepcopy(frame["error"])
                 close_nodes(parent, index)
+                self.authority.emit(self.run_id, "run_failed", {"code": parent["error"]["code"]})
             self.authority.save_run(parent)
             frame["revision"] = parent["revision"]
 
@@ -133,6 +134,7 @@ class NodeEngine(LocalEngine):
         self.store = NodeExecutionStore(parent.store, run_id, node_id)
         self._active, self._inflight, self._locks, self._drive_users = set(), {}, {}, {}
         self._parallel_tasks = {}
+        self._quiescing_runs = set()
         self._workflow = StaticWorkflowRuntime(
             self, StaticWorkflowCompiler(), StaticWorkflowInterpreter(), parent.workflow_transforms
         )

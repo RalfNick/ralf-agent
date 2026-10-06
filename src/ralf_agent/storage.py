@@ -209,7 +209,10 @@ class SQLiteStore:
                 run["id"]
                 for run in self._scoped_runs(scope)
                 if session_id in run.get("session_ids", [run["session_id"]])
-                and run["state"] not in {"succeeded", "failed", "cancelled"}
+                and (
+                    run["state"] not in {"succeeded", "failed", "cancelled"}
+                    or run.get("workflow", {}).get("quiescent") is False
+                )
             ),
             None,
         )

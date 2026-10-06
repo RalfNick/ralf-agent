@@ -169,3 +169,5 @@ Package/upgrade evidence and independent final review are recorded separately.
 Per-Run concurrency does not deliver global capacity, planning, ChildRun/teams,
 message queues, dataflow, multi-process/distributed execution or full M1.
 See [parallel Workflow](parallel-workflows.md).
+
+独立 dev12 Review 复现并修复：授权回调已核验完成仍重复派发、终态先于真实 Session append 结束而释放预留、父级失败事件缺失。七个新增回归通过；最终完整 suite **922 passed in 75.81s**，warnings-as-errors。资源静止标记持久保存，真实记忆线程／bulk cancellation／终态恢复有行为覆盖。审查取舍和安装证据见[并行审查记录](../architecture/reviews/2026-10-06-parallel-workflow.md)。

@@ -92,7 +92,10 @@ class ExecutionStore(Protocol):
     def emit(self, run_id: str, kind: str, data: dict | None = None) -> None: ...
     def events(self, run_id: str, after: int = 0, limit: int = 1000) -> list[RunEvent]: ...
     def session_owner(self, scope: Scope, session_id: str) -> str | None:
-        """Active owner, including all accepted Run session_ids when present."""
+        """Owner of accepted session_ids, retained while workflow.quiescent is False.
+
+        A terminal Run may still have a real worker completing Session I/O.
+        """
         ...
 
     def unresolved_effect(

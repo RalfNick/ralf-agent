@@ -1,6 +1,6 @@
 # Bounded Parallel Workflow Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** Execute independent static graph nodes concurrently under one durable Run and shared governance.
 
@@ -28,10 +28,10 @@ Package 0.1.0.dev12. max_concurrency is an integer 1..32; default 1 omits the fi
 
 **Interfaces:** constructors/pure scheduler in the spec; internal node view forwards authority operations and maps only branch data. Existing model/tool receiving/adoption and Action identity remain authoritative.
 
-- [ ] Write plan/scheduler regressions; run `.venv/bin/python -m pytest -q tests/test_workflow_scheduler.py`, expected missing public API/parallel field failures.
-- [ ] Implement canonical v3 plans and validated pure batch scheduler; run the same file and existing Workflow unit tests, expected pass.
-- [ ] Write barrier-based engine/governance/ownership/crash regressions before execution code; run `tests/test_parallel_workflow.py`, expected serial singleton/unsupported runtime failures.
-- [ ] Implement transactional node frames, controls and bounded supervisor; run related Agent/Tool/Workflow/lifecycle suites, expected no lost sibling progress, shared credits and evidence preservation.
-- [ ] Write adoption/starter/config tests; deliver default factory/CLI inspection/packaged parallel starter and guide. Update dev12 support matrix without broader claims.
-- [ ] Full `.venv/bin/python -m pytest -q -W error`, Ruff/format/whitespace/docs checks; build/install outside checkout and actual dev11-to-dev12 receipt/manifest replay, expected pass.
-- [ ] Commit, dispatch one fresh read-only reviewer, fix material findings with RED→GREEN and full suite, record evidence and scoped rulings; keep local branch.
+- [x] Write plan/scheduler regressions; run `.venv/bin/python -m pytest -q tests/test_workflow_scheduler.py`, expected missing public API/parallel field failures.
+- [x] Implement canonical v3 plans and validated pure batch scheduler; run the same file and existing Workflow unit tests, expected pass.
+- [x] Write barrier-based engine/governance/ownership/crash regressions before execution code; run `tests/test_parallel_workflow.py`, expected serial singleton/unsupported runtime failures.
+- [x] Implement transactional node frames, controls and bounded supervisor; run related Agent/Tool/Workflow/lifecycle suites, expected no lost sibling progress, shared credits and evidence preservation.
+- [x] Write adoption/starter/config tests; deliver default factory/CLI inspection/packaged parallel starter and guide. Update dev12 support matrix without broader claims.
+- [x] Full `.venv/bin/python -m pytest -q -W error`, Ruff/format/whitespace/docs checks; build/install outside checkout and actual dev11-to-dev12 receipt/manifest replay, expected pass.
+- [x] Commit, dispatch one fresh read-only reviewer, fix material findings with RED→GREEN and full suite, record evidence and scoped rulings; keep local branch.

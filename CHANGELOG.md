@@ -2,6 +2,16 @@
 
 记录用户可见行为和兼容边界。版本为开发预览；此记录不表示已经上传 PyPI、创建 Git 标签或发布 GitHub Release。
 
+## 0.1.0.dev12 — Unreleased
+
+新增显式有界并行静态图（max_concurrency=2..32，计划 v3）、纯 WorkflowScheduler／WorkflowBatch 与默认 static-ready 调度器。每个节点保存独立执行帧和派生 Session，依赖／条件／结果绑定显式合并，共享一个 Run、预算、命令和事件权威。默认 max_concurrency=1 保持旧声明、v1/v2 计划和 Manifest。
+
+新增 parallel starter、JSON/TOML 并发配置、调度工厂和节点诊断。独立审批／未知效果暂停不阻止其他就绪分支；失败／取消停止新调度并保存已派发证据。监督任务、节点 Task 和真实线程保持 Coordinator；终态的 Session 预留保留到资源静止，并支持崩溃后保守清理。
+
+修复授权回调核验 Action 后仍可能重复派发的原生循环问题，串行／并行共用；补齐父级失败事件。独立审查复现的效果与 Session 竞争均有回归。922 项测试、安装包 dev11 升级／恢复与五个并行崩溃窗口通过。无新增运行依赖；ExecutionStore v1 需遵循可选 session_ids／quiescent 字段的预留契约。
+
+当前并发仅按单 Run 限制；全局容量、动态 Planner、ChildRun／团队、MQ、分布式、沙箱和完整 M1 仍未交付或未验收。预览未发布到 PyPI／GitHub Release。
+
 ## 0.1.0.dev11 — Unreleased
 
 新增 Graph Tool 节点，无需模型即可执行 async／同步业务工具。沿用授权、审批、预算、稳定效果身份及独立回执采纳；Tool 计划使用 v2，既有 Agent／sequence／Graph v1 的序列化和身份不变。

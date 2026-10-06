@@ -49,13 +49,13 @@ with RuntimeBuilder().build(profile, ".ralf/parallel.sqlite") as engine:
 
 ## 上下文、审批与恢复
 
-每个节点保存自己的已绑定输入、消息、决策计数、接收证据和结果。Agent 的会话 ID 为 `<parent-session>:node:<node-id>`，提交时一并预留。父会话不隐式加入分支历史；不同分支通过 `ValueRef`／`InputMap` 分享结果。长期事实仍按 Agent 名称作用域召回；相同 Agent 名称可以看到相同事实。诊断显示节点输入、状态、结果、会话 ID 和错误，不公开内部执行帧。
+每个节点保存自己的已绑定输入、消息、决策计数、接收证据和结果。Agent 的会话 ID 为 `<parent-session>:node:<node-id>`，提交时一并预留；父 Run 已失败／取消但仍有工作未退出时也保留预留。父会话不隐式加入分支历史；不同分支通过 `ValueRef`／`InputMap` 分享结果。长期事实仍按 Agent 名称作用域召回；相同 Agent 名称可以看到相同事实。诊断显示节点输入、状态、结果、会话 ID 和错误，不公开内部执行帧。
 
 所有分支属于同一个 Run、信用预算、命令日志和事件序列。一个分支等待审批或效果核验时，它的后继等待，其他独立就绪分支可以继续。活动分支全部暂停后，父状态优先报告 `waiting_reconciliation`，其次 `waiting_approval`。检查所有节点和待审批操作，逐项审批后恢复原 Run；重复命令返回原回执。
 
 恢复时每个未完成帧每次 drive 至多尝试一次，防止一个未知操作忙循环。审批或人工核验在另一个分支等待期间受理后，可能需要再次 `drive`／`resume` 继续刚刚退出的帧；父状态此时可为 `running`，不代表已有后台服务自动推进。
 
-失败停止新节点，等待已经启动的调用结束并保存效果证据。已完成节点结果保留；取消也停止后续调度，不会撤销业务写入。调用者取消 drive 时，监督任务继续追踪已启动工作；只要节点 Task 或真实受管理线程仍活跃，不能释放 Coordinator 或重启同一 Run。整个事件循环取消后，同步线程仍可能运行，需等待真实线程退出再关闭。
+失败停止新节点，等待已经启动的调用结束并保存效果证据。已完成节点结果保留；取消也停止后续调度，不会撤销业务写入。调用者取消 drive 时，监督任务继续追踪已启动工作；只要节点 Task 或真实受管理线程仍活跃，不能释放 Coordinator 或重启同一 Run。整个事件循环取消后，同步线程仍可能运行，需等待真实线程退出再关闭。`workflow.quiescent=false` 表示资源仍未确认静止；`wait_for_threads()`、正常执行收尾或关闭会在真实工作退出后清理标记。进程崩溃留下的终态标记，由原 Run 的 `drive`／`resume` 在持有新 Coordinator 并采纳残留证据后清理。
 
 恢复复用已落盘的模型响应和工具观察；尚未接收落盘的模型调用可能重试并留下未知信用预留。外部写是否可重试仍由效果分类决定：下游幂等键、核验接口或人工确认不可省略。未知写即使 Run 已失败／取消也保留。框架不承诺任意外部操作恰好执行一次。
 
@@ -79,4 +79,4 @@ class ReverseReady(StaticWorkflowScheduler):
 
 版本化 Profile 的 `components.workflow_scheduler` 默认 adapter 为 `static-ready`，接受空配置。调度身份仅进入 v3 图 Manifest；旧 Agent、sequence、v1/v2 图的默认身份保持不变。单节点帧内部固定使用默认串行编译器／解释器处理已接受节点；父级调度器是并行选择权威。执行恢复不会重新编译原图。
 
-v3 图需要 dev12 及原版本组件，dev11 无法继续。SQLite Schema 仍为 v1；ExecutionStore 实现需在 `session_owner` 中识别 Run 的可选 `session_ids` 预留列表，并保持原有事务、事件、预算和独占租约契约。当前没有多进程执行池、分布式调度、ChildRun、Planner、团队消息或数据流引擎。
+v3 图需要 dev12 及原版本组件，dev11 无法继续。SQLite Schema 仍为 v1；ExecutionStore 实现需在 `session_owner` 中识别 Run 的可选 `session_ids` 预留列表，以及终态 Run 的 `workflow.quiescent=false` 保留标记，并保持原有事务、事件、预算和独占租约契约。当前没有多进程执行池、分布式调度、ChildRun、Planner、团队消息或数据流引擎。

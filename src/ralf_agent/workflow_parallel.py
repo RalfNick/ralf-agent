@@ -190,6 +190,7 @@ class ParallelWorkflowRuntime:
                 engine.cancel(run_id, command_id=f"parallel-cancel:{run_id}:{id(active)}")
             await self._drain(active)
             raise
+        engine._mark_workflow_quiescent(run_id, supervisor=True)
         return engine.status(run_id)
 
     @staticmethod

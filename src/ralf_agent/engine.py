@@ -134,6 +134,7 @@ class LocalEngine:
         self._active = set()
         self._inflight = {}
         self._parallel_tasks = {}
+        self._quiescing_runs = set()
         self._locks = {}
         self._drive_users = {}
         self._threads = ThreadExecutionTracker()
@@ -205,6 +206,9 @@ class LocalEngine:
                 "Finish active drive tasks and synchronous calls before closing the coordinator"
             )
         if self._lifecycle != "store_closed":
+            if self._lifecycle == "open":
+                for run_id in tuple(self._quiescing_runs):
+                    self._mark_workflow_quiescent(run_id)
             self._lifecycle = "closing"
             try:
                 self.store.close()
@@ -220,6 +224,25 @@ class LocalEngine:
     async def wait_for_threads(self):
         """Wait for owned synchronous calls; this does not cancel drive tasks."""
         await self._threads.drain()
+        for run_id in tuple(self._quiescing_runs):
+            self._mark_workflow_quiescent(run_id)
+
+    def _mark_workflow_quiescent(self, run_id, *, supervisor=False):
+        if (
+            self._threads.has_active_for(run_id)
+            or any(not t.done() for t in self._parallel_tasks.get(run_id, ()))
+            or (not supervisor and self._operation_active(run_id))
+        ):
+            return
+        with self.store.transaction():
+            run = self._authorized(run_id)
+            if (
+                run.get("plan", {}).get("schema_version") == 3
+                and run["workflow"].get("quiescent") is False
+            ):
+                run["workflow"]["quiescent"] = True
+                self._commit(run, "workflow_quiesced")
+        self._quiescing_runs.discard(run_id)
 
     def _ensure_open(self):
         if self._lifecycle != "open":
@@ -468,6 +491,7 @@ class LocalEngine:
                     from .workflow_parallel import close_nodes
 
                     close_nodes(run, action["node"])
+                    self.store.emit(run_id, "run_failed", {"code": "approval_rejected"})
             self.store.save_run(run)
             self.store.emit(
                 run_id,
@@ -625,6 +649,8 @@ class LocalEngine:
             and not any(not t.done() for t in self._parallel_tasks.get(run_id, ()))
         ):
             self._locks.pop(run_id, None)
+        if run_id in self._quiescing_runs and self._lifecycle == "open":
+            self._mark_workflow_quiescent(run_id)
 
     async def _drive_locked(self, run_id):
         # A queued caller may have passed the check between two Actions while
@@ -638,6 +664,8 @@ class LocalEngine:
                 if self._normalize_abandoned(run):
                     self._commit(run, "abandoned_attempts_unknown")
             self._adopt_received_evidence(run_id)
+            if run.get("plan", {}).get("schema_version") == 3:
+                self._mark_workflow_quiescent(run_id)
             return self.status(run_id)
         self._check_release(run)
         self._active.add(run_id)
@@ -647,6 +675,9 @@ class LocalEngine:
                 self._normalize_abandoned(run)
                 if run["state"] != "cancelling":
                     run["state"] = "running"
+                if run.get("plan", {}).get("schema_version") == 3:
+                    run["workflow"]["quiescent"] = False
+                    self._quiescing_runs.add(run_id)
                 self._commit(run, "run_resumed")
             if run.get("plan", {}).get("schema_version") == 3:
                 from .workflow_parallel import ParallelWorkflowRuntime
@@ -1499,6 +1530,8 @@ class LocalEngine:
         if run["state"] in TERMINAL or run["state"] == "cancelling":
             return True
         action = next(a for a in run["actions"] if a["id"] == action_id)
+        if action["status"] == "completed":
+            return True
         if action["status"] == "receipt_received":
             self._adopt_tool_observation(run_id, action_id)
             return True
@@ -1518,6 +1551,11 @@ class LocalEngine:
             if run["state"] in TERMINAL or run["state"] == "cancelling":
                 return True
             action = next(a for a in run["actions"] if a["id"] == action_id)
+            if action["status"] == "completed":
+                return True
+            if action["status"] == "receipt_received":
+                self._adopt_tool_observation(run_id, action_id)
+                return True
         if tool.spec.effect != "read_only":
             unresolved = self.store.unresolved_effect(
                 self.scope, action["tool"], action["arguments"], action_id
@@ -1585,6 +1623,13 @@ class LocalEngine:
                 return True
             self._check_release(run)
             action = next(a for a in run["actions"] if a["id"] == action_id)
+            # A callback or evidence confirmation may have settled the Action.
+            # Reservation must never reopen an immutable ResultCommit.
+            if action["status"] == "completed":
+                return True
+            if action["status"] == "receipt_received":
+                self._adopt_tool_observation(run_id, action_id)
+                return True
             self.store.reserve(run_id, attempt_id, tool.spec.cost)
             action["attempts"].append({"id": attempt_id, "status": "executing"})
             action["status"] = "executing"

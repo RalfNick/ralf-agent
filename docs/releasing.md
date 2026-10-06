@@ -69,3 +69,5 @@ dev9 制品还需验证三个 HTTP/SSE 协议和 DeepSeek 固定 non-thinking �
 发布说明应注明预览 API、当前能力和升级限制。漏洞处理见 [安全政策](../SECURITY.md)，功能／缺陷贡献见 [贡献指南](../CONTRIBUTING.md)。
 
 变更固定身份或存储格式前，先实现迁移／拒绝策略与真实恢复测试。未知业务效果先核验；回滚程序版本并不自动回滚数据库或远端写入。修复发布不能依赖删除执行日志来获得干净状态。
+
+dev12 制品还需在源码外运行 `ralf init my-parallel --template parallel`，验证历史 Profile 恢复、分支 Session／审批、共享预算与五个崩溃窗口；旧 dev11 native/v1/v2 请求／Manifest 保持精确，dev11 续跑 v3 在派发前拒绝。检查终态资源尚未静止时仍保留 Session 预留，原生授权回调核验不会再次派发。

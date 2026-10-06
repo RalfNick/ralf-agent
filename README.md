@@ -234,3 +234,5 @@ python examples/evaluate.py
 SDK、运行时和基础治理按 [Apache-2.0](LICENSE) 开源。外部模型／Harness 的服务和许可独立适用。
 
 并行节点隔离上下文、共享预算与分支审批／恢复见[有界并行 Workflow](docs/parallel-workflows.md)。
+
+[并行 Workflow Review](architecture/reviews/2026-10-06-parallel-workflow.md)记录 dev12 的执行隔离、资源静止、回调核验修复和独立审查证据。
