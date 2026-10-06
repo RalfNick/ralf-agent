@@ -1,6 +1,8 @@
 # 第一次使用 Ralf-Agent
 
-本文面向 **0.1.0.dev8，M1 核心预览**。需要 Python 3.11+ 和 Linux／macOS。先用离线项目完成提交、审批和恢复，再接入自己的模型与工具。知识问答可从 [RAG 模板教程](recall-and-rag.md) 开始；无需改 Python 的版本配置从 [运行装配模板](runtime-assembly.md) 开始。
+本文面向 **0.1.0.dev9，M1 核心预览**。需要 Python 3.11+ 和 Linux／macOS。先用离线项目完成提交、审批和恢复，再接入自己的模型与工具。知识问答可从 [RAG 模板教程](recall-and-rag.md) 开始；无需改 Python 的版本配置从 [运行装配模板](runtime-assembly.md) 开始。
+
+真实模型可用 `ralf init my-model-agent --template model` 生成独立项目，先替换 model/协议/凭据环境变量；配置限制与验证等级见 [模型接入](model-adapters.md)。生成模板不执行收费请求，也不表示账户与型号已验证。
 
 当前已验证源码和本地 wheel 的安装路径；尚未核验 PyPI 或 GitHub Release 中有对应发行包。不要把 `pip install ralf-agent` 当作已验证的安装方式。
 
@@ -13,7 +15,7 @@
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
-python -m pip install "/path/to/ralf_agent-0.1.0.dev8-py3-none-any.whl"
+python -m pip install "/path/to/ralf_agent-0.1.0.dev9-py3-none-any.whl"
 ralf --version
 ```
 

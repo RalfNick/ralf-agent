@@ -1,6 +1,6 @@
 # 审批、重启与未知效果恢复
 
-适用版本：0.1.0.dev8／local-4。两个接收／采纳窗口已有本地真实进程回归证据，完整 M1 验收仍未完成。恢复使用原数据库、Scope 和工厂，包括原 Harness／ToolExecutor、可选 Recall／Knowledge／planner 身份。使用 --config 时保留原 profile 声明、适配器代码及数据，见 [运行装配](runtime-assembly.md)。执行日志与业务效果证据应一起保留；取消和关闭不会撤销远端操作。
+适用版本：0.1.0.dev9／local-4。两个接收／采纳窗口已有本地真实进程回归证据，完整 M1 验收仍未完成。恢复使用原数据库、Scope 和工厂，包括原 Harness／ToolExecutor、可选 Recall／Knowledge／planner 身份。使用 --config 时保留原 profile 声明、适配器代码及数据，见 [运行装配](runtime-assembly.md)。执行日志与业务效果证据应一起保留；取消和关闭不会撤销远端操作。
 
 ## 先观察，再继续
 

@@ -1,6 +1,6 @@
 # Ralf-Agent 扩展指南
 
-版本：0.1.0.dev8；日期：2026-10-06。面向 SDK／适配器开发者。本指南描述执行、装配、召回和知识端口；企业适配与完整 M1 验收仍按 [实现清单](implementation-status.md) 分期。
+版本：0.1.0.dev9；日期：2026-10-06。面向 SDK／适配器开发者。本指南描述执行、装配、召回和知识端口；企业适配与完整 M1 验收仍按 [实现清单](implementation-status.md) 分期。
 
 ## 1. 装配组件
 
@@ -8,7 +8,8 @@
 | --- | --- | --- |
 | ExecutionEngine | SDK／CLI 工厂返回值 | submit/drive/status/events/approve/cancel/reconcile/wait_for_threads/close 公共契约；不要求继承 LocalEngine 或暴露 store |
 | RuntimeDiagnostics | 可选 engine.diagnostics | 返回独立 RunDiagnostics；缺失时 CLI 仍能输出结果 |
-| ModelProvider | `providers={name: provider}` | `identity` 非空有限 JSON；`async complete` 返回 ModelResponse；最终输出在公共采纳边界校验，不执行工具 |
+| ModelProvider | `providers={name: provider}` | `identity` 非空有限 JSON；`async complete` 返回 ModelResponse；可选纯同步 validate_request 返回 None，最终输出在公共采纳边界校验，不执行工具 |
+| StreamingModelProvider／ModelCapabilities | `provider.stream`／`capabilities` | 实现的协议能力可禁用，不能凭声明打开；片段仅展示，完整 response 才返回工具，提前退出须 aclose |
 | Harness | `harness=`，默认 NativeHarness | 非空有限 JSON identity；同步纯 prepare／propose 返回 ModelRequest／DecisionProposal；不执行工具或提交状态 |
 | ToolExecutor | `tool_executor=`，默认 PythonToolExecutor | 非空有限 JSON identity；async execute／reconcile 接收固定 DispatchEnvelope，返回 EffectObservation 或核验未知 None |
 | 工具与核验 | `tools=ToolRegistry()` | 参数 Schema、效果类别、version/config、稳定幂等键；单次调用不隐藏业务重试 |
@@ -29,6 +30,8 @@
 默认 `LocalEngine(SQLiteStore(path), ...)` 会创建 POSIX 文件租约和共享 SQLite 记忆。自定义存储通过端口接入，不需要 `.conn`／`.path`；同时显式注入 `coordinator`、`session_store`、`memory_store`。当前 ExecutionStore 方法是 Coordinator 线程内的同步事务操作；远程数据库需单独验证延迟、原子性和失败语义。
 
 Harness／ToolExecutor 不需要首次使用者额外配置。自定义组件只变换提案或执行一个派发，不取得 Engine 的审批／预算／状态权威。DispatchEnvelope 和 EffectObservation 的 JSON 属性是独立视图；ModelRequest／DecisionProposal 是分离的输入数据，frozen 顶层不保证嵌套 JSON 深度不可变。具体签名、阶段与离线例子见 [执行组件指南](execution-components.md)。
+
+模型层默认提供 Chat、DeepSeek 非思考 preset、Anthropic 文本/客户端工具及 Gemini 文本，见 [模型指南](model-adapters.md)。原生不能表达的消息字段明确拒绝；不靠丢弃 name、推理历史或签名来获得兼容。旧自定义 Provider 缺少预检或 streaming 仍可执行 complete。
 
 默认组件也可通过 JSON/TOML RuntimeProfile 装配；ComponentRegistry 显式注册第三方工厂，BuildContext.own 接管同步 close 的附属客户端。RuntimeCatalog 不覆盖已注册版本，ProfiledEngine 根据 Run 保存的原 profile 解析。它不归档 Python 实现或后端数据，恢复仍需保留它们。完整例子、默认适配器、关闭重试和历史版本配置见 [运行装配](runtime-assembly.md)。
 

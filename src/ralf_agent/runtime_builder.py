@@ -3,6 +3,7 @@
 import inspect
 import json
 import os
+from dataclasses import asdict
 from pathlib import Path
 
 from .context import ContextAssembler
@@ -11,9 +12,11 @@ from .errors import RalfError, ValidationError
 from .executors import PythonToolExecutor
 from .harness import NativeHarness
 from .memory import InMemoryMemory, SQLiteMemory
+from .model_native import AnthropicProvider, GeminiProvider
+from .model_protocol import ModelCapabilities
 from .ports import is_sync_callable as _synchronous
 from .ports import validate_engine
-from .providers import OpenAIChatProvider
+from .providers import DeepSeekChatProvider, OpenAIChatProvider
 from .recall import FixedRecallPlanner, MemoryRecallPolicy, RecallQuery
 from .retrieval import KnowledgeContext, LexicalRetriever, SQLiteKnowledgeStore
 from .runtime_config import COMPONENT_KINDS, RuntimeProfile
@@ -133,23 +136,56 @@ def _echo_config(config):
 
 
 def _chat_config(config):
-    _fields(
-        config,
-        {"model", "base_url", "api_key_env", "max_output_tokens", "token_parameter", "timeout"},
-    )
-    if not isinstance(config.get("model"), str) or not config["model"].strip():
-        raise ValidationError("Chat provider requires model")
-    name = config.get("api_key_env", "OPENAI_API_KEY")
-    if not isinstance(name, str) or not name.strip():
-        raise ValidationError("api_key_env must name an environment variable")
+    _model_options(config, OpenAIChatProvider, "OPENAI_API_KEY")
 
 
 def _chat(config, context):
-    name = config.pop("api_key_env", "OPENAI_API_KEY")
+    return _model(config, OpenAIChatProvider, "OPENAI_API_KEY")
+
+
+def _model_options(config, provider_type, key_env):
+    allowed = {
+        "model",
+        "base_url",
+        "api_key_env",
+        "max_output_tokens",
+        "timeout",
+        "temperature",
+        "top_p",
+        "stop",
+        "stream",
+        "capabilities",
+    }
+    if provider_type in {OpenAIChatProvider, GeminiProvider}:
+        allowed.add("seed")
+    if provider_type is OpenAIChatProvider:
+        allowed.add("token_parameter")
+    if provider_type is AnthropicProvider:
+        allowed.add("api_version")
+    _fields(config, allowed)
+    if not isinstance(config.get("model"), str) or not config["model"].strip():
+        raise ValidationError("Model adapter requires model")
+    if config["model"] == "YOUR_MODEL":
+        raise ValidationError("Replace YOUR_MODEL in runtime.toml with an explicit model name")
+    name = config.get("api_key_env", key_env)
+    if not isinstance(name, str) or not name.strip():
+        raise ValidationError("api_key_env must name an environment variable")
+    options = {key: value for key, value in config.items() if key != "api_key_env"}
+    if "capabilities" in options:
+        values = options["capabilities"]
+        if not isinstance(values, dict) or set(values) - {"text", "tools", "streaming"}:
+            raise ValidationError("Invalid model capability configuration")
+        options["capabilities"] = ModelCapabilities(**{**asdict(provider_type.supported), **values})
+    provider_type(api_key="configuration-validation", **options)
+    return name, options
+
+
+def _model(config, provider_type, key_env):
+    name, options = _model_options(config, provider_type, key_env)
     key = os.environ.get(name)
     if not key:
         raise ValidationError("Configured model credential environment variable is unavailable")
-    return OpenAIChatProvider(api_key=key, **config)
+    return provider_type(api_key=key, **options)
 
 
 def _policy(config, context):
@@ -200,6 +236,20 @@ class ComponentRegistry:
             validator=_echo_config,
         )
         self.register("provider", "chat-completions", _chat, validator=_chat_config)
+        for name, provider_type, key_env in [
+            ("deepseek-chat", DeepSeekChatProvider, "DEEPSEEK_API_KEY"),
+            ("anthropic-messages", AnthropicProvider, "ANTHROPIC_API_KEY"),
+            ("gemini-content", GeminiProvider, "GEMINI_API_KEY"),
+        ]:
+            # Bind values now, rather than capture the loop's final adapter.
+            self.register(
+                "provider",
+                name,
+                lambda c, ctx, cls=provider_type, env=key_env: _model(c, cls, env),
+                validator=lambda c, cls=provider_type, env=key_env: (
+                    _model_options(c, cls, env) and None
+                ),
+            )
         self.register(
             "tools", "empty", lambda c, ctx: ToolRegistry(), validator=lambda c: _fields(c, {})
         )

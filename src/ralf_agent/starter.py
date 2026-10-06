@@ -645,15 +645,63 @@ environment variable. Installing this template does not prove real model quality
 }
 
 
+_MODEL_FILES = {
+    **_CONFIG_FILES,
+    "agent_app/__main__.py": _CONFIG_FILES["agent_app/__main__.py"]
+    .replace("Offline configuration example", "Explicit model configuration example")
+    .replace('default="config-demo"', 'default="model-demo"'),
+    "runtime.toml": """schema_version = 1
+[default]
+name = "model-assistant"
+version = "1"
+
+[[profiles]]
+name = "model-assistant"
+version = "1"
+[profiles.providers.default]
+adapter = "chat-completions"
+[profiles.providers.default.config]
+model = "YOUR_MODEL"
+base_url = "https://api.openai.com/v1"
+api_key_env = "RALF_MODEL_API_KEY"
+max_output_tokens = 1024
+""",
+    "README.md": """# Model Agent
+
+Edit runtime.toml: replace YOUR_MODEL with a model available to your account,
+select its protocol/base_url, and name its credential environment variable.
+chat-completions uses max_completion_tokens by default; compatible services may
+need token_parameter="max_tokens". deepseek-chat explicitly disables thinking.
+anthropic-messages supports text/client function tools; gemini-content supports
+text only and refuses tool declarations/history.
+
+Supply the credential through your own environment or secret manager; never
+put it in TOML. Invoking the configured service may incur fees.
+
+```sh
+python -m agent_app --input hello --command-id first-task
+ralf --config runtime.toml resume RUN_ID
+```
+
+The generated application uses the installed SDK without repository imports.
+It does not verify model quality or account availability. Before adopting a new
+configuration, register a new profile version and keep the original declaration,
+adapter code and data for accepted Runs. Use a new command ID for a new task.
+""",
+}
+
+
 def create_starter(destination, *, template="oncall") -> StarterProject:
     """Create the application atomically in a new or empty directory.
 
     A file or nonempty destination is rejected, including hidden user files.
     Templates are contained in the installed package and need no source checkout.
     """
-    if template not in ("oncall", "rag", "config"):
-        raise ValidationError("Starter template must be oncall, rag or config")
-    files = {"oncall": _FILES, "rag": _RAG_FILES, "config": _CONFIG_FILES}[template]
+    if template not in ("oncall", "rag", "config", "model"):
+        raise ValidationError("Starter template must be oncall, rag, config or model")
+    files = {"oncall": _FILES, "rag": _RAG_FILES, "config": _CONFIG_FILES, "model": _MODEL_FILES}[
+        template
+    ]
     try:
         directory = Path(destination).expanduser().resolve()
         if directory == Path.cwd().resolve():

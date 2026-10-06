@@ -14,6 +14,8 @@ from .memory import (
     SQLiteMemory,
     ThreadedMemoryAdapter,
 )
+from .model_native import AnthropicProvider, GeminiProvider
+from .model_protocol import ModelCapabilities, ModelStreamEvent, StreamingModelProvider
 from .ports import (
     ContextBuilder,
     CoordinatorLease,
@@ -21,7 +23,7 @@ from .ports import (
     ExecutionStore,
     RuntimeDiagnostics,
 )
-from .providers import ModelProvider, OpenAIChatProvider
+from .providers import DeepSeekChatProvider, ModelProvider, OpenAIChatProvider
 from .recall import (
     AsyncFactReferenceValidator,
     AsyncPaginatedSessionStore,
@@ -86,7 +88,7 @@ from .vector import (
     VectorRetriever,
 )
 
-__version__ = "0.1.0.dev8"
+__version__ = "0.1.0.dev9"
 __all__ = [
     "AgentSpec",
     "AsyncLongTermMemoryStore",
@@ -108,6 +110,12 @@ __all__ = [
     "LocalEngine",
     "LongTermMemoryStore",
     "ModelProvider",
+    "ModelCapabilities",
+    "ModelStreamEvent",
+    "StreamingModelProvider",
+    "AnthropicProvider",
+    "GeminiProvider",
+    "DeepSeekChatProvider",
     "ModelResponse",
     "ModelRequest",
     "NativeHarness",

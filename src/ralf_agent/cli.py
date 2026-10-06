@@ -83,7 +83,7 @@ def main(argv=None):
     init = commands.add_parser("init", help="Create a standalone, offline Agent starter")
     init.add_argument("directory")
     init.add_argument(
-        "--template", default="oncall", help="Starter template: oncall, rag or config"
+        "--template", default="oncall", help="Starter template: oncall, rag, config or model"
     )
     run = commands.add_parser(
         "run", help="Submit an Agent/sequence declaration using a runtime config or factory"

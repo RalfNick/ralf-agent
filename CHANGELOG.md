@@ -2,6 +2,16 @@
 
 记录用户可见行为和兼容边界。版本为开发预览；此记录不表示已经上传 PyPI、创建 Git 标签或发布 GitHub Release。
 
+## 0.1.0.dev9 — Unreleased
+
+新增 ModelCapabilities、StreamingModelProvider 和 ModelStreamEvent。Chat Completions 支持 temperature/top_p/stop/seed 和 SSE；默认 identity 保持 dev8。流文本为临时展示，工具参数只在完整结束/JSON 校验后返回，Engine 仍独立接收完整响应。可选纯请求预检在预算预留和实际调用前执行，旧 Provider 保持兼容。
+
+新增原生 Anthropic 文本/客户端工具及 Gemini 文本协议，认证、历史、生成参数、用量与流式归一化。DeepSeek 非思考 preset 明确关闭 thinking，采用对应地址/凭据和 max_tokens。Gemini 工具、opaque thinking continuation、server tools 和多模态不支持；不静默丢弃不可表达的命名/推理历史。
+
+新增声明式模型 adapter 和独立 model starter；占位与非法配置在创建执行库前拒绝，密钥仅经显式参数/环境取得。独立 Review 修复空参数 delta、SSE 错误标记、畸形响应和原生历史丢失；关闭工具能力时也拒绝模型擅自返回工具。
+
+保留 local-4、ExecutionStore v1、旧调用摘要和离线模板。协议 fixture 与安装恢复有本地证据；线上厂商/型号兼容、真实模型质量、分支并行、多 Agent、MCP/沙箱和 Temporal 仍未交付或未验收。
+
 ## 0.1.0.dev8 — Unreleased
 
 新增公共 ExecutionEngine／RuntimeDiagnostics 和独立 RunDiagnostics，CLI 不要求 LocalEngine 继承关系或 .store。KnowledgeContextPort 支持直接实现知识流程；RecallPlanner 可以按 Agent／输入生成查询，实际计划保存到模型 Action，未知重试保持原查询和快照。MemoryRecallPolicy 保持配置 DTO。

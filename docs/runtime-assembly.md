@@ -51,7 +51,7 @@ JSON 使用同样的 schema_version/default/profiles 结构。Profile 只包含 
 
 | 配置位置 | 内置 adapter | 说明 |
 | --- | --- | --- |
-| providers.ALIAS | offline-echo / chat-completions | 离线回显；单次 Chat Completions |
+| providers.ALIAS | offline-echo / chat-completions / deepseek-chat / anthropic-messages / gemini-content | 离线回显与明确模型协议；原生能力及限制见模型指南 |
 | components.tools | empty | 无工具；自己的 Python 工具通过注册工厂提供 |
 | components.context_assembler | default | ContextAssembler，当前不接受配置参数 |
 | components.harness | native | NativeHarness |
@@ -86,6 +86,8 @@ builder = RuntimeBuilder(registry)
 ## 4. 模型凭据
 
 Chat adapter 接收 model、base_url、max_output_tokens、token_parameter、timeout 和 api_key_env。api_key_env 默认 OPENAI_API_KEY；指定其他变量后，不回退到默认变量。密钥只在构造时从环境取得，不进入 Profile 或 Run Manifest。内嵌 api_key 等未知字段在构造前拒绝。
+
+dev9 还接收生成参数、stream 和能力限制，提供三个新增 adapter；默认参数缺省保持旧 Chat identity。凭据、原生 protocol 与真实 model 模板见 [模型指南](model-adapters.md)。Gemini tools=True 在构造前拒绝，不会通过能力声明启用未实现行为。
 
 自定义工厂也应使用环境或应用的凭据服务；配置声明属于需要保留的非秘密数据。SDK 无法识别自定义任意字段是否含秘密，不能把秘密塞进自定义 config。接入真实 Provider 后可能产生收费调用；本轮验证只使用离线 Provider。
 

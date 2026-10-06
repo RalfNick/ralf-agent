@@ -1,6 +1,6 @@
 # 常用 API 与 CLI 参考
 
-版本：0.1.0.dev8／local-4。公开 API 为预览契约；有界召回、本地 RAG、版本化装配和独立接收／采纳有本地行为证据，完整 M1 未完成。已交付边界见 [实现清单](implementation-status.md)，适配器要求见 [扩展指南](extending.md)。以下为常用入口，不替代端口契约。
+版本：0.1.0.dev9／local-4。公开 API 为预览契约；模型协议、有界召回、本地 RAG、版本化装配和独立接收／采纳有本地行为证据，完整 M1 未完成。已交付边界见 [实现清单](implementation-status.md)，适配器要求见 [扩展指南](extending.md)。以下为常用入口，不替代端口契约。
 
 ## 定义与装配
 
@@ -39,7 +39,9 @@ from ralf_agent import (
 | `RunReader`／`CommandReceiptReader` | 可替换只读任务端口；后者是可选控制回执查询能力，默认 SQLiteRunReader 两者均实现 |
 | `load_spec(path)` | JSON/TOML Agent 或固定顺序 Workflow 声明 |
 | `Scope(workspace="default", principal="local-owner")` | 可信宿主传入的作用域；不是企业身份认证 |
-| `OpenAIChatProvider(model, ...)` | 异步单次 Chat Completions 请求；可配置 base_url、timeout、token_parameter；密钥通过 api_key 或环境传入 |
+| `OpenAIChatProvider(model, ...)` | 异步 Chat Completions；base_url/timeout/token_parameter、temperature/top_p/stop/seed、stream/capabilities 可配置；密钥通过 api_key 或环境传入 |
+| `DeepSeekChatProvider`／`AnthropicProvider`／`GeminiProvider` | 明确非思考 preset、原生 Messages 文本/工具、原生 Gemini 文本；签名工具与多模态不支持 |
+| `ModelCapabilities`／`StreamingModelProvider`／`ModelStreamEvent` | text/tools/streaming 布尔能力；stream 是异步迭代 text 片段与唯一完整 response，提前结束须 aclose |
 | `ModelResponse(output=..., tool_calls=..., usage=...)` | Provider 决策数据；工具提案使用 `ToolCall(name, arguments, call_id=None)` |
 
 执行组件可单独替换：

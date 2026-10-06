@@ -1162,9 +1162,10 @@ class LocalEngine:
                 or self.recall_planner is not None
             ):
                 action["memory_references"] = facts
+        provider = self.providers[step["provider"]]
+        self._preflight_provider_request(run_id, provider, step["provider"], messages, descriptions)
         await self._validate_model_references(run_id, knowledge, action, memory)
         attempt_id = f"{action['id']}:{len(action['attempts']) + 1}"
-        provider = self.providers[step["provider"]]
         with self.store.transaction():
             run = self._authorized(run_id)
             if run["state"] == "cancelling" or run["state"] in TERMINAL:
@@ -1184,8 +1185,10 @@ class LocalEngine:
         dispatch_started = False
         try:
             await self._validate_model_references(run_id, knowledge, action, memory)
+            self._preflight_provider_request(
+                run_id, provider, step["provider"], messages, descriptions
+            )
             current = self._authorized(run_id)
-            self._check_provider_release(current, provider, step["provider"])
             if current["state"] in TERMINAL or current["state"] == "cancelling":
                 self._record_not_dispatched(run_id, action["id"], attempt_id, "cancelled")
                 return True
@@ -1239,6 +1242,27 @@ class LocalEngine:
             run["manifest"]["providers"][name]
         ):
             raise DefinitionMismatch("The executing model Provider differs from this Run")
+
+    def _preflight_provider_request(self, run_id, provider, name, messages, descriptions):
+        """Optional pure validation before reserving or starting a model call."""
+        from .ports import is_sync_callable
+
+        self._check_provider_release(self._authorized(run_id), provider, name)
+        validate = getattr(provider, "validate_request", None)
+        if validate is not None:
+            if not is_sync_callable(validate):
+                raise ValidationError("Model request validation must be synchronous")
+            try:
+                self._component_result(
+                    validate(copy.deepcopy(messages), copy.deepcopy(descriptions)),
+                    type(None),
+                    "Model request validation",
+                )
+            except RalfError:
+                raise
+            except Exception as exc:
+                raise ValidationError("Model request is unsupported by this Provider") from exc
+        self._check_provider_release(self._authorized(run_id), provider, name)
 
     def _record_not_dispatched(self, run_id, action_id, attempt_id, code):
         with self.store.transaction():

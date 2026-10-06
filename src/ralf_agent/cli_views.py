@@ -159,7 +159,7 @@ def render_result(result):
         template = result.get("template", "oncall")
         entry_arguments = (
             ["--input", "hello"]
-            if template == "config"
+            if template in {"config", "model"}
             else (
                 ["--query", "缓存连接失败怎么恢复"]
                 if template == "rag"
