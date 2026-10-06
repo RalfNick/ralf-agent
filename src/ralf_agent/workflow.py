@@ -134,6 +134,7 @@ class GraphNode:
     allow_skipped_dependencies: bool = False
     config: dict = field(default_factory=dict)
     output_schema: dict | bool | None = None
+    tool: str | None = None
 
     def __post_init__(self):
         if (
@@ -142,18 +143,20 @@ class GraphNode:
             or not re.fullmatch(r"[A-Za-z][A-Za-z0-9_.-]{0,63}", self.id)
         ):
             raise ValidationError("Node requires a stable identifier (input is reserved)")
-        if (self.agent is None) == (self.transform is None):
-            raise ValidationError("Node requires exactly one Agent or pure transform")
+        if sum(value is not None for value in (self.agent, self.transform, self.tool)) != 1:
+            raise ValidationError("Node requires exactly one Agent, pure transform or Tool")
         if self.agent is not None and not isinstance(self.agent, AgentSpec):
             raise ValidationError("Agent node requires AgentSpec")
         if self.transform is not None:
             _require_text(self.transform, "Transform name")
+        if self.tool is not None:
+            _require_text(self.tool, "Tool name")
         if (
             not isinstance(self.depends_on, (tuple, list))
             or any(not isinstance(name, str) or not name for name in self.depends_on)
             or type(self.allow_skipped_dependencies) is not bool
             or not isinstance(self.config, dict)
-            or (self.agent is not None and self.config)
+            or (self.transform is None and self.config)
             or (self.when is not None and not isinstance(self.when, BranchCondition))
         ):
             raise ValidationError("Invalid Workflow node configuration")
@@ -166,6 +169,7 @@ class GraphNode:
 
     def to_dict(self):
         return {
+            **({"tool": self.tool} if self.tool is not None else {}),
             "id": self.id,
             "agent": None if self.agent is None else asdict(self.agent),
             "transform": self.transform,
@@ -253,7 +257,7 @@ class ExecutionPlan:
             or set(value) != fields
             or value["format"] != "ralf-static-plan"
             or type(value["schema_version"]) is not int
-            or value["schema_version"] != 1
+            or value["schema_version"] not in (1, 2)
         ):
             raise ValidationError("Unsupported static execution plan format")
         _require_text(value["name"], "Workflow name")
@@ -261,6 +265,10 @@ class ExecutionPlan:
         if not isinstance(value["nodes"], (list, tuple)):
             raise ValidationError("Plan nodes must be a list")
         nodes = [GraphNode.from_dict(node) for node in value["nodes"]]
+        if value["schema_version"] == 1 and any(node.tool is not None for node in nodes):
+            raise ValidationError("Tool nodes require static plan v2")
+        if value["schema_version"] == 2 and not any(node.tool is not None for node in nodes):
+            raise ValidationError("Plans without Tool nodes retain static plan v1")
         output = None if value["output"] is None else decode_binding(value["output"])
         _validate_nodes(nodes, output)
         normalized = {
@@ -279,7 +287,11 @@ class ExecutionPlan:
 
     @property
     def identity(self):
-        return {"format": "ralf-static-plan", "schema_version": 1, "digest": digest(self.to_dict())}
+        return {
+            "format": "ralf-static-plan",
+            "schema_version": self.to_dict()["schema_version"],
+            "digest": digest(self.to_dict()),
+        }
 
 
 @dataclass(frozen=True, init=False)
@@ -291,7 +303,7 @@ class GraphWorkflowSpec:
         plan = ExecutionPlan(
             {
                 "format": "ralf-static-plan",
-                "schema_version": 1,
+                "schema_version": 2 if any(node.tool is not None for node in nodes) else 1,
                 "name": name,
                 "version": version,
                 "nodes": [node.to_dict() for node in nodes],
@@ -357,7 +369,15 @@ class StaticWorkflowCompiler:
         if isinstance(spec, GraphWorkflowSpec):
             value = spec.to_dict()
             value.pop("kind")
-            return ExecutionPlan({"format": "ralf-static-plan", "schema_version": 1, **value})
+            return ExecutionPlan(
+                {
+                    "format": "ralf-static-plan",
+                    "schema_version": 2
+                    if any(node.get("tool") is not None for node in value["nodes"])
+                    else 1,
+                    **value,
+                }
+            )
         if isinstance(spec, AgentSpec):
             name, version, steps = spec.name, spec.version, (spec,)
         elif isinstance(spec, WorkflowSpec):

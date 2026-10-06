@@ -627,6 +627,12 @@ class LocalEngine:
                     if run["plan"]["nodes"][run["node"]]["transform"] is not None:
                         await self._guarded(run_id, self._workflow.transform(run_id))
                         continue
+                    if run["plan"]["nodes"][run["node"]].get("tool") is not None:
+                        if not await self._guarded(run_id, self._workflow.tool(run_id)):
+                            if self._authorized(run_id)["state"] == "cancelling":
+                                continue
+                            break
+                        continue
                 pending = next(
                     (
                         a
@@ -859,35 +865,13 @@ class LocalEngine:
                     for call in proposal.tool_calls:
                         if call.name not in step["tools"]:
                             raise AuthorizationDenied("Harness requested a tool outside AgentSpec")
-                        tool = self.tools.get(call.name)
-                        tool.validate(call.arguments)
-                        proposed_id = uuid.uuid4().hex
-                        call_id = call.call_id or proposed_id
-                        if call_id in call_ids:
-                            raise ValidationError("Duplicate model tool-call identity")
-                        call_ids.add(call_id)
-                        operation = {
-                            "run_id": run_id,
-                            "action_id": proposed_id,
-                            "tool": tool.manifest,
-                            "arguments": call.arguments,
-                            "scope": asdict(self.scope),
-                        }
-                        proposals.append(
-                            {
-                                "id": proposed_id,
-                                "kind": "tool",
-                                "node": action["node"],
-                                "tool": call.name,
-                                "arguments": copy.deepcopy(call.arguments),
-                                "digest": digest(operation),
-                                "effect_key": f"{self.scope.workspace}:{run_id}:{proposed_id}",
-                                "call_id": call_id,
-                                "approved": False,
-                                "status": "ready",
-                                "attempts": [],
-                            }
+                        item = self._tool_proposal(
+                            run_id, action["node"], call.name, call.arguments, call.call_id
                         )
+                        if item["call_id"] in call_ids:
+                            raise ValidationError("Duplicate model tool-call identity")
+                        call_ids.add(item["call_id"])
+                        proposals.append(item)
                     encoded = {**asdict(proposal), "usage": encoded["usage"]}
             except Exception as exc:
                 error = (
@@ -947,6 +931,31 @@ class LocalEngine:
                 },
             )
         return True
+
+    def _tool_proposal(self, run_id, node, name, arguments, call_id=None):
+        tool = self.tools.get(name)
+        tool.validate(arguments)
+        proposed_id = uuid.uuid4().hex
+        operation = {
+            "run_id": run_id,
+            "action_id": proposed_id,
+            "tool": tool.manifest,
+            "arguments": arguments,
+            "scope": asdict(self.scope),
+        }
+        return {
+            "id": proposed_id,
+            "kind": "tool",
+            "node": node,
+            "tool": name,
+            "arguments": copy.deepcopy(arguments),
+            "digest": digest(operation),
+            "effect_key": f"{self.scope.workspace}:{run_id}:{proposed_id}",
+            "call_id": call_id or proposed_id,
+            "approved": False,
+            "status": "ready",
+            "attempts": [],
+        }
 
     def _adopt_received_evidence(self, run_id):
         for action in self._authorized(run_id)["actions"]:

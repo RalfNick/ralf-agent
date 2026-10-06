@@ -83,7 +83,9 @@ def main(argv=None):
     init = commands.add_parser("init", help="Create a standalone, offline Agent starter")
     init.add_argument("directory")
     init.add_argument(
-        "--template", default="oncall", help="Starter template: oncall, rag, config, model or graph"
+        "--template",
+        default="oncall",
+        help="Starter template: oncall, rag, config, model, graph or mcp",
     )
     run = commands.add_parser(
         "run", help="Submit an Agent/Workflow declaration using a runtime config or factory"

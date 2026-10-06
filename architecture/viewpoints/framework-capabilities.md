@@ -3,7 +3,7 @@
 文档版本：0.1；日期：2026-10-06（Asia/Shanghai）。
 作者：RALF 项目维护者与架构协作。
 读者：框架维护者、应用开发者、适配器贡献者。
-状态：目标架构与交付要求。下表保留 dev9 设计基线；dev10 的 G1 串行图已交付，当前支持范围见[实现清单](../../docs/implementation-status.md)和[静态 Workflow](../../docs/static-workflows.md)。其余目标不构成已支持声明。
+状态：目标架构与交付要求。下表保留 dev9 设计基线；dev10 的 G1 串行图与 dev11 的 G2 Tool 节点／MCP stdio 已交付，当前支持范围见[实现清单](../../docs/implementation-status.md)和[静态 Workflow](../../docs/static-workflows.md)。其余目标不构成已支持声明。
 
 ## 1. 目标与达标定义
 

@@ -1,0 +1,28 @@
+# Managed Tool nodes and MCP sources — dev11
+
+Date: 2026-10-06. User goal: reach AgentScope-level defaults and replacement paths across Agent/Workflow/tools/data. This increment implements G2's first connected tool path; bounded parallelism remains the next separate execution increment.
+
+## Design choice
+
+Compose remote sources with the existing ToolRegistry and PythonToolExecutor, and execute explicit Tool nodes through the existing durable Action protocol. Do not create a second remote approval/effect authority or encode arbitrary I/O as pure Transform. AgentScope v2.0.9's Toolkit and Workspace separate discovery/description from dispatch/lifecycle; adopt that boundary, without copying its implementation. A monolithic remote executor would duplicate Python dispatch; exposing raw async callbacks in Transform would lose recovery semantics.
+
+References: [Toolkit](https://github.com/agentscope-ai/agentscope/blob/v2.0.9/src/agentscope/tool/_toolkit.py), [MCP tools](https://modelcontextprotocol.io/specification/2025-11-25/server/tools), [MCP stdio](https://modelcontextprotocol.io/specification/2025-11-25/basic/transports).
+
+## Public contracts
+
+- `GraphNode(..., tool: str | None = None)` appended to preserve positional compatibility; exactly one Agent/Transform/Tool. Tool inputs bind a JSON object matching ToolSpec. Tool nodes execute async or sync handlers through ToolExecutor, with approval, execution credits, authorization, reconciliation and independent receipt/adoption. They produce the confirmed tool JSON directly, without a model call or Session assistant message.
+- Old native and Graph v1 declarations, compiler/interpreter identities, receipts and manifests remain unchanged. Tool-bearing plans use static plan v2; v1 rejects Tool nodes; v2 requires at least one Tool, keeping non-Tool plans canonical at v1. No in-flight migration. Downlevel code refuses the new format before dispatch.
+- `ToolDescriptor(name, description, input_schema, output_schema=None)` immutable finite JSON snapshots.
+- `ToolSource` has a stable JSON `identity`, async `list_tools() -> tuple[ToolDescriptor,...]`, async `call_tool(descriptor, arguments, context) -> JSON`. Sources are borrowed; the host owns custom persistent connection shutdown.
+- `ToolPolicy(version, effect='unqueryable_write', requires_approval=True, cost=1, effect_key_argument=None, reconciler=None)` is host authority. Remote annotations cannot grant read-only status or bypass confirmation. Idempotent writes require an explicit reserved effect-key argument; require a flat object root Schema for this mapping, remove it from caller Schema, inject InvocationContext.effect_key into remote arguments. Queryable writes require an explicit reconciler. Caller cannot supply the reserved key.
+- `await register_tool_source(registry, source, policies={remote_name: ToolPolicy(...)}, prefix='') -> tuple[str,...]` discovers only explicitly selected tools, pins source/descriptor/policy identities and registers atomically. A bad/missing/duplicate tool leaves registry unchanged. Actual source identity and arguments are checked before call and source identity again after call. ToolRegistry offers `register_many` for all-or-nothing registration.
+- `MCPTransport.identity`, async `request(method, params, *, expected_tool=None) -> dict` is replaceable. `MCPToolSource` handles bounded pagination (32 pages, 256 tools), finite result envelopes, structured output Schema and isError/JSON-RPC errors as typed ToolSourceError. Result preserves content and structuredContent; no text/media is silently dropped.
+- `MCPStdioTransport(command, *, version, cwd=None, env=None, timeout=30)` is a default POSIX one-shot session for each operation. Command is an explicit argv, no shell. Fixed absolute cwd, explicit environment (PATH only by default), secret values excluded from identity; their behavioral changes require a host version change. Supported protocol negotiation: 2025-11-25, 2025-06-18, 2025-03-26, 2024-11-05. Initialize/initialized precede operation. Before tools/call, rediscover and validate the pinned descriptor in the same session. No automatic retry of writes.
+
+## Lifetime and limits
+
+Default stdio uses a tracked worker with a subprocess group, bounded nonblocking UTF-8 JSON-RPC reads (1 MiB/message; 100 unsolicited messages per response), total finite timeout 0 < timeout <= 300 seconds. Each session terminates its owned process group and reaps the direct peer in finally. Cancellation signals the worker; actual completion, independent of asyncio Task callbacks, retains Coordinator ownership. Shutdown waits use the existing Engine.wait_for_threads. Stderr is discarded, not persisted. This is process management, not a sandbox. Server-initiated sampling/elicitation are unsupported; ping is handled, other requests receive method-not-found. MCP HTTP/OAuth/persistent sessions/resources/prompts are future transports/capabilities.
+
+## Acceptance
+
+Real stdio fixture verifies initialize, tool discovery/call, pagination, descriptor drift, malformed/error/oversized frames, timeout, explicit environment and process reaping. Tool nodes verify no Provider invocation, approval-before-write, duplicate control receipt, recovery after durable receipt, unknown-write non-retry/reconcile, cancellation and output validation. Source replacement uses a small custom async source, not an MCP mock. Installed artifact example combines MCP and Tool nodes without checkout imports. Full existing suite, Ruff, build, dev10 compatibility and one fresh independent review are required.

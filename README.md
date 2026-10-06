@@ -4,7 +4,7 @@
 
 Ralf-Agent 是 Python 优先的开源 Agent 运行时。它把模型决策、工具动作、审批与结果保存为明确的执行步骤，让任务在重启后继续，并核验可能已经发生的业务操作。
 
-当前版本：**0.1.0.dev10，M1 核心预览**。提供原生 Agent SDK、顺序 Workflow 与串行静态图、SQLite 持久执行、可信 Python 工具、审批／取消、效果核验、记忆分页与本地 RAG。图支持依赖、条件、输入映射、纯变换和可替换编译器／解释器；有独立 Graph starter。模型层支持生成参数、能力预检、完整流式响应、原生 Anthropic/Gemini 文本和 DeepSeek 非思考模式适配。JSON／TOML 装配默认组件，历史任务按原配置版本恢复。完整 M1 尚未验收，适合开发者试点；支持范围见 [实现清单](docs/implementation-status.md)。预览 API 尚未稳定。
+当前版本：**0.1.0.dev11，M1 核心预览**。提供原生 Agent SDK、顺序 Workflow 与串行静态图、SQLite 持久执行、可信 Python 工具、审批／取消、效果核验、记忆分页与本地 RAG。图支持依赖、条件、输入映射、纯变换、受管理 Tool 节点和可替换编译器／解释器；有独立 Graph／MCP starter。MCP stdio 和自定义异步 ToolSource 接入同一审批／效果链路。模型层支持生成参数、能力预检、完整流式响应、原生 Anthropic/Gemini 文本和 DeepSeek 非思考模式适配。JSON／TOML 装配默认组件，历史任务按原配置版本恢复。完整 M1 尚未验收，适合开发者试点；支持范围见 [实现清单](docs/implementation-status.md)。预览 API 尚未稳定。
 
 ## 快速开始
 
@@ -70,6 +70,8 @@ python -m agent_app --input hello
 编辑 runtime.toml 的默认版本即可影响新任务；保留旧配置和适配器实现，旧任务会解析原版本。模板使用离线回显 Provider；配置与工厂扩展见 [运行装配教程](docs/runtime-assembly.md)。
 
 真实模型有独立可编辑入口：`ralf init my-model-agent --template model`。先在 runtime.toml 替换模型占位、选择协议与凭据环境变量，再运行应用。三种原生/兼容协议的参数、流式和明确限制见 [模型接入指南](docs/model-adapters.md)。Gemini 当前不支持工具，DeepSeek preset 固定关闭思考模式；本地协议测试不证明线上型号兼容或模型质量。
+
+MCP 与无模型业务图也有独立入口：`ralf init my-mcp-agent --template mcp`。工具源、明确的效果策略、幂等键注入和进程管理见 [受管理工具指南](docs/managed-tools.md)。
 
 源码中的 SDK 示例：`python examples/oncall.py`。它等待用户输入 `APPROVE`，不会自动批准。
 

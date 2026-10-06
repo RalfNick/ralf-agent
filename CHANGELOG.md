@@ -2,6 +2,14 @@
 
 记录用户可见行为和兼容边界。版本为开发预览；此记录不表示已经上传 PyPI、创建 Git 标签或发布 GitHub Release。
 
+## 0.1.0.dev11 — Unreleased
+
+新增 Graph Tool 节点，无需模型即可执行 async／同步业务工具。沿用授权、审批、预算、稳定效果身份及独立回执采纳；Tool 计划使用 v2，既有 Agent／sequence／Graph v1 的序列化和身份不变。
+
+新增 ToolDescriptor／ToolPolicy／ToolSource 与原子选择性注册，可替换异步工具源；宿主决定效果／审批，明确注入保留幂等参数。新增 MCPTransport／MCPToolSource 和 POSIX 一次会话 stdio 默认实现，真实 worker 管理超时、取消、消息／发现限制与进程组清理。提供包内 mcp starter 和接入指南，无新增运行依赖。
+
+这是 G2 的工具增量；图仍串行。MCP HTTP／OAuth、持久会话、CLI 沙箱、动态 Plan、团队和分布式未交付，完整 M1 和真实模型质量未验收。
+
 ## 0.1.0.dev10 — Unreleased
 
 新增不可变 ExecutionPlan v1、GraphWorkflowSpec、值引用／映射／条件、纯 WorkflowCompiler／WorkflowInterpreter／NodeTransform；提供 static 编译／解释和 identity 变换默认实现。图支持依赖、跳过传播、显式可选分支合并与 Schema 验收，当前串行调度。

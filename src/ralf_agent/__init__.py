@@ -5,6 +5,8 @@ from .coordinator import FileCoordinator, InProcessCoordinator
 from .engine import LocalEngine
 from .executors import DispatchEnvelope, EffectObservation, PythonToolExecutor, ToolExecutor
 from .harness import DecisionProposal, Harness, ModelRequest, NativeHarness
+from .mcp import MCPToolSource, MCPTransport
+from .mcp_stdio import MCPStdioTransport
 from .memory import (
     AsyncLongTermMemoryStore,
     AsyncSessionStore,
@@ -64,6 +66,13 @@ from .runtime_builder import (
 from .runtime_config import RuntimeCatalog, RuntimeProfile, load_catalog, load_spec
 from .runtime_router import CommandReceiptReader, ProfiledEngine, RunReader, SQLiteRunReader
 from .storage import SQLiteStore
+from .tool_sources import (
+    ToolDescriptor,
+    ToolPolicy,
+    ToolSource,
+    ToolSourceError,
+    register_tool_source,
+)
 from .tools import ToolRegistry, ToolSpec
 from .types import (
     AgentSpec,
@@ -104,8 +113,16 @@ from .workflow import (
     WorkflowSelection,
 )
 
-__version__ = "0.1.0.dev10"
+__version__ = "0.1.0.dev11"
 __all__ = [
+    "MCPToolSource",
+    "MCPTransport",
+    "MCPStdioTransport",
+    "ToolDescriptor",
+    "ToolPolicy",
+    "ToolSource",
+    "ToolSourceError",
+    "register_tool_source",
     "BranchCondition",
     "ExecutionPlan",
     "GraphNode",

@@ -201,6 +201,15 @@ class ToolRegistry:
         )
         return handler
 
+    def register_many(self, entries):
+        """Validate all entries before publishing any name into this registry."""
+        staged = ToolRegistry()
+        for spec, handler, reconciler in entries:
+            if spec.name in self._tools:
+                raise DefinitionMismatch(f"Tool already registered: {spec.name}")
+            staged.register(spec, handler, reconciler=reconciler)
+        self._tools.update(staged._tools)
+
     def get(self, name: str) -> RegisteredTool:
         try:
             tool = self._tools[name]

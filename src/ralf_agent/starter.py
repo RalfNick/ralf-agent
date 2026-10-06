@@ -5,6 +5,7 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 
 from .errors import ValidationError
+from .mcp_starter import MCP_FILES
 
 
 @dataclass(frozen=True)
@@ -764,14 +765,15 @@ def create_starter(destination, *, template="oncall") -> StarterProject:
     A file or nonempty destination is rejected, including hidden user files.
     Templates are contained in the installed package and need no source checkout.
     """
-    if template not in ("oncall", "rag", "config", "model", "graph"):
-        raise ValidationError("Starter template must be oncall, rag, config, model or graph")
+    if template not in ("oncall", "rag", "config", "model", "graph", "mcp"):
+        raise ValidationError("Starter template must be oncall, rag, config, model, graph or mcp")
     files = {
         "oncall": _FILES,
         "rag": _RAG_FILES,
         "config": _CONFIG_FILES,
         "model": _MODEL_FILES,
         "graph": _GRAPH_FILES,
+        "mcp": MCP_FILES,
     }[template]
     try:
         directory = Path(destination).expanduser().resolve()

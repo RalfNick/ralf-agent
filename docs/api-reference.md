@@ -1,6 +1,6 @@
 # 常用 API 与 CLI 参考
 
-版本：0.1.0.dev10／local-4。公开 API 为预览契约；模型协议、有界召回、本地 RAG、版本化装配和独立接收／采纳有本地行为证据，完整 M1 未完成。已交付边界见 [实现清单](implementation-status.md)，适配器要求见 [扩展指南](extending.md)。以下为常用入口，不替代端口契约。
+版本：0.1.0.dev11／local-4。公开 API 为预览契约；模型协议、有界召回、本地 RAG、版本化装配和独立接收／采纳有本地行为证据，完整 M1 未完成。已交付边界见 [实现清单](implementation-status.md)，适配器要求见 [扩展指南](extending.md)。以下为常用入口，不替代端口契约。
 
 ## 定义与装配
 
@@ -29,8 +29,8 @@ from ralf_agent import (
 | `AgentSpec(name, instructions, tools=(), ...)` | 允许工具名与 Provider 别名固定；默认最多 8 次决策；output_schema 为可选 JSON Schema |
 | `WorkflowSpec(name, steps, version="1")` | 非空 AgentSpec 顺序步骤；前步验收后的输出作为下一步输入 |
 | `GraphWorkflowSpec(name, nodes, version="1", output=None, output_schema=None)` | 不可变串行静态图；依赖、条件、输入／结果绑定与节点状态持久恢复 |
-| `GraphNode`／`ValueRef`／`Literal`／`InputMap`／`BranchCondition` | Agent 或纯变换节点；明确缺失／null、依赖祖先引用与分支合并 |
-| `ExecutionPlan`／`WorkflowCompiler`／`WorkflowInterpreter`／`WorkflowSelection` | 计划 v1 与纯编译／选择端口；默认 static，公共边界验证选择语义 |
+| `GraphNode`／`ValueRef`／`Literal`／`InputMap`／`BranchCondition` | Agent、纯变换或受管理 Tool 节点；明确缺失／null、依赖祖先引用与分支合并 |
+| `ExecutionPlan`／`WorkflowCompiler`／`WorkflowInterpreter`／`WorkflowSelection` | 计划 v1／Tool v2 与纯编译／选择端口；默认 static，公共边界验证选择语义 |
 | `NodeTransform`／`IdentityTransform` | 同步纯 JSON 计算；通过 workflow_transforms 注册，不执行外部效果 |
 | `SQLiteStore(path, readonly=False)` | 本地执行事实；固定文件身份，拒绝硬链接；默认写模式启用 WAL |
 | `LocalEngine(store, providers=..., tools=..., ...)` | 默认租约／记忆、NativeHarness 与 PythonToolExecutor；scope/session_store/memory_store/policy/context_assembler/harness/tool_executor 可注入；可选 recall_policy、recall_planner、knowledge、runtime_profile 默认 None |
@@ -47,6 +47,15 @@ from ralf_agent import (
 | `DeepSeekChatProvider`／`AnthropicProvider`／`GeminiProvider` | 明确非思考 preset、原生 Messages 文本/工具、原生 Gemini 文本；签名工具与多模态不支持 |
 | `ModelCapabilities`／`StreamingModelProvider`／`ModelStreamEvent` | text/tools/streaming 布尔能力；stream 是异步迭代 text 片段与唯一完整 response，提前结束须 aclose |
 | `ModelResponse(output=..., tool_calls=..., usage=...)` | Provider 决策数据；工具提案使用 `ToolCall(name, arguments, call_id=None)` |
+
+工具来源可单独替换，详见[受管理工具](managed-tools.md)：
+
+| API | 契约 |
+| --- | --- |
+| `ToolDescriptor`／`ToolPolicy` | 固定远端 Schema 与宿主效果／审批策略；幂等写需明确保留参数 |
+| `ToolSource`／`register_tool_source` | 异步发现／调用，选择性原子注册到 ToolRegistry；源由宿主管理 |
+| `MCPTransport`／`MCPToolSource` | 可替换传输；保留 MCP 结果、校验固定描述与结构化输出 |
+| `MCPStdioTransport` | POSIX argv 子进程、一次会话、有限超时与真实 worker 归属 |
 
 执行组件可单独替换：
 

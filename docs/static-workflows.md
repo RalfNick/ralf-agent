@@ -1,6 +1,6 @@
 # 静态图 Workflow
 
-版本：0.1.0.dev10；日期：2026-10-06。当前支持单 Coordinator 的串行静态图：依赖、条件、输入映射、显式合并和持久恢复。并行、循环、动态 Planner、子 Run 和数据流编排继续按[能力路线](../architecture/viewpoints/framework-capabilities.md)交付。
+版本：0.1.0.dev11；日期：2026-10-06。Agent／Transform 使用计划 v1，受管理 Tool 节点使用 v2，见[工具节点指南](managed-tools.md)。当前支持单 Coordinator 的串行静态图：依赖、条件、输入映射、显式合并和持久恢复。并行、循环、动态 Planner、子 Run 和数据流编排继续按[能力路线](../architecture/viewpoints/framework-capabilities.md)交付。
 
 ## 1. 安装后直接运行
 
@@ -107,7 +107,7 @@ engine = LocalEngine(
 
 配置工厂也可注册 `workflow_compiler`、`workflow_interpreter`、`workflow_transforms`；默认 adapter 分别为 `static`、`static`、`identity`，自定义映射由显式 `ComponentRegistry.register` 提供。参见[运行装配](runtime-assembly.md)。
 
-变换不得调用数据库／网络、提交业务效果或启动线程；返回值必须已经是有限 JSON，awaitable、generator 和上下文管理器都不能代表完成。纯性是可信应用的契约，框架不会把任意 Python 代码变成安全隔离环境。需要外部 I/O 时使用受管理工具；通用异步自定义节点将在独立执行器增量提供。
+变换不得调用数据库／网络、提交业务效果或启动线程；返回值必须已经是有限 JSON，awaitable、generator 和上下文管理器都不能代表完成。纯性是可信应用的契约，框架不会把任意 Python 代码变成安全隔离环境。需要外部 I/O 时使用受管理工具；外部 I/O 可通过已交付的受管理 Tool 节点执行；通用异步 NodeExecutor 仍是后续增量。
 
 ## 5. 版本与恢复
 

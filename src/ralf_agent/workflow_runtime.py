@@ -100,10 +100,15 @@ class StaticWorkflowRuntime:
                 transforms[name] = engine._component_identity(
                     engine.workflow_transforms[name], ("transform",), True, "Node transform"
                 )
+        base = engine._manifest(
+            [node["agent"] for node in value["nodes"] if node["agent"] is not None]
+        )
+        tool_names = sorted(
+            {node["tool"] for node in value["nodes"] if node.get("tool") is not None}
+        )
+        base["tools"].update(engine.tools.manifests(tool_names))
         return {
-            **engine._manifest(
-                [node["agent"] for node in value["nodes"] if node["agent"] is not None]
-            ),
+            **base,
             "workflow": {
                 "plan": ExecutionPlan(value).identity,
                 "compiler": engine._component_identity(
@@ -242,4 +247,45 @@ class StaticWorkflowRuntime:
                 raise DefinitionMismatch("The executing node transform changed")
             if current["state"] not in CLOSED:
                 self.complete(current, result)
+        return True
+
+    async def tool(self, run_id):
+        engine = self.engine
+        run = engine._authorized(run_id)
+        if run["state"] in CLOSED:
+            return True
+        engine._check_release(run)
+        node = run["plan"]["nodes"][run["node"]]
+        action = next(
+            (
+                item
+                for item in run["actions"]
+                if item["node"] == run["node"] and item["kind"] == "tool"
+            ),
+            None,
+        )
+        if action is None:
+            arguments = run["workflow"]["nodes"][node["id"]]["input"]
+            proposal = engine._tool_proposal(run_id, run["node"], node["tool"], arguments)
+            with engine.store.transaction():
+                current = engine._authorized(run_id)
+                engine._check_release(current)
+                if current["state"] in CLOSED:
+                    return True
+                current["actions"].append(proposal)
+                engine._commit(
+                    current,
+                    "workflow_tool_proposed",
+                    {"node_id": node["id"], "action_id": proposal["id"]},
+                )
+            action = proposal
+        if action["status"] != "completed":
+            if not await engine._tool(run_id, action["id"]):
+                return False
+        with engine.store.transaction():
+            current = engine._authorized(run_id)
+            engine._check_release(current)
+            completed = next(item for item in current["actions"] if item["id"] == action["id"])
+            if current["state"] not in CLOSED and completed["status"] == "completed":
+                self.complete(current, completed["result"])
         return True

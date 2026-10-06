@@ -107,3 +107,7 @@ CLI 的 `inspect/status/events` 使用只读 SQLite 和默认 Scope；不载入�
 新的适配器至少覆盖：隔离 Scope、重启后稳定身份、CAS 冲突、重复请求去重、未知成本保留、已确认效果不重跑、取消期间不新增后续调用、晚到证据不覆盖原结果、组件变化拒绝恢复。参考 `tests/test_memory.py`、`tests/test_extension_contracts.py`、`tests/test_engine.py` 中的真实数据库和异步测试。
 
 dev8 保留 dev6/dev7 的 `local-4`、默认 Manifest、SQLite Schema v1 与调用方摘要，默认 Run 可以用原工厂续跑。Recall／Knowledge／planner／profile 仅在显式启用时增加固定身份；旧的无 profile Run 经 ProfiledEngine 恢复需明确的 legacy_factory，不能回退当前默认。改变策略或知识配置后，同一提交仍找回原回执，但继续执行拒绝不匹配配置。dev3–dev5 的 local-3 Run 可观察、取消及人工核验，续跑需原版本与配置。dev1／dev2 的旧 submit 摘要重放需原版本。没有自动 Run／摘要迁移；未知效果先在原日志核验。policy 继续仅允许同步返回 None 或抛拒绝异常。
+
+## Tool sources and managed graph operations
+
+[Managed tools](managed-tools.md) exposes borrowed async ToolSource and MCPTransport ports, immutable descriptors and host policies. Register a selected source into ToolRegistry and use the names from AgentSpec or GraphNode(tool=...). The default POSIX stdio transport manages one operation/process group at a time; custom persistent clients need explicit host shutdown. Pure transforms retain their no-I/O contract.
