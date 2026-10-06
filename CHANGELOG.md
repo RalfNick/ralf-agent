@@ -2,6 +2,16 @@
 
 记录用户可见行为和兼容边界。版本为开发预览；此记录不表示已经上传 PyPI、创建 Git 标签或发布 GitHub Release。
 
+## 0.1.0.dev7 — Unreleased
+
+新增可显式启用的 `MemoryRecallPolicy`、分页 `RecallQuery/RecallPage` 及同步／异步端口。内存／SQLite 后端限制候选数与返回字符量，Session 高水位保持完整消息顺序，事实 generation 固定分页集合；超大记录跳过并推进。旧后端通过 Legacy 桥接，明确标记全量读取，Threaded 桥保留真实线程归属。
+
+新增独立 KnowledgeStore／Retriever／EmbeddingProvider／VectorIndex：内存和 SQLite 知识库提供 CAS、TTL、文档分块、范围隔离和删除版本；默认 LexicalRetriever 支持中英文词项，向量实现显式注入 Embedding 并作真实 cosine 排序，当前为本地线性检索。旧向量命中需回读权威来源并校验版本与摘要。
+
+Engine 固定可选召回／知识配置，保存原引用与最终请求快照。每次实际模型派发前复核事实和知识，异步读取结束后复核全部已知有效期。未知模型重试拒绝已失效来源、保留原快照及预算；已收到响应直接采纳。新增可编辑 `ralf init --template rag`、源码示例及接入教程；不增加运行依赖或隐藏收费调用。
+
+保留 local-4、ExecutionStore v1、默认 Manifest 和调用方摘要。未启用新能力的 dev6 Run 可用原配置续跑；启用新组件须保持原配置，不能把新默认策略加到旧 Run。Redis／PostgreSQL／托管向量库、自动语义记忆、多 Agent、MCP／沙箱、容量、并行与 Temporal 仍未交付，完整 M1 和真实模型质量尚待验收。
+
 ## 0.1.0.dev6 — Unreleased
 
 尚未公开发布。本轮组件与两个接收／采纳窗口已通过本地回归；完整 M1 未完成。

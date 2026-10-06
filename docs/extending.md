@@ -1,6 +1,6 @@
 # Ralf-Agent 扩展指南
 
-版本：0.1.0.dev6；日期：2026-10-06。面向 SDK／适配器开发者。本指南描述 Local 端口；dev6 的两个接收／采纳窗口已有 10 项真实进程／取消回归证据。企业适配与完整 M1 验收仍按 [实现清单](implementation-status.md) 分期。
+版本：0.1.0.dev7；日期：2026-10-06。面向 SDK／适配器开发者。本指南描述 Local、召回和知识端口；企业适配与完整 M1 验收仍按 [实现清单](implementation-status.md) 分期。
 
 ## 1. 装配组件
 
@@ -12,6 +12,10 @@
 | 工具与核验 | `tools=ToolRegistry()` | 参数 Schema、效果类别、version/config、稳定幂等键；单次调用不隐藏业务重试 |
 | SessionStore／AsyncSessionStore | `session_store=` | `backend_id`、read、append；CAS 与 message_id 去重同时成立 |
 | LongTermMemoryStore／AsyncLongTermMemoryStore | `memory_store=` | `backend_id`、facts、put_fact；范围、版本及到期语义一致 |
+| MemoryRecallPolicy | `recall_policy=`，默认 None | 固定查询及全局额度；同步／异步 read_page/recall，旧端口走明确 Legacy 桥 |
+| FactReferenceValidator | 记忆后端可选 validate_facts | 返回 None 或抛拒绝；校验当前 Scope/namespace/key/version/TTL；缺失时全量 Legacy 校验 |
+| KnowledgeContext／KnowledgeRetriever | `knowledge=`，默认 None | 有限 JSON identity、async references/validate；固定来源与配置，调用后复核 |
+| KnowledgeStore／EmbeddingProvider／VectorIndex | 注入 Retriever | 权威知识 CAS/TTL 与索引分离；模型身份、维度、来源过滤和显式重新索引 |
 | ContextBuilder | `context_assembler=` | identity 与确定性 assemble；返回实际消息和 JSON Manifest |
 | ExecutionStore v1 | 第一个构造参数 | 原子命令／事务、Run CAS、事件、预算、活跃 Session 和未知效果查询；不另建调度器 |
 | CoordinatorLease | `coordinator=` | 同一执行权威只允许一个持有者，活跃调用结束前不能交出归属 |
@@ -46,7 +50,7 @@ from ralf_agent import ThreadedMemoryAdapter
 
 `expires_at` 使用 Unix 秒，仅接受 `None` 或可表示为有限浮点数的 int／float；`None` 表示永不过期，过去时间合法，NaN／无穷／布尔／字符串等在写入前拒绝，不改变 CAS 版本。
 
-`facts(scope, namespace)` 只返回当前 Scope 下未过期的已确认事实；`put_fact(..., expected_version)` 不静默覆盖其他写入。当前是全量 namespace／会话读取，下一步需要预算化 RecallQuery／分页；向量检索和来源授权尚未作为代码端口发布。Redis、PostgreSQL、向量数据库不因接口存在就被列为已支持。
+`facts(scope, namespace)` 只返回当前 Scope 下未过期的已确认事实；`put_fact(..., expected_version)` 不静默覆盖其他写入。dev7 的原生内存／SQLite 提供 read_page/recall 及事实校验；远程后端可实现同步／异步同名端口。未实现新端口时 Legacy 桥仍全量读取，不能宣称底层有界。默认模型输入行为保留，需要显式配置 `MemoryRecallPolicy()` 才启用分页。知识库、检索器、向量索引和 Embedding 分别替换；实际签名、引用与规模边界见 [召回与 RAG](recall-and-rag.md)。Redis、PostgreSQL、托管向量数据库尚未提供现成适配器。
 
 ## 3. 身份与不可变发布
 
@@ -90,4 +94,4 @@ CLI 的 `inspect/status/events` 使用只读 SQLite 和默认 Scope；不载入�
 
 新的适配器至少覆盖：隔离 Scope、重启后稳定身份、CAS 冲突、重复请求去重、未知成本保留、已确认效果不重跑、取消期间不新增后续调用、晚到证据不覆盖原结果、组件变化拒绝恢复。参考 `tests/test_memory.py`、`tests/test_extension_contracts.py`、`tests/test_engine.py` 中的真实数据库和异步测试。
 
-dev6 固定身份为 `local-4`，新增 Harness／Executor Manifest 身份及接收阶段语义。dev3–dev5 的 local-3 Run 可按 ID 观察、取消及人工核验；继续执行须使用原版本和原配置，新内核默认拒绝，不静默补齐新 Manifest。SQLite Schema v1 和 dev3 起的调用方摘要不变，同一请求可以找回原 Run／回执，但找回不代表能够用 dev6 继续执行。dev1／dev2 的旧 submit 摘要包含 Manifest，历史重放需原版本。自动 Run／命令摘要迁移尚未实现。未知效果应先在原执行日志里核验，不能通过创建新日志或新 Run 绕过恢复约束。policy 继续仅允许同步返回 None 或抛拒绝异常。
+dev7 保留 dev6 的 `local-4`、默认 Manifest、SQLite Schema v1 与调用方摘要，未启用新组件的 dev6 Run 可以用原配置续跑。Recall／Knowledge 仅在显式启用时增加固定身份；改变策略或知识配置后，同一提交仍找回原回执，但继续执行拒绝不匹配配置。dev3–dev5 的 local-3 Run 可观察、取消及人工核验，续跑需原版本与配置。dev1／dev2 的旧 submit 摘要重放需原版本。没有自动 Run／摘要迁移；未知效果先在原日志核验。policy 继续仅允许同步返回 None 或抛拒绝异常。

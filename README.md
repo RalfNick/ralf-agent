@@ -4,7 +4,7 @@
 
 Ralf-Agent 是 Python 优先的开源 Agent 运行时。它把模型决策、工具动作、审批与结果保存为明确的执行步骤，让任务在重启后继续，并核验可能已经发生的业务操作。
 
-当前版本：**0.1.0.dev6，M1 核心预览**。已经提供原生 Agent SDK、顺序 Workflow、SQLite 持久执行、可信 Python 工具、审批／取消、效果核验、事件分页、独立可替换的会话与长期记忆，以及 Chat Completions 模型 Provider。执行存储、协调器、上下文装配、Harness 决策策略、工具执行器和异步记忆可显式接入。默认装配保持简单，模型响应与工具回执分别在独立事务保存后采纳。完整 M1 尚未验收；当前适合开发者试点和验证有限业务流程。完整支持状态和剩余工作见 [实现清单](docs/implementation-status.md)。预览 API 尚未稳定。
+当前版本：**0.1.0.dev7，M1 核心预览**。提供原生 Agent SDK、顺序 Workflow、SQLite 持久执行、可信 Python 工具、审批／取消、效果核验、事件分页和 Chat Completions Provider。会话与长期记忆可独立替换，支持显式启用的有额度分页；本地 RAG 提供默认词法检索、知识版本与来源校验，以及可注入 Embedding 的真实 cosine 检索。执行存储、协调器、上下文、Harness 和工具执行器均有默认组件与扩展端口。完整 M1 尚未验收，适合开发者试点；支持范围见 [实现清单](docs/implementation-status.md)。预览 API 尚未稳定。
 
 ## 快速开始
 
@@ -48,6 +48,16 @@ ralf --factory agent_app.runtime:create_engine --format text resume RUN_ID
 ```
 
 生成的 `agent_app/runtime.py` 是可编辑的离线 Provider、Python 工具、业务回执和恢复工厂，默认数据库为 `.ralf/runs.sqlite`。`init` 拒绝覆盖非空目录。安装 wheel、接入自己的工具及真实 Provider 的步骤见 [首用教程](docs/getting-started.md)；wheel 不包含仓库示例。本轮未核验公开 PyPI／GitHub Release 状态。
+
+知识问答也有独立模板，无需模型密钥：
+
+```bash
+ralf init ../my-knowledge-agent --template rag
+cd ../my-knowledge-agent
+python -m agent_app --query '缓存连接失败怎么恢复'
+```
+
+它从 SQLite 摄入文档检索证据并返回真实版本与原文引用；无相关证据时明确拒答。离线 Provider 用于验证检索链路。如何替换知识库、检索器、Embedding 和记忆策略见 [记忆与 RAG 教程](docs/recall-and-rag.md)。默认 `ralf init` 仍生成审批示例。
 
 源码中的 SDK 示例：`python examples/oncall.py`。它等待用户输入 `APPROVE`，不会自动批准。
 
@@ -191,6 +201,7 @@ python examples/evaluate.py
 - [实现状态与下一步](docs/implementation-status.md)。M1 后续完成更完整的命令／等待契约、模型质量基线及 Temporal 内部验证；v0.2 验证 Codex、并行和多进程；v1.0 完成企业私有部署目标。
 - [M1 验收与对等比较协议](docs/m1-acceptance.md)：真实模型任务集、故障窗口、Temporal 和外部开发者首用门槛；未执行的实验不记为通过。
 - [执行组件与接收阶段 Review](architecture/reviews/2026-10-06-execution-components.md)：dev6 的扩展边界、独立复核修复和真实崩溃证据。
+- [记忆与知识来源 Review](architecture/reviews/2026-10-06-recall-rag.md)：dev7 的分页、引用校验、快照恢复和规模边界。
 - [授权与关闭 Review](architecture/reviews/2026-10-05-authorization-shutdown.md)、[可靠性与架构门槛](architecture/reviews/2026-10-05-reliability-boundaries.md)、[扩展性 Review](architecture/reviews/2026-10-05-runtime-extensibility.md)。dev6 使用 `local-4`，Manifest 增加 Harness／Executor 身份；dev3–dev5 的 `local-3` Run 可观察、取消及人工核验，继续执行需要原版本与原配置。dev3 起的提交请求摘要未变，相同请求可以找回原回执；这不表示可以用新内核执行旧 Run。dev1／dev2 的历史提交重放需要原版本。运行及命令摘要尚不支持自动迁移。
 - [变更记录](CHANGELOG.md)、[贡献说明](CONTRIBUTING.md)、[发布流程](docs/releasing.md)和[安全反馈](SECURITY.md)。
 

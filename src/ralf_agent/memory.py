@@ -11,7 +11,26 @@ import uuid
 from pathlib import Path
 from typing import Protocol
 
-from .errors import IdempotencyConflict, MemoryBackendError, RalfError, ValidationError
+from .errors import (
+    DefinitionMismatch,
+    IdempotencyConflict,
+    MemoryBackendError,
+    RalfError,
+    ValidationError,
+)
+from .recall import (
+    LegacyMemoryRecallAdapter,
+    _binding,
+    _current_fact,
+    _decode_cursor,
+    _fact_inputs,
+    _integer,
+    _method_backend,
+    _name,
+    _page,
+)
+from .recall import MemoryRecallPolicy as MemoryRecallPolicy
+from .recall import RecallQuery as RecallQuery
 from .storage import SQLiteStore
 from .tools import current_thread_group, current_thread_tracker
 from .types import Scope, canonical
@@ -129,7 +148,19 @@ class ThreadedMemoryAdapter:
             raise ValidationError("Memory backends require a stable backend_id")
         if any(
             inspect.iscoroutinefunction(getattr(backend, name, None))
-            for name in ("read", "append", "facts", "put_fact")
+            or (
+                callable(getattr(backend, name, None))
+                and inspect.iscoroutinefunction(type(getattr(backend, name)).__call__)
+            )
+            for name in (
+                "read",
+                "append",
+                "facts",
+                "put_fact",
+                "read_page",
+                "recall",
+                "validate_facts",
+            )
         ):
             raise ValidationError("Use native async memory directly without the threaded bridge")
         self._backend = backend
@@ -150,6 +181,33 @@ class ThreadedMemoryAdapter:
     async def put_fact(self, *args, **kwargs):
         return await self._call(self.backend.put_fact, *args, **kwargs)
 
+    async def read_page(self, *args, **kwargs):
+        return await self._page_call("read_page", *args, **kwargs)
+
+    async def recall(self, *args, **kwargs):
+        return await self._page_call("recall", *args, **kwargs)
+
+    async def validate_facts(self, *args, **kwargs):
+        return await self._page_call("validate_facts", *args, **kwargs)
+
+    async def _page_call(self, name, *args, **kwargs):
+        backend = self.backend
+        identity = backend.backend_id
+        method = getattr(backend, name, None)
+        if not callable(method):
+            method = getattr(LegacyMemoryRecallAdapter(backend), name)
+        owner, owner_identity = _method_backend(method)
+        result = await self._call(method, *args, **kwargs)
+        if inspect.isawaitable(result):
+            if inspect.iscoroutine(result):
+                result.close()
+            raise ValidationError("Threaded memory methods must return synchronously")
+        if backend.backend_id != identity:
+            raise DefinitionMismatch("Memory backend identity changed during recall")
+        if owner is not None and owner.backend_id != owner_identity:
+            raise DefinitionMismatch("Memory method backend identity changed during recall")
+        return result
+
     async def _call(self, method, *args, **kwargs):
         tracker = current_thread_tracker.get()
         if tracker is None:
@@ -162,6 +220,8 @@ class InMemoryMemory:
         self.backend_id = backend_id or f"memory:{uuid.uuid4().hex}"
         self._sessions = {}
         self._facts = {}
+        self._fact_positions = {}
+        self._fact_generations = {}
         self._lock = threading.RLock()
 
     def read(self, scope, session_id):
@@ -195,6 +255,8 @@ class InMemoryMemory:
             ]
 
     def put_fact(self, scope, namespace, key, value, *, expected_version, expires_at=None):
+        _name(namespace, "Fact namespace")
+        _name(key, "Fact key")
         expires_at = _validate_expires_at(expires_at)
         canonical(value)
         identity = (scope.workspace, scope.principal, namespace, key)
@@ -202,13 +264,77 @@ class InMemoryMemory:
             actual = self._facts.get(identity, {}).get("version", 0)
             if actual != expected_version:
                 raise ValidationError("Fact version conflict")
+            namespace_id = identity[:3]
+            if identity not in self._facts:
+                self._fact_positions.setdefault(namespace_id, []).append(identity)
             self._facts[identity] = {
                 "key": key,
                 "value": copy.deepcopy(value),
                 "version": actual + 1,
                 "expires_at": expires_at,
             }
+            self._fact_generations[namespace_id] = self._fact_generations.get(namespace_id, 0) + 1
             return actual + 1
+
+    def recall(self, scope, namespace, query):
+        binding = _binding(self.backend_id, scope, "facts", namespace, query)
+        with self._lock:
+            namespace_id = (scope.workspace, scope.principal, namespace)
+            snapshot = {"generation": self._fact_generations.get(namespace_id, 0)}
+            positions = self._fact_positions.get(namespace_id, [])
+            after = 0
+            decoded = _decode_cursor(query.cursor, binding)
+            if decoded is not None:
+                previous, after = decoded
+                if set(previous) != {"generation"}:
+                    raise ValidationError("Fact recall snapshot is invalid")
+                _integer(previous["generation"], "Fact generation")
+                if previous != snapshot or after > len(positions):
+                    raise ValidationError("Fact recall snapshot is no longer available")
+            candidates = [
+                (index, self._facts[identity])
+                for index, identity in enumerate(
+                    positions[after : after + query.scan_limit], start=after + 1
+                )
+            ]
+            return _page(
+                candidates,
+                query,
+                "facts",
+                binding,
+                snapshot,
+                has_more=after + len(candidates) < len(positions),
+            )
+
+    def read_page(self, scope, session_id, query):
+        binding = _binding(self.backend_id, scope, "session", session_id, query)
+        with self._lock:
+            records = self._sessions.get((scope.workspace, scope.principal, session_id), [])
+            snapshot, before = _session_cursor(query, binding, 0, len(records))
+            candidates = [
+                (seq, records[seq - 1][1])
+                for seq in range(before - 1, max(0, before - query.scan_limit - 1), -1)
+            ]
+            return _page(
+                candidates,
+                query,
+                "session",
+                binding,
+                snapshot,
+                has_more=before - 1 > len(candidates),
+            )
+
+    def validate_facts(self, scope, namespace, items):
+        references = _fact_inputs(scope, namespace, items)
+        with self._lock:
+            now = time.time()
+            for reference in references:
+                actual = self._facts.get(
+                    (scope.workspace, scope.principal, namespace, reference["key"])
+                )
+                if actual is None:
+                    raise ValidationError("Fact reference is no longer current")
+                _current_fact(reference, actual["version"], actual["expires_at"], now)
 
     def close(self):
         pass
@@ -226,6 +352,36 @@ class SQLiteMemory:
         self.store.conn.executescript("""
             CREATE TABLE IF NOT EXISTS memory_sessions (workspace TEXT, principal TEXT, session TEXT, data TEXT NOT NULL, PRIMARY KEY(workspace,principal,session));
             CREATE TABLE IF NOT EXISTS memory_facts (workspace TEXT, principal TEXT, namespace TEXT, key TEXT, value TEXT NOT NULL, version INTEGER NOT NULL, expires_at REAL, PRIMARY KEY(workspace,principal,namespace,key));
+            CREATE INDEX IF NOT EXISTS memory_facts_recall_scope ON memory_facts(workspace,principal,namespace);
+            CREATE TABLE IF NOT EXISTS memory_fact_generations (workspace TEXT, principal TEXT, namespace TEXT, generation INTEGER NOT NULL, PRIMARY KEY(workspace,principal,namespace));
+            CREATE TABLE IF NOT EXISTS memory_session_index_state (workspace TEXT, principal TEXT, session TEXT, generation INTEGER NOT NULL DEFAULT 0, revision INTEGER NOT NULL DEFAULT 0, dirty INTEGER NOT NULL DEFAULT 1, PRIMARY KEY(workspace,principal,session));
+            CREATE TABLE IF NOT EXISTS memory_session_items (workspace TEXT, principal TEXT, session TEXT, seq INTEGER NOT NULL, message_id TEXT NOT NULL, data TEXT NOT NULL, PRIMARY KEY(workspace,principal,session,seq));
+            CREATE TRIGGER IF NOT EXISTS memory_fact_generation_insert AFTER INSERT ON memory_facts BEGIN
+                INSERT INTO memory_fact_generations VALUES (NEW.workspace,NEW.principal,NEW.namespace,1) ON CONFLICT(workspace,principal,namespace) DO UPDATE SET generation=generation+1;
+            END;
+            CREATE TRIGGER IF NOT EXISTS memory_fact_generation_update AFTER UPDATE ON memory_facts BEGIN
+                INSERT INTO memory_fact_generations VALUES (OLD.workspace,OLD.principal,OLD.namespace,1) ON CONFLICT(workspace,principal,namespace) DO UPDATE SET generation=generation+1;
+                INSERT INTO memory_fact_generations SELECT NEW.workspace,NEW.principal,NEW.namespace,1 WHERE NEW.workspace!=OLD.workspace OR NEW.principal!=OLD.principal OR NEW.namespace!=OLD.namespace ON CONFLICT(workspace,principal,namespace) DO UPDATE SET generation=generation+1;
+            END;
+            CREATE TRIGGER IF NOT EXISTS memory_fact_generation_delete AFTER DELETE ON memory_facts BEGIN
+                INSERT INTO memory_fact_generations VALUES (OLD.workspace,OLD.principal,OLD.namespace,1) ON CONFLICT(workspace,principal,namespace) DO UPDATE SET generation=generation+1;
+            END;
+            CREATE TRIGGER IF NOT EXISTS memory_session_dirty_insert AFTER INSERT ON memory_sessions BEGIN
+                INSERT INTO memory_session_index_state(workspace,principal,session,dirty) VALUES (NEW.workspace,NEW.principal,NEW.session,1) ON CONFLICT(workspace,principal,session) DO UPDATE SET dirty=1;
+            END;
+            CREATE TRIGGER IF NOT EXISTS memory_session_dirty_update AFTER UPDATE ON memory_sessions BEGIN
+                INSERT INTO memory_session_index_state(workspace,principal,session,dirty) VALUES (OLD.workspace,OLD.principal,OLD.session,1) ON CONFLICT(workspace,principal,session) DO UPDATE SET dirty=1;
+                INSERT INTO memory_session_index_state(workspace,principal,session,dirty) VALUES (NEW.workspace,NEW.principal,NEW.session,1) ON CONFLICT(workspace,principal,session) DO UPDATE SET dirty=1;
+            END;
+            CREATE TRIGGER IF NOT EXISTS memory_session_dirty_delete AFTER DELETE ON memory_sessions BEGIN
+                INSERT INTO memory_session_index_state(workspace,principal,session,dirty) VALUES (OLD.workspace,OLD.principal,OLD.session,1) ON CONFLICT(workspace,principal,session) DO UPDATE SET dirty=1;
+            END;
+            CREATE TRIGGER IF NOT EXISTS memory_session_generation_delete AFTER DELETE ON memory_sessions BEGIN
+                INSERT INTO memory_session_index_state VALUES (OLD.workspace,OLD.principal,OLD.session,1,0,1) ON CONFLICT(workspace,principal,session) DO UPDATE SET generation=generation+1,dirty=1;
+            END;
+            CREATE TRIGGER IF NOT EXISTS memory_session_generation_clear AFTER UPDATE ON memory_sessions WHEN json_valid(OLD.data) AND json_valid(NEW.data) AND json_array_length(OLD.data)>0 AND json_array_length(NEW.data)=0 BEGIN
+                UPDATE memory_session_index_state SET generation=generation+1,dirty=1 WHERE workspace=OLD.workspace AND principal=OLD.principal AND session=OLD.session;
+            END;
         """)
 
     def _records(self, scope, session_id):
@@ -240,8 +396,10 @@ class SQLiteMemory:
         return len(records), [r[1] for r in records]
 
     def append(self, scope, session_id, message, *, expected_revision, message_id):
+        canonical(message)
         with self.store.transaction():
             records = self._records(scope, session_id)
+            self._sync_session_index(scope, session_id, records=records)
             for index, (identity, existing) in enumerate(records, 1):
                 if identity == message_id:
                     if canonical(existing) != canonical(message):
@@ -253,6 +411,21 @@ class SQLiteMemory:
             self.store.conn.execute(
                 "INSERT INTO memory_sessions VALUES (?,?,?,?) ON CONFLICT(workspace,principal,session) DO UPDATE SET data=excluded.data",
                 (scope.workspace, scope.principal, session_id, canonical(records)),
+            )
+            self.store.conn.execute(
+                "INSERT INTO memory_session_items VALUES (?,?,?,?,?,?)",
+                (
+                    scope.workspace,
+                    scope.principal,
+                    session_id,
+                    len(records),
+                    message_id,
+                    canonical(message),
+                ),
+            )
+            self.store.conn.execute(
+                "UPDATE memory_session_index_state SET revision=?,dirty=0 WHERE workspace=? AND principal=? AND session=?",
+                (len(records), scope.workspace, scope.principal, session_id),
             )
             return len(records)
 
@@ -271,6 +444,8 @@ class SQLiteMemory:
         ]
 
     def put_fact(self, scope, namespace, key, value, *, expected_version, expires_at=None):
+        _name(namespace, "Fact namespace")
+        _name(key, "Fact key")
         expires_at = _validate_expires_at(expires_at)
         with self.store.transaction():
             row = self.store.conn.execute(
@@ -294,6 +469,154 @@ class SQLiteMemory:
             )
             return actual + 1
 
+    def recall(self, scope, namespace, query):
+        binding = _binding(self.backend_id, scope, "facts", namespace, query)
+        parameters = (scope.workspace, scope.principal, namespace)
+        with self.store.transaction():
+            row = self.store.conn.execute(
+                "SELECT generation FROM memory_fact_generations WHERE workspace=? AND principal=? AND namespace=?",
+                parameters,
+            ).fetchone()
+            snapshot = {"generation": row[0] if row else 0}
+            after = 0
+            decoded = _decode_cursor(query.cursor, binding)
+            if decoded is not None:
+                previous, after = decoded
+                if set(previous) != {"generation"}:
+                    raise ValidationError("Fact recall snapshot is invalid")
+                _integer(previous["generation"], "Fact generation")
+                if previous != snapshot:
+                    raise ValidationError("Fact recall snapshot is no longer available")
+            rows = self.store.conn.execute(
+                "SELECT rowid AS position,key,value,version,expires_at FROM memory_facts WHERE workspace=? AND principal=? AND namespace=? AND rowid>? ORDER BY rowid LIMIT ?",
+                (*parameters, after, query.scan_limit),
+            ).fetchall()
+            candidates = [
+                (
+                    row["position"],
+                    {
+                        "key": row["key"],
+                        "value": json.loads(row["value"]),
+                        "version": row["version"],
+                        "expires_at": row["expires_at"],
+                    },
+                )
+                for row in rows
+            ]
+            has_more = (
+                bool(rows)
+                and self.store.conn.execute(
+                    "SELECT 1 FROM memory_facts WHERE workspace=? AND principal=? AND namespace=? AND rowid>? LIMIT 1",
+                    (*parameters, rows[-1]["position"]),
+                ).fetchone()
+                is not None
+            )
+            return _page(candidates, query, "facts", binding, snapshot, has_more=has_more)
+
+    def _sync_session_index(self, scope, session_id, *, records=None):
+        parameters = (scope.workspace, scope.principal, session_id)
+        state = self.store.conn.execute(
+            "SELECT generation,revision,dirty FROM memory_session_index_state WHERE workspace=? AND principal=? AND session=?",
+            parameters,
+        ).fetchone()
+        if state is not None and not state["dirty"]:
+            return state["generation"], state["revision"]
+        if records is None:
+            records = self._records(scope, session_id)
+        previous = self.store.conn.execute(
+            "SELECT seq,message_id,data FROM memory_session_items WHERE workspace=? AND principal=? AND session=? ORDER BY seq",
+            parameters,
+        ).fetchall()
+        normalized = [
+            (index, identity, canonical(message))
+            for index, (identity, message) in enumerate(records, 1)
+        ]
+        generation = state["generation"] if state is not None else 0
+        if len(previous) > len(normalized) or any(
+            (row["seq"], row["message_id"], row["data"]) != record
+            for row, record in zip(previous, normalized, strict=False)
+        ):
+            generation += 1
+        self.store.conn.execute(
+            "DELETE FROM memory_session_items WHERE workspace=? AND principal=? AND session=?",
+            parameters,
+        )
+        self.store.conn.executemany(
+            "INSERT INTO memory_session_items VALUES (?,?,?,?,?,?)",
+            [(*parameters, seq, identity, data) for seq, identity, data in normalized],
+        )
+        self.store.conn.execute(
+            "INSERT INTO memory_session_index_state VALUES (?,?,?,?,?,0) ON CONFLICT(workspace,principal,session) DO UPDATE SET generation=excluded.generation,revision=excluded.revision,dirty=0",
+            (*parameters, generation, len(records)),
+        )
+        return generation, len(records)
+
+    def read_page(self, scope, session_id, query):
+        binding = _binding(self.backend_id, scope, "session", session_id, query)
+        with self.store.transaction():
+            generation, revision = self._sync_session_index(scope, session_id)
+            snapshot, before = _session_cursor(query, binding, generation, revision)
+            rows = self.store.conn.execute(
+                "SELECT seq,data FROM memory_session_items WHERE workspace=? AND principal=? AND session=? AND seq<? AND seq<=? ORDER BY seq DESC LIMIT ?",
+                (
+                    scope.workspace,
+                    scope.principal,
+                    session_id,
+                    before,
+                    snapshot["revision"],
+                    query.scan_limit,
+                ),
+            ).fetchall()
+            candidates = [(row["seq"], json.loads(row["data"])) for row in rows]
+            has_more = (
+                bool(rows)
+                and self.store.conn.execute(
+                    "SELECT 1 FROM memory_session_items WHERE workspace=? AND principal=? AND session=? AND seq<? AND seq<=? LIMIT 1",
+                    (
+                        scope.workspace,
+                        scope.principal,
+                        session_id,
+                        rows[-1]["seq"],
+                        snapshot["revision"],
+                    ),
+                ).fetchone()
+                is not None
+            )
+            return _page(candidates, query, "session", binding, snapshot, has_more=has_more)
+
+    def validate_facts(self, scope, namespace, items):
+        references = _fact_inputs(scope, namespace, items)
+        with self.store.transaction():
+            now = time.time()
+            for reference in references:
+                row = self.store.conn.execute(
+                    "SELECT version,expires_at FROM memory_facts WHERE workspace=? AND principal=? AND namespace=? AND key=?",
+                    (scope.workspace, scope.principal, namespace, reference["key"]),
+                ).fetchone()
+                if row is None:
+                    raise ValidationError("Fact reference is no longer current")
+                _current_fact(reference, row["version"], row["expires_at"], now)
+
     def close(self):
         if self._owns_store:
             self.store.close()
+
+
+def _session_cursor(query, binding, generation, revision):
+    snapshot = {"generation": generation, "revision": revision}
+    before = revision + 1
+    decoded = _decode_cursor(query.cursor, binding)
+    if decoded is not None:
+        snapshot, before = decoded
+        if set(snapshot) != {"generation", "revision"}:
+            raise ValidationError("Session recall snapshot is invalid")
+        _integer(snapshot["generation"], "Session generation")
+        _integer(snapshot["revision"], "Session revision")
+        if (
+            snapshot["generation"] != generation
+            or snapshot["revision"] > revision
+            or before > snapshot["revision"]
+            or before < 1
+        ):
+            raise ValidationError("Session recall snapshot is no longer available")
+    return snapshot, before

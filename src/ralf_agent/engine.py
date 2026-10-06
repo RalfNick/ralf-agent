@@ -1,11 +1,15 @@
 """Single-coordinator, durable native Agent and sequential Workflow execution."""
 
+from __future__ import annotations
+
 import asyncio
 import copy
 import inspect
+import time
 import uuid
 from collections.abc import Callable
-from dataclasses import asdict
+from dataclasses import asdict, replace
+from typing import TYPE_CHECKING
 
 from jsonschema import Draft202012Validator
 
@@ -20,7 +24,7 @@ from .errors import (
 )
 from .executors import DispatchEnvelope, EffectObservation, PythonToolExecutor, ToolExecutor
 from .harness import DecisionProposal, Harness, ModelRequest, NativeHarness
-from .memory import memory_call
+from .memory import _validate_expires_at, memory_call
 from .ports import ContextBuilder, CoordinatorLease, ExecutionStore
 from .tools import (
     ThreadExecutionTracker,
@@ -43,6 +47,10 @@ from .types import (
 
 TERMINAL = {"succeeded", "failed", "cancelled"}
 
+if TYPE_CHECKING:
+    from .recall import MemoryRecallPolicy
+    from .retrieval import KnowledgeContext
+
 
 class LocalEngine:
     def __init__(
@@ -59,6 +67,8 @@ class LocalEngine:
         context_assembler: ContextBuilder | None = None,
         harness: Harness | None = None,
         tool_executor: ToolExecutor | None = None,
+        recall_policy: MemoryRecallPolicy | None = None,
+        knowledge: KnowledgeContext | None = None,
     ):
         # Python 3.12's Protocol isinstance check ignores proxy __getattr__.
         # Validate the declared public operations so delegating adapters work too.
@@ -76,6 +86,22 @@ class LocalEngine:
         self.tool_executor = PythonToolExecutor(tools) if tool_executor is None else tool_executor
         self._component_identity(self.harness, ("prepare", "propose"), True, "Harness")
         self._component_identity(self.tool_executor, ("execute", "reconcile"), False, "Executor")
+        if recall_policy is not None:
+            from .recall import MemoryRecallPolicy
+
+            if not isinstance(recall_policy, MemoryRecallPolicy):
+                raise ValidationError("recall_policy must be a MemoryRecallPolicy")
+        if knowledge is not None:
+            from .retrieval import KnowledgeContext
+
+            if not isinstance(knowledge, KnowledgeContext):
+                raise ValidationError("knowledge must be a KnowledgeContext")
+        self.recall_policy = recall_policy
+        self.knowledge = knowledge
+        if recall_policy is not None:
+            self._component_identity(recall_policy, (), True, "Recall policy")
+        if knowledge is not None:
+            self._component_identity(knowledge, ("references", "validate"), False, "Knowledge")
         self.scope = scope or Scope()
         self.policy = policy
         self.owner = uuid.uuid4().hex
@@ -254,7 +280,7 @@ class LocalEngine:
             providers[step["provider"]] = copy.deepcopy(provider.identity)
             if step["output_schema"] is not None:
                 Draft202012Validator.check_schema(step["output_schema"])
-        return {
+        manifest = {
             "kernel": "local-4",
             "tools": self.tools.manifests(names),
             "providers": providers,
@@ -268,6 +294,15 @@ class LocalEngine:
                 self.tool_executor, ("execute", "reconcile"), False, "Executor"
             ),
         }
+        if self.recall_policy is not None:
+            manifest["memory_recall"] = self._component_identity(
+                self.recall_policy, (), True, "Recall policy"
+            )
+        if self.knowledge is not None:
+            manifest["knowledge"] = self._component_identity(
+                self.knowledge, ("references", "validate"), False, "Knowledge"
+            )
+        return manifest
 
     def _assemble_context(self, history, references, max_chars):
         try:
@@ -851,6 +886,189 @@ class LocalEngine:
             elif action["status"] == "receipt_received":
                 self._adopt_tool_observation(run_id, action["id"])
 
+    async def _recall_pages(self, backend, operation, name, query, max_pages):
+        from .recall import LegacyMemoryRecallAdapter, RecallPage, _method_backend
+
+        method = getattr(backend, operation, None)
+        if not callable(method):
+            method = getattr(LegacyMemoryRecallAdapter(backend), operation)
+        owner, backend_id = _method_backend(method)
+        pages = min(max_pages, query.max_items, query.max_chars // 2)
+        # Keep the per-page query fixed because it is part of cursor identity.
+        # Allocate all limits before the first call so pagination cannot spend
+        # the entire original allowance again on every page.
+        page_query = replace(
+            query,
+            max_items=query.max_items // pages,
+            max_chars=query.max_chars // pages,
+            scan_limit=query.scan_limit // pages,
+        )
+        items = []
+        cursor = None
+        seen = set()
+        summary = {
+            "pages": 0,
+            "items": 0,
+            "used_chars": 2,
+            "scanned": 0,
+            "skipped": 0,
+            "snapshot_id": None,
+            "backend_bounded": True,
+        }
+        for _ in range(pages):
+            result = self._component_result(
+                await memory_call(method, self.scope, name, replace(page_query, cursor=cursor)),
+                RecallPage,
+                "Memory recall",
+            )
+            if owner is not None and owner.backend_id != backend_id:
+                raise DefinitionMismatch("The actual recalling memory backend changed")
+            result = RecallPage(**asdict(result))
+            if (
+                len(result.items) > page_query.max_items
+                or result.used_chars > page_query.max_chars
+                or result.scanned > page_query.scan_limit
+            ):
+                raise ValidationError("Memory backend exceeded the recall allowance")
+            if summary["snapshot_id"] is not None and summary["snapshot_id"] != result.snapshot_id:
+                raise ValidationError("Memory backend changed pagination snapshot")
+            summary["snapshot_id"] = result.snapshot_id
+            summary["pages"] += 1
+            summary["scanned"] += result.scanned
+            summary["skipped"] += result.skipped
+            summary["backend_bounded"] &= result.backend_bounded
+            items = result.items + items if operation == "read_page" else items + result.items
+            cursor = result.next_cursor
+            if cursor is None:
+                break
+            if cursor in seen:
+                raise ValidationError("Memory backend repeated a pagination cursor")
+            seen.add(cursor)
+        summary["items"] = len(items)
+        summary["used_chars"] = len(canonical(items))
+        if (
+            len(items) > query.max_items
+            or summary["used_chars"] > query.max_chars
+            or summary["scanned"] > query.scan_limit
+        ):
+            raise ValidationError("Combined memory pages exceeded the recall allowance")
+        return items, summary
+
+    async def _load_references(self, run, step):
+        sessions, memory, policy, knowledge = (
+            self.sessions,
+            self.memory,
+            self.recall_policy,
+            self.knowledge,
+        )
+        recall_manifest = None
+        if policy is None:
+            _, session = await memory_call(sessions.read, self.scope, run["session_id"])
+        else:
+            session, session_manifest = await self._recall_pages(
+                sessions, "read_page", run["session_id"], policy.session, policy.max_pages
+            )
+        current = self._authorized(run["id"])
+        if current["state"] in TERMINAL or current["state"] == "cancelling":
+            return None
+        if policy is None:
+            facts = await memory_call(memory.facts, self.scope, step["name"])
+        else:
+            facts, facts_manifest = await self._recall_pages(
+                memory, "recall", step["name"], policy.facts, policy.max_pages
+            )
+            recall_manifest = {"session": session_manifest, "facts": facts_manifest}
+        current = self._authorized(run["id"])
+        self._check_release(current)
+        if (
+            sessions.backend_id != run["manifest"]["session_backend"]
+            or memory.backend_id != run["manifest"]["memory_backend"]
+        ):
+            raise DefinitionMismatch("The executing memory backend differs from this Run")
+        if policy is not None and digest(
+            self._component_identity(policy, (), True, "Recall policy")
+        ) != digest(run["manifest"]["memory_recall"]):
+            raise DefinitionMismatch("The executing recall policy differs from this Run")
+        if current["state"] in TERMINAL or current["state"] == "cancelling":
+            return None
+        knowledge_refs = []
+        if knowledge is not None:
+            knowledge_refs = await memory_call(
+                knowledge.references, self.scope, run["messages"][1]["content"]
+            )
+            if not isinstance(knowledge_refs, list) or any(
+                not isinstance(item, dict) for item in knowledge_refs
+            ):
+                raise ValidationError("Knowledge context must return JSON reference objects")
+            if (
+                len(knowledge_refs) > knowledge.limit
+                or len(canonical(knowledge_refs)) > knowledge.max_chars
+            ):
+                raise ValidationError("Knowledge context exceeded its reference allowance")
+            knowledge_refs = copy.deepcopy(knowledge_refs)
+            self._check_knowledge_release(self._authorized(run["id"]), knowledge)
+        references = knowledge_refs + facts + ([{"session": session}] if session else [])
+        return references, recall_manifest, knowledge_refs, knowledge, copy.deepcopy(facts)
+
+    def _check_knowledge_release(self, run, knowledge):
+        self._check_release(run)
+        if digest(
+            self._component_identity(knowledge, ("references", "validate"), False, "Knowledge")
+        ) != digest(run["manifest"]["knowledge"]):
+            raise DefinitionMismatch("The executing knowledge context differs from this Run")
+
+    async def _validate_knowledge(self, run_id, knowledge, references):
+        run = self._authorized(run_id)
+        if "knowledge" not in run["manifest"]:
+            return
+        self._check_knowledge_release(run, knowledge)
+        result = await memory_call(knowledge.validate, self.scope, copy.deepcopy(references))
+        self._component_result(result, type(None), "Knowledge validation")
+        self._check_knowledge_release(self._authorized(run_id), knowledge)
+
+    async def _validate_memory_references(self, run_id, references, memory):
+        if not references:
+            return
+        from .recall import LegacyMemoryRecallAdapter, _method_backend
+
+        run = self._authorized(run_id)
+        self._check_release(run)
+        if memory.backend_id != run["manifest"]["memory_backend"]:
+            raise DefinitionMismatch("The validating memory backend differs from this Run")
+        self._check_reference_expiry(references)
+        method = getattr(memory, "validate_facts", None)
+        if not callable(method):
+            method = LegacyMemoryRecallAdapter(memory).validate_facts
+        owner, backend_id = _method_backend(method)
+        namespace = run["definition"]["steps"][run["node"]]["name"]
+        result = await memory_call(method, self.scope, namespace, copy.deepcopy(references))
+        self._component_result(result, type(None), "Memory reference validation")
+        if owner is not None and owner.backend_id != backend_id:
+            raise DefinitionMismatch("The actual validating memory backend changed")
+        self._check_release(self._authorized(run_id))
+        if memory.backend_id != run["manifest"]["memory_backend"]:
+            raise DefinitionMismatch("The validating memory backend differs from this Run")
+        self._check_reference_expiry(references)
+
+    @staticmethod
+    def _check_reference_expiry(references, *, knowledge=False):
+        for reference in references:
+            if not isinstance(reference, dict):
+                raise ValidationError("Context references must be JSON records")
+            source = reference.get("_knowledge", {}) if knowledge else reference
+            if not isinstance(source, dict):
+                raise ValidationError("Context references require valid source metadata")
+            expiry = _validate_expires_at(source.get("expires_at"))
+            if expiry is not None and expiry <= time.time():
+                raise ValidationError("Context source is no longer available")
+
+    async def _validate_model_references(self, run_id, knowledge, action, memory):
+        await self._validate_knowledge(run_id, knowledge, action.get("knowledge_references", []))
+        # Knowledge validation can suspend. Check facts after it, at the last
+        # boundary before actual model disclosure, including snapshot retries.
+        await self._validate_memory_references(run_id, action.get("memory_references", []), memory)
+        self._check_reference_expiry(action.get("knowledge_references", []), knowledge=True)
+
     async def _model(self, run_id):
         run = self._authorized(run_id)
         if run["state"] in TERMINAL or run["state"] == "cancelling":
@@ -871,17 +1089,22 @@ class LocalEngine:
         if existing is None and run["decisions"] >= step["max_decisions"]:
             raise ValidationError("Agent decision limit reached")
         self._check_release(run)
+        knowledge = self.knowledge
+        memory = self.memory
         if existing:
             action = existing
             messages = copy.deepcopy(action["snapshot"])
             descriptions = copy.deepcopy(action["request"]["tools"])
         else:
-            _, session = await memory_call(self.sessions.read, self.scope, run["session_id"])
-            references = await memory_call(self.memory.facts, self.scope, step["name"])
-            references = references + ([{"session": session}] if session else [])
+            loaded = await self._load_references(run, step)
+            if loaded is None:
+                return True
+            references, recall_manifest, knowledge_refs, knowledge, facts = loaded
             messages, context_manifest = self._assemble_context(
                 run["messages"], references, step["max_context_chars"]
             )
+            if recall_manifest is not None:
+                context_manifest["memory_recall"] = recall_manifest
             request, manifest = self._prepare_model_request(run, step, messages, context_manifest)
             messages, descriptions = request.messages, request.tools
             action = {
@@ -897,6 +1120,11 @@ class LocalEngine:
                 "context_manifest": manifest,
                 "attempts": [],
             }
+            if knowledge is not None:
+                action["knowledge_references"] = knowledge_refs
+            if knowledge is not None or self.recall_policy is not None:
+                action["memory_references"] = facts
+        await self._validate_model_references(run_id, knowledge, action, memory)
         attempt_id = f"{action['id']}:{len(action['attempts']) + 1}"
         provider = self.providers[step["provider"]]
         with self.store.transaction():
@@ -917,6 +1145,7 @@ class LocalEngine:
             )
         dispatch_started = False
         try:
+            await self._validate_model_references(run_id, knowledge, action, memory)
             current = self._authorized(run_id)
             self._check_provider_release(current, provider, step["provider"])
             if current["state"] in TERMINAL or current["state"] == "cancelling":

@@ -16,6 +16,33 @@ from .memory import (
 )
 from .ports import ContextBuilder, CoordinatorLease, ExecutionStore
 from .providers import ModelProvider, OpenAIChatProvider
+from .recall import (
+    AsyncFactReferenceValidator,
+    AsyncPaginatedSessionStore,
+    AsyncRecallMemoryStore,
+    FactReferenceValidator,
+    LegacyMemoryRecallAdapter,
+    MemoryRecallPolicy,
+    PaginatedSessionStore,
+    RecallMemoryStore,
+    RecallPage,
+    RecallQuery,
+)
+from .retrieval import (
+    Chunk,
+    Document,
+    DocumentRecord,
+    InMemoryKnowledgeStore,
+    KnowledgeContext,
+    KnowledgeRetriever,
+    KnowledgeStore,
+    KnowledgeVersionConflict,
+    LexicalRetriever,
+    RetrievalQuery,
+    RetrievalResult,
+    RetrievedChunk,
+    SQLiteKnowledgeStore,
+)
 from .storage import SQLiteStore
 from .tools import ToolRegistry, ToolSpec
 from .types import (
@@ -30,8 +57,17 @@ from .types import (
     ToolCall,
     WorkflowSpec,
 )
+from .vector import (
+    EmbeddingProvider,
+    InMemoryVectorIndex,
+    SQLiteVectorIndex,
+    VectorEntry,
+    VectorHit,
+    VectorIndex,
+    VectorRetriever,
+)
 
-__version__ = "0.1.0.dev6"
+__version__ = "0.1.0.dev7"
 __all__ = [
     "AgentSpec",
     "AsyncLongTermMemoryStore",
@@ -70,4 +106,34 @@ __all__ = [
     "ToolSpec",
     "ToolExecutor",
     "WorkflowSpec",
+    "AsyncPaginatedSessionStore",
+    "AsyncFactReferenceValidator",
+    "AsyncRecallMemoryStore",
+    "Chunk",
+    "Document",
+    "DocumentRecord",
+    "EmbeddingProvider",
+    "FactReferenceValidator",
+    "InMemoryKnowledgeStore",
+    "InMemoryVectorIndex",
+    "KnowledgeContext",
+    "KnowledgeRetriever",
+    "KnowledgeStore",
+    "KnowledgeVersionConflict",
+    "LegacyMemoryRecallAdapter",
+    "LexicalRetriever",
+    "MemoryRecallPolicy",
+    "PaginatedSessionStore",
+    "RecallMemoryStore",
+    "RecallPage",
+    "RecallQuery",
+    "RetrievalQuery",
+    "RetrievalResult",
+    "RetrievedChunk",
+    "SQLiteKnowledgeStore",
+    "SQLiteVectorIndex",
+    "VectorEntry",
+    "VectorHit",
+    "VectorIndex",
+    "VectorRetriever",
 ]

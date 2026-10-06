@@ -1,6 +1,6 @@
 # 常用 API 与 CLI 参考
 
-版本：0.1.0.dev6／local-4。公开 API 为预览契约；本轮两个接收／采纳窗口已有本地故障回归证据，完整 M1 未完成。已交付边界见 [实现清单](implementation-status.md)，适配器要求见 [扩展指南](extending.md)。以下为常用入口，不替代端口契约。
+版本：0.1.0.dev7／local-4。公开 API 为预览契约；有界召回、本地 RAG 和独立接收／采纳有本地行为证据，完整 M1 未完成。已交付边界见 [实现清单](implementation-status.md)，适配器要求见 [扩展指南](extending.md)。以下为常用入口，不替代端口契约。
 
 ## 定义与装配
 
@@ -29,7 +29,7 @@ from ralf_agent import (
 | `AgentSpec(name, instructions, tools=(), ...)` | 允许工具名与 Provider 别名固定；默认最多 8 次决策；output_schema 为可选 JSON Schema |
 | `WorkflowSpec(name, steps, version="1")` | 非空 AgentSpec 顺序步骤；前步验收后的输出作为下一步输入 |
 | `SQLiteStore(path, readonly=False)` | 本地执行事实；固定文件身份，拒绝硬链接；默认写模式启用 WAL |
-| `LocalEngine(store, providers=..., tools=..., ...)` | 默认租约／记忆、NativeHarness 与 PythonToolExecutor；scope/session_store/memory_store/policy/context_assembler/harness/tool_executor 可注入 |
+| `LocalEngine(store, providers=..., tools=..., ...)` | 默认租约／记忆、NativeHarness 与 PythonToolExecutor；scope/session_store/memory_store/policy/context_assembler/harness/tool_executor 可注入；可选 recall_policy、knowledge 默认 None |
 | `Scope(workspace="default", principal="local-owner")` | 可信宿主传入的作用域；不是企业身份认证 |
 | `OpenAIChatProvider(model, ...)` | 异步单次 Chat Completions 请求；可配置 base_url、timeout、token_parameter；密钥通过 api_key 或环境传入 |
 | `ModelResponse(output=..., tool_calls=..., usage=...)` | Provider 决策数据；工具提案使用 `ToolCall(name, arguments, call_id=None)` |
@@ -118,7 +118,26 @@ handler 接收 JSON 参数和 InvocationContext。Context 提供 scope、run_id�
 | `facts(scope, namespace)` | 返回未过期事实，含 key、value、version、expires_at |
 | `put_fact(scope, namespace, key, value, *, expected_version, expires_at=None)` | 首次写 expected_version=0；CAS 成功后返回新版本；expires_at 为有限 Unix 秒 |
 
-`InMemoryMemory` 和 `SQLiteMemory` 提供参考实现。远程记忆优先使用异步端口；线程安全同步后端可用 ThreadedMemoryAdapter。`backend_id` 必须稳定且不含秘密。Redis／PostgreSQL／向量适配器尚未交付。
+`InMemoryMemory` 和 `SQLiteMemory` 提供参考实现。远程记忆优先使用异步端口；线程安全同步后端可用 ThreadedMemoryAdapter。`backend_id` 必须稳定且不含秘密。Redis／PostgreSQL／托管向量库适配器尚未交付。
+
+召回与知识常用类型也从 `ralf_agent` 导入：
+
+| API | 契约 |
+| --- | --- |
+| `RecallQuery(max_items=32, max_chars=8000, scan_limit=256, text=None, cursor=None)` | 完整记录、canonical JSON 字符与候选额度；cursor 固定查询及 Scope |
+| `MemoryRecallPolicy(facts=..., session=..., max_pages=1)` | Engine 显式启用分页；跨页共享原额度，初始查询无 cursor |
+| `read_page(scope, session_id, query)`／`recall(scope, namespace, query)` | 返回 RecallPage；同步／异步端口，原生内存／SQLite 默认实现 |
+| `validate_facts(scope, namespace, items) -> None` | 可选同步／异步事实有效性端口；内置按当前 key/version/TTL 校验；缺失时 Legacy 全量核对 |
+| `Document(document_id, text, source_uri="", metadata={})` | 权威知识输入；有限 JSON metadata，正文不能为空 |
+| `InMemoryKnowledgeStore()`／`SQLiteKnowledgeStore(path, chunk_size=1000, overlap=100)` | scoped put/get/get_chunk/chunks/delete/lexical；put/delete 使用 expected_version CAS |
+| `RetrievalQuery(text, limit=5, max_chars=8000)` | 限制检索返回；RetrievalResult 含来源、版本、分数和 mode |
+| `KnowledgeContext(retriever, namespace="default", limit=5, max_chars=8000)` | async references/validate；注入 knowledge=；来源按 Scope/版本/TTL 校验 |
+| `LexicalRetriever(store)` | 默认中英文词法检索，无远程模型调用 |
+| `EmbeddingProvider`／`VectorIndex` | 显式注入 async embed 与 scoped 索引；索引不保存知识正文 |
+| `VectorRetriever(store, index, embedding)` | 显式 index_document 后检索；回读有效权威来源 |
+| `InMemoryVectorIndex(dimensions=...)`／`SQLiteVectorIndex(path, dimensions=...)` | 本地真实 cosine 线性检索；维度与有限非零向量校验 |
+
+Knowledge／Vector 组件由应用管理生命周期。召回输出额度不限制所有底层 I/O、embedding 费用或完整 Run 的历史读取。完整例子和兼容要求见 [召回与 RAG](recall-and-rag.md)。
 
 ## CLI
 

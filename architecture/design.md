@@ -206,6 +206,8 @@ MemoryService 组合接口，允许 Redis 会话＋PostgreSQL 长期事实＋Qdr
 
 预览阶段先用默认实现验证接口，新增后端须通过共同契约测试才列为已支持。用户可以自行实现接口并配置注入；尚未验证的扩展声明 experimental，不因接口存在承诺全部后端已可互换。
 
+dev7／local-4 已提供可选 `MemoryRecallPolicy`、同步／异步分页召回与事实有效性端口；内存／SQLite 原生实现限制候选数和返回字符，Legacy 桥明确保留全量读取。知识权威存储、Retriever、EmbeddingProvider 与 VectorIndex 分离，默认中英文词法检索，真实 cosine 向量索引显式配置。Engine 保存引用和实际请求快照，在真正派发模型前检查原来源；已收到响应直接采纳。默认 dev6 Manifest 保持兼容，只有启用新组件才增加身份。当前不包含企业 SourceCatalog／ACL、外部连接器或自动语义记忆；索引重建、旧 blob 写入、最终会话 revision 读取仍可能 O(n)。实现与额度边界见 [召回与 RAG 教程](../docs/recall-and-rag.md)。
+
 执行计划、审批、工具效果和恢复日志属于可靠运行、控制与效果体系，分别遵循第 9.2 节的权威划分；不能通过替换 SessionStore 改变这些记录的权威来源。
 
 ### 6.2 数据范围与并发

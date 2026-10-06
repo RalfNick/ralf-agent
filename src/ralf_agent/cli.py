@@ -62,6 +62,7 @@ def main(argv=None):
     demo.add_argument("--command-id")
     init = commands.add_parser("init", help="Create a standalone, offline Agent starter")
     init.add_argument("directory")
+    init.add_argument("--template", default="oncall", help="Starter template: oncall or rag")
     for command in ("status", "inspect", "events", "resume", "cancel"):
         subparser = commands.add_parser(command)
         subparser.add_argument("run_id")
@@ -81,7 +82,7 @@ def main(argv=None):
         if args.command == "init":
             from .starter import create_starter
 
-            result = asdict(create_starter(args.directory))
+            result = asdict(create_starter(args.directory, template=args.template))
         elif args.command in {"status", "inspect", "events"}:
             with SQLiteStore(args.db, readonly=True) as store:
                 # A read transaction keeps the summary and credit totals in one
