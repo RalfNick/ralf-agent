@@ -174,7 +174,7 @@ facts = InMemoryMemory(backend_id="demo-facts:v1")
 # facts.put_fact(scope, "assistant", "language", "中文", expected_version=0)
 ```
 
-短期消息和长期事实使用作用域及 CAS 版本；长期记忆是显式确认的数据。自动记忆提取、向量索引和知识源撤权链路尚未交付。
+短期消息和长期事实使用作用域及 CAS 版本；长期记忆是显式确认的数据。本地向量索引、注入式向量检索与来源版本校验已交付；默认 Embedding、自动记忆提取和企业知识源撤权体系尚未交付。
 
 常用 SDK 和 CLI 见 [API 指引](docs/api-reference.md)；更多接入约束、组件生命周期和测试方法见 [扩展指南](docs/extending.md)。
 
@@ -209,8 +209,9 @@ python examples/evaluate.py
 ## 架构与路线
 
 - [完整设计](architecture/design.md)与 [review 取舍](architecture/review-resolution.md)。
+- [通用框架能力与扩展验收](architecture/viewpoints/framework-capabilities.md)：每层的契约、默认实现、替换入口和验收矩阵；覆盖 Pipeline／Graph／流式编排、动态 Plan、多 Agent 和可替换数据链路，按固定版本与场景对标 AgentScope。
 - [Run 命令](architecture/specs/run-command-contract.md)、[Action 恢复](architecture/specs/action-recovery-contract.md)、[Runner 能力](architecture/specs/runner-capability-contract.md)。
-- [实现状态与下一步](docs/implementation-status.md)。M1 后续完成更完整的命令／等待契约、模型质量基线及 Temporal 内部验证；v0.2 验证 Codex、并行和多进程；v1.0 完成企业私有部署目标。
+- [实现状态与下一步](docs/implementation-status.md)。M1 继续完成命令／等待、质量和最小 Temporal 门槛；通用 SDK 先推进静态图、工具、规划／团队和数据适配，之后扩展流式编排及企业执行模式；v1.0 完成企业私有部署验收。
 - [M1 验收与对等比较协议](docs/m1-acceptance.md)：真实模型任务集、故障窗口、Temporal 和外部开发者首用门槛；未执行的实验不记为通过。
 - [执行组件与接收阶段 Review](architecture/reviews/2026-10-06-execution-components.md)：dev6 的扩展边界、独立复核修复和真实崩溃证据。
 - [记忆与知识来源 Review](architecture/reviews/2026-10-06-recall-rag.md)：dev7 的分页、引用校验、快照恢复和规模边界。

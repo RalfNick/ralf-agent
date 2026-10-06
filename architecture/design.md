@@ -1,7 +1,9 @@
 # RALF 开源 Agent 平台架构设计
 
-版本：0.2（架构 review 合并版；文档版本独立于产品版本）  
-日期：2026-10-05（Asia/Shanghai）  
+版本：0.3（通用框架目标与分层验收修订；文档版本独立于产品版本）
+
+日期：2026-10-06（Asia/Shanghai）
+
 状态：完整架构目标；当前已交付的 v0.1 开发增量及剩余工作见 [实现状态](../docs/implementation-status.md)，不宣称以下能力已全部实现。
 2026-10-06 实现更新：dev8 已交付结构化 ExecutionEngine、知识上下文与纯召回规划端口、显式适配器注册、JSON/TOML 装配及原 profile 恢复，见 [运行装配指南](../docs/runtime-assembly.md)。默认 local-4／执行 Schema v1 保留；配置版本解析不等于 Worker 版本路由、热迁移或分布式调度。Workflow 当前仍为固定顺序步骤。
 dev9 模型增量增加生成参数、能力预检、完整 SSE、原生 Anthropic/Gemini 文本及 DeepSeek 非思考 preset，见 [模型指南](../docs/model-adapters.md)。流片段不成为执行事实，工具仍在完整响应采纳后派发；线上模型兼容、质量、Gemini 签名工具、多模态与模型路由尚未验收或实现。
@@ -10,9 +12,11 @@ dev9 模型增量增加生成参数、能力预检、完整 SSE、原生 Anthrop
 
 ## 1. 项目定位与已确定决策
 
-RALF 提供 Python 优先的 Agent SDK、可组合 Harness、工作流与可靠执行运行时。个人可以直接运行一个 Agent；企业通过同一套定义接入持久调度、权限、审批、知识库和可观测性。
+RALF 提供 Python 优先的通用 Agent 框架，包含可组合 Harness、单／多 Agent、静态／动态工作流、模型、工具、上下文、记忆、RAG 与可靠执行运行时。个人使用默认组件直接运行；企业通过同一套定义接入远程数据、持久调度、权限、审批、隔离和可观测性。
 
-项目首先解决一个具体问题：带工具调用的 Agent 任务可以审批、恢复和核验，并能从本地开发扩展到企业私有部署。同一份 Agent／Workflow 定义在不同运行模式下保持明确的执行、授权、恢复与审计语义。适配器公开能力差异，通过测试验证兼容程度。项目价值通过实际任务成功率、成本、延迟、人工介入与恢复结果证明。
+每层基础能力必须同时交付公共行为契约、可运行默认实现、独立替换入口和共同验收，让开发者通过配置、组件注入和流程组合快速实现业务。同一份 Agent／Workflow 定义在不同运行模式下保持明确的执行、授权、恢复与审计语义；审批及效果核验贯穿整个框架。适配器公开能力差异，通过测试验证兼容程度。项目价值通过实际采用成本、任务成功率、成本、延迟、人工介入与恢复结果证明。
+
+用户明确的完整目标、逐层默认／适配矩阵、三种静态编排、动态 Plan、多 Agent 和 AgentScope 对标要求见[通用框架能力与扩展验收](viewpoints/framework-capabilities.md)。该文细化目标和建设顺序；当前 dev9 的顺序 Workflow、已交付组件与剩余缺口仍按实现清单公开。
 
 本文描述完整企业架构目标。v0.1／v0.2 是逐步验证核心契约的工程预览，v1.0 是完成企业验收的首个正式版本；接口预留、内部验证和已支持能力分别标识。review 对团队规模的假设不作为删减企业目标的依据，建设范围按第 15 节分期。
 
@@ -24,12 +28,12 @@ RALF 提供 Python 优先的 Agent SDK、可组合 Harness、工作流与可靠�
 | 默认执行 | 单进程 asyncio＋SQLite，无需外部调度服务 |
 | 单机并行 | 单 Coordinator＋多 Process Worker |
 | 分布式执行 | 默认 Temporal，支持多主机 Workers；执行引擎接口可扩展 |
-| 编排 | 静态编排、运行中受控重规划、默认单 Agent／显式自动编排 |
-| Agent 类型 | General、Search、Coding 能力包，共用原生核心循环 |
+| 编排 | 顺序 Pipeline、静态 Graph、流式数据编排、动态 Plan／受控重规划，共用计划与执行契约 |
+| Agent 类型 | General、Search／RAG、PlanAndExecute、Coding 能力包，共用运行时与治理契约 |
 | 多 Agent | 子任务调用、消息／事件；远程通过 A2A |
 | 企业部署 | 单企业私有化、多工作区；公网多租户后置 |
 | 业务模板 | 企业知识库；Oncall 自动诊断，生产变更经人工批准 |
-| 后端替换 | 配置替换＋显式迁移；已有运行保留原后端和版本完成 |
+| 后端替换 | 模型、记忆、知识、向量、工具、消息、执行组件分别可替换；配置替换＋显式迁移，已有运行保留原后端和版本完成 |
 | 正式版边界 | 不交付持续群聊平台、拖拽编排、公共插件市场或运行中热迁移 |
 
 ## 2. 参考项目与设计取舍
@@ -92,7 +96,7 @@ flowchart TB
 | 层 | 职责 | 不承担的职责 |
 | --- | --- | --- |
 | Agent／AgentSpec | 定义目标、输入输出、模型、指令、工具、记忆策略及执行限制 | 不自带第二套持久调度器 |
-| Harness | 装配上下文、解释模型响应、提出下一批 Action，管理 Workspace、Skills 与产物约定 | 不直接批准工具、不自行提交运行状态或调度重试 |
+| 原生 Harness | 纯同步装配请求、解释完整模型响应与提出决策；异步规划／摘要等交由受管理执行阶段 | 不直接执行 I/O、批准工具、提交运行状态或调度重试；外部完整 Harness 由 Runner 适配 |
 | Workflow | 解释依赖、分支、并行、受限循环、等待与计划提案 | 不在确定性解释器中直接执行外部 I/O |
 | ExecutionEngine | 唯一提交 Run／Action 状态转换，序列化计划与调度，处理命令、等待、取消和恢复 | 不把对话记忆作为执行状态 |
 | ToolExecutor | 接收引擎已授权并记录意图的执行请求，执行一个 Attempt 或查询其效果，返回观察证据 | 不批准工具、不预留预算、不提交 Run 或调度重试 |
@@ -152,9 +156,9 @@ Action 区分待调度、执行中、已确认结果、失败、取消与 outcom
 
 ### 5.1 原生 Agent 与 Harness
 
-General、Search、Coding 优先作为能力包与配置组合，共用原生决策／工具循环。Coding 增加文件、代码、测试和 Workspace 能力，并可选择外部 Coding Harness。
+General、Search／RAG、PlanAndExecute、Coding 优先作为能力包与配置组合，共用运行时与治理契约。简单 Agent 使用原生决策／工具循环；PlanAndExecute 组合受管理规划与验证阶段。Coding 增加文件、代码、测试和 Workspace 能力，并可选择外部 Coding Harness。
 
-Harness 管理上下文、工具目录、Skills、工作目录、产物和会话。Skill 是按需加载的说明制品，不能自动授予工具权限。
+原生 Harness 消费上下文、工具目录及相关制品，纯同步地准备请求和解释响应；上下文检索、Skills 加载、Workspace 与产物 I/O 由相应受管理组件完成。Skill 是按需加载的说明制品，不能自动授予工具权限。外部完整 Harness 的内部能力通过 Runner 声明。
 
 原生执行以模型 Action、工具 Action、持久人工等待和子 Run 作为恢复边界，不能把整个 Agent 循环封装成唯一的大 Action。模型调用前保存必要的 ContextSnapshot／Manifest；引擎采纳模型响应时，一并提交响应引用、稳定的拟执行 Action 清单及参数摘要，之后才允许工具调度。
 
@@ -164,9 +168,9 @@ Harness 管理上下文、工具目录、Skills、工作目录、产物和会话
 
 ### 5.2 编排统一结构
 
-静态编排通过 Python Builder 或声明配置形成类型化任务结构，支持条件、并行、受限循环、人工等待与子工作流。普通依赖图必须可校验；循环通过显式上限和预算表达。
+静态编排通过 Python Builder 或声明配置形成类型化任务结构：Pipeline 顺序传递完整结果，Graph 表达依赖／条件／并行／合并／受限循环，Stream Workflow 逐条传递数据。编译、校验和解释分离，共用计划、节点及执行契约。普通依赖图必须可校验；循环通过显式上限和预算表达。数据流具有独立通道、背压、消费位置、检查点及 Sink 效果协议；模型 token 流和 Run 事件订阅分别验收，见[编排详细要求](viewpoints/framework-capabilities.md#4-三种静态编排与动态-plan)。
 
-动态 Planner 提交计划提案。确定性校验器检查执行器注册、输入输出类型、依赖、权限、预算和能力，接受后记录 PlanRevision。重放使用已记录的计划结果，不重新询问模型。
+动态 Planner 作为受管理步骤提交计划提案。确定性校验器检查执行器注册、输入输出类型、依赖、权限、预算和能力，接受后记录 PlanRevision。执行后由 Verifier 给出完成或受限重规划证据；规划次数、期限和预算有上限。重放使用已记录的计划结果，不重新询问模型。纯 RecallPlanner 只负责召回查询，不等于动态任务规划器。
 
 默认使用单 Agent；显式 auto 模式先路由，再根据任务需要生成协作计划。动态、静态、默认模板使用同一个解释器。
 
@@ -197,7 +201,7 @@ ManagedStepRunner 暴露 RALF 可提交、恢复和治理的 Action 边界；Del
 | --- | --- | --- |
 | SessionStore | 短期消息、摘要、追加序号、版本与清理 | v0.1 SQLite；企业目标 PostgreSQL、Redis |
 | LongTermMemoryStore | 长期事实、来源、版本、有效期、范围与删除 | v0.1 SQLite 显式事实；企业目标 PostgreSQL、Redis |
-| VectorIndex | 向量写入、过滤检索、删除；返回记录 ID、版本与分数 | 企业默认 pgvector；Qdrant 独立扩展 |
+| VectorIndex | 向量写入、过滤检索、删除；返回记录 ID、版本与分数 | 本地内存／SQLite；企业默认 pgvector，Qdrant 独立扩展 |
 | EmbeddingProvider | 批量编码，声明模型版本与维度 | 模型服务及用户实现 |
 | MemoryPolicy | 上下文选择、提取、写入、召回、压缩与遗忘 | 内置策略及用户实现 |
 | KnowledgeConnector／Retriever | 数据接入、解析、更新、检索与重排 | 文件接入、通用连接接口及扩展包 |
@@ -456,7 +460,7 @@ Janitor 只清理已结束且没有有效引用、租约或恢复需求的资源
 
 ReleaseManifest 固定 Agent、Workflow、Skill、Tool、Policy、内核／IR 兼容范围、适配器版本及依赖摘要。开发可使用别名，执行时解析为具体版本。升级不覆盖旧制品。
 
-RuntimeConfig 支持程序化注入与 YAML，提供本地、单机多进程、企业配置组合。配置检查输出依赖、能力和权限问题；连接参数通过凭据引用提供。
+配置支持程序化注入、JSON／TOML 声明及版本化 Profile；YAML 可由独立加载器扩展。目标提供本地、单机多进程、企业配置组合。配置检查输出依赖、能力和权限问题；连接参数通过凭据引用提供。
 
 后端切换只影响新运行。记忆迁移提供导出、导入、校验和索引重建；活跃 Session 的迁移需要停止写入并检查版本。已有 Run 保留原执行后端，不承诺 SQLite 历史直接导入 Temporal。
 
@@ -468,7 +472,7 @@ RuntimeConfig 支持程序化注入与 YAML，提供本地、单机多进程、�
 
 ### 13.3 适配器开发与验收
 
-提供模板、配置 Schema、生命周期示例、模拟工具和 AdapterContractSuite。v0.2 首先用 Codex App Server 验证一个真实 DelegatedRunner，范围为隔离 Coding 任务；逐项验证 session_continue、等待、取消和产物等能力。AgentScope、LangGraph、Claude Agent SDK 与 DeepSeek Harness 保留在企业生态路线中，分别通过真实契约测试后发布。
+提供模板、配置 Schema、生命周期示例、模拟工具和 AdapterContractSuite。通用 SDK 先用静态图、自定义节点与工具／数据后端替换验证组合边界；Codex App Server 验证首个真实 DelegatedRunner，范围为隔离 Coding 任务，逐项验证 session_continue、等待、取消和产物等能力。AgentScope、LangGraph、Claude Agent SDK 与 DeepSeek Harness 按独立生态适配交付，分别通过真实契约测试后发布。
 
 外部框架或 Harness 是受管理执行单元；内部工具治理能否接管由实际适配能力决定。未满足治理要求时限制可用工具／场景或明确拒绝，不能靠统一接口隐藏差异。
 
@@ -521,13 +525,14 @@ v0.1 先实现缩小的 Oncall 样例：读取工单 → 提出方案 → 持久
 | 阶段 | 交付目标 |
 | --- | --- |
 | M1／v0.1：核心预览 | Python SDK＋CLI、一个原生 Harness、Local 单进程＋SQLite、一个满足工具调用契约的模型 Provider、可信 Python Tools、顺序 Workflow、基础 Session／显式长期事实；持久审批、Action 恢复、效果日志、原子预算、不可变发布引用与单 Agent 评测贯穿。内部最小 Temporal 样例验证相同契约，不列为生产支持 |
-| M2a／v0.2：扩展预览 | 一个真实 Codex DelegatedRunner、分支／并行、Local 多进程、所需 CLI／MCP 执行隔离、首个替换后端与契约套件。每个能力单独通过验收后标为支持，不一次性实现全部框架适配 |
-| M2b：企业候选 | 完整 Temporal 后端、PostgreSQL／pgvector、受控重规划、多 Agent、可靠消息与 A2A；按场景交付其他记忆／向量／消息扩展及框架适配，完成迁移与兼容验证 |
+| M2a／v0.2：通用 SDK 预览 | 统一计划与静态图／Pipeline、自定义节点、分支／并行、便利工具入口及 HTTP／CLI／MCP、默认数据链路与首批替换后端；每项能力提供默认实现、starter、替换示例与共同契约套件 |
+| M2b：通用 SDK 扩展 | 动态 Plan／Verifier／受控重规划、ChildRun／多 Agent 团队、流式数据编排、Token 上下文与可选摘要／提炼、Redis／PostgreSQL／向量适配、首个 Codex DelegatedRunner；与本地恢复协议一起验收 |
+| M2c：企业候选 | Local 单 Coordinator 多进程、完整 Temporal 后端、PostgreSQL 控制／效果日志、可靠消息与 A2A；独立验证多模式执行权威、资源隔离及迁移，数据适配不等于分布式调度 |
 | M3／v1.0：企业正式可用 | 自部署 API、基础控制台、OIDC、多工作区、知识库／Oncall、版本化部署、保留清理、恢复演练、场景评测与发布门禁、自部署文档；此前三个执行模式满足正式场景的共同契约 |
 
-M1 退出条件是小任务闭环及故障窗口、质量基线通过；M2a 以真实外部 Runtime 和并行资源验证抽象。M3 验收完成后发布首个正式可用版本。预览接口可按验证结果修订；v1.0 稳定公共契约采用版本和弃用策略，后端实现不靠未经验证的兼容声明进入发布清单。
+M1 退出条件是小任务闭环及故障窗口、质量基线通过；M2a／M2b 先验收通用 SDK 的组合能力、默认实现及替换成本，M2c 验证企业执行与部署。M3 验收完成后发布首个正式可用版本。预览接口可按验证结果修订；v1.0 稳定公共契约采用版本和弃用策略，后端实现不靠未经验证的兼容声明进入发布清单。
 
-各阶段先完成本阶段可验证闭环再扩展，预算／权限／恢复保证不能以“以后企业版本补齐”推迟。架构 review 的逐项取舍记录见 [review 合并说明](review-resolution.md)。
+通用 SDK 与 M1 验收可分别形成可验证增量，未完成门槛继续公开；不把本地编排和团队能力推迟到完整 Temporal 之后，也不以新增功能宣布 M1 已验收。预算／权限／恢复保证贯穿每项能力。详细依赖与下一增量见[G1–G6 建设顺序](viewpoints/framework-capabilities.md#8-建设顺序与里程碑)。架构 review 的逐项取舍记录见 [review 合并说明](review-resolution.md)。
 
 ## 16. 验收与故障场景
 

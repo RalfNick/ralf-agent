@@ -33,12 +33,14 @@ The [M1 acceptance protocol](m1-acceptance.md) defines real-model tasks, a LangG
 
 The [runtime assembly guide](runtime-assembly.md) documents profile compatibility, explicit factories and public ports. The [model guide](model-adapters.md) separates implemented protocols from online/model-quality evidence. Graph Workflow, persistent stream events, model routing/multimodal, MCP lifecycle, multi-Agent and distributed execution remain separate deliverables.
 
+The [general framework capability plan](../architecture/viewpoints/framework-capabilities.md) records the user's full target: each layer must ship a public behavior contract, usable default, independent replacement path and conformance evidence. General SDK work proceeds as G1 static plans/graphs, G2 tools/bounded parallel execution, G3 planning/child Runs/teams, G4 data/context/adapters, G5 dataflow streams/external Runners and G6 enterprise execution/services. Data components can ship independently during G1–G3. These are planned capabilities, not dev9 support; the next implementation increment is the G1 common-plan/static-graph boundary. A local SDK increment does not depend on shipping the full Temporal backend, and does not close remaining M1 gates by itself.
+
 1. Extend the verified dev6 component/receiver regressions into grouped M1 fault reports. Both local receiver windows now have real process/cancellation evidence; migrations and complete command outcomes remain.
 2. Complete pending input/deadline/approval expiry, explicit unknown model retry policy and stronger resource lifecycle handling.
 3. Validate real model task completion/tool choice/stopping and context retention against a fixed scenario set; retain the offline regression suite separately.
 4. Extend the delivered Recall/Session indexes to efficient final append, indexed Run/unknown-effect queries and capacity limits separate from budgets. Cancelled but still active calls must retain capacity until completion.
 5. Run the minimum Temporal contract probe using the same approval/cancel/unknown-effect cases, backed by independent Workflow/History authority. Do not advertise Temporal support before actual tests pass.
-6. Add the first external Runner, replacement backend, CLI/MCP isolation and parallel/multi-process execution after those contract gates, under the agreed v0.2 scope.
+6. Deliver the general SDK increments against the existing approval/budget/recovery contracts, with starters and adapter conformance per capability. Add the first external Runner and multi-process/distributed execution through their own authority/resource gates; keep M1 acceptance and feature support distinct.
 
 ## Interpretation of guarantees
 

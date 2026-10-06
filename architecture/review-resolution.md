@@ -6,6 +6,8 @@
 
 来源：[用户提供的架构review](https://chatgpt.com/space/page_6ac325daccd4819190f4ac1ef3fa90f2)。本文记录对 review 建议的采用方式，完整方案见[架构设计](design.md)。
 
+2026-10-06 后续修订：用户明确了通用框架的完整能力目标，设计 v0.3 将通用 SDK／本地组合能力前置，详见[分层能力与交付验收](viewpoints/framework-capabilities.md)。本文保留此前 review 的历史取舍；当前建设顺序以 v0.3 和 G1–G6 为准，既有授权、执行权威、恢复及兼容约束继续适用。
+
 ## 1. 合并结论
 
 采用 review 对恢复粒度、职责归属、并发边界、外部 Runner 能力与早期评测的建议。把完整企业蓝图与工程预览范围分开，用一个原生任务闭环验证核心，再逐步验证并行、外部 Runtime 和分布式执行。
