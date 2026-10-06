@@ -2,6 +2,26 @@
 
 记录用户可见行为和兼容边界。版本为开发预览；此记录不表示已经上传 PyPI、创建 Git 标签或发布 GitHub Release。
 
+## 0.1.0.dev6 — Unreleased
+
+尚未公开发布。本轮组件与两个接收／采纳窗口已通过本地回归；完整 M1 未完成。
+
+### 新增
+
+- 公开 Harness、NativeHarness、ModelRequest／DecisionProposal 及 ToolExecutor、PythonToolExecutor、DispatchEnvelope／EffectObservation；默认装配保持简洁，自定义 identity 固定到 Manifest。
+- 模型完整响应与 handler／执行器核验观察先独立接收，再分别执行 DecisionCommit／ResultCommit；receiver commit 后的恢复、取消和精确结算由真实进程回归验证。
+- 源码离线 execution_components 示例，展示按 Agent 的策略与受审批业务执行器，以及顺序 Workflow。
+- CLI inspect 展示等待采纳的耐久证据，区别于未确认写效果。
+
+### 边界修复
+
+- 固定真正调用的 Provider／Executor 对象并在调用前和接收后复核身份，防止注册表替换掩盖实际组件配置漂移。
+- 意图保存后的未开始调用明确记录 not_dispatched，并释放本次预留；历史未知 Attempt 仍可阻断／核验，不让零结算重试覆盖真正派发的费用。
+
+### 兼容与范围
+
+内核升级为 local-4。dev3–dev5 的 local-3 Run 仍可观察／取消／人工核验，继续必须使用原版本和原配置，不自动迁移；dev3 起的请求摘要和 SQLite Schema v1 不变。人工 reconcile 仍为命令去重与结果同事务。真实模型质量、RAG／向量适配、容量控制、并行、MCP／沙箱与 Temporal 未因本轮组件分离而交付。
+
 ## 0.1.0.dev5 — Unreleased
 
 尚未公开发布，M1 仍为核心预览。

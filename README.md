@@ -4,7 +4,7 @@
 
 Ralf-Agent 是 Python 优先的开源 Agent 运行时。它把模型决策、工具动作、审批与结果保存为明确的执行步骤，让任务在重启后继续，并核验可能已经发生的业务操作。
 
-当前版本：**0.1.0.dev5，M1 核心预览**。已经提供原生 Agent SDK、顺序 Workflow、SQLite 持久执行、可信 Python 工具、审批／取消、效果核验、事件分页、独立可替换的会话与长期记忆，以及 Chat Completions 模型 Provider。执行存储、协调器、上下文装配和异步记忆可显式接入。完整 M1 尚未验收；当前适合开发者试点和验证有限业务流程。完整支持状态和剩余工作见 [实现清单](docs/implementation-status.md)。预览 API 尚未稳定。
+当前版本：**0.1.0.dev6，M1 核心预览**。已经提供原生 Agent SDK、顺序 Workflow、SQLite 持久执行、可信 Python 工具、审批／取消、效果核验、事件分页、独立可替换的会话与长期记忆，以及 Chat Completions 模型 Provider。执行存储、协调器、上下文装配、Harness 决策策略、工具执行器和异步记忆可显式接入。默认装配保持简单，模型响应与工具回执分别在独立事务保存后采纳。完整 M1 尚未验收；当前适合开发者试点和验证有限业务流程。完整支持状态和剩余工作见 [实现清单](docs/implementation-status.md)。预览 API 尚未稳定。
 
 ## 快速开始
 
@@ -55,8 +55,8 @@ ralf --factory agent_app.runtime:create_engine --format text resume RUN_ID
 
 ```bash
 python -m examples.custom_runtime --db .ralf/custom.sqlite
-# 复制输出中的 run_id；PYTHONPATH=. 使 examples 工厂可导入
-PYTHONPATH=. ralf --db .ralf/custom.sqlite --factory examples.custom_runtime:create_engine resume RUN_ID
+# 复制输出中的 run_id，从仓库目录导入原工厂
+ralf --db .ralf/custom.sqlite --factory examples.custom_runtime:create_engine resume RUN_ID
 ralf --db .ralf/custom.sqlite status RUN_ID
 ```
 
@@ -136,7 +136,9 @@ flow = WorkflowSpec(
 ## 扩展与替换
 
 - **模型：** 实现 `ModelProvider.identity` 与异步 `complete(messages, tools) -> ModelResponse`，通过 `providers` 注入。Provider 只产生决策，不自行执行工具。
+- **Agent 策略：** 默认 `NativeHarness`；自定义同步 `prepare(spec, messages, tools) -> ModelRequest` 与 `propose(spec, response) -> DecisionProposal`，通过 `harness` 注入。可以按 AgentSpec 选择策略；内核继续验收工具白名单、参数和最终输出。
 - **工具：** `ToolRegistry.register(ToolSpec, handler, reconciler=...)`。handler 接收 JSON 参数和可信 `InvocationContext`，支持普通同步／异步函数、实例、绑定方法和 `functools.partial`。状态、绑定参数和依赖变更应更新 `ToolSpec.version/config`，不要把秘密写入配置；代码摘要和配置一起绑定运行。Registry／policy 返回的描述是独立副本。
+- **工具执行器：** 默认 `PythonToolExecutor`；自定义异步 `execute(DispatchEnvelope) -> EffectObservation` 与 `reconcile(DispatchEnvelope) -> EffectObservation | None`，通过 `tool_executor` 注入。审批、预算、派发意图和结果提交由内核负责；执行器复用固定的参数、摘要与 effect_key。
 - **记忆：** `SessionStore`／`LongTermMemoryStore` 及对应异步 Protocol 通过 `session_store`／`memory_store` 独立注入。SQLite 和内存后端留在创建线程；远程后端优先实现异步方法。线程安全的同步远程客户端可用 `ThreadedMemoryAdapter` 显式桥接。`backend_id` 必须识别后端／配置／版本，已有 Run 不静默切换后端。
 - **执行与上下文：** `ExecutionStore` 不暴露 SQL／连接，`CoordinatorLease` 负责执行权归属；自定义存储需显式提供租约和记忆组件。`context_assembler` 接收具有版本身份的 `ContextBuilder`，内核仍检查上下文额度和实际快照摘要。这些是 Local 的组件端口，多进程和 Temporal 尚未实现。
 - **治理：** 本版本为可信宿主配置的本地所有者模式。可注入同步 `policy(scope, tool_spec, arguments) -> None`，拒绝时抛 `AuthorizationDenied`；其他返回值一律拒绝；每次工具执行／恢复重新检查。企业 OIDC、资源 ACL 和凭据代理尚未交付。
@@ -154,9 +156,11 @@ facts = InMemoryMemory(backend_id="demo-facts:v1")
 
 常用 SDK 和 CLI 见 [API 指引](docs/api-reference.md)；更多接入约束、组件生命周期和测试方法见 [扩展指南](docs/extending.md)。
 
+[组件接入指南](docs/execution-components.md)提供完整契约。源码示例 `python -m examples.execution_components --db .ralf/components.sqlite` 使用自定义 Harness 和业务执行器，停在人工审批；加 `--workflow` 使用同一组件运行顺序工作流。示例使用独立业务账本，模型为离线脚本。
+
 ## 执行与恢复保证
 
-模型响应和稳定工具清单在同一 SQLite 事务采纳，之后才调度工具。已采纳决策不重新问模型。工具执行前保存效果意图，结果提交后才能推进下一步。
+模型完整响应先在接收事务保存，再由 Harness 提案并在另一事务采纳稳定工具清单，之后才调度工具。已保存响应恢复时不重新问模型；已采纳决策不重新生成。工具执行前保存效果意图，收到的确认观察先独立保存，再提交结果推进下一步；恢复已保存观察不重新执行或查询业务工具。CLI `inspect` 区分待采纳证据与未知写效果。
 
 工具声明 `read_only`、`idempotent_write`、`queryable_write` 或 `unqueryable_write`。`reconciler` 返回已确认效果的 JSON 结果，无法确定时返回 `None`。不可核验写停在 `waiting_reconciliation`；本地所有者可用 SDK `reconcile()` 提交已完成效果的人工证据。新的 Run 也不能重新提交同一工具／参数对应的未解决写效果。
 
@@ -186,7 +190,8 @@ python examples/evaluate.py
 - [Run 命令](architecture/specs/run-command-contract.md)、[Action 恢复](architecture/specs/action-recovery-contract.md)、[Runner 能力](architecture/specs/runner-capability-contract.md)。
 - [实现状态与下一步](docs/implementation-status.md)。M1 后续完成更完整的命令／等待契约、模型质量基线及 Temporal 内部验证；v0.2 验证 Codex、并行和多进程；v1.0 完成企业私有部署目标。
 - [M1 验收与对等比较协议](docs/m1-acceptance.md)：真实模型任务集、故障窗口、Temporal 和外部开发者首用门槛；未执行的实验不记为通过。
-- [授权与关闭 Review](architecture/reviews/2026-10-05-authorization-shutdown.md)、[可靠性与架构门槛](architecture/reviews/2026-10-05-reliability-boundaries.md)、[扩展性 Review](architecture/reviews/2026-10-05-runtime-extensibility.md)。dev5 保留 dev4 的 `local-3` 固定发布身份及 dev3 提交摘要，与合法 dev3／dev4 Run／回执兼容；dev1／dev2 Run 可按 ID 观察、取消及人工核验，继续执行和历史提交重放需要原版本。运行及命令摘要尚不支持自动迁移。
+- [执行组件与接收阶段 Review](architecture/reviews/2026-10-06-execution-components.md)：dev6 的扩展边界、独立复核修复和真实崩溃证据。
+- [授权与关闭 Review](architecture/reviews/2026-10-05-authorization-shutdown.md)、[可靠性与架构门槛](architecture/reviews/2026-10-05-reliability-boundaries.md)、[扩展性 Review](architecture/reviews/2026-10-05-runtime-extensibility.md)。dev6 使用 `local-4`，Manifest 增加 Harness／Executor 身份；dev3–dev5 的 `local-3` Run 可观察、取消及人工核验，继续执行需要原版本与原配置。dev3 起的提交请求摘要未变，相同请求可以找回原回执；这不表示可以用新内核执行旧 Run。dev1／dev2 的历史提交重放需要原版本。运行及命令摘要尚不支持自动迁移。
 - [变更记录](CHANGELOG.md)、[贡献说明](CONTRIBUTING.md)、[发布流程](docs/releasing.md)和[安全反馈](SECURITY.md)。
 
 SDK、运行时和基础治理按 [Apache-2.0](LICENSE) 开源。外部模型／Harness 的服务和许可独立适用。

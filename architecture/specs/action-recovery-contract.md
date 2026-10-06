@@ -1,9 +1,9 @@
 # RALF 动作恢复契约
 
-版本：0.1（设计契约）  
-日期：2026-10-05  
-作者：RALF 架构设计  
-状态：设计，尚未实现。本文中的记录、接口及验收场景是实现要求。  
+版本：0.1（设计契约）
+日期：2026-10-06
+作者：RALF 架构设计
+状态：设计契约，Local 部分实现。dev6／local-4 提供原生／顺序执行、独立模型响应／效果观察接收与采纳；本文的完整字段、并行、Temporal、截止时间及成组验收仍是实现要求，不能视作已交付。
 关联：[架构总设计](../design.md)的领域状态、原生 Harness、执行引擎、治理及恢复章节。
 
 ## 1. 范围与核心约束
@@ -62,7 +62,8 @@ Local 的 DecisionCommit 可将回复引用、候选清单与控制版本写入�
 ```mermaid
 flowchart TD
     Context[装配并持久保存 ContextSnapshot] --> Model[模型 Action：单次推理尝试]
-    Model --> Decision[DecisionCommit：采用回复与稳定工具 Actions]
+    Model --> Response[保存完整模型响应]
+    Response --> Decision[DecisionCommit：采用回复与稳定工具 Actions]
     Decision --> Gate[当前权限 / 预算 / 审批 / 会话租约]
     Gate --> Intent[持久 DispatchIntent]
     Intent --> Execute[受控执行单个工具 Action]
@@ -117,7 +118,11 @@ flowchart TD
 
 内部阶段至少区分 `proposed`、`waiting_gate`、`ready`、`dispatch_committed`、`executing`、`receipt_known`、`result_committed`、`outcome_unknown` 以及失败/取消。内部阶段可映射至总设计的公开 Action 状态，不要求 API 暴露所有存储阶段。
 
+dev6 Local 的模型接收为 response_received／model_response_recorded，工具接收为 receipt_received／tool_receipt_recorded；分别在后续事务采纳 decision_adopted／tool_result_committed。接收阶段已耐久时，恢复使用保存事实，不重复原 Provider、handler 或 query。默认 Harness／Executor 与自定义端口遵循相同采纳边界，见[组件指南](../../docs/execution-components.md)。
+
 `executing` 表示执行已交接，不证明目标已提交效果；`receipt_known` 也不自动代表成功，回执可能确认拒绝、失败或仍在处理中。业务效果结论和输出验收分别记录。只有 ResultCommit 才能推动依赖和原生下一轮决策。
+
+Local 在意图保存后仍会复核取消与实际调用组件；若能证明本次调用尚未开始，则 Attempt 标记 not_dispatched，释放它自己的预留。该证明不能覆盖历史未知 Attempt：Action 仍保留 outcome_unknown、跨 Run 阻断及原费用，核验使用最后真正派发的 Attempt。进程丢失或意图后崩溃本身不能证明未执行。
 
 ### 5.2 重试所有者
 

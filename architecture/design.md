@@ -93,12 +93,14 @@ flowchart TB
 | Harness | 装配上下文、解释模型响应、提出下一批 Action，管理 Workspace、Skills 与产物约定 | 不直接批准工具、不自行提交运行状态或调度重试 |
 | Workflow | 解释依赖、分支、并行、受限循环、等待与计划提案 | 不在确定性解释器中直接执行外部 I/O |
 | ExecutionEngine | 唯一提交 Run／Action 状态转换，序列化计划与调度，处理命令、等待、取消和恢复 | 不把对话记忆作为执行状态 |
-| ToolExecutor | 接收引擎授权的执行请求，检查当前权限、预算和审批，记录效果意图、执行及回执 | 不自行规划下一步、不另建运行状态机 |
+| ToolExecutor | 接收引擎已授权并记录意图的执行请求，执行一个 Attempt 或查询其效果，返回观察证据 | 不批准工具、不预留预算、不提交 Run 或调度重试 |
 | Adapters | 外部模型、工具、框架、完整 Harness、远程 Agent | 不虚构外部实现缺失的恢复或拦截能力 |
 | Governance | 身份、资源授权、审批、凭据、预算与审计 | 不接受模型输出作为授权依据 |
 | Data／Observability | 数据、产物、来源、生命周期与遥测 | 遥测不作为执行恢复的权威来源 |
 
 原生循环的编程边界为 Harness 提案 → Engine 采纳并提交 → Executor 执行 → Engine 采纳结果。可恢复步骤和外部委派分别遵循 [Action 恢复契约](specs/action-recovery-contract.md)与 [Runner 能力契约](specs/runner-capability-contract.md)。
+
+dev6／local-4 已提供 `Harness`／`NativeHarness` 和 `ToolExecutor`／`PythonToolExecutor` 可替换端口。LocalEngine 在独立接收事务保存完整模型响应或效果观察，再提交决策／结果；内核保留当前授权、审批、预算和状态权威。此实现只覆盖原生 Agent 与顺序 Workflow；Workspace、Skills、Coding Runner 和分布式能力仍按后续阶段交付。具体 DTO、阶段和验证边界见[执行组件指南](../docs/execution-components.md)。
 
 ## 4. 领域对象、请求与状态契约
 
@@ -232,7 +234,7 @@ SourceCatalog 为外部内容记录来源 ID、版本、授权引用、有效性
 
 ### 6.5 ContextAssembler
 
-ContextAssembler 位于 Harness 内，统一从 Session、长期记忆、知识、工具结果和用户输入装配每次模型调用的上下文。
+ContextAssembler 从 Session、长期记忆、知识、工具结果和用户输入装配每次模型调用的上下文。Local 中由 Engine 调用可替换 ContextBuilder，再交给纯 Harness 准备请求；最终实际请求快照与额度由内核验收。知识检索和自动压缩属于尚未交付的上下文能力。
 
 装配处理 Token 预算、优先级、去重、摘要和大内容卸载。输出 ContextManifest，记录采用的来源版本、授权范围、内容引用／摘要、选择与丢弃原因、使用策略和预算。
 
@@ -248,7 +250,8 @@ ContextAssembler 位于 Harness 内，统一从 Session、长期记忆、知识�
 | --- | --- |
 | ToolRegistry | 注册、查询、发现、版本管理和注销；保存 Schema、来源、效果与所需权限 |
 | ToolProvider | 适配 Python handler、HTTP、CLI、MCP 等调用来源 |
-| ToolExecutor | 参数校验、权限、预算、审批、截止时间、取消、效果记录与结果归一化 |
+| Engine 工具网关 | 参数校验、权限、预算、审批、截止时间、取消、效果意图、证据接收与结果采纳；截止时间仍属后续实现 |
+| ToolExecutor | 执行固定 DispatchEnvelope 或查询原效果，返回规范化 EffectObservation；Python 默认实现复核工具 Manifest |
 | SandboxProvider | 创建、运行、终止和释放环境，落实文件／网络／进程／资源限制 |
 
 提供 Python 注册 API、装饰器、配置注册和插件入口。注册只保存描述；下载、Python import、启动 CLI／MCP 服务属于执行激活动作。运行固定工具版本，后续注册变更影响新运行。

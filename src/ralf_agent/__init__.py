@@ -3,6 +3,8 @@
 from .context import ContextAssembler
 from .coordinator import FileCoordinator, InProcessCoordinator
 from .engine import LocalEngine
+from .executors import DispatchEnvelope, EffectObservation, PythonToolExecutor, ToolExecutor
+from .harness import DecisionProposal, Harness, ModelRequest, NativeHarness
 from .memory import (
     AsyncLongTermMemoryStore,
     AsyncSessionStore,
@@ -29,7 +31,7 @@ from .types import (
     WorkflowSpec,
 )
 
-__version__ = "0.1.0.dev5"
+__version__ = "0.1.0.dev6"
 __all__ = [
     "AgentSpec",
     "AsyncLongTermMemoryStore",
@@ -39,6 +41,10 @@ __all__ = [
     "ContextBuilder",
     "CoordinatorLease",
     "ExecutionStore",
+    "DecisionProposal",
+    "DispatchEnvelope",
+    "EffectObservation",
+    "Harness",
     "FileCoordinator",
     "InProcessCoordinator",
     "InMemoryMemory",
@@ -47,7 +53,10 @@ __all__ = [
     "LongTermMemoryStore",
     "ModelProvider",
     "ModelResponse",
+    "ModelRequest",
+    "NativeHarness",
     "OpenAIChatProvider",
+    "PythonToolExecutor",
     "RunEvent",
     "RunHandle",
     "RunSnapshot",
@@ -59,5 +68,6 @@ __all__ = [
     "ThreadedMemoryAdapter",
     "ToolRegistry",
     "ToolSpec",
+    "ToolExecutor",
     "WorkflowSpec",
 ]

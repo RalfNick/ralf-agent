@@ -1,6 +1,6 @@
 # 常用 API 与 CLI 参考
 
-版本：0.1.0.dev5。公开 API 为预览契约；已交付边界见 [实现清单](implementation-status.md)，适配器要求见 [扩展指南](extending.md)。以下为常用入口，不替代端口契约。
+版本：0.1.0.dev6／local-4。公开 API 为预览契约；本轮两个接收／采纳窗口已有本地故障回归证据，完整 M1 未完成。已交付边界见 [实现清单](implementation-status.md)，适配器要求见 [扩展指南](extending.md)。以下为常用入口，不替代端口契约。
 
 ## 定义与装配
 
@@ -19,6 +19,8 @@ from ralf_agent import (
     ToolCall,
     Scope,
     InMemoryMemory,
+    NativeHarness,
+    PythonToolExecutor,
 )
 ```
 
@@ -27,10 +29,25 @@ from ralf_agent import (
 | `AgentSpec(name, instructions, tools=(), ...)` | 允许工具名与 Provider 别名固定；默认最多 8 次决策；output_schema 为可选 JSON Schema |
 | `WorkflowSpec(name, steps, version="1")` | 非空 AgentSpec 顺序步骤；前步验收后的输出作为下一步输入 |
 | `SQLiteStore(path, readonly=False)` | 本地执行事实；固定文件身份，拒绝硬链接；默认写模式启用 WAL |
-| `LocalEngine(store, providers=..., tools=..., ...)` | 默认使用 Store 提供的租约和记忆；scope/session_store/memory_store/policy/context_assembler 可注入 |
+| `LocalEngine(store, providers=..., tools=..., ...)` | 默认租约／记忆、NativeHarness 与 PythonToolExecutor；scope/session_store/memory_store/policy/context_assembler/harness/tool_executor 可注入 |
 | `Scope(workspace="default", principal="local-owner")` | 可信宿主传入的作用域；不是企业身份认证 |
 | `OpenAIChatProvider(model, ...)` | 异步单次 Chat Completions 请求；可配置 base_url、timeout、token_parameter；密钥通过 api_key 或环境传入 |
 | `ModelResponse(output=..., tool_calls=..., usage=...)` | Provider 决策数据；工具提案使用 `ToolCall(name, arguments, call_id=None)` |
+
+执行组件可单独替换：
+
+| API | 契约 |
+| --- | --- |
+| `Harness.prepare(spec, messages, tools) -> ModelRequest` | 同步纯数据变换；禁止模型／工具调用、I/O 和状态提交 |
+| `Harness.propose(spec, response) -> DecisionProposal` | 从已收到响应提出 output／ToolCall；内核仍作完整验收 |
+| `NativeHarness()` | 默认透明转交原始请求／提案 |
+| `ToolExecutor.execute(envelope) -> EffectObservation` | async，执行一个派发 Attempt，返回有限 JSON 证据 |
+| `ToolExecutor.reconcile(envelope) -> EffectObservation \| None` | async，核验原效果，未知返回 None |
+| `PythonToolExecutor(tools)` | 默认执行 Registry 中固定 Manifest 的可信 Python 工具 |
+| `DispatchEnvelope(context, tool_manifest, arguments, operation_digest)` | 固定的派发上下文与 JSON 数据；对象不是权限令牌 |
+| `EffectObservation(result, source="tool-handler")` | 未采纳的确认结果；result 视图与内部快照分离 |
+
+这些类型也从 `ralf_agent` 导入。组件必须提供非空有限 JSON identity，影响行为的非秘密配置／版本固定在 Manifest。完整装配和阶段说明见 [执行组件指南](execution-components.md)。
 
 没有工具提案时，输出必须完整且非空白。合法 JSON 的 `0`／`False`／空容器可以作为结果；`None` 需要显式允许 null 的输出 Schema。启用 Schema 时，字符串先按 JSON 解析，然后校验。
 
@@ -60,7 +77,9 @@ print(snapshot.state, snapshot.result, snapshot.error)
 
 RunHandle 包含 `run_id` 和 `receipt`，`to_dict()` 便于 JSON 输出；`handle.status(engine)`／`handle.events(engine, after)` 是观察便捷方法。CommandReceipt 的 `record_state/apply_state` 描述命令处理，不等同于 Run 成功。
 
-Engine 拥有执行 Store 和 Coordinator。显式注入的 Provider、客户端及记忆组件由调用者管理和关闭。恢复时保留稳定的工厂模块、配置身份和原数据库路径。
+Engine 拥有执行 Store 和 Coordinator。显式注入的 Provider、ToolExecutor、客户端及记忆组件由调用者管理和关闭。恢复时保留稳定的工厂模块、配置身份和原数据库路径。
+
+模型 response_received／工具 receipt_received 表示证据已独立保存、尚未完成采纳。恢复使用原 received_response／effect_observation，不重发对应调用。取消后的证据仍可结算和采纳，不产生后续 Action、不重新打开终态。人工 reconcile 保持命令／结果同事务；详情见 [恢复指南](recovery-guide.md)。
 
 ## 工具、授权和记忆
 
@@ -109,7 +128,7 @@ handler 接收 JSON 参数和 InvocationContext。Context 提供 scope、run_id�
 | --- | --- |
 | `init DIRECTORY` | 在新／空目录生成独立离线 Agent 项目；从目标目录外执行 |
 | `demo --ticket INC-001 [--command-id ID]` | 内置离线测试案例；使用自己的 Demo 配置，不接收 factory |
-| `inspect RUN_ID` | 只读简要诊断、pending 和后续命令 |
+| `inspect RUN_ID` | 只读简要诊断、pending、unresolved_effects、recorded_evidence 和后续命令 |
 | `status RUN_ID` | 只读完整 RunSnapshot |
 | `events RUN_ID [--after SEQ] [--limit N]` | 只读事件分页，每页最多 1000 |
 | `approve RUN_ID ACTION_ID --digest DIGEST --command-id ID [--reject]` | 显式审批决定 |

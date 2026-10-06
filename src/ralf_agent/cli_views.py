@@ -4,7 +4,7 @@ import json
 import shlex
 
 from .engine import TERMINAL
-from .types import RunSnapshot
+from .types import RunSnapshot, digest
 
 
 def command_hint(db, factory, command, *arguments):
@@ -54,6 +54,20 @@ def inspection(run, budget, db, factory=None):
         and action["status"] in {"executing", "outcome_unknown"}
         and manifest["tools"][action["tool"]]["effect"] != "read_only"
     ]
+    recorded = [
+        {
+            "action_id": action["id"],
+            "kind": action["kind"],
+            "status": action["status"],
+            "evidence_digest": digest(
+                action["received_response"]
+                if action["kind"] == "model"
+                else action["effect_observation"]
+            ),
+        }
+        for action in run["actions"]
+        if action["status"] in {"response_received", "receipt_received"}
+    ]
     return {
         "run_id": snapshot.run_id,
         "state": snapshot.state,
@@ -65,9 +79,10 @@ def inspection(run, budget, db, factory=None):
         "needs_factory": needs_factory,
         "pending": pending,
         "unresolved_effects": unresolved,
+        "recorded_evidence": recorded,
         "resume_command": (
             command_hint(db, configured_factory, "resume", snapshot.run_id)
-            if snapshot.state not in TERMINAL
+            if snapshot.state not in TERMINAL or recorded
             else None
         ),
         "events_command": command_hint(db, None, "events", snapshot.run_id, "--after", "0"),
@@ -107,6 +122,14 @@ def render_inspection(report):
                 f"Effect key: {item['effect_key']}",
                 "Check the business receipt; use the original reconciler or SDK reconcile() with verified evidence.",
                 "A running handler may still own this operation. Do not submit a replacement Run.",
+            ]
+        )
+    for item in report["recorded_evidence"]:
+        lines.extend(
+            [
+                f"Saved evidence awaiting adoption: {item['action_id']} / {item['kind']} ({item['status']})",
+                f"Evidence digest: {item['evidence_digest']}",
+                "No external request is needed to adopt this saved evidence; later live steps may make new requests.",
             ]
         )
     if report["resume_command"]:

@@ -1,12 +1,14 @@
 # Ralf-Agent 扩展指南
 
-版本：0.1.0.dev4；日期：2026-10-05。面向 SDK／适配器开发者。本指南描述已经运行的 Local 端口；企业适配仍按 [实现清单](implementation-status.md) 分期。
+版本：0.1.0.dev6；日期：2026-10-06。面向 SDK／适配器开发者。本指南描述 Local 端口；dev6 的两个接收／采纳窗口已有 10 项真实进程／取消回归证据。企业适配与完整 M1 验收仍按 [实现清单](implementation-status.md) 分期。
 
 ## 1. 装配组件
 
 | 扩展点 | 注入位置 | 必须满足的约束 |
 | --- | --- | --- |
 | ModelProvider | `providers={name: provider}` | `identity` 非空有限 JSON；`async complete` 返回 ModelResponse；最终输出在公共采纳边界校验，不执行工具 |
+| Harness | `harness=`，默认 NativeHarness | 非空有限 JSON identity；同步纯 prepare／propose 返回 ModelRequest／DecisionProposal；不执行工具或提交状态 |
+| ToolExecutor | `tool_executor=`，默认 PythonToolExecutor | 非空有限 JSON identity；async execute／reconcile 接收固定 DispatchEnvelope，返回 EffectObservation 或核验未知 None |
 | 工具与核验 | `tools=ToolRegistry()` | 参数 Schema、效果类别、version/config、稳定幂等键；单次调用不隐藏业务重试 |
 | SessionStore／AsyncSessionStore | `session_store=` | `backend_id`、read、append；CAS 与 message_id 去重同时成立 |
 | LongTermMemoryStore／AsyncLongTermMemoryStore | `memory_store=` | `backend_id`、facts、put_fact；范围、版本及到期语义一致 |
@@ -18,6 +20,8 @@
 同步返回 `None` 表示检查已经执行并完成授权。上下文管理器、awaitable、generator、True／False、字典等不能表示授权；框架不进入它们，也不调用它们的任意生命周期方法。对已识别的 coroutine／generator 仅做关闭清理，然后报配置错误。
 
 默认 `LocalEngine(SQLiteStore(path), ...)` 会创建 POSIX 文件租约和共享 SQLite 记忆。自定义存储通过端口接入，不需要 `.conn`／`.path`；同时显式注入 `coordinator`、`session_store`、`memory_store`。当前 ExecutionStore 方法是 Coordinator 线程内的同步事务操作；远程数据库需单独验证延迟、原子性和失败语义。
+
+Harness／ToolExecutor 不需要首次使用者额外配置。自定义组件只变换提案或执行一个派发，不取得 Engine 的审批／预算／状态权威。DispatchEnvelope 和 EffectObservation 的 JSON 属性是独立视图；ModelRequest／DecisionProposal 是分离的输入数据，frozen 顶层不保证嵌套 JSON 深度不可变。具体签名、阶段与离线例子见 [执行组件指南](execution-components.md)。
 
 ## 2. 远程记忆
 
@@ -48,11 +52,13 @@ from ralf_agent import ThreadedMemoryAdapter
 
 identity／backend_id 表达端点、数据库／namespace、模型、版本及影响行为的非秘密配置。不要存入 API key、连接凭据或用户隐私。独立内存实例默认具有不同身份；人为指定同一身份时，使用者负责后端语义保持一致。
 
-工具实例状态、partial 绑定参数、闭包和外部依赖不会自动序列化；改变它们时同步更新 `ToolSpec.version/config` 并构造新的 Registry。Provider／ContextBuilder／记忆的 identity 应反映实际当前配置。内核在恢复、异步装配后的派发、模型响应采纳、工具授权后，以及最终会话写入完成后、提交节点／Run 成功前复核固定发布。会话读取和保存固定使用同一执行组件；若适配器在等待期间更换实际后端，Run 失败，已发生的外部写入仍可能存在。
+工具实例状态、partial 绑定参数、闭包和外部依赖不会自动序列化；改变它们时同步更新 `ToolSpec.version/config` 并构造新的 Registry。Provider／Harness／ToolExecutor／ContextBuilder／记忆的 identity 应反映实际当前配置。内核在恢复、异步装配后的派发、模型响应采纳、工具授权后，以及最终会话写入完成后、提交节点／Run 成功前复核固定发布。会话读取和保存固定使用同一执行组件；若适配器在等待期间更换实际后端，Run 失败，已发生的外部写入仍可能存在。
 
-没有工具提案的 ModelResponse 必须给出完整最终结果：缺少输出或空白文本会在采纳前拒绝；False、0、空对象／数组属于合法 JSON。配置输出 Schema 时，文本按 JSON 解析后再校验；Schema 允许 null 时可返回 None 或 JSON null，编码后的空白文本仍拒绝。
+没有工具提案的 DecisionProposal 必须给出完整最终结果：缺少输出或空白文本会在采纳前拒绝；False、0、空对象／数组属于合法 JSON。默认 NativeHarness 透明转交 ModelResponse，自定义 Harness 可以变换原始响应，最终验收对象仍是它提出的输出。配置输出 Schema 时，文本按 JSON 解析后再校验；Schema 允许 null 时可返回 None 或 JSON null，编码后的空白文本仍拒绝。
 
 Registry 的 Schema/config 描述是独立副本，policy 可以读取它们；修改副本不会改变登记的工具或原审批。核验历史未知效果使用原 Manifest 成本，不要求当前工具仍注册。
+
+模型收到完整响应后独立保存 received_response，才调用 Harness.propose 并执行 DecisionCommit；handler／执行器自动核验观察独立保存 effect_observation，才执行 ResultCommit。接收阶段的证据不能因取消被抹去；恢复不重复已保存响应的模型调用或已保存回执的 handler／query。人工 reconcile 的结果已有命令 payload 证据，仍与命令去重及结果提交共用原子事务，不另建接收窗口。当前故障窗口证据状态见 [验收协议](m1-acceptance.md)。
 
 ## 4. 存储及租约
 
@@ -66,7 +72,7 @@ ExecutionStore 的 `run()` 返回与底层记录分离的 JSON 快照；`save_ru
 
 ## 5. 生命周期与 CLI
 
-Engine 成功构造后拥有 execution store 与 coordinator；`close()` 等待条件由调用者满足，活跃工具／记忆调用或排队的 drive 尚未结束时会拒绝关闭。框架托管的同步工具、核验函数与 ThreadedMemoryAdapter 调用按实际工作线程退出追踪；取消全部 Task 或关闭事件循环不表示线程已停止。同 Run 的线程尚活跃时拒绝 drive，cancel 不提前把实际执行判成遗失 Attempt。完成调用和无调用者的 Run 锁会释放。传入的 Provider、HTTP client、session_store、memory_store 由调用者管理，Engine 不隐式关闭它们。构造失败会释放已获得租约，直接传入的 store 仍由调用者关闭。
+Engine 成功构造后拥有 execution store 与 coordinator；`close()` 等待条件由调用者满足，活跃工具／记忆调用或排队的 drive 尚未结束时会拒绝关闭。框架托管的同步工具、核验函数与 ThreadedMemoryAdapter 调用按实际工作线程退出追踪；取消全部 Task 或关闭事件循环不表示线程已停止。同 Run 的线程尚活跃时拒绝 drive，cancel 不提前把实际执行判成遗失 Attempt。完成调用和无调用者的 Run 锁会释放。传入的 Provider、ToolExecutor、HTTP client、session_store、memory_store 由调用者管理，Engine 不隐式关闭它们。构造失败会释放已获得租约，直接传入的 store 仍由调用者关闭。
 
 服务关闭时先停止接收新请求，完成或取消并 await 自己管理的驱动 Task，再 `await engine.wait_for_threads()`，最后 `engine.close()`。等待方法不取消 Task，也不释放租约；取消等待不会丢弃线程归属，已经关闭旧事件循环时可以在新循环等待。线程结束仅表示本地执行已退出；若取消使回执没有采纳，未知效果仍需按执行日志核验。同步线程不能被 asyncio 强制终止，需要 handler 自身的超时／协作退出策略。
 
@@ -78,10 +84,10 @@ Engine 成功构造后拥有 execution store 与 coordinator；`close()` 等待�
 
 SDK 入口程序应导入同一个配置模块，工具实现保留稳定的包／模块名。示例入口已经这样装配；在 `__main__` 重新定义工具后，再从其他模块加载同名函数，属于不同的发布身份。
 
-CLI 的 `status/events` 使用只读 SQLite 和默认 Scope；不载入工厂、不取得执行租约。自定义 Scope／非 SQLite 的观察可使用 SDK `engine.status/events`，独立 Read API 尚未发布。
+CLI 的 `inspect/status/events` 使用只读 SQLite 和默认 Scope；不载入工厂、不取得执行租约。已注入 Harness／Executor 的恢复命令也必须使用原 factory。自定义 Scope／非 SQLite 的观察可使用 SDK `engine.status/events`，独立 Read API 尚未发布。
 
 ## 6. 接入验收与升级
 
 新的适配器至少覆盖：隔离 Scope、重启后稳定身份、CAS 冲突、重复请求去重、未知成本保留、已确认效果不重跑、取消期间不新增后续调用、晚到证据不覆盖原结果、组件变化拒绝恢复。参考 `tests/test_memory.py`、`tests/test_extension_contracts.py`、`tests/test_engine.py` 中的真实数据库和异步测试。
 
-dev4 对 local-3 做兼容的安全修复，保留内核身份 `local-3`、SQLite Schema v1 和 dev3 调用方摘要；合法 dev3 Run／回执无需迁移即可继续使用。返回 True／False 等的 policy 需改为同步返回 None 或抛拒绝异常。dev1／dev2 的记录可以按 Run ID 观察、取消及人工核验；继续执行须使用原版本和原配置。稳定的调用方摘要从 dev3 首次接受的提交起生效；旧版 submit 摘要包含 Manifest，直接用 dev3／dev4 重放会得到冲突，应使用原版本找回回执。自动 Run／命令摘要迁移尚未实现。未知效果应先在原执行日志里核验，不能通过创建新日志或新 Run 绕过恢复约束。
+dev6 固定身份为 `local-4`，新增 Harness／Executor Manifest 身份及接收阶段语义。dev3–dev5 的 local-3 Run 可按 ID 观察、取消及人工核验；继续执行须使用原版本和原配置，新内核默认拒绝，不静默补齐新 Manifest。SQLite Schema v1 和 dev3 起的调用方摘要不变，同一请求可以找回原 Run／回执，但找回不代表能够用 dev6 继续执行。dev1／dev2 的旧 submit 摘要包含 Manifest，历史重放需原版本。自动 Run／命令摘要迁移尚未实现。未知效果应先在原执行日志里核验，不能通过创建新日志或新 Run 绕过恢复约束。policy 继续仅允许同步返回 None 或抛拒绝异常。

@@ -18,6 +18,8 @@ from .errors import (
     RalfError,
     ValidationError,
 )
+from .executors import DispatchEnvelope, EffectObservation, PythonToolExecutor, ToolExecutor
+from .harness import DecisionProposal, Harness, ModelRequest, NativeHarness
 from .memory import memory_call
 from .ports import ContextBuilder, CoordinatorLease, ExecutionStore
 from .tools import (
@@ -25,7 +27,6 @@ from .tools import (
     ToolSpec,
     current_thread_group,
     current_thread_tracker,
-    invoke,
 )
 from .types import (
     AgentSpec,
@@ -34,6 +35,7 @@ from .types import (
     RunHandle,
     RunSnapshot,
     Scope,
+    ToolCall,
     WorkflowSpec,
     canonical,
     digest,
@@ -55,6 +57,8 @@ class LocalEngine:
         policy: Callable[[Scope, ToolSpec, dict], None] | None = None,
         coordinator: CoordinatorLease | None = None,
         context_assembler: ContextBuilder | None = None,
+        harness: Harness | None = None,
+        tool_executor: ToolExecutor | None = None,
     ):
         # Python 3.12's Protocol isinstance check ignores proxy __getattr__.
         # Validate the declared public operations so delegating adapters work too.
@@ -68,6 +72,10 @@ class LocalEngine:
         self.store = store
         self.providers = dict(providers)
         self.tools = tools
+        self.harness = NativeHarness() if harness is None else harness
+        self.tool_executor = PythonToolExecutor(tools) if tool_executor is None else tool_executor
+        self._component_identity(self.harness, ("prepare", "propose"), True, "Harness")
+        self._component_identity(self.tool_executor, ("execute", "reconcile"), False, "Executor")
         self.scope = scope or Scope()
         self.policy = policy
         self.owner = uuid.uuid4().hex
@@ -192,6 +200,42 @@ class LocalEngine:
     def status(self, run_id):
         return RunSnapshot.from_record(self._authorized(run_id))
 
+    @staticmethod
+    def _component_identity(component, methods, synchronous, label):
+        try:
+            identity = component.identity
+            if not isinstance(identity, dict) or not identity:
+                raise ValidationError(f"{label} requires a non-empty JSON identity")
+            canonical(identity)
+            for name in methods:
+                method = getattr(component, name, None)
+                if not callable(method):
+                    raise ValidationError(f"{label} does not implement {name}")
+                if synchronous:
+                    candidates = (method, getattr(method, "__call__", None))  # noqa: B004
+                    if any(
+                        inspect.iscoroutinefunction(value)
+                        or inspect.isasyncgenfunction(value)
+                        or inspect.isgeneratorfunction(value)
+                        for value in candidates
+                    ):
+                        raise ValidationError(f"{label}.{name} must be synchronous")
+                elif not inspect.iscoroutinefunction(method):
+                    raise ValidationError(f"{label}.{name} must be an async method")
+            return copy.deepcopy(identity)
+        except RalfError:
+            raise
+        except Exception as exc:
+            raise ValidationError(f"Cannot validate {label} configuration") from exc
+
+    @staticmethod
+    def _component_result(value, expected, label):
+        if not isinstance(value, expected):
+            if inspect.iscoroutine(value) or inspect.isgenerator(value):
+                value.close()
+            raise ValidationError(f"{label} returned an unsupported value")
+        return value
+
     def events(self, run_id, *, after=0, limit=1000):
         self._authorized(run_id)
         return self.store.events(run_id, after, limit)
@@ -211,12 +255,18 @@ class LocalEngine:
             if step["output_schema"] is not None:
                 Draft202012Validator.check_schema(step["output_schema"])
         return {
-            "kernel": "local-3",
+            "kernel": "local-4",
             "tools": self.tools.manifests(names),
             "providers": providers,
             "session_backend": self.sessions.backend_id,
             "memory_backend": self.memory.backend_id,
             "context_builder": copy.deepcopy(self.context.identity),
+            "harness": self._component_identity(
+                self.harness, ("prepare", "propose"), True, "Harness"
+            ),
+            "tool_executor": self._component_identity(
+                self.tool_executor, ("execute", "reconcile"), False, "Executor"
+            ),
         }
 
     def _assemble_context(self, history, references, max_chars):
@@ -464,6 +514,7 @@ class LocalEngine:
             with self.store.transaction():
                 if self._normalize_abandoned(run):
                     self._commit(run, "abandoned_attempts_unknown")
+            self._adopt_received_evidence(run_id)
             return self.status(run_id)
         self._check_release(run)
         self._active.add(run_id)
@@ -477,6 +528,7 @@ class LocalEngine:
             while True:
                 run = self._authorized(run_id)
                 if run["state"] in TERMINAL:
+                    self._adopt_received_evidence(run_id)
                     break
                 if run["state"] == "cancelling":
                     with self.store.transaction():
@@ -593,6 +645,212 @@ class LocalEngine:
                 )
                 self._commit(run, "workflow_node_completed", {"node": run["node"] - 1})
 
+    def _prepare_model_request(self, run, step, messages, context_manifest):
+        harness = self.harness
+        spec = AgentSpec(**copy.deepcopy(step))
+        descriptions = self.tools.descriptions(step["tools"])
+        try:
+            prepared = self._component_result(
+                harness.prepare(spec, copy.deepcopy(messages), copy.deepcopy(descriptions)),
+                ModelRequest,
+                "Harness.prepare",
+            )
+            # A custom policy may retain its DTO. Freeze the actual request now.
+            request = ModelRequest(prepared.messages, prepared.tools)
+        except RalfError:
+            raise
+        except Exception as exc:
+            raise ValidationError("Harness failed to prepare a model request") from exc
+        self._check_release(self._authorized(run["id"]))
+        if digest(
+            self._component_identity(harness, ("prepare", "propose"), True, "Harness")
+        ) != digest(run["manifest"]["harness"]):
+            raise DefinitionMismatch("The preparing Harness differs from this Run")
+        if not request.messages or len(canonical(request.messages)) > step["max_context_chars"]:
+            raise ValidationError("Harness request exceeded the context limit or has no messages")
+        allowed = {item["function"]["name"]: item for item in descriptions}
+        offered = set()
+        for description in request.tools:
+            function = description.get("function")
+            name = function.get("name") if isinstance(function, dict) else None
+            if name not in allowed:
+                raise AuthorizationDenied("Harness offered a tool outside AgentSpec")
+            if name in offered or digest(description) != digest(allowed[name]):
+                raise ValidationError("Harness changed or duplicated a registered tool descriptor")
+            offered.add(name)
+        changed = digest(request.messages) != digest(messages)
+        manifest = {
+            **context_manifest,
+            "digest": digest(request.messages),
+            "chars": len(canonical(request.messages)),
+            "assembly": copy.deepcopy(context_manifest),
+            "harness_transformed": changed,
+        }
+        if changed:
+            # Preserve assembly provenance without claiming the transformed
+            # request still contains each selected reference.
+            manifest["reference_versions"] = []
+        return request, manifest
+
+    def _record_model_response(self, run_id, action_id, attempt_id, encoded):
+        with self.store.transaction():
+            run = self._authorized(run_id)
+            action = next(item for item in run["actions"] if item["id"] == action_id)
+            if action.get("received_response") is not None:
+                if digest(action["received_response"]) != digest(encoded):
+                    raise ValidationError("Model response identity conflict")
+                return
+            action["received_response"] = copy.deepcopy(encoded)
+            action["status"] = "response_received"
+            action["attempts"][-1]["status"] = "completed"
+            step = run["definition"]["steps"][action["node"]]
+            self.store.settle(
+                attempt_id, step["model_credits"], encoded.get("usage") or {"usage": "unknown"}
+            )
+            self._commit(
+                run,
+                "model_response_recorded",
+                {
+                    "action_id": action_id,
+                    "attempt_id": attempt_id,
+                    "response_digest": digest(encoded),
+                },
+            )
+
+    def _adopt_model_response(self, run_id, action_id):
+        run = self._authorized(run_id)
+        action = next(item for item in run["actions"] if item["id"] == action_id)
+        if action["status"] != "response_received":
+            return True
+        encoded = copy.deepcopy(action["received_response"])
+        closed = run["state"] in TERMINAL or run["state"] == "cancelling"
+        proposals = []
+        if not closed:
+            self._check_release(run)
+            step = run["definition"]["steps"][action["node"]]
+            harness = self.harness
+            try:
+                response = ModelResponse(
+                    output=encoded["output"],
+                    tool_calls=tuple(ToolCall(**call) for call in encoded["tool_calls"]),
+                    usage=encoded["usage"],
+                )
+                proposed = self._component_result(
+                    harness.propose(AgentSpec(**copy.deepcopy(step)), response),
+                    DecisionProposal,
+                    "Harness.propose",
+                )
+                proposal = DecisionProposal(proposed.output, proposed.tool_calls)
+                current = self._authorized(run_id)
+                self._check_release(current)
+                if digest(
+                    self._component_identity(harness, ("prepare", "propose"), True, "Harness")
+                ) != digest(run["manifest"]["harness"]):
+                    raise DefinitionMismatch("The proposing Harness differs from this Run")
+                closed = current["state"] in TERMINAL or current["state"] == "cancelling"
+                if not closed:
+                    if not proposal.tool_calls:
+                        final_output(proposal.output, step["output_schema"])
+                    call_ids = set()
+                    for call in proposal.tool_calls:
+                        if call.name not in step["tools"]:
+                            raise AuthorizationDenied("Harness requested a tool outside AgentSpec")
+                        tool = self.tools.get(call.name)
+                        tool.validate(call.arguments)
+                        proposed_id = uuid.uuid4().hex
+                        call_id = call.call_id or proposed_id
+                        if call_id in call_ids:
+                            raise ValidationError("Duplicate model tool-call identity")
+                        call_ids.add(call_id)
+                        operation = {
+                            "run_id": run_id,
+                            "action_id": proposed_id,
+                            "tool": tool.manifest,
+                            "arguments": call.arguments,
+                            "scope": asdict(self.scope),
+                        }
+                        proposals.append(
+                            {
+                                "id": proposed_id,
+                                "kind": "tool",
+                                "node": action["node"],
+                                "tool": call.name,
+                                "arguments": copy.deepcopy(call.arguments),
+                                "digest": digest(operation),
+                                "effect_key": f"{self.scope.workspace}:{run_id}:{proposed_id}",
+                                "call_id": call_id,
+                                "approved": False,
+                                "status": "ready",
+                                "attempts": [],
+                            }
+                        )
+                    encoded = {**asdict(proposal), "usage": encoded["usage"]}
+            except Exception as exc:
+                error = (
+                    exc
+                    if isinstance(exc, RalfError)
+                    else ValidationError("Harness failed to produce a valid decision")
+                )
+                with self.store.transaction():
+                    current = self._authorized(run_id)
+                    target = next(item for item in current["actions"] if item["id"] == action_id)
+                    target["status"] = "rejected"
+                    target["decision_error"] = {"code": error.code}
+                    self._commit(
+                        current, "decision_rejected", {"action_id": action_id, "code": error.code}
+                    )
+                if error is exc:
+                    raise
+                raise error from exc
+        with self.store.transaction():
+            run = self._authorized(run_id)
+            action = next(item for item in run["actions"] if item["id"] == action_id)
+            if action["status"] != "response_received":
+                return True
+            closed = run["state"] in TERMINAL or run["state"] == "cancelling"
+            action["response"] = encoded
+            action["status"] = "completed"
+            action["decision_skipped"] = closed
+            if not closed:
+                run["actions"].extend(proposals)
+                if proposals:
+                    run["messages"].append(
+                        {
+                            "role": "assistant",
+                            "content": encoded["output"]
+                            if isinstance(encoded["output"], str)
+                            else None,
+                            "tool_calls": [
+                                {
+                                    "id": item["call_id"],
+                                    "type": "function",
+                                    "function": {
+                                        "name": item["tool"],
+                                        "arguments": canonical(item["arguments"]),
+                                    },
+                                }
+                                for item in proposals
+                            ],
+                        }
+                    )
+            self._commit(
+                run,
+                "decision_adopted",
+                {
+                    "action_id": action_id,
+                    "proposed_actions": [] if closed else [item["id"] for item in proposals],
+                    "decision_skipped": closed,
+                },
+            )
+        return True
+
+    def _adopt_received_evidence(self, run_id):
+        for action in self._authorized(run_id)["actions"]:
+            if action["status"] == "response_received":
+                self._adopt_model_response(run_id, action["id"])
+            elif action["status"] == "receipt_received":
+                self._adopt_tool_observation(run_id, action["id"])
+
     async def _model(self, run_id):
         run = self._authorized(run_id)
         if run["state"] in TERMINAL or run["state"] == "cancelling":
@@ -600,42 +858,54 @@ class LocalEngine:
         step = run["definition"]["steps"][run["node"]]
         existing = next(
             (
-                a
-                for a in run["actions"]
-                if a["node"] == run["node"] and a["kind"] == "model" and a["status"] != "completed"
+                item
+                for item in run["actions"]
+                if item["node"] == run["node"]
+                and item["kind"] == "model"
+                and item["status"] != "completed"
             ),
             None,
         )
+        if existing and existing["status"] == "response_received":
+            return self._adopt_model_response(run_id, existing["id"])
         if existing is None and run["decisions"] >= step["max_decisions"]:
             raise ValidationError("Agent decision limit reached")
         self._check_release(run)
         if existing:
             action = existing
             messages = copy.deepcopy(action["snapshot"])
+            descriptions = copy.deepcopy(action["request"]["tools"])
         else:
             _, session = await memory_call(self.sessions.read, self.scope, run["session_id"])
             references = await memory_call(self.memory.facts, self.scope, step["name"])
             references = references + ([{"session": session}] if session else [])
-            messages, manifest = self._assemble_context(
+            messages, context_manifest = self._assemble_context(
                 run["messages"], references, step["max_context_chars"]
             )
+            request, manifest = self._prepare_model_request(run, step, messages, context_manifest)
+            messages, descriptions = request.messages, request.tools
             action = {
                 "id": uuid.uuid4().hex,
                 "kind": "model",
                 "node": run["node"],
                 "status": "ready",
-                "snapshot": messages,
+                "snapshot": copy.deepcopy(messages),
+                "request": {
+                    "messages": copy.deepcopy(messages),
+                    "tools": copy.deepcopy(descriptions),
+                },
                 "context_manifest": manifest,
                 "attempts": [],
             }
         attempt_id = f"{action['id']}:{len(action['attempts']) + 1}"
+        provider = self.providers[step["provider"]]
         with self.store.transaction():
             run = self._authorized(run_id)
-            if run["state"] in TERMINAL or run["state"] == "cancelling":
+            if run["state"] == "cancelling" or run["state"] in TERMINAL:
                 return True
             self._check_release(run)
             if existing is not None:
-                action = next(a for a in run["actions"] if a["id"] == action["id"])
+                action = next(item for item in run["actions"] if item["id"] == action["id"])
             self.store.reserve(run_id, attempt_id, step["model_credits"])
             action["attempts"].append({"id": attempt_id, "status": "executing"})
             action["status"] = "executing"
@@ -645,97 +915,36 @@ class LocalEngine:
             self._commit(
                 run, "model_dispatched", {"action_id": action["id"], "attempt_id": attempt_id}
             )
+        dispatch_started = False
         try:
-            response = await self.providers[step["provider"]].complete(
-                copy.deepcopy(messages), self.tools.descriptions(step["tools"])
-            )
-            self._check_release(self._authorized(run_id))
+            current = self._authorized(run_id)
+            self._check_provider_release(current, provider, step["provider"])
+            if current["state"] in TERMINAL or current["state"] == "cancelling":
+                self._record_not_dispatched(run_id, action["id"], attempt_id, "cancelled")
+                return True
+            complete = provider.complete
+            dispatch_started = True
+            response = await complete(copy.deepcopy(messages), copy.deepcopy(descriptions))
             if not isinstance(response, ModelResponse):
                 raise ValidationError("Model provider must return ModelResponse")
             encoded = asdict(response)
             canonical(encoded)
-            if not response.tool_calls:
-                final_output(response.output, step["output_schema"])
-            proposals = []
-            call_ids = set()
-            for call in response.tool_calls:
-                if call.name not in step["tools"]:
-                    raise AuthorizationDenied("Model requested a tool outside AgentSpec")
-                tool = self.tools.get(call.name)
-                tool.validate(call.arguments)
-                action_id = uuid.uuid4().hex
-                call_id = call.call_id or action_id
-                if call_id in call_ids:
-                    raise ValidationError("Duplicate model tool-call identity")
-                call_ids.add(call_id)
-                operation = {
-                    "run_id": run_id,
-                    "action_id": action_id,
-                    "tool": tool.manifest,
-                    "arguments": call.arguments,
-                    "scope": asdict(self.scope),
-                }
-                proposals.append(
-                    {
-                        "id": action_id,
-                        "kind": "tool",
-                        "node": run["node"],
-                        "tool": call.name,
-                        "arguments": copy.deepcopy(call.arguments),
-                        "digest": digest(operation),
-                        "effect_key": f"{self.scope.workspace}:{run_id}:{action_id}",
-                        "call_id": call_id,
-                        "approved": False,
-                        "status": "ready",
-                        "attempts": [],
-                    }
-                )
-            with self.store.transaction():
-                run = self._authorized(run_id)
-                action = next(a for a in run["actions"] if a["id"] == action["id"])
-                action["response"] = encoded
-                action["status"] = "completed"
-                action["attempts"][-1]["status"] = "completed"
-                self.store.settle(
-                    attempt_id, step["model_credits"], response.usage or {"usage": "unknown"}
-                )
-                if run["state"] != "cancelling":
-                    run["actions"].extend(proposals)
-                    if proposals:
-                        run["messages"].append(
-                            {
-                                "role": "assistant",
-                                "content": response.output
-                                if isinstance(response.output, str)
-                                else None,
-                                "tool_calls": [
-                                    {
-                                        "id": a["call_id"],
-                                        "type": "function",
-                                        "function": {
-                                            "name": a["tool"],
-                                            "arguments": canonical(a["arguments"]),
-                                        },
-                                    }
-                                    for a in proposals
-                                ],
-                            }
-                        )
-                self._commit(
-                    run,
-                    "decision_adopted",
-                    {
-                        "action_id": action["id"],
-                        "proposed_actions": [a["id"] for a in proposals]
-                        if run["state"] != "cancelling"
-                        else [],
-                    },
-                )
-            return True
+            self._record_model_response(run_id, action["id"], attempt_id, encoded)
         except Exception as exc:
+            if not dispatch_started:
+                code = exc.code if isinstance(exc, RalfError) else "validation_error"
+                self._record_not_dispatched(run_id, action["id"], attempt_id, code)
+                if isinstance(exc, RalfError):
+                    raise
+                raise ValidationError("Cannot dispatch the pinned model request") from exc
             with self.store.transaction():
                 run = self._authorized(run_id)
-                action = next(a for a in run["actions"] if a["id"] == action["id"])
+                action = next(item for item in run["actions"] if item["id"] == action["id"])
+                if action.get("received_response") is not None:
+                    self.store.emit(
+                        run_id, "model_response_processing_error", {"action_id": action["id"]}
+                    )
+                    return False
                 action["status"] = "outcome_unknown"
                 action["attempts"][-1]["status"] = "unknown"
                 self.store.mark_unknown(attempt_id)
@@ -754,6 +963,88 @@ class LocalEngine:
                     )
                 self._commit(run, "model_attempt_unknown", {"action_id": action["id"]})
             return False
+        self._check_provider_release(self._authorized(run_id), provider, step["provider"])
+        return self._adopt_model_response(run_id, action["id"])
+
+    def _check_provider_release(self, run, provider, name):
+        self._check_release(run)
+        if digest(self._component_identity(provider, ("complete",), False, "Provider")) != digest(
+            run["manifest"]["providers"][name]
+        ):
+            raise DefinitionMismatch("The executing model Provider differs from this Run")
+
+    def _record_not_dispatched(self, run_id, action_id, attempt_id, code):
+        with self.store.transaction():
+            run = self._authorized(run_id)
+            action = next(item for item in run["actions"] if item["id"] == action_id)
+            action["attempts"][-1]["status"] = "not_dispatched"
+            action["status"] = (
+                "outcome_unknown"
+                if any(attempt["status"] == "unknown" for attempt in action["attempts"])
+                else "not_dispatched"
+            )
+            self.store.settle(attempt_id, 0, {"dispatch": "not_started"})
+            self._commit(
+                run,
+                f"{action['kind']}_dispatch_rejected",
+                {"action_id": action_id, "attempt_id": attempt_id, "code": code},
+            )
+
+    def _record_tool_observation(self, run_id, action_id, observation, receipt):
+        self._component_result(observation, EffectObservation, "ToolExecutor")
+        result = observation.result
+        canonical(result)
+        with self.store.transaction():
+            run = self._authorized(run_id)
+            action = next(item for item in run["actions"] if item["id"] == action_id)
+            if action["status"] == "completed":
+                self._tool_result(run, action, result, receipt)
+                return False
+            if "effect_observation" in action:
+                known = action["effect_observation"]["result"]
+                self.store.emit(
+                    run_id,
+                    "late_effect_evidence",
+                    {
+                        "action_id": action_id,
+                        "source": receipt["source"],
+                        "result_digest": digest(result),
+                        "matches_committed_result": digest(result) == digest(known),
+                    },
+                )
+                return True
+            action["effect_observation"] = {
+                "result": copy.deepcopy(result),
+                "receipt": copy.deepcopy(receipt),
+            }
+            action["status"] = "receipt_received"
+            attempt = self._last_dispatched_attempt(action)
+            if attempt is not None:
+                attempt["status"] = "receipt_received"
+            self._commit(
+                run,
+                "tool_receipt_recorded",
+                {
+                    "action_id": action_id,
+                    "source": receipt["source"],
+                    "result_digest": digest(result),
+                },
+            )
+        return True
+
+    def _adopt_tool_observation(self, run_id, action_id):
+        with self.store.transaction():
+            run = self._authorized(run_id)
+            action = next(item for item in run["actions"] if item["id"] == action_id)
+            if action["status"] != "receipt_received":
+                return False
+            observation = action["effect_observation"]
+            committed = self._tool_result(
+                run, action, observation["result"], observation["receipt"]
+            )
+            if committed:
+                self._commit(run, "tool_result_committed", {"action_id": action_id})
+        return committed
 
     def _tool_result(self, run, action, result, receipt):
         canonical(result)
@@ -775,8 +1066,8 @@ class LocalEngine:
         action["status"] = "completed"
         action["result"] = copy.deepcopy(result)
         action["receipt"] = receipt
-        if action["attempts"]:
-            attempt = action["attempts"][-1]
+        attempt = self._last_dispatched_attempt(action)
+        if attempt is not None:
             attempt["status"] = "completed"
             self.store.settle(
                 attempt["id"],
@@ -788,11 +1079,21 @@ class LocalEngine:
         )
         return True
 
+    @staticmethod
+    def _last_dispatched_attempt(action):
+        return next(
+            (item for item in reversed(action["attempts"]) if item["status"] != "not_dispatched"),
+            None,
+        )
+
     async def _tool(self, run_id, action_id):
         run = self._authorized(run_id)
         if run["state"] in TERMINAL or run["state"] == "cancelling":
             return True
         action = next(a for a in run["actions"] if a["id"] == action_id)
+        if action["status"] == "receipt_received":
+            self._adopt_tool_observation(run_id, action_id)
+            return True
         tool = self.tools.get(action["tool"])
         self._check_release(run)
         tool.validate(action["arguments"])
@@ -827,33 +1128,41 @@ class LocalEngine:
                     run, "approval_requested", {"action_id": action_id, "digest": action["digest"]}
                 )
             return False
+        previous_attempt = self._last_dispatched_attempt(action)
         context = InvocationContext(
             self.scope,
             run_id,
             action_id,
-            action["attempts"][-1]["id"] if action["attempts"] else "",
+            previous_attempt["id"] if previous_attempt is not None else "",
             action["effect_key"],
             self.owner,
         )
+        executor = self.tool_executor
+        manifest = run["manifest"]["tools"][action["tool"]]
         if action["status"] == "outcome_unknown":
-            if tool.reconciler is not None:
-                try:
-                    result = await invoke(
-                        tool.reconciler, action["arguments"], context, thread_tracker=self._threads
-                    )
-                except Exception:
-                    result = None
-                with self.store.transaction():
-                    run = self._authorized(run_id)
-                    action = next(a for a in run["actions"] if a["id"] == action_id)
-                    if action["status"] == "completed":
-                        if result is not None:
-                            self._tool_result(run, action, result, {"source": "tool-reconciler"})
-                        return True
-                    if result is not None:
-                        self._tool_result(run, action, result, {"source": "tool-reconciler"})
-                        self._commit(run, "effect_reconciled", {"action_id": action_id})
-                        return True
+            try:
+                observation = await executor.reconcile(
+                    DispatchEnvelope(context, manifest, action["arguments"], action["digest"])
+                )
+            except RalfError:
+                raise
+            except Exception:
+                observation = None
+            if observation is not None:
+                self._component_result(observation, EffectObservation, "ToolExecutor.reconcile")
+                self._record_tool_observation(
+                    run_id,
+                    action_id,
+                    observation,
+                    {"source": observation.source, "attempt_id": context.attempt_id},
+                )
+            self._check_executor_release(self._authorized(run_id), executor)
+            if observation is not None:
+                self._adopt_tool_observation(run_id, action_id)
+                return True
+            current = next(a for a in self._authorized(run_id)["actions"] if a["id"] == action_id)
+            if current["status"] == "completed":
+                return True
             if tool.spec.effect not in {"read_only", "idempotent_write"}:
                 with self.store.transaction():
                     run = self._authorized(run_id)
@@ -884,20 +1193,34 @@ class LocalEngine:
         context = InvocationContext(
             self.scope, run_id, action_id, attempt_id, action["effect_key"], self.owner
         )
+        dispatch_started = False
         try:
-            result = await invoke(
-                tool.handler, action["arguments"], context, thread_tracker=self._threads
+            envelope = DispatchEnvelope(context, manifest, action["arguments"], action["digest"])
+            current = self._authorized(run_id)
+            self._check_executor_release(current, executor)
+            if current["state"] in TERMINAL or current["state"] == "cancelling":
+                self._record_not_dispatched(run_id, action_id, attempt_id, "cancelled")
+                return True
+            execute = executor.execute
+            dispatch_started = True
+            observation = await execute(envelope)
+            self._component_result(observation, EffectObservation, "ToolExecutor.execute")
+            self._record_tool_observation(
+                run_id,
+                action_id,
+                observation,
+                {"source": observation.source, "attempt_id": attempt_id},
             )
-            with self.store.transaction():
-                run = self._authorized(run_id)
-                action = next(a for a in run["actions"] if a["id"] == action_id)
-                committed = self._tool_result(
-                    run, action, result, {"source": "tool-handler", "attempt_id": attempt_id}
-                )
-                if committed:
-                    self._commit(run, "tool_result_committed", {"action_id": action_id})
+            self._check_executor_release(self._authorized(run_id), executor)
+            self._adopt_tool_observation(run_id, action_id)
             return True
-        except Exception:
+        except Exception as exc:
+            if not dispatch_started:
+                code = exc.code if isinstance(exc, RalfError) else "validation_error"
+                self._record_not_dispatched(run_id, action_id, attempt_id, code)
+                if isinstance(exc, RalfError):
+                    raise
+                raise ValidationError("Cannot dispatch the pinned tool request") from exc
             with self.store.transaction():
                 run = self._authorized(run_id)
                 action = next(a for a in run["actions"] if a["id"] == action_id)
@@ -908,6 +1231,13 @@ class LocalEngine:
                         {"action_id": action_id, "attempt_id": attempt_id},
                     )
                     return False
+                if action["status"] == "receipt_received":
+                    self.store.emit(
+                        run_id,
+                        "tool_receipt_processing_error",
+                        {"action_id": action_id, "attempt_id": attempt_id},
+                    )
+                    raise
                 action["status"] = "outcome_unknown"
                 action["attempts"][-1]["status"] = "unknown"
                 self.store.mark_unknown(attempt_id)
@@ -917,3 +1247,10 @@ class LocalEngine:
                     )
                 self._commit(run, "effect_unknown", {"action_id": action_id})
             return False
+
+    def _check_executor_release(self, run, executor):
+        self._check_release(run)
+        if digest(
+            self._component_identity(executor, ("execute", "reconcile"), False, "Executor")
+        ) != digest(run["manifest"]["tool_executor"]):
+            raise DefinitionMismatch("The executing ToolExecutor differs from this Run")

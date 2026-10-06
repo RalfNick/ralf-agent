@@ -89,6 +89,7 @@ def installed_wheel(tmp_path_factory):
             "-m",
             "pip",
             "install",
+            "--force-reinstall",
             "--no-index",
             "--no-deps",
             "--no-cache-dir",

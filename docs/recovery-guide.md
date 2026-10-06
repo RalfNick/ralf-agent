@@ -1,6 +1,6 @@
 # 审批、重启与未知效果恢复
 
-适用版本：0.1.0.dev5。恢复操作使用原执行数据库、原 Scope 和原工厂。执行日志与业务效果证据应一起保留；取消和关闭进程不会撤销远端业务操作。
+适用版本：0.1.0.dev6／local-4。两个接收／采纳窗口已有本地真实进程回归证据，完整 M1 验收仍未完成。恢复操作使用原执行数据库、原 Scope 和原工厂，包括原 Harness／ToolExecutor 身份。执行日志与业务效果证据应一起保留；取消和关闭进程不会撤销远端业务操作。
 
 ## 先观察，再继续
 
@@ -24,6 +24,8 @@ ralf --db .ralf/runs.sqlite events RUN_ID --after 0 --limit 100
 
 `inspect` 的建议描述下一步；读取成功或 CLI 退出码 0 不代表 Run 已成功完成，应以 `state/result/error` 为准。
 
+recorded_evidence 表示已收到、已耐久保存但尚未采纳的模型响应或工具观察，unresolved_effects 表示仍未确认的写。前者恢复时使用原证据，不重新调用原请求；后续活跃步骤可以继续执行。终态 Run 也可以采纳保存的证据与结算费用，终态保持不变。not_dispatched 则是本次调用在实际开始前被拒绝；它不抹掉历史 Attempt 的未知效果或额度。
+
 ## 持久审批与重复命令
 
 进程在 `waiting_approval` 时可以正常关闭。新进程加载同一个工厂，针对原 Action 作出决定：
@@ -37,15 +39,19 @@ ralf --db .ralf/runs.sqlite --factory agent_app.runtime:create_engine resume RUN
 
 同一个 Scope 内，相同 command_id 和请求内容返回原回执，内容改变则 `idempotency_conflict`。submit 身份由 definition、input、budget 和 session_id 决定；当前配置别名移动后重复请求仍返回最初 Run，但恢复仍要满足该 Run 的固定 Release。客户端网络或终端结果不确定时，重复原命令，不要直接生成新命令和新业务任务。
 
-## 已采纳模型决策不会重问；未知写效果先核验
+## 已收到证据先采纳；未知写效果先核验
 
-工具派发前保存效果意图。若业务已经提交，但进程在结果采纳前退出，Action 可成为 `outcome_unknown`。已采纳的模型决策继续使用原工具提案；引擎不会为了恢复已确认决策重新询问模型。
+工具派发前保存效果意图。收到完整模型响应后，先在独立事务保存 received_response，记录 model_response_recorded，Action 为 response_received；恢复调用原 Harness.propose 并验收，不重新问模型。DecisionCommit 后继续使用原稳定工具提案。
 
-`queryable_write`／其他已注册核验函数的工具，可在恢复时用 `reconciler(arguments, context)` 按原 `effect_key` 查询业务记录。返回已确认结果的 JSON；无法确定时返回 `None`。核验不应隐式重做写操作。缺少核验能力的未知写保持等待，相同工具／参数的未解决写也会阻止新的 Run 重新派发。
+handler／执行器自动核验返回确认结果后，先独立保存 effect_observation，记录 tool_receipt_recorded，Action 为 receipt_received；恢复提交原 Action 的结果，不重新执行 handler 或 query。模型已知 credits 在接收时结算，工具 credits 在结果采纳时结算。
 
-M1 尚未实现“已证明未执行／仍在处理中”的丰富核验结果或独立效果回执提交窗口。没有“未查到”就能安全重写的通用保证，也没有跨系统 exactly-once 保证。
+若业务已提交，但本地效果观察尚未保存，Action 仍可能 outcome_unknown；独立回执阶段不能追回未收到的响应。取消后已保存证据仍需结算与采纳，但不创建新提案／派发，不重新打开终态。操作员 reconcile 的人工结果仍与命令去重及 ResultCommit 共用同一原子事务，没有额外自动执行器接收窗口。实现与故障验证状态见 [组件指南](execution-components.md)。
 
-若等待来自未采纳的模型尝试，下一次 resume 当前会发起新的模型 Attempt，旧未知额度继续占用；这可能产生新的供应商用量。先检查事件和 Action，区别于已经采纳的决策；显式可配置的未知模型重试策略仍待交付。`reconcile()` 仅确认工具效果，不能用于补交模型响应。
+恢复通过 `ToolExecutor.reconcile(envelope)` 按原 effect_key 查询业务记录，返回 EffectObservation，无法确定时返回 None。默认 PythonToolExecutor 转发 Registry 中的 `reconciler(arguments, context)`，该函数返回已确认结果的 JSON 或未知 None；自定义执行器可以独立提供查询，不要求重复注册 Python 核验函数。核验不应隐式重做写操作。缺少核验能力的未知写保持等待，相同工具／参数的未解决写也会阻止新的 Run 重新派发。
+
+M1 尚未实现“已证明未执行／仍在处理中”的丰富核验结果。没有“未查到”就能安全重写的通用保证，也没有跨系统 exactly-once 保证。
+
+若等待来自尚未耐久收到响应的模型尝试，下一次 resume 当前仍会发起新的模型 Attempt，旧未知额度继续占用；这可能产生新的供应商用量。先检查事件和 Action，区别于 response_received 或已经采纳的决策；显式可配置的未知模型重试策略仍待交付。`reconcile()` 仅确认工具效果，不能用于补交模型响应。
 
 ### 本地所有者提交人工核验证据
 
@@ -95,11 +101,11 @@ Store 关闭失败会保留租约、停止旧 Engine 的其他操作；修正组
 | 错误 code | 检查方向 |
 | --- | --- |
 | coordinator_busy | 同一数据库是否还有 Engine、drive 或未结束的真实线程；先完成其关闭 |
-| definition_mismatch | 原工具模块、version/config、Provider、记忆 backend_id 或 ContextBuilder 是否改变；恢复原配置 |
+| definition_mismatch | 原内核版本、工具模块、version/config、Provider、Harness、ToolExecutor、记忆 backend_id 或 ContextBuilder 是否改变；恢复原版本／配置 |
 | idempotency_conflict | 是否复用了命令 ID，但改变定义／输入／预算／Session／审批决定 |
 | authorization_denied | 原 Scope 或宿主 policy 是否拒绝该操作；审批不能代替授权 |
 | validation_error | 参数／输出 Schema、policy 返回值、CAS 或生命周期是否违反契约 |
 
 整数 credits 的未知预留保持占用；缺失 Token 用量不会被认定为零。credits 不是供应商费用或外部调用硬限制。
 
-dev5 保留 `local-3` 和 dev3 请求摘要，合法 dev3／dev4 Run 和回执可继续使用。dev1／dev2 Run 可按 ID 观察、取消及人工核验；继续执行与历史 submit 重放需原版本和配置。自动迁移尚未实现，详情见 [扩展指南](extending.md)。
+dev6 使用 `local-4`，dev3–dev5 的 local-3 Run 不能由新内核默认续跑，需原版本和原配置；观察、取消与人工核验仍可进行。SQLite Schema v1、dev3 起调用方摘要保持不变，重复原请求仍能找回旧 Run／回执，但不能据此绕过版本检查。dev1／dev2 的旧 submit 重放需原版本。自动迁移尚未实现，详情见 [扩展指南](extending.md)。

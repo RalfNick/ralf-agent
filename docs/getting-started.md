@@ -1,6 +1,6 @@
 # 第一次使用 Ralf-Agent
 
-本文面向 **0.1.0.dev5，M1 核心预览**。需要 Python 3.11+ 和 Linux／macOS。先用离线项目完成一次提交、审批和恢复，再接入自己的模型与业务工具。
+本文面向 **0.1.0.dev6，M1 核心预览**。需要 Python 3.11+ 和 Linux／macOS。先用离线项目完成一次提交、审批和恢复，再接入自己的模型与业务工具。
 
 当前已验证源码和本地 wheel 的安装路径；尚未核验 PyPI 或 GitHub Release 中有对应发行包。不要把 `pip install ralf-agent` 当作已验证的安装方式。
 
@@ -13,7 +13,7 @@
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
-python -m pip install "/path/to/ralf_agent-0.1.0.dev5-py3-none-any.whl"
+python -m pip install "/path/to/ralf_agent-0.1.0.dev6-py3-none-any.whl"
 ralf --version
 ```
 
@@ -74,6 +74,7 @@ ralf --db .ralf/runs.sqlite --format text inspect RUN_ID
 | Python 工具 | JSON 参数 Schema；读／写效果类别；写操作的 effect_key、审批和核验方式 |
 | 授权 policy | 同步执行，成功返回 None，拒绝抛 AuthorizationDenied；其他返回值拒绝 |
 | Provider | 异步 complete 返回 ModelResponse；只提出决策，工具由引擎执行 |
+| Harness／ToolExecutor | 默认原生策略与 Python 执行器；需要领域策略或业务派发适配时按[组件指南](execution-components.md)注入 |
 | 记忆 | 会话／长期记忆独立注入；稳定 backend_id、Scope 隔离、CAS 和去重 |
 
 接入实际模型时可用 `OpenAIChatProvider` 替换离线 Provider，并在进程环境中提供 `OPENAI_API_KEY` 和模型名。真实调用产生供应商用量；不要把密钥加入 ToolSpec.config、Provider.identity 或版本库。兼容的服务需要单独验证响应和工具调用契约。完整端口要求见 [扩展指南](extending.md)，常用 SDK 调用见 [API 参考](api-reference.md)。
