@@ -4,12 +4,16 @@ import json
 import os
 import sys
 import time
+import uuid
 from pathlib import Path
 
 mode, directory = sys.argv[1:]
 root = Path(directory)
 root.mkdir(exist_ok=True)
 (root / "pid").write_text(str(os.getpid()))
+cursor_token = uuid.uuid4().hex
+with (root / "sessions").open("a") as log:
+    log.write("started\n")
 initialized = False
 for line in sys.stdin:
     message = json.loads(line)
@@ -45,7 +49,13 @@ for line in sys.stdin:
             print("x" * 1048577, flush=True)
             continue
         result = {
-            "protocolVersion": "invalid" if mode == "version" else "2025-11-25",
+            "protocolVersion": {}
+            if mode == "version_object"
+            else []
+            if mode == "version_array"
+            else "invalid"
+            if mode == "version"
+            else "2025-11-25",
             "capabilities": {"tools": {}},
             "serverInfo": {"name": "offline", "version": "1"},
         }
@@ -68,7 +78,26 @@ for line in sys.stdin:
             },
             "annotations": {"readOnlyHint": True},
         }
-        if mode == "manypages":
+        if mode == "session_cursor":
+            supplied = message["params"].get("cursor")
+            if supplied is not None and supplied != cursor_token:
+                print(
+                    json.dumps(
+                        {
+                            "jsonrpc": "2.0",
+                            "id": request_id,
+                            "error": {"code": -32602, "message": "Unknown session cursor"},
+                        }
+                    ),
+                    flush=True,
+                )
+                continue
+            if supplied is None:
+                result = {"tools": [tool], "nextCursor": cursor_token}
+            else:
+                tool["name"] = "second"
+                result = {"tools": [tool]}
+        elif mode == "manypages":
             page = int(message["params"].get("cursor", "0"))
             tool["name"] = "page-" + str(page)
             result = {"tools": [tool], "nextCursor": str(page + 1)}

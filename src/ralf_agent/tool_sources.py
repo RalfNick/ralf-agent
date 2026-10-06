@@ -130,9 +130,15 @@ def _caller_schema(descriptor, policy):
     }:
         raise ValidationError("Reserved effect keys require a flat object root Schema")
     properties = schema.get("properties", {})
-    if key not in properties or properties[key].get("type") != "string":
+    if (
+        key not in properties
+        or not isinstance(properties[key], dict)
+        or properties[key].get("type") != "string"
+    ):
         raise ValidationError("Reserved effect key must name a declared string property")
     properties.pop(key)
+    # Removing a property alone does not forbid it when extra fields are allowed.
+    schema["not"] = {"required": [key]}
     if "required" in schema:
         schema["required"] = [name for name in schema["required"] if name != key]
     return schema

@@ -110,25 +110,30 @@ class _Session:
             return message["result"]
         raise ToolSourceError("MCP peer exceeded the unsolicited message limit")
 
-    def matching_tool(self, expected):
-        descriptors, cursor, seen = [], None, set()
+    def discover(self, params):
+        # Opaque cursors may belong to this initialized peer/session. Exhaust
+        # discovery here rather than opening another peer for each page.
+        tools, names, cursor, seen = [], set(), params.get("cursor"), set()
         for _ in range(32):
             page = self.request("tools/list", {} if cursor is None else {"cursor": cursor})
             if not isinstance(page.get("tools"), list):
                 raise ToolSourceError("MCP discovery page is invalid")
-            descriptors.extend(mcp_descriptor(item) for item in page["tools"])
-            if len(descriptors) > 256 or len({item.name for item in descriptors}) != len(
-                descriptors
-            ):
-                raise ToolSourceError("MCP discovery has excessive or duplicated tools")
+            for item in page["tools"]:
+                descriptor = mcp_descriptor(item)
+                if descriptor.name in names or len(tools) == 256:
+                    raise ToolSourceError("MCP discovery has excessive or duplicated tools")
+                names.add(descriptor.name)
+                tools.append(item)
             cursor = page.get("nextCursor")
             if cursor is None:
-                break
+                return tools
             if not isinstance(cursor, str) or not cursor or cursor in seen:
                 raise ToolSourceError("MCP discovery cursor is invalid")
             seen.add(cursor)
-        else:
-            raise ToolSourceError("MCP discovery exceeded 32 pages")
+        raise ToolSourceError("MCP discovery exceeded 32 pages")
+
+    def matching_tool(self, expected):
+        descriptors = [mcp_descriptor(item) for item in self.discover({})]
         match = next((item for item in descriptors if item.name == expected["name"]), None)
         if match is None or digest(match.to_dict()) != digest(expected):
             raise DefinitionMismatch("MCP peer tool differs from the pinned descriptor")
@@ -235,12 +240,15 @@ class MCPStdioTransport:
                 },
             )
             if (
-                initialized.get("protocolVersion") not in VERSIONS
+                not isinstance(initialized.get("protocolVersion"), str)
+                or initialized["protocolVersion"] not in VERSIONS
                 or not isinstance(initialized.get("capabilities"), dict)
                 or not isinstance(initialized["capabilities"].get("tools"), dict)
             ):
                 raise ToolSourceError("MCP peer has an unsupported protocol or tool capability")
             session.notify("notifications/initialized")
+            if method == "tools/list":
+                return {"tools": session.discover(params)}
             if expected is not None:
                 session.matching_tool(expected)
             return session.request(method, params)

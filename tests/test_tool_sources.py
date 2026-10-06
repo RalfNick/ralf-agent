@@ -242,3 +242,62 @@ def test_source_must_return_completed_finite_json(result):
     )
     with pytest.raises(ValidationError):
         asyncio.run(registry.get("write").handler({"value": 1}, context()))
+
+
+@pytest.mark.parametrize("additional", [True, None])
+def test_reserved_key_rejected_by_registry_while_other_extra_fields_remain_valid(additional):
+    a = public()
+    schema = {
+        "type": "object",
+        "properties": {"value": {"type": "integer"}, "request_id": {"type": "string"}},
+        "required": ["value", "request_id"],
+    }
+    if additional is not None:
+        schema["additionalProperties"] = additional
+    source = Source([a.ToolDescriptor("write", "Write", schema)])
+    registry = ToolRegistry()
+    asyncio.run(
+        a.register_tool_source(
+            registry,
+            source,
+            policies={
+                "write": a.ToolPolicy(
+                    "1", effect="idempotent_write", effect_key_argument="request_id"
+                )
+            },
+        )
+    )
+    tool = registry.get("write")
+    tool.validate({"value": 1, "extra": "retained"})
+    with pytest.raises(ValidationError):
+        tool.validate({"value": 1, "request_id": "forged"})
+    assert asyncio.run(tool.handler({"value": 1, "extra": "retained"}, context())) == {
+        "accepted": {"value": 1, "extra": "retained", "request_id": "stable-key"}
+    }
+
+
+@pytest.mark.parametrize("property_schema", [True, False])
+def test_boolean_reserved_property_schema_is_rejected_with_validation_error(property_schema):
+    a = public()
+    source = Source(
+        [
+            a.ToolDescriptor(
+                "write", "Write", {"type": "object", "properties": {"request_id": property_schema}}
+            )
+        ]
+    )
+    registry = ToolRegistry()
+    with pytest.raises(ValidationError):
+        asyncio.run(
+            a.register_tool_source(
+                registry,
+                source,
+                policies={
+                    "write": a.ToolPolicy(
+                        "1", effect="idempotent_write", effect_key_argument="request_id"
+                    )
+                },
+            )
+        )
+    with pytest.raises(DefinitionMismatch):
+        registry.get("write")

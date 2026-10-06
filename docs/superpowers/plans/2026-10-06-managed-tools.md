@@ -1,6 +1,6 @@
 # Managed Tools Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** Deliver replaceable MCP tool sources and managed async/sync graph Tool nodes, retaining durable governance.
 
@@ -35,4 +35,4 @@ Package 0.1.0.dev11; old local-4/ExecutionStore v1 and plan v1 identities unchan
 - [x] Write direct Tool-node integration tests; run `tests/test_workflow_tools.py`, expected unsupported tool argument/plan assertions.
 - [x] Implement v2 plan/Tool-node execution via shared Action builder; run related Workflow/executor/runtime suites, expected approval/recovery/cancel/budget/output and v1 compatibility pass.
 - [x] Deliver package-contained example/guide and dev11; full `.venv/bin/python -m pytest -q -W error`, Ruff lint/format, Git whitespace and documentation checks pass.
-- [ ] Build/install outside checkout; run example with no Provider and actual dev10-to-dev11 native/Graph identity replay. Commit, obtain a fresh independent review, fix material findings with RED→GREEN and full suite, record evidence and scope decisions.
+- [x] Build/install outside checkout; run example with no Provider and actual dev10-to-dev11 native/Graph identity replay. Commit, obtain a fresh independent review, fix material findings with RED→GREEN and full suite, record evidence and scope decisions.

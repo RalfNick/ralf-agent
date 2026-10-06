@@ -108,7 +108,7 @@ class OrdersSource:
 
 自定义 Source 可接 HTTP、RPC 或其他协议；来源对象由宿主管理，框架不会关闭借用连接。实际调用前后检查源身份，输入／结果必须是有限 JSON。影响隐藏依赖的改变需要诚实地更新版本。
 
-MCPTransport 则负责 `async request(method, params, *, expected_tool=None) -> dict`。tools/call 前必须校验 expected_tool；默认 stdio 在同一会话中重新发现并比对固定描述。自定义传输需要落实同等行为、身份和关闭契约；HTTP／OAuth 尚无默认实现。
+MCPTransport 则负责 `async request(method, params, *, expected_tool=None) -> dict`。tools/call 前必须校验 expected_tool；默认 stdio 在同一会话中重新发现并比对固定描述；tools/list 会在该会话内消费所有分页，返回完整的有界工具列表，避免临时游标跨会话失效。自定义传输需要落实同等行为、身份和关闭契约；HTTP／OAuth 尚无默认实现。
 
 stdio 每次操作启动独立会话，按 initialize → initialized → tools/list 或 tools/call 执行，结束时终止进程组并回收直接子进程。操作在框架跟踪的真实 worker 中运行；取消 asyncio Task 不能提前释放 Coordinator，服务退出前按[关闭指南](recovery-guide.md)等待真实工作结束。这是可信进程管理，未提供沙箱隔离。
 

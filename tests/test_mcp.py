@@ -67,7 +67,7 @@ def test_real_pagination_returns_all_named_tools(tmp_path):
 
 def test_repeated_cursor_rejected_without_infinite_discovery(tmp_path):
     a = public()
-    with pytest.raises(ValidationError):
+    with pytest.raises(a.ToolSourceError):
         asyncio.run(source(a, tmp_path, "cursor").list_tools())
     gone(tmp_path)
 
@@ -212,4 +212,20 @@ def test_protocol_identity_and_discovery_limits_reject(tmp_path, mode):
 def test_server_ping_does_not_replace_initialize_response(tmp_path):
     a = public()
     assert asyncio.run(source(a, tmp_path, "ping").list_tools())[0].name == "read"
+    gone(tmp_path)
+
+
+def test_session_local_cursor_remains_valid_for_entire_discovery(tmp_path):
+    a = public()
+    tools = asyncio.run(source(a, tmp_path, "session_cursor").list_tools())
+    assert [tool.name for tool in tools] == ["read", "second"]
+    assert (tmp_path / "sessions").read_text().splitlines() == ["started"]
+    gone(tmp_path)
+
+
+@pytest.mark.parametrize("mode", ["version_object", "version_array"])
+def test_malformed_negotiated_version_uses_typed_protocol_error(tmp_path, mode):
+    a = public()
+    with pytest.raises(a.ToolSourceError):
+        asyncio.run(source(a, tmp_path, mode).list_tools())
     gone(tmp_path)

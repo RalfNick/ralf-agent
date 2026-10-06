@@ -248,3 +248,52 @@ def test_crash_after_tool_receipt_reuses_confirmed_result(tmp_path):
                 "result": {"value": 3},
                 "calls": 1,
             }
+
+
+def test_forged_remote_effect_key_fails_before_approval_or_reservation(tmp_path):
+    from ralf_agent import ToolDescriptor, ToolPolicy, register_tool_source
+
+    calls = []
+
+    class Source:
+        identity = {"kind": "reserved-key", "version": "1"}
+
+        async def list_tools(self):
+            return (
+                ToolDescriptor(
+                    "write",
+                    "Write",
+                    {
+                        "type": "object",
+                        "properties": {"request_id": {"type": "string"}},
+                        "required": ["request_id"],
+                        "additionalProperties": True,
+                    },
+                ),
+            )
+
+        async def call_tool(self, descriptor, arguments, context):
+            calls.append(arguments)
+            return arguments
+
+    registry = ToolRegistry()
+    asyncio.run(
+        register_tool_source(
+            registry,
+            Source(),
+            policies={
+                "write": ToolPolicy(
+                    "1", effect="idempotent_write", effect_key_argument="request_id"
+                )
+            },
+        )
+    )
+    with LocalEngine(SQLiteStore(tmp_path / "run.sqlite"), providers={}, tools=registry) as engine:
+        flow = GraphWorkflowSpec("reserved", [GraphNode("write", tool="write")])
+        handle = engine.submit(flow, {"request_id": "forged"}, command_id="forged")
+        result = asyncio.run(engine.drive(handle.run_id))
+        assert result.state == "failed" and result.error["code"] == "validation_error"
+        assert engine.store.run(handle.run_id)["actions"] == []
+        assert engine.diagnostics(handle.run_id).budget["held"] == 0
+        assert engine.diagnostics(handle.run_id).budget["spent"] == 0
+        assert not calls

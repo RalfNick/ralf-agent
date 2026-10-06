@@ -226,6 +226,7 @@ python examples/evaluate.py
 - [M1 验收与对等比较协议](docs/m1-acceptance.md)：真实模型任务集、故障窗口、Temporal 和外部开发者首用门槛；未执行的实验不记为通过。
 - [执行组件与接收阶段 Review](architecture/reviews/2026-10-06-execution-components.md)：dev6 的扩展边界、独立复核修复和真实崩溃证据。
 - [记忆与知识来源 Review](architecture/reviews/2026-10-06-recall-rag.md)：dev7 的分页、引用校验、快照恢复和规模边界。
+- [受管理工具与 MCP Review](architecture/reviews/2026-10-06-managed-tools.md)：dev11 的会话游标、幂等参数提前验收、修复与资源归属证据。
 - [静态 Workflow Review](architecture/reviews/2026-10-06-static-workflow.md)：dev10 的纯编排边界、真实进程恢复、安装升级和独立审查证据。
 - [授权与关闭 Review](architecture/reviews/2026-10-05-authorization-shutdown.md)、[可靠性与架构门槛](architecture/reviews/2026-10-05-reliability-boundaries.md)、[扩展性 Review](architecture/reviews/2026-10-05-runtime-extensibility.md)。dev6 使用 `local-4`，Manifest 增加 Harness／Executor 身份；dev3–dev5 的 `local-3` Run 可观察、取消及人工核验，继续执行需要原版本与原配置。dev3 起的提交请求摘要未变，相同请求可以找回原回执；这不表示可以用新内核执行旧 Run。dev1／dev2 的历史提交重放需要原版本。运行及命令摘要尚不支持自动迁移。
 - [变更记录](CHANGELOG.md)、[贡献说明](CONTRIBUTING.md)、[发布流程](docs/releasing.md)和[安全反馈](SECURITY.md)。
