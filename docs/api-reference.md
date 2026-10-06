@@ -1,6 +1,6 @@
 # 常用 API 与 CLI 参考
 
-版本：0.1.0.dev11／local-4。公开 API 为预览契约；模型协议、有界召回、本地 RAG、版本化装配和独立接收／采纳有本地行为证据，完整 M1 未完成。已交付边界见 [实现清单](implementation-status.md)，适配器要求见 [扩展指南](extending.md)。以下为常用入口，不替代端口契约。
+版本：0.1.0.dev12／local-4。公开 API 为预览契约；模型协议、有界召回、本地 RAG、版本化装配和独立接收／采纳有本地行为证据，完整 M1 未完成。已交付边界见 [实现清单](implementation-status.md)，适配器要求见 [扩展指南](extending.md)。以下为常用入口，不替代端口契约。
 
 ## 定义与装配
 
@@ -180,3 +180,5 @@ Knowledge／Vector 组件由应用管理生命周期。召回输出额度不限�
 | `cancel RUN_ID --command-id ID` | 显式取消 |
 
 CLI 没有独立的 submit／reconcile／增额命令；新任务通过生成项目入口或 SDK 提交。CLI 观察仅支持默认 Scope／SQLite。常见 typed error 从 `ralf_agent.errors` 导入，CLI 错误输出到 stderr、返回 2；成功处理命令返回 0，仍需检查 Run state。
+
+`GraphWorkflowSpec(..., max_concurrency=1)` 默认串行，2..32 显式并行。`WorkflowScheduler`／`StaticWorkflowScheduler` 返回 detached `WorkflowBatch`；通过 Engine 参数或 Profile 的 `workflow_scheduler` 组件替换。节点隔离与恢复见[并行指南](parallel-workflows.md)。

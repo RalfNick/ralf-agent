@@ -759,14 +759,65 @@ For real task quality, configure a real Provider and evaluate it separately.
 _GRAPH_FILES.pop("agent.toml")
 
 
+_PARALLEL_FILES = {
+    **_GRAPH_FILES,
+    "agent_app/__main__.py": _GRAPH_FILES["agent_app/__main__.py"].replace(
+        "graph-demo", "parallel-demo"
+    ),
+    "graph.json": """{
+  "kind": "graph", "name": "parallel-report", "max_concurrency": 2,
+  "nodes": [
+    {"id": "research", "agent": {"name": "research", "instructions": "Research the task."}},
+    {"id": "verify", "agent": {"name": "verify", "instructions": "Verify the task."}},
+    {"id": "join", "transform": "identity", "depends_on": ["research", "verify"],
+     "input": {"kind": "object", "fields": {
+       "research": {"kind": "ref", "source": "research"},
+       "verify": {"kind": "ref", "source": "verify"}
+     }}}
+  ],
+  "output": {"kind": "ref", "source": "join"}
+}
+""",
+    "README.md": """# Parallel Workflow
+
+Runs two independent Agent nodes and explicitly joins their results, with
+max_concurrency=2. The installed SDK and offline echo Provider require no
+credentials or source checkout. This tests scheduling, not real model quality.
+
+```sh
+python -m agent_app --input task --command-id first
+python -m agent_app --input queued --command-id second --submit-only
+ralf --config runtime.toml resume RUN_ID
+ralf --config runtime.toml --format text inspect RUN_ID
+```
+
+Replace RUN_ID with the submitted ID. Edit graph.json to define Agents, managed
+Tools, pure transforms, bindings and the per-Run concurrency (1..32). Default 1
+uses the original serial plan; greater values use plan v3 with isolated branch
+Sessions named <parent-session>:node:<node-id>. Share results through bindings.
+The two default Agents echo immediately; a real asynchronous Provider or tool
+can overlap external calls. Providers and adapters must support concurrent use.
+
+All branches share one Run, budget, approval/effect protocol and event sequence.
+A blocked branch pauses its descendants; independent branches may continue.
+After applying a control command, resume the original Run. Failure/cancellation
+stops new work and retains started effects; no automatic business rollback.
+Keep the original profile and code for recovery. Per-Run concurrency is not a
+global/tenant capacity limit, multi-Agent messaging or distributed execution.
+""",
+}
+
+
 def create_starter(destination, *, template="oncall") -> StarterProject:
     """Create the application atomically in a new or empty directory.
 
     A file or nonempty destination is rejected, including hidden user files.
     Templates are contained in the installed package and need no source checkout.
     """
-    if template not in ("oncall", "rag", "config", "model", "graph", "mcp"):
-        raise ValidationError("Starter template must be oncall, rag, config, model, graph or mcp")
+    if template not in ("oncall", "rag", "config", "model", "graph", "mcp", "parallel"):
+        raise ValidationError(
+            "Starter template must be oncall, rag, config, model, graph, mcp or parallel"
+        )
     files = {
         "oncall": _FILES,
         "rag": _RAG_FILES,
@@ -774,6 +825,7 @@ def create_starter(destination, *, template="oncall") -> StarterProject:
         "model": _MODEL_FILES,
         "graph": _GRAPH_FILES,
         "mcp": MCP_FILES,
+        "parallel": _PARALLEL_FILES,
     }[template]
     try:
         directory = Path(destination).expanduser().resolve()

@@ -145,3 +145,27 @@ Plan: docs/superpowers/plans/2026-10-05-m1-local-runtime.md.
 - Independent review ran 61 new and 102 existing lifecycle/executor/Workflow tests and reproduced four gaps. The single fix pass adds 8 RED→GREEN cases: session-local cursors stay in one stdio discovery session, reserved keys fail before approvals/reservations, malformed negotiation uses ToolSourceError and boolean reserved schemas use ValidationError. Focused final suites: 69 passed in 3.99s; fresh full final suite: **872 passed in 77.37s**, warnings as errors. No second review was requested.
 - G2 bounded parallelism, HTTP/OAuth/persistent MCP, CLI sandbox, arbitrary NodeExecutor, dynamic Plan/ChildRun/teams and enterprise execution remain future work. Offline protocol/fixture tests establish no live-provider/task-quality or AgentScope superiority claim. Python 3.11/3.13 and remote publication have not been run locally.
 - Final documentation verification after the review record: 44 documents, 249 local links, 25 Python blocks, 32 shell blocks and two TOML blocks pass syntax/link checks. The task-case specification remains JSON-valid and supplies no model quality score. Review evidence and scope rulings are retained in the [managed-tools review](../architecture/reviews/2026-10-06-managed-tools.md).
+
+## 2026-10-06 — dev12 local bounded parallel Workflow
+
+Added explicit max_concurrency=2..32 static plan v3, a pure replaceable
+WorkflowScheduler/WorkflowBatch and default declaration-order scheduling. Default
+1 preserves serial v1/v2 declarations and manifests. Independent nodes have
+transactionally merged execution frames and reserved isolated Sessions inside one
+Run; actions, commands, budget and event sequence retain one authority.
+
+Agent/Tool overlap, configurable caps, explicit joins/skips, shared budget,
+multiple approvals/replay/restart, unknown effects/manual context reconciliation,
+stop-on-failure, caller/bulk cancellation and real-thread ownership have behavior
+coverage. Five real-process windows cover response/receipt commits, external
+commit, node completion and Session append. An unsaved sibling model call may
+retry; confirmed work is recovered through the original effect policy.
+
+The parallel starter, JSON/TOML setting and scheduler factory are available from
+the installed SDK. Diagnostics expose branch Sessions and outcomes without
+internal execution frames. Full pre-review suite: 915 passed in 78.47s with
+warnings as errors; Ruff/format/whitespace and document syntax/links passed.
+Package/upgrade evidence and independent final review are recorded separately.
+Per-Run concurrency does not deliver global capacity, planning, ChildRun/teams,
+message queues, dataflow, multi-process/distributed execution or full M1.
+See [parallel Workflow](parallel-workflows.md).

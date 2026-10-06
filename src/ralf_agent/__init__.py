@@ -113,7 +113,7 @@ from .workflow import (
     WorkflowSelection,
 )
 
-__version__ = "0.1.0.dev11"
+__version__ = "0.1.0.dev12"
 __all__ = [
     "MCPToolSource",
     "MCPTransport",
@@ -230,3 +230,7 @@ __all__ = [
     "RunReader",
     "SQLiteRunReader",
 ]
+
+from .workflow_scheduler import StaticWorkflowScheduler, WorkflowBatch, WorkflowScheduler
+
+__all__ += ["StaticWorkflowScheduler", "WorkflowBatch", "WorkflowScheduler"]

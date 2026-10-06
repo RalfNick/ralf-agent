@@ -126,3 +126,5 @@ Workflow 支持原有顺序入口和 dev10 串行静态图。图节点、条件�
 Profile 的 components 可配置 `workflow_compiler`（adapter=`static`）、`workflow_interpreter`（adapter=`static`）和 `workflow_transforms`（adapter=`identity`），默认实现均接受空配置。自定义工厂显式注册同类组件，`workflow_transforms` 工厂返回名称到 NodeTransform 的映射。它们目前作用于 Graph 入口，旧 Agent／sequence 保留兼容执行路径；主动转成新图声明使用 `GraphWorkflowSpec.from_plan`。
 
 计划只在首次接受命令时编译；恢复固定原计划、组件身份与 profile。Python 自定义组件、分支合并、串行边界与[静态 Workflow 教程](static-workflows.md)一致。未被图使用的变换不进入其执行 Manifest；已启用的 profile 声明仍须完整保留。
+
+有界并行图可配置 `workflow_scheduler`，默认 adapter=`static-ready`，接受空配置。显式工厂返回纯同步 WorkflowScheduler；身份只加入 v3 图 Manifest，见[并行指南](parallel-workflows.md)。

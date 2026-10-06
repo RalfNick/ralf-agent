@@ -270,6 +270,7 @@ class ComponentRegistry:
             self.register(kind, "in-memory", lambda c, ctx: InMemoryMemory(**c))
         self.register("knowledge", "sqlite-lexical", _lexical)
         from .workflow import IdentityTransform, StaticWorkflowCompiler, StaticWorkflowInterpreter
+        from .workflow_scheduler import StaticWorkflowScheduler
 
         self.register(
             "workflow_compiler",
@@ -281,6 +282,12 @@ class ComponentRegistry:
             "workflow_interpreter",
             "static",
             lambda c, ctx: StaticWorkflowInterpreter(),
+            validator=lambda c: _fields(c, {}),
+        )
+        self.register(
+            "workflow_scheduler",
+            "static-ready",
+            lambda c, ctx: StaticWorkflowScheduler(),
             validator=lambda c: _fields(c, {}),
         )
         self.register(

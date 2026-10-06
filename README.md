@@ -4,7 +4,7 @@
 
 Ralf-Agent 是 Python 优先的开源 Agent 运行时。它把模型决策、工具动作、审批与结果保存为明确的执行步骤，让任务在重启后继续，并核验可能已经发生的业务操作。
 
-当前版本：**0.1.0.dev11，M1 核心预览**。提供原生 Agent SDK、顺序 Workflow 与串行静态图、SQLite 持久执行、可信 Python 工具、审批／取消、效果核验、记忆分页与本地 RAG。图支持依赖、条件、输入映射、纯变换、受管理 Tool 节点和可替换编译器／解释器；有独立 Graph／MCP starter。MCP stdio 和自定义异步 ToolSource 接入同一审批／效果链路。模型层支持生成参数、能力预检、完整流式响应、原生 Anthropic/Gemini 文本和 DeepSeek 非思考模式适配。JSON／TOML 装配默认组件，历史任务按原配置版本恢复。完整 M1 尚未验收，适合开发者试点；支持范围见 [实现清单](docs/implementation-status.md)。预览 API 尚未稳定。
+当前版本：**0.1.0.dev12，M1 核心预览**。提供原生 Agent SDK、顺序 Workflow 与静态串行／有界并行图、SQLite 持久执行、可信 Python 工具、审批／取消、效果核验、记忆分页与本地 RAG。图支持依赖、条件、输入映射、纯变换、受管理 Tool 节点和可替换编译器／解释器／调度器；有独立 Graph／Parallel／MCP starter。MCP stdio 和自定义异步 ToolSource 接入同一审批／效果链路。模型层支持生成参数、能力预检、完整流式响应、原生 Anthropic/Gemini 文本和 DeepSeek 非思考模式适配。JSON／TOML 装配默认组件，历史任务按原配置版本恢复。完整 M1 尚未验收，适合开发者试点；支持范围见 [实现清单](docs/implementation-status.md)。预览 API 尚未稳定。
 
 ## 快速开始
 
@@ -232,3 +232,5 @@ python examples/evaluate.py
 - [变更记录](CHANGELOG.md)、[贡献说明](CONTRIBUTING.md)、[发布流程](docs/releasing.md)和[安全反馈](SECURITY.md)。
 
 SDK、运行时和基础治理按 [Apache-2.0](LICENSE) 开源。外部模型／Harness 的服务和许可独立适用。
+
+并行节点隔离上下文、共享预算与分支审批／恢复见[有界并行 Workflow](docs/parallel-workflows.md)。

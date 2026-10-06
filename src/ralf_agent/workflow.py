@@ -252,14 +252,18 @@ class ExecutionPlan:
 
     def __init__(self, value):
         fields = {"format", "schema_version", "name", "version", "nodes", "output", "output_schema"}
+        if isinstance(value, dict) and value.get("schema_version") == 3:
+            fields.add("max_concurrency")
         if (
             not isinstance(value, dict)
             or set(value) != fields
             or value["format"] != "ralf-static-plan"
             or type(value["schema_version"]) is not int
-            or value["schema_version"] not in (1, 2)
+            or value["schema_version"] not in (1, 2, 3)
         ):
             raise ValidationError("Unsupported static execution plan format")
+        if value["schema_version"] == 3:
+            _concurrency(value["max_concurrency"], 2)
         _require_text(value["name"], "Workflow name")
         _require_text(value["version"], "Workflow version")
         if not isinstance(value["nodes"], (list, tuple)):
@@ -298,12 +302,18 @@ class ExecutionPlan:
 class GraphWorkflowSpec:
     _data_json: str
 
-    def __init__(self, name, nodes, version="1", output=None, output_schema=None):
+    def __init__(
+        self, name, nodes, version="1", output=None, output_schema=None, max_concurrency=1
+    ):
+        _concurrency(max_concurrency)
         _validate_nodes(nodes, output)
         plan = ExecutionPlan(
             {
                 "format": "ralf-static-plan",
-                "schema_version": 2 if any(node.tool is not None for node in nodes) else 1,
+                "schema_version": 3
+                if max_concurrency > 1
+                else (2 if any(node.tool is not None for node in nodes) else 1),
+                **({"max_concurrency": max_concurrency} if max_concurrency > 1 else {}),
                 "name": name,
                 "version": version,
                 "nodes": [node.to_dict() for node in nodes],
@@ -326,6 +336,10 @@ class GraphWorkflowSpec:
     @property
     def version(self):
         return self.to_dict()["version"]
+
+    @property
+    def max_concurrency(self):
+        return self.to_dict().get("max_concurrency", 1)
 
     @property
     def nodes(self):
@@ -372,9 +386,9 @@ class StaticWorkflowCompiler:
             return ExecutionPlan(
                 {
                     "format": "ralf-static-plan",
-                    "schema_version": 2
-                    if any(node.get("tool") is not None for node in value["nodes"])
-                    else 1,
+                    "schema_version": 3
+                    if value.get("max_concurrency", 1) > 1
+                    else (2 if any(node.get("tool") is not None for node in value["nodes"]) else 1),
                     **value,
                 }
             )
@@ -446,7 +460,12 @@ class WorkflowSelection:
         object.__setattr__(self, "skipped", tuple(self.skipped))
 
 
-def _choices(plan, root_input, states):
+def _concurrency(value, minimum=1):
+    if type(value) is not int or not minimum <= value <= 32:
+        raise ValidationError("Workflow concurrency requires an integer from 1 to 32")
+
+
+def _choices(plan, root_input, states, *, parallel=False):
     if not isinstance(plan, ExecutionPlan):
         raise ValidationError("Interpreter requires ExecutionPlan")
     value = plan.to_dict()
@@ -457,7 +476,19 @@ def _choices(plan, root_input, states):
     for record in state.values():
         if (
             not isinstance(record, dict)
-            or record.get("state") not in {"pending", "completed", "skipped"}
+            or record.get("state")
+            not in (
+                {
+                    "pending",
+                    "completed",
+                    "skipped",
+                    "running",
+                    "waiting_approval",
+                    "waiting_reconciliation",
+                }
+                if parallel
+                else {"pending", "completed", "skipped"}
+            )
             or (record["state"] == "completed" and "result" not in record)
         ):
             raise ValidationError("Workflow selection requires settled or pending nodes")
@@ -467,7 +498,7 @@ def _choices(plan, root_input, states):
         ready, newly_skipped = [], []
         for node in nodes:
             if state[node.id]["state"] != "pending" or any(
-                state[dep]["state"] == "pending" for dep in node.depends_on
+                state[dep]["state"] not in {"completed", "skipped"} for dep in node.depends_on
             ):
                 continue
             skip = not node.allow_skipped_dependencies and any(
@@ -488,6 +519,10 @@ def _choices(plan, root_input, states):
             break
     if ready:
         return ready, tuple(skipped), state, None
+    if parallel and any(
+        record["state"] not in {"completed", "skipped"} for record in state.values()
+    ):
+        return [], tuple(skipped), state, None
     if any(record["state"] == "pending" for record in state.values()):
         raise ValidationError("Workflow has no eligible node")
     result = (

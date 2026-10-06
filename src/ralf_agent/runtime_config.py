@@ -22,6 +22,7 @@ COMPONENT_KINDS = frozenset(
         "knowledge",
         "workflow_compiler",
         "workflow_interpreter",
+        "workflow_scheduler",
         "workflow_transforms",
     }
 )

@@ -77,6 +77,7 @@ class LocalEngine:
         workflow_compiler=None,
         workflow_interpreter=None,
         workflow_transforms=None,
+        workflow_scheduler=None,
     ):
         # Python 3.12's Protocol isinstance check ignores proxy __getattr__.
         # Validate the declared public operations so delegating adapters work too.
@@ -121,11 +122,18 @@ class LocalEngine:
         self._workflow = StaticWorkflowRuntime(
             self, workflow_compiler, workflow_interpreter, workflow_transforms
         )
+        from .workflow_scheduler import StaticWorkflowScheduler
+
+        self.workflow_scheduler = (
+            StaticWorkflowScheduler() if workflow_scheduler is None else workflow_scheduler
+        )
+        self._component_identity(self.workflow_scheduler, ("select",), True, "Workflow scheduler")
         self.scope = scope or Scope()
         self.policy = policy
         self.owner = uuid.uuid4().hex
         self._active = set()
         self._inflight = {}
+        self._parallel_tasks = {}
         self._locks = {}
         self._drive_users = {}
         self._threads = ThreadExecutionTracker()
@@ -190,6 +198,7 @@ class LocalEngine:
         if (
             self._drive_users
             or any(not task.done() for task in self._inflight.values())
+            or any(not task.done() for tasks in self._parallel_tasks.values() for task in tasks)
             or self._threads.has_active
         ):
             raise ValidationError(
@@ -218,7 +227,11 @@ class LocalEngine:
 
     def _operation_active(self, run_id):
         task = self._inflight.get(run_id)
-        return (task is not None and not task.done()) or self._threads.has_active_for(run_id)
+        return (
+            (task is not None and not task.done())
+            or any(not t.done() for t in self._parallel_tasks.get(run_id, ()))
+            or self._threads.has_active_for(run_id)
+        )
 
     def _authorized(self, run_id):
         self._ensure_open()
@@ -385,7 +398,11 @@ class LocalEngine:
                     **definition,
                     "steps": [node["agent"] for node in plan["nodes"] if node["agent"] is not None],
                 }
-            if session_id is not None and self.store.session_owner(self.scope, session_id):
+            session_ids = [session_id or run_id]
+            parallel = graph and plan["schema_version"] == 3
+            if parallel:
+                session_ids += [f"{session_ids[0]}:node:{n['id']}" for n in plan["nodes"]]
+            if any(self.store.session_owner(self.scope, name) for name in session_ids):
                 raise ValidationError("Session already belongs to an active Run")
             data = {
                 "id": run_id,
@@ -405,6 +422,7 @@ class LocalEngine:
                 "actions": [],
                 "messages": messages,
                 "session_id": session_id or run_id,
+                **({"session_ids": session_ids} if parallel else {}),
             }
             if graph:
                 data["plan"] = plan
@@ -446,6 +464,10 @@ class LocalEngine:
             run["state"] = "running" if approved else "failed"
             if not approved:
                 run["error"] = {"code": "approval_rejected"}
+                if run.get("plan", {}).get("schema_version") == 3:
+                    from .workflow_parallel import close_nodes
+
+                    close_nodes(run, action["node"])
             self.store.save_run(run)
             self.store.emit(
                 run_id,
@@ -485,8 +507,12 @@ class LocalEngine:
             run["state"] = "cancelling" if active else "cancelled"
             if is_graph(run):
                 for node in run["workflow"]["nodes"].values():
-                    if node["state"] in {"pending", "running"}:
+                    if node["state"] not in {"completed", "skipped", "failed", "cancelled"}:
                         node["state"] = "cancelled"
+                if run.get("plan", {}).get("schema_version") == 3:
+                    from .workflow_parallel import close_nodes
+
+                    close_nodes(run)
             self.store.save_run(run)
             self.store.emit(run_id, "cancel_applied", {"state": run["state"]})
             return {"state_revision": run["revision"]}
@@ -497,7 +523,11 @@ class LocalEngine:
 
     def reconcile(self, run_id, action_id, result, *, command_id):
         """Local owner's explicit confirmation of an already-completed external effect."""
-        self._authorized(run_id)
+        run = self._authorized(run_id)
+        if run.get("plan", {}).get("schema_version") == 3:
+            from .workflow_parallel import ParallelWorkflowRuntime
+
+            return ParallelWorkflowRuntime(self).reconcile(run_id, action_id, result, command_id)
         canonical(result)
 
         def apply():
@@ -556,6 +586,10 @@ class LocalEngine:
             if run["state"] not in TERMINAL:
                 run["state"] = "cancelled" if run["state"] == "cancelling" else "failed"
                 run["error"] = {"code": code}
+                if run.get("plan", {}).get("schema_version") == 3:
+                    from .workflow_parallel import close_nodes
+
+                    close_nodes(run)
                 if is_graph(run) and run["workflow"]["current"] is not None:
                     run["workflow"]["nodes"][run["workflow"]["current"]]["state"] = (
                         "failed" if run["state"] == "failed" else "cancelled"
@@ -585,7 +619,11 @@ class LocalEngine:
             self._inflight.pop(run_id)
         # Count owners and queued callers, including cancelled waiters. Removing
         # a lock with waiters would let a new caller create a second Run owner.
-        if run_id not in self._drive_users and run_id not in self._inflight:
+        if (
+            run_id not in self._drive_users
+            and run_id not in self._inflight
+            and not any(not t.done() for t in self._parallel_tasks.get(run_id, ()))
+        ):
             self._locks.pop(run_id, None)
 
     async def _drive_locked(self, run_id):
@@ -610,6 +648,10 @@ class LocalEngine:
                 if run["state"] != "cancelling":
                     run["state"] = "running"
                 self._commit(run, "run_resumed")
+            if run.get("plan", {}).get("schema_version") == 3:
+                from .workflow_parallel import ParallelWorkflowRuntime
+
+                return await self._guarded(run_id, ParallelWorkflowRuntime(self).drive(run_id))
             while True:
                 run = self._authorized(run_id)
                 if run["state"] in TERMINAL:
@@ -958,6 +1000,11 @@ class LocalEngine:
         }
 
     def _adopt_received_evidence(self, run_id):
+        if self._authorized(run_id).get("plan", {}).get("schema_version") == 3:
+            from .workflow_parallel import ParallelWorkflowRuntime
+
+            ParallelWorkflowRuntime(self).adopt(run_id)
+            return
         for action in self._authorized(run_id)["actions"]:
             if action["status"] == "response_received":
                 self._adopt_model_response(run_id, action["id"])

@@ -208,7 +208,7 @@ class SQLiteStore:
             (
                 run["id"]
                 for run in self._scoped_runs(scope)
-                if run["session_id"] == session_id
+                if session_id in run.get("session_ids", [run["session_id"]])
                 and run["state"] not in {"succeeded", "failed", "cancelled"}
             ),
             None,

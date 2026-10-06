@@ -39,7 +39,14 @@ def agent_step(run, index=None):
 def workflow_details(run):
     if not is_graph(run):
         return None
-    return copy.deepcopy({"plan": run["plan"], **run["workflow"]})
+    details = copy.deepcopy({"plan": run["plan"], **run["workflow"]})
+    for state in details["nodes"].values():
+        frame = state.pop("execution", None)
+        if frame is not None:
+            state["session_id"] = frame["session_id"]
+            if frame["error"] is not None:
+                state["error"] = frame["error"]
+    return details
 
 
 class StaticWorkflowRuntime:
@@ -118,6 +125,15 @@ class StaticWorkflowRuntime:
                     engine.workflow_interpreter, ("select",), True, "Workflow interpreter"
                 ),
                 "transforms": transforms,
+                **(
+                    {
+                        "scheduler": engine._component_identity(
+                            engine.workflow_scheduler, ("select",), True, "Workflow scheduler"
+                        )
+                    }
+                    if value["schema_version"] == 3
+                    else {}
+                ),
             },
         }
 

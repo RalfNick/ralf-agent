@@ -1,6 +1,6 @@
 # 静态图 Workflow
 
-版本：0.1.0.dev11；日期：2026-10-06。Agent／Transform 使用计划 v1，受管理 Tool 节点使用 v2，见[工具节点指南](managed-tools.md)。当前支持单 Coordinator 的串行静态图：依赖、条件、输入映射、显式合并和持久恢复。并行、循环、动态 Planner、子 Run 和数据流编排继续按[能力路线](../architecture/viewpoints/framework-capabilities.md)交付。
+版本：0.1.0.dev12；日期：2026-10-06。Agent／Transform 使用计划 v1，受管理 Tool 节点使用 v2，见[工具节点指南](managed-tools.md)。当前支持单 Coordinator 的静态串行／显式有界并行图：依赖、条件、输入映射、显式合并和持久恢复。并行计划使用 v3，见[并行指南](parallel-workflows.md)。循环、动态 Planner、子 Run 和数据流编排继续按[能力路线](../architecture/viewpoints/framework-capabilities.md)交付。
 
 ## 1. 安装后直接运行
 
@@ -77,7 +77,7 @@ branches = [
 
 条件按规范 JSON 比较，`true` 与 `1` 不相等。条件为假时节点标为 skipped；默认依赖被跳过节点的后继也跳过。分支合并需要显式允许被跳过的依赖，并为其结果选择可选引用。没有 `output` 时，结果是已完成节点的 ID／结果映射；配置 `output` 时按绑定组成结果，可配 `output_schema` 验收，包括有意返回 null。模型自身的空输出仍遵循 Agent 的公共最终输出校验。
 
-当前图遇到执行失败即整体失败；未执行节点保留 pending，已完成结果可诊断。取消停止后续调度，待执行／活跃节点标为 cancelled；已派发效果和晚到证据继续追踪。图默认没有并发或自动业务回滚。
+当前图遇到执行失败即整体失败；未执行节点保留 pending，已完成结果可诊断。取消停止后续调度，待执行／活跃节点标为 cancelled；已派发效果和晚到证据继续追踪。图默认串行；开启并行使用 max_concurrency，仍没有自动业务回滚。
 
 ## 4. 自定义组件
 
@@ -124,4 +124,4 @@ from ralf_agent import GraphWorkflowSpec, StaticWorkflowCompiler
 # graph = GraphWorkflowSpec.from_plan(StaticWorkflowCompiler().compile(sequence))
 ```
 
-这是新声明／新 Run，不能把旧 Run 在执行中切换为图。Graph Manifest 含新的工作流协议身份，dev9 不支持继续这些 Run。IR 当前限制 256 节点、引用路径 32 段、计划序列化 UTF-8 大小 1 MiB；节点结果、容量和清理仍有后续治理工作。真实故障与测试证据见[实现进展](implementation-progress.md)，完整 M1 门槛仍见[验收协议](m1-acceptance.md)。
+这是新声明／新 Run，不能把旧 Run 在执行中切换为图。Graph Manifest 含新的工作流协议身份，dev9 不支持继续这些 Run。IR 当前为 v1/v2/v3，限制 256 节点、引用路径 32 段、计划序列化 UTF-8 大小 1 MiB；节点结果、容量和清理仍有后续治理工作。真实故障与测试证据见[实现进展](implementation-progress.md)，完整 M1 门槛仍见[验收协议](m1-acceptance.md)。
