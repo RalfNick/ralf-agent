@@ -36,20 +36,22 @@ from .types import (
     AgentSpec,
     InvocationContext,
     ModelResponse,
+    RunDiagnostics,
     RunHandle,
     RunSnapshot,
     Scope,
     ToolCall,
-    WorkflowSpec,
     canonical,
     digest,
+    runtime_profile_identity,
+    submission_request,
 )
 
 TERMINAL = {"succeeded", "failed", "cancelled"}
 
 if TYPE_CHECKING:
-    from .recall import MemoryRecallPolicy
-    from .retrieval import KnowledgeContext
+    from .recall import MemoryRecallPolicy, RecallPlanner
+    from .retrieval import KnowledgeContextPort
 
 
 class LocalEngine:
@@ -68,7 +70,9 @@ class LocalEngine:
         harness: Harness | None = None,
         tool_executor: ToolExecutor | None = None,
         recall_policy: MemoryRecallPolicy | None = None,
-        knowledge: KnowledgeContext | None = None,
+        knowledge: KnowledgeContextPort | None = None,
+        recall_planner: RecallPlanner | None = None,
+        runtime_profile: dict | None = None,
     ):
         # Python 3.12's Protocol isinstance check ignores proxy __getattr__.
         # Validate the declared public operations so delegating adapters work too.
@@ -92,11 +96,19 @@ class LocalEngine:
             if not isinstance(recall_policy, MemoryRecallPolicy):
                 raise ValidationError("recall_policy must be a MemoryRecallPolicy")
         if knowledge is not None:
-            from .retrieval import KnowledgeContext
+            from .recall import _integer
 
-            if not isinstance(knowledge, KnowledgeContext):
-                raise ValidationError("knowledge must be a KnowledgeContext")
+            _integer(getattr(knowledge, "limit", None), "Knowledge reference limit", 1)
+            _integer(getattr(knowledge, "max_chars", None), "Knowledge character limit", 2)
+        if recall_policy is not None and recall_planner is not None:
+            raise ValidationError("Configure a recall policy or planner, not both")
+        if recall_planner is not None:
+            self._component_identity(recall_planner, ("plan",), True, "Recall planner")
         self.recall_policy = recall_policy
+        self.recall_planner = recall_planner
+        self.runtime_profile = (
+            None if runtime_profile is None else runtime_profile_identity(runtime_profile)
+        )
         self.knowledge = knowledge
         if recall_policy is not None:
             self._component_identity(recall_policy, (), True, "Recall policy")
@@ -266,6 +278,16 @@ class LocalEngine:
         self._authorized(run_id)
         return self.store.events(run_id, after, limit)
 
+    def diagnostics(self, run_id):
+        with self.store.transaction():
+            run = self._authorized(run_id)
+            return RunDiagnostics(
+                RunSnapshot.from_record(run),
+                run["manifest"],
+                run["release_digest"],
+                self.store.budget(run_id),
+            )
+
     def _manifest(self, steps):
         names = sorted({name for step in steps for name in step["tools"]})
         providers = {}
@@ -302,6 +324,12 @@ class LocalEngine:
             manifest["knowledge"] = self._component_identity(
                 self.knowledge, ("references", "validate"), False, "Knowledge"
             )
+        if self.recall_planner is not None:
+            manifest["recall_planner"] = self._component_identity(
+                self.recall_planner, ("plan",), True, "Recall planner"
+            )
+        if self.runtime_profile is not None:
+            manifest["runtime_profile"] = runtime_profile_identity(self.runtime_profile)
         return manifest
 
     def _assemble_context(self, history, references, max_chars):
@@ -322,29 +350,9 @@ class LocalEngine:
 
     def submit(self, spec, input, *, command_id, budget=32, session_id=None):
         self._ensure_open()
-        if isinstance(spec, AgentSpec):
-            definition = {
-                "kind": "agent",
-                "name": spec.name,
-                "version": spec.version,
-                "steps": [asdict(spec)],
-            }
-        elif isinstance(spec, WorkflowSpec):
-            definition = {
-                "kind": "sequence",
-                "name": spec.name,
-                "version": spec.version,
-                "steps": [asdict(step) for step in spec.steps],
-            }
-        else:
-            raise ValidationError("Submit an AgentSpec or sequential WorkflowSpec")
+        payload = submission_request(spec, input, budget=budget, session_id=session_id)
+        definition = payload["definition"]
         run_id = uuid.uuid4().hex
-        payload = {
-            "definition": definition,
-            "input": copy.deepcopy(input),
-            "budget": budget,
-            "session_id": session_id,
-        }
         # Request identity contains only caller-controlled data. Configuration
         # aliases are resolved inside first acceptance, after receipt lookup.
         canonical(payload)
@@ -962,6 +970,27 @@ class LocalEngine:
             self.knowledge,
         )
         recall_manifest = None
+        planner = self.recall_planner
+        if planner is not None:
+            from .recall import MemoryRecallPolicy, RecallQuery
+
+            proposed = self._component_result(
+                planner.plan(
+                    self.scope, step["name"], run["session_id"], run["messages"][1]["content"]
+                ),
+                MemoryRecallPolicy,
+                "Recall planner",
+            )
+            policy = MemoryRecallPolicy(
+                facts=RecallQuery(**asdict(proposed.facts)),
+                session=RecallQuery(**asdict(proposed.session)),
+                max_pages=proposed.max_pages,
+            )
+            self._check_release(self._authorized(run["id"]))
+            if digest(
+                self._component_identity(planner, ("plan",), True, "Recall planner")
+            ) != digest(run["manifest"]["recall_planner"]):
+                raise DefinitionMismatch("The executing recall planner changed")
         if policy is None:
             _, session = await memory_call(sessions.read, self.scope, run["session_id"])
         else:
@@ -985,9 +1014,12 @@ class LocalEngine:
             or memory.backend_id != run["manifest"]["memory_backend"]
         ):
             raise DefinitionMismatch("The executing memory backend differs from this Run")
-        if policy is not None and digest(
-            self._component_identity(policy, (), True, "Recall policy")
-        ) != digest(run["manifest"]["memory_recall"]):
+        if (
+            policy is not None
+            and planner is None
+            and digest(self._component_identity(policy, (), True, "Recall policy"))
+            != digest(run["manifest"]["memory_recall"])
+        ):
             raise DefinitionMismatch("The executing recall policy differs from this Run")
         if current["state"] in TERMINAL or current["state"] == "cancelling":
             return None
@@ -1008,7 +1040,7 @@ class LocalEngine:
             knowledge_refs = copy.deepcopy(knowledge_refs)
             self._check_knowledge_release(self._authorized(run["id"]), knowledge)
         references = knowledge_refs + facts + ([{"session": session}] if session else [])
-        return references, recall_manifest, knowledge_refs, knowledge, copy.deepcopy(facts)
+        return references, recall_manifest, knowledge_refs, knowledge, copy.deepcopy(facts), policy
 
     def _check_knowledge_release(self, run, knowledge):
         self._check_release(run)
@@ -1099,12 +1131,14 @@ class LocalEngine:
             loaded = await self._load_references(run, step)
             if loaded is None:
                 return True
-            references, recall_manifest, knowledge_refs, knowledge, facts = loaded
+            references, recall_manifest, knowledge_refs, knowledge, facts, selected_policy = loaded
             messages, context_manifest = self._assemble_context(
                 run["messages"], references, step["max_context_chars"]
             )
             if recall_manifest is not None:
                 context_manifest["memory_recall"] = recall_manifest
+            if self.recall_planner is not None:
+                context_manifest["memory_recall_policy"] = selected_policy.identity
             request, manifest = self._prepare_model_request(run, step, messages, context_manifest)
             messages, descriptions = request.messages, request.tools
             action = {
@@ -1122,7 +1156,11 @@ class LocalEngine:
             }
             if knowledge is not None:
                 action["knowledge_references"] = knowledge_refs
-            if knowledge is not None or self.recall_policy is not None:
+            if (
+                knowledge is not None
+                or self.recall_policy is not None
+                or self.recall_planner is not None
+            ):
                 action["memory_references"] = facts
         await self._validate_model_references(run_id, knowledge, action, memory)
         attempt_id = f"{action['id']}:{len(action['attempts']) + 1}"

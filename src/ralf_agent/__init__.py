@@ -14,18 +14,26 @@ from .memory import (
     SQLiteMemory,
     ThreadedMemoryAdapter,
 )
-from .ports import ContextBuilder, CoordinatorLease, ExecutionStore
+from .ports import (
+    ContextBuilder,
+    CoordinatorLease,
+    ExecutionEngine,
+    ExecutionStore,
+    RuntimeDiagnostics,
+)
 from .providers import ModelProvider, OpenAIChatProvider
 from .recall import (
     AsyncFactReferenceValidator,
     AsyncPaginatedSessionStore,
     AsyncRecallMemoryStore,
     FactReferenceValidator,
+    FixedRecallPlanner,
     LegacyMemoryRecallAdapter,
     MemoryRecallPolicy,
     PaginatedSessionStore,
     RecallMemoryStore,
     RecallPage,
+    RecallPlanner,
     RecallQuery,
 )
 from .retrieval import (
@@ -34,6 +42,7 @@ from .retrieval import (
     DocumentRecord,
     InMemoryKnowledgeStore,
     KnowledgeContext,
+    KnowledgeContextPort,
     KnowledgeRetriever,
     KnowledgeStore,
     KnowledgeVersionConflict,
@@ -43,6 +52,15 @@ from .retrieval import (
     RetrievedChunk,
     SQLiteKnowledgeStore,
 )
+from .runtime_builder import (
+    BuildContext,
+    ComponentRegistry,
+    RuntimeBuilder,
+    RuntimeBuildError,
+    RuntimeInstance,
+)
+from .runtime_config import RuntimeCatalog, RuntimeProfile, load_catalog, load_spec
+from .runtime_router import CommandReceiptReader, ProfiledEngine, RunReader, SQLiteRunReader
 from .storage import SQLiteStore
 from .tools import ToolRegistry, ToolSpec
 from .types import (
@@ -50,6 +68,7 @@ from .types import (
     CommandReceipt,
     InvocationContext,
     ModelResponse,
+    RunDiagnostics,
     RunEvent,
     RunHandle,
     RunSnapshot,
@@ -67,12 +86,13 @@ from .vector import (
     VectorRetriever,
 )
 
-__version__ = "0.1.0.dev7"
+__version__ = "0.1.0.dev8"
 __all__ = [
     "AgentSpec",
     "AsyncLongTermMemoryStore",
     "AsyncSessionStore",
     "CommandReceipt",
+    "CommandReceiptReader",
     "ContextAssembler",
     "ContextBuilder",
     "CoordinatorLease",
@@ -136,4 +156,22 @@ __all__ = [
     "VectorHit",
     "VectorIndex",
     "VectorRetriever",
+    "ExecutionEngine",
+    "RuntimeDiagnostics",
+    "RunDiagnostics",
+    "KnowledgeContextPort",
+    "RecallPlanner",
+    "FixedRecallPlanner",
+    "RuntimeCatalog",
+    "RuntimeProfile",
+    "load_catalog",
+    "load_spec",
+    "ComponentRegistry",
+    "BuildContext",
+    "RuntimeBuilder",
+    "RuntimeBuildError",
+    "RuntimeInstance",
+    "ProfiledEngine",
+    "RunReader",
+    "SQLiteRunReader",
 ]

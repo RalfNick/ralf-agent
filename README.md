@@ -4,7 +4,7 @@
 
 Ralf-Agent 是 Python 优先的开源 Agent 运行时。它把模型决策、工具动作、审批与结果保存为明确的执行步骤，让任务在重启后继续，并核验可能已经发生的业务操作。
 
-当前版本：**0.1.0.dev7，M1 核心预览**。提供原生 Agent SDK、顺序 Workflow、SQLite 持久执行、可信 Python 工具、审批／取消、效果核验、事件分页和 Chat Completions Provider。会话与长期记忆可独立替换，支持显式启用的有额度分页；本地 RAG 提供默认词法检索、知识版本与来源校验，以及可注入 Embedding 的真实 cosine 检索。执行存储、协调器、上下文、Harness 和工具执行器均有默认组件与扩展端口。完整 M1 尚未验收，适合开发者试点；支持范围见 [实现清单](docs/implementation-status.md)。预览 API 尚未稳定。
+当前版本：**0.1.0.dev8，M1 核心预览**。提供原生 Agent SDK、顺序 Workflow、SQLite 持久执行、可信 Python 工具、审批／取消、效果核验、记忆分页与本地 RAG。执行器、知识上下文、模型、上下文、记忆及检索都有公共扩展端口；JSON／TOML 可以装配默认组件，历史任务按原配置版本恢复。完整 M1 尚未验收，适合开发者试点；支持范围见 [实现清单](docs/implementation-status.md)。预览 API 尚未稳定。
 
 ## 快速开始
 
@@ -59,6 +59,16 @@ python -m agent_app --query '缓存连接失败怎么恢复'
 
 它从 SQLite 摄入文档检索证据并返回真实版本与原文引用；无相关证据时明确拒答。离线 Provider 用于验证检索链路。如何替换知识库、检索器、Embedding 和记忆策略见 [记忆与 RAG 教程](docs/recall-and-rag.md)。默认 `ralf init` 仍生成审批示例。
 
+也可以从声明式配置开始：
+
+```bash
+ralf init ../my-config-agent --template config
+cd ../my-config-agent
+python -m agent_app --input hello
+```
+
+编辑 runtime.toml 的默认版本即可影响新任务；保留旧配置和适配器实现，旧任务会解析原版本。模板使用离线回显 Provider；配置与工厂扩展见 [运行装配教程](docs/runtime-assembly.md)。
+
 源码中的 SDK 示例：`python examples/oncall.py`。它等待用户输入 `APPROVE`，不会自动批准。
 
 自建 Agent 的 CLI 恢复使用原配置工厂，不能用 Demo 配置代替。仓库内提供可运行示例：
@@ -70,7 +80,7 @@ ralf --db .ralf/custom.sqlite --factory examples.custom_runtime:create_engine re
 ralf --db .ralf/custom.sqlite status RUN_ID
 ```
 
-工厂是使用者显式指定的可信本地 Python 代码，接收数据库路径并返回 `LocalEngine`。审批和取消也可以使用同一 `--factory`；从工程目录执行即可导入本地工厂。`status/inspect/events` 使用只读 SQLite 观察模式，不取得执行租约，不执行工厂，不创建缺失的数据库。CLI 观察当前限定默认本地 Scope。
+工厂是使用者显式指定的可信本地 Python 代码，接收数据库路径并返回符合 `ExecutionEngine` 契约的对象。审批和取消也可以使用同一 `--factory`；从工程目录执行即可导入本地工厂。`status/inspect/events` 使用只读 SQLite 观察模式，不取得执行租约，不执行工厂，不创建缺失的数据库。CLI 观察当前限定默认本地 Scope。
 
 ## 编写自己的 Agent
 

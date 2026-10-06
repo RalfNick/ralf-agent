@@ -122,6 +122,30 @@ class PaginatedSessionStore(Protocol):
     def read_page(self, scope: Scope, session_id: str, query: RecallQuery) -> RecallPage: ...
 
 
+class RecallPlanner(Protocol):
+    """Pure selection of a fixed query for one new model Action."""
+
+    identity: dict
+
+    def plan(
+        self, scope: Scope, namespace: str, session_id: str, text: str
+    ) -> MemoryRecallPolicy: ...
+
+
+class FixedRecallPlanner:
+    def __init__(self, policy=None):
+        self.policy = MemoryRecallPolicy() if policy is None else policy
+        if not isinstance(self.policy, MemoryRecallPolicy):
+            raise ValidationError("FixedRecallPlanner requires a MemoryRecallPolicy")
+
+    @property
+    def identity(self):
+        return {"kind": "fixed-recall-planner", "version": "1", "policy": self.policy.identity}
+
+    def plan(self, scope, namespace, session_id, text):
+        return self.policy
+
+
 class RecallMemoryStore(Protocol):
     backend_id: str
 

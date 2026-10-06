@@ -3,6 +3,7 @@
 import copy
 import hashlib
 import json
+import re
 from dataclasses import asdict, dataclass, field
 from typing import Any
 
@@ -99,6 +100,34 @@ class WorkflowSpec:
         object.__setattr__(self, "steps", tuple(self.steps))
 
 
+def submission_request(spec, input, *, budget=32, session_id=None):
+    """Caller-controlled identity shared by native acceptance and read-only replay."""
+    if isinstance(spec, AgentSpec):
+        definition = {
+            "kind": "agent",
+            "name": spec.name,
+            "version": spec.version,
+            "steps": [asdict(spec)],
+        }
+    elif isinstance(spec, WorkflowSpec):
+        definition = {
+            "kind": "sequence",
+            "name": spec.name,
+            "version": spec.version,
+            "steps": [asdict(step) for step in spec.steps],
+        }
+    else:
+        raise ValidationError("Submit an AgentSpec or sequential WorkflowSpec")
+    payload = {
+        "definition": definition,
+        "input": copy.deepcopy(input),
+        "budget": budget,
+        "session_id": session_id,
+    }
+    canonical(payload)
+    return payload
+
+
 @dataclass(frozen=True)
 class ToolCall:
     name: str
@@ -177,6 +206,43 @@ class RunSnapshot:
             pending,
             tuple(run["actions"]),
         )
+
+
+def runtime_profile_identity(value):
+    """Validate a non-secret reference to an immutable runtime profile."""
+    if (
+        not isinstance(value, dict)
+        or set(value) != {"kind", "name", "version", "digest"}
+        or value["kind"] != "runtime-profile"
+    ):
+        raise ValidationError("Invalid runtime profile identity")
+    _require_text(value["name"], "Profile name")
+    _require_text(value["version"], "Profile version")
+    if (
+        not isinstance(value["digest"], str)
+        or re.fullmatch(r"[0-9a-f]{64}", value["digest"]) is None
+    ):
+        raise ValidationError("Profile digest must be a SHA-256 identity")
+    return copy.deepcopy(value)
+
+
+@dataclass(frozen=True)
+class RunDiagnostics:
+    snapshot: RunSnapshot
+    manifest: dict
+    release_digest: str
+    budget: dict
+
+    def __post_init__(self):
+        if not isinstance(self.snapshot, RunSnapshot):
+            raise ValidationError("Diagnostics require a RunSnapshot")
+        if not isinstance(self.manifest, dict) or not isinstance(self.budget, dict):
+            raise ValidationError("Diagnostics require JSON manifest and budget objects")
+        _require_text(self.release_digest, "Release digest")
+        canonical(asdict(self))
+        object.__setattr__(self, "snapshot", copy.deepcopy(self.snapshot))
+        object.__setattr__(self, "manifest", copy.deepcopy(self.manifest))
+        object.__setattr__(self, "budget", copy.deepcopy(self.budget))
 
 
 @dataclass(frozen=True)

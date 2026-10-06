@@ -195,6 +195,15 @@ class KnowledgeRetriever(Protocol):
     async def validate(self, scope, namespace, items) -> None: ...
 
 
+class KnowledgeContextPort(Protocol):
+    identity: dict
+    limit: int
+    max_chars: int
+
+    async def references(self, scope: Scope, text: str) -> list[dict]: ...
+    async def validate(self, scope: Scope, references: list[dict]) -> None: ...
+
+
 def _tokens(text):
     tokens = set()
     for word in re.findall(r"[a-z0-9_]+|[\u3400-\u9fff]+", text.lower()):

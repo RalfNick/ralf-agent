@@ -1,10 +1,71 @@
 """Version 1 local runtime ports; no SQL, credentials or scheduling in adapters."""
 
+import inspect
 from collections.abc import Callable
 from contextlib import AbstractContextManager
 from typing import Protocol, runtime_checkable
 
-from .types import CommandReceipt, RunEvent, Scope
+from .errors import ValidationError
+from .types import CommandReceipt, RunDiagnostics, RunEvent, RunHandle, RunSnapshot, Scope
+
+
+@runtime_checkable
+class ExecutionEngine(Protocol):
+    """Public control contract; resource ownership ends only after close succeeds."""
+
+    def submit(self, spec, input, *, command_id, budget=32, session_id=None) -> RunHandle: ...
+    async def drive(self, run_id: str) -> RunSnapshot: ...
+    def status(self, run_id: str) -> RunSnapshot: ...
+    def events(self, run_id: str, *, after=0, limit=1000) -> list[RunEvent]: ...
+    def approve(
+        self, run_id, action_id, target_digest, *, command_id, approved=True
+    ) -> CommandReceipt: ...
+    def cancel(self, run_id, *, command_id) -> CommandReceipt: ...
+    def reconcile(self, run_id, action_id, result, *, command_id) -> CommandReceipt: ...
+    async def wait_for_threads(self) -> None: ...
+    def close(self) -> None: ...
+
+
+@runtime_checkable
+class RuntimeDiagnostics(Protocol):
+    def diagnostics(self, run_id: str) -> RunDiagnostics: ...
+
+
+def validate_engine(engine):
+    # Method-based checks support delegation without requiring inheritance.
+    for name in vars(ExecutionEngine):
+        if name.startswith("_"):
+            continue
+        method = getattr(engine, name, None)
+        if not callable(method):
+            raise ValidationError(f"ExecutionEngine requires {name}")
+        if name in {"drive", "wait_for_threads"}:
+            if not inspect.iscoroutinefunction(method):
+                raise ValidationError(f"ExecutionEngine.{name} must be async")
+        elif not is_sync_callable(method):
+            raise ValidationError(f"ExecutionEngine.{name} must be synchronous")
+    return engine
+
+
+def is_sync_callable(method):
+    candidate = getattr(method, "__call__", None)  # noqa: B004
+    return callable(method) and not any(
+        inspect.iscoroutinefunction(item)
+        or inspect.isgeneratorfunction(item)
+        or inspect.isasyncgenfunction(item)
+        for item in (method, candidate)
+    )
+
+
+def close_engine(engine):
+    close = getattr(engine, "close", None)
+    if not is_sync_callable(close):
+        raise ValidationError("ExecutionEngine.close must be synchronous")
+    result = close()
+    if result is not None:
+        if inspect.iscoroutine(result) or inspect.isgenerator(result):
+            result.close()
+        raise ValidationError("ExecutionEngine.close must return None after completion")
 
 
 @runtime_checkable

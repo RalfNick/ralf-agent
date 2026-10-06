@@ -1,6 +1,6 @@
 # 常用 API 与 CLI 参考
 
-版本：0.1.0.dev7／local-4。公开 API 为预览契约；有界召回、本地 RAG 和独立接收／采纳有本地行为证据，完整 M1 未完成。已交付边界见 [实现清单](implementation-status.md)，适配器要求见 [扩展指南](extending.md)。以下为常用入口，不替代端口契约。
+版本：0.1.0.dev8／local-4。公开 API 为预览契约；有界召回、本地 RAG、版本化装配和独立接收／采纳有本地行为证据，完整 M1 未完成。已交付边界见 [实现清单](implementation-status.md)，适配器要求见 [扩展指南](extending.md)。以下为常用入口，不替代端口契约。
 
 ## 定义与装配
 
@@ -29,7 +29,15 @@ from ralf_agent import (
 | `AgentSpec(name, instructions, tools=(), ...)` | 允许工具名与 Provider 别名固定；默认最多 8 次决策；output_schema 为可选 JSON Schema |
 | `WorkflowSpec(name, steps, version="1")` | 非空 AgentSpec 顺序步骤；前步验收后的输出作为下一步输入 |
 | `SQLiteStore(path, readonly=False)` | 本地执行事实；固定文件身份，拒绝硬链接；默认写模式启用 WAL |
-| `LocalEngine(store, providers=..., tools=..., ...)` | 默认租约／记忆、NativeHarness 与 PythonToolExecutor；scope/session_store/memory_store/policy/context_assembler/harness/tool_executor 可注入；可选 recall_policy、knowledge 默认 None |
+| `LocalEngine(store, providers=..., tools=..., ...)` | 默认租约／记忆、NativeHarness 与 PythonToolExecutor；scope/session_store/memory_store/policy/context_assembler/harness/tool_executor 可注入；可选 recall_policy、recall_planner、knowledge、runtime_profile 默认 None |
+| `ExecutionEngine` | 公共 submit/drive/status/events/approve/cancel/reconcile/wait_for_threads/close，不要求具体继承关系 |
+| `RuntimeDiagnostics`／`RunDiagnostics` | 可选丰富诊断；返回独立 snapshot/manifest/release_digest/budget |
+| `RuntimeProfile(name, version, providers, components={})` | 固定有限 JSON 声明，公开视图是副本；identity 摘要进入接受时的发布 |
+| `RuntimeCatalog.register/set_default/resolve`／`load_catalog(path)` | 同版本内容不可覆盖；JSON/TOML 加载不执行代码 |
+| `ComponentRegistry.register(kind, name, factory)`／`RuntimeBuilder.build(profile, db_path)` | 显式构造适配器；BuildContext.own 接管同步关闭资源，返回 RuntimeInstance |
+| `ProfiledEngine(catalog, db_path, builder=None, ...)` | 按原 profile 路由任务；一次一个本地实例，缺失版本不回退新默认 |
+| `RunReader`／`CommandReceiptReader` | 可替换只读任务端口；后者是可选控制回执查询能力，默认 SQLiteRunReader 两者均实现 |
+| `load_spec(path)` | JSON/TOML Agent 或固定顺序 Workflow 声明 |
 | `Scope(workspace="default", principal="local-owner")` | 可信宿主传入的作用域；不是企业身份认证 |
 | `OpenAIChatProvider(model, ...)` | 异步单次 Chat Completions 请求；可配置 base_url、timeout、token_parameter；密钥通过 api_key 或环境传入 |
 | `ModelResponse(output=..., tool_calls=..., usage=...)` | Provider 决策数据；工具提案使用 `ToolCall(name, arguments, call_id=None)` |
@@ -126,12 +134,14 @@ handler 接收 JSON 参数和 InvocationContext。Context 提供 scope、run_id�
 | --- | --- |
 | `RecallQuery(max_items=32, max_chars=8000, scan_limit=256, text=None, cursor=None)` | 完整记录、canonical JSON 字符与候选额度；cursor 固定查询及 Scope |
 | `MemoryRecallPolicy(facts=..., session=..., max_pages=1)` | Engine 显式启用分页；跨页共享原额度，初始查询无 cursor |
+| `RecallPlanner.plan(scope, namespace, session_id, text)` | 纯同步返回 MemoryRecallPolicy；实际查询持久保存，未知重试不重新规划 |
 | `read_page(scope, session_id, query)`／`recall(scope, namespace, query)` | 返回 RecallPage；同步／异步端口，原生内存／SQLite 默认实现 |
 | `validate_facts(scope, namespace, items) -> None` | 可选同步／异步事实有效性端口；内置按当前 key/version/TTL 校验；缺失时 Legacy 全量核对 |
 | `Document(document_id, text, source_uri="", metadata={})` | 权威知识输入；有限 JSON metadata，正文不能为空 |
 | `InMemoryKnowledgeStore()`／`SQLiteKnowledgeStore(path, chunk_size=1000, overlap=100)` | scoped put/get/get_chunk/chunks/delete/lexical；put/delete 使用 expected_version CAS |
 | `RetrievalQuery(text, limit=5, max_chars=8000)` | 限制检索返回；RetrievalResult 含来源、版本、分数和 mode |
 | `KnowledgeContext(retriever, namespace="default", limit=5, max_chars=8000)` | async references/validate；注入 knowledge=；来源按 Scope/版本/TTL 校验 |
+| `KnowledgeContextPort` | 可直接实现 identity/limit/max_chars/async references/validate，无需继承默认 Facade |
 | `LexicalRetriever(store)` | 默认中英文词法检索，无远程模型调用 |
 | `EmbeddingProvider`／`VectorIndex` | 显式注入 async embed 与 scoped 索引；索引不保存知识正文 |
 | `VectorRetriever(store, index, embedding)` | 显式 index_document 后检索；回读有效权威来源 |

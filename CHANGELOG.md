@@ -2,6 +2,16 @@
 
 记录用户可见行为和兼容边界。版本为开发预览；此记录不表示已经上传 PyPI、创建 Git 标签或发布 GitHub Release。
 
+## 0.1.0.dev8 — Unreleased
+
+新增公共 ExecutionEngine／RuntimeDiagnostics 和独立 RunDiagnostics，CLI 不要求 LocalEngine 继承关系或 .store。KnowledgeContextPort 支持直接实现知识流程；RecallPlanner 可以按 Agent／输入生成查询，实际计划保存到模型 Action，未知重试保持原查询和快照。MemoryRecallPolicy 保持配置 DTO。
+
+新增不可变 RuntimeProfile／RuntimeCatalog、严格 JSON／TOML 加载、显式 ComponentRegistry、RuntimeBuilder 和资源管理。默认组件可声明装配；配置不动态 import/eval，自定义适配器由应用注册。Chat 凭据通过环境变量名称引用。附属资源在引擎停止后清理，失败保留重试句柄；不完整 close 不能释放归属或确认完成。
+
+ProfiledEngine 按保存的 profile 身份恢复旧任务，默认版本仅控制新提交。回执查询先于新配置装配；缺失或改写原配置拒绝继续，无 profile 的旧 Run 要显式 legacy_factory。新增 --config、run --spec 及独立 config 模板，保留原 oncall/rag 路径。
+
+默认 local-4、执行 Schema v1、请求摘要及 dev7 Manifest 不变，仅显式 profile/planner 增加身份。Catalog 不归档代码或外部数据；Graph／并行 Workflow、MCP／沙箱、多 Agent、模型流式／能力协商、Temporal 和完整 M1 验收仍未交付。
+
 ## 0.1.0.dev7 — Unreleased
 
 新增可显式启用的 `MemoryRecallPolicy`、分页 `RecallQuery/RecallPage` 及同步／异步端口。内存／SQLite 后端限制候选数与返回字符量，Session 高水位保持完整消息顺序，事实 generation 固定分页集合；超大记录跳过并推进。旧后端通过 Legacy 桥接，明确标记全量读取，Threaded 桥保留真实线程归属。

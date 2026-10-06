@@ -1,11 +1,13 @@
 # Ralf-Agent 扩展指南
 
-版本：0.1.0.dev7；日期：2026-10-06。面向 SDK／适配器开发者。本指南描述 Local、召回和知识端口；企业适配与完整 M1 验收仍按 [实现清单](implementation-status.md) 分期。
+版本：0.1.0.dev8；日期：2026-10-06。面向 SDK／适配器开发者。本指南描述执行、装配、召回和知识端口；企业适配与完整 M1 验收仍按 [实现清单](implementation-status.md) 分期。
 
 ## 1. 装配组件
 
 | 扩展点 | 注入位置 | 必须满足的约束 |
 | --- | --- | --- |
+| ExecutionEngine | SDK／CLI 工厂返回值 | submit/drive/status/events/approve/cancel/reconcile/wait_for_threads/close 公共契约；不要求继承 LocalEngine 或暴露 store |
+| RuntimeDiagnostics | 可选 engine.diagnostics | 返回独立 RunDiagnostics；缺失时 CLI 仍能输出结果 |
 | ModelProvider | `providers={name: provider}` | `identity` 非空有限 JSON；`async complete` 返回 ModelResponse；最终输出在公共采纳边界校验，不执行工具 |
 | Harness | `harness=`，默认 NativeHarness | 非空有限 JSON identity；同步纯 prepare／propose 返回 ModelRequest／DecisionProposal；不执行工具或提交状态 |
 | ToolExecutor | `tool_executor=`，默认 PythonToolExecutor | 非空有限 JSON identity；async execute／reconcile 接收固定 DispatchEnvelope，返回 EffectObservation 或核验未知 None |
@@ -13,8 +15,9 @@
 | SessionStore／AsyncSessionStore | `session_store=` | `backend_id`、read、append；CAS 与 message_id 去重同时成立 |
 | LongTermMemoryStore／AsyncLongTermMemoryStore | `memory_store=` | `backend_id`、facts、put_fact；范围、版本及到期语义一致 |
 | MemoryRecallPolicy | `recall_policy=`，默认 None | 固定查询及全局额度；同步／异步 read_page/recall，旧端口走明确 Legacy 桥 |
+| RecallPlanner | `recall_planner=`，默认 None | identity、同步纯 plan 返回 MemoryRecallPolicy；与 recall_policy 互斥，原 Action 恢复不重新规划 |
 | FactReferenceValidator | 记忆后端可选 validate_facts | 返回 None 或抛拒绝；校验当前 Scope/namespace/key/version/TTL；缺失时全量 Legacy 校验 |
-| KnowledgeContext／KnowledgeRetriever | `knowledge=`，默认 None | 有限 JSON identity、async references/validate；固定来源与配置，调用后复核 |
+| KnowledgeContextPort／KnowledgeRetriever | `knowledge=`，默认 None | identity、limit/max_chars、async references/validate；结构化端口不要求继承 KnowledgeContext，固定来源与配置，调用后复核 |
 | KnowledgeStore／EmbeddingProvider／VectorIndex | 注入 Retriever | 权威知识 CAS/TTL 与索引分离；模型身份、维度、来源过滤和显式重新索引 |
 | ContextBuilder | `context_assembler=` | identity 与确定性 assemble；返回实际消息和 JSON Manifest |
 | ExecutionStore v1 | 第一个构造参数 | 原子命令／事务、Run CAS、事件、预算、活跃 Session 和未知效果查询；不另建调度器 |
@@ -26,6 +29,8 @@
 默认 `LocalEngine(SQLiteStore(path), ...)` 会创建 POSIX 文件租约和共享 SQLite 记忆。自定义存储通过端口接入，不需要 `.conn`／`.path`；同时显式注入 `coordinator`、`session_store`、`memory_store`。当前 ExecutionStore 方法是 Coordinator 线程内的同步事务操作；远程数据库需单独验证延迟、原子性和失败语义。
 
 Harness／ToolExecutor 不需要首次使用者额外配置。自定义组件只变换提案或执行一个派发，不取得 Engine 的审批／预算／状态权威。DispatchEnvelope 和 EffectObservation 的 JSON 属性是独立视图；ModelRequest／DecisionProposal 是分离的输入数据，frozen 顶层不保证嵌套 JSON 深度不可变。具体签名、阶段与离线例子见 [执行组件指南](execution-components.md)。
+
+默认组件也可通过 JSON/TOML RuntimeProfile 装配；ComponentRegistry 显式注册第三方工厂，BuildContext.own 接管同步 close 的附属客户端。RuntimeCatalog 不覆盖已注册版本，ProfiledEngine 根据 Run 保存的原 profile 解析。它不归档 Python 实现或后端数据，恢复仍需保留它们。完整例子、默认适配器、关闭重试和历史版本配置见 [运行装配](runtime-assembly.md)。
 
 ## 2. 远程记忆
 
@@ -84,7 +89,7 @@ Engine 成功构造后拥有 execution store 与 coordinator；`close()` 等待�
 
 追踪只覆盖框架托管的同步调用。自定义 async 适配器内部直接使用 asyncio.to_thread、创建自己的后台线程或交出外部调用后，必须自行保证取消、真实完成与资源归属契约；不能把仅取消等待当作实际工作已结束。
 
-自建 Agent 的跨进程控制使用 `--factory module:callable`。同步工厂接收 db_path，返回相同固定配置的 LocalEngine；工厂应放在可导入包中，或在仓库目录使用 `PYTHONPATH=.`。完整可运行示例见 [custom_runtime.py](../examples/custom_runtime.py)。
+自建 Agent 的跨进程控制使用 `--factory module:callable`。同步工厂接收 db_path，返回符合 ExecutionEngine 的对象；工厂应放在可导入包中，或在仓库目录使用 `PYTHONPATH=.`。内置适配器可直接用 `--config runtime.toml` 和 `run --spec agent.toml`，两种入口互斥。完整可运行示例见 [custom_runtime.py](../examples/custom_runtime.py)；独立配置模板用 `ralf init my-agent --template config`。
 
 SDK 入口程序应导入同一个配置模块，工具实现保留稳定的包／模块名。示例入口已经这样装配；在 `__main__` 重新定义工具后，再从其他模块加载同名函数，属于不同的发布身份。
 
@@ -94,4 +99,4 @@ CLI 的 `inspect/status/events` 使用只读 SQLite 和默认 Scope；不载入�
 
 新的适配器至少覆盖：隔离 Scope、重启后稳定身份、CAS 冲突、重复请求去重、未知成本保留、已确认效果不重跑、取消期间不新增后续调用、晚到证据不覆盖原结果、组件变化拒绝恢复。参考 `tests/test_memory.py`、`tests/test_extension_contracts.py`、`tests/test_engine.py` 中的真实数据库和异步测试。
 
-dev7 保留 dev6 的 `local-4`、默认 Manifest、SQLite Schema v1 与调用方摘要，未启用新组件的 dev6 Run 可以用原配置续跑。Recall／Knowledge 仅在显式启用时增加固定身份；改变策略或知识配置后，同一提交仍找回原回执，但继续执行拒绝不匹配配置。dev3–dev5 的 local-3 Run 可观察、取消及人工核验，续跑需原版本与配置。dev1／dev2 的旧 submit 摘要重放需原版本。没有自动 Run／摘要迁移；未知效果先在原日志核验。policy 继续仅允许同步返回 None 或抛拒绝异常。
+dev8 保留 dev6/dev7 的 `local-4`、默认 Manifest、SQLite Schema v1 与调用方摘要，默认 Run 可以用原工厂续跑。Recall／Knowledge／planner／profile 仅在显式启用时增加固定身份；旧的无 profile Run 经 ProfiledEngine 恢复需明确的 legacy_factory，不能回退当前默认。改变策略或知识配置后，同一提交仍找回原回执，但继续执行拒绝不匹配配置。dev3–dev5 的 local-3 Run 可观察、取消及人工核验，续跑需原版本与配置。dev1／dev2 的旧 submit 摘要重放需原版本。没有自动 Run／摘要迁移；未知效果先在原日志核验。policy 继续仅允许同步返回 None 或抛拒绝异常。

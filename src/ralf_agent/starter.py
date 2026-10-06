@@ -13,6 +13,7 @@ class StarterProject:
     module: str
     factory: str
     files: tuple[str, ...]
+    template: str = "oncall"
 
 
 _RUNTIME = '''"""Editable offline Agent: read, approve a write, then verify its receipt."""
@@ -561,15 +562,98 @@ resume old Runs with their original factory and configuration.
 }
 
 
+_CONFIG_FILES = {
+    ".gitignore": ".ralf/\n__pycache__/\n",
+    "agent_app/__init__.py": "",
+    "agent_app/runtime.py": '''"""Stable factory; runtime declarations are in runtime.toml."""
+from pathlib import Path
+from ralf_agent import ProfiledEngine, load_catalog
+
+
+def create_engine(db_path):
+    catalog = load_catalog(Path(__file__).resolve().parents[1] / "runtime.toml")
+    return ProfiledEngine(catalog, db_path)
+''',
+    "agent_app/__main__.py": '''"""Offline configuration example using the installed CLI."""
+import argparse
+from pathlib import Path
+from ralf_agent.cli import main
+
+parser = argparse.ArgumentParser()
+parser.add_argument("--db", default=".ralf/runs.sqlite")
+parser.add_argument("--input", default="hello")
+parser.add_argument("--command-id", default="config-demo")
+parser.add_argument("--submit-only", action="store_true")
+args = parser.parse_args()
+root = Path(__file__).resolve().parents[1]
+command = ["--db", args.db, "--config", str(root / "runtime.toml"), "run",
+           "--spec", str(root / "agent.toml"), "--input", args.input, "--command-id", args.command_id]
+if args.submit_only:
+    command.append("--submit-only")
+raise SystemExit(main(command))
+''',
+    "runtime.toml": """schema_version = 1
+[default]
+name = "assistant"
+version = "1"
+
+[[profiles]]
+name = "assistant"
+version = "1"
+[profiles.providers.default]
+adapter = "offline-echo"
+[profiles.providers.default.config]
+label = "config-v1"
+
+[[profiles]]
+name = "assistant"
+version = "2"
+[profiles.providers.default]
+adapter = "offline-echo"
+[profiles.providers.default.config]
+label = "config-v2"
+""",
+    "agent.toml": """kind = "agent"
+name = "configured-assistant"
+instructions = "Answer the supplied task."
+""",
+    "README.md": """# Configured Agent
+
+This editable project uses the installed SDK and an explicit offline echo
+Provider. It tests configuration and recovery, without calling a model service.
+
+```sh
+python -m agent_app --input hello
+ralf --config runtime.toml run --spec agent.toml --input question --command-id new
+```
+
+Edit `runtime.toml` to select version 2 under `[default]`. Keep both historical
+profile entries. New submissions use the new default; queued version 1 Runs
+continue with version 1. Do not edit an accepted profile version in place.
+
+```sh
+python -m agent_app --input pending --command-id pending --submit-only
+ralf --config runtime.toml resume RUN_ID
+```
+
+Replace RUN_ID with the submitted ID. Cross-directory commands need the same
+absolute --db and --config paths. JSON/TOML does not import plugins: register
+custom factories explicitly in Python and return ProfiledEngine from that
+trusted factory. Inline Chat Provider keys are rejected; `api_key_env` names an
+environment variable. Installing this template does not prove real model quality.
+""",
+}
+
+
 def create_starter(destination, *, template="oncall") -> StarterProject:
     """Create the application atomically in a new or empty directory.
 
     A file or nonempty destination is rejected, including hidden user files.
     Templates are contained in the installed package and need no source checkout.
     """
-    if template not in ("oncall", "rag"):
-        raise ValidationError("Starter template must be oncall or rag")
-    files = _RAG_FILES if template == "rag" else _FILES
+    if template not in ("oncall", "rag", "config"):
+        raise ValidationError("Starter template must be oncall, rag or config")
+    files = {"oncall": _FILES, "rag": _RAG_FILES, "config": _CONFIG_FILES}[template]
     try:
         directory = Path(destination).expanduser().resolve()
         if directory == Path.cwd().resolve():
@@ -593,5 +677,5 @@ def create_starter(destination, *, template="oncall") -> StarterProject:
     except (OSError, TypeError, ValueError, RuntimeError) as exc:
         raise ValidationError("Cannot create starter in the requested directory") from exc
     return StarterProject(
-        str(directory), "agent_app", "agent_app.runtime:create_engine", tuple(files)
+        str(directory), "agent_app", "agent_app.runtime:create_engine", tuple(files), template
     )

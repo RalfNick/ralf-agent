@@ -4,22 +4,35 @@ import json
 import shlex
 
 from .engine import TERMINAL
-from .types import RunSnapshot, digest
+from .types import RunDiagnostics, RunSnapshot, digest
 
 
-def command_hint(db, factory, command, *arguments):
+def command_hint(db, factory, command, *arguments, config=None):
     parts = ["ralf", "--db", str(db)]
     if factory:
         parts.extend(("--factory", factory))
+    elif config:
+        parts.extend(("--config", str(config)))
     return shlex.join([*parts, command, *arguments])
 
 
-def inspection(run, budget, db, factory=None):
-    snapshot = RunSnapshot.from_record(run)
-    manifest = run["manifest"]
+def inspection(run, budget, db, factory=None, *, config=None):
+    return diagnostics_inspection(
+        RunDiagnostics(
+            RunSnapshot.from_record(run), run["manifest"], run["release_digest"], budget
+        ),
+        db,
+        factory,
+        config=config,
+    )
+
+
+def diagnostics_inspection(details, db, factory=None, *, config=None):
+    snapshot = details.snapshot
+    manifest = details.manifest
     providers = manifest["providers"]
     is_demo = all(value.get("kind") == "offline-scripted-oncall" for value in providers.values())
-    needs_factory = factory is None and not is_demo
+    needs_factory = factory is None and config is None and not is_demo
     configured_factory = factory or ("YOUR_MODULE:create_engine" if needs_factory else None)
     pending = []
     for action in snapshot.pending:
@@ -37,7 +50,7 @@ def inspection(run, budget, db, factory=None):
             if decision == "reject":
                 arguments.append("--reject")
             item[f"{decision}_command"] = command_hint(
-                db, configured_factory, "approve", *arguments
+                db, configured_factory, "approve", *arguments, config=config
             )
         pending.append(item)
     unresolved = [
@@ -49,7 +62,7 @@ def inspection(run, budget, db, factory=None):
             "effect_key": action["effect_key"],
             "digest": action["digest"],
         }
-        for action in run["actions"]
+        for action in snapshot.actions
         if action["kind"] == "tool"
         and action["status"] in {"executing", "outcome_unknown"}
         and manifest["tools"][action["tool"]]["effect"] != "read_only"
@@ -65,7 +78,7 @@ def inspection(run, budget, db, factory=None):
                 else action["effect_observation"]
             ),
         }
-        for action in run["actions"]
+        for action in snapshot.actions
         if action["status"] in {"response_received", "receipt_received"}
     ]
     return {
@@ -74,14 +87,14 @@ def inspection(run, budget, db, factory=None):
         "state_revision": snapshot.state_revision,
         "result": snapshot.result,
         "error": snapshot.error,
-        "release": {"kernel": manifest["kernel"], "digest": run["release_digest"]},
-        "budget": {"unit": "execution_credits", **budget},
+        "release": {"kernel": manifest["kernel"], "digest": details.release_digest},
+        "budget": {"unit": "execution_credits", **details.budget},
         "needs_factory": needs_factory,
         "pending": pending,
         "unresolved_effects": unresolved,
         "recorded_evidence": recorded,
         "resume_command": (
-            command_hint(db, configured_factory, "resume", snapshot.run_id)
+            command_hint(db, configured_factory, "resume", snapshot.run_id, config=config)
             if snapshot.state not in TERMINAL or recorded
             else None
         ),
@@ -143,13 +156,23 @@ def render_inspection(report):
 def render_result(result):
     """Human-readable control receipts and event pages; JSON remains the default."""
     if isinstance(result, dict) and "directory" in result and "factory" in result:
+        template = result.get("template", "oncall")
+        entry_arguments = (
+            ["--input", "hello"]
+            if template == "config"
+            else (
+                ["--query", "缓存连接失败怎么恢复"]
+                if template == "rag"
+                else ["--ticket", "INC-001"]
+            )
+        )
         return "\n".join(
             [
                 f"Created offline Agent starter: {result['directory']}",
                 f"Runtime factory: {result['factory']}",
                 "Start the test task, then inspect its approval:",
                 "  " + shlex.join(["cd", result["directory"]]),
-                "  " + shlex.join(["python", "-m", result["module"], "--ticket", "INC-001"]),
+                "  " + shlex.join(["python", "-m", result["module"], *entry_arguments]),
                 "  "
                 + command_hint(
                     ".ralf/runs.sqlite", result["factory"], "--format", "text", "inspect", "RUN_ID"
