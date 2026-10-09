@@ -1,0 +1,124 @@
+"""Registered control observations/selection; no local scheduler or SQL authority."""
+
+from dataclasses import asdict
+
+from .dag_planning import DAGProposal, PlanningConclusion
+from .errors import RalfError, ValidationError
+from .orchestration_types import TeamRequest, TeamSelection
+from .planning import PlanningRequest, PlanProposal, Verification
+from .temporal_parent_state import child_run_id
+from .temporal_state import detached, validate_request
+from .types import RunSnapshot, Scope, digest
+
+
+class _RecordedCaller:
+    def __init__(self, request, snapshot):
+        self.request, self.snapshot = detached(request), detached(snapshot)
+
+    async def call(self, call_id, member, input):
+        if (
+            call_id != "planner"
+            or member != "@planner"
+            or input != self.request
+            or self.snapshot is None
+        ):
+            raise ValidationError("Planner may consume only its recorded managed child")
+        value = detached(self.snapshot)
+        value["pending"], value["actions"] = tuple(value["pending"]), tuple(value["actions"])
+        return RunSnapshot(**value)
+
+
+async def select(runtime, value):
+    runtime.validate_release(value["runtime_manifest"])
+    definition, kind = value["definition"], value["kind"]
+    if kind == "team":
+        request = TeamRequest(
+            value["input"], definition["members"], value["results"], definition["strategy_config"]
+        )
+        result = runtime.teams[definition["strategy"]].select(request)
+        if not isinstance(result, TeamSelection):
+            from .temporal_activities import _close_lazy
+
+            _close_lazy(result)
+            raise ValidationError("Team strategy must return TeamSelection")
+    else:
+        request = PlanningRequest(**value["planning_request"])
+        if kind == "plan":
+            result = await runtime.planners[definition["planner"]].plan(
+                request, _RecordedCaller(request.to_dict(), value.get("planner_snapshot"))
+            )
+            if not isinstance(result, (PlanProposal, DAGProposal, PlanningConclusion)):
+                from .temporal_activities import _close_lazy
+
+                _close_lazy(result)
+                raise ValidationError("Planner must return a completed typed proposal")
+        elif kind == "verify":
+            result = runtime.verifiers[definition["verifier"]].verify(request)
+            if not isinstance(result, Verification):
+                from .temporal_activities import _close_lazy
+
+                _close_lazy(result)
+                raise ValidationError("Verifier must return Verification")
+        else:
+            raise ValidationError("Unknown parent selection operation")
+    runtime.validate_release(value["runtime_manifest"])
+    return detached(result.to_dict())
+
+
+async def control(runtime, client, value):
+    from .temporal import TemporalEngine
+
+    runtime.validate_release(value["runtime_manifest"])
+    mode, call = value["mode"], value["child"]
+    scope = Scope(**value["scope"])
+    if call["run_id"] != child_run_id(value["scope"], call["command_id"]):
+        raise ValidationError("Child control identity mismatch")
+    validate_request(call["request"], value["runtime_manifest"])
+    engine = TemporalEngine(
+        client, task_queue=value["task_queue"], release=value["runtime_manifest"], scope=scope
+    )
+    if mode == "register":
+        await engine._guard("submit", call["command_id"], call["run_id"], call["request"])
+        result = {"run_id": call["run_id"], "registered": True}
+    elif mode == "observe":
+        result = {**asdict(await engine.diagnostics(call["run_id"])), "scope": value["scope"]}
+    elif mode == "cancel":
+        command = "ralf-parent-stop:" + digest([value["parent_id"], call["run_id"]])
+        result = asdict(await engine.cancel(call["run_id"], command_id=command))
+    else:
+        raise ValidationError("Unknown child control operation")
+    runtime.validate_release(value["runtime_manifest"])
+    return detached(result)
+
+
+def registered_parent_activities(runtime, client):
+    from temporalio import activity
+
+    from .temporal_parent_state import CONTROL_ACTIVITY, SELECTION_ACTIVITY
+    from .temporal_state import CONTEXT_ACTIVITY
+
+    @activity.defn(name=CONTROL_ACTIVITY)
+    async def child_control(value: dict) -> dict:
+        try:
+            return {"ok": True, "result": await control(runtime, client, value)}
+        except Exception as exc:
+            return {
+                "ok": False,
+                "code": exc.code if isinstance(exc, RalfError) else "child_control_failed",
+            }
+
+    @activity.defn(name=SELECTION_ACTIVITY)
+    async def selection(value: dict) -> dict:
+        try:
+            return {"ok": True, "result": await select(runtime, value)}
+        except Exception as exc:
+            return {
+                "ok": False,
+                "code": exc.code if isinstance(exc, RalfError) else "selection_failed",
+            }
+
+    @activity.defn(name=CONTEXT_ACTIVITY)
+    async def context(value: dict) -> dict:
+        return await runtime.prepare_context(value)
+
+    return [child_control, selection, context]

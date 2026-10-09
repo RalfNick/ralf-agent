@@ -30,8 +30,36 @@ def create_frame(engine, parent, node_id, input):
         }
     ).to_dict()
     view = NodeEngine(engine, parent["id"], node_id)
-    manifest = view._workflow.manifest(plan)
     definition = {"kind": "graph", "steps": []}
+    if "binding_definition" in parent["definition"]:
+        from .binding_definitions import BoundDefinition
+        from .binding_runtime import descriptor_for, unwrap_definition
+        from .workflow import GraphWorkflowSpec
+
+        index = next(i for i, n in enumerate(parent["plan"]["nodes"]) if n["id"] == node_id)
+        bindings = (
+            {}
+            if node["agent"] is None
+            else {
+                f"graph/nodes/{node_id}": descriptor_for(
+                    parent["definition"], index, parent["plan"]
+                )
+            }
+        )
+        definition = unwrap_definition(
+            BoundDefinition(GraphWorkflowSpec.from_plan(ExecutionPlan(plan)), bindings).to_dict()
+        )
+        manifest = view._bindings.manifest(definition, plan=plan)
+    else:
+        manifest = view._workflow.manifest(plan)
+    from .agent_limits import pin_projection_limits
+    from .binding_manifests import step_manifest
+
+    # Frames share the parent authority: recomputing a policy here must not
+    # replace the caps accepted for that parent node.
+    index = next(i for i, n in enumerate(parent["plan"]["nodes"]) if n["id"] == node_id)
+    pin_projection_limits(manifest, parent["manifest"])
+    pin_projection_limits(step_manifest(manifest, 0), engine._step_manifest(parent, index))
     return {
         "id": parent["id"],
         "revision": parent["revision"],
@@ -138,6 +166,9 @@ class NodeEngine(LocalEngine):
         self._workflow = StaticWorkflowRuntime(
             self, StaticWorkflowCompiler(), StaticWorkflowInterpreter(), parent.workflow_transforms
         )
+        from .binding_runtime import AgentBindingResolver
+
+        self._bindings = AgentBindingResolver(self)
 
     def _check_release(self, run):
         self.parent._check_release(self.parent._authorized(run["id"]))

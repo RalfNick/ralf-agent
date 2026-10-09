@@ -1,8 +1,8 @@
 # Ralf-Agent 扩展指南
 
-版本：0.1.0.dev10；日期：2026-10-06。面向 SDK／适配器开发者。本指南描述执行、装配、召回和知识端口；企业适配与完整 M1 验收仍按 [实现清单](implementation-status.md) 分期。
+版本：0.1.0.dev23；日期：2026-10-08。面向 SDK／适配器开发者。本指南描述执行、装配、召回和知识端口；当前扩展组件与限制见 [实现清单](implementation-status.md)，企业适配与完整 M1 仍未验收。
 
-完整目标要求每层交付公共契约、默认实现、替换示例和共同验收，见[通用框架能力矩阵](../architecture/viewpoints/framework-capabilities.md)。该矩阵保留 dev9 基线，规划、团队及高级数据端口仍未交付；下表列当前 SDK 能力，新增串行图见[静态 Workflow](static-workflows.md)。
+完整目标要求每层交付公共契约、默认实现、替换示例和共同验收，见[通用框架能力矩阵](../architecture/viewpoints/framework-capabilities.md)。静态图／并行、动态规划／团队和远程数据已有实现，分别见[静态 Workflow](static-workflows.md)、[编排](orchestration.md)与[远程数据](remote-data.md)。默认实现不一定默认启用；每 Agent 能力绑定、推荐组合与 Local/Temporal 契约差异见[整体审查](../architecture/reviews/2026-10-08-agent-framework-alignment.md)。下表以本地装配契约为主，Temporal 支持范围单独声明。
 
 ## 1. 装配组件
 
@@ -33,6 +33,8 @@
 
 默认 `LocalEngine(SQLiteStore(path), ...)` 会创建 POSIX 文件租约和共享 SQLite 记忆。自定义存储通过端口接入，不需要 `.conn`／`.path`；同时显式注入 `coordinator`、`session_store`、`memory_store`。当前 ExecutionStore 方法是 Coordinator 线程内的同步事务操作；远程数据库需单独验证延迟、原子性和失败语义。
 
+Session ID 在 submit 中可省略（None，此时采用 Run ID）；显式指定时必须是非空、非纯空白字符串。默认 Session 后端的 read/append 也要求该字符串契约，不接受数字或隐式字符串转换。合法名字保留原值，不裁剪、大小写折叠或重写，以保持请求摘要和历史身份。自定义 Session 适配器应遵循同一契约。
+
 Harness／ToolExecutor 不需要首次使用者额外配置。自定义组件只变换提案或执行一个派发，不取得 Engine 的审批／预算／状态权威。DispatchEnvelope 和 EffectObservation 的 JSON 属性是独立视图；ModelRequest／DecisionProposal 是分离的输入数据，frozen 顶层不保证嵌套 JSON 深度不可变。具体签名、阶段与离线例子见 [执行组件指南](execution-components.md)。
 
 模型层默认提供 Chat、DeepSeek 非思考 preset、Anthropic 文本/客户端工具及 Gemini 文本，见 [模型指南](model-adapters.md)。原生不能表达的消息字段明确拒绝；不靠丢弃 name、推理历史或签名来获得兼容。旧自定义 Provider 缺少预检或 streaming 仍可执行 complete。
@@ -62,7 +64,7 @@ from ralf_agent import ThreadedMemoryAdapter
 
 `expires_at` 使用 Unix 秒，仅接受 `None` 或可表示为有限浮点数的 int／float；`None` 表示永不过期，过去时间合法，NaN／无穷／布尔／字符串等在写入前拒绝，不改变 CAS 版本。
 
-`facts(scope, namespace)` 只返回当前 Scope 下未过期的已确认事实；`put_fact(..., expected_version)` 不静默覆盖其他写入。dev7 的原生内存／SQLite 提供 read_page/recall 及事实校验；远程后端可实现同步／异步同名端口。未实现新端口时 Legacy 桥仍全量读取，不能宣称底层有界。默认模型输入行为保留，需要显式配置 `MemoryRecallPolicy()` 才启用分页。知识库、检索器、向量索引和 Embedding 分别替换；实际签名、引用与规模边界见 [召回与 RAG](recall-and-rag.md)。Redis、PostgreSQL、托管向量数据库尚未提供现成适配器。
+`facts(scope, namespace)` 只返回当前 Scope 下未过期的已确认事实；`put_fact(..., expected_version)` 不静默覆盖其他写入。本地内存／SQLite 及 dev14 Redis／PostgreSQL 提供 read_page/recall 与事实校验。未实现新端口时 Legacy 桥仍全量读取，不能宣称底层有界。默认模型输入行为保留，需要显式配置 `MemoryRecallPolicy()` 才启用分页。知识库、检索器、向量索引和 Embedding 分别替换；见[召回与 RAG](recall-and-rag.md)及[真实远程适配器](remote-data.md)。
 
 ## 3. 身份与不可变发布
 
@@ -92,7 +94,9 @@ Engine 成功构造后拥有 execution store 与 coordinator；`close()` 等待�
 
 服务关闭时先停止接收新请求，完成或取消并 await 自己管理的驱动 Task，再 `await engine.wait_for_threads()`，最后 `engine.close()`。等待方法不取消 Task，也不释放租约；取消等待不会丢弃线程归属，已经关闭旧事件循环时可以在新循环等待。线程结束仅表示本地执行已退出；若取消使回执没有采纳，未知效果仍需按执行日志核验。同步线程不能被 asyncio 强制终止，需要 handler 自身的超时／协作退出策略。
 
-存储 close 抛异常时，Engine 进入 close_failed，保留租约并拒绝 submit／drive／控制／读取操作；可以重试 close。存储已关闭但租约释放失败时只重试释放，不重复关闭存储。成功 close 可重复调用，原 Engine 始终不可再执行。自定义存储应允许部分关闭失败后的安全重试，自定义租约应按原持有者身份幂等释放。
+存储 close 抛异常或没有同步返回 None 时，Engine 进入 close_failed，保留租约并拒绝 submit／drive／控制／读取操作；可以重试 close。存储已关闭但租约释放失败时只重试释放，不重复关闭存储。成功 close 可重复调用，原 Engine 始终不可再执行。Coordinator 的 acquire/release 同样必须同步完成并返回 None；引擎不进入返回的上下文管理器或等待 coroutine。自定义存储应允许部分关闭失败后的安全重试，自定义租约应按原持有者身份幂等释放。
+
+acquire 抛异常时，适配器负责清理本次获取产生的临时资源，保持原持有者不变；Engine 不调用 release，以免复用同一 Store／租约时释放已有执行权。acquire 已返回但完成值无效，或之后的构造失败时，Engine 才尝试幂等释放；直接注入的 Store 仍由调用方清理。
 
 追踪只覆盖框架托管的同步调用。自定义 async 适配器内部直接使用 asyncio.to_thread、创建自己的后台线程或交出外部调用后，必须自行保证取消、真实完成与资源归属契约；不能把仅取消等待当作实际工作已结束。
 
@@ -101,6 +105,10 @@ Engine 成功构造后拥有 execution store 与 coordinator；`close()` 等待�
 SDK 入口程序应导入同一个配置模块，工具实现保留稳定的包／模块名。示例入口已经这样装配；在 `__main__` 重新定义工具后，再从其他模块加载同名函数，属于不同的发布身份。
 
 CLI 的 `inspect/status/events` 使用只读 SQLite 和默认 Scope；不载入工厂、不取得执行租约。已注入 Harness／Executor 的恢复命令也必须使用原 factory。自定义 Scope／非 SQLite 的观察可使用 SDK `engine.status/events`，独立 Read API 尚未发布。
+
+dev13 可使用 register_async/abuild 和 own_async/aclose 管理异步组件客户端；原同步执行权契约不变。异步启动、创建循环、取消后的清理任务及重试见[异步装配](async-assembly.md)。
+
+dev14 的 TeamStrategy、Planner 和 PlanVerifier 有默认实现，可通过 Engine 映射或 ComponentRegistry 显式替换。策略返回有限 JSON 提案，成员沿用 AgentSpec 与现有执行组件；调用方无需实现第二套工具循环。约束、ModelPlanner 接入和父子恢复见[编排指南](orchestration.md)。
 
 ## 6. 接入验收与升级
 
@@ -111,3 +119,28 @@ dev8 保留 dev6/dev7 的 `local-4`、默认 Manifest、SQLite Schema v1 与调�
 ## Tool sources and managed graph operations
 
 [Managed tools](managed-tools.md) exposes borrowed async ToolSource and MCPTransport ports, immutable descriptors and host policies. Register a selected source into ToolRegistry and use the names from AgentSpec or GraphNode(tool=...). The default POSIX stdio transport manages one operation/process group at a time; custom persistent clients need explicit host shutdown. Pure transforms retain their no-I/O contract.
+
+## DAG, nested execution and remote composition
+
+Use Planner.plan -> DAGProposal/PlanningConclusion with registered capabilities, rather than mutating accepted plan state. All child member types use the same execution-tree budget/parent-release checks; see [DAG/nesting](dynamic-dag.md). Pure static compiler/interpreter/scheduler contracts remain available.
+
+MessageBus, sync/async Inbox/Outbox and CommandAdapter accept structural composition. A2AClientPort allows a third-party client; transport does not execute work. Supply durable commit-before-return and stable identity guarantees, including return-None completion. See [remote handoff](remote-handoff.md).
+
+TemporalRuntime registers Provider/ToolExecutor/EffectJournal independently of the local builder. New execution backends must declare a capability subset and their own authority, not reuse ExecutionStore as distributed locking. EffectJournal received/acknowledge must return None only after durable completion. See [Temporal](temporal-execution.md).
+
+
+## 服务与异步执行控制
+
+同步或原生异步的 submit/status/cancel 可通过 TaskControlBridge 统一调用，全部方法须使用同一模式，返回真实完成的 SDK DTO，Scope 与注册方法不能在 await 间漂移。桥接不使用线程模拟 LocalEngine、不隐式 drive 或关闭资源。PostgresInbox/PostgresOutbox 是共享交接的默认实现，用户实现可替换 AsyncInbox/AsyncOutbox，但须满足事务身份、容量和不可变完成契约。默认 LocalA2AService 接管本地 Engine/Inbox 并安全关闭；A2AApplication 借用远程资源。示例与契约见[异步交接](async-handoff.md)。
+
+## Temporal 组件注册
+
+使用 `TemporalRuntime` 的命名 TeamStrategy／Planner／PlanVerifier 注册表可替换默认策略，输出必须为已完成的类型化提案。显式扩展发布保存 identity／config／方法代码摘要，执行前后校验；模型 Planner 声明无工具的 AgentSpec，使用受管理子任务结果。RAG 复用 KnowledgeContext 的异步检索／校验端口，执行限制使用 TemporalExecutionPolicy。详见[分布式编排](temporal-composition.md)。这些注册表不自动发现插件，不执行隐藏的 Provider 调用，不承诺企业身份体系。
+
+## 替换 Parser、Chunker 或原子知识存储
+
+从 dev18 起，DocumentParser.parse 与 Chunker.split 是独立的纯同步结构化端口。每层有无需服务的默认实现；IngestionCoordinator 通过关键字参数替换组件，先冻结有界 DTO，再交给 IngestionKnowledgeStore／AsyncIngestionKnowledgeStore 原子保存。SourceDocument／ParsedDocument／ChunkSpan／PreparedIngestion／IngestionReceipt 分离原始来源、解析正文、位置与历史接受证据。借用 Store 的生命周期由宿主管理；原 KnowledgeStore.put 和默认分块行为保持。具体扩展示例、去重／CAS／取消／向量边界见[摄取指南](document-ingestion.md)。
+
+## 替换 Embedding、融合或重排
+
+新 HybridRetriever 明确传入来源 Store 与命名召回分支。每层只替换一个 Protocol 即可；融合／重排返回 ID 提案，原正文与来源仍归知识权威。RankFusion 同步纯计算，Reranker／AsyncReranker 明确模式，完成结果有界且冻结。现成离线 RRF／保序／词项重排不宣称语义模型能力。HTTP Embedding 需显式模型／维度／凭据和异步资源生命周期；配置、扩展及恢复见[混合检索指南](hybrid-retrieval.md)。

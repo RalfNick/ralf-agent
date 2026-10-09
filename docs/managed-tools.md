@@ -20,24 +20,39 @@ ralf --db .ralf/runs.sqlite --factory agent_app.runtime:create_engine resume RUN
 ```python
 import asyncio
 from ralf_agent import (
-    GraphNode, GraphWorkflowSpec, LocalEngine, SQLiteStore,
-    ToolRegistry, ToolSpec, ValueRef,
+    GraphNode,
+    GraphWorkflowSpec,
+    LocalEngine,
+    SQLiteStore,
+    ToolRegistry,
+    ToolSpec,
+    ValueRef,
 )
+
 
 async def read_order(arguments, context):
     # Replace with an actual async service call.
     return {"order_id": arguments["order_id"], "state": "ready"}
 
+
 tools = ToolRegistry()
 tools.register(
-    ToolSpec("read_order", "Read an order", {
-        "type": "object", "properties": {"order_id": {"type": "string"}},
-        "required": ["order_id"], "additionalProperties": False,
-    }),
+    ToolSpec(
+        "read_order",
+        "Read an order",
+        {
+            "type": "object",
+            "properties": {"order_id": {"type": "string"}},
+            "required": ["order_id"],
+            "additionalProperties": False,
+        },
+    ),
     read_order,
 )
 flow = GraphWorkflowSpec(
-    "order", [GraphNode("read", tool="read_order")], output=ValueRef("read"),
+    "order",
+    [GraphNode("read", tool="read_order")],
+    output=ValueRef("read"),
 )
 with LocalEngine(SQLiteStore(".ralf/order.sqlite"), providers={}, tools=tools) as engine:
     handle = engine.submit(flow, {"order_id": "ORDER-1"}, command_id="read-1")
@@ -52,20 +67,34 @@ Tool 节点的外部效果不可藏在纯 Transform 中。未知写效果继续�
 
 ```python
 from ralf_agent import (
-    MCPStdioTransport, MCPToolSource, ToolPolicy, ToolRegistry, register_tool_source,
+    MCPStdioTransport,
+    MCPToolSource,
+    ToolPolicy,
+    ToolRegistry,
+    register_tool_source,
 )
 
+
 async def build_tools(peer_command):
-    source = MCPToolSource(MCPStdioTransport(
-        peer_command, version="business-server-1", timeout=30,
-        # env={"PATH": "/usr/bin:/bin", "SERVICE_TOKEN": "..."},
-    ))
+    source = MCPToolSource(
+        MCPStdioTransport(
+            peer_command,
+            version="business-server-1",
+            timeout=30,
+            # env={"PATH": "/usr/bin:/bin", "SERVICE_TOKEN": "..."},
+        )
+    )
     tools = ToolRegistry()
     names = await register_tool_source(
-        tools, source,
-        policies={"lookup_order": ToolPolicy(
-            "1", effect="read_only", requires_approval=False,
-        )},
+        tools,
+        source,
+        policies={
+            "lookup_order": ToolPolicy(
+                "1",
+                effect="read_only",
+                requires_approval=False,
+            )
+        },
         prefix="orders_",
     )
     return tools, names
@@ -79,7 +108,9 @@ peer_command 是明确的 argv，例如 `["/absolute/python", "/absolute/server.
 
 ```python
 policy = ToolPolicy(
-    "1", effect="idempotent_write", requires_approval=True,
+    "1",
+    effect="idempotent_write",
+    requires_approval=True,
     effect_key_argument="request_id",
 )
 ```
@@ -93,14 +124,23 @@ ToolSource 的 identity 是非空 JSON，list_tools 与 call_tool 是 async：
 ```python
 from ralf_agent import ToolDescriptor
 
+
 class OrdersSource:
     identity = {"kind": "orders-source", "version": "1"}
 
     async def list_tools(self):
-        return (ToolDescriptor("lookup_order", "Read order state", {
-            "type": "object", "properties": {"order_id": {"type": "string"}},
-            "required": ["order_id"], "additionalProperties": False,
-        }),)
+        return (
+            ToolDescriptor(
+                "lookup_order",
+                "Read order state",
+                {
+                    "type": "object",
+                    "properties": {"order_id": {"type": "string"}},
+                    "required": ["order_id"],
+                    "additionalProperties": False,
+                },
+            ),
+        )
 
     async def call_tool(self, descriptor, arguments, context):
         return {"order_id": arguments["order_id"], "state": "ready"}

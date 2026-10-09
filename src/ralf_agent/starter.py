@@ -4,15 +4,26 @@ from dataclasses import dataclass
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
+from .a2a_starter import A2A_FILES
+from .async_starter import ASYNC_FILES
+from .context_starter import context_files
+from .dag_starter import DAG_FILES, NESTED_FILES
 from .errors import ValidationError
+from .hybrid_starter import hybrid_files
+from .ingestion_starter import ingestion_files
 from .mcp_starter import MCP_FILES
+from .memory_starter import MEMORY_FILES
+from .model_check_starter import MODEL_CHECK_FILES
+from .observable_starter import OBSERVABLE_FILES
+from .orchestration_starter import PLAN_FILES, TEAM_FILES
+from .temporal_starter import TEMPORAL_FILES
 
 
 @dataclass(frozen=True)
 class StarterProject:
     directory: str
     module: str
-    factory: str
+    factory: str | None
     files: tuple[str, ...]
     template: str = "oncall"
 
@@ -808,15 +819,41 @@ global/tenant capacity limit, multi-Agent messaging or distributed execution.
 }
 
 
+_INGEST_FILES = ingestion_files(_RAG_RUNTIME, _RAG_FILES)
+_HYBRID_FILES = hybrid_files(_INGEST_FILES)
+_CONTEXT_FILES = context_files()
+
+
 def create_starter(destination, *, template="oncall") -> StarterProject:
     """Create the application atomically in a new or empty directory.
 
     A file or nonempty destination is rejected, including hidden user files.
     Templates are contained in the installed package and need no source checkout.
     """
-    if template not in ("oncall", "rag", "config", "model", "graph", "mcp", "parallel"):
+    if template not in (
+        "oncall",
+        "rag",
+        "config",
+        "model",
+        "graph",
+        "mcp",
+        "parallel",
+        "async",
+        "plan",
+        "team",
+        "dag",
+        "nested",
+        "a2a",
+        "temporal",
+        "ingest",
+        "hybrid",
+        "context",
+        "memory",
+        "model-check",
+        "observable",
+    ):
         raise ValidationError(
-            "Starter template must be oncall, rag, config, model, graph, mcp or parallel"
+            "Starter template must be oncall, rag, config, model, graph, mcp, parallel, async, plan, team, dag, nested, a2a, temporal, ingest, hybrid, context, memory, model-check or observable"
         )
     files = {
         "oncall": _FILES,
@@ -826,6 +863,19 @@ def create_starter(destination, *, template="oncall") -> StarterProject:
         "graph": _GRAPH_FILES,
         "mcp": MCP_FILES,
         "parallel": _PARALLEL_FILES,
+        "async": ASYNC_FILES,
+        "plan": PLAN_FILES,
+        "team": TEAM_FILES,
+        "dag": DAG_FILES,
+        "nested": NESTED_FILES,
+        "a2a": A2A_FILES,
+        "temporal": TEMPORAL_FILES,
+        "ingest": _INGEST_FILES,
+        "hybrid": _HYBRID_FILES,
+        "context": _CONTEXT_FILES,
+        "memory": MEMORY_FILES,
+        "model-check": MODEL_CHECK_FILES,
+        "observable": OBSERVABLE_FILES,
     }[template]
     try:
         directory = Path(destination).expanduser().resolve()
@@ -850,5 +900,15 @@ def create_starter(destination, *, template="oncall") -> StarterProject:
     except (OSError, TypeError, ValueError, RuntimeError) as exc:
         raise ValidationError("Cannot create starter in the requested directory") from exc
     return StarterProject(
-        str(directory), "agent_app", "agent_app.runtime:create_engine", tuple(files), template
+        str(directory),
+        "agent_app",
+        None
+        if template in {"temporal", "model-check"}
+        else (
+            "agent_app.runtime:create_runtime"
+            if template == "async"
+            else "agent_app.runtime:create_engine"
+        ),
+        tuple(files),
+        template,
     )

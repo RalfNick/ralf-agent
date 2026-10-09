@@ -102,9 +102,16 @@ class WorkflowSpec:
 
 def submission_request(spec, input, *, budget=32, session_id=None):
     """Caller-controlled identity shared by native acceptance and read-only replay."""
+    from .orchestration_types import DynamicWorkflowSpec, TeamSpec
     from .workflow import GraphWorkflowSpec
 
-    if isinstance(spec, GraphWorkflowSpec):
+    if session_id is not None:
+        _require_text(session_id, "Session ID")
+    from .binding_definitions import AgentDefinition, BoundDefinition
+
+    if isinstance(spec, (AgentDefinition, BoundDefinition)):
+        definition = spec.to_dict()
+    elif isinstance(spec, (GraphWorkflowSpec, TeamSpec, DynamicWorkflowSpec)):
         definition = spec.to_dict()
     elif isinstance(spec, AgentSpec):
         definition = {
@@ -121,7 +128,9 @@ def submission_request(spec, input, *, budget=32, session_id=None):
             "steps": [asdict(step) for step in spec.steps],
         }
     else:
-        raise ValidationError("Submit an AgentSpec, WorkflowSpec or GraphWorkflowSpec")
+        raise ValidationError(
+            "Submit an Agent, Workflow, Graph, Team or DynamicWorkflow specification"
+        )
     payload = {
         "definition": definition,
         "input": copy.deepcopy(input),

@@ -1,0 +1,17 @@
+# Local per-Agent execution limits — H1f
+
+User intent is the already approved flexible layer bindings/defaults roadmap. Implement the next unblocked H1 limits role, not a new scheduler. Workspace is accumulated uncommitted dev29. This increment is Local only; Temporal bindings, Artifact/Workspace/Skills/Sandbox/stage policies, H2 and distributed capacity remain pending.
+
+## Pure policy and accepted evidence
+
+AgentLimitsPolicy has stable non-secret identity and pure synchronous propose(AgentSpec)->AgentLimitProposal. FixedAgentLimits is the default opt-in policy. Proposal has optional strict integer max_decisions>=1, max_context_chars>=256, max_tool_actions>=0. None adds no cap. DTO is detached/immutable; only concrete proposal return is allowed. Async/generator/lazy wrappers, dict results and invalid values fail closed. Do not alter model_credits, tool costs, permissions, output Schema or definition identity.
+
+AgentSpec caps, mandatory host limits and optional selected Agent limits intersect by minimum. Ref/disabled cannot remove host caps. Disabled skips optional per-Agent policy only; inherited host applies once. Pure policies receive detached Spec including nested Schema. Capture/check actual policy identity before/after proposal. Only fixed accepted resolved caps drive execution: never rerun a potentially stateful policy to choose an action limit. Release validation recomputes current proposal to reject drift, without updating old accepted limits.
+
+A configured limits manifest records policy identities plus effective caps keyed by digest of original effective-tool-set Agent step. Duplicate equal Spec digests must yield equal caps or preflight refuses. No policy => old manifest bytes and step behavior unchanged. Explicit non-inherit limits bindings use local-bindings-6 so old wheel refuses before dispatch. Default host limits add manifest only when configured. Limits has no selector.
+
+Execution applies fixed caps at initial admission/context validation, graph selection, model request acceptance and max_decisions. max_tool_actions counts distinct adopted tool Actions for the current Agent node, including ready/approval/unknown/completed; an over-limit batch rejects atomically before adopting any proposal. Recovery/retry of an existing Action does not consume another slot. This is not RPC-attempt/rate/concurrency/token/dollar limiting. Sequential/parallel/child/nested Agent invocations have independent counts; existing Run/parent budgets remain authoritative. Direct Tool/Transform graph nodes are outside this per-Agent policy.
+
+Support native Agent, sequence, Graph/parallel, Team/Dynamic/nested stable paths; Profile default component and binding ref declarations, sync/async factories/ownership. Effective cap evidence is inspectable in fixed manifest. Existing caller request dedup uses original definition/budget/command, not latest aliases. Missing/drifted original policy refuses recovery; already accepted model response/effect evidence is retained. No default caps falsely claim enterprise governance.
+
+Virtual parallel frames project original accepted caps. Managed child admission and release checks compare caps to the original parent member snapshot recursively through bound/nested members and the model Planner. Limits-bearing parent calls also fix the original member name; no-limits calls retain the legacy linkage shape. A child cannot replace parent accepted caps by re-proposing a policy under a different execution context.

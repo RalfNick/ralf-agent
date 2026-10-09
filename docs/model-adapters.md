@@ -1,12 +1,13 @@
 # 模型适配、生成参数与流式结果
 
-dev9 提供三个 HTTP 协议与 DeepSeek 非思考模式适配器，全部复用已有 httpx，不需要厂商 SDK。Provider 只调用模型，不执行工具或自动重试。协议回归、在线模型兼容和任务质量是不同的验证结果；当前只完成本地协议/运行时验证。
+dev9 提供三个 HTTP 协议与 DeepSeek 非思考模式适配器，全部复用已有 httpx，不需要厂商 SDK。Provider 只调用模型，不执行工具或自动重试。协议回归、在线模型兼容和任务质量是不同的验证结果；当前有本地协议／运行时验证和 dev21 的小范围 DeepSeek 实测；完整模型兼容矩阵及任务质量仍待验收。dev22 新增[原生 Responses／兼容探针](sdk-model-tools.md)。
 
 ## 默认覆盖
 
 | SDK / 配置 adapter | 文本 | 客户端函数工具 | SSE | 默认凭据变量 | 主要限制 |
 | --- | --- | --- | --- | --- | --- |
 | OpenAIChatProvider / chat-completions | 支持 | 支持 | 支持 | OPENAI_API_KEY | Chat Completions 兼容协议；不支持需保留 opaque reasoning 状态的工具循环 |
+| OpenAIResponsesProvider / openai-responses | 支持 | 支持 | 支持 | OPENAI_API_KEY | 原生 text/functions、JSON-object／显式严格 Schema；拒绝需保留推理状态、媒体、服务端工具和非空 annotations |
 | DeepSeekChatProvider / deepseek-chat | 支持 | 支持 | 支持 | DEEPSEEK_API_KEY | 固定 thinking.type=disabled 和 max_tokens；不支持思考模式工具续接或 seed |
 | AnthropicProvider / anthropic-messages | 支持 | 支持 | 支持 | ANTHROPIC_API_KEY | Messages 原生转换；不支持 thinking、server tools、多模态 |
 | GeminiProvider / gemini-content | 支持 | 不支持 | 支持 | GEMINI_API_KEY | Developer API 原生文本；工具声明/历史在发送前拒绝，签名工具状态未交付 |
@@ -83,4 +84,4 @@ text 是临时展示，response 是唯一完整结果。工具参数片段只在
 
 本地 HTTP/SSE fixture 验证三种协议的认证、地址、生成参数、文本/工具转换、用量、结束原因、碎片参数、错误脱敏及连接生命周期。Anthropic Agent 实测审批前不执行工具，批准后完成一次工具往返；默认 Chat identity 保留 dev8。DeepSeek 非思考 preset 的请求字段有本地证据。安装包的原任务恢复和独立模板另行验证，结果见 [实现进度](implementation-progress.md)。
 
-在线账户/地区/型号兼容、真实延迟/Token/费用、工具选择和拒绝能力尚未执行。使用者可在自己的环境提交最小文本、工具往返、流式完成/取消四种用例，记录型号、地址、日期与非秘密配置；通过后只标记该组合。该流程不替代 [M1 真实任务集](m1-acceptance.md)。OpenAI Responses、厂商 SDK、多模态、模型自动路由、Gemini 签名工具和持久流事件仍需后续交付。
+dev21 已保留小范围 DeepSeek 案例与用量；其他在线账户／地区／型号兼容及完整任务质量尚未验收。使用者可在自己的环境提交最小文本、工具往返、流式完成/取消四种用例，记录型号、地址、日期与非秘密配置；通过后只标记该组合。该流程不替代 [M1 真实任务集](m1-acceptance.md)。完整 Responses 推理续接、厂商 SDK、多模态、模型自动路由、Gemini 签名工具和持久流事件仍需后续交付。

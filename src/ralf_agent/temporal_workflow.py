@@ -1,0 +1,279 @@
+"""The independent Temporal Workflow/History execution authority.
+
+This SDK-specific module is loaded only by the explicit worker/replayer factory.
+Business terminal Runs remain queryable and accept durable late-evidence/control
+Updates; the facade never completes or restarts them to bypass unknown effects.
+"""
+
+import asyncio
+from datetime import timedelta
+
+from temporalio import workflow
+from temporalio.common import RetryPolicy
+from temporalio.exceptions import ActivityError, ApplicationError
+
+with workflow.unsafe.imports_passed_through():
+    from .temporal_state import (
+        ACK_ACTIVITY,
+        CONTEXT_ACTIVITY,
+        MODEL_ACTIVITY,
+        RECONCILE_ACTIVITY,
+        TOOL_ACTIVITY,
+        WORKFLOW_NAME,
+        TemporalRunState,
+        detached,
+        digest,
+    )
+
+
+@workflow.defn(name=WORKFLOW_NAME)
+class TemporalRunWorkflow:
+    @workflow.init
+    def __init__(self, accepted: dict):
+        # Queries/Updates may run before the run coroutine is scheduled.
+        info = workflow.info()
+        self.state = TemporalRunState(
+            info.workflow_id,
+            accepted["scope"],
+            accepted["command_id"],
+            accepted["request"],
+            accepted["manifest"],
+            info.run_id,
+        )
+        self.wake_revision = 0
+
+    @workflow.run
+    async def run(self, accepted: dict) -> None:
+        policy = self.state.manifest.get("execution_policy", {})
+        if policy.get("run_timeout_seconds") is not None:
+            asyncio.create_task(self._deadline(policy["run_timeout_seconds"]))
+        timeout = timedelta(seconds=accepted["activity_timeout"])
+        total_timeout = timedelta(seconds=accepted["activity_timeout"] * 2 + 5)
+        while True:
+            observed_wake = self.wake_revision
+            if self.state.pending_acks:
+                evidence = self.state.pending_acks.pop(0)
+                self.state.active_evidence_ack = evidence["action_id"]
+                try:
+                    result = await workflow.execute_activity(
+                        ACK_ACTIVITY,
+                        evidence,
+                        start_to_close_timeout=timeout,
+                        schedule_to_close_timeout=total_timeout,
+                        retry_policy=RetryPolicy(maximum_attempts=1),
+                        activity_id=f"ack:{evidence['action_id']}:{len(self.state.event_log)}",
+                    )
+                    if not result["ok"]:
+                        self.state.deferred_acks.append(evidence)
+                    self.state._emit(
+                        "effect_journal_acknowledged"
+                        if result["ok"]
+                        else "effect_journal_ack_deferred",
+                        {"action_id": evidence["action_id"], **result},
+                    )
+                except ActivityError:
+                    self.state.deferred_acks.append(evidence)
+                    self.state._emit(
+                        "effect_journal_ack_deferred",
+                        {"action_id": evidence["action_id"], "code": "activity_failed"},
+                    )
+                finally:
+                    self.state.active_evidence_ack = None
+                continue
+            if self.state.reconcile_requests:
+                action = self.state.reconcile_requests.pop(0)
+                self.state.active_reconciliation = action["id"]
+                envelope = self.state.envelope(action)
+                try:
+                    response = await workflow.execute_activity(
+                        RECONCILE_ACTIVITY,
+                        envelope,
+                        start_to_close_timeout=timeout,
+                        schedule_to_close_timeout=total_timeout,
+                        retry_policy=RetryPolicy(maximum_attempts=1),
+                        activity_id=f"reconcile:{action['id']}:{len(self.state.event_log)}",
+                    )
+                    if response["ok"]:
+                        self.state.accept_tool(action["id"], response, reconciled=True)
+                    else:
+                        self.state._emit(
+                            "effect_reconciliation_unverified",
+                            {"action_id": action["id"], "code": response["code"]},
+                        )
+                except ActivityError:
+                    self.state._emit(
+                        "effect_reconciliation_unverified",
+                        {"action_id": action["id"], "code": "activity_failed"},
+                    )
+                finally:
+                    self.state.active_reconciliation = None
+                continue
+            operation = self.state.next_operation()
+            if operation is None:
+                expiry = policy.get("approval_timeout_seconds")
+                pending = next(
+                    (
+                        action
+                        for action in self.state.actions
+                        if action["status"] == "waiting_approval"
+                    ),
+                    None,
+                )
+                if (
+                    pending is not None
+                    and expiry is not None
+                    and self.state.state not in {"cancelled", "failed", "succeeded"}
+                ):
+                    if "approval_expires_at" not in pending:
+                        pending["approval_expires_at"] = workflow.now().timestamp() + expiry
+                        self.state._emit(
+                            "approval_expiry_recorded",
+                            {
+                                "action_id": pending["id"],
+                                "expires_at": pending["approval_expires_at"],
+                            },
+                        )
+                    remaining = max(0, pending["approval_expires_at"] - workflow.now().timestamp())
+                    try:
+                        await workflow.wait_condition(
+                            lambda wake=observed_wake: self.wake_revision != wake,
+                            timeout=timedelta(seconds=remaining),
+                        )
+                    except TimeoutError:
+                        if pending["status"] == "waiting_approval" and self.state.state not in {
+                            "cancelled",
+                            "failed",
+                            "succeeded",
+                        }:
+                            pending["status"] = "failed"
+                            self.state.state, self.state.error = (
+                                "failed",
+                                {"code": "approval_expired"},
+                            )
+                            self.state._emit("approval_expired", {"action_id": pending["id"]})
+                else:
+                    await workflow.wait_condition(
+                        lambda wake=observed_wake: self.wake_revision != wake
+                    )
+                continue
+            action, request = operation
+            try:
+                response = await workflow.execute_activity(
+                    CONTEXT_ACTIVITY
+                    if action["kind"] == "context"
+                    else MODEL_ACTIVITY
+                    if action["kind"] == "model"
+                    else TOOL_ACTIVITY,
+                    request,
+                    start_to_close_timeout=timeout,
+                    schedule_to_close_timeout=total_timeout,
+                    retry_policy=RetryPolicy(maximum_attempts=1),
+                    activity_id=action["id"]
+                    if action["kind"] == "context"
+                    else action["attempts"][0]["id"],
+                )
+                if action["kind"] == "context":
+                    self.state.accept_context(action["id"], response)
+                elif action["kind"] == "model":
+                    self.state.accept_model(action["id"], response)
+                else:
+                    self.state.accept_tool(action["id"], response)
+            except ActivityError:
+                # A server timeout is not evidence that a Python thread or
+                # downstream request stopped. Preserve the dispatched identity.
+                if action["kind"] == "context":
+                    self.state.accept_context(action["id"], {"ok": False, "code": "context_failed"})
+                else:
+                    self.state.operation_unknown(action["id"], "activity_outcome_unknown")
+
+    async def _deadline(self, seconds):
+        await workflow.sleep(seconds)
+        if self.state.state not in {"succeeded", "failed", "cancelled"}:
+            self.state.state, self.state.error = "cancelled", {"code": "deadline_exceeded"}
+            self.state._emit("deadline_exceeded")
+            self.wake_revision += 1
+
+    @workflow.update(name="command")
+    async def command(self, request: dict) -> dict:
+        try:
+            receipt = self.state.command(request["command_id"], request["payload"])
+            if request["payload"]["kind"] == "drive":
+                self.state.retry_blocked()
+            self.wake_revision += 1
+            return receipt
+        except Exception as exc:
+            raise ApplicationError(
+                "Temporal command was rejected",
+                type=getattr(exc, "code", "validation_error"),
+                non_retryable=True,
+            ) from None
+
+    @workflow.query(name="view")
+    def view(self, request: dict) -> dict:
+        try:
+            self.state.authorize(request.get("scope"))
+            kind = request["kind"]
+            if kind == "status":
+                return self.state.snapshot()
+            if kind == "diagnostics":
+                return self.state.diagnostics()
+            if kind == "events":
+                return detached(
+                    [e for e in self.state.event_log if e["seq"] > request["after"]][
+                        : request["limit"]
+                    ]
+                )
+            if kind == "submission":
+                payload = {
+                    "kind": "submit",
+                    "scope": request["scope"],
+                    "request": request["request"],
+                }
+                # Querying existing receipt is read-only and deliberately does
+                # not resolve the facade's newly configured runtime release.
+                command_id = request["command_id"]
+                if self.state.command_digests.get(command_id) != digest(payload):
+                    return {"error": "idempotency_conflict"}
+                return detached(self.state.receipts[command_id])
+            return {"error": "validation_error"}
+        except Exception as exc:
+            return {"error": getattr(exc, "code", "validation_error")}
+
+
+with workflow.unsafe.imports_passed_through():
+    from .temporal_state import COMMAND_REGISTRY_NAME, TemporalCommandRegistryState
+
+
+@workflow.defn(name=COMMAND_REGISTRY_NAME)
+class TemporalCommandRegistryWorkflow:
+    """History-backed scoped command acceptance, with no Run-result authority."""
+
+    @workflow.init
+    def __init__(self, accepted: dict):
+        self.commands = TemporalCommandRegistryState(accepted["scope"])
+
+    @workflow.run
+    async def run(self, accepted: dict) -> None:
+        await workflow.wait_condition(lambda: False)
+
+    @workflow.update(name="reserve")
+    async def reserve(self, request: dict) -> dict:
+        # No await or external I/O: one Update atomically pins identity/target.
+        try:
+            return self.commands.reserve(request)
+        except Exception as exc:
+            raise ApplicationError(
+                "Temporal command identity was rejected",
+                type=getattr(exc, "code", "validation_error"),
+                non_retryable=True,
+            ) from None
+
+    @workflow.query(name="view")
+    def view(self, request: dict) -> dict:
+        if request.get("scope") != self.commands.scope:
+            return {"error": "authorization_denied"}
+        return {
+            "scope": detached(self.commands.scope),
+            "capacity": self.commands.capacity,
+            "accepted_commands": len(self.commands.identities),
+        }

@@ -1,0 +1,155 @@
+# Typed tools and native Responses — dev22
+
+This increment begins the accepted model/tool developer roadmap. It adds three
+public APIs without changing ModelResponse, native execution authority or legacy
+provider/tool identities: OpenAIResponsesProvider, infer_tool_schema and
+evaluate_model_compatibility. New factories and a nineteenth starter are additive.
+
+## Register ordinary Python functions
+
+```python
+from ralf_agent import ToolRegistry
+
+tools = ToolRegistry()
+
+
+@tools.tool(effect="read_only", description="Find a record by its ID")
+def lookup(record_id: str, limit: int = 5):
+    return {"record_id": record_id, "limit": limit}
+
+
+# lookup remains an ordinary callable.
+assert lookup("A-1") == {"record_id": "A-1", "limit": 5}
+```
+
+Use register_function(function, ...) for programmatic registration. Keyword
+functions and bound methods are supported; positional-only/variadic signatures
+need the existing explicit ToolSpec/(arguments, context) API. The bridge adapts
+keyword arguments to that executor contract, including async function results.
+Effect must be declared. Annotation inference never grants approval or permission.
+Write tools retain their existing effect, approval, budget and recovery semantics.
+
+Supported inference: str/int/float/bool/None, list[T], dict[str,T], fixed tuple
+arrays, unions/Optional, homogeneous Literal values and Annotated's base type.
+Annotated metadata is ignored; use explicit input_schema for constraints.
+Postponed annotations use a bounded AST whitelist, never eval/get_type_hints.
+Named user types, Pydantic/dataclass conversion, aliases and arbitrary expressions
+require an explicit input Schema or an explicit custom adapter. Values remain JSON
+values; Python tuple annotations describe fixed JSON arrays, not a coercion API.
+
+Generated schemas reject extra fields and distinguish required parameters from
+parameters with defaults. Defaults are validated, captured in private JSON
+snapshots and copied for each call. Only a digest enters implementation identity;
+values never appear as Schema defaults. Changing defaults changes a new
+registration's identity. Source-less Python code has a normalized bytecode digest.
+Captured owner/global dependencies still require explicit version/config identity.
+Explicit Schemas must be closed object Schemas declaring exactly the callable
+parameters, with each default checked against its parameter Schema. Effective
+merged arguments are validated again. Local proposals and Temporal model Activities
+resolve defaults before the operation digest, approval and host policy, so the
+approved arguments match execution. Resolved defaults appear in private Run and
+approval records when used; secrets belong in host context/config instead.
+
+To receive the host context, declare context_parameter explicitly:
+
+```python
+@tools.tool(
+    effect="idempotent_write", requires_approval=True, context_parameter="context", version="1"
+)
+def apply(value: int, *, context):
+    return business_service.apply(value, idempotency_key=context.effect_key)
+```
+
+The Context parameter is absent from inferred model Schema. Supplying it in model
+arguments is rejected even with an explicit Schema; only the executor injects it.
+Existing low-level registration and manifests stay unchanged.
+
+## Native Responses
+
+```python
+from ralf_agent import OpenAIResponsesProvider
+
+provider = OpenAIResponsesProvider(
+    "YOUR_ACTUAL_MODEL",
+    max_output_tokens=1024,
+    timeout=30,
+    json_mode=True,
+)
+# Reads OPENAI_API_KEY; the caller controls borrowed HTTP client lifetime.
+```
+
+Runtime profiles select adapter="openai-responses". Credentials use api_key_env;
+keys do not belong in JSON/TOML. base_url defaults to https://api.openai.com/v1.
+Text/functions, complete SSE, temperature/top_p, capability restrictions and
+native JSON formatting are supported. seed/stop are unsupported. An optional
+reasoning_effort="none" is sent explicitly; model/account support is not inferred.
+
+The adapter sends store=false and complete explicit input history, without
+previous_response_id. Function call_id is preserved separately from output item
+id. Client tools use strict=false, retaining the host's optional/default/Schema
+semantics. Provider only proposes calls; Engine/ToolExecutor own authorization.
+
+json_mode requests text.format=json_object and requires a JSON instruction.
+Alternatively output_schema plus schema_name requests native strict structured
+output. The supported subset requires a root object, closed objects, all property
+names required and local references; unrecognized native keywords fail preflight.
+Use nullable fields for optional output values. Schema and name are pinned in
+identity; actual final JSON is also validated locally. Every schema-bearing
+location is traversed, object constraints require an explicit object type, and
+the local validator uses a registry that refuses external retrieval.
+
+Reasoning items/opaque continuation, server tools, refusal, media and nonempty
+annotations are explicitly refused. They cannot be faithfully represented by the
+current text/function ModelResponse. A successful protocol fixture is not a claim
+that every Responses model or endpoint works. SSE requires semantic event ordering,
+completed status and final agreement with collected text/argument fragments,
+completion metadata, function/call IDs, content parts and response identity. Text
+fragments are display-only; decisions are complete responses, not stream chunks.
+This does not add durable live Run events or a WebSocket transport.
+
+References: [function calling](https://developers.openai.com/api/docs/guides/function-calling),
+[structured output](https://developers.openai.com/api/docs/guides/structured-outputs),
+[semantic streaming](https://developers.openai.com/api/reference/resources/responses/streaming-events).
+
+## Bounded compatibility checks
+
+```sh
+ralf-check-model                         # not_run; no key reads or network calls
+ralf-check-model --offline               # deterministic fixtures; not model quality
+ralf init my-model-check --template model-check
+cd my-model-check
+python -m agent_app
+```
+
+A real check is explicit and may incur fees:
+
+```sh
+ralf-check-model --adapter openai-responses --model YOUR_ACTUAL_MODEL \
+  --api-key-env MY_MODEL_KEY --max-calls 6 --max-output-tokens 1024 \
+  --timeout 30 --evidence-dir PRIVATE_FRESH_DIRECTORY
+```
+
+SDK: await evaluate_model_compatibility(provider, cases=[...], limits=EvaluationLimits(...),
+evidence_dir=...). Providers are borrowed. Choose cases text/structured/tool/stream/
+stream_close. Defaults allow five cases and six model attempts; the echo tool is
+read-only and checks exact arguments and its durable result. Native capabilities
+that disable tools/streams are recorded as unsupported, not silently enabled.
+
+Each scenario runs through managed LocalEngine authority with bounded decisions
+and credits. Private SQLite evidence is mode0600; use a fresh directory for every
+probe. Public reports contain receipt IDs, checks and known/unknown token usage,
+not raw answers or exception strings. Provider metadata has a typed projection;
+unknown generation keys and error codes never pass through to public reports. max_calls includes attempted invocations;
+preflight failures and absent optional stream ports need not cause HTTP calls.
+Configure actual Provider output limits within the declared probe allowance. Call
+timeout bounds the awaited client, not arbitrary trusted code or supplier work.
+Currency caps return not_run because the generic port cannot enforce billing.
+
+stream_close closes the consumer after its first text event and checks completion
+of aclose. The original Run correctly remains waiting_reconciliation with unknown
+model outcome/usage. It proves neither upstream cancellation nor billing refunds.
+Whole usage is null if any call has unknown usage; known_usage is only the subtotal.
+
+Offline and online reports always keep model_quality=null. These are narrow
+protocol/scenario checks; use the frozen business/planning evaluation for task
+quality. This increment makes no new paid calls or online compatibility claim.

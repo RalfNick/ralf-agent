@@ -1,8 +1,10 @@
 # M1 验收方案
 
-版本：验收协议草案 2；日期：2026-10-06；维护者：Ralf-Agent maintainers。适用对象：项目维护者、首次采用的开发者和后端实现者。
+版本：验收协议草案 3；日期：2026-10-07；维护者：Ralf-Agent maintainers。适用对象：项目维护者、首次采用的开发者和后端实现者。
 
-M1 完成需要执行可靠性、真实模型任务表现、可替换后端契约和外部采用证据。本轮目标基线是 `0.1.0.dev9` / `local-4` 本地核心预览；组件、独立接收、可选分页召回、本地 RAG 与版本化装配已有行为回归。成组 M1 报告、真实模型、Temporal 与外部采用仍待验收。既有版本成绩保留为历史基线。本文件定义剩余工作，不宣布 M1 完成或 RALF 优于其他框架。数字门槛为待冻结目标。
+M1 完成需要执行可靠性、真实模型任务表现、可替换后端契约和外部采用证据。当前目标基线是 `0.1.0.dev21` / `local-4` 核心预览；原生与编排／数据端口、独立 Temporal History 权威及实际服务故障测试已有交付记录。成组 M1 报告、完整真实模型任务集、对等比较与外部采用仍待验收。既有版本成绩保留为历史基线。本文件定义剩余工作，不宣布 M1 完成或 RALF 优于其他框架。数字门槛为待冻结目标。
+
+当前功能范围已推进到 dev25，分层缺口见[剩余能力清单](remaining-work.md)。本协议保留历史任务／候选验收线；其中早期的“尚未交付”范围不能覆盖当前已实现的 MCP、图／团队／Temporal 子集。新增实现和小范围模型试验并不自动关闭本协议的完整质量、成组故障或外部采用门槛。
 
 ## 1. 证据和状态
 
@@ -10,10 +12,10 @@ M1 完成需要执行可靠性、真实模型任务表现、可替换后端契�
 | --- | --- | --- |
 | Local 命令、审批、未知效果、预算和生命周期 | 已有离线证据 | dev4 基线 256、dev5 全套 274、dev6 全套 376 项通过；本轮实际结果见[实现进度](implementation-progress.md)。离线证据不替代模型评测或外部采用 |
 | 完成一个预设 Oncall 流程并恢复审批 | 已有离线证据 | [evaluate.py](../examples/evaluate.py)是 scripted Provider 的 3 个流程，不是 3 个真实模型任务 |
-| 真实模型的选工具、传参数、拒绝、停止、记忆利用 | 设计待跑 | [任务清单](../evals/task-cases.json)含 20 个案例原型；真实模型、fixture、执行器、评分器及成绩均未交付 |
+| 真实模型的选工具、传参数、拒绝、停止、记忆利用 | 小范围试验已有，完整验收待跑 | [任务清单](../evals/task-cases.json)含 20 个案例原型；该 20 类完整任务集的 fixture／执行器／成绩尚未全部交付；另有 20 案例规划评测及八案例业务执行器，dev21 已记录小范围真实 DeepSeek 试验，完整最终配置任务集、重复试验与答案引用质量仍未验收 |
 | RALF / LangGraph 对等比较 | 设计待跑 | 两个独立实现、固定模型与任务、逐例日志和成对统计报告 |
 | Harness／ToolExecutor 与独立接收／采纳 | 已有本地回归证据 | 公开组件；两个 response_received／receipt_received 窗口真实进程崩溃、取消、结算与无重复调用 10 项通过；成组 20 次报告待跑 |
-| Temporal 最小契约探针 | 未实现 | 独立 Workflow/History 权威实现及本节指定的真实 Worker 故障证据 |
+| Temporal 最小契约探针 | 已有实现与真实服务证据，分组验收待核对 | 独立 Workflow/History 权威、实际 Worker 故障／重启和 History 重放见 [dev17 记录](../architecture/reviews/2026-10-07-temporal-composites.md)；按本协议逐项映射，不能据此宣布完整 M1 通过 |
 | 首次采用和自定义扩展 | 设计待跑 | 外部开发者实测；作者自测和已通过的扩展单测不替代这份报告 |
 | 预算化 Recall／分页与本地知识检索 | 已实现本地可选路径 | 内存／SQLite、Legacy／Threaded；额度、范围、TTL、版本、来源恢复回归及独立 wheel starter，边界见[教程](recall-and-rag.md) |
 | 自动语义压缩与并发额度 | 未实现 | 字符裁剪、Recall 额度和 execution credits 不替代这些能力 |
@@ -48,7 +50,7 @@ flowchart LR
 
 ## 3. 真实模型任务集
 
-[task-cases.json](../evals/task-cases.json)及其 [Schema](../evals/task-cases.schema.json)是 fixture / oracle 规格，不是可运行基准。`results=null`、`runner_status=not_implemented`、`fixture_status=not_implemented` 是当前真实状态。新增执行器需要从这些规格建立隔离的内存/SQLite 业务状态，并先验证评分器；不能让 ScriptedProvider 输出标准答案冒充真实模型成绩。
+[task-cases.json](../evals/task-cases.json)及其 [Schema](../evals/task-cases.schema.json)是 fixture / oracle 规格，不是可运行基准。`results=null`、`runner_status=not_implemented`、`fixture_status=not_implemented` 是当前真实状态。已有 [business evaluation](business-evaluation.md) 覆盖八类独立业务任务，不能视作这里 20 类原型全部实现。扩展执行器需要从这些规格建立隔离的内存/SQLite 业务状态，并先验证评分器；不能让 ScriptedProvider 输出标准答案冒充真实模型成绩。
 
 | ID | 案例原型 | 必须独立验证的事实 |
 | --- | --- | --- |
@@ -169,3 +171,5 @@ dev6 的 [进程回归](../tests/test_receipt_process_recovery.py)在最外层�
 结果字段未测量时为 `null` 并附原因。拒绝类的正确拒绝可以是任务成功，人工拒绝/取消是控制终态，超时和 Provider 故障保留失败；不能仅将 state=succeeded 的 Run 选入完成率分母。门槛、样本、主要指标、允许工具路径和排除条件在看到成绩前冻结；试验后改变时开新实验编号。
 
 M1 完成需要：离线回归与制品验证持续通过；真实质量/保护指标通过；完整响应与独立回执两个窗口闭环；Temporal 最小探针通过；外部采用达到门槛。任何一项未完成仍标本地核心预览，并列出阻塞证据。金额硬预算、企业鉴权、MCP/CLI 沙箱、规模化分布式、自动压缩和外部 Runner 保持后续范围，不能由本方案的通过推导已经交付。
+
+[dev21 真实试验](live-model-quality.md)使用 38 次调用；最初业务 0/8、规划 3/6，改进输出契约后子集 3/4、JSON 模式缺信息子集 3/3。不同配置的子集不能合并为完整通过。

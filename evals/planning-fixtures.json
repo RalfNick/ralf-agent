@@ -1,0 +1,34 @@
+{
+  "version": "1",
+  "responses": [
+    {
+      "case_id": "incident-sequence",
+      "output": {
+        "status": "plan",
+        "nodes": [
+          {"id": "read", "member": "read_ticket", "depends_on": [], "input": {"kind": "literal", "value": {"ticket": "INC-042"}}},
+          {"id": "fix", "member": "repair", "depends_on": ["read"], "input": {"kind": "object", "fields": {"ticket": {"kind": "literal", "value": "INC-042"}, "diagnosis": {"kind": "ref", "source": "read", "path": ["diagnosis"]}}}},
+          {"id": "verify", "member": "verify", "depends_on": ["fix"], "input": {"kind": "ref", "source": "fix", "path": []}}
+        ],
+        "output": {"kind": "ref", "source": "verify", "path": []}
+      },
+      "usage": {"input_tokens": 0, "output_tokens": 0}
+    },
+    {
+      "case_id": "parallel-evidence",
+      "output": {
+        "status": "plan",
+        "nodes": [
+          {"id": "metrics", "member": "metrics", "depends_on": [], "input": {"kind": "literal", "value": {"service": "checkout"}}},
+          {"id": "logs", "member": "logs", "depends_on": [], "input": {"kind": "literal", "value": {"service": "checkout"}}},
+          {"id": "summary", "member": "summarize", "depends_on": ["metrics", "logs"], "input": {"kind": "object", "fields": {"logs": {"kind": "ref", "source": "logs", "path": []}, "metrics": {"kind": "ref", "source": "metrics", "path": []}}}}
+        ],
+        "output": {"kind": "ref", "source": "summary", "path": []}
+      }
+    },
+    {
+      "case_id": "missing-environment",
+      "output": {"status": "needs_input", "reason": "Which deployment environment should receive release R21?"}
+    }
+  ]
+}

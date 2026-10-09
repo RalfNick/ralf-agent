@@ -1,10 +1,35 @@
 # Ralf-Agent
 
+dev30 增加[每 Agent 执行限制](docs/agent-limits.md)：可替换纯策略、宿主强制上限与固定 caps；决策／上下文／工具动作额度复用原执行、审批和恢复，支持 Local 绑定及配置。
+
+dev29 增加[可替换完成验证](docs/completion-verification.md)：以已提交工具回执验证业务完成，有界反馈复用原预算和审批；支持 Local 每 Agent 绑定及 Profile 配置。模型／异步验证阶段、统一 Facade 和 Temporal 绑定仍待完成。
+
 **Reliable Agent Lifecycle Framework — 从单个智能体到可靠的企业 AI。**
+
+dev28 的[Facts／Knowledge 范围绑定](docs/data-bindings.md)支持共享客户端下的独立 namespace 与来源校验；[DeepSeek 完整小试验](docs/live-model-quality-dev28.md)保留真实业务失败，Schema 合法仍不代表业务操作已完成。
 
 Ralf-Agent 是 Python 优先的开源 Agent 运行时。它把模型决策、工具动作、审批与结果保存为明确的执行步骤，让任务在重启后继续，并核验可能已经发生的业务操作。
 
-当前版本：**0.1.0.dev12，M1 核心预览**。提供原生 Agent SDK、顺序 Workflow 与静态串行／有界并行图、SQLite 持久执行、可信 Python 工具、审批／取消、效果核验、记忆分页与本地 RAG。图支持依赖、条件、输入映射、纯变换、受管理 Tool 节点和可替换编译器／解释器／调度器；有独立 Graph／Parallel／MCP starter。MCP stdio 和自定义异步 ToolSource 接入同一审批／效果链路。模型层支持生成参数、能力预检、完整流式响应、原生 Anthropic/Gemini 文本和 DeepSeek 非思考模式适配。JSON／TOML 装配默认组件，历史任务按原配置版本恢复。完整 M1 尚未验收，适合开发者试点；支持范围见 [实现清单](docs/implementation-status.md)。预览 API 尚未稳定。
+初次使用从[首用教程](docs/getting-started.md)开始；typed 工具与模型默认接入见[SDK 指南](docs/sdk-model-tools.md)，持久事件与调用中间件见[事件指南](docs/middleware-and-events.md)。[整体架构审查](architecture/reviews/2026-10-08-agent-framework-alignment.md)区分已有组件、默认组合、尚未实现的能力和三项已在dev24修复的问题与后续架构门槛。
+
+当前版本：**0.1.0.dev28，M1 核心预览**。提供原生 Agent SDK、顺序 Workflow、静态串行／有界并行图，以及有限动态规划与多 Agent 团队。SQLite 持久执行统一管理模型、工具、审批／取消、预算和未知效果恢复。模型层提供 Chat Completions、Anthropic、Gemini 文本及 DeepSeek 非思考模式适配；工具支持可信 Python、异步 ToolSource 和 MCP stdio。JSON／TOML 装配版本化组件，历史任务按原配置恢复。
+
+dev14 增加真实 **Redis Session/Facts、PostgreSQL Memory/Knowledge 和 Qdrant VectorIndex**，通过[异步装配](docs/async-assembly.md)接入原有记忆／RAG 端口；提供默认规则 Planner、受管理 ModelPlanner、Verifier，以及 Sequential／Router／Supervisor 团队和独立 Plan／Team 模板。接入方式见[远程数据指南](docs/remote-data.md)与[规划及多 Agent 指南](docs/orchestration.md)。完整 M1 尚未验收，适合开发者试点；[实现清单](docs/implementation-status.md)记录支持边界。预览 API 尚未稳定。
+
+dev15 增加[动态 DAG、计划补丁和嵌套编排](docs/dynamic-dag.md)、可替换的[MQ／A2A 交接层](docs/remote-handoff.md)，以及以 History 为执行权威的[Temporal 预览后端](docs/temporal-execution.md)。dev15 的 Temporal 子集仅支持原生 Agent／顺序 Workflow；dev17 已扩展，见下文。新增 20 个冻结任务的[规划质量评测入口](docs/planning-evaluation.md)，真实模型质量仍需实际配置与运行，离线分数不代表 AI 能力。
+
+```bash
+ralf init my-dag --template dag
+# 或：ralf init my-nested --template nested
+cd my-dag
+python -m agent_app --input hello --command-id first
+```
+
+dev16 将 A2A 接到原生异步执行权威，新增共享 PostgreSQL Inbox／Outbox 和默认 `a2a` HTTP 模板。单机默认服务负责执行跟踪与安全关闭；多进程网关可共用 Temporal 和 PostgreSQL。配置与所有权见[异步交接指南](docs/async-handoff.md)。
+
+dev17 增加 [Temporal 分布式图／团队／动态规划与嵌套编排](docs/temporal-composition.md)，复用真实 PostgreSQL／Qdrant RAG；支持固定执行额度、并发／深度限制、任务期限和审批过期。组件通过显式注册替换，父子执行事实归 History 管理。新增安装包内 `temporal` 模板和 [业务任务评测](docs/business-evaluation.md)。企业身份、全局容量、生命周期治理和真实模型质量仍需后续验收。
+
+dev21 新增[自动来源记忆与受管理模型摘要](docs/managed-memory.md)、[Temporal 自定义上下文](docs/temporal-custom-context.md)和第十八种 memory starter。已完成一轮[真实 DeepSeek 试验](docs/live-model-quality.md)，保留初次失败和不同配置的后续成绩；不代表完整 M1 或跨框架能力对齐。
 
 ## 快速开始
 
@@ -155,7 +180,7 @@ flow = WorkflowSpec(
 # engine.submit(flow, input, command_id="workflow-001")
 ```
 
-前一步通过输出验收后，结果成为下一步输入。需要依赖、条件分支和输入映射时，使用 `GraphWorkflowSpec`。默认串行调度，图计划及节点状态持久保存；并行、动态计划与子 Agent 尚未交付。
+前一步通过输出验收后，结果成为下一步输入。需要依赖、条件分支和输入映射时，使用 `GraphWorkflowSpec`，默认串行，显式 max_concurrency 启用有界并行。图计划及节点状态持久保存。动态规划使用 `DynamicWorkflowSpec`，团队使用 `TeamSpec`；两者通过子 Run 复用相同的 Agent 与业务执行协议。
 
 ```sh
 ralf init my-graph --template graph
@@ -165,6 +190,16 @@ python -m agent_app --input urgent --command-id first-graph
 
 Python 图定义、自定义纯变换、编译器／解释器、分支合并与恢复见[静态 Workflow 教程](docs/static-workflows.md)。
 
+无需模型密钥也能运行规划与团队链路：
+
+```shell
+ralf init my-plan --template plan
+cd my-plan
+python -m agent_app --input hello --command-id first-plan
+```
+
+`--template team` 生成 Supervisor／Workers 项目。规则与离线模型仅验证运行时链路；真实模型规划需要配置 Provider。父子审批、预算、取消、恢复和自定义策略见[编排指南](docs/orchestration.md)。
+
 ## 扩展与替换
 
 - **图编排：** `WorkflowCompiler`／`WorkflowInterpreter` 与 `NodeTransform` 是同步纯端口，默认有静态编译／解释和复制输入实现。可直接注入或用显式工厂注册；输入、跳过集合与结束结果仍由公共边界校验。
@@ -173,7 +208,9 @@ Python 图定义、自定义纯变换、编译器／解释器、分支合并与�
 - **工具：** `ToolRegistry.register(ToolSpec, handler, reconciler=...)`。handler 接收 JSON 参数和可信 `InvocationContext`，支持普通同步／异步函数、实例、绑定方法和 `functools.partial`。状态、绑定参数和依赖变更应更新 `ToolSpec.version/config`，不要把秘密写入配置；代码摘要和配置一起绑定运行。Registry／policy 返回的描述是独立副本。
 - **工具执行器：** 默认 `PythonToolExecutor`；自定义异步 `execute(DispatchEnvelope) -> EffectObservation` 与 `reconcile(DispatchEnvelope) -> EffectObservation | None`，通过 `tool_executor` 注入。审批、预算、派发意图和结果提交由内核负责；执行器复用固定的参数、摘要与 effect_key。
 - **记忆：** `SessionStore`／`LongTermMemoryStore` 及对应异步 Protocol 通过 `session_store`／`memory_store` 独立注入。SQLite 和内存后端留在创建线程；远程后端优先实现异步方法。线程安全的同步远程客户端可用 `ThreadedMemoryAdapter` 显式桥接。`backend_id` 必须识别后端／配置／版本，已有 Run 不静默切换后端。
-- **执行与上下文：** `ExecutionStore` 不暴露 SQL／连接，`CoordinatorLease` 负责执行权归属；自定义存储需显式提供租约和记忆组件。`context_assembler` 接收具有版本身份的 `ContextBuilder`，内核仍检查上下文额度和实际快照摘要。这些是 Local 的组件端口，多进程和 Temporal 尚未实现。
+- **远程数据与 RAG：** Redis／PostgreSQL 提供会话和事实默认适配器；PG 文档权威与 Qdrant 派生索引可独立替换，通过 EmbeddingProvider／VectorRetriever 组合。可选客户端使用 `.[remote]` 安装，工厂通过 abuild 创建并管理关闭。
+- **规划与团队：** 替换 Planner、纯 PlanVerifier 或 TeamStrategy，注册有限成员即可组合业务 Agent。策略提出计划，Engine 管理子调用与执行事实；父级统一限制成员、修订、步骤、并发和 credits。
+- **执行与上下文：** `ExecutionStore` 不暴露 SQL／连接，`CoordinatorLease` 负责执行权归属；自定义存储需显式提供租约和记忆组件。`context_assembler` 接收具有版本身份的 `ContextBuilder`，内核仍检查上下文额度和实际快照摘要。这些是 Local 的同步组件端口；独立 History 权威与支持范围见 [Temporal 编排](docs/temporal-composition.md)。
 - **治理：** 本版本为可信宿主配置的本地所有者模式。可注入同步 `policy(scope, tool_spec, arguments) -> None`，拒绝时抛 `AuthorizationDenied`；其他返回值一律拒绝；每次工具执行／恢复重新检查。企业 OIDC、资源 ACL 和凭据代理尚未交付。
 
 ```python
@@ -185,7 +222,7 @@ facts = InMemoryMemory(backend_id="demo-facts:v1")
 # facts.put_fact(scope, "assistant", "language", "中文", expected_version=0)
 ```
 
-短期消息和长期事实使用作用域及 CAS 版本；长期记忆是显式确认的数据。本地向量索引、注入式向量检索与来源版本校验已交付；默认 Embedding、自动记忆提取和企业知识源撤权体系尚未交付。
+短期消息和长期事实使用作用域及 CAS 版本。本地向量索引、Hash Embedding 离线基线、混合检索和来源版本校验已有实现；[可选记忆 pipeline](docs/managed-memory.md)提供规则／模型字段选择与有来源的观察记录。观察记录不等于已经确认的事实。自动 in-Run 摘要、语义修订／撤回、线上语义质量和企业知识源撤权体系仍待完善。
 
 常用 SDK 和 CLI 见 [API 指引](docs/api-reference.md)；更多接入约束、组件生命周期和测试方法见 [扩展指南](docs/extending.md)。
 
@@ -220,6 +257,8 @@ python examples/evaluate.py
 ## 架构与路线
 
 - [完整设计](architecture/design.md)与 [review 取舍](architecture/review-resolution.md)。
+- [dev27 剩余能力清单](docs/remaining-work.md)：逐层区分已交付子集、尚未实现与待验收能力，按 H1–H5 继续建设。
+- [AgentHarness目标架构](architecture/viewpoints/harness-runtime.md)：广义Harness/Core、每Agent绑定、统一入口、受管理默认链路与H1–H5开发门槛；首期见[能力绑定契约](architecture/specs/agent-capability-binding-contract.md)，H2见[Facade／Session／关闭契约](architecture/specs/agent-facade-session-contract.md)。dev25交付H1a，dev26将六类组件选择扩展到Local图／Team／动态DAG／嵌套成员；[使用教程](docs/agent-bindings.md)。dev27增加[Session后端／namespace／实际地址占用](docs/session-bindings.md)；Temporal绑定、其他资源选择／环境角色及Facade API仍待实现。
 - [通用框架能力与扩展验收](architecture/viewpoints/framework-capabilities.md)：每层的契约、默认实现、替换入口和验收矩阵；覆盖 Pipeline／Graph／流式编排、动态 Plan、多 Agent 和可替换数据链路，按固定版本与场景对标 AgentScope。
 - [Run 命令](architecture/specs/run-command-contract.md)、[Action 恢复](architecture/specs/action-recovery-contract.md)、[Runner 能力](architecture/specs/runner-capability-contract.md)。
 - [实现状态与下一步](docs/implementation-status.md)。M1 继续完成命令／等待、质量和最小 Temporal 门槛；通用 SDK 先推进静态图、工具、规划／团队和数据适配，之后扩展流式编排及企业执行模式；v1.0 完成企业私有部署验收。
@@ -236,3 +275,22 @@ SDK、运行时和基础治理按 [Apache-2.0](LICENSE) 开源。外部模型／
 并行节点隔离上下文、共享预算与分支审批／恢复见[有界并行 Workflow](docs/parallel-workflows.md)。
 
 [并行 Workflow Review](architecture/reviews/2026-10-06-parallel-workflow.md)记录 dev12 的执行隔离、资源静止、回调核验修复和独立审查证据。
+
+### 用户文档摄取（dev18）
+
+`ralf init my-doc-agent --template ingest` 提供第十五种包内 starter。显式 UTF-8 文本／Markdown → 可替换 Parser／Chunker → 原子知识回执 → 默认词法证据 Agent 查询；SQLite 默认无需外部服务，PostgreSQL 支持同一摄取契约。重复请求返回历史回执，`knowledge_committed` 不代表向量索引就绪。替换组件、更新／恢复及边界见[文档摄取指南](docs/document-ingestion.md)。dev19 已交付显式 HTTP Embedding／混合检索／基础重排，dev21 已交付显式模型摘要与来源提炼；运行内自动链路及完整语义质量仍待验收。
+
+### 混合检索（dev19）
+
+`ralf init my-hybrid-agent --template hybrid` 提供第十六种包内模板：用户文档摄取、显式向量索引、词法／向量并行召回和引用恢复。默认 HashEmbedding 无需服务；显式 OpenAIEmbeddingProvider 和 SQLite／PostgreSQL/Qdrant 的新装配入口可替换这一层。融合与同步／异步重排仅提出排名和候选 ID，由知识权威复核来源。完整示例、预算、生命周期与语义质量边界见[混合检索指南](docs/hybrid-retrieval.md)。
+
+### 上下文与大结果（dev20）
+
+`ralf init my-context-agent --template context` 提供第十七种离线模板，显式存储大工具结果并读取有界样本，支持提交后恢复。MessageCounter、ContextBudgeter、ContextSummarizer 可分别替换，BudgetedContextAssembler 提供字符／token 估算、完整消息组裁剪与显式历史摘录，实际 Harness 请求也受预算约束。ArtifactStore 有内存／SQLite 默认，实现 Scope、字节、TTL、摘要与事务容量；应用工具选择引用契约。旧默认保持。自动事实提炼、模型摘要、Temporal 自定义上下文与企业治理仍待完善，见 [上下文与 Artifact 指南](docs/context-artifacts.md)。
+
+Native Responses, keyword Python tools and managed compatibility scenarios: [dev22 guide](docs/sdk-model-tools.md). The [ordered alignment roadmap](docs/agentscope-alignment.md) tracks subsequent sandbox/interaction, semantic data, services and enterprise gates.
+
+The dev23 [middleware and event guide](docs/middleware-and-events.md) covers
+opt-in observers, resumable persisted-event streaming, ralf-watch-events and the
+twentieth observable starter. [Alignment order](docs/agentscope-alignment.md)
+retains separate input/Workspace/Sandbox and production acceptance gates.

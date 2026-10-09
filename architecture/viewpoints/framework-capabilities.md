@@ -1,9 +1,11 @@
 # RALF 通用框架能力与扩展验收
 
-文档版本：0.1；日期：2026-10-06（Asia/Shanghai）。
+文档版本：1.1；日期：2026-10-08（Asia/Shanghai）。
 作者：RALF 项目维护者与架构协作。
 读者：框架维护者、应用开发者、适配器贡献者。
-状态：目标架构与交付要求。下表保留 dev9 设计基线；dev10 的 G1 串行图与 dev11 的 G2 Tool 节点／MCP stdio 与 dev12 的本地有界并行已交付，当前支持范围见[实现清单](../../docs/implementation-status.md)和[静态 Workflow](../../docs/static-workflows.md)。其余目标不构成已支持声明。
+状态：目标架构与交付要求。下表保留 dev9 设计基线；dev10–dev13 已交付静态图、MCP/Tool、本地并行和异步装配。dev14 增加有界规划/子 Run 团队及真实 Redis/PG/Qdrant；dev15 已增加DAG/嵌套、本地与真实Redis消息交接、A2A0.3轮询子集及独立Temporal Agent/sequence后端，dev16 已增加异步 A2A 控制、共享 PG Inbox／Outbox 和单机服务模板；dev17 通过显式扩展发布交付 Temporal Graph/Team/Dynamic/嵌套与注册 RAG、每任务执行策略和业务评测入口；dev18 已交付独立 Parser／Chunker 和原子知识摄取回执；dev19 增加显式 HTTP Embedding 和可组合 Hybrid／融合重排；企业治理、实时流和真实模型质量仍需验收。其他后端能力不默认为可用。当前范围见[实现清单](../../docs/implementation-status.md)、[编排指南](../../docs/orchestration.md)和[数据指南](../../docs/remote-data.md)。其余目标不构成已支持声明。
+
+当前分层剩余能力及验收见[dev30 清单](../../docs/remaining-work.md)：dev20–dev30 已增加显式上下文／产物、来源记忆提炼／模型摘要、Temporal 纯自定义上下文、Responses/typed工具、中间件／事件、共享采纳规则及 H1a/Local H1b/Session H1c/Facts与Knowledge范围H1d及纯完成Verifier H1e／执行限制H1f绑定。下面 dev9 矩阵保持历史基线，不作为当前未实现清单。
 
 ## 1. 目标与达标定义
 
@@ -14,6 +16,15 @@ RALF 的目标是通用 Agent 框架：个人开发者用默认组件完成单 A
 开箱即用按三个层次验收：核心安装无需 Redis、PostgreSQL、Temporal 或向量服务，可运行本地 Agent／Workflow／词法 RAG；真实模型和网络工具显式配置服务与凭据即可使用；企业组合提供可部署配置、迁移及恢复说明。离线 Provider 验证执行链路，不能作为模型任务质量证明。需要服务或下载模型的能力必须说明依赖，不在安装或首次启动时隐式调用收费服务、下载大模型。
 
 本设计补充[总架构](../design.md)，不取代[实现清单](../../docs/implementation-status.md)或[M1 验收门槛](../../docs/m1-acceptance.md)。新增契约名均为设计名称，除明确标为“已交付”的端口外，不能当作当前可导入的 SDK API。
+
+## AgentHarness目标整合（dev24之后）
+
+[AgentHarness目标架构](harness-runtime.md)把本文的逻辑能力整合为按Agent可组合的运行系统。
+广义Harness包含Core；现有Harness/NativeHarness保留为纯DecisionPolicy。
+每Agent绑定、统一Agent/Session入口、受管理默认链路、Workspace/Sandbox与Service按H1–H5推进，
+具体首期输入、作用域、版本和兼容规则见[绑定契约](../specs/agent-capability-binding-contract.md)。
+[Facade/Session契约](../specs/agent-facade-session-contract.md)补齐H2前置行为：Runtime独立托管执行、wait仅观察、首期耐久busy拒绝、绑定CAS修订及owned/borrowed关闭。队列是后续独立能力；远程客户端关闭不关闭Workers。命名与本地AgentScope源码取舍见[修订记录](../reviews/2026-10-08-agent-harness-facade.md)。
+dev25交付H1a，dev26交付[Local H1b绑定](../../docs/agent-bindings.md)，同一六类选择与Profile v2覆盖原生Agent/顺序/图/Team/动态DAG/嵌套成员；dev27交付Local Session后端/namespace/实际地址占用；Temporal绑定、其他角色资源选择、环境角色及H2仍待实现。原有数据角色、计划、授权和恢复契约继续有效。
 
 ## 2. 分层及公共边界
 
@@ -66,7 +77,7 @@ flowchart TB
 | 短期记忆 | SessionStore／AsyncSessionStore；分页召回 | SQLite、内存 Session，去重／CAS／分页 | Redis、PostgreSQL、外部会话服务 | 本地实现已交付；外部适配器未交付 |
 | 长期记忆 | LongTermMemoryStore／异步及召回端口 | SQLite 显式事实；可选提炼、冲突确认 | PostgreSQL／Redis Facts、外部记忆系统 | 本地事实／TTL／CAS 已交付；自动提炼未交付 |
 | 原始知识 | KnowledgeStore／KnowledgeContextPort | SQLite 文档、版本、来源及删除 | PostgreSQL、业务知识库、连接器 | 内存／SQLite 与来源校验已交付；连接器／ACL 目录待补 |
-| 文档摄入 | 目标 KnowledgeConnector／Parser／Chunker | 本地文本／Markdown 导入、独立字符 Chunker | PDF／Office、网页、业务 API、Token／语义分块 | 显式文本摄入已交付；分块仍在 Store 中，独立端口待补 |
+| 文档摄入 | DocumentParser／Chunker／IngestionKnowledgeStore | UTF-8 文本／Markdown、兼容字符／可选段落分块、原子知识回执 | PDF／Office、网页、业务 API、Token／语义分块 | dev18 D1 已交付；向量索引显式独立，后台连接器仍待补 |
 | Embedding | EmbeddingProvider | 配置即用的 Embeddings API 适配器；可选本地模型 | 厂商原生协议、sentence-transformers 等独立扩展 | 只有可注入端口，没有内置 Provider |
 | 向量索引 | VectorIndex | 内存／SQLite 精确检索；企业 pgvector | Qdrant；其他后端按贡献逐项验证 | 本地 cosine 已交付；外部向量库和 ANN 待补 |
 | 检索与重排 | Retriever；目标 Reranker／RetrievalPipeline | 词法检索；向量检索、混合融合、默认保序重排 | 业务 Retriever、交叉编码器／模型 Reranker | 词法与注入式向量检索已交付；混合、重排待补 |
@@ -185,6 +196,16 @@ SandboxBackend 独立管理本地受控进程、容器及远程执行环境，�
 
 dev10 已完成 G1 的计划、串行静态图、纯变换和可替换编译／解释边界，保留旧入口兼容桥；通用异步自定义节点及实际并行继续在受管理执行器增量交付。G1 不把“定义多个节点”标作“已实现多 Agent 协作”。工具及外部数据适配器按各自共同测试交付；每次发行都更新能力矩阵。
 
+### dev14 的实际 G3/G4 状态
+
+| 项目 | 已交付与替换方式 | 仍需验收 |
+| --- | --- | --- |
+| G3 规划内核 | DynamicWorkflowSpec、Planner/PlanVerifier、提案接收/修订采纳窗口、Rule/Model Planner、受限重规划；原生 Agent 子调用复用执行权威 | 模型规划质量、异步模型 Verifier、动态 DAG/嵌套流程与时间额度 |
+| G3 团队内核 | TeamSpec/TeamStrategy、Sequential/Router/Supervisor 默认、独立 Session、父子 escrow/取消/恢复；JSON/TOML 与 Plan/Team starter | 外部开发者采用、递归团队、远程 A2A/MQ 与企业授权 |
+| G4 远程适配 | Redis Session/Facts；PG Session/Facts/Knowledge；Qdrant 派生索引；abuild 默认工厂、实际服务测试和权威来源回读 | pgvector、版本/Cluster/failover/性能矩阵、迁移/清理、语义 embedding/混合重排、独立 Parser/Chunker 与智能记忆链路 |
+
+这些是可运行的参考实现与扩展入口，G3/G4 完整目标尚未验收。默认 HashEmbeddingProvider 是词项散列基线；规则/fixture ModelPlanner 只验证执行契约。数据服务与父子并发仍位于单 Local Coordinator 范围。审查、兼容和安装证据见[dev14 记录](../reviews/2026-10-07-data-orchestration.md)。
+
 ## 9. AgentScope 对标及超越证据
 
 本次对标冻结为 AgentScope **v2.0.9，提交 `2e706a6`**，资料核对日 2026-10-06。该版已有 Goal／Team Pipeline，Team 由 leader 委派并发成员；SOP 的持久恢复仍标记实验性。[官方 Pipeline 导出](https://raw.githubusercontent.com/agentscope-ai/agentscope/v2.0.9/src/agentscope/pipeline/__init__.py)、[版本发布说明](https://github.com/agentscope-ai/agentscope/releases/tag/v2.0.9)
@@ -206,3 +227,11 @@ Realtime、TTS 等高级多模态，以及公网持续群聊在当前正式版�
 本文确定：每层组件的四项交付要求、统一计划与多种编排入口、异步智能步骤与纯策略分离、数据角色独立、多 Agent 通过子 Run 复用执行权威，以及通用 SDK 先行的建设顺序。对应不变量见[领域与状态契约](../design.md#4-领域对象请求与状态契约)、[数据权威](../design.md#92-每类记录的唯一权威)和[扩展发布](../design.md#13-发布兼容与开发体验)。
 
 具体实现时为 G1–G6 各自建立版本化规格、兼容计划和验收记录；原有[Run 命令](../specs/run-command-contract.md)、[Action 恢复](../specs/action-recovery-contract.md)、[Runner 能力](../specs/runner-capability-contract.md)继续作为约束。当前端口与装配方法见[执行组件](../../docs/execution-components.md)、[运行装配](../../docs/runtime-assembly.md)、[模型接入](../../docs/model-adapters.md)、[记忆／RAG](../../docs/recall-and-rag.md)。
+
+## dev17 分布式边界
+
+独立 Parent Workflow 记录提案、修订、子调用身份与额度，实际 Child Workflow 仍拥有模型／工具执行事实；控制、选择和上下文为独立 Activity。策略注册、KnowledgeContext 与 TemporalExecutionPolicy 可以替换和配置，扩展发布和原生发布区分。详见[分布式编排](../../docs/temporal-composition.md)。这扩展 G3／G4／G6 的已交付部分，不代表 M1 或企业阶段验收完成。
+
+## 智能数据链路的下一轮设计
+
+[组件设计草案](intelligent-data-pipeline.md)把 Parser／Chunker、语义 Embedding／混合重排、上下文预算／卸载、摘要／长期记忆提炼与业务 Verifier 的端口、默认实现、恢复及验收要求集中说明。D1 的独立 Parser／Chunker／原子摄取已实现；D2 的协议／Hybrid／融合重排已实现，真实语义质量及 D3–D4 尚未验收，当前交付能力仍以实现清单为准。

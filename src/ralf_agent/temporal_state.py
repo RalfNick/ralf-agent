@@ -1,0 +1,810 @@
+"""Deterministic Temporal Run state. Only a Workflow may persist this value.
+
+The PostgreSQL journal is deliberately absent here: commands, credits, Actions,
+and terminal decisions are replayed exclusively from Temporal History.
+"""
+
+import copy
+
+from jsonschema import Draft202012Validator
+
+from .decisions import final_output, validate_call_ids, validate_decision
+from .errors import AuthorizationDenied, DefinitionMismatch, IdempotencyConflict, ValidationError
+from .governance import TemporalExecutionPolicy
+from .harness import DecisionProposal
+from .model_evidence import settlement_usage, validate_model_usage, validate_received_response
+from .tools import ToolSpec
+from .types import AgentSpec, ToolCall, canonical, credits, digest
+
+TERMINAL = frozenset({"succeeded", "failed", "cancelled"})
+KERNEL = "temporal-1"
+WORKFLOW_NAME = "ralf.temporal.run.v1"
+MODEL_ACTIVITY = "ralf.temporal.model.v1"
+TOOL_ACTIVITY = "ralf.temporal.tool.v1"
+RECONCILE_ACTIVITY = "ralf.temporal.reconcile.v1"
+ACK_ACTIVITY = "ralf.temporal.evidence.v1"
+CONTEXT_ACTIVITY = "ralf.temporal.context.v1"
+
+
+def detached(value):
+    canonical(value)
+    return copy.deepcopy(value)
+
+
+def text(value, label):
+    if not isinstance(value, str) or not value.strip():
+        raise ValidationError(f"{label} must be a non-empty string")
+
+
+def validate_schema_references(schema):
+    """Keep every Workflow Schema check deterministic and free of network I/O."""
+    if not isinstance(schema, dict):
+        return
+    for key in ("$ref", "$dynamicRef", "$recursiveRef"):
+        reference = schema.get(key)
+        if isinstance(reference, str) and not reference.startswith("#"):
+            raise ValidationError("Temporal requires local Schema references")
+    for key in (
+        "additionalProperties",
+        "unevaluatedProperties",
+        "propertyNames",
+        "additionalItems",
+        "unevaluatedItems",
+        "contains",
+        "not",
+        "if",
+        "then",
+        "else",
+        "contentSchema",
+    ):
+        validate_schema_references(schema.get(key))
+    for key in ("allOf", "anyOf", "oneOf", "prefixItems"):
+        for value in schema.get(key, ()):
+            validate_schema_references(value)
+    items = schema.get("items")
+    for value in items if isinstance(items, list) else (items,):
+        validate_schema_references(value)
+    for key in (
+        "$defs",
+        "definitions",
+        "properties",
+        "patternProperties",
+        "dependentSchemas",
+        "dependencies",
+    ):
+        values = schema.get(key, {})
+        if isinstance(values, dict):
+            for value in values.values():
+                validate_schema_references(value)
+
+
+def validate_manifest(manifest):
+    if not isinstance(manifest, dict) or manifest.get("kernel") != KERNEL:
+        raise DefinitionMismatch("Unsupported Temporal runtime release")
+    for key in ("tools", "providers", "harness", "context_builder", "tool_executor", "policy"):
+        if not isinstance(manifest.get(key), dict):
+            raise ValidationError(f"Temporal runtime release requires {key}")
+    if not manifest["providers"]:
+        raise ValidationError("Temporal runtime requires explicit providers")
+    for name, identity in manifest["providers"].items():
+        text(name, "Provider name")
+        if not isinstance(identity, dict) or not identity:
+            raise ValidationError("Temporal requires non-empty provider identities")
+    for name, value in manifest["tools"].items():
+        try:
+            implementation = value["implementation_digest"]
+            if not isinstance(implementation, str) or len(implementation) != 64:
+                raise ValidationError("Invalid Temporal tool manifest implementation identity")
+            spec = ToolSpec(
+                **{key: item for key, item in value.items() if key != "implementation_digest"}
+            )
+            if spec.name != name:
+                raise ValidationError("Invalid Temporal tool manifest name")
+            validate_schema_references(spec.input_schema)
+        except (KeyError, TypeError, ValueError) as exc:
+            raise ValidationError("Invalid Temporal tool manifest") from exc
+    canonical(manifest)
+    return detached(manifest)
+
+
+def validate_request(request, manifest):
+    credits(request["budget"])
+    if request.get("session_id") is not None:
+        raise ValidationError("Temporal shared sessions are not supported")
+    definition = request["definition"]
+    policy = (
+        TemporalExecutionPolicy.from_identity(manifest["execution_policy"])
+        if "execution_policy" in manifest
+        else TemporalExecutionPolicy()
+    )
+    if definition.get("kind") in {"graph", "team", "dynamic"}:
+        if "orchestration" not in manifest:
+            raise ValidationError(
+                "Temporal supports native AgentSpec or sequential WorkflowSpec; registered orchestration release required"
+            )
+        from .spec_codec import agent_steps, decode_spec, validate_definition_tree
+        from .workflow import GraphWorkflowSpec
+
+        value = validate_definition_tree(definition)
+        decode_spec(value)
+        stack = [(definition, 0)]
+        planner_agents = []
+        while stack:
+            current, depth = stack.pop()
+            if depth >= policy.max_depth:
+                raise ValidationError("Distributed definition exceeds registered depth")
+            if current.get("max_concurrency", 1) > policy.max_concurrency:
+                raise ValidationError("Concurrency exceeds execution policy")
+            kind = current.get("kind", "agent")
+            if kind == "graph":
+                graph = GraphWorkflowSpec.from_dict(current)
+                if any(node.agent is None for node in graph.nodes):
+                    raise ValidationError("Temporal graph supports Agent nodes only")
+                for node in graph.nodes:
+                    validate_schema_references(node.output_schema)
+                validate_schema_references(graph.to_dict()["output_schema"])
+            elif kind in {"team", "dynamic"}:
+                registries = manifest["orchestration"]
+                fields = (
+                    [("strategy", "teams")]
+                    if kind == "team"
+                    else [("planner", "planners"), ("verifier", "verifiers")]
+                )
+                for field, registry in fields:
+                    if current[field] not in registries[registry]:
+                        raise DefinitionMismatch("Orchestration component unavailable")
+                if kind == "dynamic":
+                    planner = registries["planners"][current["planner"]]
+                    if planner.get("agent") is not None:
+                        planner_agents.append(planner["agent"])
+                stack.extend((member, depth + 1) for member in current["members"].values())
+        steps = agent_steps(definition) + planner_agents
+    else:
+        if definition.get("kind") not in {"agent", "sequence"}:
+            raise ValidationError("Temporal supports native AgentSpec or sequential WorkflowSpec")
+        if not isinstance(definition.get("steps"), list) or not definition["steps"]:
+            raise ValidationError("Temporal requires at least one native Agent step")
+        steps = definition["steps"]
+    for value in steps:
+        spec = AgentSpec(**value)
+        validate_schema_references(spec.output_schema)
+        if spec.provider not in manifest["providers"]:
+            raise DefinitionMismatch(f"Model provider not configured: {spec.provider}")
+        for name in spec.tools:
+            if policy.allowed_tools is not None and name not in policy.allowed_tools:
+                raise ValidationError("Tool forbidden by execution policy")
+            if name not in manifest["tools"]:
+                raise DefinitionMismatch(f"Tool not registered: {name}")
+    canonical(request)
+
+
+class TemporalRunState:
+    """One bounded Agent/sequence. No clocks, generated IDs, I/O, or hidden retry."""
+
+    def __init__(self, run_id, scope, command_id, request, manifest, execution_epoch=None):
+        text(run_id, "Run ID")
+        text(command_id, "Command ID")
+        manifest = validate_manifest(manifest)
+        validate_request(request, manifest)
+        self.run_id, self.scope = run_id, detached(scope)
+        self.request, self.manifest = detached(request), manifest
+        self.release_digest = digest({"definition": request["definition"], "manifest": manifest})
+        self.epoch = execution_epoch or f"history:{run_id}"
+        self.state, self.revision, self.result, self.error = "queued", 0, None, None
+        self.node, self.decisions, self.actions = 0, 0, []
+        self.messages = self._messages(self.step, request["input"])
+        self.receipts, self.command_digests, self.event_log = {}, {}, []
+        self.reservations, self.pending_acks = {}, []
+        self.active_action, self.remote_uncertain = None, False
+        self.reconcile_requests = []
+        self.active_reconciliation = None
+        self.active_evidence_ack = None
+        self.deferred_acks = []
+        self.context_snapshot = None
+        self.context_signature = None
+        payload = {"kind": "submit", "scope": self.scope, "request": self.request}
+        self.command_digests[command_id] = digest(payload)
+        self.receipts[command_id] = self._receipt(command_id, "submit", {"state_revision": 0})
+        self._emit("run_submitted", {"release_digest": self.release_digest}, bump=False)
+
+    @property
+    def step(self):
+        return self.request["definition"]["steps"][self.node]
+
+    @staticmethod
+    def _messages(step, value):
+        return [
+            {"role": "system", "content": step["instructions"]},
+            {"role": "user", "content": value if isinstance(value, str) else canonical(value)},
+        ]
+
+    @property
+    def budget(self):
+        reserved = sum(v["amount"] for v in self.reservations.values() if v["status"] == "reserved")
+        unknown = sum(v["amount"] for v in self.reservations.values() if v["status"] == "unknown")
+        spent = sum(
+            v.get("actual", 0) for v in self.reservations.values() if v["status"] == "settled"
+        )
+        return {
+            "allowance": self.request["budget"],
+            "reserved": reserved,
+            "unknown": unknown,
+            "spent": spent,
+            "remaining": self.request["budget"] - reserved - unknown - spent,
+            "reservations": detached(list(self.reservations.values())),
+        }
+
+    def _emit(self, kind, data=None, *, bump=True):
+        if bump:
+            self.revision += 1
+        self.event_log.append(
+            {
+                "run_id": self.run_id,
+                "seq": len(self.event_log) + 1,
+                "kind": kind,
+                "data": detached(data or {}),
+            }
+        )
+
+    def _receipt(self, command_id, kind, outcome, *, apply_state="applied"):
+        return {
+            "command_id": command_id,
+            "run_id": self.run_id,
+            "kind": kind,
+            "record_state": "durably_recorded",
+            "apply_state": apply_state,
+            "outcome": detached(outcome),
+        }
+
+    def authorize(self, scope):
+        if scope != self.scope:
+            raise AuthorizationDenied("Run belongs to another workspace or principal")
+
+    def command(self, command_id, payload):
+        text(command_id, "Command ID")
+        self.authorize(payload.get("scope"))
+        identity = digest(payload)
+        if command_id in self.command_digests:
+            if identity != self.command_digests[command_id]:
+                raise IdempotencyConflict("Command ID already identifies different content")
+            return detached(self.receipts[command_id])
+        kind = payload.get("kind")
+        if kind not in {"approve", "cancel", "reconcile", "drive"}:
+            raise ValidationError("Unknown Temporal command")
+        self._emit("command_recorded", {"command_id": command_id, "kind": kind})
+        try:
+            outcome = self._apply(kind, payload, command_id)
+            receipt = self._receipt(command_id, kind, outcome)
+        except (ValidationError, DefinitionMismatch) as exc:
+            receipt = self._receipt(command_id, kind, {"error": exc.code}, apply_state="rejected")
+        self.command_digests[command_id] = identity
+        self.receipts[command_id] = receipt
+        self._emit(
+            "command_applied",
+            {"command_id": command_id, "kind": kind, "apply_state": receipt["apply_state"]},
+        )
+        return detached(receipt)
+
+    def _apply(self, kind, payload, command_id):
+        if kind == "cancel":
+            if self.state in {"succeeded", "failed"}:
+                return {"rejected": True, "reason": "too_late"}
+            if self.state == "cancelled":
+                return {"reason": "already_terminal"}
+            self.state = "cancelled"
+            self._emit(
+                "cancel_applied", {"state": self.state, "remote_stop_confirmed": self.quiescent}
+            )
+            return {"state_revision": self.revision, "remote_stop_confirmed": self.quiescent}
+        if kind == "drive":
+            return {"state_revision": self.revision}
+        action = next((a for a in self.actions if a["id"] == payload.get("action_id")), None)
+        if kind == "approve":
+            if self.state in TERMINAL:
+                return {"rejected": True, "reason": "target_closed"}
+            if (
+                action is None
+                or action["status"] != "waiting_approval"
+                or action["digest"] != payload.get("digest")
+                or type(payload.get("approved")) is not bool
+            ):
+                raise ValidationError("Approval does not match the pending operation")
+            action["approved"] = payload["approved"]
+            action["status"] = "ready" if payload["approved"] else "failed"
+            self.state = "running" if payload["approved"] else "failed"
+            if not payload["approved"]:
+                self.error = {"code": "approval_rejected"}
+            self._emit(
+                "approval_applied", {"action_id": action["id"], "approved": action["approved"]}
+            )
+            return {"state_revision": self.revision}
+        if (
+            action is None
+            or action["kind"] != "tool"
+            or action["status"] not in {"outcome_unknown", "completed"}
+        ):
+            raise ValidationError("No unknown tool effect to reconcile")
+        if payload.get("query", False):
+            if action["status"] == "completed":
+                return {"reason": "already_confirmed", "state_revision": self.revision}
+            if any(a["id"] == action["id"] for a in self.reconcile_requests):
+                return {"reason": "query_pending", "state_revision": self.revision}
+            self.reconcile_requests.append(detached(action))
+            self._emit("reconciliation_requested", {"action_id": action["id"]})
+            return {"state_revision": self.revision, "evidence_pending": True}
+        if "result" not in payload:
+            raise ValidationError("Manual reconciliation requires explicit evidence")
+        self.accept_tool(
+            action["id"],
+            {
+                "ok": True,
+                "result": payload["result"],
+                "source": "operator",
+                "command_id": command_id,
+            },
+            reconciled=True,
+        )
+        return {"state_revision": self.revision}
+
+    @property
+    def quiescent(self):
+        return self.active_action is None and not self.remote_uncertain
+
+    def snapshot(self):
+        return {
+            "run_id": self.run_id,
+            "state": self.state,
+            "state_revision": self.revision,
+            "result": detached(self.result),
+            "error": detached(self.error),
+            "pending": [
+                {
+                    "action_id": a["id"],
+                    "digest": a["digest"],
+                    "tool": a["tool"],
+                    "arguments": detached(a["arguments"]),
+                }
+                for a in self.actions
+                if a["status"] == "waiting_approval"
+            ],
+            "actions": detached(self.actions),
+            "consistency": "authoritative",
+        }
+
+    def diagnostics(self):
+        return {
+            "snapshot": self.snapshot(),
+            "manifest": detached(self.manifest),
+            "release_digest": self.release_digest,
+            "budget": self.budget,
+            "workflow": {
+                "backend": "temporal",
+                "node": self.node,
+                "steps": len(self.request["definition"]["steps"]),
+                "quiescent": self.quiescent,
+                "remote_stop_confirmed": self.quiescent,
+                "active_action": self.active_action,
+                "unknown_remote_execution": self.remote_uncertain,
+                "reconciliation_pending": bool(
+                    self.reconcile_requests or self.active_reconciliation
+                ),
+                "evidence_ack_pending": bool(self.pending_acks or self.active_evidence_ack),
+                "deferred_evidence_acks": len(self.deferred_acks),
+            },
+        }
+
+    def _reserve(self, action, amount):
+        if amount > self.budget["remaining"]:
+            self.state, self.error = "failed", {"code": "budget_exceeded"}
+            self._emit("run_failed", self.error)
+            return False
+        attempt_id = f"{action['id']}:attempt:1"
+        action["attempts"] = [{"id": attempt_id, "status": "executing"}]
+        self.reservations[attempt_id] = {"id": attempt_id, "amount": amount, "status": "reserved"}
+        action["status"] = "executing"
+        self.active_action, self.state = action["id"], "running"
+        self._emit(
+            "dispatch_intent_recorded",
+            {
+                "action_id": action["id"],
+                "attempt_id": attempt_id,
+                "effect_key": action.get("effect_key"),
+                "credits": amount,
+            },
+        )
+        return True
+
+    def _settle(self, action, usage=None, *, undispatched=False):
+        if action["attempts"]:
+            attempt = action["attempts"][0]
+            attempt["status"] = "not_dispatched" if undispatched else "completed"
+            reservation = self.reservations[attempt["id"]]
+            reservation.update(
+                status="settled",
+                actual=0 if undispatched else reservation["amount"],
+                usage=usage or {},
+            )
+        if self.active_action == action["id"]:
+            self.active_action = None
+
+    def envelope(self, action):
+        return {
+            "runtime_manifest": detached(self.manifest),
+            "scope": self.scope,
+            "run_id": self.run_id,
+            "action_id": action["id"],
+            "attempt_id": action["attempts"][0]["id"],
+            "effect_key": action["effect_key"],
+            "execution_epoch": self.epoch,
+            "tool": action["tool"],
+            "tool_manifest": self.manifest["tools"][action["tool"]],
+            "arguments": detached(action["arguments"]),
+            "operation_digest": action["digest"],
+        }
+
+    def next_operation(self):
+        if self.state in TERMINAL or self.active_action is not None:
+            return None
+        pending = [
+            a
+            for a in self.actions
+            if a["node"] == self.node and a["kind"] == "tool" and a["status"] != "completed"
+        ]
+        if pending:
+            action = pending[0]
+            if action["status"] in {"outcome_unknown", "waiting_approval", "blocked"}:
+                return None
+            manifest = self.manifest["tools"][action["tool"]]
+            if manifest["requires_approval"] and not action["approved"]:
+                action["status"], self.state = "waiting_approval", "waiting_approval"
+                self._emit(
+                    "approval_requested", {"action_id": action["id"], "digest": action["digest"]}
+                )
+                return None
+            if not self._reserve(action, manifest["cost"]):
+                return None
+            return action, self.envelope(action)
+        if self.decisions >= self.step["max_decisions"]:
+            self.state, self.error = "failed", {"code": "decision_limit"}
+            self._emit("run_failed", self.error)
+            return None
+        if (
+            self.manifest.get("knowledge_context") is not None
+            or self.manifest.get("context_registration") is not None
+        ):
+            signature = digest([self.step, self.messages])
+            if signature != self.context_signature:
+                action = {
+                    "id": f"{self.run_id}:context:{self.node}:{self.decisions + 1}",
+                    "kind": "context",
+                    "node": self.node,
+                    "status": "executing",
+                    "attempts": [],
+                }
+                self.actions.append(action)
+                self.active_action, self.state = action["id"], "running"
+                self._emit("context_dispatch_intent_recorded", {"action_id": action["id"]})
+                return action, {
+                    "runtime_manifest": detached(self.manifest),
+                    "scope": self.scope,
+                    "run_id": self.run_id,
+                    "step": detached(self.step),
+                    "messages": detached(self.messages),
+                }
+        self.decisions += 1
+        action = {
+            "id": f"{self.run_id}:model:{self.node}:{self.decisions}",
+            "kind": "model",
+            "node": self.node,
+            "status": "ready",
+            "attempts": [],
+        }
+        self.actions.append(action)
+        if not self._reserve(action, self.step["model_credits"]):
+            return None
+        request = {
+            "runtime_manifest": detached(self.manifest),
+            "step": detached(self.step),
+            "messages": detached(self.messages),
+        }
+        if self.context_snapshot is not None and (
+            self.manifest.get("knowledge_context") is not None
+            or self.manifest.get("context_registration") is not None
+        ):
+            request.update(context=detached(self.context_snapshot), scope=self.scope)
+        return action, request
+
+    def accept_context(self, action_id, response):
+        action = next(a for a in self.actions if a["id"] == action_id)
+        self.active_action = None
+        if not response.get("ok"):
+            action["status"] = "failed"
+            if self.state not in TERMINAL:
+                self.state, self.error = "failed", {"code": response.get("code", "context_failed")}
+            self._emit("context_failed", {"action_id": action_id})
+            return
+        canonical(response)
+        if (
+            not isinstance(response.get("references"), list)
+            or not isinstance(response.get("messages"), list)
+            or len(canonical(response["messages"])) > self.step["max_context_chars"]
+        ):
+            raise ValidationError("Invalid received model context")
+        self.context_snapshot = detached(response)
+        self.context_signature = digest([self.step, self.messages])
+        action["status"], action["response"] = "completed", detached(response)
+        self._emit(
+            "context_snapshot_recorded", {"action_id": action_id, "digest": digest(response)}
+        )
+
+    def operation_unknown(self, action_id, code):
+        action = next(a for a in self.actions if a["id"] == action_id)
+        action["status"], action["attempts"][0]["status"] = "outcome_unknown", "unknown"
+        self.reservations[action["attempts"][0]["id"]]["status"] = "unknown"
+        self.active_action, self.remote_uncertain = None, True
+        if self.state not in TERMINAL:
+            self.state = "waiting_reconciliation" if action["kind"] == "tool" else "failed"
+            self.error = {"code": code, "action_id": action_id}
+        self._emit("action_outcome_unknown", {"action_id": action_id, "code": code})
+
+    def accept_failure(self, action_id, response):
+        if response.get("dispatched", True):
+            self.operation_unknown(action_id, response.get("code", "activity_failed"))
+            return
+        action = next(a for a in self.actions if a["id"] == action_id)
+        self._settle(action, undispatched=True)
+        if response.get("blocked"):
+            action["status"] = "blocked"
+            if self.state not in TERMINAL:
+                self.state, self.error = "waiting_reconciliation", {"code": "prior_effect_unknown"}
+            self._emit(
+                "prior_effect_blocks_write",
+                {"action_id": action_id, "prior": response.get("prior")},
+            )
+            return
+        action["status"] = "failed"
+        if self.state not in TERMINAL:
+            self.state, self.error = "failed", {"code": response.get("code", "activity_failed")}
+        self._emit("run_failed", {"code": response.get("code", "activity_failed")})
+
+    def accept_model(self, action_id, response):
+        received_v2 = response.get("model_evidence_version") == 2
+        if not received_v2 and not response["ok"]:
+            # Recorded legacy Activity failures must replay their original History.
+            self.accept_failure(action_id, response)
+            return
+        action = next(a for a in self.actions if a["id"] == action_id)
+        if received_v2:
+            received = detached(response["received_response"])
+            action["received_response"] = received
+            self._settle(action, settlement_usage(received.get("usage")))
+        else:
+            self._settle(action, response.get("usage"))
+        action["status"], action["response"] = "completed", detached(response)
+        self._emit("model_response_recorded", {"action_id": action_id})
+        if self.state in TERMINAL:
+            self._emit("late_model_evidence", {"action_id": action_id})
+            return
+        try:
+            if received_v2:
+                validate_received_response(received)
+                validate_model_usage(received["usage"])
+                if not response["ok"]:
+                    self._reject_model(action, response.get("code", "validation_error"))
+                    return
+                if response.get("usage") != received["usage"]:
+                    raise ValidationError("Model evidence usage disagrees with its proposal")
+                proposal = validate_decision(
+                    AgentSpec(**self.step),
+                    DecisionProposal(
+                        response["output"],
+                        tuple(ToolCall(**call) for call in response["tool_calls"]),
+                    ),
+                    self.manifest["tools"],
+                )
+                response = {
+                    **response,
+                    "output": proposal.output,
+                    "tool_calls": [
+                        {"name": call.name, "arguments": call.arguments, "call_id": call.call_id}
+                        for call in proposal.tool_calls
+                    ],
+                }
+            calls = response["tool_calls"]
+            proposals = []
+            for i, call in enumerate(calls):
+                if call["name"] not in self.step["tools"]:
+                    raise ValidationError("Model proposed an undeclared tool")
+                manifest = self.manifest["tools"][call["name"]]
+                if not isinstance(call["arguments"], dict) or not Draft202012Validator(
+                    manifest["input_schema"]
+                ).is_valid(call["arguments"]):
+                    raise ValidationError("Model tool arguments do not match Schema")
+                identity = f"{self.run_id}:tool:{self.node}:{self.decisions}:{i}"
+                operation = {
+                    "run_id": self.run_id,
+                    "action_id": identity,
+                    "scope": self.scope,
+                    "tool": manifest,
+                    "arguments": call["arguments"],
+                }
+                proposals.append(
+                    {
+                        "id": identity,
+                        "kind": "tool",
+                        "node": self.node,
+                        "tool": call["name"],
+                        "arguments": detached(call["arguments"]),
+                        "digest": digest(operation),
+                        "effect_key": "ralf-temporal:"
+                        + digest([self.scope, self.run_id, identity]),
+                        "call_id": call.get("call_id") or identity,
+                        "approved": False,
+                        "status": "ready",
+                        "attempts": [],
+                    }
+                )
+            if received_v2:
+                validate_call_ids([item["call_id"] for item in proposals])
+            if proposals:
+                self.actions.extend(proposals)
+                self.messages.append(
+                    {
+                        "role": "assistant",
+                        "content": response["output"]
+                        if isinstance(response["output"], str)
+                        else None,
+                        "tool_calls": [
+                            {
+                                "id": a["call_id"],
+                                "type": "function",
+                                "function": {
+                                    "name": a["tool"],
+                                    "arguments": canonical(a["arguments"]),
+                                },
+                            }
+                            for a in proposals
+                        ],
+                    }
+                )
+                self._emit(
+                    "decision_adopted",
+                    {"action_id": action_id, "proposed_actions": [a["id"] for a in proposals]},
+                )
+            else:
+                result = final_output(response["output"], self.step["output_schema"])
+                self._emit("node_completed", {"node": self.node, "result_digest": digest(result)})
+                if self.node + 1 < len(self.request["definition"]["steps"]):
+                    self.node += 1
+                    self.decisions, self.messages = 0, self._messages(self.step, result)
+                else:
+                    self.state, self.result = "succeeded", detached(result)
+                    self._emit("run_succeeded", {"result_digest": digest(result)})
+        except (ValidationError, AuthorizationDenied) as exc:
+            if received_v2:
+                self._reject_model(action, exc.code)
+            else:
+                self.state, self.error = "failed", {"code": exc.code}
+                self._emit("run_failed", self.error)
+
+    def _reject_model(self, action, code):
+        action.update(status="rejected", decision_error={"code": code})
+        self._emit("decision_rejected", {"action_id": action["id"], "code": code})
+        self.state, self.error = "failed", {"code": code}
+        self._emit("run_failed", self.error)
+
+    def accept_tool(self, action_id, response, *, reconciled=False):
+        if not response["ok"]:
+            self.accept_failure(action_id, response)
+            return
+        action = next(a for a in self.actions if a["id"] == action_id)
+        result = detached(response["result"])
+        if action["status"] == "completed":
+            self._emit(
+                "late_effect_evidence",
+                {
+                    "action_id": action_id,
+                    "matches_committed_result": digest(result) == digest(action["result"]),
+                    "result_digest": digest(result),
+                },
+            )
+            return
+        self._settle(action, {"effect": "confirmed"})
+        action.update(
+            status="completed",
+            result=result,
+            receipt={"source": response.get("source", "tool-handler")},
+        )
+        self.pending_acks.append(
+            {
+                **self.envelope(action),
+                "result": result,
+                "source": response.get("source", "tool-handler"),
+            }
+        )
+        if not reconciled:
+            # A real completed Activity proves its awaited handler returned. A
+            # query/operator receipt alone never proves a lost handler stopped.
+            self.remote_uncertain = any(a["status"] == "outcome_unknown" for a in self.actions)
+        self._emit(
+            "effect_reconciled" if reconciled else "tool_result_committed",
+            {"action_id": action_id, "source": response.get("source", "tool-handler")},
+        )
+        if self.state not in TERMINAL:
+            self.state, self.error = "running", None
+            self.messages.append(
+                {"role": "tool", "tool_call_id": action["call_id"], "content": canonical(result)}
+            )
+
+    def retry_blocked(self):
+        self.pending_acks.extend(self.deferred_acks)
+        self.deferred_acks = []
+        # Retrying a journal acknowledgement is safe after business terminal;
+        # dispatching a blocked operation is not. No control may reopen a Run.
+        if self.state in TERMINAL:
+            return
+        for action in self.actions:
+            if action["status"] == "blocked":
+                # No handler was dispatched. A fresh attempt after journal
+                # reconciliation is safe, with unchanged action/effect identity.
+                action["status"] = "ready"
+                self.state, self.error = "running", None
+                self._emit("blocked_write_rechecked", {"action_id": action["id"]})
+
+
+COMMAND_REGISTRY_NAME = "ralf.temporal.commands.v1"
+COMMAND_REGISTRY_CAPACITY = 4096
+
+
+class TemporalCommandRegistryState:
+    """Scoped identity guard only. It never stores Run state or applied outcomes."""
+
+    def __init__(self, scope, *, capacity=COMMAND_REGISTRY_CAPACITY):
+        if type(capacity) is not int or not 1 <= capacity <= COMMAND_REGISTRY_CAPACITY:
+            raise ValidationError("Invalid Temporal command registry capacity")
+        self.scope, self.capacity, self.identities = detached(scope), capacity, {}
+
+    def reserve(self, request):
+        if request.get("scope") != self.scope:
+            raise AuthorizationDenied("Command registry belongs to another trusted scope")
+        for key in ("command_id", "kind", "target", "payload_digest"):
+            text(request.get(key), f"Command {key}")
+        identity = detached({key: request[key] for key in ("kind", "target", "payload_digest")})
+        command_id = request["command_id"]
+        previous = self.identities.get(command_id)
+        if previous is not None and previous != identity:
+            raise IdempotencyConflict(
+                "Scoped command ID already identifies different content or target"
+            )
+        if previous is None:
+            if len(self.identities) >= self.capacity:
+                raise ValidationError("Temporal scoped command registry capacity exhausted")
+            self.identities[command_id] = identity
+        return {
+            "command_id": command_id,
+            "target": identity["target"],
+            "record_state": "durably_recorded",
+            "apply_state": "not_applied",
+        }
+
+
+def temporal_capabilities():
+    return {
+        "native_agent": True,
+        "sequence": True,
+        "history_context": True,
+        "durable_approvals": True,
+        "history_replay": True,
+        "scoped_command_identity": True,
+        "queryable_effect_reconciliation": True,
+        "graph": False,
+        "team": False,
+        "dag": False,
+        "nesting": False,
+        "shared_session": False,
+        "remote_memory": False,
+        "rag": False,
+        "custom_harness": False,
+        "custom_context_builder": True,
+        "async_runtime_catalog": False,
+    }

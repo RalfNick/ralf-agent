@@ -1,5 +1,6 @@
 """Explicit adapter factories and resource ownership for the local runtime."""
 
+import asyncio
 import inspect
 import json
 import os
@@ -14,12 +15,14 @@ from .harness import NativeHarness
 from .memory import InMemoryMemory, SQLiteMemory
 from .model_native import AnthropicProvider, GeminiProvider
 from .model_protocol import ModelCapabilities
+from .model_responses import OpenAIResponsesProvider
+from .ports import is_async_callable, validate_engine
 from .ports import is_sync_callable as _synchronous
-from .ports import validate_engine
 from .providers import DeepSeekChatProvider, OpenAIChatProvider
 from .recall import FixedRecallPlanner, MemoryRecallPolicy, RecallQuery
 from .retrieval import KnowledgeContext, LexicalRetriever, SQLiteKnowledgeStore
 from .runtime_config import COMPONENT_KINDS, RuntimeProfile
+from .runtime_lifecycle import BuildContext, RuntimeInstance
 from .storage import SQLiteStore
 from .tools import ToolRegistry
 from .types import ModelResponse, Scope, canonical
@@ -41,69 +44,6 @@ def _close_complete(value, label):
 def _fields(config, allowed):
     if set(config) - set(allowed):
         raise ValidationError("Unknown adapter configuration fields")
-
-
-class BuildContext:
-    def __init__(self, store, db_path, scope, base_dir):
-        self.store, self.db_path, self.scope = store, str(db_path), scope
-        self.base_dir = Path(base_dir).resolve()
-        self.tools = None
-        self._resources = []
-
-    def own(self, resource):
-        if resource is self.store:
-            return resource  # ExecutionEngine already owns this authority.
-        if not _synchronous(getattr(resource, "close", None)):
-            raise ValidationError("Owned resources require synchronous close")
-        if not any(existing is resource for existing in self._resources):
-            self._resources.append(resource)
-        return resource
-
-    def path(self, value):
-        if not isinstance(value, str) or not value.strip():
-            raise ValidationError("Resource path must be a non-empty string")
-        path = Path(value)
-        return str((path if path.is_absolute() else self.base_dir / path).resolve())
-
-    def cleanup(self):
-        while self._resources:
-            resource = self._resources[-1]
-            _close_complete(resource.close(), "Resource close")
-            self._resources.pop()
-
-
-class RuntimeInstance:
-    """Close execution first; cleanup failures leave a retriable, stopped instance."""
-
-    def __init__(self, engine, context):
-        self._engine, self._context = engine, context
-        self._engine_closed = False
-
-    def __getattr__(self, name):
-        if self._engine_closed:
-            raise ValidationError("Runtime is closed; retry resource cleanup only")
-        return getattr(self._engine, name)
-
-    def __enter__(self):
-        if self._engine_closed:
-            raise ValidationError("Runtime is closed")
-        return self
-
-    def __exit__(self, *args):
-        self.close()
-
-    def close(self):
-        if not self._engine_closed:
-            _close_complete(
-                self._engine.close() if self._engine is not None else self._context.store.close(),
-                "Engine close",
-            )
-            self._engine_closed = True
-        self._context.cleanup()
-
-    async def wait_for_threads(self):
-        if self._engine is not None and not self._engine_closed:
-            await self._engine.wait_for_threads()
 
 
 class RuntimeBuildError(ValidationError):
@@ -160,6 +100,11 @@ def _model_options(config, provider_type, key_env):
         allowed.add("seed")
     if provider_type is OpenAIChatProvider:
         allowed.add("token_parameter")
+    if provider_type in {OpenAIChatProvider, DeepSeekChatProvider, OpenAIResponsesProvider}:
+        allowed.add("json_mode")
+    if provider_type is OpenAIResponsesProvider:
+        allowed.discard("stop")
+        allowed.update({"output_schema", "schema_name", "reasoning_effort"})
     if provider_type is AnthropicProvider:
         allowed.add("api_version")
     _fields(config, allowed)
@@ -226,9 +171,35 @@ def _lexical(config, context):
     )
 
 
+def _tool_names_config(config):
+    from .binding_catalog import component_identity
+
+    _fields(config, {"names"})
+    component_identity("tool_set", config.get("names", []))
+
+
+def _tool_names(config, context):
+    _tool_names_config(config)
+    return tuple(config.get("names", []))
+
+
+_BINDING_FACTORY_KINDS = {
+    "provider": "provider",
+    "decision_policy": "harness",
+    "context": "context_assembler",
+    "session": "session_store",
+    "facts": "memory_store",
+    "knowledge": "knowledge",
+    "tool_set": "tool_set",
+    "verifier": "verifier",
+    "limits": "limits",
+}
+
+
 class ComponentRegistry:
     def __init__(self):
         self._factories = {}
+        self.register("tool_set", "names", _tool_names, validator=_tool_names_config)
         self.register(
             "provider",
             "offline-echo",
@@ -237,6 +208,7 @@ class ComponentRegistry:
         )
         self.register("provider", "chat-completions", _chat, validator=_chat_config)
         for name, provider_type, key_env in [
+            ("openai-responses", OpenAIResponsesProvider, "OPENAI_API_KEY"),
             ("deepseek-chat", DeepSeekChatProvider, "DEEPSEEK_API_KEY"),
             ("anthropic-messages", AnthropicProvider, "ANTHROPIC_API_KEY"),
             ("gemini-content", GeminiProvider, "GEMINI_API_KEY"),
@@ -254,8 +226,52 @@ class ComponentRegistry:
             "tools", "empty", lambda c, ctx: ToolRegistry(), validator=lambda c: _fields(c, {})
         )
         self.register("context_assembler", "default", lambda c, ctx: ContextAssembler(**c))
+        from .context_factories import budgeted_context
+
+        self.register(
+            "context_assembler",
+            "budgeted",
+            lambda c, ctx: budgeted_context(c),
+            validator=lambda c: budgeted_context(c) and None,
+        )
         self.register(
             "harness", "native", lambda c, ctx: NativeHarness(), validator=lambda c: _fields(c, {})
+        )
+        from .agent_limits import FixedAgentLimits
+        from .completion import SchemaCompletionVerifier, ToolReceiptVerifier
+
+        def fixed_limits(config):
+            _fields(config, {"max_decisions", "max_context_chars", "max_tool_actions"})
+            return FixedAgentLimits(**config)
+
+        self.register(
+            "limits",
+            "fixed",
+            lambda c, ctx: fixed_limits(c),
+            validator=lambda c: fixed_limits(c) and None,
+        )
+
+        self.register(
+            "verifier",
+            "schema",
+            lambda c, ctx: SchemaCompletionVerifier(),
+            validator=lambda c: _fields(c, {}),
+        )
+
+        def receipt_verifier(config):
+            _fields(
+                config,
+                {"tool", "when", "result_schema", "argument_bindings", "on_missing", "feedback"},
+            )
+            if "tool" not in config:
+                raise ValidationError("Tool receipt verification requires a tool")
+            return ToolReceiptVerifier(**config)
+
+        self.register(
+            "verifier",
+            "tool-receipt",
+            lambda c, ctx: receipt_verifier(c),
+            validator=lambda c: receipt_verifier(c) and None,
         )
         self.register(
             "tool_executor",
@@ -296,21 +312,180 @@ class ComponentRegistry:
             lambda c, ctx: {"identity": IdentityTransform()},
             validator=lambda c: _fields(c, {}),
         )
+        from .dag_planning import ModelDAGPlanner, RuleDAGPlanner
+        from .planning import CompleteVerifier, ModelPlanner, RulePlanner
+        from .remote_factories import (
+            knowledge_config,
+            memory_config,
+            postgres_knowledge,
+            postgres_memory,
+            redis_memory,
+        )
+        from .teams import RouterTeam, SequentialTeam, SupervisorTeam
+
+        self.register(
+            "planners",
+            "rule",
+            lambda c, ctx: {"rule": RulePlanner(**c)},
+            validator=lambda c: (_fields(c, {"members"}) or RulePlanner(**c)) and None,
+        )
+        self.register(
+            "planners",
+            "model",
+            lambda c, ctx: {"model": ModelPlanner(**c)},
+            validator=lambda c: (
+                (_fields(c, {"provider", "instructions", "version"}) or ModelPlanner(**c)) and None
+            ),
+        )
+        self.register(
+            "plan_verifiers",
+            "complete",
+            lambda c, ctx: {"complete": CompleteVerifier()},
+            validator=lambda c: _fields(c, {}),
+        )
+        self.register(
+            "planners",
+            "dag-rule",
+            lambda c, ctx: {"dag-rule": RuleDAGPlanner()},
+            validator=lambda c: _fields(c, {}),
+        )
+        self.register(
+            "planners",
+            "dag-model",
+            lambda c, ctx: {"dag-model": ModelDAGPlanner(**c)},
+            validator=lambda c: (
+                (_fields(c, {"provider", "instructions", "version"}) or ModelDAGPlanner(**c))
+                and None
+            ),
+        )
+        self.register(
+            "team_strategies",
+            "defaults",
+            lambda c, ctx: {
+                "sequential": SequentialTeam(),
+                "router": RouterTeam(),
+                "supervisor": SupervisorTeam(),
+            },
+            validator=lambda c: _fields(c, {}),
+        )
+        for kind in ("session_store", "memory_store"):
+            self.register_async(
+                kind, "redis", redis_memory, validator=lambda c: memory_config(c, redis=True)
+            )
+            self.register_async(kind, "postgres", postgres_memory, validator=memory_config)
+        self.register_async(
+            "knowledge", "postgres-lexical", postgres_knowledge, validator=knowledge_config
+        )
+
+        async def vector_knowledge(config, context):
+            return await postgres_knowledge(config, context, vector=True)
+
+        self.register_async(
+            "knowledge",
+            "postgres-qdrant",
+            vector_knowledge,
+            validator=lambda c: knowledge_config(c, vector=True),
+        )
+
+        from .knowledge_factories import (
+            hybrid_config,
+            postgres_qdrant_hybrid,
+            sqlite_hybrid,
+            sqlite_hybrid_http,
+        )
+
+        self.register("knowledge", "sqlite-hybrid", sqlite_hybrid, validator=hybrid_config)
+        self.register_async(
+            "knowledge",
+            "sqlite-hybrid-http",
+            sqlite_hybrid_http,
+            validator=lambda c: hybrid_config(c, http=True),
+        )
+        self.register_async(
+            "knowledge",
+            "postgres-qdrant-hybrid",
+            postgres_qdrant_hybrid,
+            validator=lambda c: hybrid_config(c, remote=True),
+        )
+
+        from .middleware_factories import register_middleware_factories
+
+        register_middleware_factories(self)
 
     def register(self, kind, name, factory, *, validator=None):
+        self._register(kind, name, factory, validator, asynchronous=False)
+
+    def register_async(self, kind, name, factory, *, validator=None):
+        self._register(kind, name, factory, validator, asynchronous=True)
+
+    def _register(self, kind, name, factory, validator, *, asynchronous):
         if (
-            kind not in COMPONENT_KINDS | {"provider"}
+            kind not in COMPONENT_KINDS | {"provider", "tool_set"}
             or not isinstance(name, str)
             or not name.strip()
         ):
             raise ValidationError("Register a known component kind and non-empty adapter name")
-        if not _synchronous(factory) or (validator is not None and not _synchronous(validator)):
-            raise ValidationError("Adapter factories and validators must be synchronous")
+        if not (is_async_callable(factory) if asynchronous else _synchronous(factory)):
+            raise ValidationError(
+                "Async adapter factories must be async"
+                if asynchronous
+                else "Adapter factories must be synchronous"
+            )
+        if validator is not None and not _synchronous(validator):
+            raise ValidationError("Adapter validators must be synchronous")
         if (kind, name) in self._factories:
             raise ValidationError("An adapter name is already registered")
         self._factories[kind, name] = (factory, validator)
 
     def prepare(self, kind, declaration):
+        if (kind, declaration["adapter"]) in {
+            ("session_store", "session-resource"),
+            ("memory_store", "facts-resource"),
+            ("knowledge", "knowledge-resource"),
+        }:
+            from .binding_data import (
+                FactsBindingResource,
+                KnowledgeBindingResource,
+                data_namespace_options,
+            )
+            from .binding_sessions import SessionBindingResource, namespace_options
+            from .runtime_config import component_declaration
+
+            resource_type, validate, default = {
+                "session_store": (SessionBindingResource, namespace_options, None),
+                "memory_store": (FactsBindingResource, data_namespace_options, "default"),
+                "knowledge": (KnowledgeBindingResource, data_namespace_options, "default"),
+            }[kind]
+            config = declaration.get("config", {})
+            _fields(config, {"backend", "namespaces", "default_namespace"})
+            if "backend" not in config:
+                raise ValidationError("Binding resource requires a backend declaration")
+            namespaces = validate(
+                config.get("namespaces", [default]), config.get("default_namespace", default)
+            )
+            default_namespace = config.get("default_namespace", default)
+            backend = component_declaration(config["backend"])
+            if backend["adapter"] in {"session-resource", "facts-resource", "knowledge-resource"}:
+                raise ValidationError("Binding resources cannot wrap another resource")
+            factory, options = self.prepare(kind, backend)
+            if is_async_callable(factory):
+
+                async def wrap(config, context):
+                    return resource_type(
+                        await factory(config, context),
+                        namespaces=namespaces,
+                        default_namespace=default_namespace,
+                    )
+            else:
+
+                def wrap(config, context):
+                    return resource_type(
+                        _completed(factory(config, context), "Session backend factory"),
+                        namespaces=namespaces,
+                        default_namespace=default_namespace,
+                    )
+
+            return wrap, options
         entry = self._factories.get((kind, declaration["adapter"]))
         if entry is None:
             raise ValidationError("Adapter is not explicitly registered")
@@ -344,7 +519,7 @@ class RuntimeBuilder:
                 "RuntimeBuilder requires an explicit registry and synchronous factories"
             )
 
-    def build(self, profile, db_path, *, scope=None):
+    def _prepare(self, profile, db_path, scope):
         if not isinstance(profile, RuntimeProfile):
             raise ValidationError("Build a RuntimeProfile")
         scope = Scope() if scope is None else scope
@@ -358,12 +533,37 @@ class RuntimeBuilder:
             kind: self.registry.prepare(kind, value) for kind, value in profile.components.items()
         }
         path = str(Path(db_path).resolve())
+        bindings = [
+            (
+                declaration,
+                self.registry.prepare(
+                    _BINDING_FACTORY_KINDS[declaration["role"]], declaration["component"]
+                ),
+            )
+            for declaration in profile.binding_components or []
+        ]
+        return scope, path, providers, components, bindings
+
+    def _store(self, path):
         try:
-            store = _completed(self.store_factory(path), "Execution store factory")
+            return _completed(self.store_factory(path), "Execution store factory")
         except RalfError:
             raise
         except Exception as exc:
             raise ValidationError("Execution authority could not be constructed") from exc
+
+    def build(self, profile, db_path, *, scope=None):
+        scope, path, providers, components, bindings = self._prepare(profile, db_path, scope)
+        if any(
+            not _synchronous(factory)
+            for factory, _ in [
+                *providers.values(),
+                *components.values(),
+                *(prepared for _, prepared in bindings),
+            ]
+        ):
+            raise ValidationError("Async adapter factories require await RuntimeBuilder.abuild")
+        store = self._store(path)
         context, candidate = BuildContext(store, path, scope, self.base_dir), None
 
         def construct(prepared):
@@ -378,6 +578,18 @@ class RuntimeBuilder:
                 construct(components.pop("tools")) if "tools" in components else ToolRegistry()
             )
             options = {kind: construct(prepared) for kind, prepared in components.items()}
+            if profile.binding_components is not None:
+                from .binding_catalog import BindingCatalog
+
+                catalog = BindingCatalog(scope=scope)
+                for declaration, prepared in bindings:
+                    catalog.register(
+                        declaration["role"],
+                        declaration["component_id"],
+                        declaration["version"],
+                        construct(prepared),
+                    )
+                options["binding_catalog"] = catalog
             candidate = _completed(
                 self.engine_factory(
                     store,
@@ -396,11 +608,78 @@ class RuntimeBuilder:
             # Close the authority we created instead; actual close-capable
             # engines retain ownership until their close completes.
             owner = candidate if callable(getattr(candidate, "close", None)) else None
-            cleanup = RuntimeInstance(owner, context)
+            cleanup = RuntimeInstance(owner, context, drain_engine=False)
             try:
                 cleanup.close()
             except Exception as cleanup_error:
                 raise RuntimeBuildError(cleanup) from cleanup_error
             if isinstance(exc, RalfError):
+                raise
+            raise RuntimeBuildError(cleanup) from exc
+
+    async def abuild(self, profile, db_path, *, scope=None):
+        scope, path, providers, components, bindings = self._prepare(profile, db_path, scope)
+        store = self._store(path)
+        context = BuildContext(store, path, scope, self.base_dir, allow_async=True)
+        candidate = None
+
+        async def construct(prepared):
+            factory, config = prepared
+            value = (
+                await factory(config, context)
+                if is_async_callable(factory)
+                else factory(config, context)
+            )
+            return _completed(value, "Adapter factory")
+
+        try:
+            built_providers = {
+                name: await construct(prepared) for name, prepared in providers.items()
+            }
+            for provider in built_providers.values():
+                LocalEngine._component_identity(provider, ("complete",), False, "Provider")
+            context.tools = (
+                await construct(components.pop("tools"))
+                if "tools" in components
+                else ToolRegistry()
+            )
+            options = {kind: await construct(prepared) for kind, prepared in components.items()}
+            if profile.binding_components is not None:
+                from .binding_catalog import BindingCatalog
+
+                catalog = BindingCatalog(scope=scope)
+                for declaration, prepared in bindings:
+                    catalog.register(
+                        declaration["role"],
+                        declaration["component_id"],
+                        declaration["version"],
+                        await construct(prepared),
+                    )
+                options["binding_catalog"] = catalog
+            candidate = _completed(
+                self.engine_factory(
+                    store,
+                    providers=built_providers,
+                    tools=context.tools,
+                    scope=scope,
+                    runtime_profile=profile.identity,
+                    **options,
+                ),
+                "Execution engine factory",
+            )
+            validate_engine(candidate)
+            return RuntimeInstance(candidate, context)
+        except BaseException as exc:
+            owner = candidate if callable(getattr(candidate, "close", None)) else None
+            # Rejected candidates may not implement a valid drain port. Their
+            # synchronous close remains responsible for the authority gate.
+            cleanup = RuntimeInstance(owner, context, drain_engine=False)
+            try:
+                await cleanup.aclose()
+            except BaseException as cleanup_error:
+                raise RuntimeBuildError(cleanup) from cleanup_error
+            if isinstance(exc, (RalfError, asyncio.CancelledError)):
+                raise
+            if not isinstance(exc, Exception):
                 raise
             raise RuntimeBuildError(cleanup) from exc

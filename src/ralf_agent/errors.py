@@ -17,6 +17,14 @@ class BudgetExceeded(RalfError):
     code = "budget_exceeded"
 
 
+class CompletionRejected(RalfError):
+    code = "completion_rejected"
+
+
+class AgentLimitExceeded(RalfError):
+    code = "agent_limit_exceeded"
+
+
 class AuthorizationDenied(RalfError):
     code = "authorization_denied"
 

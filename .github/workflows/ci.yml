@@ -22,7 +22,9 @@ jobs:
       - run: python -m ruff check .
       - run: python -m ruff format --check .
       - run: python -m pytest -q
+      - run: python -m ralf_agent.business_evaluation_cli --offline --max-calls 16
       - run: python examples/evaluate.py
+      - run: python examples/evaluate_planning.py --fixture evals/planning-fixtures.json
       - run: python -m build
       - run: python -m pip install --force-reinstall --no-deps dist/*.whl
       - name: Installed wheel smoke test outside checkout
@@ -38,3 +40,107 @@ jobs:
           ralf init wheel-graph --template graph
           cd wheel-graph
           python -m agent_app --input urgent --command-id CI-GRAPH
+
+      - name: Installed document ingestion starter outside checkout
+        working-directory: ${{ runner.temp }}
+        run: |
+          ralf init wheel-ingest --template ingest
+          cd wheel-ingest
+          echo 'Pool timeout: inspect the connection pool.' > runbook.md
+          python -m agent_app ingest runbook.md --document-id pool --command-id CI-INGEST --expected-version 0
+          python -m agent_app query --query 'pool timeout' --command-id CI-ANSWER
+
+      - name: Installed hybrid retrieval starter outside checkout
+        working-directory: ${{ runner.temp }}
+        run: |
+          ralf init wheel-hybrid --template hybrid
+          cd wheel-hybrid
+          echo 'Pool timeout: inspect the connection pool.' > runbook.md
+          python -m agent_app ingest runbook.md --document-id pool --command-id CI-HYBRID-INGEST --expected-version 0
+          python -m agent_app index --document-id pool
+          python -m agent_app query --query 'pool timeout' --command-id CI-HYBRID-ANSWER
+
+      - name: Installed context and artifact starter outside checkout
+        working-directory: ${{ runner.temp }}
+        run: |
+          ralf init wheel-context --template context
+          cd wheel-context
+          python -m agent_app --input 'pool timeout' --command-id CI-CONTEXT
+
+      - name: Installed automatic memory starter outside checkout
+        working-directory: ${{ runner.temp }}
+        run: |
+          ralf init wheel-memory --template memory
+          cd wheel-memory
+          python -m agent_app
+          python -m agent_app
+
+      - name: Installed model compatibility starter outside checkout
+        working-directory: ${{ runner.temp }}
+        run: |
+          ralf-check-model
+          ralf init wheel-model-check --template model-check
+          cd wheel-model-check
+          python -m agent_app
+
+      - name: Installed observable starter outside checkout
+        working-directory: ${{ runner.temp }}
+        run: |
+          ralf init wheel-observable --template observable
+          cd wheel-observable
+          python -m agent_app
+          python -m agent_app
+
+  remote-contracts:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: local-test-only
+          POSTGRES_DB: postgres
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+      qdrant:
+        image: qdrant/qdrant:v1.19.2
+        ports: ['6333:6333']
+    env:
+      RALF_TEST_POSTGRES_DSN: 'host=127.0.0.1 user=postgres password=local-test-only dbname=postgres'
+      RALF_TEST_QDRANT_URL: 'http://127.0.0.1:6333'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: sudo apt-get update && sudo apt-get install -y redis-server
+      - run: python -m pip install -e '.[dev,remote,server,temporal]'
+      - run: timeout 30 bash -c 'until curl --fail --silent http://127.0.0.1:6333/healthz; do sleep 1; done'
+      - run: >-
+          python -m pytest -q -W error
+          tests/test_redis_memory_adapter.py tests/test_postgres_adapter.py
+          tests/test_qdrant_adapter.py tests/test_remote_assembly.py
+          tests/test_messaging.py tests/test_redis_streams.py
+          tests/test_handoff.py tests/test_a2a.py tests/test_a2a_http.py
+          tests/test_task_controls.py tests/test_a2a_async.py
+          tests/test_postgres_handoff.py tests/test_postgres_handoff_crash.py
+          tests/test_postgres_ingestion.py tests/test_ingestion_crash.py tests/test_hybrid_remote.py
+          tests/test_memory_pipeline_remote.py
+          tests/test_service_lifecycle.py tests/test_a2a_starter.py
+      - name: Start an actual persisted Temporal Service
+        run: |
+          python -m tests.temporal_service_runner --state-dir "$RUNNER_TEMP/ralf-temporal" > "$RUNNER_TEMP/ralf-temporal.log" 2>&1 &
+          timeout 120 bash -c 'until test -s "$RUNNER_TEMP/ralf-temporal/address"; do sleep 1; done'
+          echo "RALF_TEST_TEMPORAL_ADDRESS=$(cat "$RUNNER_TEMP/ralf-temporal/address")" >> "$GITHUB_ENV"
+      - name: Two-worker Temporal contracts and History replay
+        run: python -m pytest -q -W error tests/test_model_adoption_contracts.py tests/test_recent_session_context.py tests/test_temporal_engine.py tests/test_temporal_service.py tests/test_a2a_temporal.py tests/test_temporal_composite_service.py tests/test_temporal_composites.py tests/test_temporal_context.py tests/test_temporal_parent_facade.py tests/test_temporal_starter.py tests/test_temporal_review.py tests/test_temporal_custom_context.py tests/test_temporal_custom_service.py tests/test_observable_temporal_service.py
+      - name: Stop task-owned Temporal Service
+        if: always()
+        run: |
+          if test -d "$RUNNER_TEMP/ralf-temporal"; then
+            touch "$RUNNER_TEMP/ralf-temporal/stop"
+            timeout 30 bash -c 'until test -f "$RUNNER_TEMP/ralf-temporal/stopped"; do sleep 1; done'
+          fi

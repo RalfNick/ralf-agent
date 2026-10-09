@@ -2,9 +2,10 @@
 
 import copy
 import inspect
+from dataclasses import asdict
 
 from .errors import DefinitionMismatch, RalfError, ValidationError
-from .types import digest
+from .types import RunSnapshot, digest
 from .workflow import (
     ExecutionPlan,
     GraphWorkflowSpec,
@@ -36,7 +37,16 @@ def agent_step(run, index=None):
     return run["definition"]["steps"][index]
 
 
-def workflow_details(run):
+def workflow_details(run, store=None):
+    if run.get("orchestration") is not None:
+        details = copy.deepcopy(run["orchestration"])
+        if store is not None:
+            for call in details["children"]:
+                child = store.run(call["run_id"])
+                if child["scope"] != run["scope"] or child.get("parent_id") != run["id"]:
+                    raise DefinitionMismatch("Child diagnostics do not belong to this parent")
+                call["snapshot"] = asdict(RunSnapshot.from_record(child))
+        return details
     if not is_graph(run):
         return None
     details = copy.deepcopy({"plan": run["plan"], **run["workflow"]})
@@ -76,7 +86,11 @@ class StaticWorkflowRuntime:
         identity = engine._component_identity(compiler, ("compile",), True, "Workflow compiler")
         try:
             result = engine._component_result(
-                compiler.compile(GraphWorkflowSpec.from_dict(definition)),
+                compiler.compile(
+                    GraphWorkflowSpec.from_dict(
+                        definition.get("binding_definition", {}).get("definition", definition)
+                    )
+                ),
                 ExecutionPlan,
                 "WorkflowCompiler.compile",
             )
@@ -95,7 +109,7 @@ class StaticWorkflowRuntime:
             raise DefinitionMismatch("The compiling Workflow component changed")
         return plan
 
-    def manifest(self, plan):
+    def manifest(self, plan, *, agent_manifests=None):
         engine = self.engine
         value = ExecutionPlan(plan).to_dict()
         transforms = {}
@@ -109,7 +123,12 @@ class StaticWorkflowRuntime:
                 )
         base = engine._manifest(
             [node["agent"] for node in value["nodes"] if node["agent"] is not None]
+            if agent_manifests is None
+            else []
         )
+        if agent_manifests is not None:
+            for manifest in agent_manifests:
+                base["tools"].update(manifest["tools"])
         tool_names = sorted(
             {node["tool"] for node in value["nodes"] if node.get("tool") is not None}
         )
@@ -190,8 +209,14 @@ class StaticWorkflowRuntime:
             )
             step = run["plan"]["nodes"][index]["agent"]
             if step is not None:
+                step = engine._agent_step(run, index)
                 messages = engine._initial_messages(step, selection.input)
-                engine._assemble_context(messages, [], step["max_context_chars"])
+                engine._assemble_context(
+                    messages,
+                    [],
+                    step["max_context_chars"],
+                    context=engine._components(run, index).context,
+                )
         with engine.store.transaction():
             current = engine._authorized(run_id)
             if current["state"] in CLOSED:

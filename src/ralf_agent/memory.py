@@ -33,7 +33,7 @@ from .recall import MemoryRecallPolicy as MemoryRecallPolicy
 from .recall import RecallQuery as RecallQuery
 from .storage import SQLiteStore
 from .tools import current_thread_group, current_thread_tracker
-from .types import Scope, canonical
+from .types import Scope, _require_text, canonical
 
 
 def _validate_expires_at(expires_at):
@@ -225,11 +225,13 @@ class InMemoryMemory:
         self._lock = threading.RLock()
 
     def read(self, scope, session_id):
+        _require_text(session_id, "Session ID")
         with self._lock:
             records = self._sessions.get((scope.workspace, scope.principal, session_id), [])
             return len(records), [copy.deepcopy(record[1]) for record in records]
 
     def append(self, scope, session_id, message, *, expected_revision, message_id):
+        _require_text(session_id, "Session ID")
         canonical(message)
         with self._lock:
             records = self._sessions.setdefault((scope.workspace, scope.principal, session_id), [])
@@ -385,6 +387,7 @@ class SQLiteMemory:
         """)
 
     def _records(self, scope, session_id):
+        _require_text(session_id, "Session ID")
         row = self.store.conn.execute(
             "SELECT data FROM memory_sessions WHERE workspace=? AND principal=? AND session=?",
             (scope.workspace, scope.principal, session_id),

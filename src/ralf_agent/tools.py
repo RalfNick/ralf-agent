@@ -179,6 +179,15 @@ class RegisteredTool:
         ).is_valid(arguments):
             raise ValidationError(f"Arguments do not match Schema for tool {self.spec.name}")
 
+    def resolve_arguments(self, arguments):
+        """Resolve typed defaults before action identity, approval and policy."""
+        from .tool_functions import TypedFunctionHandler
+
+        if type(self.handler) is TypedFunctionHandler:
+            return self.handler.resolve_arguments(arguments)
+        self.validate(arguments)
+        return copy.deepcopy(arguments)
+
 
 class ToolRegistry:
     def __init__(self):
@@ -200,6 +209,21 @@ class ToolRegistry:
             copy.deepcopy(spec), handler, reconciler, digest(identities)
         )
         return handler
+
+    def register_function(self, function, **metadata):
+        """Register a keyword Python function; effect must be explicitly declared."""
+        from .tool_functions import register_function
+
+        return register_function(self, function, **metadata)
+
+    def tool(self, **metadata):
+        """Decorator returning the original callable after typed registration."""
+
+        def decorate(function):
+            self.register_function(function, **metadata)
+            return function
+
+        return decorate
 
     def register_many(self, entries):
         """Validate all entries before publishing any name into this registry."""
@@ -239,6 +263,10 @@ class ToolRegistry:
 
 
 def _callable_identity(function):
+    from .tool_functions import TypedFunctionHandler
+
+    if type(function) is TypedFunctionHandler:
+        return function.implementation_identity
     if function is None:
         return None
     if isinstance(function, partial):

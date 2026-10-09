@@ -20,8 +20,13 @@ ralf --config runtime.toml --format text inspect RUN_ID
 ```python
 import asyncio
 from ralf_agent import (
-    AgentSpec, GraphNode, GraphWorkflowSpec, InputMap,
-    RuntimeBuilder, RuntimeProfile, ValueRef,
+    AgentSpec,
+    GraphNode,
+    GraphWorkflowSpec,
+    InputMap,
+    RuntimeBuilder,
+    RuntimeProfile,
+    ValueRef,
 )
 
 flow = GraphWorkflowSpec(
@@ -30,7 +35,9 @@ flow = GraphWorkflowSpec(
         GraphNode("research", agent=AgentSpec("research", "Research the task.")),
         GraphNode("verify", agent=AgentSpec("verify", "Verify the task.")),
         GraphNode(
-            "join", transform="identity", depends_on=("research", "verify"),
+            "join",
+            transform="identity",
+            depends_on=("research", "verify"),
             input=InputMap({"research": ValueRef("research"), "verify": ValueRef("verify")}),
         ),
     ],
@@ -66,12 +73,16 @@ with RuntimeBuilder().build(profile, ".ralf/parallel.sqlite") as engine:
 ```python
 from ralf_agent import StaticWorkflowScheduler, WorkflowBatch
 
+
 class ReverseReady(StaticWorkflowScheduler):
     identity = {"kind": "reverse-ready", "version": "1"}
 
     def select(self, plan, input, states, limit):
         batch = super().select(plan, input, states, limit)
-        return WorkflowBatch(tuple(reversed(batch.selections)), batch.skipped, batch.done, batch.result)
+        return WorkflowBatch(
+            tuple(reversed(batch.selections)), batch.skipped, batch.done, batch.result
+        )
+
 
 # LocalEngine(..., workflow_scheduler=ReverseReady())
 # registry.register("workflow_scheduler", "reverse", lambda config, context: ReverseReady())

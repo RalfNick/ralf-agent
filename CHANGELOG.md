@@ -1,6 +1,162 @@
 # Changelog
 
+## 0.1.0.dev30 — Local Agent limits
+
+- Add pure AgentLimitsPolicy/FixedAgentLimits and immutable accepted decision/context/tool-Action caps.
+- Support limits bindings and Profile factories across Local compositions; host caps cannot be removed.
+- Reject over-limit tool batches before adoption; preserve legacy unconfigured manifests and existing Action recovery.
+
+## 0.1.0.dev29 — Local completion verification
+
+- Add pure, replaceable CompletionVerifier, receipt correspondence rules and durable bounded feedback before final Session save.
+- Support per-Agent verifier bindings and Profile factories for Local compositions; preserve unconfigured legacy releases.
+- Add explicit business evaluation receipt gate; managed model verification and Temporal bindings remain pending.
+
+## 0.1.0.dev28 — H1d Local scoped data bindings (local, unreleased)
+
+- Add host-allowlisted Facts/Knowledge namespace resources and immutable borrowed views across native, sequential, graph, team, dynamic and nested Local Agent routing.
+- Preserve source provenance, actual delegated client/retriever identity, cursor/expiry/version checks and bounded continuation of fitting facts. Default scoped Facts bridge may perform multiple source reads; legacy full-read limits remain explicit.
+- Add JSON/TOML facts-resource/knowledge-resource factories, retain owned/borrowed and async lifecycle, use local-bindings-4 only for scoped data resources; mixed Session refs preserve original actual-address admission.
+- Run one fixed DeepSeek trial: business8×2=10/16 (repair0/6), scoped extraction4/4,26 calls. Preserve false resolved results with zero business writes; no parity/production or broad RAG claim.
+- Other resource roles, Temporal bindings and H2 facade remain pending. No new base dependency, commit, push or publication.
+
+## 0.1.0.dev27 — H1c Local Session bindings (local, unreleased)
+
+- Select sync/async Session backends and host-allowlisted namespace views per native or composite Agent, using the existing Session ports and data adapters.
+- Persist actual-address admission within the existing execution authority, including catalog/default aliases, serial future steps and parallel child isolation. Session refs use local-bindings-3; original native/H1a/H1b release identities remain unchanged without refs.
+- Add JSON/TOML session-resource assembly through the existing owned/borrowed lifecycle. Selected views cannot be registered again or used as host defaults; invalid admission results cannot close borrowed objects.
+- Advertise only actual authority capabilities. Temporal bindings, other resource selectors, H2 Facade/Turn/closing and cross-authority Session leases remain separate work.
+- No new runtime dependency, live model call, Git commit or remote publication.
+
+## 0.1.0.dev26 — H1b Local composite bindings (local, unreleased)
+
+- Extend BoundDefinition to Graph/Team/Dynamic and recursive nested native members with stable declaration paths.
+- Pin local-bindings-2 composite releases, compiler/scheduler/strategy/planner identities and member releases; route isolated graph node views and managed children to their selected components.
+- Preserve host tool approval/effects, parent budgets/cancellation, response evidence and original submit/control receipts. Add real graph/nested process-death recovery scenarios.
+- Preserve unbound and H1a local-bindings-1 identity; Session refs/selectors, Temporal bindings and H2 Facade remain unsupported.
+- Preserve legacy native H1a acceptance for large valid schemas; composite size checks operate on declarations and keep historical sequence codec bounds.
+- No new runtime dependency, model calls, Git commit or remote publication.
+
+## 0.1.0.dev25 — H1a capability bindings (local, unreleased)
+
+- Add immutable AgentDefinition/BoundDefinition wrappers and inherit/ref/disabled capability choices without changing AgentSpec.
+- Select providers, pure policies, context, facts, knowledge and tool subsets per native Agent/sequential step in one Local authority; pin per-step manifests and preserve received evidence on drift.
+- Add scoped borrowed BindingCatalog and JSON/TOML catalog v2 assembly through existing sync/async lifecycle.
+- Keep unbound local-4/Profile v1/command identities; advanced/Temporal bindings and Session selectors are explicit refusals. H2 Facade/Turn/close semantics remain design requirements.
+- No new base dependency, model-quality baseline, commit or remote release.
+
+## 0.1.0.dev24 — shared model and context contracts
+
+- Share pure decision, effective tool argument and call-ID validation between Local and new Temporal Activity evidence.
+- Preserve completed Temporal model responses/usage before proposal or release refusal; rejected decisions settle known execution without creating tool Actions.
+- Preserve recorded legacy Activity transitions for History replay.
+- Keep recent whole Session turns when full optional history exceeds context budgets, including native task/result records; both context assemblers use one selector.
+- No per-Agent bindings, input continuation, paid-model baseline or enterprise production claim is added.
+
+## 0.1.0.dev23 — Unreleased
+
+- Add opt-in synchronous invocation middleware with immutable observations,
+  preserved after-hook receipts, executable identities and default profile adapters.
+- Add bounded scoped durable-event subscription, resumable cursors/SSE encoder,
+  read-only event CLI and twentieth observable starter.
+- Keep old native releases/19starters compatible; no new base dependencies.
+  Input continuation/Workspace/Sandbox remain separate work.
+
+
 记录用户可见行为和兼容边界。版本为开发预览；此记录不表示已经上传 PyPI、创建 Git 标签或发布 GitHub Release。
+
+## 0.1.0.dev22 — Unreleased
+
+- Add native stateless Responses text/functions/SSE and explicit JSON/native strict Schema configuration.
+- Add pure bounded typed-tool inference, keyword/async bridges and explicit host Context injection.
+- Add bounded managed model compatibility checks, safe not_run console and nineteenth offline starter.
+- Preserve native identities and old templates; no new base dependency, live quality or framework parity claim.
+
+## 0.1.0.dev21 — Unreleased
+
+新增显式自动长期记忆链路：规则／受管理模型选择器、来源字段允许列表、追加观察、命令与来源绑定、CAS／分页去重、过期与当前版本复核。业务结果和记忆回执分别保存；现有 SQLite／Redis／PostgreSQL 端口可复用。
+
+新增受管理模型摘要与冻结纯摘要适配器；Temporal 自定义 ContextBuilder 有独立 Activity／History 快照及代码／包装器发布摘要，原生默认保持兼容。新增显式非流式 JSON 对象模式和第十八种离线 memory starter。独立审查的四项 P2 已有复现与修复。
+
+完成 38 次真实 DeepSeek 调用，保留初次失败和不同配置的子集复测。完整最终配置任务集、自动运行中压缩、语义事实修订、完整 M1 与企业验收仍未完成。见[记忆指南](docs/managed-memory.md)、[上下文指南](docs/temporal-custom-context.md)和[真实质量报告](docs/live-model-quality.md)。本轮不提交到远端。
+
+## 0.1.0.dev20 — Unreleased
+
+新增 MessageCounter／ContextBudgeter／ContextSummarizer 与 ContextMeasure／ContextSummary，默认精确字符计量、完整消息组裁剪、显式 UTF-8 token 估算和确定性历史摘录。BudgetedContextAssembler 采用有界、分离的提案，固定实现／配置，保护任务与最新完整工具组；Engine 在 Harness 处理后的实际请求再次校验。
+
+新增带 Scope／后端／内容摘要／字节／TTL 身份的 ArtifactReference 和同步／异步存储端口，内存／SQLite 默认实现提供显式 put/get/delete、重复去重、事务容量、读取上限和完整性校验。应用工具显式选择大结果引用契约；无自动卸载、GC 或远程 Artifact 后端。
+
+新增 budgeted 配置入口和第十七种 context 包内模板，离线大结果→引用→有界样本→重启恢复。旧十六模板、默认 ContextAssembler、local-4、原生 Temporal History 和基础依赖保持。自动事实提炼、模型摘要、Temporal 自定义 Context、企业治理和真实智能质量仍待验收。详见[指南](docs/context-artifacts.md)。
+
+## 0.1.0.dev19 — Unreleased
+
+Review 后补摄取回执的确定性块 ID／定位顺序与上限校验。新增显式 OpenAIEmbeddingProvider float 协议，乱序 index 恢复、有限向量／维度／批次／usage、预检与客户端生命周期。没有隐式密钥、重试或付费请求。
+
+新增 RankFusion／RRFFusion、同步／异步 Reranker 和默认保序／词项重排；HybridRetriever 通过来源 Store 采用并行分支结果，固定注册、候选去重／预算和严格／显式降级。重排 ID 立即冻结，融合后与异步等待后复核来源。
+
+新增三种 Hybrid 装配入口和第十六种包内 hybrid 模板，用户文档摄取→显式索引→离线证据查询／恢复。原十五份模板、旧适配声明、local-4 与原生 Temporal History 保持；基础依赖不变。真实语义质量、D3／D4 与完整 M1 尚未验收。详见[指南](docs/hybrid-retrieval.md)。
+
+## 0.1.0.dev18 — Unreleased
+
+新增 DocumentParser／Chunker 结构化端口与有界不可变来源／位置／回执 DTO。UTF-8 文本与 Markdown、兼容字符分块和可选段落分块提供离线默认；IngestionCoordinator 固定组件身份，在写入前拒绝错误、惰性和越界结果。
+
+内存／SQLite／PostgreSQL 原子提交文档 CAS、完整块集、词项与不可变摄取回执。请求身份独立于首次解析／分块发布；相同命令在配置移动、更新、过期或删除后仍返回历史回执。SQLite 拒绝未提交的外部事务，PG 通过共享文档／namespace 锁控制并发去重与容量；向量索引保持显式独立。
+
+新增第十五种 ingest 包内模板，直接读取用户有界 UTF-8 文件，完成摄取、查询引用及跨进程恢复。原十四种模板、旧 put／块标识、native local-4 和 Temporal History 默认保持兼容。基础依赖不变；真实模型质量、语义／混合检索、智能上下文／记忆与完整 M1 尚未验收。详见[摄取指南](docs/document-ingestion.md)。
+
+## 0.1.0.dev17 — Unreleased
+
+新增独立 TemporalParentState／ParentWorkflow 与显式 orchestration_release，支持 Agent-node 静态图、有限 Plan/DAG、Team 与嵌套成员；子调用意图、稳定身份、预算 escrow、观察与补丁 CAS 归 History。默认原生 release、请求与原十三种模板保持。注册策略可替换且固定实现摘要；模型规划使用受管理子 Workflow，不隐藏调用。
+
+新增独立 RAG Context Activity、固定引用快照与派发前校验，兼容真实 PostgreSQL/Qdrant。新增不可变 TemporalExecutionPolicy，按任务约束子数、并发、深度、工具、期限与审批过期；取消和未知效果保留真实执行容量。查询到业务回执不能证明丢失的远程调用停止，父级继续保留 escrow。
+
+新增包内 temporal starter 和 ralf-evaluate-business；八个不同业务场景验证诊断、参数、审批、停止和重启恢复，默认 not_run，离线回归不代表真实模型质量。审查修复动态 Schema 的非本地引用、矛盾额度观察和先修复后诊断的错误评分。
+
+企业 IAM／全局容量／History 清理与部署治理、共享 Sessions、直接 Tool/Transform 图节点、真实模型质量仍待验收。见[分布式指南](docs/temporal-composition.md)与[业务评测](docs/business-evaluation.md)。
+
+## 0.1.0.dev16 — Unreleased
+
+新增 SyncTaskControls/AsyncTaskControls 和 TaskControlBridge，A2AApplication 可组合原生异步 Temporal 控制。固定 Scope、同步／异步模式、方法代码及 callable entry point；统一验证完成 DTO 和有限 JSON，Inbox I/O 后、wakeup 前复核。保留 RuntimeInstance 动态委托，拒绝惰性完成。
+
+新增 PostgresInbox/PostgresOutbox，共享事务接收、完整消息身份、不可变回执和按 Scope 原子容量；网络发布在事务外，崩溃后用原消息重放。连接显式初始化／所有权／可重试关闭。默认保留全部去重证据，无隐式 TTL／清理。
+
+修复 Temporal 首次 Update／Query 可能先于 run() 到达时的未初始化拒绝，原 History 重放兼容。
+
+新增 LocalA2AService 与第十三种包内 a2a 模板，显式宿主凭据、离线 Provider、真实 HTTP／Run／Inbox；跟踪 drive，关闭前取消、等待真实 handler，并分阶段关闭资源。共享 HTTP／Temporal／PG 的实际双进程去重和接收窗口恢复已加入测试。原十二种模板及合法执行身份保留，基础依赖不变；Temporal 能力仍为 Agent／sequence 子集，完整 M1 和真实模型质量未验收。
+
+## 0.1.0.dev15 — Unreleased
+
+新增 DAGNode/DAGProposal、RuleDAGPlanner/ModelDAGPlanner 和 structured refused/needs_input，复用静态依赖/引用/条件验证。受管理子 Run 并发、保存绑定与结果、原计划恢复，以及 scoped command + expected_plan_revision 的 pending-node patch。Team/Dynamic 支持 Agent、sequence、graph、team 和 dynamic 嵌套成员，固定祖先发布、递归预算结算和有限深度，后代真实线程结束前保留根 Session。新增 dag/nested 包内模板；原十种模板和旧 flat 身份保留。
+
+新增 MessageBus/Inbox/Outbox/CommandAdapter 结构化同步或异步端口，内存/SQLite 默认实现及真实 Redis Streams。A2A0.3 轮询子集、显式宿主 Scope、可替换客户端和受管理 queryable-write ToolSource；接收/命令/完成/ack 与 outbox/publication 分阶段。传输不拥有 Run，也不隐式 drive。容量满明确拒绝，保留去重与待处理证据。
+
+新增 AsyncExecutionEngine/AsyncRuntimeDiagnostics 与 TemporalEngine，Workflow/History 独立管理状态，注册的 Provider/ToolExecutor Activities 不包装 LocalEngine。EffectJournal/PostgresEffectJournal 只保存效果证据及未知写守卫。当前仅原生 Agent/sequence，其他能力显式拒绝；真实 Service/独立 Worker 中断、审批、回执丢失、取消和 History replay 有验证，完整部署治理仍未交付。
+
+新增冻结20任务的真实 ModelDAGPlanner 提案语义评测、调用/token/timeout 上限、失败分母和私有证据。默认 not_run；离线fixture不产生model_quality，严格货币上限无法保证时拒绝调用。实际模型成绩、端到端任务质量及跨框架对等 benchmark 尚未建立。
+
+审查修复及最终证据见[dev15记录](architecture/reviews/2026-10-07-dag-remote-execution.md)。基础依赖仍为 httpx/jsonschema，Temporal/server为显式可选extras；不承诺外部效果 exactly-once、全企业能力或竞品全面超越。
+
+## 0.1.0.dev14 — Unreleased
+
+新增真实 RedisMemory、PostgresMemory、PostgresKnowledgeStore 和 QdrantVectorIndex，复用会话/事实/知识/向量端口，提供 CAS、去重、逻辑 TTL、范围隔离与分页。Qdrant 确认完成状态，并经权威知识库回读版本/摘要；HashEmbeddingProvider 是可替换的离线词项散列基线。客户端使用可选 redis/postgres/remote extras；新增 async 默认工厂和显式初始化，无基础运行依赖增加。
+
+新增 TeamSpec、DynamicWorkflowSpec、TeamStrategy、Planner/PlanVerifier 和不可变提案快照。默认 Sequential/Router/Supervisor、RulePlanner/受管理 ModelPlanner/CompleteVerifier；子 Run 创建、父子链接和父额度 escrow 同事务，保持独立 Session、原生审批、取消与未知效果恢复。收到计划和采纳修订分阶段持久化，有界重规划，提供 JSON/TOML 与包内 plan/team 模板。
+
+独立审查的三个问题已用 RED→GREEN 回归修复：并行子失败立即取消兄弟且等待真实调用退出；Qdrant 关闭失败/取消仍可重试；受管理 Planner 调用遵守父并发容量。五个真实进程窗口验证提案/修订/子提交/子完成/Verify 的恢复。
+
+原 native/sequence/static graph 的 local-4、Schema v1、合法请求与默认 Manifest 保持；新的父 Run 和带 parent_call 的子 Run 需 dev14，不自动迁移。原八种模板保持兼容。实际服务、完整 suite、安装升级与打包证据见[审查记录](architecture/reviews/2026-10-07-data-orchestration.md)。
+
+有限本地委派计划不包含动态 DAG、嵌套 Team/Workflow、MQ/A2A、分布式权威或企业身份。真实模型规划/语义检索质量、全局容量、deadline、完整 M1 和竞品对等基准仍待验收。见[远程数据](docs/remote-data.md)和[规划/团队](docs/orchestration.md)。
+
+## 0.1.0.dev13 — Unreleased
+
+新增 AsyncLifecycle、显式 register_async、RuntimeBuilder.abuild、BuildContext.own_async 与 RuntimeInstance.aclose/async with。同步/异步客户端可以逆序管理，失败保留重试句柄；取消外层等待后保留真实清理 Task，拒绝清理自重入。异步资源绑定创建循环，缓存的 drive 方法同样在派发前检查；关闭开始后拒绝新的执行入口。
+
+Store/Engine 创建与执行权关闭仍同步，默认 build/close、local-4、ExecutionStore v1 和合法请求身份不变。构造失败时，被拒绝的部分 Engine 通过自身 close 检查并释放执行权，不能被无效的排空方法阻断。正常实例仍严格检查排空完成。
+
+新增安装包内 async starter，用离线 HTTP transport 验证真实 AsyncClient、Profile 恢复、命令重放和资源关闭；原七种模板内容保持不变。新增 28 项测试，完整 1018 项通过；仓库外 wheel 契约 92 项通过，实际 dev12→dev13 原生/v3 任务恢复与原回执保留通过。无新增运行依赖。
+
+同步 ProfiledEngine/CLI 尚不路由异步工厂；模板通过自己的 async Python 入口运行。Redis/PostgreSQL/托管向量适配器、动态 Plan、多 Agent 和分布式执行仍需独立交付与验证。见[异步装配指南](docs/async-assembly.md)和[审查记录](architecture/reviews/2026-10-06-async-assembly.md)。
 
 ## 0.1.0.dev12 — Unreleased
 
@@ -11,6 +167,8 @@
 修复授权回调核验 Action 后仍可能重复派发的原生循环问题，串行／并行共用；补齐父级失败事件。独立审查复现的效果与 Session 竞争均有回归。922 项测试、安装包 dev11 升级／恢复与五个并行崩溃窗口通过。无新增运行依赖；ExecutionStore v1 需遵循可选 session_ids／quiescent 字段的预留契约。
 
 当前并发仅按单 Run 限制；全局容量、动态 Planner、ChildRun／团队、MQ、分布式、沙箱和完整 M1 仍未交付或未验收。预览未发布到 PyPI／GitHub Release。
+
+后续框架审查修复：租约 acquire/release 与 Store.close 强制同步完成并返回 None；关闭未完成可重试且禁止继续执行；复用租约获取失败不会释放原持有者。submit 与本地 Session 后端统一拒绝非字符串/空白 ID，合法身份与原回执保持兼容。配置 SDK/CLI 的诊断补齐图节点与分支 Session。新增 68 项回归，最终 990 项通过；旧 dev12 安装包创建的原生/v3 任务与回执可由修复包继续处理。见[框架审查与修复证据](architecture/reviews/2026-10-06-framework-parity.md)。
 
 ## 0.1.0.dev11 — Unreleased
 

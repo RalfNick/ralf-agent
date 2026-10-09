@@ -14,7 +14,7 @@ from typing import TYPE_CHECKING
 from jsonschema import Draft202012Validator
 
 from .context import ContextAssembler
-from .decisions import final_output
+from .decisions import final_output, validate_call_ids, validate_decision
 from .errors import (
     AuthorizationDenied,
     CoordinatorBusy,
@@ -25,7 +25,20 @@ from .errors import (
 from .executors import DispatchEnvelope, EffectObservation, PythonToolExecutor, ToolExecutor
 from .harness import DecisionProposal, Harness, ModelRequest, NativeHarness
 from .memory import _validate_expires_at, memory_call
-from .ports import ContextBuilder, CoordinatorLease, ExecutionStore
+from .model_evidence import (
+    settlement_usage,
+    snapshot_model_response,
+    validate_model_usage,
+    validate_received_response,
+)
+from .ports import (
+    ContextBuilder,
+    CoordinatorLease,
+    ExecutionStore,
+    _complete_sync_none,
+    _invoke_sync_none,
+    is_sync_callable,
+)
 from .tools import (
     ThreadExecutionTracker,
     ToolSpec,
@@ -78,11 +91,17 @@ class LocalEngine:
         workflow_interpreter=None,
         workflow_transforms=None,
         workflow_scheduler=None,
+        team_strategies=None,
+        planners=None,
+        plan_verifiers=None,
+        binding_catalog=None,
+        verifier=None,
+        limits=None,
     ):
         # Python 3.12's Protocol isinstance check ignores proxy __getattr__.
         # Validate the declared public operations so delegating adapters work too.
         if any(
-            not callable(getattr(store, name, None))
+            not is_sync_callable(getattr(store, name, None))
             for name in vars(ExecutionStore)
             if not name.startswith("_")
         ):
@@ -92,6 +111,12 @@ class LocalEngine:
         self.providers = dict(providers)
         self.tools = tools
         self.harness = NativeHarness() if harness is None else harness
+        self.verifier = verifier
+        self.limits = limits
+        if limits is not None:
+            self._component_identity(limits, ("propose",), True, "Agent limits")
+        if verifier is not None:
+            self._component_identity(verifier, ("verify",), True, "Completion verifier")
         self.tool_executor = PythonToolExecutor(tools) if tool_executor is None else tool_executor
         self._component_identity(self.harness, ("prepare", "propose"), True, "Harness")
         self._component_identity(self.tool_executor, ("execute", "reconcile"), False, "Executor")
@@ -128,7 +153,21 @@ class LocalEngine:
             StaticWorkflowScheduler() if workflow_scheduler is None else workflow_scheduler
         )
         self._component_identity(self.workflow_scheduler, ("select",), True, "Workflow scheduler")
+        from .orchestration import OrchestrationRuntime
+
+        self._orchestration = OrchestrationRuntime(
+            self, team_strategies=team_strategies, planners=planners, plan_verifiers=plan_verifiers
+        )
         self.scope = scope or Scope()
+        from .binding_catalog import BindingCatalog
+        from .binding_runtime import AgentBindingResolver
+
+        if binding_catalog is not None and (
+            not isinstance(binding_catalog, BindingCatalog) or binding_catalog.scope != self.scope
+        ):
+            raise ValidationError("BindingCatalog must match the trusted Engine Scope")
+        self.binding_catalog = binding_catalog
+        self._bindings = AgentBindingResolver(self)
         self.policy = policy
         self.owner = uuid.uuid4().hex
         self._active = set()
@@ -146,11 +185,17 @@ class LocalEngine:
                     "Custom execution stores require an explicit coordinator lease"
                 )
             coordinator = factory()
-        if not all(callable(getattr(coordinator, name, None)) for name in ("acquire", "release")):
-            raise ValidationError("Coordinator must implement acquire and release")
+        acquire = getattr(coordinator, "acquire", None)
+        if not is_sync_callable(acquire) or not is_sync_callable(
+            getattr(coordinator, "release", None)
+        ):
+            raise ValidationError("Coordinator must implement synchronous acquire and release")
         self.coordinator = coordinator
-        self.coordinator.acquire()
+        # A failed acquire may be a reused lease's existing owner. Its adapter
+        # owns partial-failure cleanup; this constructor must never release it.
+        acquired = acquire()
         try:
+            _complete_sync_none(acquired, "Coordinator.acquire")
             self._default_memory = None
             if session_store is None or memory_store is None:
                 factory = getattr(store, "create_memory", None)
@@ -161,6 +206,17 @@ class LocalEngine:
                 self._default_memory = factory()
             self.sessions = self._default_memory if session_store is None else session_store
             self.memory = self._default_memory if memory_store is None else memory_store
+            from .binding_data import FactsView, KnowledgeView
+            from .binding_sessions import SessionView
+
+            if isinstance(self.sessions, SessionView):
+                raise ValidationError(
+                    "Host Session defaults require an original backend, not a view"
+                )
+            if isinstance(self.memory, FactsView) or isinstance(self.knowledge, KnowledgeView):
+                raise ValidationError(
+                    "Host data defaults require original components, not scoped views"
+                )
             for backend, methods in (
                 (self.sessions, ("read", "append")),
                 (self.memory, ("facts",)),
@@ -181,7 +237,7 @@ class LocalEngine:
                 raise ValidationError("Context assembler requires identity and assemble")
             canonical(self.context.identity)
         except BaseException:
-            self.coordinator.release()
+            _invoke_sync_none(self.coordinator.release, "Coordinator.release")
             raise
 
     def __enter__(self):
@@ -211,14 +267,14 @@ class LocalEngine:
                     self._mark_workflow_quiescent(run_id)
             self._lifecycle = "closing"
             try:
-                self.store.close()
+                _invoke_sync_none(self.store.close, "ExecutionStore.close")
             except BaseException:
                 self._lifecycle = "close_failed"
                 raise
             self._lifecycle = "store_closed"
         # A failed close keeps ownership and permits only a close retry. Once
         # storage is closed, a failed lease release must not reopen the Engine.
-        self.coordinator.release()
+        _invoke_sync_none(self.coordinator.release, "Coordinator.release")
         self._lifecycle = "closed"
 
     async def wait_for_threads(self):
@@ -329,14 +385,51 @@ class LocalEngine:
                 run["manifest"],
                 run["release_digest"],
                 self.store.budget(run_id),
-                workflow_details(run),
+                workflow_details(run, self.store),
             )
 
-    def _manifest(self, steps):
+    def patch_plan(self, run_id, proposal, *, expected_plan_revision, command_id):
+        self._ensure_open()
+        return self._orchestration._dag.patch(run_id, proposal, expected_plan_revision, command_id)
+
+    @property
+    def binding_capabilities(self):
+        from .binding_runtime import binding_capabilities
+
+        capabilities = binding_capabilities()
+        available = is_sync_callable(getattr(self.store, "session_resource_owner", None))
+        capabilities["session_resource_admission"] = available
+        if not available:
+            capabilities["supported_binding_roles"].remove("session")
+            capabilities["session_modes"] = ["inherit", "disabled"]
+            capabilities["resource_selector_roles"].pop("session")
+        return capabilities
+
+    def _components(self, run, index=None):
+        return self._bindings.components(run, index)
+
+    def _agent_step(self, run, index=None):
+        return self._bindings.effective_step(run, index)
+
+    @staticmethod
+    def _step_manifest(run, index=None):
+        from .binding_manifests import step_manifest
+
+        return step_manifest(run["manifest"], run["node"] if index is None else index)
+
+    def _manifest(self, steps, *, components=None):
+        sessions = self.sessions if components is None else components.sessions
+        memory = self.memory if components is None else components.memory
+        context = self.context if components is None else components.context
+        harness = self.harness if components is None else components.harness
+        knowledge = self.knowledge if components is None else components.knowledge
+        verifier = self.verifier if components is None else components.verifier
         names = sorted({name for step in steps for name in step["tools"]})
         providers = {}
         for step in steps:
-            provider = self.providers.get(step["provider"])
+            provider = (
+                self.providers.get(step["provider"]) if components is None else components.provider
+            )
             if provider is None:
                 raise DefinitionMismatch(f"Model provider not configured: {step['provider']}")
             if not inspect.iscoroutinefunction(getattr(provider, "complete", None)):
@@ -350,12 +443,10 @@ class LocalEngine:
             "kernel": "local-4",
             "tools": self.tools.manifests(names),
             "providers": providers,
-            "session_backend": self.sessions.backend_id,
-            "memory_backend": self.memory.backend_id,
-            "context_builder": copy.deepcopy(self.context.identity),
-            "harness": self._component_identity(
-                self.harness, ("prepare", "propose"), True, "Harness"
-            ),
+            "session_backend": sessions.backend_id if sessions is not None else None,
+            "memory_backend": memory.backend_id if memory is not None else None,
+            "context_builder": copy.deepcopy(context.identity),
+            "harness": self._component_identity(harness, ("prepare", "propose"), True, "Harness"),
             "tool_executor": self._component_identity(
                 self.tool_executor, ("execute", "reconcile"), False, "Executor"
             ),
@@ -364,21 +455,32 @@ class LocalEngine:
             manifest["memory_recall"] = self._component_identity(
                 self.recall_policy, (), True, "Recall policy"
             )
-        if self.knowledge is not None:
+        if knowledge is not None:
             manifest["knowledge"] = self._component_identity(
-                self.knowledge, ("references", "validate"), False, "Knowledge"
+                knowledge, ("references", "validate"), False, "Knowledge"
             )
         if self.recall_planner is not None:
             manifest["recall_planner"] = self._component_identity(
                 self.recall_planner, ("plan",), True, "Recall planner"
             )
+        if verifier is not None:
+            manifest["completion_verifier"] = self._component_identity(
+                verifier, ("verify",), True, "Completion verifier"
+            )
+        from .agent_limits import limit_manifest
+
+        caps = limit_manifest(self, steps, None if components is None else components.limits)
+        if caps is not None:
+            manifest["agent_limits"] = caps
         if self.runtime_profile is not None:
             manifest["runtime_profile"] = runtime_profile_identity(self.runtime_profile)
         return manifest
 
-    def _assemble_context(self, history, references, max_chars):
+    def _assemble_context(self, history, references, max_chars, *, context=None):
         try:
-            messages, manifest = self.context.assemble(history, references, max_chars)
+            messages, manifest = (self.context if context is None else context).assemble(
+                history, references, max_chars
+            )
         except RalfError:
             raise
         except Exception as exc:
@@ -392,26 +494,93 @@ class LocalEngine:
         canonical(manifest)
         return messages, manifest
 
-    def submit(self, spec, input, *, command_id, budget=32, session_id=None):
+    def submit(self, spec, input, *, command_id, budget=32, session_id=None, _parent_call=None):
         self._ensure_open()
         payload = submission_request(spec, input, budget=budget, session_id=session_id)
         definition = payload["definition"]
+        if definition["kind"] in {"bound_agent", "bound_definition"}:
+            from .binding_runtime import unwrap_definition
+
+            definition = unwrap_definition(definition)
+        if _parent_call is not None:
+            if not isinstance(_parent_call, dict) or set(_parent_call) not in (
+                {"parent_id", "call_id", "reservation"},
+                {"parent_id", "call_id", "reservation", "limits_member"},
+            ):
+                raise ValidationError("Invalid managed parent call binding")
+            for value in _parent_call.values():
+                if not isinstance(value, str) or not value.strip():
+                    raise ValidationError(
+                        "Managed parent call identities must be non-empty strings"
+                    )
+            payload["parent_call"] = copy.deepcopy(_parent_call)
         run_id = uuid.uuid4().hex
         # Request identity contains only caller-controlled data. Configuration
         # aliases are resolved inside first acceptance, after receipt lookup.
         canonical(payload)
 
         def apply():
+            if definition["kind"] in {"team", "dynamic"}:
+                return self._orchestration.accept(
+                    run_id, definition, payload["input"], budget, session_id, _parent_call
+                )
+            bound = "binding_definition" in definition
             graph = definition["kind"] == "graph"
             plan = self._workflow.compile(definition) if graph else None
             manifest = (
-                self._workflow.manifest(plan) if graph else self._manifest(definition["steps"])
+                self._bindings.manifest(definition, plan=plan)
+                if bound
+                else self._workflow.manifest(plan)
+                if graph
+                else self._manifest(definition["steps"])
             )
+            if _parent_call is not None:
+                parent = self._authorized(_parent_call["parent_id"])
+                if (
+                    parent.get("orchestration") is None
+                    or parent["state"] in TERMINAL
+                    or parent["state"] == "cancelling"
+                ):
+                    raise ValidationError("A managed child requires an active orchestration parent")
+                self._check_parent_limits(parent, _parent_call, manifest)
+                manifest["parent_call"] = copy.deepcopy(_parent_call)
             messages = (
                 [] if graph else self._initial_messages(definition["steps"][0], payload["input"])
             )
+            if (
+                bound
+                and session_id is not None
+                and any(
+                    entry["manifest"]["session_backend"] is None
+                    for entry in manifest["agent_bindings"]["steps"].values()
+                )
+            ):
+                raise ValidationError("Explicit Session requires a Session binding")
             if not graph:
-                self._assemble_context(messages, [], definition["steps"][0]["max_context_chars"])
+                from .agent_limits import apply_pinned_limits
+                from .binding_manifests import step_manifest
+
+                if bound:
+                    from .binding_runtime import descriptor_for
+
+                    components = self._bindings.resolve(
+                        definition["steps"][0], descriptor_for(definition, 0)
+                    )[0]
+                    self._assemble_context(
+                        messages,
+                        [],
+                        apply_pinned_limits(
+                            {**definition["steps"][0], "tools": list(components.tools)},
+                            step_manifest(manifest, 0),
+                        )["max_context_chars"],
+                        context=components.context,
+                    )
+                else:
+                    self._assemble_context(
+                        messages,
+                        [],
+                        apply_pinned_limits(definition["steps"][0], manifest)["max_context_chars"],
+                    )
             execution_definition = definition
             if graph:
                 # Old native kernels can read this shape and reject the new
@@ -425,8 +594,9 @@ class LocalEngine:
             parallel = graph and plan["schema_version"] == 3
             if parallel:
                 session_ids += [f"{session_ids[0]}:node:{n['id']}" for n in plan["nodes"]]
-            if any(self.store.session_owner(self.scope, name) for name in session_ids):
-                raise ValidationError("Session already belongs to an active Run")
+            from .session_resources import admit_sessions
+
+            session_claim_data = admit_sessions(self, manifest, session_ids, plan)
             data = {
                 "id": run_id,
                 "revision": 0,
@@ -446,6 +616,16 @@ class LocalEngine:
                 "messages": messages,
                 "session_id": session_id or run_id,
                 **({"session_ids": session_ids} if parallel else {}),
+                **session_claim_data,
+                **(
+                    {
+                        "parent_call": copy.deepcopy(_parent_call),
+                        "parent_id": _parent_call["parent_id"],
+                        "call_id": _parent_call["call_id"],
+                    }
+                    if _parent_call is not None
+                    else {}
+                ),
             }
             if graph:
                 data["plan"] = plan
@@ -529,6 +709,8 @@ class LocalEngine:
                     "reason": "already_terminal" if run["state"] == "cancelled" else "applied_noop"
                 }
             run["state"] = "cancelling" if active else "cancelled"
+            if run.get("orchestration") is not None:
+                self._orchestration.cancel_children(run)
             if is_graph(run):
                 for node in run["workflow"]["nodes"].values():
                     if node["state"] not in {"completed", "skipped", "failed", "cancelled"}:
@@ -581,14 +763,47 @@ class LocalEngine:
 
     def _check_release(self, run):
         manifest = (
-            self._workflow.manifest(run["plan"])
+            self._bindings.manifest(run["definition"], plan=run.get("plan"))
+            if "binding_definition" in run["definition"]
+            else self._orchestration.manifest(run["definition"])
+            if run.get("orchestration") is not None
+            else self._workflow.manifest(run["plan"])
             if is_graph(run)
             else self._manifest(run["definition"]["steps"])
         )
+        if run.get("parent_call") is not None:
+            binding = run["parent_call"]
+            parent = self._authorized(binding["parent_id"])
+            self._check_release(parent)
+            if not any(
+                call["id"] == binding["call_id"]
+                and call["run_id"] == run["id"]
+                and ("limits_member" not in binding or call["member"] == binding["limits_member"])
+                for call in parent["orchestration"]["children"]
+            ):
+                raise DefinitionMismatch("The child's pinned parent release or ownership changed")
+            self._check_parent_limits(parent, binding, manifest)
+            manifest["parent_call"] = copy.deepcopy(binding)
         if digest(manifest) != digest(run["manifest"]):
             raise DefinitionMismatch(
                 "Pinned tool, provider or memory backend differs from this Run"
             )
+
+    def _check_parent_limits(self, parent, binding, manifest):
+        from .agent_limits import has_agent_limits, validate_inherited_limits
+
+        if not has_agent_limits(parent["manifest"]) and not has_agent_limits(manifest):
+            return
+        member = binding.get("limits_member")
+        if member not in parent["definition"]["members"] and not (
+            member == "@planner"
+            and parent["manifest"]["orchestration"].get("planning_agent") is not None
+        ):
+            raise DefinitionMismatch("Child limits require the original declared member")
+        source = (
+            parent["manifest"]["orchestration"].get("members", {}).get(member, parent["manifest"])
+        )
+        validate_inherited_limits(manifest, source)
 
     def _commit(self, run, kind, data=None):
         self.store.save_run(run)
@@ -610,6 +825,8 @@ class LocalEngine:
             if run["state"] not in TERMINAL:
                 run["state"] = "cancelled" if run["state"] == "cancelling" else "failed"
                 run["error"] = {"code": code}
+                if run.get("orchestration") is not None:
+                    self._orchestration.cancel_children(run)
                 if run.get("plan", {}).get("schema_version") == 3:
                     from .workflow_parallel import close_nodes
 
@@ -660,6 +877,9 @@ class LocalEngine:
             raise CoordinatorBusy("The previous Action is still running; wait for its result")
         run = self._authorized(run_id)
         if run["state"] in TERMINAL:
+            if run.get("orchestration") is not None:
+                self._orchestration.terminal(run_id)
+                return self.status(run_id)
             with self.store.transaction():
                 if self._normalize_abandoned(run):
                     self._commit(run, "abandoned_attempts_unknown")
@@ -679,6 +899,8 @@ class LocalEngine:
                     run["workflow"]["quiescent"] = False
                     self._quiescing_runs.add(run_id)
                 self._commit(run, "run_resumed")
+            if run.get("orchestration") is not None:
+                return await self._guarded(run_id, self._orchestration.drive(run_id))
             if run.get("plan", {}).get("schema_version") == 3:
                 from .workflow_parallel import ParallelWorkflowRuntime
 
@@ -732,7 +954,14 @@ class LocalEngine:
                         ),
                         None,
                     )
-                    if adopted and not adopted["response"]["tool_calls"]:
+                    if (
+                        adopted
+                        and not adopted["response"]["tool_calls"]
+                        and adopted.get("completion_verification", {})
+                        .get("verdict", {})
+                        .get("status")
+                        != "retry"
+                    ):
                         await self._guarded(
                             run_id, self._finish_node(run_id, adopted["response"]["output"])
                         )
@@ -777,35 +1006,47 @@ class LocalEngine:
         run = self._authorized(run_id)
         if run["state"] in TERMINAL or run["state"] == "cancelling":
             return
-        step = agent_step(run)
+        step = self._agent_step(run)
         result = final_output(result, step["output_schema"])
         if is_graph(run):
             from .workflow import validate_output
 
             result = validate_output(result, run["plan"]["nodes"][run["node"]]["output_schema"])
-        sessions = self.sessions
-        revision, _ = await memory_call(sessions.read, self.scope, run["session_id"])
+        from .completion_runtime import verify_completion
+
+        if not verify_completion(self, run_id, result):
+            return
+        sessions = self._components(run).sessions
+        revision, _ = (
+            (await memory_call(sessions.read, self.scope, run["session_id"]))
+            if sessions is not None
+            else (0, [])
+        )
+
         current = self._authorized(run_id)
         if current["state"] in TERMINAL or current["state"] == "cancelling":
             return
         self._check_release(current)
-        if sessions.backend_id != current["manifest"]["session_backend"]:
+        if (sessions.backend_id if sessions is not None else None) != self._step_manifest(current)[
+            "session_backend"
+        ]:
             raise DefinitionMismatch("The executing session backend differs from this Run")
-        await memory_call(
-            sessions.append,
-            self.scope,
-            run["session_id"],
-            {
-                "role": "assistant",
-                "content": result,
-                "agent": step["name"],
-                "task": run["workflow"]["nodes"][run["workflow"]["current"]]["input"]
-                if is_graph(run)
-                else run["input"],
-            },
-            expected_revision=revision,
-            message_id=f"{run_id}:{run['node']}:result",
-        )
+        if sessions is not None:
+            await memory_call(
+                sessions.append,
+                self.scope,
+                run["session_id"],
+                {
+                    "role": "assistant",
+                    "content": result,
+                    "agent": step["name"],
+                    "task": run["workflow"]["nodes"][run["workflow"]["current"]]["input"]
+                    if is_graph(run)
+                    else run["input"],
+                },
+                expected_revision=revision,
+                message_id=f"{run_id}:{run['node']}:result",
+            )
         with self.store.transaction():
             run = self._authorized(run_id)
             if run["state"] in TERMINAL or run["state"] == "cancelling":
@@ -813,7 +1054,9 @@ class LocalEngine:
             # An append may already have committed externally. A changed backend
             # cannot be silently confirmed as completing the pinned Release.
             self._check_release(run)
-            if sessions.backend_id != run["manifest"]["session_backend"]:
+            if (sessions.backend_id if sessions is not None else None) != self._step_manifest(run)[
+                "session_backend"
+            ]:
                 raise DefinitionMismatch("The executing session backend differs from this Run")
             if is_graph(run):
                 self._workflow.complete(run, result)
@@ -825,11 +1068,12 @@ class LocalEngine:
                 self._commit(run, "run_succeeded")
             else:
                 run["decisions"] = 0
-                run["messages"] = self._initial_messages(agent_step(run), result)
+                run["messages"] = self._initial_messages(self._agent_step(run), result)
                 self._commit(run, "workflow_node_completed", {"node": run["node"] - 1})
 
     def _prepare_model_request(self, run, step, messages, context_manifest):
-        harness = self.harness
+        components = self._components(run)
+        harness = components.harness
         spec = AgentSpec(**copy.deepcopy(step))
         descriptions = self.tools.descriptions(step["tools"])
         try:
@@ -847,10 +1091,28 @@ class LocalEngine:
         self._check_release(self._authorized(run["id"]))
         if digest(
             self._component_identity(harness, ("prepare", "propose"), True, "Harness")
-        ) != digest(run["manifest"]["harness"]):
+        ) != digest(self._step_manifest(run)["harness"]):
             raise DefinitionMismatch("The preparing Harness differs from this Run")
         if not request.messages or len(canonical(request.messages)) > step["max_context_chars"]:
             raise ValidationError("Harness request exceeded the context limit or has no messages")
+        request_measurement = None
+        validate_request = getattr(components.context, "validate_request", None)
+        if validate_request is not None:
+            from .context_budget import ContextMeasure
+
+            if not is_sync_callable(validate_request):
+                raise ValidationError("Context request validation must be synchronous")
+            measurement = self._component_result(
+                validate_request(copy.deepcopy(request.messages), step["max_context_chars"]),
+                ContextMeasure,
+                "Context request validation",
+            )
+            request_measurement = asdict(
+                ContextMeasure(measurement.units, measurement.unit, measurement.estimated)
+            )
+            self._check_release(self._authorized(run["id"]))
+            if not request.messages or len(canonical(request.messages)) > step["max_context_chars"]:
+                raise ValidationError("Prepared request exceeded the final context limit")
         allowed = {item["function"]["name"]: item for item in descriptions}
         offered = set()
         for description in request.tools:
@@ -869,6 +1131,8 @@ class LocalEngine:
             "assembly": copy.deepcopy(context_manifest),
             "harness_transformed": changed,
         }
+        if request_measurement is not None:
+            manifest["measurement"] = request_measurement
         if changed:
             # Preserve assembly provenance without claiming the transformed
             # request still contains each selected reference.
@@ -886,9 +1150,11 @@ class LocalEngine:
             action["received_response"] = copy.deepcopy(encoded)
             action["status"] = "response_received"
             action["attempts"][-1]["status"] = "completed"
+            # Receiving evidence must not resolve live bindings: drift or removal
+            # is checked only after the completed response is durable.
             step = agent_step(run, action["node"])
             self.store.settle(
-                attempt_id, step["model_credits"], encoded.get("usage") or {"usage": "unknown"}
+                attempt_id, step["model_credits"], settlement_usage(encoded.get("usage"))
             )
             self._commit(
                 run,
@@ -910,9 +1176,10 @@ class LocalEngine:
         proposals = []
         if not closed:
             self._check_release(run)
-            step = agent_step(run, action["node"])
-            harness = self.harness
+            step = self._agent_step(run, action["node"])
+            harness = self._components(run, action["node"]).harness
             try:
+                validate_received_response(encoded)
                 response = ModelResponse(
                     output=encoded["output"],
                     tool_calls=tuple(ToolCall(**call) for call in encoded["tool_calls"]),
@@ -923,28 +1190,47 @@ class LocalEngine:
                     DecisionProposal,
                     "Harness.propose",
                 )
-                proposal = DecisionProposal(proposed.output, proposed.tool_calls)
+                validate_model_usage(encoded["usage"])
+                effective_calls = []
+                for call in proposed.tool_calls:
+                    if call.name not in step["tools"]:
+                        raise AuthorizationDenied("Harness requested a tool outside AgentSpec")
+                    effective_calls.append(
+                        ToolCall(
+                            call.name,
+                            self.tools.get(call.name).resolve_arguments(call.arguments),
+                            call.call_id,
+                        )
+                    )
+                proposal = validate_decision(
+                    AgentSpec(**copy.deepcopy(step)),
+                    DecisionProposal(proposed.output, tuple(effective_calls)),
+                    self.tools.manifests(step["tools"]),
+                )
                 current = self._authorized(run_id)
                 self._check_release(current)
                 if digest(
                     self._component_identity(harness, ("prepare", "propose"), True, "Harness")
-                ) != digest(run["manifest"]["harness"]):
+                ) != digest(self._step_manifest(run)["harness"]):
                     raise DefinitionMismatch("The proposing Harness differs from this Run")
                 closed = current["state"] in TERMINAL or current["state"] == "cancelling"
                 if not closed:
-                    if not proposal.tool_calls:
-                        final_output(proposal.output, step["output_schema"])
-                    call_ids = set()
-                    for call in proposal.tool_calls:
-                        if call.name not in step["tools"]:
-                            raise AuthorizationDenied("Harness requested a tool outside AgentSpec")
-                        item = self._tool_proposal(
+                    from .errors import AgentLimitExceeded
+
+                    maximum = self._bindings.tool_action_limit(current, action["node"])
+                    used = sum(
+                        a["kind"] == "tool" and a["node"] == action["node"]
+                        for a in current["actions"]
+                    )
+                    if maximum is not None and used + len(proposal.tool_calls) > maximum:
+                        raise AgentLimitExceeded("Agent tool Action limit reached")
+                    proposals = [
+                        self._tool_proposal(
                             run_id, action["node"], call.name, call.arguments, call.call_id
                         )
-                        if item["call_id"] in call_ids:
-                            raise ValidationError("Duplicate model tool-call identity")
-                        call_ids.add(item["call_id"])
-                        proposals.append(item)
+                        for call in proposal.tool_calls
+                    ]
+                    validate_call_ids([item["call_id"] for item in proposals])
                     encoded = {**asdict(proposal), "usage": encoded["usage"]}
             except Exception as exc:
                 error = (
@@ -1007,7 +1293,7 @@ class LocalEngine:
 
     def _tool_proposal(self, run_id, node, name, arguments, call_id=None):
         tool = self.tools.get(name)
-        tool.validate(arguments)
+        arguments = tool.resolve_arguments(arguments)
         proposed_id = uuid.uuid4().hex
         operation = {
             "run_id": run_id,
@@ -1111,11 +1397,12 @@ class LocalEngine:
         return items, summary
 
     async def _load_references(self, run, step):
+        components = self._components(run)
         sessions, memory, policy, knowledge = (
-            self.sessions,
-            self.memory,
+            components.sessions,
+            components.memory,
             self.recall_policy,
-            self.knowledge,
+            components.knowledge,
         )
         recall_manifest = None
         planner = self.recall_planner
@@ -1137,9 +1424,11 @@ class LocalEngine:
             self._check_release(self._authorized(run["id"]))
             if digest(
                 self._component_identity(planner, ("plan",), True, "Recall planner")
-            ) != digest(run["manifest"]["recall_planner"]):
+            ) != digest(self._step_manifest(run)["recall_planner"]):
                 raise DefinitionMismatch("The executing recall planner changed")
-        if policy is None:
+        if sessions is None:
+            session, session_manifest = [], {"disabled": True}
+        elif policy is None:
             _, session = await memory_call(sessions.read, self.scope, run["session_id"])
         else:
             session, session_manifest = await self._recall_pages(
@@ -1148,25 +1437,29 @@ class LocalEngine:
         current = self._authorized(run["id"])
         if current["state"] in TERMINAL or current["state"] == "cancelling":
             return None
-        if policy is None:
+        if memory is None:
+            facts, facts_manifest = [], {"disabled": True}
+        elif policy is None:
             facts = await memory_call(memory.facts, self.scope, step["name"])
         else:
             facts, facts_manifest = await self._recall_pages(
                 memory, "recall", step["name"], policy.facts, policy.max_pages
             )
+        if policy is not None:
             recall_manifest = {"session": session_manifest, "facts": facts_manifest}
         current = self._authorized(run["id"])
         self._check_release(current)
-        if (
-            sessions.backend_id != run["manifest"]["session_backend"]
-            or memory.backend_id != run["manifest"]["memory_backend"]
-        ):
+        if (sessions.backend_id if sessions is not None else None) != self._step_manifest(run)[
+            "session_backend"
+        ] or (memory.backend_id if memory is not None else None) != self._step_manifest(run)[
+            "memory_backend"
+        ]:
             raise DefinitionMismatch("The executing memory backend differs from this Run")
         if (
             policy is not None
             and planner is None
             and digest(self._component_identity(policy, (), True, "Recall policy"))
-            != digest(run["manifest"]["memory_recall"])
+            != digest(self._step_manifest(run)["memory_recall"])
         ):
             raise DefinitionMismatch("The executing recall policy differs from this Run")
         if current["state"] in TERMINAL or current["state"] == "cancelling":
@@ -1194,12 +1487,12 @@ class LocalEngine:
         self._check_release(run)
         if digest(
             self._component_identity(knowledge, ("references", "validate"), False, "Knowledge")
-        ) != digest(run["manifest"]["knowledge"]):
+        ) != digest(self._step_manifest(run)["knowledge"]):
             raise DefinitionMismatch("The executing knowledge context differs from this Run")
 
     async def _validate_knowledge(self, run_id, knowledge, references):
         run = self._authorized(run_id)
-        if "knowledge" not in run["manifest"]:
+        if "knowledge" not in self._step_manifest(run):
             return
         self._check_knowledge_release(run, knowledge)
         result = await memory_call(knowledge.validate, self.scope, copy.deepcopy(references))
@@ -1213,20 +1506,20 @@ class LocalEngine:
 
         run = self._authorized(run_id)
         self._check_release(run)
-        if memory.backend_id != run["manifest"]["memory_backend"]:
+        if memory.backend_id != self._step_manifest(run)["memory_backend"]:
             raise DefinitionMismatch("The validating memory backend differs from this Run")
         self._check_reference_expiry(references)
         method = getattr(memory, "validate_facts", None)
         if not callable(method):
             method = LegacyMemoryRecallAdapter(memory).validate_facts
         owner, backend_id = _method_backend(method)
-        namespace = agent_step(run)["name"]
+        namespace = self._agent_step(run)["name"]
         result = await memory_call(method, self.scope, namespace, copy.deepcopy(references))
         self._component_result(result, type(None), "Memory reference validation")
         if owner is not None and owner.backend_id != backend_id:
             raise DefinitionMismatch("The actual validating memory backend changed")
         self._check_release(self._authorized(run_id))
-        if memory.backend_id != run["manifest"]["memory_backend"]:
+        if memory.backend_id != self._step_manifest(run)["memory_backend"]:
             raise DefinitionMismatch("The validating memory backend differs from this Run")
         self._check_reference_expiry(references)
 
@@ -1253,7 +1546,7 @@ class LocalEngine:
         run = self._authorized(run_id)
         if run["state"] in TERMINAL or run["state"] == "cancelling":
             return True
-        step = agent_step(run)
+        step = self._agent_step(run)
         existing = next(
             (
                 item
@@ -1269,8 +1562,8 @@ class LocalEngine:
         if existing is None and run["decisions"] >= step["max_decisions"]:
             raise ValidationError("Agent decision limit reached")
         self._check_release(run)
-        knowledge = self.knowledge
-        memory = self.memory
+        components = self._components(run)
+        knowledge, memory = components.knowledge, components.memory
         if existing:
             action = existing
             messages = copy.deepcopy(action["snapshot"])
@@ -1281,7 +1574,7 @@ class LocalEngine:
                 return True
             references, recall_manifest, knowledge_refs, knowledge, facts, selected_policy = loaded
             messages, context_manifest = self._assemble_context(
-                run["messages"], references, step["max_context_chars"]
+                run["messages"], references, step["max_context_chars"], context=components.context
             )
             if recall_manifest is not None:
                 context_manifest["memory_recall"] = recall_manifest
@@ -1310,7 +1603,7 @@ class LocalEngine:
                 or self.recall_planner is not None
             ):
                 action["memory_references"] = facts
-        provider = self.providers[step["provider"]]
+        provider = components.provider
         self._preflight_provider_request(run_id, provider, step["provider"], messages, descriptions)
         await self._validate_model_references(run_id, knowledge, action, memory)
         attempt_id = f"{action['id']}:{len(action['attempts']) + 1}"
@@ -1345,8 +1638,7 @@ class LocalEngine:
             response = await complete(copy.deepcopy(messages), copy.deepcopy(descriptions))
             if not isinstance(response, ModelResponse):
                 raise ValidationError("Model provider must return ModelResponse")
-            encoded = asdict(response)
-            canonical(encoded)
+            encoded = snapshot_model_response(response)
             self._record_model_response(run_id, action["id"], attempt_id, encoded)
         except Exception as exc:
             if not dispatch_started:
@@ -1387,7 +1679,7 @@ class LocalEngine:
     def _check_provider_release(self, run, provider, name):
         self._check_release(run)
         if digest(self._component_identity(provider, ("complete",), False, "Provider")) != digest(
-            run["manifest"]["providers"][name]
+            self._step_manifest(run)["providers"][name]
         ):
             raise DefinitionMismatch("The executing model Provider differs from this Run")
 
@@ -1510,7 +1802,7 @@ class LocalEngine:
             attempt["status"] = "completed"
             self.store.settle(
                 attempt["id"],
-                run["manifest"]["tools"][action["tool"]]["cost"],
+                self._step_manifest(run, action["node"])["tools"][action["tool"]]["cost"],
                 {"effect": "confirmed"},
             )
         run["messages"].append(
@@ -1584,7 +1876,7 @@ class LocalEngine:
             self.owner,
         )
         executor = self.tool_executor
-        manifest = run["manifest"]["tools"][action["tool"]]
+        manifest = self._step_manifest(run)["tools"][action["tool"]]
         if action["status"] == "outcome_unknown":
             try:
                 observation = await executor.reconcile(
@@ -1705,5 +1997,5 @@ class LocalEngine:
         self._check_release(run)
         if digest(
             self._component_identity(executor, ("execute", "reconcile"), False, "Executor")
-        ) != digest(run["manifest"]["tool_executor"]):
+        ) != digest(self._step_manifest(run)["tool_executor"]):
             raise DefinitionMismatch("The executing ToolExecutor differs from this Run")

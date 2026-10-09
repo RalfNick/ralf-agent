@@ -145,6 +145,7 @@ class OpenAIChatProvider(HTTPModelProvider):
         base_url="https://api.openai.com/v1",
         max_output_tokens=1024,
         token_parameter="max_completion_tokens",
+        json_mode=False,
         timeout=60,
         client=None,
         temperature=None,
@@ -155,6 +156,7 @@ class OpenAIChatProvider(HTTPModelProvider):
         capabilities=None,
     ):
         self.token_parameter = token_parameter
+        self.json_mode = json_mode
         self._configure(
             model,
             api_key,
@@ -180,6 +182,12 @@ class OpenAIChatProvider(HTTPModelProvider):
         }:
             raise ValidationError("Invalid output token parameter")
         value["token_parameter"] = self.token_parameter
+        if type(self.json_mode) is not bool or self.json_mode and self.stream_response:
+            raise ValidationError(
+                "JSON object mode requires a boolean and non-streaming completion"
+            )
+        if self.json_mode:
+            value["json_mode"] = True
         return value
 
     def _body(self, messages, tools, config):
@@ -193,7 +201,21 @@ class OpenAIChatProvider(HTTPModelProvider):
         }
         if tools:
             body["tools"] = tools
+        if config.get("json_mode"):
+            if not any(
+                m.get("role") in {"system", "user"}
+                and isinstance(m.get("content"), str)
+                and "json" in m["content"].lower()
+                for m in messages
+            ):
+                raise ValidationError("JSON object mode requires an explicit JSON prompt")
+            body["response_format"] = {"type": "json_object"}
         return config["base_url"] + "/chat/completions", body
+
+    def _prepared(self, messages, tools, *, streaming=False):
+        if streaming and self.json_mode:
+            raise ValidationError("JSON object mode supports only non-streaming completion")
+        return super()._prepared(messages, tools, streaming=streaming)
 
     def _headers(self, key):
         return {"Authorization": f"Bearer {key}"}
@@ -205,7 +227,10 @@ class OpenAIChatProvider(HTTPModelProvider):
         value = json_object(text)
         if not isinstance(value["choices"], list) or len(value["choices"]) != 1:
             raise ValueError("Expected one response choice")
-        return _chat_response(value["choices"][0], value.get("usage"))
+        result = _chat_response(value["choices"][0], value.get("usage"))
+        if self.json_mode and not result.tool_calls:
+            json_object(result.output)
+        return result
 
     def _stream_state(self):
         return ChatStream()
@@ -222,6 +247,7 @@ class DeepSeekChatProvider(OpenAIChatProvider):
         *,
         api_key=None,
         base_url="https://api.deepseek.com",
+        json_mode=False,
         max_output_tokens=1024,
         timeout=60,
         client=None,
@@ -240,6 +266,7 @@ class DeepSeekChatProvider(OpenAIChatProvider):
             base_url=base_url,
             max_output_tokens=max_output_tokens,
             token_parameter="max_tokens",
+            json_mode=json_mode,
             timeout=timeout,
             client=client,
             temperature=temperature,

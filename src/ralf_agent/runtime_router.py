@@ -25,6 +25,7 @@ from .types import (
     digest,
     submission_request,
 )
+from .workflow_runtime import workflow_details
 
 
 class RunReader(Protocol):
@@ -78,6 +79,7 @@ class SQLiteRunReader:
                 run["manifest"],
                 run["release_digest"],
                 store.budget(run_id),
+                workflow_details(run, store),
             )
 
     def submit_receipt(self, command_id, payload):

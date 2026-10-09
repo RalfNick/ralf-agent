@@ -26,8 +26,14 @@ ralf --config runtime.toml --format text inspect RUN_ID
 ```python
 import asyncio
 from ralf_agent import (
-    AgentSpec, GraphNode, GraphWorkflowSpec, InputMap, Literal,
-    RuntimeBuilder, RuntimeProfile, ValueRef,
+    AgentSpec,
+    GraphNode,
+    GraphWorkflowSpec,
+    InputMap,
+    Literal,
+    RuntimeBuilder,
+    RuntimeProfile,
+    ValueRef,
 )
 
 flow = GraphWorkflowSpec(
@@ -44,7 +50,9 @@ flow = GraphWorkflowSpec(
     output=ValueRef("answer"),
 )
 profile = RuntimeProfile(
-    "local-graph", "1", {"default": {"adapter": "offline-echo"}},
+    "local-graph",
+    "1",
+    {"default": {"adapter": "offline-echo"}},
 )
 with RuntimeBuilder().build(profile, ".ralf/graph.sqlite") as engine:
     handle = engine.submit(flow, "prepare a report", command_id="report-001")
@@ -65,12 +73,16 @@ branches = [
     GraphNode("left", transform="identity", when=BranchCondition(ValueRef(), "left")),
     GraphNode("right", transform="identity", when=BranchCondition(ValueRef(), "left", negate=True)),
     GraphNode(
-        "join", transform="identity", depends_on=("left", "right"),
+        "join",
+        transform="identity",
+        depends_on=("left", "right"),
         allow_skipped_dependencies=True,
-        input=InputMap({
-            "left": ValueRef("left", required=False),
-            "right": ValueRef("right", required=False),
-        }),
+        input=InputMap(
+            {
+                "left": ValueRef("left", required=False),
+                "right": ValueRef("right", required=False),
+            }
+        ),
     ),
 ]
 ```
@@ -88,18 +100,26 @@ branches = [
 ```python
 from ralf_agent import GraphNode, GraphWorkflowSpec, LocalEngine, SQLiteStore, ToolRegistry
 
+
 class SumValues:
     identity = {"kind": "sum-values", "version": "1"}
 
     def transform(self, input, config):
         return sum(input[config["field"]])
 
+
 flow = GraphWorkflowSpec(
     "sum",
-    [GraphNode("total", transform="sum", config={"field": "values"}, output_schema={"type": "number"})],
+    [
+        GraphNode(
+            "total", transform="sum", config={"field": "values"}, output_schema={"type": "number"}
+        )
+    ],
 )
 engine = LocalEngine(
-    SQLiteStore(".ralf/sum.sqlite"), providers={}, tools=ToolRegistry(),
+    SQLiteStore(".ralf/sum.sqlite"),
+    providers={},
+    tools=ToolRegistry(),
     workflow_transforms={"sum": SumValues()},
 )
 # Submit {"values": [1, 2, 3]} and drive; close the engine after owned work finishes.

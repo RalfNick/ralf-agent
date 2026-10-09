@@ -294,9 +294,25 @@ class InMemoryKnowledgeStore:
         self.backend_id = backend_id or f"knowledge-memory:{uuid.uuid4().hex}"
         _text(self.backend_id, "Knowledge backend identity")
         self._versions, self._documents, self._chunks = {}, {}, {}
+        self._ingestions = {}
         self._lock = threading.RLock()
 
     def put(self, scope, namespace, document, *, expected_version, expires_at=None):
+        return self._put(
+            scope, namespace, document, expected_version=expected_version, expires_at=expires_at
+        )
+
+    def ingestion_receipt(self, scope, namespace, command_id):
+        from .knowledge_ingestion import memory_receipt
+
+        return memory_receipt(self, scope, namespace, command_id)
+
+    def ingest(self, scope, namespace, prepared, *, command_id):
+        from .knowledge_ingestion import memory_ingest
+
+        return memory_ingest(self, scope, namespace, prepared, command_id=command_id)
+
+    def _put(self, scope, namespace, document, *, expected_version, expires_at=None, prepared=None):
         prefix = _scope(scope, namespace)
         if not isinstance(document, Document):
             raise ValidationError("Knowledge writes require a Document")
@@ -317,7 +333,11 @@ class InMemoryKnowledgeStore:
                 scope=scope,
                 namespace=namespace,
             )
-            chunks = _make_chunks(record, self.chunk_size, self.overlap)
+            chunks = (
+                _make_chunks(record, self.chunk_size, self.overlap)
+                if prepared is None
+                else prepared.chunks(record)
+            )
             self._versions[identity] = record.version
             self._documents[identity] = record
             self._chunks[identity] = chunks
@@ -405,6 +425,10 @@ class SQLiteKnowledgeStore:
             )
             _text(self.backend_id, "Knowledge backend identity")
             self.store.conn.executescript("""
+                CREATE TABLE IF NOT EXISTS knowledge_ingestions (
+                    workspace TEXT, principal TEXT, namespace TEXT, command_id TEXT,
+                    request_digest TEXT NOT NULL, receipt TEXT NOT NULL,
+                    PRIMARY KEY(workspace,principal,namespace,command_id));
                 CREATE TABLE IF NOT EXISTS knowledge_documents (
                     workspace TEXT, principal TEXT, namespace TEXT, document_id TEXT,
                     version INTEGER NOT NULL, text TEXT NOT NULL, source_uri TEXT NOT NULL,
@@ -440,6 +464,21 @@ class SQLiteKnowledgeStore:
         )
 
     def put(self, scope, namespace, document, *, expected_version, expires_at=None):
+        return self._put(
+            scope, namespace, document, expected_version=expected_version, expires_at=expires_at
+        )
+
+    def ingestion_receipt(self, scope, namespace, command_id):
+        from .knowledge_ingestion import sqlite_receipt
+
+        return sqlite_receipt(self, scope, namespace, command_id)
+
+    def ingest(self, scope, namespace, prepared, *, command_id):
+        from .knowledge_ingestion import sqlite_ingest
+
+        return sqlite_ingest(self, scope, namespace, prepared, command_id=command_id)
+
+    def _put(self, scope, namespace, document, *, expected_version, expires_at=None, prepared=None):
         prefix = _scope(scope, namespace)
         if not isinstance(document, Document):
             raise ValidationError("Knowledge writes require a Document")
@@ -463,7 +502,11 @@ class SQLiteKnowledgeStore:
                 scope=scope,
                 namespace=namespace,
             )
-            chunks = _make_chunks(record, self.chunk_size, self.overlap)
+            chunks = (
+                _make_chunks(record, self.chunk_size, self.overlap)
+                if prepared is None
+                else prepared.chunks(record)
+            )
             self.store.conn.execute(
                 "INSERT INTO knowledge_documents VALUES (?,?,?,?,?,?,?,?,?,0) "
                 "ON CONFLICT(workspace,principal,namespace,document_id) DO UPDATE SET "

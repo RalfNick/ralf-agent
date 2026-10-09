@@ -24,6 +24,11 @@ COMPONENT_KINDS = frozenset(
         "workflow_interpreter",
         "workflow_scheduler",
         "workflow_transforms",
+        "team_strategies",
+        "planners",
+        "plan_verifiers",
+        "verifier",
+        "limits",
     }
 )
 
@@ -44,13 +49,37 @@ def component_declaration(value):
     return json.loads(canonical({"adapter": value["adapter"], "config": config}))
 
 
+def binding_component_declaration(value):
+    from .binding_catalog import SELECTABLE_ROLES
+
+    if not isinstance(value, dict) or set(value) != {
+        "role",
+        "component_id",
+        "version",
+        "component",
+    }:
+        raise ValidationError(
+            "Binding component requires role, component_id, version and component"
+        )
+    if not isinstance(value["role"], str) or value["role"] not in SELECTABLE_ROLES:
+        raise ValidationError("Unsupported binding component role")
+    _name(value["component_id"], "Binding component ID")
+    _name(value["version"], "Binding component version")
+    return {
+        "role": value["role"],
+        "component_id": value["component_id"],
+        "version": value["version"],
+        "component": component_declaration(value["component"]),
+    }
+
+
 @dataclass(frozen=True, init=False)
 class RuntimeProfile:
     name: str
     version: str
     _data_json: str
 
-    def __init__(self, name, version, providers, components=None):
+    def __init__(self, name, version, providers, components=None, binding_components=None):
         _name(name, "Profile name")
         _name(version, "Profile version")
         if not isinstance(providers, dict) or not providers:
@@ -70,6 +99,14 @@ class RuntimeProfile:
             "providers": normalized,
             "components": {key: component_declaration(value) for key, value in components.items()},
         }
+        if binding_components is not None:
+            if not isinstance(binding_components, list):
+                raise ValidationError("Binding components require a declaration list")
+            bindings = [binding_component_declaration(value) for value in binding_components]
+            keys = [(v["role"], v["component_id"], v["version"]) for v in bindings]
+            if len(set(keys)) != len(keys):
+                raise ValidationError("Binding component role/ID/version must be unique")
+            payload.update(schema_version=2, binding_components=bindings)
         object.__setattr__(self, "name", name)
         object.__setattr__(self, "version", version)
         object.__setattr__(self, "_data_json", canonical(payload))
@@ -81,6 +118,14 @@ class RuntimeProfile:
     @property
     def components(self):
         return json.loads(self._data_json)["components"]
+
+    @property
+    def schema_version(self):
+        return json.loads(self._data_json).get("schema_version", 1)
+
+    @property
+    def binding_components(self):
+        return json.loads(self._data_json).get("binding_components")
 
     @property
     def identity(self):
@@ -163,20 +208,20 @@ def load_catalog(path):
         not isinstance(payload, dict)
         or set(payload) != {"schema_version", "default", "profiles"}
         or type(payload["schema_version"]) is not int
-        or payload["schema_version"] != 1
+        or payload["schema_version"] not in {1, 2}
         or not isinstance(payload["profiles"], list)
         or not isinstance(payload["default"], dict)
         or set(payload["default"]) != {"name", "version"}
     ):
-        raise ValidationError("Runtime catalog requires schema_version=1, default and profiles")
+        raise ValidationError(
+            "Runtime catalog requires schema_version=1 or 2, default and profiles"
+        )
     catalog = RuntimeCatalog(base_dir=Path(path).resolve().parent)
     for value in payload["profiles"]:
-        if not isinstance(value, dict) or set(value) - {
-            "name",
-            "version",
-            "providers",
-            "components",
-        }:
+        allowed = {"name", "version", "providers", "components"}
+        if payload["schema_version"] == 2:
+            allowed.add("binding_components")
+        if not isinstance(value, dict) or set(value) - allowed:
             raise ValidationError("Unknown runtime profile fields")
         try:
             catalog.register(RuntimeProfile(**value))
@@ -195,6 +240,10 @@ def load_spec(path):
     if not isinstance(value, dict):
         raise ValidationError("An Agent/Workflow spec must be an object")
     value = dict(value)
+    if value.get("kind") in {"bound_agent", "bound_definition"}:
+        from .binding_definitions import decode_definition
+
+        return decode_definition(value)
     kind = value.pop("kind", "agent")
     try:
         if kind == "agent":
@@ -208,6 +257,10 @@ def load_spec(path):
             from .workflow import GraphWorkflowSpec
 
             return GraphWorkflowSpec.from_dict(value)
+        if kind in {"team", "dynamic"}:
+            from .orchestration_types import DynamicWorkflowSpec, TeamSpec
+
+            return (TeamSpec if kind == "team" else DynamicWorkflowSpec).from_dict(value)
     except (KeyError, TypeError) as exc:
         raise ValidationError("Invalid Agent/Workflow declaration fields") from exc
-    raise ValidationError("Spec kind must be agent, sequence or graph")
+    raise ValidationError("Spec kind must be agent, sequence, graph, team or dynamic")

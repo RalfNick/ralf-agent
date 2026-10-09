@@ -1,6 +1,6 @@
 # 常用 API 与 CLI 参考
 
-版本：0.1.0.dev12／local-4。公开 API 为预览契约；模型协议、有界召回、本地 RAG、版本化装配和独立接收／采纳有本地行为证据，完整 M1 未完成。已交付边界见 [实现清单](implementation-status.md)，适配器要求见 [扩展指南](extending.md)。以下为常用入口，不替代端口契约。
+版本：0.1.0.dev23／local-4。公开 API 为预览契约；静态图、有限规划／团队和真实数据适配器有行为证据，完整 M1 未完成。已交付边界见[实现清单](implementation-status.md)，适配器要求见[扩展指南](extending.md)。以下为常用入口，不替代端口契约。
 
 ## 定义与装配
 
@@ -28,7 +28,9 @@ from ralf_agent import (
 | --- | --- |
 | `AgentSpec(name, instructions, tools=(), ...)` | 允许工具名与 Provider 别名固定；默认最多 8 次决策；output_schema 为可选 JSON Schema |
 | `WorkflowSpec(name, steps, version="1")` | 非空 AgentSpec 顺序步骤；前步验收后的输出作为下一步输入 |
-| `GraphWorkflowSpec(name, nodes, version="1", output=None, output_schema=None)` | 不可变串行静态图；依赖、条件、输入／结果绑定与节点状态持久恢复 |
+| `GraphWorkflowSpec(name, nodes, version="1", output=None, output_schema=None, max_concurrency=1)` | 不可变静态图，默认串行，2..32 显式并行；依赖、条件、输入／结果绑定与节点状态持久恢复 |
+| `TeamSpec(name, members, strategy="sequential", ...)` | 有限 Agent／sequence／graph／team／dynamic 成员树、纯委派策略、child_budget/max_concurrency/max_depth，父子 Run 管理 |
+| `DynamicWorkflowSpec(name, members, planner="rule", verifier="complete", ...)` | 有限委派计划，flat／DAG 模式、max_revisions/max_steps/max_concurrency/max_depth，Plan→Execute→Verify→Replan |
 | `GraphNode`／`ValueRef`／`Literal`／`InputMap`／`BranchCondition` | Agent、纯变换或受管理 Tool 节点；明确缺失／null、依赖祖先引用与分支合并 |
 | `ExecutionPlan`／`WorkflowCompiler`／`WorkflowInterpreter`／`WorkflowSelection` | 计划 v1／Tool v2 与纯编译／选择端口；默认 static，公共边界验证选择语义 |
 | `NodeTransform`／`IdentityTransform` | 同步纯 JSON 计算；通过 workflow_transforms 注册，不执行外部效果 |
@@ -41,7 +43,7 @@ from ralf_agent import (
 | `ComponentRegistry.register(kind, name, factory)`／`RuntimeBuilder.build(profile, db_path)` | 显式构造适配器；BuildContext.own 接管同步关闭资源，返回 RuntimeInstance |
 | `ProfiledEngine(catalog, db_path, builder=None, ...)` | 按原 profile 路由任务；一次一个本地实例，缺失版本不回退新默认 |
 | `RunReader`／`CommandReceiptReader` | 可替换只读任务端口；后者是可选控制回执查询能力，默认 SQLiteRunReader 两者均实现 |
-| `load_spec(path)` | 严格 JSON/TOML Agent、sequence 或 graph 声明；完整用法见[静态 Workflow](static-workflows.md) |
+| `load_spec(path)` | 严格 JSON/TOML Agent、sequence、graph、team 或 dynamic 声明；见[静态 Workflow](static-workflows.md)及[编排](orchestration.md) |
 | `Scope(workspace="default", principal="local-owner")` | 可信宿主传入的作用域；不是企业身份认证 |
 | `OpenAIChatProvider(model, ...)` | 异步 Chat Completions；base_url/timeout/token_parameter、temperature/top_p/stop/seed、stream/capabilities 可配置；密钥通过 api_key 或环境传入 |
 | `DeepSeekChatProvider`／`AnthropicProvider`／`GeminiProvider` | 明确非思考 preset、原生 Messages 文本/工具、原生 Gemini 文本；签名工具与多模态不支持 |
@@ -88,7 +90,7 @@ print(snapshot.state, snapshot.result, snapshot.error)
 
 | 方法 | 结果和语义 |
 | --- | --- |
-| `submit(spec, input, *, command_id, budget=32, session_id=None)` | 返回 RunHandle；记录提交，不隐式启动 drive；定义／输入／预算／Session 构成请求身份 |
+| `submit(spec, input, *, command_id, budget=32, session_id=None)` | 返回 RunHandle；记录提交，不隐式启动 drive；定义／输入／预算／Session 构成请求身份。Session 省略时用 Run ID，显式指定必须为非空字符串，保留原值 |
 | `await drive(run_id)` | 推进原 Run 到终态或等待；返回 RunSnapshot；同 Run 未完成调用阻止第二次执行 |
 | `status(run_id)` | 当前 Scope 的 RunSnapshot：state、result、error、pending、actions |
 | `events(run_id, *, after=0, limit=1000)` | 有序 RunEvent；after 使用最后 seq；event_id 为 run_id:seq |
@@ -141,7 +143,7 @@ handler 接收 JSON 参数和 InvocationContext。Context 提供 scope、run_id�
 | `facts(scope, namespace)` | 返回未过期事实，含 key、value、version、expires_at |
 | `put_fact(scope, namespace, key, value, *, expected_version, expires_at=None)` | 首次写 expected_version=0；CAS 成功后返回新版本；expires_at 为有限 Unix 秒 |
 
-`InMemoryMemory` 和 `SQLiteMemory` 提供参考实现。远程记忆优先使用异步端口；线程安全同步后端可用 ThreadedMemoryAdapter。`backend_id` 必须稳定且不含秘密。Redis／PostgreSQL／托管向量库适配器尚未交付。
+`InMemoryMemory` 和 `SQLiteMemory` 提供本地实现；RedisMemory 与 PostgresMemory 提供异步远程实现。线程安全同步后端可用 ThreadedMemoryAdapter。`backend_id` 必须稳定且不含秘密。可选依赖、初始化与资源归属见[远程数据](remote-data.md)。
 
 召回与知识常用类型也从 `ralf_agent` 导入：
 
@@ -161,6 +163,11 @@ handler 接收 JSON 参数和 InvocationContext。Context 提供 scope、run_id�
 | `EmbeddingProvider`／`VectorIndex` | 显式注入 async embed 与 scoped 索引；索引不保存知识正文 |
 | `VectorRetriever(store, index, embedding)` | 显式 index_document 后检索；回读有效权威来源 |
 | `InMemoryVectorIndex(dimensions=...)`／`SQLiteVectorIndex(path, dimensions=...)` | 本地真实 cosine 线性检索；维度与有限非零向量校验 |
+| `RedisMemory.connect(url, backend_id=..., prefix="ralf", timeout=10)` | async owned 客户端；构造器借用客户端，Lua CAS/去重、逻辑 TTL、分页 |
+| `PostgresMemory.connect(dsn, backend_id=...)` | async owned 连接；显式 initialize，事务 CAS/去重、逻辑 TTL、分页 |
+| `PostgresKnowledgeStore.connect(dsn, backend_id=..., chunk_size=1000, overlap=100)` | async 文档权威；显式 initialize，CAS/TTL/删除版本和词法检索 |
+| `QdrantVectorIndex(url, collection=..., dimensions=..., backend_id=..., client=None)` | async initialize/upsert/search/delete_document/aclose；固定 Cosine，Scope 过滤，失败关闭可重试 |
+| `HashEmbeddingProvider(dimensions=128)` | async 确定性词项散列基线，可替换 EmbeddingProvider；不作为语义模型 |
 
 Knowledge／Vector 组件由应用管理生命周期。召回输出额度不限制所有底层 I/O、embedding 费用或完整 Run 的历史读取。完整例子和兼容要求见 [召回与 RAG](recall-and-rag.md)。
 
@@ -182,3 +189,93 @@ Knowledge／Vector 组件由应用管理生命周期。召回输出额度不限�
 CLI 没有独立的 submit／reconcile／增额命令；新任务通过生成项目入口或 SDK 提交。CLI 观察仅支持默认 Scope／SQLite。常见 typed error 从 `ralf_agent.errors` 导入，CLI 错误输出到 stderr、返回 2；成功处理命令返回 0，仍需检查 Run state。
 
 `GraphWorkflowSpec(..., max_concurrency=1)` 默认串行，2..32 显式并行。`WorkflowScheduler`／`StaticWorkflowScheduler` 返回 detached `WorkflowBatch`；通过 Engine 参数或 Profile 的 `workflow_scheduler` 组件替换。节点隔离与恢复见[并行指南](parallel-workflows.md)。
+
+## 异步装配（dev13）
+
+AsyncLifecycle.aclose、ComponentRegistry.register_async、RuntimeBuilder.abuild、BuildContext.own_async 和 RuntimeInstance.aclose/async with 是显式 SDK 入口。原 ExecutionEngine/Store/Coordinator 仍同步关闭；同步 CLI/ProfiledEngine 不路由异步工厂。归属、事件循环和失败/取消重试见[异步装配](async-assembly.md)。
+
+## 规划与团队（dev14）
+
+| API | 契约 |
+| --- | --- |
+| `TeamStrategy.select(TeamRequest) -> TeamSelection` | 纯同步提出 ChildCall 或最终 JSON；通过 team_strategies 映射注入 |
+| `SequentialTeam`／`RouterTeam`／`SupervisorTeam` | 默认顺序、显式路由、Worker 并行后 Supervisor 汇总 |
+| `Planner.plan(PlanningRequest, AgentCaller) -> PlanProposal \| DAGProposal \| PlanningConclusion \| None` | async 提案；None 仅允许实际子调用尚待恢复时返回 |
+| `RulePlanner`／`ModelPlanner` | 默认有限成员计划；受管理 tool-free 模型子 Run，沿用审批/预算/响应恢复 |
+| `PlanProposal(steps)`／`PlanStep(id, member, input)` | 固定有限 JSON、allowlist、唯一 ID；收到提案与修订采纳分开保存 |
+| `PlanVerifier.verify(PlanningRequest) -> Verification` | 纯同步完成/失败/重规划判断；CompleteVerifier 默认取最后 Worker 结果 |
+| `Verification(status, result=None)` | status 为 succeeded/failed/replan，修订/步骤/总预算有界 |
+
+TeamRequest、PlanningRequest、ChildCall、TeamSelection 与上述类型均从公共包导入。Planner 的 caller 只允许注册的 @planner Agent，遵守父并发额度；业务 Worker 在采纳计划后委派。child_budget 先从父额度整体预留，未知效果保守保留；父失败/取消传播到孩子。审批/reconcile 针对真实 child Run，恢复驱动父 Run；详情见[编排指南](orchestration.md)。
+
+## dev15 DAG, transport and distributed ports
+
+DAGNode/DAGProposal, RuleDAGPlanner/ModelDAGPlanner and PlanningConclusion extend the existing Planner boundary. LocalEngine.patch_plan performs scoped idempotency/CAS. See [DAG](dynamic-dag.md) for typed bindings and nested member support.
+
+MessageBus with InMemoryMessageBus/RedisStreamsBus; Inbox/AsyncInbox and Outbox/AsyncOutbox with SQLite defaults; CommandAdapter with LocalCommandAdapter/AsyncCommandAdapter; EngineCommandDispatcher and consume_delivery. Public validation/call helpers enforce native async vs completed sync boundaries without inheritance. A2AClientPort/A2AClient, A2AApplication and A2AToolSource expose the fixed polling subset. See [handoff](remote-handoff.md).
+
+AsyncExecutionEngine/AsyncRuntimeDiagnostics are separate from synchronous local ports. TemporalEngine, TemporalRuntime, build_temporal_worker, replay_temporal_history and EffectJournal/PostgresEffectJournal provide explicit registered distributed execution. See the [capability subset](temporal-execution.md). EvaluationLimits/evaluate_planning/load_planning_cases/score_planning_proposal and ralf-evaluate-planning expose [proposal evaluation](planning-evaluation.md).
+
+
+## 异步交接与服务
+
+SyncTaskControls/AsyncTaskControls 与 TaskControlBridge 是独立的完成控制端口，支持结构化委托和可调用对象；不转移执行权威或资源所有权。PostgresInbox/PostgresOutbox.connect + initialize 提供共享持久交接，LocalA2AService 提供单机 ASGI lifespan、drive 跟踪与真实 handler drain。`ralf init --template a2a` 生成可编辑独立服务。参数、容量、重放与远程资源关闭见[异步交接](async-handoff.md)。
+
+## 分布式编排与业务评测
+
+`TemporalRuntime(..., team_strategies={}, planners={}, plan_verifiers={}, knowledge=None, execution_policy=None)` 提供显式组件替换；`runtime.orchestration_release` 固定扩展发布，配合 `build_temporal_worker(..., release=release)` 与 `TemporalEngine(..., release=release)`。原生默认用 `runtime.manifest`。`TemporalExecutionPolicy` 是不可变的每任务限制。`patch_plan` 使用原计划修订号 CAS；审批与核验针对实际叶子 Run。详见 [分布式指南](temporal-composition.md)。
+
+`evaluate_business(provider=None, *, cases=None, limits=None, evidence_dir=None, offline=False, prices=None)` 默认不调用模型；`load_business_cases(path=None)` 返回独立任务集。CLI 为 `ralf-evaluate-business`；[评测指南](business-evaluation.md)说明预算与结果边界。
+
+## Document ingestion (dev18)
+
+Public pure ports: `DocumentParser.parse(SourceDocument) -> ParsedDocument`, `Chunker.split(ParsedDocument) -> tuple[ChunkSpan, ...]`; defaults `TextDocumentParser`, `CharacterChunker`, `ParagraphChunker`. `IngestionCoordinator(store, parser=None, chunker=None)` borrows a sync/async atomic store; `await ingest(scope, namespace, source, command_id=..., expected_version=..., expires_at=None)` returns immutable `IngestionReceipt`.
+
+`IngestionKnowledgeStore` and `AsyncIngestionKnowledgeStore` expose `ingest(scope, namespace, PreparedIngestion, command_id=...)` and `ingestion_receipt(scope, namespace, command_id)`. In-memory/SQLite/PostgreSQL implement them; vector indexing is separate. DTOs and examples, bounds, commit/replay/CAS and parsed-character locations are documented in the [ingestion guide](document-ingestion.md).
+
+## Hybrid retrieval (dev19)
+
+`OpenAIEmbeddingProvider.embed` preserves the async vector-list port; `embed_result` adds immutable `EmbeddingResponse` with per-request usage. `RankFusion` / `RRFFusion` return `FusionRank`; `Reranker` / `AsyncReranker`, `PreserveOrderReranker` / `TokenOverlapReranker` propose only existing candidate IDs. `HybridRetriever(store, retrievers, ...)` uses existing RetrievalQuery/Result and validates the source authority around all ranking awaits. See [guide](hybrid-retrieval.md) for bounds, borrowed/owned lifecycle, failure modes and additive factory declarations.
+
+## Context and explicit artifacts (dev20)
+
+MessageCounter, ContextMeasure, ContextBudgeter, WholeGroupBudgeter,
+CanonicalCharacterCounter, UTF8TokenEstimator, ContextSummarizer, ContextSummary,
+ExcerptContextSummarizer, BudgetedContextAssembler and optional
+ContextRequestValidator provide pure opt-in context assembly/actual-request
+measurement. ArtifactReference, ArtifactStore/AsyncArtifactStore,
+InMemoryArtifactStore and SQLiteArtifactStore provide explicit scoped JSON
+storage. Structural extension contracts, defaults and limits are documented in
+[context/artifacts](context-artifacts.md). No implicit model summaries,
+automatic fact extraction or Temporal custom context support is claimed.
+
+## Managed memory, summaries and Temporal context (dev21)
+
+MemoryExtractor, RuleMemoryExtractor, ModelMemoryExtractor, FactProposal, MemoryAdmissionPolicy and MemoryPipeline provide explicit successful-Run consolidation over CAS/recall/validation ports. ManagedModelSummarizer, ManagedSummary and FrozenContextSummarizer bridge durable tool-free model Runs to pure context assembly. See [managed memory](managed-memory.md) and [Temporal registration](temporal-custom-context.md). Chat Completions/DeepSeek adapters accept explicit `json_mode=True` for non-streaming JSON objects; output Schema and semantic checks still belong to adoption.
+
+## dev22 model and typed-tool APIs
+
+OpenAIResponsesProvider implements the existing text/function Provider and streaming ports. infer_tool_schema and ToolRegistry.register_function/tool bridge bounded JSON annotations/keyword calls to existing tool dispatch. evaluate_model_compatibility runs managed narrow scenarios; no provider returns not_run. See [contracts, examples and limits](sdk-model-tools.md).
+
+## Invocation observation and durable events
+
+InvocationRecord/InvocationMiddleware, NoopMiddleware/LoggingMiddleware and
+MiddlewareProvider/MiddlewareToolExecutor provide opt-in existing-port wrappers.
+EventCursor/EventEnvelope, SyncRunEventSource/AsyncRunEventSource and
+RunEventSubscription provide bounded scoped pull/reconnect and SSE encoding.
+See [middleware and events](middleware-and-events.md) for defaults, exact schemas,
+configuration, borrowed lifecycle and installed CLI/template examples.
+
+## Per-Agent bindings (dev25 H1a)
+
+AgentDefinition/BoundDefinition and AgentBindingDescriptor/BindingSelection are additive public values.
+BindingCatalog holds scoped borrowed components; LocalEngine.binding_capabilities describes the supported subset.
+See [binding examples and refusal matrix](agent-bindings.md); Agent/Runtime Facade remains target-only.
+
+## Local 完成验证
+
+`LocalEngine(..., verifier=None)` 默认保持 Schema 完成语义。`CompletionVerifier.verify(CompletionRequest) -> CompletionVerdict` 支持纯同步接受／拒绝／有界重试；`SchemaCompletionVerifier` 与 `ToolReceiptVerifier` 为默认适配器。Verifier 角色可按 Agent 绑定并由 Profile 装配，详见[完成验证](completion-verification.md)。
+
+## Local 每 Agent 执行限制
+
+`LocalEngine(..., limits=None)` 的宿主上限与 `limits` Agent 绑定始终取交集；`FixedAgentLimits(max_decisions=None,max_context_chars=None,max_tool_actions=None)` 是 opt-in 默认，`AgentLimitsPolicy.propose(AgentSpec)->AgentLimitProposal` 可替换。接受时固定 caps，执行读取原发布；Profile 的 limits/fixed 适配及声明路径见[教程](agent-limits.md)。

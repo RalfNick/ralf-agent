@@ -3,6 +3,7 @@
 import json
 import shlex
 
+from .binding_manifests import all_step_manifests, step_manifest
 from .engine import TERMINAL
 from .types import RunDiagnostics, RunSnapshot, digest
 from .workflow_runtime import workflow_details
@@ -35,16 +36,23 @@ def inspection(run, budget, db, factory=None, *, config=None):
 def diagnostics_inspection(details, db, factory=None, *, config=None):
     snapshot = details.snapshot
     manifest = details.manifest
-    providers = manifest["providers"]
+    providers = [
+        value for view in all_step_manifests(manifest) for value in view["providers"].values()
+    ]
     is_demo = bool(providers) and all(
-        value.get("kind") == "offline-scripted-oncall" for value in providers.values()
+        value.get("kind") == "offline-scripted-oncall" for value in providers
     )
+    actions = {action["id"]: action for action in snapshot.actions}
+
+    def effect(action):
+        return step_manifest(manifest, action["node"])["tools"][action["tool"]]["effect"]
+
     needs_factory = factory is None and config is None and not is_demo
     configured_factory = factory or ("YOUR_MODULE:create_engine" if needs_factory else None)
     pending = []
     for action in snapshot.pending:
         item = dict(action)
-        item["effect"] = manifest["tools"][item["tool"]]["effect"]
+        item["effect"] = effect(actions[item["action_id"]])
         for decision in ("approve", "reject"):
             arguments = [
                 snapshot.run_id,
@@ -65,14 +73,14 @@ def diagnostics_inspection(details, db, factory=None, *, config=None):
             "action_id": action["id"],
             "tool": action["tool"],
             "arguments": action["arguments"],
-            "effect": manifest["tools"][action["tool"]]["effect"],
+            "effect": effect(action),
             "effect_key": action["effect_key"],
             "digest": action["digest"],
         }
         for action in snapshot.actions
         if action["kind"] == "tool"
         and action["status"] in {"executing", "outcome_unknown"}
-        and manifest["tools"][action["tool"]]["effect"] != "read_only"
+        and effect(action) != "read_only"
     ]
     recorded = [
         {
@@ -107,8 +115,17 @@ def diagnostics_inspection(details, db, factory=None, *, config=None):
         ),
         "events_command": command_hint(db, None, "events", snapshot.run_id, "--after", "0"),
     }
+    if "agent_bindings" in manifest:
+        report["agent_bindings"] = {
+            path: {"resolved": entry["resolved"], "providers": entry["manifest"]["providers"]}
+            for path, entry in manifest["agent_bindings"]["steps"].items()
+        }
     if details.workflow is not None:
         report["workflow"] = details.workflow
+        for child in report["workflow"].get("children", []):
+            child["inspect_command"] = command_hint(
+                db, None, "--format", "text", "inspect", child["run_id"]
+            )
     return report
 
 
@@ -122,13 +139,26 @@ def render_inspection(report):
     lines.append(
         f"Execution credits: spent {budget['spent']}, held {budget['held']}, limit {budget['limit']}"
     )
+    for path, entry in report.get("agent_bindings", {}).items():
+        lines.append(f"Agent binding: {path}")
+        for alias, identity in entry["providers"].items():
+            lines.append("  Provider: " + alias + " / " + json.dumps(identity, ensure_ascii=False))
     if report["needs_factory"]:
         lines.append("Set YOUR_MODULE:create_engine to the original trusted runtime factory.")
     if report["error"]:
         lines.append("Error: " + json.dumps(report["error"], ensure_ascii=False))
     if report.get("workflow") is not None:
-        for node_id, node in report["workflow"]["nodes"].items():
+        for node_id, node in report["workflow"].get("nodes", {}).items():
             lines.append(f"Node: {node_id} ({node['state']})")
+        for child in report["workflow"].get("children", []):
+            lines.append(
+                f"Child: {child['id']} / {child['member']} / {child['run_id']} ({child['state']})"
+            )
+            lines.append("  " + child["inspect_command"])
+        for revision in report["workflow"].get("revisions", []):
+            lines.append(f"Plan revision: {revision.get('plan_revision', revision['revision'])}")
+        for node_id, node in report["workflow"].get("dag", {}).get("nodes", {}).items():
+            lines.append(f"DAG node: {node_id} ({node['state']})")
     for item in report["pending"]:
         lines.extend(
             [
@@ -170,9 +200,46 @@ def render_result(result):
     """Human-readable control receipts and event pages; JSON remains the default."""
     if isinstance(result, dict) and "directory" in result and "factory" in result:
         template = result.get("template", "oncall")
+        if template == "temporal":
+            return "\n".join(
+                [
+                    f"Created offline Temporal starter: {result['directory']}",
+                    "Install ralf-agent[temporal] and set RALF_TEMPORAL_ADDRESS to your Service.",
+                    "  " + shlex.join(["cd", result["directory"]]),
+                    "  " + shlex.join(["python", "-m", result["module"], "worker"]),
+                    "In another terminal from the same directory:",
+                    "  " + shlex.join(["python", "-m", result["module"], "run", "--kind", "dag"]),
+                ]
+            )
+        if template == "a2a":
+            return "\n".join(
+                [
+                    f"Created offline A2A service starter: {result['directory']}",
+                    "Install ralf-agent[server] and set RALF_A2A_TOKEN locally in both terminals.",
+                    "  " + shlex.join(["cd", result["directory"]]),
+                    "  " + shlex.join(["python", "-m", result["module"], "serve"]),
+                    "In another terminal from the same directory:",
+                    "  "
+                    + shlex.join(["python", "-m", result["module"], "client", "--input", "hello"]),
+                ]
+            )
+        if template == "async":
+            return "\n".join(
+                [
+                    f"Created offline async Agent starter: {result['directory']}",
+                    f"Async Python factory: {result['factory']}",
+                    "  " + shlex.join(["cd", result["directory"]]),
+                    "  " + shlex.join(["python", "-m", result["module"], "--input", "hello"]),
+                    "  " + shlex.join(["python", "-m", result["module"], "--resume", "RUN_ID"]),
+                    "  "
+                    + command_hint(
+                        ".ralf/runs.sqlite", None, "--format", "text", "inspect", "RUN_ID"
+                    ),
+                ]
+            )
         entry_arguments = (
             ["--input", "hello"]
-            if template in {"config", "model", "graph"}
+            if template in {"config", "model", "graph", "plan", "team", "dag", "nested"}
             else (
                 ["--query", "缓存连接失败怎么恢复"]
                 if template == "rag"

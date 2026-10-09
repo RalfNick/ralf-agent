@@ -212,10 +212,30 @@ class SQLiteStore:
                 and (
                     run["state"] not in {"succeeded", "failed", "cancelled"}
                     or run.get("workflow", {}).get("quiescent") is False
+                    or run.get("orchestration", {}).get("quiescent") is False
                 )
             ),
             None,
         )
+
+    def session_resource_owner(self, scope, resource):
+        """Address-based admission shares the Run transaction and quiescence."""
+        from .session_resources import run_session_claims, same_session_address
+
+        if (
+            not isinstance(resource, dict)
+            or set(resource) != {"backend_id", "session_id"}
+            or any(not isinstance(value, str) or not value.strip() for value in resource.values())
+        ):
+            raise ValidationError("Session resource requires backend_id and actual session_id")
+        for run in self._scoped_runs(scope):
+            if any(same_session_address(resource, claim) for claim in run_session_claims(run)) and (
+                run["state"] not in {"succeeded", "failed", "cancelled"}
+                or run.get("workflow", {}).get("quiescent") is False
+                or run.get("orchestration", {}).get("quiescent") is False
+            ):
+                return run["id"]
+        return None
 
     def unresolved_effect(self, scope, tool, arguments, exclude_action_id):
         for run in self._scoped_runs(scope):

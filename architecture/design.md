@@ -1,13 +1,11 @@
 # RALF 开源 Agent 平台架构设计
 
-版本：0.3（通用框架目标与分层验收修订；文档版本独立于产品版本）
+版本：1.2（H1a／Local H1b／Session H1c／Facts与Knowledge范围H1d及纯完成Verifier H1e／执行限制H1f绑定实现、AgentHarness命名及Facade/Session/关闭契约；文档版本独立于产品版本）
 
-日期：2026-10-06（Asia/Shanghai）
+日期：2026-10-08（Asia/Shanghai）
 
 状态：完整架构目标；当前已交付的 v0.1 开发增量及剩余工作见 [实现状态](../docs/implementation-status.md)，不宣称以下能力已全部实现。
-2026-10-06 实现更新：dev8 已交付结构化 ExecutionEngine、知识上下文与纯召回规划端口、显式适配器注册、JSON/TOML 装配及原 profile 恢复，见 [运行装配指南](../docs/runtime-assembly.md)。默认 local-4／执行 Schema v1 保留；配置版本解析不等于 Worker 版本路由、热迁移或分布式调度。Workflow 在 dev8 中仍为固定顺序步骤。
-dev9 模型增量增加生成参数、能力预检、完整 SSE、原生 Anthropic/Gemini 文本及 DeepSeek 非思考 preset，见 [模型指南](../docs/model-adapters.md)。流片段不成为执行事实，工具仍在完整响应采纳后派发；线上模型兼容、质量、Gemini 签名工具、多模态与模型路由尚未验收或实现。
-dev10 编排增量已交付计划 v1、可替换纯编译器／解释器／变换、串行静态图的依赖／条件／输入映射与持久节点状态，以及 JSON/TOML 和 Graph starter，见[静态 Workflow 指南](../docs/static-workflows.md)。默认旧入口保留兼容路径，Graph 通过新 Manifest 固定计划；并行、动态 Plan、ChildRun 与数据流尚未交付。
+2026-10-08 实现基线：dev24 已有 Local／Temporal 原生 Agent、顺序流程及受限图／团队／动态编排，真实远程数据适配、可选记忆／摘要、中间件和持久事件订阅；上一轮三项P2已通过共享采纳／证据／近期Session规则修复，见[修复审查](reviews/2026-10-08-shared-model-context-contracts.md)。本次设计将广义Harness定义为包含Core的能力运行系统，现有Harness API保留为纯DecisionPolicy。dev25已实现[H1a绑定子集](../docs/agent-bindings.md)：原生Agent/顺序流程六类组件选择、逐步骤发布与Profile v2。dev26将同一六类选择扩展到Local图/Team/动态DAG/嵌套成员；dev27补齐Local Session后端、namespace视图与同权威实际地址占用；dev28交付Facts/Knowledge宿主允许namespace视图和来源校验；dev29增加Local纯完成Verifier绑定与耐久回执反馈；dev30交付Local限额策略的固定交集与工具动作额度；Temporal绑定、其他资源选择、环境角色、统一入口与受管理默认链路仍属于[目标设计](viewpoints/harness-runtime.md)。统一入口的等待、Session占用与资源关闭遵循[Facade契约](specs/agent-facade-session-contract.md)，三个审查空白与本地AgentScope参考见[修订记录](reviews/2026-10-08-agent-harness-facade.md)。后续沿用[建设顺序](../docs/agentscope-alignment.md)，不以设计或测试数量替代实际默认行为验收。
 读者：项目维护者、SDK 开发者、架构师与企业实施团队。  
 项目名称：Ralf-Agent；RALF 表示 Reliable Agent Lifecycle Framework。仓库：[RalfNick/ralf-agent](https://github.com/RalfNick/ralf-agent)。
 
@@ -75,19 +73,23 @@ flowchart LR
 
 ```mermaid
 flowchart TB
-    Entry[SDK / CLI / API / 控制台] --> Control[RunService / ReleaseRegistry / Admission]
-    Control --> Core[Agent / Harness / Workflow / Run / Action]
-    Core --> Engine[ExecutionEngine]
-    Engine --> Local[LocalEngine: 单进程或单机多进程]
-    Engine --> Temporal[TemporalEngine: 分布式 Workers]
-    Core --> Context[ContextAssembler / Memory / Knowledge]
-    Core --> Tools[ToolRegistry / ToolExecutor / Sandbox]
-    Core --> Messaging[AgentCaller / MessageBus / A2A]
-    Core --> Adapters[模型与第三方 RunnerAdapter]
-    Governance[Policy / Approval / Credential / Budget] -.-> Control
-    Governance -.-> Core
-    Data[Artifact / SourceCatalog / Cache / 生命周期] -.-> Core
-    Observe[事件 / Tracing / 日志 / 评测] -.-> Core
+    Entry[SDK / CLI / API / 控制台] --> Facade[Agent / Session Facade]
+    Service[可选 Service: 身份 / 托管 / 容量 / 通信] --> Facade
+    Service --> Runtime[Runtime: 资源所有权 / 生命周期 / Task托管]
+    Runtime -.-> Bindings
+    Runtime -.-> Kernel
+    Facade --> Bindings[版本化能力绑定 / Release / Admission]
+    Bindings --> Harness[AgentHarness: 能力组合与受管理阶段]
+    Harness --> Kernel[RuntimeKernel: 公共执行协议与纯规则]
+    Kernel --> Local[Local 执行权威 / SQLite]
+    Kernel --> Temporal[Temporal 执行权威 / History]
+    Harness --> Strategies[DecisionPolicy / Workflow / Planner / Team]
+    Harness --> Context[ContextPipeline / Memory / RAG / Artifact]
+    Harness --> Tools[ToolExecutor / Workspace / Skill / Sandbox / Runner]
+    Harness --> Messaging[AgentCaller / MessageBus / A2A]
+    Governance[Policy / Approval / Credential / Budget] -.-> Bindings
+    Governance -.-> Kernel
+    Observe[事实事件 / 展示事件 / Trace / Eval] -.-> Harness
 ```
 
 上图表示逻辑依赖，不要求每个模块独立部署。采用模块化代码组织；企业部署分离 API／控制台、执行 Workers、沙箱和基础设施。个人模式直接在 SDK 进程使用内核。
@@ -97,7 +99,10 @@ flowchart TB
 | 层 | 职责 | 不承担的职责 |
 | --- | --- | --- |
 | Agent／AgentSpec | 定义目标、输入输出、模型、指令、工具、记忆策略及执行限制 | 不自带第二套持久调度器 |
-| 原生 Harness | 纯同步装配请求、解释完整模型响应与提出决策；异步规划／摘要等交由受管理执行阶段 | 不直接执行 I/O、批准工具、提交运行状态或调度重试；外部完整 Harness 由 Runner 适配 |
+| AgentHarness（目标） | 按Agent组合能力、统一入口与受管理阶段；包含Core执行循环 | 不在执行后端之外增加Run状态权威 |
+| Runtime（目标宿主） | 共享装配、owned/borrowed资源与本地执行Task托管 | 不用Task列表代替Run日志；不改变借用资源的所有权 |
+| DecisionPolicy（现有Harness API） | 纯同步准备请求、解释响应与提出决策；异步规划／摘要交由受管理阶段 | 不直接执行I/O、批准工具、提交状态或调度重试 |
+| RuntimeKernel（逻辑协议） | 公共验证、确定性推进和受管理阶段规则 | 不另建持久状态库；每后端提交自己的转换 |
 | Workflow | 解释依赖、分支、并行、受限循环、等待与计划提案 | 不在确定性解释器中直接执行外部 I/O |
 | ExecutionEngine | 唯一提交 Run／Action 状态转换，序列化计划与调度，处理命令、等待、取消和恢复 | 不把对话记忆作为执行状态 |
 | ToolExecutor | 接收引擎已授权并记录意图的执行请求，执行一个 Attempt 或查询其效果，返回观察证据 | 不批准工具、不预留预算、不提交 Run 或调度重试 |
@@ -105,9 +110,22 @@ flowchart TB
 | Governance | 身份、资源授权、审批、凭据、预算与审计 | 不接受模型输出作为授权依据 |
 | Data／Observability | 数据、产物、来源、生命周期与遥测 | 遥测不作为执行恢复的权威来源 |
 
-原生循环的编程边界为 Harness 提案 → Engine 采纳并提交 → Executor 执行 → Engine 采纳结果。可恢复步骤和外部委派分别遵循 [Action 恢复契约](specs/action-recovery-contract.md)与 [Runner 能力契约](specs/runner-capability-contract.md)。
+原生循环的编程边界为 DecisionPolicy（现有Harness）提案 → 执行权威采纳并提交 → Executor执行 → 执行权威采纳结果。可恢复步骤和外部委派分别遵循 [Action 恢复契约](specs/action-recovery-contract.md)与 [Runner 能力契约](specs/runner-capability-contract.md)。
 
-dev6／local-4 已提供 `Harness`／`NativeHarness` 和 `ToolExecutor`／`PythonToolExecutor` 可替换端口。LocalEngine 在独立接收事务保存完整模型响应或效果观察，再提交决策／结果；内核保留当前授权、审批、预算和状态权威。此实现只覆盖原生 Agent 与顺序 Workflow；Workspace、Skills、Coding Runner 和分布式能力仍按后续阶段交付。具体 DTO、阶段和验证边界见[执行组件指南](../docs/execution-components.md)。
+`Harness`／`NativeHarness` 和 `ToolExecutor`／`PythonToolExecutor` 已有可替换端口。LocalEngine 在独立接收事务保存完整模型响应或效果观察，再提交决策／结果；内核保留当前授权、审批、预算和状态权威。dev24 本地编排已扩展为图／团队／动态流程，Temporal 支持其明确声明的子集；自定义 Harness 等能力尚未完全可移植。Workspace、Skills、Coding Runner 与完整企业部署仍待交付。具体 DTO、阶段和验证边界见[执行组件指南](../docs/execution-components.md)及[Temporal 编排](../docs/temporal-composition.md)。
+
+### 3.4 默认组合与扩展防线
+
+以下约束用于后续建设；dev25–dev27交付H1a／Local H1b／Session H1c绑定子集，不能据此宣称完整H1/H2已实现；详细组件、默认组合、迁移与阶段门槛见[AgentHarness目标架构](viewpoints/harness-runtime.md)，首期规范见[能力绑定契约](specs/agent-capability-binding-contract.md)：
+
+- 简单 Agent／Session 入口和高级运行装配共用同一执行权威；个人首用不要求先理解 Action、租约、接收阶段和所有 Profile 对象。
+- [Facade行为契约](specs/agent-facade-session-contract.md)统一纯观察wait、明确cancel/业务deadline、耐久Session busy拒绝和owned/borrowed关闭。首期不提供Turn排队；观察取消不取消业务，关闭默认保留可恢复待办。
+- 每个 Agent 可以通过有版本的能力绑定选择模型／工具／上下文／知识／记忆策略／DecisionPolicy（现有Harness），默认继承宿主配置。绑定在接受时固定，不赋予模型授权能力，也不通过独立 Engine 拆散普通团队的预算与恢复。
+- 默认组件须组成有价值的推荐链路，覆盖近期会话、RAG 和记忆／上下文管理。可选模型、远程服务和额外费用由配置明确开启；离线基线只证明链路。
+- 纯策略、受管理 I/O、授权与采纳阶段分离。模型摘要、知识获取、产物卸载等有执行证据及生命周期，不能藏在纯 Harness 或任意观察 hook 中。
+- Local／Temporal 的存储和调度独立；公共提案、已收到证据、输出验收、作用域及错误语义使用共同纯校验与相同验收案例。差异通过结构化能力声明在提交前拒绝。
+- 消息、Session、Run／Action 事实与展示事件分别定义。展示 delta 可关联执行，但未完成的片段不能提前执行工具；输入续接、外部结果与最终／暂停结果先形成共享语义，再公开服务 API。
+- 一个新增抽象必须解决明确替换或组合需求，并交付默认行为、替换示例和安装包用户场景。接口数量、模板数量、回归数量不能替代采用和真实任务质量。
 
 ## 4. 领域对象、请求与状态契约
 
@@ -159,11 +177,11 @@ Action 区分待调度、执行中、已确认结果、失败、取消与 outcom
 
 General、Search／RAG、PlanAndExecute、Coding 优先作为能力包与配置组合，共用运行时与治理契约。简单 Agent 使用原生决策／工具循环；PlanAndExecute 组合受管理规划与验证阶段。Coding 增加文件、代码、测试和 Workspace 能力，并可选择外部 Coding Harness。
 
-原生 Harness 消费上下文、工具目录及相关制品，纯同步地准备请求和解释响应；上下文检索、Skills 加载、Workspace 与产物 I/O 由相应受管理组件完成。Skill 是按需加载的说明制品，不能自动授予工具权限。外部完整 Harness 的内部能力通过 Runner 声明。
+AgentHarness目标层按Agent组合模型、Context/Memory/RAG、Workspace、Skills、Sandbox和策略，并包含Core执行循环。现有Harness/NativeHarness继续作为纯DecisionPolicy消费上下文与工具目录、准备请求和解释响应，不更改旧接口。检索、Skills/Workspace加载、模型摘要与产物I/O由受管理阶段完成。Skill说明制品不能授予权限；外部完整Harness通过Runner声明可观察能力。
 
 原生执行以模型 Action、工具 Action、持久人工等待和子 Run 作为恢复边界，不能把整个 Agent 循环封装成唯一的大 Action。模型调用前保存必要的 ContextSnapshot／Manifest；引擎采纳模型响应时，一并提交响应引用、稳定的拟执行 Action 清单及参数摘要，之后才允许工具调度。
 
-重放复用已采纳响应、上下文和 Action，不重新询问模型来替换已采纳决策。模型请求已发出但响应尚未采纳时，可以按策略重新发起决策尝试，记录潜在重复成本和未知用量；该窗口还不能触发工具效果。新一轮决策、显式重规划和历史重放分别记录。
+重放复用已采纳响应、上下文和 Action，不重新询问模型来替换已采纳决策。真正未收到响应的派发不确定窗口，只有明确重试政策才能重新发起并记录潜在重复成本和未知用量；已经收到但尚未采纳的响应复用原证据校验，不能重新询问模型替换。未采纳窗口不能触发工具效果。新一轮决策、显式重规划和历史重放分别记录。
 
 持久等待不占住 Worker，恢复原等待对象；子任务保留子 Run 身份及结果引用，不因父任务恢复重复创建。完整外部 Harness 的内部步骤按其能力声明处理，不能自动成为 RALF 可逐步恢复的状态。具体提交和崩溃窗口见 [Action 恢复契约](specs/action-recovery-contract.md)。
 
@@ -243,7 +261,7 @@ SourceCatalog 为外部内容记录来源 ID、版本、授权引用、有效性
 
 ### 6.5 ContextAssembler
 
-ContextAssembler 从 Session、长期记忆、知识、工具结果和用户输入装配每次模型调用的上下文。Local 中由 Engine 调用可替换 ContextBuilder，再交给纯 Harness 准备请求；最终实际请求快照与额度由内核验收。知识检索和自动压缩属于尚未交付的上下文能力。
+ContextPipeline目标层通过受管理阶段从Session、Facts、Knowledge和产物端口取得证据，再由纯ContextBuilder/Counter/Budgeter选择内容。当前Local由Engine读取并调用构建器，再交给纯Harness准备请求；实际请求快照与预算由执行权威验收。可选知识检索、模型摘要与记忆提炼已有明确实现，dev24修复默认近期Session选择；自动in-Run压缩和推荐智能管线仍待交付。
 
 装配处理 Token 预算、优先级、去重、摘要和大内容卸载。输出 ContextManifest，记录采用的来源版本、授权范围、内容引用／摘要、选择与丢弃原因、使用策略和预算。
 
@@ -326,9 +344,11 @@ Coding Harness、浏览器或有状态工具可声明执行器绑定要求；缺
 | 事实 | Local 权威 | Temporal 模式权威 |
 | --- | --- | --- |
 | 执行计划、步骤、等待、重试与运行终态 | Coordinator 的 SQLite 执行日志 | Temporal Workflow／History |
-| 发布定义、当前授权和审批决定 | 本地控制存储 | PostgreSQL 控制存储 |
+| 发布定义与当前授权政策来源 | 本地控制存储 | 版本化控制存储；可用 PostgreSQL |
+| 已采纳审批、取消与控制命令 | Coordinator 的 SQLite 执行日志 | 对应 Run 的 Workflow／History |
 | 工具外部效果记录 | Coordinator 的效果日志 | PostgreSQL EffectJournal |
-| 预算预留与用量结算 | SQLite 控制存储的 BudgetStore／UsageLedger | PostgreSQL 的 BudgetStore／UsageLedger |
+| 每 Run 执行额度预留与结算 | Coordinator 的 SQLite 执行日志 | 对应 Workflow／History；用量账单可独立保存，不能重复调度 |
+| Session Turn 准入、绑定修订与占用（H2目标） | 指定 Coordinator 的事务记录 | 指定 Session 协调 Workflow／History；不拥有 Run 的业务状态 |
 | 平台资源归属与租约 | Coordinator 的资源记录 | PostgreSQL 资源记录；经受控交接与执行器关联 |
 | 会话、长期事实、原始知识 | 所选记忆／知识记录后端 | 所选记忆／知识记录后端 |
 | 产物内容与来源元数据 | 本地内容存储与元数据 | 对象内容存储与元数据 |
@@ -445,7 +465,7 @@ Janitor 只清理已结束且没有有效引用、租约或恢复需求的资源
 
 服务分别报告进程存活、接受新任务能力、依赖健康、Worker 容量和后台积压。依赖故障不统一伪装成服务健康。
 
-停止或升级时先停止接收新任务，再排空或持久停泊正在执行的工作，释放执行环境。控制台提供未知效果、死信、卡住运行及孤儿资源的核验与恢复入口，操作经过授权并记录。
+停止或升级时先停止接收新任务，再排空或持久停泊正在执行的工作，释放执行环境。统一入口按[关闭契约](specs/agent-facade-session-contract.md#7-facade关闭与资源所有权)区分执行宿主和客户端：借用资源不关闭；默认drain保留稳定待办及Session占用；超时返回CloseIncomplete，实际handler未退出或存储关闭失败时保留必要归属。控制台提供未知效果、死信、卡住运行及孤儿资源的核验与恢复入口，操作经过授权并记录。
 
 ### 12.4 备份恢复
 

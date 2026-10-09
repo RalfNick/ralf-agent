@@ -21,6 +21,7 @@ from ralf_agent import (
 )
 
 root, window, mode = Path(sys.argv[1]), sys.argv[2], sys.argv[3]
+binding_mode = sys.argv[4] if len(sys.argv) > 4 else None
 
 
 class CrashStore(SQLiteStore):
@@ -82,8 +83,26 @@ registry.register(
     write,
     reconciler=reconcile,
 )
+
+
+class UnusedProvider:
+    identity = {"kind": "must-not-be-selected", "version": "1"}
+
+    async def complete(self, messages, tools):
+        raise AssertionError("A bound worker fell back to the host model")
+
+
+catalog = None
+if binding_mode is not None:
+    from ralf_agent import BindingCatalog, Scope
+
+    catalog = BindingCatalog(scope=Scope())
+    catalog.register("provider", "selected", "1", Provider())
 with LocalEngine(
-    CrashStore(root / "run.sqlite"), providers={"default": Provider()}, tools=registry
+    CrashStore(root / "run.sqlite"),
+    providers={"default": Provider() if binding_mode is None else UnusedProvider()},
+    tools=registry,
+    binding_catalog=catalog,
 ) as engine:
     if mode == "crash" and window == "session_append":
         original = engine.sessions.append
@@ -106,6 +125,19 @@ with LocalEngine(
         ],
         max_concurrency=2,
     )
+    if binding_mode is not None:
+        from ralf_agent import AgentBindingDescriptor, BindingSelection, BoundDefinition, TeamSpec
+
+        paths = {
+            f"graph/nodes/n{i}": AgentBindingDescriptor(
+                provider=BindingSelection.ref("selected", "1")
+            )
+            for i in range(2)
+        }
+        if binding_mode == "nested":
+            spec = TeamSpec("outer", {"graph": spec}, child_budget=16)
+            paths = {"team/members/graph/" + path: value for path, value in paths.items()}
+        spec = BoundDefinition(spec, paths)
     handle = engine.submit(spec, {}, command_id="s")
     result = asyncio.run(engine.drive(handle.run_id))
     with sqlite3.connect(root / "business.sqlite") as db:
@@ -118,6 +150,7 @@ with LocalEngine(
                 "result": result.result,
                 "effects": effects,
                 "model_calls": calls,
+                "kernel": engine.diagnostics(handle.run_id).manifest["kernel"],
             }
         )
     )

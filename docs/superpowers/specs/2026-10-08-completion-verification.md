@@ -1,0 +1,15 @@
+# Agent completion verification — H1e
+
+Implement the remaining-work R01 verifier role and the pure part of R10/R26's business completion gate. User intent: flexible defaults and replacement at every layer, without weakening execution authority, approval or recovery. This increment is Local-only. Model/I/O verifiers, managed automatic stages, full H2, PlanVerifier changes and Temporal bindings remain pending.
+
+## Contract
+
+`CompletionVerifier.identity` is stable JSON; `verify(CompletionRequest) -> CompletionVerdict` is pure synchronous. Request contains detached task/output and only current-node completed tool receipts (id/tool/arguments/result/receipt/effect_key). No models, sessions, databases or mutable Run objects are passed. Verification cannot grant permission or dispatch effects. Strict typed verdict: accept, reject, retry; retry requires bounded nonempty feedback. Unknown/lazy return values are rejected.
+
+Engine still applies public final_output and graph Schema validation first. No configured verifier preserves dev28 manifest bytes and behavior. Explicit SchemaCompletionVerifier is a baseline; ToolReceiptVerifier is an opt-in, configurable rule requiring a named committed tool result, optional final-output condition Schema, result Schema, and JSON Pointer argument bindings from the final output. This proves correspondence to RALF's recorded receipt, not external truth or arbitrary exactly-once effects. Custom pure verifiers implement the same port.
+
+Verification record is committed on the final model Action, with immutable detached request/verdict and request digest, before Session append or node completion. Retry feedback and record are committed atomically; subsequent decisions never reuse a retried final answer. Existing max_decisions, model credits, cancellation and tool approval gates remain authoritative. Rejected answers fail with completion_rejected. Recovery reuses committed decisions; missing/drifted original verifier refuses recovery. Recheck actual executing verifier identity after invocation; current catalog/host identities alone are insufficient.
+
+H1 binding verifier inherit/ref/disabled supported across Local native, sequence, graph, parallel frames, team/dynamic/nested. Disabled only removes extra business verification; Schema validation remains mandatory. References have no selectors. New explicit verifier refs use local-bindings-5 so dev28 fails closed. Inherited verifier is included only when configured. Runtime Profile synchronous/asynchronous factories support component and binding declarations without changing resource ownership. Old manifests/binding records must remain byte-identical if no verifier is selected.
+
+Business evaluation gets an opt-in completion_verifier parameter and a clearly labeled receipt gate option. Frozen tasks, expected outputs, business database oracle and approval policy do not change. Historical live scores stay untouched. Verification quality is reported separately from business success; no score claims without actual runs.
