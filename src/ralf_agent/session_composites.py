@@ -105,6 +105,28 @@ def save_composite_turn_result(engine, run, result):
     from .session_conversations import check_conversation_run
 
     check_conversation_run(engine, run)
+    if "remote_session_binding" in run:
+        from .remote_composite_saves import validate_saves
+        from .remote_session_saves import _original
+
+        turn, _, remote = _original(engine, run)
+        saves = validate_saves(run, turn, remote)
+        if (
+            set(saves) != {"turn"}
+            or saves["turn"]["receipt"] is None
+            or saves["turn"]["message"] != result_message(run, result)
+        ):
+            raise DefinitionMismatch("Required remote composite result is unconfirmed")
+        engine.store.emit(
+            run["id"],
+            "session_turn_result_committed",
+            {
+                "turn_id": turn.turn_id,
+                "message_id": run["id"] + ":turn:result",
+                "digest": digest(saves["turn"]["message"]),
+            },
+        )
+        return
     turn = TurnAdmission.from_dict(run["session_turn"])
     authority = LocalSessionAuthority(engine, turn.run.authority_locator)
     state = authority.validate(turn.session)

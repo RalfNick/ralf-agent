@@ -47,6 +47,12 @@ class RemoteSessionAdmissionStore(ConversationSessionAdmissionStore, Protocol):
     ) -> str | None: ...
 
 
+class RemoteCompositeSessionAdmissionStore(RemoteSessionAdmissionStore, Protocol):
+    """Optional schema6 for original composite final-result save evidence."""
+
+    def prepare_remote_composites(self) -> None: ...
+
+
 class ValidatedSessionAdmission:
     """Require completed port results; never enter a deferred adapter operation."""
 
@@ -95,6 +101,9 @@ class ValidatedSessionAdmission:
 
     def prepare_remote_sessions(self):
         return self._call("prepare_remote_sessions", "mutation")
+
+    def prepare_remote_composites(self):
+        return self._call("prepare_remote_composites", "mutation")
 
     def remote_owner(self, *args, **kwargs):
         return self._call("remote_owner", "owner", *args, **kwargs)

@@ -120,7 +120,7 @@ class Runtime:
             + (
                 ["graph", "team", "dynamic"]
                 if type(getattr(self._local.store, "session_admission_version", 1)) is int
-                and self._local.store.session_admission_version in {2, 3, 4}
+                and self._local.store.session_admission_version in {2, 3, 4, 5}
                 else []
             ),
             "session_storage": "colocated-sqlite",
@@ -128,10 +128,15 @@ class Runtime:
                 getattr(self._local.store, "session_admission_version", 1)
             )
             is int
-            and self._local.store.session_admission_version in {3, 4},
+            and self._local.store.session_admission_version in {3, 4, 5},
             "remote_session_definitions": ["agent", "sequence"]
+            + (
+                ["graph", "team", "dynamic"]
+                if self._local.store.session_admission_version == 5
+                else []
+            )
             if type(getattr(self._local.store, "session_admission_version", 1)) is int
-            and self._local.store.session_admission_version == 4
+            and self._local.store.session_admission_version in {4, 5}
             else [],
             "queue": False,
             "deadline": False,

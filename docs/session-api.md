@@ -1,10 +1,10 @@
-# Durable Local Sessions — dev38 / H2b1–H2b4a
+# Durable Local Sessions — dev39 / H2b1–H2b4b
 
 H2b1 provides durable native/sequence conversations; H2b2 adds colocated Local
 Graph (including parallel and direct transform nodes), Team, Dynamic linear-plan/DAG
 and nested definitions with existing capability bindings. Colocated Session and execution records share the same SQLite connection and
 Coordinator. H2b4a adds receipt-backed remote data for native/sequence Turns;
-remote composite root conversations and Temporal shared Sessions remain unsupported. H2b3 adds host-authorized
+H2b4b adds explicit remote composite root conversations; Temporal shared Sessions remain unsupported. H2b3 adds host-authorized
 composite root namespaces. Temporal stateless entry has a separate delivered subset.
 
 ## Open and continue
@@ -290,5 +290,75 @@ revision 和原 message 的 receipt。查询必须是同一原子快照且按消
 成功接受远程 Session 首次原子启用语义 schema5；dev37 及更早代码拒绝
 此数据库。未使用该能力的 schema1/2/3/4 不升级。自定义 admission Store
 需声明 session_admission_version=4，并提供同步、同事务完成的
-prepare_remote_sessions 与 remote_owner 扩展。完整 H2b 仍缺远程复合根
-会话、跨权威租约、耐久 FIFO、输入续接及业务 deadline。
+prepare_remote_sessions 与 remote_owner 扩展。dev39 接通远程复合根会话；完整 H2b 仍缺跨权威租约、耐久 FIFO、输入续接及业务 deadline。
+
+## 远程复合根会话：dev39／H2b4b
+
+Local Graph（串行／并行／直接转换）、Team、动态 Plan／DAG 和嵌套流程
+可使用显式 conversation_resource 的 receipt-v1 后端。根会话与成员绑定
+独立：成员保留原有工具、上下文及会话；根最终消息记录原任务、最终结果和
+复合定义名称。默认 SQLite 的原子保存保持原行为。
+
+```python
+from ralf_agent import Runtime, SessionBindingResource
+
+# backend is an initialized receipt-v1 Session port. Caller owns this borrowed client.
+engine.conversation_resource = SessionBindingResource(
+    backend, namespaces=("support", "research"), default_namespace="support"
+)
+async with Runtime(engine, owned=True) as runtime:
+    agent = runtime.create_agent(graph_or_team_or_dynamic_definition)
+    session = await agent.open_session("customer", command_id="open")
+    run = await session.submit("Investigate", command_id="one", budget=128)
+    result = await run.wait(wait_timeout=10)
+    if result.snapshot.state == "waiting_reconciliation":
+        print(await run.pending())
+        await run.resume()
+        result = await run.wait(wait_timeout=10, terminal_only=True)
+```
+
+既有 session-resource 工厂也可配置宿主根资源，沿用异步客户端的 owned
+生命周期和环境变量引用：
+
+```toml
+schema_version = 1
+[default]
+name = "app"
+version = "1"
+[[profiles]]
+name = "app"
+version = "1"
+[profiles.providers.default]
+adapter = "offline-echo"
+[profiles.components.conversation_resource]
+adapter = "session-resource"
+[profiles.components.conversation_resource.config]
+namespaces = ["support", "research"]
+default_namespace = "support"
+[profiles.components.conversation_resource.config.backend]
+adapter = "redis"
+[profiles.components.conversation_resource.config.backend.config]
+url_env = "RALF_REDIS_URL"
+backend_id = "app-conversations"
+prefix = "ralf-conversations"
+```
+
+使用 await Runtime.afrom_profile(load_catalog(path).default, db_path)；同步
+工厂在创建数据库前拒绝远程异步客户端。PostgreSQL 使用同一 backend 槽，
+adapter="postgres"，config 包含 dsn_env、backend_id 及按需 initialize。
+
+最终结果由原 Interpreter／Team Policy／Plan Verifier 采纳，先在原 Run
+记录保存意图和独立 workflow/orchestration 标记，再执行远程保存。未确认
+时保留该结果；重启恢复直接保存／核验，不再次选择计划、调用验证器或子 Agent。
+原 Run 仍独占成功提交，远程写入和本地提交之间没有跨库事务。
+
+message_id 固定为 run_id + ':turn:result'；终态 resume 只查询原意图。
+未知保存／实际后代／工作线程仍占用会话，取消／失败不会被升级为成功。
+Session status/turns/pending 只读持久证据。idle native↔composite rebind
+可以复用同一真实远程地址和 namespace，原绑定修订与历史继续可观察。
+
+首次成功接受该能力原子启用 schema6，dev38 及更早版本拒绝读取。自定义
+admission Store 声明 session_admission_version=5 并实现同步同事务
+prepare_remote_composites；仍包含原 schema5 native 及 colocated 扩展。
+没有启用的新数据库保留原 schema1–5。跨权威会话租约、Temporal 绑定／
+共享会话、耐久 FIFO、输入续接、业务 deadline 和完整 H2 继续待交付。

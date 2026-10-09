@@ -1,4 +1,4 @@
-# Implementation status — 0.1.0.dev38
+# Implementation status — 0.1.0.dev39
 
 Target architecture update: [AgentHarness](../architecture/viewpoints/harness-runtime.md)
 defines broad Harness/Core roles, per-Agent bindings, Agent/Session facade, managed
@@ -29,7 +29,7 @@ dev31 delivers [H2a Local stateless Agent API](agent-api.md): immutable AgentHar
 Runtime-owned Local drive tasks, Agent/AgentRun/RunRef, observation-only wait,
 nested control ownership/waking and retryable drain/cancel closing. Full H1/H2
 are not complete; remote Sessions, Temporal bindings and automatic
-managed stages remain pending. SDK is dev38. The [Facade/Session target contract](../architecture/specs/agent-facade-session-contract.md)
+managed stages remain pending. SDK is dev39. The [Facade/Session target contract](../architecture/specs/agent-facade-session-contract.md)
 now specifies observation-only waiting, durable busy refusal, Session binding revisions,
 and ownership-aware closing. H2a implements the declared Local stateless subset;
 remaining shared routing and backend requirements are not changes to legacy
@@ -180,3 +180,6 @@ AgentScope parity require subsequent increments.
 
 
 dev38 adds H2b4a [remote native/sequence durable Turns](session-api.md#远程持久会话dev38h2b4a): existing Redis/PostgreSQL Session adapters expose bounded atomic exact-message receipts. The original Local authority journals required save intent, dispatch and receipt; lost acknowledgements pause and explicit recovery reuses adopted output without repeating business effects. Terminal recovery queries only and preserves cancelled/failed state. Stable remote SessionRef, independent admission metadata, conservative Scope/address refusal and transactional opt-in schema5 are delivered. Composite root remote data, cross-authority leases, Temporal shared Sessions, FIFO/input/deadline and full H2 remain pending. Actual-service and installed/upgrade evidence is recorded in the dev38 review; absent PostgreSQL configuration is not a delivery-quality claim.
+
+
+dev39 delivers H2b4b [remote composite root conversations](session-api.md#远程复合根会话dev39h2b4b): Graph/parallel/direct-transform, Team, Dynamic Plan/DAG and nested Local Turns fix an explicit receipt-backed root resource independently of members. The original authority persists the final proposal, corresponding workflow/orchestration marker, required save and receipt; recovery completes the save directly without repeated planning, verification or child/business execution. Async Profile session-resource assembly reuses existing backend factories and owned lifecycle. Native↔composite idle rebind preserves one remote address. New capability atomically enables semantic schema6; old38 refuses it, previous schema1–5 remain supported. Cross-authority leases, Temporal binding/shared Sessions, FIFO/input/deadline, automatic Harness stages and complete H2 remain unfulfilled.

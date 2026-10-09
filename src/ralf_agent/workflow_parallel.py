@@ -125,13 +125,24 @@ class ParallelWorkflowRuntime:
                 if slots:
                     run = engine._authorized(run_id)
                     batch = self._select(run, slots)
+                    if batch.done:
+                        from .remote_composite_saves import save_result
+
+                        if (
+                            await save_result(engine, run_id, batch.result, skipped=batch.skipped)
+                            is False
+                        ):
+                            break
                     with engine.store.transaction():
                         current = engine._authorized(run_id)
                         if current["state"] in CLOSED:
                             continue
                         for node_id in batch.skipped:
-                            current["workflow"]["nodes"][node_id] = {"state": "skipped"}
-                            engine.store.emit(run_id, "workflow_node_skipped", {"node_id": node_id})
+                            if current["workflow"]["nodes"][node_id]["state"] != "skipped":
+                                current["workflow"]["nodes"][node_id] = {"state": "skipped"}
+                                engine.store.emit(
+                                    run_id, "workflow_node_skipped", {"node_id": node_id}
+                                )
                         for selection in batch.selections:
                             current["workflow"]["nodes"][selection.node_id] = {
                                 "state": "running",

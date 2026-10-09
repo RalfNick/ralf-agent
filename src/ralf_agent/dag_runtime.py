@@ -35,7 +35,6 @@ class DAGRuntime:
                 }
             )
             self.engine._commit(run, "planning_conclusion_adopted")
-            self.orchestration._finish(run["id"], conclusion.to_dict())
             return False
         proposal = DAGProposal.from_dict(value)
         self._validate(run, proposal)

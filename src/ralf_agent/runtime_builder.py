@@ -448,6 +448,7 @@ class ComponentRegistry:
     def prepare(self, kind, declaration):
         if (kind, declaration["adapter"]) in {
             ("session_store", "session-resource"),
+            ("conversation_resource", "session-resource"),
             ("memory_store", "facts-resource"),
             ("knowledge", "knowledge-resource"),
         }:
@@ -461,6 +462,7 @@ class ComponentRegistry:
 
             resource_type, validate, default = {
                 "session_store": (SessionBindingResource, namespace_options, None),
+                "conversation_resource": (SessionBindingResource, namespace_options, None),
                 "memory_store": (FactsBindingResource, data_namespace_options, "default"),
                 "knowledge": (KnowledgeBindingResource, data_namespace_options, "default"),
             }[kind]
@@ -475,7 +477,9 @@ class ComponentRegistry:
             backend = component_declaration(config["backend"])
             if backend["adapter"] in {"session-resource", "facts-resource", "knowledge-resource"}:
                 raise ValidationError("Binding resources cannot wrap another resource")
-            factory, options = self.prepare(kind, backend)
+            factory, options = self.prepare(
+                "session_store" if kind == "conversation_resource" else kind, backend
+            )
             if is_async_callable(factory):
 
                 async def wrap(config, context):

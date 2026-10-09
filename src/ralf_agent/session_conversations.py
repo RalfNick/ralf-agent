@@ -27,7 +27,10 @@ def select_conversation(engine, namespace=UNSET_NAMESPACE):
     if type(backend) is not SQLiteMemory or backend.store.conn is not getattr(
         engine.store, "conn", None
     ):
-        raise ValidationError("Conversation resource requires colocated SQLiteMemory")
+        from .session_receipts import supports_remote_session
+
+        if not supports_remote_session(backend):
+            raise ValidationError("Conversation resource requires colocated data or exact receipts")
     descriptor = json.loads(canonical({"resource": resource.identity, "namespace": namespace}))
     return backend, namespace, descriptor
 

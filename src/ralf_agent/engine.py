@@ -936,6 +936,13 @@ class LocalEngine:
                     run["workflow"]["quiescent"] = False
                     self._quiescing_runs.add(run_id)
                 self._commit(run, "run_resumed")
+            if run["definition"]["kind"] in {"graph", "team", "dynamic"} and "turn" in run.get(
+                "remote_session_saves", {}
+            ):
+                from .remote_composite_saves import resume_result
+
+                await self._guarded(run_id, resume_result(self, run_id))
+                return self.status(run_id)
             if run.get("orchestration") is not None:
                 return await self._guarded(run_id, self._orchestration.drive(run_id))
             if run.get("plan", {}).get("schema_version") == 3:
@@ -953,7 +960,9 @@ class LocalEngine:
                         self._commit(run, "run_cancelled")
                     break
                 if is_graph(run):
-                    if not self._workflow.prepare(run_id):
+                    if not await self._guarded(run_id, self._workflow.prepare(run_id)):
+                        if self._authorized(run_id)["state"] == "waiting_reconciliation":
+                            break
                         continue
                     run = self._authorized(run_id)
                     if run["plan"]["nodes"][run["node"]]["transform"] is not None:

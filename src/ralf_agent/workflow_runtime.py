@@ -156,7 +156,7 @@ class StaticWorkflowRuntime:
             },
         }
 
-    def prepare(self, run_id):
+    async def prepare(self, run_id):
         engine = self.engine
         run = engine._authorized(run_id)
         if run["state"] in CLOSED:
@@ -217,14 +217,23 @@ class StaticWorkflowRuntime:
                     step["max_context_chars"],
                     context=engine._components(run, index).context,
                 )
+        if selection.done:
+            from .remote_composite_saves import save_result
+
+            if (
+                await save_result(engine, run_id, selection.result, skipped=selection.skipped)
+                is False
+            ):
+                return False
         with engine.store.transaction():
             current = engine._authorized(run_id)
             if current["state"] in CLOSED:
                 return False
             engine._check_release(current)
             for node_id in selection.skipped:
-                current["workflow"]["nodes"][node_id] = {"state": "skipped"}
-                engine.store.emit(run_id, "workflow_node_skipped", {"node_id": node_id})
+                if current["workflow"]["nodes"][node_id]["state"] != "skipped":
+                    current["workflow"]["nodes"][node_id] = {"state": "skipped"}
+                    engine.store.emit(run_id, "workflow_node_skipped", {"node_id": node_id})
             if selection.done:
                 from .session_composites import save_composite_turn_result
 

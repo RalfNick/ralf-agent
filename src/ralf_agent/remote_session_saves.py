@@ -64,7 +64,12 @@ def _original(engine, run):
         run.get("remote_session_binding") != remote
         or turn.run.run_id != run["id"]
         or turn.run.release_digest != run["release_digest"]
-        or run["session_id"] != turn.session.key.session_id
+        or run["session_id"]
+        != (
+            turn.session.key.storage_key
+            if run["definition"]["kind"] in {"graph", "team", "dynamic"}
+            else turn.session.key.session_id
+        )
         or binding["manifest"] != run["manifest"]
     ):
         raise DefinitionMismatch("Remote Turn differs from its admitted Run")
@@ -176,6 +181,8 @@ def remote_saves_settled(engine, run):
         if value["receipt"] is None:
             return False
     if run["state"] == "succeeded":
+        if run["definition"]["kind"] in {"graph", "team", "dynamic"}:
+            return set(saves) == {"turn"} and saves["turn"]["message"]["content"] == run["result"]
         if set(saves) != {str(i) for i in range(len(run["definition"]["steps"]))}:
             return False
         if saves[str(len(saves) - 1)]["message"]["content"] != run["result"]:
@@ -184,6 +191,10 @@ def remote_saves_settled(engine, run):
 
 
 def _validated_saves(run, turn, remote):
+    if run["definition"]["kind"] in {"graph", "team", "dynamic"}:
+        from .remote_composite_saves import validate_saves
+
+        return validate_saves(run, turn, remote)
     saves = run.get("remote_session_saves")
     if type(saves) is not dict:
         raise DefinitionMismatch("Remote save journal is invalid")
@@ -274,6 +285,8 @@ def _pause(engine, run_id, node):
 
 async def save_remote_result(engine, run_id, result):
     run = engine._authorized(run_id)
+    if run["definition"]["kind"] in {"graph", "team", "dynamic"}:
+        return None
     original = _original(engine, run)
     if original is None:
         return None
@@ -341,6 +354,10 @@ async def save_remote_result(engine, run_id, result):
 
 async def reconcile_terminal_saves(engine, run_id):
     run = engine._authorized(run_id)
+    if run["definition"]["kind"] in {"graph", "team", "dynamic"}:
+        from .remote_composite_saves import recover_terminal
+
+        return await recover_terminal(engine, run_id)
     original = _original(engine, run)
     if original is None:
         return

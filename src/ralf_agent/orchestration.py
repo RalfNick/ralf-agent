@@ -442,8 +442,12 @@ class OrchestrationRuntime:
                         engine._commit(latest, "children_waiting")
                 return False
 
-    def _finish(self, run_id, result):
+    async def _finish(self, run_id, result):
         canonical(result)
+        from .remote_composite_saves import save_result
+
+        if await save_result(self.engine, run_id, result) is False:
+            return
         with self.engine.store.transaction():
             run = self.engine._authorized(run_id)
             self.engine._check_release(run)
@@ -477,7 +481,7 @@ class OrchestrationRuntime:
         selection = engine._component_result(strategy.select(request), TeamSelection, "Team.select")
         engine._check_release(engine._authorized(run_id))
         if selection.done:
-            self._finish(run_id, selection.result)
+            await self._finish(run_id, selection.result)
             return False
         self._validate_calls(run, selection.calls)
         with engine.store.transaction():
@@ -538,7 +542,7 @@ class OrchestrationRuntime:
                 latest["orchestration"]["revisions"][-1]["verification"] = verdict.to_dict()
                 engine._commit(latest, "plan_verified")
             if verdict.status == "succeeded":
-                self._finish(run_id, verdict.result)
+                await self._finish(run_id, verdict.result)
                 return False
             if verdict.status == "failed":
                 raise ChildRunFailed("Plan verification did not succeed")
@@ -586,15 +590,19 @@ class OrchestrationRuntime:
                 return False
             state = run["orchestration"]
             if dag:
-                return self._dag.adopt(run)
-            self._validate_calls(run, state["proposal"]["steps"])
-            state["queue"] = copy.deepcopy(state["proposal"]["steps"])
-            state["revisions"].append(
-                {"revision": state["revision"], "proposal": state["proposal"]}
-            )
-            state["stage"] = "execute"
-            engine._commit(run, "plan_revision_adopted")
-        return True
+                advance = self._dag.adopt(run)
+            else:
+                self._validate_calls(run, state["proposal"]["steps"])
+                state["queue"] = copy.deepcopy(state["proposal"]["steps"])
+                state["revisions"].append(
+                    {"revision": state["revision"], "proposal": state["proposal"]}
+                )
+                state["stage"] = "execute"
+                engine._commit(run, "plan_revision_adopted")
+                advance = True
+        if not advance:
+            await self._finish(run_id, run["orchestration"]["proposal"])
+        return advance
 
     async def drive(self, run_id):
         engine = self.engine

@@ -71,9 +71,19 @@ class LocalSessionAuthority:
 
         composite = definition["kind"] in KINDS
         conversation = None
+        remote = None
         if composite:
             self._composite_extension()
-            _, namespace, conversation = select_conversation(self.engine, namespace)
+            backend, namespace, conversation = select_conversation(self.engine, namespace)
+            if type(backend) is not SQLiteMemory or backend.store.conn is not getattr(
+                self.engine.store, "conn", None
+            ):
+                self._remote_extension(composite=True)
+                remote = {
+                    "backend_id": backend.backend_id,
+                    "namespace": namespace,
+                    "receipt_version": 1,
+                }
             if conversation is not None:
                 self._composite_extension(conversation=True)
         elif definition["kind"] not in {"agent", "sequence"}:
@@ -81,7 +91,6 @@ class LocalSessionAuthority:
         bound = "binding_definition" in definition
         namespaces = []
         resources = []
-        remote = None
         for index, step in enumerate([] if composite else definition["steps"]):
             backend = (
                 self.engine._bindings.resolve(step, descriptor_for(definition, index))[0].sessions
@@ -139,24 +148,30 @@ class LocalSessionAuthority:
             binding["remote_session"] = remote
         return key, binding
 
-    def _remote_extension(self):
+    def _remote_extension(self, *, composite=False):
         version = getattr(self.engine.store, "session_admission_version", 1)
         if (
             type(version) is not int
-            or version != 4
+            or version not in ({5} if composite else {4, 5})
             or any(
                 not is_sync_callable(getattr(self.store.delegate, method, None))
-                for method in ("prepare_remote_sessions", "remote_owner")
+                for method in (
+                    ("prepare_remote_composites", "remote_owner")
+                    if composite
+                    else ("prepare_remote_sessions", "remote_owner")
+                )
             )
         ):
-            raise ValidationError("Remote Sessions require authority-bound admission version4")
+            raise ValidationError(
+                "Remote Sessions require their authority-bound admission extension"
+            )
 
     def _composite_extension(self, *, conversation=False):
         version = getattr(self.engine.store, "session_admission_version", 1)
         method = "prepare_conversations" if conversation else "prepare_composites"
         if (
             type(version) is not int
-            or version not in ({3, 4} if conversation else {2, 3, 4})
+            or version not in ({3, 4, 5} if conversation else {2, 3, 4, 5})
             or not is_sync_callable(getattr(self.store.delegate, method, None))
         ):
             raise ValidationError(
@@ -164,16 +179,20 @@ class LocalSessionAuthority:
             )
 
     def _prepare(self, binding):
-        if "remote_session" in binding:
-            self._remote_extension()
-            self.store.prepare_remote_sessions()
-            return
         declaration = binding["definition"]
         definition = (
             unwrap_definition(declaration)
             if declaration["kind"] in {"bound_agent", "bound_definition"}
             else declaration
         )
+        if "remote_session" in binding:
+            composite = definition["kind"] in {"graph", "team", "dynamic"}
+            self._remote_extension(composite=composite)
+            if composite:
+                self.store.prepare_remote_composites()
+            else:
+                self.store.prepare_remote_sessions()
+            return
         if definition["kind"] in {"graph", "team", "dynamic"}:
             conversation = "conversation" in binding
             self._composite_extension(conversation=conversation)
