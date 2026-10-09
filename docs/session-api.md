@@ -1,10 +1,10 @@
-# Durable Local Sessions — dev37 / H2b1–H2b3
+# Durable Local Sessions — dev38 / H2b1–H2b4a
 
 H2b1 provides durable native/sequence conversations; H2b2 adds colocated Local
 Graph (including parallel and direct transform nodes), Team, Dynamic linear-plan/DAG
-and nested definitions with existing capability bindings. Session and execution
-records share the same SQLite connection and Coordinator. Remote conversation
-stores and Temporal shared Sessions remain unsupported. H2b3 adds host-authorized
+and nested definitions with existing capability bindings. Colocated Session and execution records share the same SQLite connection and
+Coordinator. H2b4a adds receipt-backed remote data for native/sequence Turns;
+remote composite root conversations and Temporal shared Sessions remain unsupported. H2b3 adds host-authorized
 composite root namespaces. Temporal stateless entry has a separate delivered subset.
 
 ## Open and continue
@@ -237,3 +237,58 @@ remain unchanged. Marker2 retains default composite support.
 Shared remote routing/admission, durable FIFO,
 input continuation, deadline, handoff, Temporal shared Sessions and full H2b remain separate
 capabilities in the [remaining checklist](remaining-work.md).
+
+## 远程持久会话：dev38／H2b4a
+
+原生 Agent／顺序 Workflow 可通过已有 SessionBindingResource 和绑定目录使用
+RedisMemory／PostgresMemory。它们保存会话数据；Local SQLite Coordinator
+仍独占 Run、Turn、审批和预算的执行权威。异步客户端用 RuntimeBuilder.abuild
+装配，或按既有 owned/borrowed 生命周期创建：
+
+```python
+from ralf_agent import AgentBindingDescriptor, AgentDefinition, AgentSpec, BindingSelection, SessionBindingResource
+
+# backend is an initialized RedisMemory or PostgresMemory; catalog and engine
+# use the same trusted Scope. The caller owns this borrowed async backend.
+catalog.register("session", "history", "1", SessionBindingResource(
+    backend, namespaces=("support",), default_namespace="support"
+))
+definition = AgentDefinition(AgentSpec("support", "Help the user"),
+    AgentBindingDescriptor(session=BindingSelection.ref("history", "1")))
+agent = runtime.create_agent(definition)
+session = await agent.open_session("customer", command_id="open")
+run = await session.submit("Help me", command_id="one")
+result = await run.wait(wait_timeout=10)
+if result.snapshot.state == "waiting_reconciliation":
+    print(await run.pending())
+    await run.resume()  # original output and stable message ID; no business-tool replay
+    result = await run.wait(wait_timeout=10, terminal_only=True)
+```
+
+所有顺序步骤必须使用同一后端、namespace 和回执协议。为了阻止不真实的
+backend_id 别名绕过准入，同一 Scope 内已登记的远程物理会话地址会保守阻断
+其他后端的直接提交。独立存储需要不同 namespace 或 Session ID。此规则只
+覆盖同一执行权威，不能在两个独立 Coordinator 之间共享可写会话。
+
+保存分为原 Run 日志中的意图、派发和核验回执；append 返回的 revision
+本身不能确认成功。连接失败、CAS 冲突或未得到有效回执会暂停为
+waiting_reconciliation，每次显式恢复最多尝试一次保存。先按原 message_id
+查询；已保存且内容匹配时只补记回执，不重新追加，也不重跑模型／工具。
+
+取消后的未知保存仍占用 Session；终态的显式 resume 只查询已有保存意图，
+不追加新消息，也不把 cancelled/failed 改成 succeeded。status/turns 只读
+原权威证据，不检查远程当前可用性或数据保留情况。保存到远程和提交本地
+终态不是跨库原子事务：取消或本地提交失败时，远程可能已保存一条观察消息。
+
+自定义后端需声明精确整数 session_receipt_version=1，并实现
+inspect_message(scope, physical_session_id, message_id)。返回完整有限 JSON：
+scope、session_id、message_id、当前 revision，以及 None 或包含正整数
+revision 和原 message 的 receipt。查询必须是同一原子快照且按消息 ID
+有界读取；SessionView 负责授权 namespace 投影和返回校验。原 read/append
+接口和默认 colocated 路径保持兼容。
+
+成功接受远程 Session 首次原子启用语义 schema5；dev37 及更早代码拒绝
+此数据库。未使用该能力的 schema1/2/3/4 不升级。自定义 admission Store
+需声明 session_admission_version=4，并提供同步、同事务完成的
+prepare_remote_sessions 与 remote_owner 扩展。完整 H2b 仍缺远程复合根
+会话、跨权威租约、耐久 FIFO、输入续接及业务 deadline。

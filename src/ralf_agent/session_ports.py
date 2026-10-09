@@ -38,6 +38,15 @@ class ConversationSessionAdmissionStore(CompositeSessionAdmissionStore, Protocol
     def prepare_conversations(self) -> None: ...
 
 
+class RemoteSessionAdmissionStore(ConversationSessionAdmissionStore, Protocol):
+    """Optional schema5: remote data with original local admission authority."""
+
+    def prepare_remote_sessions(self) -> None: ...
+    def remote_owner(
+        self, scope: Scope, address: str, *, exclude_run_id: str | None = None
+    ) -> str | None: ...
+
+
 class ValidatedSessionAdmission:
     """Require completed port results; never enter a deferred adapter operation."""
 
@@ -83,6 +92,12 @@ class ValidatedSessionAdmission:
 
     def prepare_conversations(self):
         return self._call("prepare_conversations", "mutation")
+
+    def prepare_remote_sessions(self):
+        return self._call("prepare_remote_sessions", "mutation")
+
+    def remote_owner(self, *args, **kwargs):
+        return self._call("remote_owner", "owner", *args, **kwargs)
 
     def load(self, *args, **kwargs):
         return self._call("load", "load", *args, **kwargs)

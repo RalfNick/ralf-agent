@@ -1,9 +1,9 @@
 # RALF AgentHarness 目标架构
 
 版本：1.7；日期：2026-10-09；维护者：RALF maintainers。
-状态：根据用户认可的理想架构形成的目标设计；实现基线为0.1.0.dev37（H1a–H1f、Local stateless H2a、同库原生／顺序 H2b1／复合 Session H2b2／授权根 namespace H2b3、Temporal 原生入口 H2c1／高级编排入口 H2c2）。
+状态：根据用户认可的理想架构形成的目标设计；实现基线为0.1.0.dev38（H1a–H1f、Local stateless H2a、同库原生／顺序 H2b1／复合 Session H2b2／授权根 namespace H2b3／远程原生顺序 H2b4a、Temporal 原生入口 H2c1／高级编排入口 H2c2）。
 读者：框架维护者、Agent应用开发者、适配器作者与企业部署团队。
-除明确标为 H1a–H1f、dev31 Local stateless H2a 、dev32 同库原生／顺序 Session H2b1 与 dev33 Temporal 原生／顺序入口 H2c1 、dev34 高级编排入口 H2c2 与 dev35 同库复合会话 H2b2、dev36 授权根 namespace H2b3 的子集外，本文中的接口和示例仍为目标设计。AgentHarness 当前固定声明并复用 Local 权威，自动能力阶段尚未实现。
+除明确标为 H1a–H1f、dev31 Local stateless H2a 、dev32 同库原生／顺序 Session H2b1 与 dev33 Temporal 原生／顺序入口 H2c1 、dev34 高级编排入口 H2c2 与 dev35 同库复合会话 H2b2、dev36 授权根 namespace H2b3 与 dev38 远程原生／顺序 H2b4a 的子集外，本文中的接口和示例仍为目标设计。AgentHarness 当前固定声明并复用 Local 权威，自动能力阶段尚未实现。
 [绑定使用教程](../../docs/agent-bindings.md)与 [Local Agent API](../../docs/agent-api.md)记录实际支持与拒绝；dev32 同库原生／顺序 Session/Turn 子集已交付；dev33 Temporal 原生／顺序入口已交付；dev34 已注册高级入口已交付；dev35同库复合会话与dev36授权根namespace已交付；远程会话、Temporal 绑定与完整 H2 尚未交付。
 已交付范围始终以[实现状态](../../docs/implementation-status.md)为准。
 历史文件名harness-runtime.md保留以保护已有审查/链接；目标组件名称统一为AgentHarness。
@@ -215,7 +215,7 @@ MQ投递/ack不是执行确认；Inbox/Outbox、command_id与业务回执承担�
 ## 9. 统一入口、会话和关闭契约
 
 完整规范见[Agent Facade/Session契约](../specs/agent-facade-session-contract.md)，
-该规范补齐等待、跨Run会话占用及退出责任，是H2实现的前置门槛。dev31 H2a 已实现 Local stateless 入口、独立托管、纯观察、原根控制唤醒与可重试关闭；dev32 H2b1 通过显式 SessionRef 支持同库原生／顺序 Turn 与 rebind。远程会话、输入续接、deadline、handoff 和未支持的 Temporal 绑定／共享会话在接受前拒绝。dev33 H2c1 原生／顺序入口见[实际指南](../../docs/temporal-agent-api.md)。以下含完整 Session 的示例仍为目标；可运行子集见[Session 指南](../../docs/session-api.md)。
+该规范补齐等待、跨Run会话占用及退出责任，是H2实现的前置门槛。dev31 H2a 已实现 Local stateless 入口、独立托管、纯观察、原根控制唤醒与可重试关闭；dev32 H2b1 通过显式 SessionRef 支持同库原生／顺序 Turn 与 rebind。远程复合根会话、跨权威会话租约、输入续接、deadline、handoff 和未支持的 Temporal 绑定／共享会话在接受前拒绝。dev33 H2c1 原生／顺序入口见[实际指南](../../docs/temporal-agent-api.md)。以下含完整 Session 的示例仍为目标；可运行子集见[Session 指南](../../docs/session-api.md)。
 
 - Agent/Session入口提供run、submit、wait、status、approve/reject、send_input、
   cancel与事件观察；异步优先，Local同步控制通过明确适配。
@@ -364,3 +364,5 @@ AgentState与独立应用Service/ChatRunRegistry/lifespan；没有导出HarnessA
 RALF保持命令幂等/效果证据和纯策略边界，不照搬async Task取消即业务中断、
 可吞最终事件的hook语义或将整体AgentState当Run恢复权威。
 本轮三个P2及源码定位详见[修订与参考记录](../reviews/2026-10-08-agent-harness-facade.md)。
+
+| H2b4a：远程原生／顺序会话（dev38） | 原 Local admission 接受远程 Session Turn；Redis／PG 原子准确消息回执；原 Run 中保存意图／模型 Action 对应标记／派发／核验回执 | 丢失响应及重启不重跑业务、终态只查询且未知保存占用、schema5 旧代码拒绝；复合根远程、跨权威共享、Temporal Session 和完整 H2 仍未交付 |

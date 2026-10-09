@@ -52,6 +52,13 @@ local revision = redis.call('LLEN', KEYS[1])
 return {revision, redis.call('LRANGE', KEYS[1], 0, -1)}
 """
 
+_INSPECT = """
+local revision = redis.call('LLEN', KEYS[1])
+local previous = redis.call('HGET', KEYS[2], ARGV[1])
+if not previous then return {revision, 0, ''} end
+return {revision, previous, redis.call('LINDEX', KEYS[1], tonumber(previous) - 1) or ''}
+"""
+
 _SESSION_PAGE = """
 local revision = redis.call('LLEN', KEYS[1])
 local generation = redis.call('GET', KEYS[2]) or '0'
@@ -248,6 +255,40 @@ class RedisMemory:
             return [_number(item) for item in response]
         except Exception as exc:
             raise MemoryBackendError("Redis memory returned invalid data") from exc
+
+    session_receipt_version = 1
+
+    async def inspect_message(self, scope, session_id, message_id):
+        from .session_receipts import validate_inspection
+
+        _inputs(scope, session_id)
+        _text(message_id, "Message identity")
+        response = await self._eval(
+            _INSPECT, self._keys(scope, "session", session_id, "messages", "identities"), message_id
+        )
+        try:
+            if not isinstance(response, list) or len(response) != 3:
+                raise ValueError("Invalid Redis receipt")
+            revision, sequence = _number(response[0]), _number(response[1])
+            receipt = (
+                {"revision": sequence, "message": _objects([response[2]])[0]} if sequence else None
+            )
+            if not sequence and response[2] not in ("", b""):
+                raise ValueError("Invalid Redis missing receipt")
+            return validate_inspection(
+                {
+                    "scope": asdict(scope),
+                    "session_id": session_id,
+                    "message_id": message_id,
+                    "revision": revision,
+                    "receipt": receipt,
+                },
+                scope,
+                session_id,
+                message_id,
+            )
+        except Exception as exc:
+            raise MemoryBackendError("Redis memory returned invalid write evidence") from exc
 
     async def read(self, scope, session_id):
         _inputs(scope, session_id)

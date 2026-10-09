@@ -80,6 +80,8 @@ class LocalSessionAuthority:
             raise ValidationError("Unsupported Session definition")
         bound = "binding_definition" in definition
         namespaces = []
+        resources = []
+        remote = None
         for index, step in enumerate([] if composite else definition["steps"]):
             backend = (
                 self.engine._bindings.resolve(step, descriptor_for(definition, index))[0].sessions
@@ -90,19 +92,34 @@ class LocalSessionAuthority:
             if isinstance(backend, SessionView):
                 backend._check(self.engine.scope)
                 namespace, backend = backend.namespace, backend.backend
-            if type(backend) is not SQLiteMemory or backend.store.conn is not getattr(
+            if type(backend) is SQLiteMemory and backend.store.conn is getattr(
                 self.engine.store, "conn", None
             ):
-                raise ValidationError(
-                    "H2b1 Session requires SQLiteMemory colocated with its execution connection"
+                resources.append(None)
+            else:
+                from .session_receipts import supports_remote_session
+
+                if not supports_remote_session(backend):
+                    raise ValidationError("Remote Sessions require bounded exact write receipts")
+                self._remote_extension()
+                resources.append(
+                    {"backend_id": backend.backend_id, "namespace": namespace, "receipt_version": 1}
                 )
             namespaces.append(namespace)
         if not composite and len(set(namespaces)) != 1:
             raise ValidationError("All Session steps must share one authorized namespace")
+        if resources:
+            if any(value != resources[0] for value in resources):
+                raise ValidationError(
+                    "All Session steps must share one storage resource and receipt protocol"
+                )
+            remote = resources[0]
         key = SessionKey(
             self.engine.scope.workspace,
             self.engine.scope.principal,
-            self.resource_id,
+            self.resource_id
+            if remote is None
+            else digest(["remote-session-resource-v1", remote["backend_id"]]),
             namespace if composite else namespaces[0],
             session_id,
         )
@@ -118,14 +135,28 @@ class LocalSessionAuthority:
         binding = {"definition": declaration, "manifest": manifest}
         if conversation is not None:
             binding["conversation"] = conversation
+        if remote is not None:
+            binding["remote_session"] = remote
         return key, binding
+
+    def _remote_extension(self):
+        version = getattr(self.engine.store, "session_admission_version", 1)
+        if (
+            type(version) is not int
+            or version != 4
+            or any(
+                not is_sync_callable(getattr(self.store.delegate, method, None))
+                for method in ("prepare_remote_sessions", "remote_owner")
+            )
+        ):
+            raise ValidationError("Remote Sessions require authority-bound admission version4")
 
     def _composite_extension(self, *, conversation=False):
         version = getattr(self.engine.store, "session_admission_version", 1)
         method = "prepare_conversations" if conversation else "prepare_composites"
         if (
             type(version) is not int
-            or version not in ({3} if conversation else {2, 3})
+            or version not in ({3, 4} if conversation else {2, 3, 4})
             or not is_sync_callable(getattr(self.store.delegate, method, None))
         ):
             raise ValidationError(
@@ -133,6 +164,10 @@ class LocalSessionAuthority:
             )
 
     def _prepare(self, binding):
+        if "remote_session" in binding:
+            self._remote_extension()
+            self.store.prepare_remote_sessions()
+            return
         declaration = binding["definition"]
         definition = (
             unwrap_definition(declaration)
@@ -170,11 +205,21 @@ class LocalSessionAuthority:
             self.engine.scope.principal,
         ):
             raise AuthorizationDenied("Session belongs to another trusted Scope")
-        if ref.key.resource_id != self.resource_id or ref.coordination_ref != self.coordination_ref:
+        if ref.coordination_ref != self.coordination_ref:
             raise DefinitionMismatch("Session route belongs to another resource or authority")
         state = self.store.load(self.engine.scope, ref.key.key_id)
         if state is None:
             raise NotFound("Session route not found")
+        from .remote_session_saves import validate_remote_binding
+
+        remote = validate_remote_binding(state, ref.binding_revision, self.resource_id)
+        expected_resource = (
+            self.resource_id
+            if remote is None
+            else digest(["remote-session-resource-v1", remote["backend_id"]])
+        )
+        if ref.key.resource_id != expected_resource:
+            raise DefinitionMismatch("Session route belongs to another storage resource")
         if self._ref(state, ref.binding_revision) != ref:
             raise DefinitionMismatch("Session reference differs from its original binding")
         return state
@@ -214,7 +259,12 @@ class LocalSessionAuthority:
                 for action in run["actions"]
             ):
                 return self._run_ref(run_id)
-            if run["state"] == "succeeded":
+            if "remote_session_binding" in run or state["key"]["resource_id"] != self.resource_id:
+                from .remote_session_saves import remote_saves_settled
+
+                if not remote_saves_settled(self.engine, run):
+                    return self._run_ref(run_id)
+            elif run["state"] == "succeeded":
                 from .session_composites import KINDS
 
                 composite = run["definition"]["kind"] in KINDS
@@ -234,7 +284,12 @@ class LocalSessionAuthority:
                     expected,
                 ):
                     return self._run_ref(run_id)
-        legacy = self.store.legacy_owner(
+        owner = (
+            self.store.remote_owner
+            if state["key"]["resource_id"] != self.resource_id
+            else self.store.legacy_owner
+        )
+        legacy = owner(
             self.engine.scope,
             SessionKey.from_dict(state["key"]).storage_key,
             exclude_run_id=run_id,
@@ -283,6 +338,8 @@ class LocalSessionAuthority:
                     or self._ref(state).definition_digest != digest(declaration)
                     or state["bindings"][str(state["binding_revision"])].get("conversation")
                     != binding.get("conversation")
+                    or state["bindings"][str(state["binding_revision"])].get("remote_session")
+                    != binding.get("remote_session")
                 ):
                     return {"rejected": True, "reason": "session_binding_mismatch"}
                 return {"session_ref": self._ref(state).to_dict()}
@@ -338,6 +395,9 @@ class LocalSessionAuthority:
                 # Independent admission evidence distinguishes configured None
                 # from a genuine legacy Turn, even in a mixed schema4 database.
                 run["conversation_binding"] = json.loads(canonical(binding["conversation"]))
+            if "remote_session" in binding:
+                run["remote_session_binding"] = json.loads(canonical(binding["remote_session"]))
+                run["remote_session_saves"] = {}
             run_ref = self._run_ref(run_id)
             turn = TurnAdmission(
                 uuid.uuid4().hex,

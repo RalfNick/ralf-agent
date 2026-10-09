@@ -41,7 +41,10 @@ class RunTaskSupervisor:
             # Explicit late-evidence controls may release descendant capacity
             # after parent cancellation. Drive only the authority's terminal
             # housekeeping; it never reopens the parent's business state.
-            if flow.get("quiescent") is not False:
+            unresolved = self.unresolved(ref) if self.unresolved is not None else []
+            if flow.get("quiescent") is not False and not any(
+                item.get("source") == "remote_session" for item in unresolved
+            ):
                 return
         self.refs[ref.run_id] = ref
         self.errors.pop(ref.run_id, None)

@@ -172,6 +172,14 @@ def test_real_sessions_preserve_json_and_original_message_identity(redis_service
             with pytest.raises(ValidationError):
                 await memory.append(scope, "会话", {}, expected_revision=0, message_id="other")
             assert await memory.read(scope, "会话") == (1, [message])
+            assert (await memory.inspect_message(scope, "会话", "原始🌍"))["receipt"] == {
+                "revision": 1,
+                "message": message,
+            }
+            assert (await memory.inspect_message(scope, "会话", "missing"))["receipt"] is None
+            assert (
+                await memory.inspect_message(Scope(scope.workspace, "other"), "会话", "原始🌍")
+            )["revision"] == 0
             assert await memory.read(Scope(scope.workspace, "other"), "会话") == (0, [])
             keys = await client.keys(f"sessions:{decode_responses}:*")
             from redis.crc import key_slot

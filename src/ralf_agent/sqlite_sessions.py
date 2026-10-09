@@ -7,7 +7,7 @@ from contextvars import ContextVar
 
 from .errors import ValidationError
 from .session_types import SessionKey, TurnAdmission, integer
-from .types import canonical
+from .types import canonical, digest
 
 _permit = ContextVar("session_admission_permit", default=None)
 
@@ -30,7 +30,7 @@ class SQLiteSessionAdmission:
         row = self.transaction_owner.conn.execute(
             "SELECT value FROM metadata WHERE key='schema_version'"
         ).fetchone()
-        return row[0] in {"2", "3", "4"}
+        return row[0] in {"2", "3", "4", "5"}
 
     def _writing(self):
         if self.transaction_owner.readonly or not self.transaction_owner.conn.in_transaction:
@@ -44,6 +44,9 @@ class SQLiteSessionAdmission:
 
     def prepare_conversations(self):
         self._prepare(4)
+
+    def prepare_remote_sessions(self):
+        self._prepare(5)
 
     def _prepare(self, version):
         self._writing()
@@ -188,14 +191,17 @@ class SQLiteSessionAdmission:
         return None
 
     def route_owner(self, scope, resource):
-        if resource["backend_id"] not in {
+        state = self.load_address(scope, resource["session_id"])
+        remote = state is not None and state["key"]["resource_id"] != digest(
+            ["sqlite-session-resource", self.authority_backend_id]
+        )
+        if not remote and resource["backend_id"] not in {
             self.authority_backend_id,
             "threaded:" + self.authority_backend_id,
             self.session_backend_id,
             "threaded:" + self.session_backend_id,
         }:
             return None
-        state = self.load_address(scope, resource["session_id"])
         if state is None or _permit.get() == (
             id(self.transaction_owner),
             scope.workspace,
@@ -204,3 +210,22 @@ class SQLiteSessionAdmission:
         ):
             return None
         return state["active_run"] or "session-route:" + SessionKey.from_dict(state["key"]).key_id
+
+    def remote_owner(self, scope, address, *, exclude_run_id=None):
+        from .session_resources import run_session_claims
+
+        for run in self.transaction_owner._scoped_runs(scope):
+            if run["id"] == exclude_run_id:
+                continue
+            if any(c["session_id"] == address for c in run_session_claims(run)) and (
+                run["state"] not in {"succeeded", "failed", "cancelled"}
+                or run.get("workflow", {}).get("quiescent") is False
+                or run.get("orchestration", {}).get("quiescent") is False
+                or any(
+                    a["kind"] == "tool"
+                    and a["status"] in {"executing", "outcome_unknown", "receipt_received"}
+                    for a in run["actions"]
+                )
+            ):
+                return run["id"]
+        return None

@@ -120,7 +120,7 @@ class Runtime:
             + (
                 ["graph", "team", "dynamic"]
                 if type(getattr(self._local.store, "session_admission_version", 1)) is int
-                and self._local.store.session_admission_version in {2, 3}
+                and self._local.store.session_admission_version in {2, 3, 4}
                 else []
             ),
             "session_storage": "colocated-sqlite",
@@ -128,7 +128,11 @@ class Runtime:
                 getattr(self._local.store, "session_admission_version", 1)
             )
             is int
-            and self._local.store.session_admission_version == 3,
+            and self._local.store.session_admission_version in {3, 4},
+            "remote_session_definitions": ["agent", "sequence"]
+            if type(getattr(self._local.store, "session_admission_version", 1)) is int
+            and self._local.store.session_admission_version == 4
+            else [],
             "queue": False,
             "deadline": False,
             "handoff": False,
@@ -311,6 +315,12 @@ class Runtime:
             seen.add(owner.run_id)
             self._validate(owner)
             info = self.engine.diagnostics(owner.run_id)
+            from .remote_session_saves import pending_remote_saves
+
+            pending.extend(
+                {"ref": owner.to_dict(), **item}
+                for item in pending_remote_saves(self._local, self._local._authorized(owner.run_id))
+            )
             for action in info.snapshot.pending:
                 pending.append({"kind": "approval", "ref": owner.to_dict(), **action})
             for action in info.snapshot.actions:

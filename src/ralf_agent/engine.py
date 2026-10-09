@@ -788,6 +788,9 @@ class LocalEngine:
         )
 
     def _check_release(self, run):
+        from .remote_session_saves import check_remote_session_run
+
+        check_remote_session_run(self, run)
         if "session_turn" in run:
             from .session_conversations import check_conversation_run
 
@@ -907,6 +910,10 @@ class LocalEngine:
             raise CoordinatorBusy("The previous Action is still running; wait for its result")
         run = self._authorized(run_id)
         if run["state"] in TERMINAL:
+            if "remote_session_binding" in run or "remote_session_saves" in run:
+                from .remote_session_saves import reconcile_terminal_saves
+
+                await self._guarded(run_id, reconcile_terminal_saves(self, run_id))
             if run.get("orchestration") is not None:
                 self._orchestration.terminal(run_id)
                 return self.status(run_id)
@@ -992,9 +999,13 @@ class LocalEngine:
                         .get("status")
                         != "retry"
                     ):
-                        await self._guarded(
+                        finished = await self._guarded(
                             run_id, self._finish_node(run_id, adopted["response"]["output"])
                         )
+                        if finished is False:
+                            if self._authorized(run_id)["state"] == "cancelling":
+                                continue
+                            break
                     else:
                         if not await self._guarded(run_id, self._model(run_id)):
                             if self._authorized(run_id)["state"] == "cancelling":
@@ -1047,9 +1058,14 @@ class LocalEngine:
         if not verify_completion(self, run_id, result):
             return
         sessions = self._components(run).sessions
+        from .remote_session_saves import save_remote_result
+
+        saved = await save_remote_result(self, run_id, result)
+        if saved is False:
+            return False
         revision, _ = (
             (await memory_call(sessions.read, self.scope, run["session_id"]))
-            if sessions is not None
+            if saved is None and sessions is not None
             else (0, [])
         )
 
@@ -1061,7 +1077,7 @@ class LocalEngine:
             "session_backend"
         ]:
             raise DefinitionMismatch("The executing session backend differs from this Run")
-        if sessions is not None:
+        if saved is None and sessions is not None:
             await memory_call(
                 sessions.append,
                 self.scope,

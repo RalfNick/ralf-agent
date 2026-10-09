@@ -12,6 +12,7 @@ import json
 import time
 import weakref
 from contextlib import asynccontextmanager
+from dataclasses import asdict
 
 from .errors import IdempotencyConflict, MemoryBackendError, RalfError, ValidationError
 from .memory import _session_cursor, _validate_expires_at
@@ -198,6 +199,41 @@ class _PostgresAdapter:
 
 class PostgresMemory(_PostgresAdapter):
     """Scoped sessions, versioned facts, bounded recall and fact validation."""
+
+    session_receipt_version = 1
+
+    async def inspect_message(self, scope, session_id, message_id):
+        from .session_receipts import validate_inspection
+
+        prefix = _prefix(scope, session_id)
+        _name(message_id, "Message identity")
+        async with self._transaction(("session", *prefix)):
+            row = await self._execute(
+                "SELECT revision FROM ralf_memory_sessions "
+                "WHERE workspace=%s AND principal=%s AND session=%s",
+                prefix,
+                fetch="one",
+            )
+            saved = await self._execute(
+                "SELECT seq,data FROM ralf_memory_messages "
+                "WHERE workspace=%s AND principal=%s AND session=%s AND message_id=%s",
+                (*prefix, message_id),
+                fetch="one",
+            )
+            return validate_inspection(
+                {
+                    "scope": asdict(scope),
+                    "session_id": session_id,
+                    "message_id": message_id,
+                    "revision": row[0] if row else 0,
+                    "receipt": {"revision": saved[0], "message": json.loads(saved[1])}
+                    if saved
+                    else None,
+                },
+                scope,
+                session_id,
+                message_id,
+            )
 
     @classmethod
     async def connect(cls, dsn, *, backend_id):

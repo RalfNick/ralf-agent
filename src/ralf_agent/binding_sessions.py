@@ -128,3 +128,14 @@ class SessionView:
         value = await memory_call(method, scope, self.storage_key(session_id), query)
         self._check(scope)
         return value
+
+    async def inspect_message(self, scope, session_id, message_id):
+        from .session_receipts import supports_remote_session, validate_inspection
+
+        self._check(scope)
+        if not supports_remote_session(self.backend):
+            raise ValidationError("Session backend does not support exact write receipts")
+        address = self.storage_key(session_id)
+        value = await memory_call(self.backend.inspect_message, scope, address, message_id)
+        self._check(scope)
+        return validate_inspection(value, scope, address, message_id)
