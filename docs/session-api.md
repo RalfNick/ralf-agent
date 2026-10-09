@@ -246,15 +246,26 @@ RedisMemory／PostgresMemory。它们保存会话数据；Local SQLite Coordinat
 装配，或按既有 owned/borrowed 生命周期创建：
 
 ```python
-from ralf_agent import AgentBindingDescriptor, AgentDefinition, AgentSpec, BindingSelection, SessionBindingResource
+from ralf_agent import (
+    AgentBindingDescriptor,
+    AgentDefinition,
+    AgentSpec,
+    BindingSelection,
+    SessionBindingResource,
+)
 
 # backend is an initialized RedisMemory or PostgresMemory; catalog and engine
 # use the same trusted Scope. The caller owns this borrowed async backend.
-catalog.register("session", "history", "1", SessionBindingResource(
-    backend, namespaces=("support",), default_namespace="support"
-))
-definition = AgentDefinition(AgentSpec("support", "Help the user"),
-    AgentBindingDescriptor(session=BindingSelection.ref("history", "1")))
+catalog.register(
+    "session",
+    "history",
+    "1",
+    SessionBindingResource(backend, namespaces=("support",), default_namespace="support"),
+)
+definition = AgentDefinition(
+    AgentSpec("support", "Help the user"),
+    AgentBindingDescriptor(session=BindingSelection.ref("history", "1")),
+)
 agent = runtime.create_agent(definition)
 session = await agent.open_session("customer", command_id="open")
 run = await session.submit("Help me", command_id="one")

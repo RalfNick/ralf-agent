@@ -178,6 +178,9 @@ class OrchestrationRuntime:
             engine._check_parent_limits(parent, parent_call, manifest)
             manifest["parent_call"] = copy.deepcopy(parent_call)
         execution_definition = {**definition, "steps": agent_steps(definition)}
+        from .managed_memory import admit_stages
+
+        admit_stages(engine, manifest, definition["kind"], parent_call)
         from .session_resources import admit_sessions
 
         session_claim_data = admit_sessions(engine, manifest, [session])

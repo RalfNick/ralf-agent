@@ -193,6 +193,7 @@ _BINDING_FACTORY_KINDS = {
     "tool_set": "tool_set",
     "verifier": "verifier",
     "limits": "limits",
+    "stage_policy": "stage_policy",
 }
 
 
@@ -419,6 +420,9 @@ class ComponentRegistry:
         from .middleware_factories import register_middleware_factories
 
         register_middleware_factories(self)
+        from .managed_memory_factories import register_memory_stages
+
+        register_memory_stages(self)
 
     def register(self, kind, name, factory, *, validator=None):
         self._register(kind, name, factory, validator, asynchronous=False)

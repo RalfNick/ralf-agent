@@ -30,6 +30,7 @@ COMPONENT_KINDS = frozenset(
         "plan_verifiers",
         "verifier",
         "limits",
+        "stage_policy",
     }
 )
 

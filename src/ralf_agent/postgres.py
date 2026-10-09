@@ -200,6 +200,8 @@ class _PostgresAdapter:
 class PostgresMemory(_PostgresAdapter):
     """Scoped sessions, versioned facts, bounded recall and fact validation."""
 
+    fact_inspection_version = 1
+
     session_receipt_version = 1
 
     async def inspect_message(self, scope, session_id, message_id):
@@ -357,6 +359,17 @@ class PostgresMemory(_PostgresAdapter):
                 fetch="all",
             )
             return [self._fact(row) for row in rows]
+
+    async def inspect_fact(self, scope, namespace, key):
+        prefix = _prefix(scope, namespace)
+        _name(key, "Fact key")
+        async with self._transaction(("facts", *prefix)):
+            row = await self._execute(
+                "SELECT key,value,version,expires_at FROM ralf_memory_facts WHERE workspace=%s AND principal=%s AND namespace=%s AND key=%s",
+                (*prefix, key),
+                fetch="one",
+            )
+            return None if row is None else self._fact(row)
 
     async def put_fact(self, scope, namespace, key, value, *, expected_version, expires_at=None):
         prefix = _prefix(scope, namespace)

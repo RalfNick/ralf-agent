@@ -1,4 +1,4 @@
-# Implementation status — 0.1.0.dev39
+# Implementation status — 0.1.0.dev40
 
 Target architecture update: [AgentHarness](../architecture/viewpoints/harness-runtime.md)
 defines broad Harness/Core roles, per-Agent bindings, Agent/Session facade, managed
@@ -29,7 +29,7 @@ dev31 delivers [H2a Local stateless Agent API](agent-api.md): immutable AgentHar
 Runtime-owned Local drive tasks, Agent/AgentRun/RunRef, observation-only wait,
 nested control ownership/waking and retryable drain/cancel closing. Full H1/H2
 are not complete; remote Sessions, Temporal bindings and automatic
-managed stages remain pending. SDK is dev39. The [Facade/Session target contract](../architecture/specs/agent-facade-session-contract.md)
+managed stages remain partial. SDK is dev40. The [Facade/Session target contract](../architecture/specs/agent-facade-session-contract.md)
 now specifies observation-only waiting, durable busy refusal, Session binding revisions,
 and ownership-aware closing. H2a implements the declared Local stateless subset;
 remaining shared routing and backend requirements are not changes to legacy
@@ -183,3 +183,6 @@ dev38 adds H2b4a [remote native/sequence durable Turns](session-api.md#远程持
 
 
 dev39 delivers H2b4b [remote composite root conversations](session-api.md#远程复合根会话dev39h2b4b): Graph/parallel/direct-transform, Team, Dynamic Plan/DAG and nested Local Turns fix an explicit receipt-backed root resource independently of members. The original authority persists the final proposal, corresponding workflow/orchestration marker, required save and receipt; recovery completes the save directly without repeated planning, verification or child/business execution. Async Profile session-resource assembly reuses existing backend factories and owned lifecycle. Native↔composite idle rebind preserves one remote address. New capability atomically enables semantic schema6; old38 refuses it, previous schema1–5 remain supported. Cross-authority leases, Temporal binding/shared Sessions, FIFO/input/deadline, automatic Harness stages and complete H2 remain unfulfilled.
+
+
+dev40 delivers the first Local H3a [managed rule-memory stage](managed-memory-stages.md) for native Agents and sequences. It is opt-in, separately host-granted, grounded and charged against Run execution credits. Original authority persists source/proposal/CAS intent/receipt evidence; unknown writes retain credits and explicit terminal recovery only inspects exact facts. Auxiliary failure does not replay business work or change terminal success. BindingCatalog supports stage_policy inherit/ref/disabled; JSON/TOML sourced-memory and sourced-memory-async reuse existing backend/client factories. Semantic7 activation is atomic with first enabled admission; dev39 readers refuse it. Default-off releases remain unchanged. Advanced/Temporal automatic stages, automatic model extraction, background jobs and semantic memory revision remain undelivered.

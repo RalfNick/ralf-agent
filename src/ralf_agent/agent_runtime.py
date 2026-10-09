@@ -326,6 +326,17 @@ class Runtime:
                 {"ref": owner.to_dict(), **item}
                 for item in pending_remote_saves(self._local, self._local._authorized(owner.run_id))
             )
+            for stage in self._local.memory_stages(owner.run_id):
+                if stage["status"] in {"proposing", "prepared", "outcome_unknown"}:
+                    pending.append(
+                        {
+                            "kind": "auxiliary",
+                            "source": "memory",
+                            "node": stage["node"],
+                            "status": stage["status"],
+                            "ref": owner.to_dict(),
+                        }
+                    )
             for action in info.snapshot.pending:
                 pending.append({"kind": "approval", "ref": owner.to_dict(), **action})
             for action in info.snapshot.actions:
@@ -443,6 +454,10 @@ class AgentRun:
 
     async def diagnostics(self):
         return await self._runtime._aobserve(self.ref, "diagnostics")
+
+    async def memory_stages(self):
+        """Local auxiliary receipts; explicit resume inspects unknown memory evidence."""
+        return await self._runtime._aobserve(self.ref, "memory_stages")
 
     async def pending(self):
         return await self._runtime._apending(self.ref)

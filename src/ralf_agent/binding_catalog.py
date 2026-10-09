@@ -19,6 +19,7 @@ SELECTABLE_ROLES = frozenset(
         "tool_set",
         "verifier",
         "limits",
+        "stage_policy",
     }
 )
 
@@ -77,6 +78,10 @@ def component_identity(role, component):
         return LocalEngine._component_identity(component, ("verify",), True, "Completion verifier")
     if role == "limits":
         return LocalEngine._component_identity(component, ("propose",), True, "Agent limits")
+    if role == "stage_policy":
+        from .managed_memory import stage_identity
+
+        return stage_identity(component, component.scope)
     raise ValidationError("Binding role is not selectable in Local H1a")
 
 

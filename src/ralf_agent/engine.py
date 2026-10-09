@@ -98,6 +98,7 @@ class LocalEngine:
         verifier=None,
         limits=None,
         conversation_resource=None,
+        stage_policy=None,
     ):
         # Python 3.12's Protocol isinstance check ignores proxy __getattr__.
         # Validate the declared public operations so delegating adapters work too.
@@ -115,6 +116,7 @@ class LocalEngine:
         self.harness = NativeHarness() if harness is None else harness
         self.verifier = verifier
         self.limits = limits
+        self.stage_policy = stage_policy
         if limits is not None:
             self._component_identity(limits, ("propose",), True, "Agent limits")
         if verifier is not None:
@@ -409,6 +411,14 @@ class LocalEngine:
                 raise DefinitionMismatch("Managed child has no original parent ownership")
             return parent_id
 
+    def memory_stages(self, run_id):
+        """Scope-authorized immutable copy of auxiliary memory evidence, no I/O."""
+        run = self._authorized(run_id)
+        from .managed_memory_stage import validate_journal
+
+        validate_journal(self, run)
+        return copy.deepcopy(list(run.get("memory_stages", {}).values()))
+
     def patch_plan(self, run_id, proposal, *, expected_plan_revision, command_id):
         self._ensure_open()
         return self._orchestration._dag.patch(run_id, proposal, expected_plan_revision, command_id)
@@ -488,6 +498,11 @@ class LocalEngine:
             manifest["completion_verifier"] = self._component_identity(
                 verifier, ("verify",), True, "Completion verifier"
             )
+        stage = self.stage_policy if components is None else components.stage_policy
+        if stage is not None:
+            from .managed_memory import stage_identity
+
+            manifest["managed_memory"] = stage_identity(stage, self.scope)
         from .agent_limits import limit_manifest
 
         caps = limit_manifest(self, steps, None if components is None else components.limits)
@@ -628,6 +643,9 @@ class LocalEngine:
         from .session_resources import admit_sessions
 
         session_claim_data = admit_sessions(self, manifest, session_ids, plan)
+        from .managed_memory import admit_stages
+
+        admit_stages(self, manifest, definition["kind"], _parent_call)
         data = {
             "id": run_id,
             "revision": 0,
@@ -910,6 +928,11 @@ class LocalEngine:
             raise CoordinatorBusy("The previous Action is still running; wait for its result")
         run = self._authorized(run_id)
         if run["state"] in TERMINAL:
+            if "memory_stages" in run or any("memory_stage" in a for a in run["actions"]):
+                from .managed_memory_stage import recover_terminal_memory
+
+                await self._guarded(run_id, recover_terminal_memory(self, run_id))
+                run = self._authorized(run_id)
             if "remote_session_binding" in run or "remote_session_saves" in run:
                 from .remote_session_saves import reconcile_terminal_saves
 
@@ -1102,6 +1125,9 @@ class LocalEngine:
                 expected_revision=revision,
                 message_id=f"{run_id}:{run['node']}:result",
             )
+        from .managed_memory_stage import finish_memory_stage
+
+        await finish_memory_stage(self, run_id, result)
         with self.store.transaction():
             run = self._authorized(run_id)
             if run["state"] in TERMINAL or run["state"] == "cancelling":
@@ -1313,6 +1339,8 @@ class LocalEngine:
             action["response"] = encoded
             action["status"] = "completed"
             action["decision_skipped"] = closed
+            if not closed and not proposals and "managed_memory" in self._step_manifest(run):
+                action["memory_stage"] = {"schema_version": 1, "required": True}
             if not closed:
                 run["actions"].extend(proposals)
                 if proposals:

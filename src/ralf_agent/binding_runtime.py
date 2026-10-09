@@ -22,6 +22,7 @@ class StepComponents:
     tools: tuple[str, ...]
     verifier: object | None
     limits: object | None
+    stage_policy: object | None = None
 
 
 def step_path(definition, index, plan=None):
@@ -70,6 +71,8 @@ class AgentBindingResolver:
             values["verifier"] = e.verifier
         if descriptor.limits.mode != "inherit" or e.limits is not None:
             values["limits"] = e.limits
+        if descriptor.stage_policy.mode != "inherit" or e.stage_policy is not None:
+            values["stage_policy"] = e.stage_policy
         records = {}
         for role in values:
             selection = getattr(descriptor, role)
@@ -97,6 +100,7 @@ class AgentBindingResolver:
             tools,
             values.get("verifier"),
             values.get("limits"),
+            values.get("stage_policy"),
         ), records
 
     def components(self, run, index=None):
@@ -115,6 +119,7 @@ class AgentBindingResolver:
             tuple(step["tools"]),
             e.verifier,
             None,
+            e.stage_policy,
         )
 
     def base_step(self, run, index=None):
@@ -195,6 +200,8 @@ class AgentBindingResolver:
             manifest["kernel"] = "local-bindings-5"
         if any(entry["descriptor"]["limits"]["mode"] != "inherit" for entry in entries.values()):
             manifest["kernel"] = "local-bindings-6"
+        if any("managed_memory" in entry["manifest"] for entry in entries.values()):
+            manifest["kernel"] = "local-bindings-7"
         if self.engine.runtime_profile is not None:
             manifest["runtime_profile"] = runtime_profile_identity(self.engine.runtime_profile)
         return manifest

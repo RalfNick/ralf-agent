@@ -41,6 +41,8 @@ def definition(kind="agent"):
 @pytest.mark.parametrize("kind", ["agent", "sequence"])
 @pytest.mark.parametrize("namespace", [None, "red"])
 def test_remote_turns_namespace_history_and_pure_observation(tmp_path, kind, namespace):
+    from .test_remote_session_recovery import settled
+
     async def scenario():
         runtime, backend, provider = setup(
             tmp_path / "run.sqlite",
@@ -61,9 +63,11 @@ def test_remote_turns_namespace_history_and_pure_observation(tmp_path, kind, nam
                 )
                 one = await session.submit("q", command_id="one")
                 assert (await one.wait(wait_timeout=1)).snapshot.state == "succeeded"
+                await settled(runtime)
                 assert not (await session.status()).busy
                 two = await session.submit("next", command_id="two")
                 assert (await two.wait(wait_timeout=1)).snapshot.state == "succeeded"
+                await settled(runtime)
                 assert [t.turn_seq for t in await session.turns()] == [1, 2]
                 address = session.ref.key.storage_key
                 revision, messages = backend.memory.read(r.Scope(), address)

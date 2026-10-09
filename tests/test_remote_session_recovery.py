@@ -97,6 +97,7 @@ def test_independent_remote_admission_evidence_cannot_downgrade(tmp_path, missin
                 )
                 one = await session.submit("q", command_id="one")
                 await one.wait(wait_timeout=1)
+                await settled(runtime)
                 store = runtime.engine.store
                 with store.transaction():
                     if missing in {"binding", "both"}:
@@ -138,6 +139,7 @@ def test_cancelled_unknown_remote_write_holds_turn_until_query_only_recovery(tmp
                 )
                 one = await session.submit("q", command_id="one")
                 await one.wait(wait_timeout=1)
+                await settled(runtime)
                 backend.receipt_override = lambda value: {**value, "receipt": None}
                 await one.cancel(command_id="cancel")
                 await settled(runtime)
@@ -175,6 +177,7 @@ def test_cancelled_live_append_retains_runtime_until_real_completion(tmp_path):
                     runtime.engine.close()
                 backend.release.set()
                 await one.wait(wait_timeout=1)
+                await settled(runtime)
                 await runtime.resume(one.ref)
                 await settled(runtime)
                 assert (await one.status()).state == "cancelled"
@@ -198,6 +201,7 @@ def test_persisted_receipt_must_still_match_adopted_model_message(tmp_path):
                 )
                 one = await session.submit("q", command_id="one")
                 await one.wait(wait_timeout=1)
+                await settled(runtime)
                 with runtime.engine.store.transaction():
                     run = runtime.engine.store.run(one.ref.run_id)
                     intent = run["remote_session_saves"]["0"]
@@ -265,6 +269,7 @@ def test_malformed_save_journal_refuses_observation(tmp_path, damage):
                 )
                 one = await session.submit("q", command_id="one")
                 await one.wait(wait_timeout=1)
+                await settled(runtime)
                 with runtime.engine.store.transaction():
                     run = runtime.engine.store.run(one.ref.run_id)
                     original = copy.deepcopy(run["remote_session_saves"])

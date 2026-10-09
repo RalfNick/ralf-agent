@@ -28,7 +28,7 @@ class RunTaskSupervisor:
                 )
                 if self.unresolved is not None:
                     unknown = unknown or any(
-                        item["kind"] == "reconciliation"
+                        item["kind"] in {"reconciliation", "auxiliary"}
                         for item in self.unresolved(self.refs[run_id])
                     )
                 if not unknown:
@@ -43,7 +43,7 @@ class RunTaskSupervisor:
             # housekeeping; it never reopens the parent's business state.
             unresolved = self.unresolved(ref) if self.unresolved is not None else []
             if flow.get("quiescent") is not False and not any(
-                item.get("source") == "remote_session" for item in unresolved
+                item.get("source") in {"remote_session", "memory"} for item in unresolved
             ):
                 return
         self.refs[ref.run_id] = ref

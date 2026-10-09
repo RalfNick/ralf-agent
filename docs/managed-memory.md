@@ -138,3 +138,7 @@ summaries remain the offline option.
 Both managed summary and model extraction work with synchronous LocalEngine
 controls or asynchronous TemporalEngine controls. Temporal custom context is
 registered separately; see [Temporal custom context](temporal-custom-context.md).
+
+## In-Run rule stage
+
+Dev40 additionally provides optional Local native/sequence [managed rule-memory stages](managed-memory-stages.md), selected through host stage_policy bindings. These freeze verified result observations before terminal submission; this explicit MemoryPipeline continues to require an authoritative succeeded Run. Automatic model extraction and advanced/Temporal stage combinations remain pending.

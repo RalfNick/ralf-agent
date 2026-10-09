@@ -22,6 +22,28 @@ class SessionResourceAdmission(Protocol):
     def session_resource_owner(self, scope: Scope, resource: dict) -> str | None: ...
 
 
+class ManagedStageStore(Protocol):
+    """Optional semantic gate; old readers must refuse newly accepted stage Runs.
+
+    Activation is atomic with command acceptance under the original Store's
+    transaction. It must not create an independent stage execution authority.
+    """
+
+    managed_stage_version: int
+
+    def prepare_managed_stages(self) -> None: ...
+
+    def managed_stage_reservation(self, run_id: str, reservation_id: str) -> dict | None: ...
+
+
+class FactInspection(Protocol):
+    """Optional exact scoped point lookup, including stored expiry metadata."""
+
+    fact_inspection_version: int
+
+    def inspect_fact(self, scope: Scope, namespace: str, key: str) -> dict | None: ...
+
+
 @runtime_checkable
 class ExecutionEngine(Protocol):
     """Public control contract; resource ownership ends only after close succeeds."""

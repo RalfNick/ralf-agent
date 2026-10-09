@@ -69,7 +69,8 @@ anthropic-messages、gemini-content、openai-responses。服务、账号和任�
 | session | 宿主原 Session 后端 | 注册 SessionStore／AsyncSessionStore；宿主 allowlist 下的 namespace | stateless，不读取/保存会话消息 |
 | verifier | 未配置时仅强制 Schema 校验；已配置时继承宿主验证器 | 纯同步 CompletionVerifier，固定身份与回执证据 | 关闭额外规则，Schema 仍强制 |
 | limits | 原 Spec 与宿主强制上限 | 纯同步策略，与宿主／Spec 取最小值 | 只关闭额外 Agent 策略，宿主限制仍生效 |
-| artifacts/workspace/sandbox/skills/stage_policy | 原宿主行为；不激活新阶段 | 首期拒绝 | 首期拒绝 |
+| stage_policy | 原生／顺序：默认关闭或宿主自动规则记忆 | 关闭自动阶段 | 宿主注册的 ManagedMemoryPolicy |
+| artifacts/workspace/sandbox/skills | 原宿主行为；不激活新阶段 | 首期拒绝 | 首期拒绝 |
 
 工具子集不能增加 AgentSpec 未声明的工具；HostPolicy、审批、效果分类和执行器始终由宿主控制。
 目录绑定不授予企业资源权限。facts 使用当前 Agent 名称作为既有 namespace；knowledge
@@ -254,3 +255,5 @@ CLI inspect 和文本 status/run/resume 按逐步骤发布展示绑定；审批�
 纯完成 verifier 的配置、耐久反馈和恢复见[H1e 教程](completion-verification.md)。
 
 决策／上下文／工具动作 caps 与默认配置见[H1f 教程](agent-limits.md)。
+
+自动记忆 stage_policy 的支持范围、写授权和独立恢复证据见[受管理记忆阶段](managed-memory-stages.md)。高级编排和 Temporal 自动阶段仍未交付。

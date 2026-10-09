@@ -174,6 +174,8 @@ class RedisMemory:
     share a hash tag. The adapter does not apply physical key TTLs to facts.
     """
 
+    fact_inspection_version = 1
+
     def __init__(self, client, *, backend_id, prefix="ralf", owns_client=False):
         _config(backend_id, prefix)
         if type(owns_client) is not bool:
@@ -338,6 +340,16 @@ class RedisMemory:
             ),
             key=lambda item: item["key"],
         )
+
+    async def inspect_fact(self, scope, namespace, key):
+        _inputs(scope, namespace)
+        _text(key, "Fact key")
+        rows = await self._eval(
+            _VALIDATE_FACTS, self._keys(scope, "facts", namespace, "values"), key
+        )
+        if not isinstance(rows, list) or len(rows) != 1:
+            raise MemoryBackendError("Redis fact inspection returned invalid data")
+        return None if rows[0] is None else _facts(rows)[0]
 
     async def put_fact(self, scope, namespace, key, value, *, expected_version, expires_at=None):
         _inputs(scope, namespace)

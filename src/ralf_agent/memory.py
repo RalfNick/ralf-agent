@@ -169,6 +169,13 @@ class ThreadedMemoryAdapter:
     def backend_id(self):
         return f"threaded:{self.backend.backend_id}"
 
+    @property
+    def fact_inspection_version(self):
+        return getattr(self.backend, "fact_inspection_version", None)
+
+    async def inspect_fact(self, *args, **kwargs):
+        return await self._call(self.backend.inspect_fact, *args, **kwargs)
+
     async def read(self, *args, **kwargs):
         return await self._call(self.backend.read, *args, **kwargs)
 
@@ -216,6 +223,8 @@ class ThreadedMemoryAdapter:
 
 
 class InMemoryMemory:
+    fact_inspection_version = 1
+
     def __init__(self, *, backend_id=None):
         self.backend_id = backend_id or f"memory:{uuid.uuid4().hex}"
         self._sessions = {}
@@ -255,6 +264,14 @@ class InMemoryMemory:
                 and ns == namespace
                 and (v["expires_at"] is None or v["expires_at"] > time.time())
             ]
+
+    def inspect_fact(self, scope, namespace, key):
+        _fact_inputs(scope, namespace, [])
+        _name(key, "Fact key")
+        with self._lock:
+            return copy.deepcopy(
+                self._facts.get((scope.workspace, scope.principal, namespace, key))
+            )
 
     def put_fact(self, scope, namespace, key, value, *, expected_version, expires_at=None):
         _name(namespace, "Fact namespace")
@@ -343,6 +360,8 @@ class InMemoryMemory:
 
 
 class SQLiteMemory:
+    fact_inspection_version = 1
+
     def __init__(self, path_or_store):
         self._owns_store = not isinstance(path_or_store, SQLiteStore)
         self.store = SQLiteStore(path_or_store) if self._owns_store else path_or_store
@@ -445,6 +464,24 @@ class SQLiteMemory:
                 (scope.workspace, scope.principal, namespace, time.time()),
             )
         ]
+
+    def inspect_fact(self, scope, namespace, key):
+        _fact_inputs(scope, namespace, [])
+        _name(key, "Fact key")
+        row = self.store.conn.execute(
+            "SELECT key,value,version,expires_at FROM memory_facts WHERE workspace=? AND principal=? AND namespace=? AND key=?",
+            (scope.workspace, scope.principal, namespace, key),
+        ).fetchone()
+        return (
+            None
+            if row is None
+            else {
+                "key": row[0],
+                "value": json.loads(row[1]),
+                "version": row[2],
+                "expires_at": row[3],
+            }
+        )
 
     def put_fact(self, scope, namespace, key, value, *, expected_version, expires_at=None):
         _name(namespace, "Fact namespace")
