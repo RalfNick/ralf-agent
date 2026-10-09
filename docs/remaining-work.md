@@ -1,15 +1,15 @@
-# dev34 剩余能力与架构验收清单
+# dev36 剩余能力与架构验收清单
 
-版本：8；日期：2026-10-09；维护者：RALF maintainers。
+版本：10；日期：2026-10-09；维护者：RALF maintainers。
 读者：框架维护者、应用开发者及适配器贡献者。基线：da55f97 的 dev30，
-以及本地 dev31 H2a／dev32 H2b1 与 dev33 H2c1／dev34 H2c2 增量。
+以及已提交5626c17的dev31–34与当前本地dev35 H2b2及dev36 H2b3增量。
 
 ## 1. 结论与判定方式
 
 RALF 已有可运行的通用 SDK 预览：模型／工具循环、顺序与图编排、动态 DAG、
 受管理多 Agent、远程数据适配及有限 Temporal 分布式执行。尚未完成的主链路是
 完整每 Agent 能力绑定、统一 Agent／Session 入口、推荐智能数据组合和长期运行治理。
-H1a–H1f、Local stateless H2a、同库原生／顺序会话 H2b1 和 Temporal 原生／顺序入口 H2c1／已注册高级编排入口 H2c2 已交付；完整 H1/H2 尚未完成，H3–H5 有可复用基础但未达到各自交付门槛。
+H1a–H1f、Local stateless H2a、同库原生／顺序 H2b1／复合会话 H2b2 和 Temporal 原生／顺序入口 H2c1／已注册高级编排入口 H2c2 已交付；完整 H1/H2 尚未完成，H3–H5 有可复用基础但未达到各自交付门槛。
 完整 M1、AgentScope 目标业务链路对齐及企业正式可用均不能标为完成。
 
 H1c 的[验收记录](../architecture/reviews/2026-10-08-session-capability-bindings.md)：
@@ -33,6 +33,10 @@ dev33 H2c1 增加[Temporal 原生／顺序 Agent 入口](temporal-agent-api.md)�
 
 dev34 H2c2 接通已注册 Graph／Team／Dynamic／嵌套 Agent 入口；通过原父子命令／发布身份验证读取实际子 Run 控制，有界固定派发观察保留客户端取消和 detach。Temporal 绑定、远程／复合会话与完整 H2 继续待交付。
 
+dev35 H2b2 接通同库 Graph／并行／Team／动态 Plan/DAG／嵌套 Session Turns：固定成员绑定、原子最终保存、真实子处理器／未知效果／缺失结果占用、idle CAS 跨种类 rebind。成功接受启用 schema3，dev34 在派发前拒绝；详见[验收与取舍](../architecture/reviews/2026-10-09-local-composite-session-turns.md)。远程共享会话、复合根 namespace、Temporal 绑定和完整 H2 待交付。
+
+dev36 H2b3 增加宿主授权的同库复合根 namespace、独立根资源、原绑定派发校验和 schema4 兼容门槛。Profile 专用声明、远程共享会话、Temporal 绑定及完整 H2 尚待交付。见[验收记录](../architecture/reviews/2026-10-09-composite-conversation-namespaces.md)。
+
 本清单对照[总架构](../architecture/design.md)、[通用能力清单](../architecture/viewpoints/framework-capabilities.md)、
 [AgentHarness H1–H5](../architecture/viewpoints/harness-runtime.md)、
 [建设顺序](agentscope-alignment.md)和[当前实现](implementation-status.md)，并核对 SDK 源码。
@@ -53,10 +57,10 @@ PG Knowledge/Inbox/Outbox、Qdrant、HTTP Embedding、Hybrid/RRF／基础重排�
 
 ### 组合、入口、模型与编排
 
-| ID／层 | dev34 已交付基础 | 尚未完成的具体能力 | 阶段／状态 |
+| ID／层 | dev36 已交付基础 | 尚未完成的具体能力 | 阶段／状态 |
 | --- | --- | --- | --- |
 | R01 每 Agent 绑定 | Local 原生 Agent／顺序／Graph／Team／Dynamic／嵌套成员六类选择：provider、decision_policy、context、facts、knowledge、tool_set；稳定路径、固定父子发布与 Profile v2；Session 后端／允许的 namespace／同权威实际地址占用；Facts／Knowledge 宿主范围视图与来源校验；纯完成 verifier 的 inherit/ref/disabled；宿主与 Agent limits 的固定交集与动作额度 | Temporal 绑定；其他资源身份／selector／作用域视图；artifacts／workspace／sandbox／skills／stage_policy 绑定与准入。当前这些角色只能继承既有行为，显式选择被拒绝 | H1：子集已交付 |
-| R02 Agent／Session 入口 | H2a Local stateless Agent/Runtime/AgentRun、RunRef/WaitResult；独立任务托管、纯观察等待、原根流程控制路由、owned/borrowed 关闭与 CloseIncomplete 重试、显式重连；保留旧 RunHandle DTO；H2b1 同库原生／顺序 SessionKey／路由／Turn／busy／CAS rebind；H2c1 Temporal 原生／顺序共同入口、异步重连、固定 RPC 组件与客户端 detach；H2c2 已注册 Graph／Team／Dynamic／嵌套入口与实际子 Run 控制 | 远程／图／Team／Dynamic Session 组合、输入续接／业务 deadline、Temporal 绑定、移交与耐久 FIFO | H2a／H2b1／H2c1／H2c2：子集已交付；完整 H2 未交付 |
+| R02 Agent／Session 入口 | H2a Local stateless Agent/Runtime/AgentRun、RunRef/WaitResult；独立任务托管、纯观察等待、原根流程控制路由、owned/borrowed 关闭与 CloseIncomplete 重试、显式重连；保留旧 RunHandle DTO；H2b1 同库原生／顺序及 H2b2 图／团队／动态／嵌套及 H2b3 授权根 namespace SessionKey／路由／Turn／busy／CAS rebind；H2c1 Temporal 原生／顺序共同入口、异步重连、固定 RPC 组件与客户端 detach；H2c2 已注册 Graph／Team／Dynamic／嵌套入口与实际子 Run 控制 | 远程 Session 组合、输入续接／业务 deadline、Temporal 绑定、移交与耐久 FIFO | H2a／H2b1／H2b2／H2b3／H2c1／H2c2：子集已交付；完整 H2 未交付 |
 | R03 Harness 与公共规则 | 纯 Harness/NativeHarness、ToolExecutor、共享决策／证据规则、Workflow Compiler/Interpreter、固定声明的 AgentHarness 组合入口 | 广义 Harness 受管理阶段及默认组合；逐步提取 RuntimeKernel 纯规则；Prepare/Verify/Memory 等阶段的身份、证据、取消和恢复协议。保持 Local/Temporal 各自唯一执行权威 | H1–H3：部分抽象已实现 |
 | R04 配置与装配 | 版本 Profile/Catalog、JSON/TOML、注册工厂、sync/async 装配、owned 清理、历史配置路由 | 完整绑定／推荐组合配置；CLI/ProfiledEngine 异步工厂路由；插件显式安装／激活／兼容检查；配置／组件迁移、旧代码归档、部署版本管理；配置来源／监听按需分期 | H1／H5：子集已交付 |
 | R05 模型适配 | Chat Completions、DeepSeek 非思考、Anthropic 文本／工具、Gemini 文本、stateless Responses/JSON/完整 SSE | Gemini 函数调用、Responses 续接及受限字段；能力／用量／错误／超时／重试一致性；路由/fallback/负载策略及效果不重复契约；国内外及本地模型真实兼容矩阵。兼容 URL 不证明每个模型支持同一能力 | A1／H5：协议子集已交付，线上验收未完成 |
@@ -69,7 +73,7 @@ PG Knowledge/Inbox/Outbox、Qdrant、HTTP Embedding、Hybrid/RRF／基础重排�
 
 ### 工具、上下文、记忆与知识
 
-| ID／层 | dev34 已交付基础 | 尚未完成的具体能力 | 阶段／状态 |
+| ID／层 | dev36 已交付基础 | 尚未完成的具体能力 | 阶段／状态 |
 | --- | --- | --- | --- |
 | R12 工具接入／工具包 | typed Python/Schema/默认参数、ToolRegistry、async ToolSource、MCP stdio、A2A ToolSource、授权／审批／核验 | MCP HTTP/持续 Session/OAuth；固定 executable/argv 的 CLI Runner；通用受控 HTTP 工具适配；搜索／文件／浏览器工具包与发现；有状态工具租约和停止证据 | H4：子集已交付 |
 | R13 Workspace/Skills/Sandbox/Runner | 可信 Python、MCP 受管理进程生命周期；Runner 目标契约 | Workspace／文件权限／资源租约；Skills 生命周期／能力注册／来源；容器／远端 Sandbox 文件、网络、进程和资源隔离；Coding Runner、Codex 首个适配及各外部 Runner 验收。普通子进程不是安全沙箱 | H4：目标能力未交付 |
@@ -81,7 +85,7 @@ PG Knowledge/Inbox/Outbox、Qdrant、HTTP Embedding、Hybrid/RRF／基础重排�
 
 ### 执行、通信、服务与验收
 
-| ID／层 | dev34 已交付基础 | 尚未完成的具体能力 | 阶段／状态 |
+| ID／层 | dev36 已交付基础 | 尚未完成的具体能力 | 阶段／状态 |
 | --- | --- | --- | --- |
 | R19 执行模式／后端一致性 | Local 单 Coordinator/SQLite；Temporal 独立 History，原生 Agent/sequence 与显式发布的 Agent-node Graph/Team/Dynamic/嵌套、RAG | 单 Coordinator 多 Process Worker；Temporal 新绑定、共享 Session/Facts/custom Harness、直接 Tool/Transform 图节点等组合；共同能力／故障／升级门禁；Continue-As-New、部署版本及长期容量。PG Facts/Knowledge 不等于 PG ExecutionStore/分布式调度 | H5／C1：分布式子集已交付 |
 | R20 MQ／A2A | memory/SQLite/Redis Streams、Inbox/Outbox、PG 共享回执；A2A JSON-RPC0.3 文本/数据 polling、async controls | 保留／压缩／积压／重投递与 failover 认证；额外 Broker 按需；A2A SSE/push/files/Task continuation 及真实停止约定。ack 不等于效果确认，不承诺跨系统全局恰好一次 | H4／H5：子集已交付 |
@@ -110,7 +114,9 @@ flowchart LR
     H2a --> H2b1[H2b1 同库会话已交付]
     H2b1 --> H2c1[H2c1 Temporal 原生入口已交付]
     H2c1 --> H2c2[H2c2 已注册高级 Temporal 入口]
-    H2c2 --> H2[H2 剩余会话与绑定]
+    H2c2 --> H2b2[H2b2 同库复合会话已交付]
+    H2b2 --> H2b3[H2b3 授权根 namespace 已交付]
+    H2b3 --> H2[H2 剩余会话与绑定]
     H1 --> H2
     H2 --> H3[H3 推荐智能数据链路]
     H3 --> H4[H4 环境与协作]
@@ -121,7 +127,7 @@ flowchart LR
 ~~~
 
 1. **H1/H2 闭环组合与入口。** R01–R04，以及 R10/R21/R22 的续接与等待。
-   H2a 已有 Local stateless 入口与独立托管，H2b1 已有同库原生／顺序 Session／Turn 占用及稳定绑定，H2c1 已有 Temporal 原生／顺序共同入口，H2c2 已接通已注册高级编排；继续完成远程／复合会话与 Temporal 绑定。
+   H2a 已有 Local stateless 入口与独立托管，H2b1 已有同库原生／顺序 Session／Turn 占用及稳定绑定，H2c1 已有 Temporal 原生／顺序共同入口，H2c2 已接通已注册高级编排、H2b2 已接通同库复合会话；继续完成远程会话 与 Temporal 绑定。
    旧审批、原发布恢复及 caller/HTTP 断连共同验收；H2b 首期忙碌拒绝，耐久 FIFO 后续 opt-in。
 2. **H3 做三个可安装、可替换的参考组合。** Local Basic、Local Knowledge、Managed Memory；
    补 R07/R14–R18 的受管理阶段、自动卸载、语义可选组件和明确失败降级。
@@ -170,3 +176,23 @@ Registered advanced Temporal entry is delivered; full H2 remains open. Final
 2352passed56skipped,231 installed contracts and12+12 actual Service/Worker probes
 pass. Actual dev33 old/current7 histories and Local schema1/schema2 wheel recovery
 retain original evidence. [Review/rulings](../architecture/reviews/2026-10-09-temporal-composite-agent-facade.md) records the pruning/import/bookkeeping fixes; old marker-less histories retain their original evidence rules.
+
+
+### dev35 H2b2 verification
+
+Final2393 passed/56 explicit service/optional skips; outside-checkout wheel259 passed.
+Actual dev34↔dev35 native/sequence schema1/schema2 approval recovery passes4 cases
+each direction; six composite schema3 cases preserve Turns/receipts/manifests and
+one effect per Action. Old read-only/writable SDKs refuse3 before dispatch. A real
+COMMIT failure and failed rollback were independently reproduced and fixed in one
+RED→GREEN pass. [Review/evidence and all rulings](../architecture/reviews/2026-10-09-local-composite-session-turns.md)
+records installed/package gates and remaining full H2/H3 scope.
+
+### dev36 H2b3 verification
+
+Authorized colocated composite root namespaces are delivered through SDK/factory
+assembly; dedicated Profile declaration, remote Sessions and full H2 remain open.
+Independent Run admission evidence also protects configured None selection while
+genuine legacy Turns retain their original behavior in mixed schema4 databases.
+[Review/evidence and all rulings](../architecture/reviews/2026-10-09-composite-conversation-namespaces.md)
+records original approval/recovery, actual old/new wheels and final gates.

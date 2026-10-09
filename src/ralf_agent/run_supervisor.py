@@ -37,7 +37,12 @@ class RunTaskSupervisor:
     def start(self, ref):
         self.prune()
         if self.engine.status(ref.run_id).state in TERMINAL:
-            return
+            flow = self.engine.diagnostics(ref.run_id).workflow or {}
+            # Explicit late-evidence controls may release descendant capacity
+            # after parent cancellation. Drive only the authority's terminal
+            # housekeeping; it never reopens the parent's business state.
+            if flow.get("quiescent") is not False:
+                return
         self.refs[ref.run_id] = ref
         self.errors.pop(ref.run_id, None)
         if ref.run_id in self.tasks:

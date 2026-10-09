@@ -12,6 +12,8 @@ from .types import CommandReceipt, RunEvent, canonical, credits, digest
 
 
 class SQLiteStore:
+    session_admission_version = 3
+
     def __init__(self, path, *, readonly=False):
         # Resolve once: a later chdir or an input symlink must not move the WAL,
         # backend identity, or coordinator away from this execution database.
@@ -23,6 +25,7 @@ class SQLiteStore:
             else f"sqlite:{self.path}"
         )
         self._coordinator = None
+        self._transaction_failed = False
         self._path_identity = self._file_identity(required=False)
         if readonly:
             if self.path == ":memory:" or self._path_identity is None:
@@ -39,7 +42,7 @@ class SQLiteStore:
                 row = self.conn.execute(
                     "SELECT value FROM metadata WHERE key='schema_version'"
                 ).fetchone()
-                if row is None or row[0] not in {"1", "2"}:
+                if row is None or row[0] not in {"1", "2", "3", "4"}:
                     raise ValidationError("Unsupported execution database Schema")
             except (sqlite3.DatabaseError, ValidationError) as exc:
                 self.close()
@@ -68,10 +71,20 @@ class SQLiteStore:
             CREATE INDEX IF NOT EXISTS reservation_run ON reservations(run_id);
         """)
         row = self.conn.execute("SELECT value FROM metadata WHERE key='schema_version'").fetchone()
-        if row and row[0] not in {"1", "2"}:
+        if row and row[0] not in {"1", "2", "3", "4"}:
             self.close()
             raise ValidationError("Unsupported execution database Schema")
         self.conn.execute("INSERT OR IGNORE INTO metadata VALUES ('schema_version','1')")
+
+    @property
+    def conn(self):
+        if self._transaction_failed:
+            raise ValidationError("Execution database rollback failed; close and reopen the Store")
+        return self._conn
+
+    @conn.setter
+    def conn(self, connection):
+        self._conn = connection
 
     def _file_identity(self, *, required=True):
         if self.path == ":memory:":
@@ -103,7 +116,7 @@ class SQLiteStore:
         self.close()
 
     def close(self):
-        self.conn.close()
+        self._conn.close()
 
     def create_coordinator(self):
         from .coordinator import FileCoordinator, InProcessCoordinator
@@ -144,11 +157,19 @@ class SQLiteStore:
         self.conn.execute("BEGIN IMMEDIATE")
         try:
             yield
-        except BaseException:
-            self.conn.rollback()
-            raise
-        else:
+            # SQLite can reject COMMIT while retaining uncommitted writes.
             self.conn.commit()
+        except BaseException as error:
+            try:
+                self.conn.rollback()
+            except BaseException:
+                self._transaction_failed = True
+                error.add_note("Execution database rollback failed; Store is unusable")
+                try:
+                    self._conn.close()
+                except BaseException:
+                    error.add_note("Execution database close also failed; retry close")
+            raise
 
     def command(self, scope, command_id, kind, payload, run_id, apply):
         if not isinstance(command_id, str) or not command_id:
@@ -236,7 +257,7 @@ class SQLiteStore:
         version = self.conn.execute(
             "SELECT value FROM metadata WHERE key='schema_version'"
         ).fetchone()[0]
-        if version == "2":
+        if version in {"2", "3", "4"}:
             owner = self.create_session_admission().route_owner(scope, resource)
             if owner is not None:
                 return owner

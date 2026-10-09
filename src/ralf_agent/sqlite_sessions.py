@@ -30,13 +30,22 @@ class SQLiteSessionAdmission:
         row = self.transaction_owner.conn.execute(
             "SELECT value FROM metadata WHERE key='schema_version'"
         ).fetchone()
-        return row[0] == "2"
+        return row[0] in {"2", "3", "4"}
 
     def _writing(self):
         if self.transaction_owner.readonly or not self.transaction_owner.conn.in_transaction:
             raise ValidationError("Session admission requires its execution transaction")
 
     def prepare(self):
+        self._prepare(2)
+
+    def prepare_composites(self):
+        self._prepare(3)
+
+    def prepare_conversations(self):
+        self._prepare(4)
+
+    def _prepare(self, version):
         self._writing()
         c = self.transaction_owner.conn
         c.execute(
@@ -45,7 +54,10 @@ class SQLiteSessionAdmission:
         c.execute(
             "CREATE TABLE IF NOT EXISTS agent_session_turns (workspace TEXT, principal TEXT, key_id TEXT, seq INTEGER, run_id TEXT UNIQUE NOT NULL, data TEXT NOT NULL, PRIMARY KEY(workspace,principal,key_id,seq))"
         )
-        c.execute("UPDATE metadata SET value='2' WHERE key='schema_version'")
+        c.execute(
+            "UPDATE metadata SET value=? WHERE key='schema_version' AND CAST(value AS INTEGER)<?",
+            (str(version), version),
+        )
 
     def load(self, scope, key_id):
         if not self._enabled():

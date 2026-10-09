@@ -18,6 +18,7 @@ from .errors import (
 )
 from .memory import SQLiteMemory
 from .ports import is_sync_callable
+from .session_conversations import UNSET_NAMESPACE, select_conversation
 from .session_ports import SessionAdmissionStore, ValidatedSessionAdmission
 from .session_types import SessionKey, SessionRef, SessionSnapshot, TurnAdmission, integer
 from .sqlite_sessions import admission_permit
@@ -59,18 +60,27 @@ class LocalSessionAuthority:
     def _harness(definition):
         return definition if isinstance(definition, AgentHarness) else AgentHarness(definition)
 
-    def _pin(self, harness, session_id):
+    def _pin(self, harness, session_id, *, namespace=UNSET_NAMESPACE):
         declaration = json.loads(harness._definition_json)
         definition = (
             unwrap_definition(declaration)
             if declaration["kind"] in {"bound_agent", "bound_definition"}
             else declaration
         )
-        if definition["kind"] not in {"agent", "sequence"}:
-            raise ValidationError("H2b1 Session supports native Agents and sequential Workflows")
+        from .session_composites import KINDS, composite_manifest
+
+        composite = definition["kind"] in KINDS
+        conversation = None
+        if composite:
+            self._composite_extension()
+            _, namespace, conversation = select_conversation(self.engine, namespace)
+            if conversation is not None:
+                self._composite_extension(conversation=True)
+        elif definition["kind"] not in {"agent", "sequence"}:
+            raise ValidationError("Unsupported Session definition")
         bound = "binding_definition" in definition
         namespaces = []
-        for index, step in enumerate(definition["steps"]):
+        for index, step in enumerate([] if composite else definition["steps"]):
             backend = (
                 self.engine._bindings.resolve(step, descriptor_for(definition, index))[0].sessions
                 if bound
@@ -87,21 +97,57 @@ class LocalSessionAuthority:
                     "H2b1 Session requires SQLiteMemory colocated with its execution connection"
                 )
             namespaces.append(namespace)
-        if len(set(namespaces)) != 1:
+        if not composite and len(set(namespaces)) != 1:
             raise ValidationError("All Session steps must share one authorized namespace")
         key = SessionKey(
             self.engine.scope.workspace,
             self.engine.scope.principal,
             self.resource_id,
-            namespaces[0],
+            namespace if composite else namespaces[0],
             session_id,
         )
         manifest = (
-            self.engine._bindings.manifest(definition)
-            if bound
-            else self.engine._manifest(definition["steps"])
+            composite_manifest(self.engine, definition)
+            if composite
+            else (
+                self.engine._bindings.manifest(definition)
+                if bound
+                else self.engine._manifest(definition["steps"])
+            )
         )
-        return key, {"definition": declaration, "manifest": manifest}
+        binding = {"definition": declaration, "manifest": manifest}
+        if conversation is not None:
+            binding["conversation"] = conversation
+        return key, binding
+
+    def _composite_extension(self, *, conversation=False):
+        version = getattr(self.engine.store, "session_admission_version", 1)
+        method = "prepare_conversations" if conversation else "prepare_composites"
+        if (
+            type(version) is not int
+            or version not in ({3} if conversation else {2, 3})
+            or not is_sync_callable(getattr(self.store.delegate, method, None))
+        ):
+            raise ValidationError(
+                "Composite Sessions require the authority-bound admission extension"
+            )
+
+    def _prepare(self, binding):
+        declaration = binding["definition"]
+        definition = (
+            unwrap_definition(declaration)
+            if declaration["kind"] in {"bound_agent", "bound_definition"}
+            else declaration
+        )
+        if definition["kind"] in {"graph", "team", "dynamic"}:
+            conversation = "conversation" in binding
+            self._composite_extension(conversation=conversation)
+            if conversation:
+                self.store.prepare_conversations()
+            else:
+                self.store.prepare_composites()
+        else:
+            self.store.prepare()
 
     def _ref(self, state, revision=None):
         revision = state["binding_revision"] if revision is None else revision
@@ -149,6 +195,12 @@ class LocalSessionAuthority:
         run_id = state["active_run"]
         if run_id is not None:
             run = self.engine._authorized(run_id)
+            from .session_composites import KINDS, composite_turn_busy
+
+            if run["definition"]["kind"] in KINDS and composite_turn_busy(
+                self.engine, run, self.hosting
+            ):
+                return self._run_ref(run_id)
             if (
                 run["state"] not in TERMINAL
                 or self.engine._operation_active(run_id)
@@ -163,17 +215,22 @@ class LocalSessionAuthority:
             ):
                 return self._run_ref(run_id)
             if run["state"] == "succeeded":
-                step = run["definition"]["steps"][-1]
+                from .session_composites import KINDS
+
+                composite = run["definition"]["kind"] in KINDS
+                step = None if composite else run["definition"]["steps"][-1]
                 expected = {
                     "role": "assistant",
                     "content": run["result"],
-                    "agent": step["name"],
+                    "agent": run["definition"]["name"] if composite else step["name"],
                     "task": run["input"],
                 }
                 if not self.store.confirmed_result(
                     self.engine.scope,
                     SessionKey.from_dict(state["key"]).storage_key,
-                    f"{run_id}:{len(run['definition']['steps']) - 1}:result",
+                    run_id + ":turn:result"
+                    if composite
+                    else f"{run_id}:{len(run['definition']['steps']) - 1}:result",
                     expected,
                 ):
                     return self._run_ref(run_id)
@@ -192,31 +249,44 @@ class LocalSessionAuthority:
             raise SessionBindingMismatch(receipt)
         return receipt
 
-    def open(self, harness, session_id, *, command_id):
+    def open(self, harness, session_id, *, command_id, namespace=UNSET_NAMESPACE):
         harness = self._harness(harness)
         # Validate caller syntax, without resolving current components before replay.
         SessionKey(
             self.engine.scope.workspace,
             self.engine.scope.principal,
             self.resource_id,
-            None,
+            None if namespace is UNSET_NAMESPACE else namespace,
             session_id,
         )
         declaration = json.loads(harness._definition_json)
         payload = {"definition": declaration, "session_id": session_id}
+        if namespace is not UNSET_NAMESPACE:
+            definition = (
+                unwrap_definition(declaration)
+                if declaration["kind"] in {"bound_agent", "bound_definition"}
+                else declaration
+            )
+            if definition["kind"] not in {"graph", "team", "dynamic"}:
+                raise ValidationError(
+                    "Conversation namespace selection requires a composite definition"
+                )
+            payload["namespace"] = namespace
 
         def apply():
-            key, binding = self._pin(harness, session_id)
+            key, binding = self._pin(harness, session_id, namespace=namespace)
             state = self.store.load_address(self.engine.scope, key.storage_key)
             if state is not None:
                 if (
                     state["key"] != key.to_dict()
                     or state["coordination_ref"] != self.coordination_ref
                     or self._ref(state).definition_digest != digest(declaration)
+                    or state["bindings"][str(state["binding_revision"])].get("conversation")
+                    != binding.get("conversation")
                 ):
                     return {"rejected": True, "reason": "session_binding_mismatch"}
                 return {"session_ref": self._ref(state).to_dict()}
-            self.store.prepare()
+            self._prepare(binding)
             state = {
                 "key": key.to_dict(),
                 "coordination_ref": self.coordination_ref,
@@ -252,15 +322,22 @@ class LocalSessionAuthority:
             binding = state["bindings"][str(ref.binding_revision)]
             harness = AgentHarness.__new__(AgentHarness)
             object.__setattr__(harness, "_definition_json", canonical(binding["definition"]))
-            key, current = self._pin(harness, ref.key.session_id)
+            key, current = self._pin(harness, ref.key.session_id, namespace=ref.key.namespace)
             if key != ref.key or current != binding:
                 return {"rejected": True, "reason": "session_binding_mismatch"}
             raw_payload = submission_request(
-                harness.definition, input, budget=budget, session_id=ref.key.session_id
+                harness.definition,
+                input,
+                budget=budget,
+                session_id=ref.key.storage_key if "conversation" in binding else ref.key.session_id,
             )
             with admission_permit(self.engine.store, self.engine.scope, ref.key.storage_key):
                 self.engine._accept_submission(run_id, raw_payload)
             run = self.engine._authorized(run_id)
+            if "conversation" in binding:
+                # Independent admission evidence distinguishes configured None
+                # from a genuine legacy Turn, even in a mixed schema4 database.
+                run["conversation_binding"] = json.loads(canonical(binding["conversation"]))
             run_ref = self._run_ref(run_id)
             turn = TurnAdmission(
                 uuid.uuid4().hex,
@@ -313,10 +390,11 @@ class LocalSessionAuthority:
             blocker = self._blocker(state)
             if blocker is not None:
                 return {"rejected": True, "reason": "session_busy", "run_ref": blocker.to_dict()}
-            key, binding = self._pin(harness, ref.key.session_id)
+            key, binding = self._pin(harness, ref.key.session_id, namespace=ref.key.namespace)
             if key != ref.key:
                 return {"rejected": True, "reason": "session_resource_change"}
             revision = state["binding_revision"] + 1
+            self._prepare(binding)
             state["bindings"][str(revision)] = binding
             state["binding_revision"], state["active_run"] = revision, None
             self.store.save(state, expected_revision=state["revision"])

@@ -149,7 +149,7 @@ def test_wrong_scope_coordination_or_declared_binding_refuses_attach(tmp_path):
 
 
 @pytest.mark.parametrize("kind", ["graph", "team", "dynamic"])
-def test_composite_sessions_explicitly_refuse_without_route_or_run(kind, tmp_path):
+def test_composite_sessions_refuse_without_advertised_admission_extension(kind, tmp_path):
     async def scenario():
         spec = r.AgentSpec("a", "A")
         definition = {
@@ -160,6 +160,7 @@ def test_composite_sessions_explicitly_refuse_without_route_or_run(kind, tmp_pat
         async with api()(
             engine(tmp_path / "refuse.sqlite", ScriptedProvider([])), owned=True
         ) as runtime:
+            runtime.engine.store.session_admission_version = 1
             with pytest.raises(ValidationError):
                 await runtime.create_agent(definition).open_session("s", command_id="open")
             assert runtime.engine.store.conn.execute("SELECT count(*) FROM runs").fetchone()[0] == 0

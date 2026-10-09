@@ -449,6 +449,9 @@ class OrchestrationRuntime:
             self.engine._check_release(run)
             if run["state"] in TERMINAL or run["state"] == "cancelling":
                 return
+            from .session_composites import save_composite_turn_result
+
+            save_composite_turn_result(self.engine, run, result)
             run["state"], run["result"] = "succeeded", copy.deepcopy(result)
             self.engine._commit(run, "run_succeeded")
 

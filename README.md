@@ -1,5 +1,10 @@
 # Ralf-Agent
 
+当前工作区 **0.1.0.dev36** 增加[授权根会话 namespace](docs/session-api.md)：
+图／Team／动态／嵌套会话在宿主允许范围中选择 namespace，根资源与成员默认分离，
+同名会话地址／历史独立，原资源在派发和最终保存前复核。配置此能力启用 schema4，
+dev35旧代码在派发前拒绝；默认 schema1/2/3 兼容。SDK仍是开发者预览。
+
 dev34 扩展[Temporal Agent 入口](docs/temporal-agent-api.md)：同一 Agent/AgentRun API 支持原生／顺序及已注册的 Graph、Team、动态 DAG 与嵌套流程；按实际子 Run 定位审批／核验，等待只观察，客户端 detach 保留服务端执行。Temporal 能力绑定、共享远程会话和完整 H2 仍待交付。
 
 dev32 增加[持久 Local Session／Turn](docs/session-api.md)：原生 Agent／顺序 Workflow 的会话占用、原发布固定、稳定忙碌回执与空闲 CAS rebind；会话与执行事实同 SQLite 权威。开启会话后启用 schema2，旧 SDK 明确拒绝，远程／图／团队会话和完整 H2b 仍待交付。
@@ -14,7 +19,7 @@ Ralf-Agent 是 Python 优先的开源 Agent 运行时。它把模型决策、工
 
 初次使用从[首用教程](docs/getting-started.md)开始；typed 工具与模型默认接入见[SDK 指南](docs/sdk-model-tools.md)，持久事件与调用中间件见[事件指南](docs/middleware-and-events.md)。[整体架构审查](architecture/reviews/2026-10-08-agent-framework-alignment.md)区分已有组件、默认组合、尚未实现的能力和三项已在dev24修复的问题与后续架构门槛。
 
-当前版本：**0.1.0.dev28，M1 核心预览**。提供原生 Agent SDK、顺序 Workflow、静态串行／有界并行图，以及有限动态规划与多 Agent 团队。SQLite 持久执行统一管理模型、工具、审批／取消、预算和未知效果恢复。模型层提供 Chat Completions、Anthropic、Gemini 文本及 DeepSeek 非思考模式适配；工具支持可信 Python、异步 ToolSource 和 MCP stdio。JSON／TOML 装配版本化组件，历史任务按原配置恢复。
+当前版本：**0.1.0.dev36，M1 核心预览**。提供原生 Agent SDK、顺序 Workflow、静态串行／有界并行图，以及有限动态规划与多 Agent 团队。SQLite 持久执行统一管理模型、工具、审批／取消、预算和未知效果恢复。模型层提供 Chat Completions、Anthropic、Gemini 文本及 DeepSeek 非思考模式适配；工具支持可信 Python、异步 ToolSource 和 MCP stdio。JSON／TOML 装配版本化组件，历史任务按原配置恢复。
 
 dev14 增加真实 **Redis Session/Facts、PostgreSQL Memory/Knowledge 和 Qdrant VectorIndex**，通过[异步装配](docs/async-assembly.md)接入原有记忆／RAG 端口；提供默认规则 Planner、受管理 ModelPlanner、Verifier，以及 Sequential／Router／Supervisor 团队和独立 Plan／Team 模板。接入方式见[远程数据指南](docs/remote-data.md)与[规划及多 Agent 指南](docs/orchestration.md)。完整 M1 尚未验收，适合开发者试点；[实现清单](docs/implementation-status.md)记录支持边界。预览 API 尚未稳定。
 

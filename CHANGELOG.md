@@ -1,5 +1,28 @@
 # Changelog
 
+## 0.1.0.dev36 — Authorized composite conversation namespaces
+
+- Add borrowed host conversation resources and composite namespace selection;
+  same-ID roots use independent canonical parent/member addresses.
+- Fix original resource/default/allowlist in binding revisions; validate before
+  effects and final save while preserving received evidence.
+- Persist independent configured Turn admission evidence on the original Run,
+  including None; missing metadata cannot silently become a legacy route.
+- Configured roots enable monotonic schema4; default1/2/3 remains compatible.
+  Remote/shared Temporal Sessions, Profile declaration and full H2 remain pending.
+
+## 0.1.0.dev35 — Local composite Session Turns
+
+- Extend the same durable AgentSession API to colocated Graph/parallel, Team,
+  Dynamic linear-plan/DAG and nested definitions with original member bindings.
+- Commit the stable whole-turn conversation result and parent success atomically;
+  descendant handlers, unknown effects, frame lifecycle and missing save evidence
+  retain occupancy. Explicit late-evidence controls adopt terminal housekeeping.
+- Successful composite open/rebind enables monotonic schema3; actual dev34 readers
+  refuse it before dispatch. Native-only schema1/schema2 behavior remains compatible.
+- Remote/shared Temporal Sessions, composite root namespaces, FIFO and complete H2
+  remain pending. See [Session API](docs/session-api.md).
+
 ## 0.1.0.dev34 — Temporal composite Agent facade
 
 - Extend Agent entry to registered Graph/Team/Dynamic/nested Temporal definitions with original parent History and receipts.

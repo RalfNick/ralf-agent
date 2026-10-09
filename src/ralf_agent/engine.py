@@ -97,6 +97,7 @@ class LocalEngine:
         binding_catalog=None,
         verifier=None,
         limits=None,
+        conversation_resource=None,
     ):
         # Python 3.12's Protocol isinstance check ignores proxy __getattr__.
         # Validate the declared public operations so delegating adapters work too.
@@ -108,6 +109,7 @@ class LocalEngine:
             raise ValidationError("Store must implement the version 1 ExecutionStore port")
         self._validate_policy(policy)
         self.store = store
+        self.conversation_resource = conversation_resource
         self.providers = dict(providers)
         self.tools = tools
         self.harness = NativeHarness() if harness is None else harness
@@ -213,6 +215,10 @@ class LocalEngine:
                 raise ValidationError(
                     "Host Session defaults require an original backend, not a view"
                 )
+            if conversation_resource is not None:
+                from .session_conversations import select_conversation
+
+                select_conversation(self)
             if isinstance(self.memory, FactsView) or isinstance(self.knowledge, KnowledgeView):
                 raise ValidationError(
                     "Host data defaults require original components, not scoped views"
@@ -782,6 +788,10 @@ class LocalEngine:
         )
 
     def _check_release(self, run):
+        if "session_turn" in run:
+            from .session_conversations import check_conversation_run
+
+            check_conversation_run(self, run)
         manifest = (
             self._bindings.manifest(run["definition"], plan=run.get("plan"))
             if "binding_definition" in run["definition"]

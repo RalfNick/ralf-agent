@@ -26,6 +26,18 @@ class SessionAdmissionStore(Protocol):
     ) -> str | None: ...
 
 
+class CompositeSessionAdmissionStore(SessionAdmissionStore, Protocol):
+    """Optional schema3 extension, completed inside the authority transaction."""
+
+    def prepare_composites(self) -> None: ...
+
+
+class ConversationSessionAdmissionStore(CompositeSessionAdmissionStore, Protocol):
+    """Optional schema4 extension for original root conversation bindings."""
+
+    def prepare_conversations(self) -> None: ...
+
+
 class ValidatedSessionAdmission:
     """Require completed port results; never enter a deferred adapter operation."""
 
@@ -65,6 +77,12 @@ class ValidatedSessionAdmission:
 
     def prepare(self):
         return self._call("prepare", "mutation")
+
+    def prepare_composites(self):
+        return self._call("prepare_composites", "mutation")
+
+    def prepare_conversations(self):
+        return self._call("prepare_conversations", "mutation")
 
     def load(self, *args, **kwargs):
         return self._call("load", "load", *args, **kwargs)

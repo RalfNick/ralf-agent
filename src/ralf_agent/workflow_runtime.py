@@ -226,6 +226,9 @@ class StaticWorkflowRuntime:
                 current["workflow"]["nodes"][node_id] = {"state": "skipped"}
                 engine.store.emit(run_id, "workflow_node_skipped", {"node_id": node_id})
             if selection.done:
+                from .session_composites import save_composite_turn_result
+
+                save_composite_turn_result(engine, current, selection.result)
                 current["state"], current["result"] = "succeeded", selection.result
                 engine._commit(current, "run_succeeded")
                 return False

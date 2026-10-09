@@ -1,10 +1,10 @@
 # RALF AgentHarness 目标架构
 
 版本：1.7；日期：2026-10-09；维护者：RALF maintainers。
-状态：根据用户认可的理想架构形成的目标设计；实现基线为0.1.0.dev34（H1a–H1f、Local stateless H2a、同库原生／顺序 Session H2b1、Temporal 原生入口 H2c1／高级编排入口 H2c2）。
+状态：根据用户认可的理想架构形成的目标设计；实现基线为0.1.0.dev36（H1a–H1f、Local stateless H2a、同库原生／顺序 H2b1／复合 Session H2b2／授权根 namespace H2b3、Temporal 原生入口 H2c1／高级编排入口 H2c2）。
 读者：框架维护者、Agent应用开发者、适配器作者与企业部署团队。
-除明确标为 H1a–H1f、dev31 Local stateless H2a 、dev32 同库原生／顺序 Session H2b1 与 dev33 Temporal 原生／顺序入口 H2c1 与 dev34 高级编排入口 H2c2 的子集外，本文中的接口和示例仍为目标设计。AgentHarness 当前固定声明并复用 Local 权威，自动能力阶段尚未实现。
-[绑定使用教程](../../docs/agent-bindings.md)与 [Local Agent API](../../docs/agent-api.md)记录实际支持与拒绝；dev32 同库原生／顺序 Session/Turn 子集已交付；dev33 Temporal 原生／顺序入口已交付；dev34 已注册高级入口已交付；远程／复合会话、Temporal 绑定与完整 H2 尚未交付。
+除明确标为 H1a–H1f、dev31 Local stateless H2a 、dev32 同库原生／顺序 Session H2b1 与 dev33 Temporal 原生／顺序入口 H2c1 、dev34 高级编排入口 H2c2 与 dev35 同库复合会话 H2b2、dev36 授权根 namespace H2b3 的子集外，本文中的接口和示例仍为目标设计。AgentHarness 当前固定声明并复用 Local 权威，自动能力阶段尚未实现。
+[绑定使用教程](../../docs/agent-bindings.md)与 [Local Agent API](../../docs/agent-api.md)记录实际支持与拒绝；dev32 同库原生／顺序 Session/Turn 子集已交付；dev33 Temporal 原生／顺序入口已交付；dev34 已注册高级入口已交付；dev35同库复合会话与dev36授权根namespace已交付；远程会话、Temporal 绑定与完整 H2 尚未交付。
 已交付范围始终以[实现状态](../../docs/implementation-status.md)为准。
 历史文件名harness-runtime.md保留以保护已有审查/链接；目标组件名称统一为AgentHarness。
 
@@ -215,7 +215,7 @@ MQ投递/ack不是执行确认；Inbox/Outbox、command_id与业务回执承担�
 ## 9. 统一入口、会话和关闭契约
 
 完整规范见[Agent Facade/Session契约](../specs/agent-facade-session-contract.md)，
-该规范补齐等待、跨Run会话占用及退出责任，是H2实现的前置门槛。dev31 H2a 已实现 Local stateless 入口、独立托管、纯观察、原根控制唤醒与可重试关闭；dev32 H2b1 通过显式 SessionRef 支持同库原生／顺序 Turn 与 rebind。远程／复合会话、输入续接、deadline、handoff 和未支持的 Temporal 绑定／共享会话在接受前拒绝。dev33 H2c1 原生／顺序入口见[实际指南](../../docs/temporal-agent-api.md)。以下含完整 Session 的示例仍为目标；可运行子集见[Session 指南](../../docs/session-api.md)。
+该规范补齐等待、跨Run会话占用及退出责任，是H2实现的前置门槛。dev31 H2a 已实现 Local stateless 入口、独立托管、纯观察、原根控制唤醒与可重试关闭；dev32 H2b1 通过显式 SessionRef 支持同库原生／顺序 Turn 与 rebind。远程会话、输入续接、deadline、handoff 和未支持的 Temporal 绑定／共享会话在接受前拒绝。dev33 H2c1 原生／顺序入口见[实际指南](../../docs/temporal-agent-api.md)。以下含完整 Session 的示例仍为目标；可运行子集见[Session 指南](../../docs/session-api.md)。
 
 - Agent/Session入口提供run、submit、wait、status、approve/reject、send_input、
   cancel与事件观察；异步优先，Local同步控制通过明确适配。
@@ -291,13 +291,13 @@ SDK直接运行不依赖Service，身份与Scope不从用户提示词取得。
 
 ## 11. 当前基线与迁移
 
-| 能力 | dev34当前状态 | 目标迁移 |
+| 能力 | dev36当前状态 | 目标迁移 |
 | --- | --- | --- |
 | DecisionPolicy | Harness/NativeHarness已实现 | 保留导入与行为，文档补充狭义定位 |
 | 执行与恢复 | Local/Temporal明确子集、共享采纳规则 | 从Engine逐步抽纯规则与受管理阶段，共同conformance |
 | 组件装配 | H1a与Local H1b六类绑定，覆盖原生/顺序/图/Team/Dynamic/嵌套、固定父子Release及Profile v2 | 补Temporal绑定、其他规范资源身份/环境角色；Local Session H1c已交付，不把Local H1b当完整H1 |
 | 上下文/记忆/RAG | 多个端口/适配器与可选链路已有实现 | 组合为推荐受管理管线，补自动阶段与作用域路由 |
-| Agent/Session应用API | H2a Local stateless Agent/Runtime、AgentRun/RunRef/WaitResult、托管／观察／可重试关闭；H2b1 同库原生／顺序 Session/Turn、busy、固定绑定与 CAS rebind；H2c1 Temporal 原生／顺序共同入口与固定 RPC 派发／detach | H2c2 已接通已注册高级入口；补远程／复合会话、续接、Temporal 绑定与完整共同验收；旧RunHandle DTO保留 |
+| Agent/Session应用API | H2a Local stateless Agent/Runtime、AgentRun/RunRef/WaitResult、托管／观察／可重试关闭；H2b1 原生／顺序及 H2b2 同库复合 Session/Turn、busy、固定绑定与 CAS rebind；H2c1 Temporal 原生／顺序共同入口与固定 RPC 派发／detach | H2c2 已接通已注册高级入口；补远程会话、续接、Temporal 绑定与完整共同验收；旧RunHandle DTO保留 |
 | Workspace/Skill/Sandbox | 尚未完整交付 | 分别实现，不能把现有可信Python称为隔离 |
 | 实时事件 | 持久事实订阅已有，Agent delta尚未统一 | 独立展示协议，不改变采纳语义 |
 | 企业Service | 有限HTTP/A2A与交接 | 身份、容量、运维、迁移/保留和恢复控制面后续验收 |
@@ -318,6 +318,8 @@ SDK直接运行不依赖Service，身份与Scope不从用户提示词取得。
 | H2：统一入口 | Agent/Session/WaitResult、独立任务托管、耐久busy拒绝、drain/句柄关闭；按Facade规范验收 | 等待取消不取消业务；暂停/关闭/重启不丢占用；shared不关闭池；超时保留租约；相同后端案例 |
 | H2后续可选队列 | 有版本的耐久Turn FIFO，首期明确拒绝queue | 去重/容量/顺序/绑定/取消/重启；不能用临时内存或消息投递代替 |
 | H2c2：Temporal 高级入口（dev34） | 注册 Graph／Team／Dynamic／嵌套共同入口、实际子 Run 审批／核验与有界原组件遍历 | 实际 Service／Worker／History、原发布重连和安装包；绑定／共享 Session 与完整 H2 继续待交付 |
+| H2b2：同库复合会话（dev35） | 同一 AgentSession 接通 Graph／parallel／Team／Plan/DAG／嵌套，原子最终保存、成员绑定和耐久占用 | 真实 async/thread、子效果核验／重启、旧新 wheel/schema3；远程与完整 H2b 继续待交付 |
+| H2b3：授权复合根 namespace（dev36） | 独立宿主根资源、按允许 namespace 开会话、固定绑定派发复核 | 同名地址／历史隔离、审批重启及安装包 schema4 拒绝；Profile／远程和完整 H2 待交付 |
 | H3：默认智能链路 | 近期召回、RAG、显式摘要/提炼/卸载的推荐组合，辅助结果可见 | 不重执行业务、来源/预算/取消故障；实际模型答案/引用/记忆质量逐项报告 |
 | H4：环境与协作 | Workspace/Skill/Sandbox/子Agent及可观察Runner委派 | 文件/网络隔离、真实退出、重复交接、预算传播、同任务故障窗口 |
 | H5：后端与服务成熟度 | 能力一致性、容量/保留/部署/身份/迁移与恢复管理 | 实际服务长期运行、故障/升级、外部开发者接入，明确未支持组合 |

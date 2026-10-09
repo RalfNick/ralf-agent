@@ -3,7 +3,7 @@
 H2a delivers an async Local stateless application entry, independent task hosting,
 pure observations and retryable closing. Existing Harness remains the pure
 DecisionPolicy; AgentHarness freezes capability declarations and delegates actual
-execution to LocalEngine. dev32 adds the explicit [colocated native/sequence Session H2b1 subset](session-api.md); dev33 adds the [Temporal native/sequence entry](temporal-agent-api.md). dev34 extends this entry to registered Graph/Team/Dynamic/nested definitions. Full H1/H2, Temporal bindings/shared Sessions and automatic H3 stages remain pending.
+execution to LocalEngine. dev32 adds the explicit [colocated native/sequence Session H2b1 subset](session-api.md); dev33 adds the [Temporal native/sequence entry](temporal-agent-api.md). dev34 extends this entry to registered Graph/Team/Dynamic/nested definitions; dev35 adds colocated Local composite Session Turns. Full H1/H2, Temporal bindings/shared Sessions and automatic H3 stages remain pending.
 
 ## Standalone Agent
 
@@ -114,5 +114,5 @@ failed-host responsibilities, not an unbounded completed-Run history.
 The Local raw stateless submit entry still refuses shared session_id, queue, deadline_at and handoff. dev32 provides explicit [colocated native/sequence Sessions](session-api.md) with durable Turn/rebind; dev33 provides explicit Runtime.from_temporal for native/sequence remote runs. Broader Session/remote facade combinations remain pending. Private per-Run legacy
 Session storage remains; it is not cross-Turn conversation coordination. Default
 polling waits are not streaming dataflow or hosted SSE. CLI still uses its legacy
-entry. Remaining H2b remote/composite Sessions, H3 recommended managed context/memory/RAG and H4 environments
+entry. Remaining H2b remote Sessions, H3 recommended managed context/memory/RAG and H4 environments
 remain separate deliverables.

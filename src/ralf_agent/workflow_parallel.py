@@ -141,6 +141,9 @@ class ParallelWorkflowRuntime:
                                 ),
                             }
                         if batch.done:
+                            from .session_composites import save_composite_turn_result
+
+                            save_composite_turn_result(engine, current, batch.result)
                             current["state"], current["result"], current["error"] = (
                                 "succeeded",
                                 batch.result,

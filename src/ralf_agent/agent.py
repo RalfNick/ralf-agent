@@ -52,10 +52,12 @@ class Agent:
             harness = selected if isinstance(selected, AgentHarness) else AgentHarness(selected)
         self.runtime, self.harness = runtime, harness
 
-    async def open_session(self, session_id, *, command_id):
+    async def open_session(self, session_id, *, command_id, **options):
         if self._closed:
             raise RuntimeClosed("Agent entry is closed")
-        return await self.runtime.open_session(self.harness, session_id, command_id=command_id)
+        return await self.runtime.open_session(
+            self.harness, session_id, command_id=command_id, **options
+        )
 
     async def submit(self, input, *, command_id, **options):
         if self._closed:

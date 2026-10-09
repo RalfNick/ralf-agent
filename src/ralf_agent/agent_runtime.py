@@ -116,8 +116,19 @@ class Runtime:
                 getattr(self._local.store, "create_session_admission", None)
             ),
             "durable_turns": callable(getattr(self._local.store, "create_session_admission", None)),
-            "session_definitions": ["agent", "sequence"],
+            "session_definitions": ["agent", "sequence"]
+            + (
+                ["graph", "team", "dynamic"]
+                if type(getattr(self._local.store, "session_admission_version", 1)) is int
+                and self._local.store.session_admission_version in {2, 3}
+                else []
+            ),
             "session_storage": "colocated-sqlite",
+            "conversation_namespaces": type(
+                getattr(self._local.store, "session_admission_version", 1)
+            )
+            is int
+            and self._local.store.session_admission_version == 3,
             "queue": False,
             "deadline": False,
             "handoff": False,
@@ -193,12 +204,14 @@ class Runtime:
             )
         return self._session_host
 
-    async def open_session(self, harness, session_id, *, command_id):
+    async def open_session(self, harness, session_id, *, command_id, **options):
         from .agent_session import AgentSession
         from .session_types import SessionRef
 
         self._check(accepting=True)
-        receipt = self._session_authority().open(harness, session_id, command_id=command_id)
+        receipt = self._session_authority().open(
+            harness, session_id, command_id=command_id, **options
+        )
         ref = SessionRef.from_dict(receipt.outcome["session_ref"])
         self._session_authority().validate(ref)
         return AgentSession(self, ref, receipt=receipt)
