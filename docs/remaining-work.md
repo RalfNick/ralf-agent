@@ -1,8 +1,8 @@
-# dev36 剩余能力与架构验收清单
+# dev37 剩余能力与架构验收清单
 
-版本：10；日期：2026-10-09；维护者：RALF maintainers。
+版本：11；日期：2026-10-09；维护者：RALF maintainers。
 读者：框架维护者、应用开发者及适配器贡献者。基线：da55f97 的 dev30，
-以及已提交5626c17的dev31–34与当前本地dev35 H2b2及dev36 H2b3增量。
+以及已提交1cad308的dev31–36与当前dev37配置／首用增量。
 
 ## 1. 结论与判定方式
 
@@ -37,6 +37,8 @@ dev35 H2b2 接通同库 Graph／并行／Team／动态 Plan/DAG／嵌套 Session
 
 dev36 H2b3 增加宿主授权的同库复合根 namespace、独立根资源、原绑定派发校验和 schema4 兼容门槛。Profile 专用声明、远程共享会话、Temporal 绑定及完整 H2 尚待交付。见[验收记录](../architecture/reviews/2026-10-09-composite-conversation-namespaces.md)。
 
+dev37 补齐授权根会话的 JSON/TOML Profile 声明及 sync/async Runtime 装配，提供可安装 sessions starter 与原 Profile/Turn 重连；远程会话及 Temporal 绑定仍待交付。
+
 本清单对照[总架构](../architecture/design.md)、[通用能力清单](../architecture/viewpoints/framework-capabilities.md)、
 [AgentHarness H1–H5](../architecture/viewpoints/harness-runtime.md)、
 [建设顺序](agentscope-alignment.md)和[当前实现](implementation-status.md)，并核对 SDK 源码。
@@ -57,7 +59,7 @@ PG Knowledge/Inbox/Outbox、Qdrant、HTTP Embedding、Hybrid/RRF／基础重排�
 
 ### 组合、入口、模型与编排
 
-| ID／层 | dev36 已交付基础 | 尚未完成的具体能力 | 阶段／状态 |
+| ID／层 | dev37 已交付基础 | 尚未完成的具体能力 | 阶段／状态 |
 | --- | --- | --- | --- |
 | R01 每 Agent 绑定 | Local 原生 Agent／顺序／Graph／Team／Dynamic／嵌套成员六类选择：provider、decision_policy、context、facts、knowledge、tool_set；稳定路径、固定父子发布与 Profile v2；Session 后端／允许的 namespace／同权威实际地址占用；Facts／Knowledge 宿主范围视图与来源校验；纯完成 verifier 的 inherit/ref/disabled；宿主与 Agent limits 的固定交集与动作额度 | Temporal 绑定；其他资源身份／selector／作用域视图；artifacts／workspace／sandbox／skills／stage_policy 绑定与准入。当前这些角色只能继承既有行为，显式选择被拒绝 | H1：子集已交付 |
 | R02 Agent／Session 入口 | H2a Local stateless Agent/Runtime/AgentRun、RunRef/WaitResult；独立任务托管、纯观察等待、原根流程控制路由、owned/borrowed 关闭与 CloseIncomplete 重试、显式重连；保留旧 RunHandle DTO；H2b1 同库原生／顺序及 H2b2 图／团队／动态／嵌套及 H2b3 授权根 namespace SessionKey／路由／Turn／busy／CAS rebind；H2c1 Temporal 原生／顺序共同入口、异步重连、固定 RPC 组件与客户端 detach；H2c2 已注册 Graph／Team／Dynamic／嵌套入口与实际子 Run 控制 | 远程 Session 组合、输入续接／业务 deadline、Temporal 绑定、移交与耐久 FIFO | H2a／H2b1／H2b2／H2b3／H2c1／H2c2：子集已交付；完整 H2 未交付 |
@@ -73,7 +75,7 @@ PG Knowledge/Inbox/Outbox、Qdrant、HTTP Embedding、Hybrid/RRF／基础重排�
 
 ### 工具、上下文、记忆与知识
 
-| ID／层 | dev36 已交付基础 | 尚未完成的具体能力 | 阶段／状态 |
+| ID／层 | dev37 已交付基础 | 尚未完成的具体能力 | 阶段／状态 |
 | --- | --- | --- | --- |
 | R12 工具接入／工具包 | typed Python/Schema/默认参数、ToolRegistry、async ToolSource、MCP stdio、A2A ToolSource、授权／审批／核验 | MCP HTTP/持续 Session/OAuth；固定 executable/argv 的 CLI Runner；通用受控 HTTP 工具适配；搜索／文件／浏览器工具包与发现；有状态工具租约和停止证据 | H4：子集已交付 |
 | R13 Workspace/Skills/Sandbox/Runner | 可信 Python、MCP 受管理进程生命周期；Runner 目标契约 | Workspace／文件权限／资源租约；Skills 生命周期／能力注册／来源；容器／远端 Sandbox 文件、网络、进程和资源隔离；Coding Runner、Codex 首个适配及各外部 Runner 验收。普通子进程不是安全沙箱 | H4：目标能力未交付 |
@@ -85,13 +87,13 @@ PG Knowledge/Inbox/Outbox、Qdrant、HTTP Embedding、Hybrid/RRF／基础重排�
 
 ### 执行、通信、服务与验收
 
-| ID／层 | dev36 已交付基础 | 尚未完成的具体能力 | 阶段／状态 |
+| ID／层 | dev37 已交付基础 | 尚未完成的具体能力 | 阶段／状态 |
 | --- | --- | --- | --- |
 | R19 执行模式／后端一致性 | Local 单 Coordinator/SQLite；Temporal 独立 History，原生 Agent/sequence 与显式发布的 Agent-node Graph/Team/Dynamic/嵌套、RAG | 单 Coordinator 多 Process Worker；Temporal 新绑定、共享 Session/Facts/custom Harness、直接 Tool/Transform 图节点等组合；共同能力／故障／升级门禁；Continue-As-New、部署版本及长期容量。PG Facts/Knowledge 不等于 PG ExecutionStore/分布式调度 | H5／C1：分布式子集已交付 |
 | R20 MQ／A2A | memory/SQLite/Redis Streams、Inbox/Outbox、PG 共享回执；A2A JSON-RPC0.3 文本/数据 polling、async controls | 保留／压缩／积压／重投递与 failover 认证；额外 Broker 按需；A2A SSE/push/files/Task continuation 及真实停止约定。ack 不等于效果确认，不承诺跨系统全局恰好一次 | H4／H5：子集已交付 |
 | R21 控制／审批／预算／容量 | 幂等命令与 DAG patch、local policy、固定动作、unknown holds／父子额度；每 Agent 固定决策／上下文／工具Action caps；Temporal timer/审批期限 | Local deadline／审批过期、输入／鉴权续接；not-executed/in-progress 核验证据；业务资源别名规范化；真实费用／共享账户；独立并发／工作区额度／背压，真实调用未退出仍占容量 | H2／H5：基础已交付 |
 | R22 事件／展示／观察 | 耐久 Run 事件／游标／分页、pull 订阅、SSE 编码、只读 CLI、opt-in middleware | 托管 HTTP/SSE/WebSocket；类型化 Agent/model delta、结束／取消／重连；OTel trace/metrics、跨 Run/远端关联、审计／脱敏／保留。展示 hook 不得丢失业务证据 | H2／H5／B2：观察基础已交付 |
-| R23 Service／交互／作业 | packaged 本地 HTTP/A2A service、owned shutdown、remote CLI、二十种 wheel starter | 统一 Agent Service/sessions/资源库、默认托管／共享池、TUI/Web 基础控制台；渠道／定时／后台／唤醒／索引；审批／核验／恢复管理。现有模板不是完整应用平台 | H5／B1/B2：有限服务已交付 |
+| R23 Service／交互／作业 | packaged 本地 HTTP/A2A service、owned shutdown、remote CLI、二十一种 wheel starter | 统一 Agent Service/sessions/资源库、默认托管／共享池、TUI/Web 基础控制台；渠道／定时／后台／唤醒／索引；审批／核验／恢复管理。现有模板不是完整应用平台 | H5／B1/B2：有限服务已交付 |
 | R24 企业身份／运维 | 宿主 Scope、本地授权、版本固定和部分容量保护 | OIDC/企业 actor、资源 ACL/SourceCatalog、凭据代理、工作区配额；保留／迁移／备份／恢复、升级回滚、健康／HA/故障演练、自部署文档和控制面。Scope 字段不是认证体系 | H5／C2：企业目标未交付 |
 | R25 扩展验收／首用 | SDK/API/教程/恢复/发布/贡献文档、适配测试、wheel starter 和旧新兼容证据 | 外部作者可复用的按角色 AdapterContractSuite；完整声明→默认→替换→生命周期→错误→恢复示例；独立开发者换模型/库/工具/节点；性能／升级矩阵、稳定 API 弃用策略。公开 PyPI/Release／社区采用本轮未核验 | 横向验收：部分已交付 |
 | R26 真实质量／M1／比较 | 冻结 20 案例规划、八案例业务执行器；dev21 真实小试验；独立 response/receipt 窗口和 Worker 故障证据 | 完整最终配置重复业务／规划／记忆／RAG 引用任务；M1 20 类原型完整 fixture/评分器；成组窗口／Temporal 契约报告；独立首次采用；同模型/工具/服务的 AgentScope/LangGraph 实现与成绩 | A4／M1／D：验收未完成 |

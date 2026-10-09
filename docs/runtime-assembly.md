@@ -56,6 +56,7 @@ JSON 使用同样的 schema_version/default/profiles 结构。Profile 只包含 
 | components.context_assembler | default | ContextAssembler，当前不接受配置参数 |
 | components.harness | native | NativeHarness |
 | components.tool_executor | python | PythonToolExecutor，使用已构造的工具注册表 |
+| components.conversation_resource | colocated-session | 宿主复合根会话；仅 namespaces/default_namespace，同执行连接；构造不升级数据 schema |
 | components.session_store / memory_store | sqlite / in-memory | 默认省略时共享执行库；显式 sqlite 可指定 path |
 | components.recall_policy | bounded-recall | facts/session 的 RecallQuery 与 max_pages |
 | components.recall_planner | fixed | FixedRecallPlanner，接收相同查询配置 |

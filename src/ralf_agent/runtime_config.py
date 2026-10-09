@@ -12,6 +12,7 @@ COMPONENT_KINDS = frozenset(
     {
         "tools",
         "session_store",
+        "conversation_resource",
         "memory_store",
         "coordinator",
         "context_assembler",

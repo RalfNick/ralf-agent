@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.0.dev37 — Configured conversation entry
+
+- Assemble authorized root resources through JSON/TOML Profile and sync/async Runtime builders, borrowing the original SQLite connection.
+- Add an installed sessions starter with exact Turn/Profile reconnect, immutable reference replay and configuration-free status.
+- Preserve absent-component Profile identities, previous20 starters and default schema behavior; remote Sessions and Temporal bindings remain pending.
+
 ## 0.1.0.dev36 — Authorized composite conversation namespaces
 
 - Add borrowed host conversation resources and composite namespace selection;

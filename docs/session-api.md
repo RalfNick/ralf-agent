@@ -1,4 +1,4 @@
-# Durable Local Sessions — dev36 / H2b1–H2b3
+# Durable Local Sessions — dev37 / H2b1–H2b3
 
 H2b1 provides durable native/sequence conversations; H2b2 adds colocated Local
 Graph (including parallel and direct transform nodes), Team, Dynamic linear-plan/DAG
@@ -124,8 +124,33 @@ resource default; explicit None selects None if authorized. The option is
 composite-only; native/sequence retain existing leaf Session bindings.
 The borrowed resource must be SessionBindingResource with actual colocated
 SQLiteMemory; remote/foreign connections refuse. The Engine owner manages its
-actual Store connection. This is SDK/factory assembly; dedicated Profile JSON/TOML
-declaration remains future work.
+actual Store connection. SDK/factory and dev37 Profile JSON/TOML assembly are supported.
+Use `components.conversation_resource` with `adapter="colocated-session"` and
+`config={"namespaces": ["support", "sales"], "default_namespace": "support"}`.
+The built-in factory borrows the existing execution connection; it accepts no path
+or backend declaration. Validation precedes Store creation; building alone leaves
+schema1, while a valid configured composite open enables4.
+
+```python
+from ralf_agent import Runtime, load_catalog
+
+catalog = load_catalog("runtime.toml")
+async with Runtime.from_profile(catalog.default, ".ralf/runs.sqlite") as runtime:
+    session = await runtime.create_agent(graph).open_session("customer", command_id="open")
+    result = await session.run("Question", command_id="one", budget=64)
+```
+
+Use `await Runtime.afrom_profile(...)` for async factories. `ComponentRegistry`
+accepts explicit sync/async factories for this kind; their resources obey the
+existing owned/borrowed lifecycle and actual colocated validation. New declarations
+are rejected by old SDKs; absent-component Profile1/2 identities stay unchanged.
+
+`ralf init my-sessions --template sessions` creates an offline installed example.
+Its run command returns an immutable reference containing the original Turn and
+Profile identity. Resume resolves that original Profile, validates the persisted
+Turn and reconnects without another submission. Pure status uses the scoped
+read-only reader and works with unavailable model configuration. Retain original
+Profiles and code for recovery; reference files are not an execution authority.
 
 Binding revisions fix resource identity, allowlist/default and selected namespace.
 Each configured composite Run independently records that original descriptor in

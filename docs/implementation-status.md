@@ -1,4 +1,4 @@
-# Implementation status — 0.1.0.dev36
+# Implementation status — 0.1.0.dev37
 
 Target architecture update: [AgentHarness](../architecture/viewpoints/harness-runtime.md)
 defines broad Harness/Core roles, per-Agent bindings, Agent/Session facade, managed
@@ -29,7 +29,7 @@ dev31 delivers [H2a Local stateless Agent API](agent-api.md): immutable AgentHar
 Runtime-owned Local drive tasks, Agent/AgentRun/RunRef, observation-only wait,
 nested control ownership/waking and retryable drain/cancel closing. Full H1/H2
 are not complete; remote Sessions, Temporal bindings and automatic
-managed stages remain pending. SDK is dev36. The [Facade/Session target contract](../architecture/specs/agent-facade-session-contract.md)
+managed stages remain pending. SDK is dev37. The [Facade/Session target contract](../architecture/specs/agent-facade-session-contract.md)
 now specifies observation-only waiting, durable busy refusal, Session binding revisions,
 and ownership-aware closing. H2a implements the declared Local stateless subset;
 remaining shared routing and backend requirements are not changes to legacy
@@ -46,7 +46,9 @@ dev35 adds H2b2 [colocated composite Sessions](session-api.md): Graph/parallel, 
 
 dev36 adds H2b3 [authorized composite root namespaces](session-api.md): separate borrowed host resource, allowlisted per-open selection, independent original Run admission evidence and canonical parent/member IDs. Configured roots opt into schema4; actual dev35 refuses4. SDK/factory assembly is delivered; Profile declaration, remote Sessions and complete H2 remain pending. [H2b3 review/evidence](../architecture/reviews/2026-10-09-composite-conversation-namespaces.md) records final gates.
 
-The [dev36 remaining-work checklist](remaining-work.md) maps each layer to delivered
+dev37 adds root conversation declarations through JSON/TOML Profile components and sync/async Runtime assembly, plus the installed `sessions` starter with original Profile/Turn reconnection and pure status. Previous20 starter trees and absent-component Profile identities remain compatible. [dev37 evidence](../architecture/reviews/2026-10-09-configured-conversation-entry.md) records final2457/56 source,212 installed contracts and44 bidirectional wheel cases. Remote Sessions, Temporal bindings and full H2 remain pending.
+
+The [dev37 remaining-work checklist](remaining-work.md) maps each layer to delivered
 subsets, missing capabilities and outstanding acceptance, with H1–H5 priorities.
 
 2026-10-09. This is the M1 core preview. Full M1 acceptance, enterprise architecture and a production-ready v0.1 release have not been completed. Public interfaces remain experimental. Static Graph Workflow, managed Tool/MCP nodes, bounded parallel execution and explicit async component lifecycle are available. dev14 adds real Redis/PostgreSQL/Qdrant data adapters, bounded plan/execute/verify/replan and local child-Run teams. dev15 adds dynamic DAG/plan patches, nested local workflows, MQ/A2A handoff and an independently History-owned Temporal subset. dev16 adds native async A2A controls, shared PostgreSQL Inbox/Outbox and a packaged local HTTP service with tracked shutdown. dev17 adds History-owned distributed Graph/Team/Dynamic/nesting, fixed RAG snapshots with shared PG/Qdrant ports, per-Run execution policy/timers and an installed Temporal starter; business evaluation remains not_run without model configuration. dev18 adds replaceable UTF-8 parsing/chunking and atomic memory/SQLite/PostgreSQL ingestion receipts plus a user-document starter. dev19 adds explicit float HTTP embeddings, replaceable RRF/rerank and authority-validated parallel Hybrid retrieval with additive assembly and an offline user-document starter. dev20 adds opt-in pure context measurement/complete-group selection/excerpts, actual Harness-request measurement and scoped memory/SQLite artifacts with a seventeenth offline starter. dev21 adds opt-in sourced memory consolidation, managed model summaries, pure custom Temporal context and a bounded real DeepSeek trial. dev22 adds stateless native Responses/JSON/SSE, typed Python tools and an offline-first compatibility suite. Default native local-4/request/Manifest identities and original flat parents remain compatible; new nested/DAG definitions require dev15. Evidence is recorded in [implementation progress](implementation-progress.md).

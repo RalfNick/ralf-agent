@@ -200,6 +200,38 @@ def render_result(result):
     """Human-readable control receipts and event pages; JSON remains the default."""
     if isinstance(result, dict) and "directory" in result and "factory" in result:
         template = result.get("template", "oncall")
+        if template == "sessions":
+            return "\n".join(
+                [
+                    f"Created offline Session starter: {result['directory']}",
+                    "  " + shlex.join(["cd", result["directory"]]),
+                    "  "
+                    + shlex.join(
+                        [
+                            "python",
+                            "-m",
+                            result["module"],
+                            "run",
+                            "--input",
+                            "hello",
+                            "--command-id",
+                            "first",
+                        ]
+                    ),
+                    "Reconnect with the reference path returned by that command:",
+                    "  "
+                    + shlex.join(
+                        [
+                            "python",
+                            "-m",
+                            result["module"],
+                            "resume",
+                            "--reference",
+                            "REFERENCE_PATH",
+                        ]
+                    ),
+                ]
+            )
         if template == "temporal":
             return "\n".join(
                 [

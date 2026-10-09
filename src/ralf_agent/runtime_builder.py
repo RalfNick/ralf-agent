@@ -284,6 +284,14 @@ class ComponentRegistry:
         for kind in ("session_store", "memory_store"):
             self.register(kind, "sqlite", _sqlite_memory)
             self.register(kind, "in-memory", lambda c, ctx: InMemoryMemory(**c))
+        from .conversation_factories import colocated_conversation, conversation_config
+
+        self.register(
+            "conversation_resource",
+            "colocated-session",
+            colocated_conversation,
+            validator=conversation_config,
+        )
         self.register("knowledge", "sqlite-lexical", _lexical)
         from .workflow import IdentityTransform, StaticWorkflowCompiler, StaticWorkflowInterpreter
         from .workflow_scheduler import StaticWorkflowScheduler
