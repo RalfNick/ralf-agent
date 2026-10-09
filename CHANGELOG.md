@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.0.dev41 — Managed context preparation
+
+- Add opt-in per-Agent pure ManagedContextPipeline and JSON/TOML managed-summary factories for Local native Agents/sequences.
+- Journal complete history sources, model dispatch/response, frozen business projection and independent original-Run credits; unknown summaries fall back without retries.
+- Preserve tool evidence, protected latest groups, fixed reference validation and actual operation ownership; terminal recovery consumes evidence only.
+- Atomically enable schema8 on admission; default identities and schemas1–7 remain compatible. Session/RAG compression, advanced/Temporal stages and model quality remain pending.
+
 ## 0.1.0.dev37 — Configured conversation entry
 
 - Assemble authorized root resources through JSON/TOML Profile and sync/async Runtime builders, borrowing the original SQLite connection.

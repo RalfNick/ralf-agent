@@ -1,4 +1,4 @@
-# Implementation status — 0.1.0.dev40
+# Implementation status — 0.1.0.dev41
 
 Target architecture update: [AgentHarness](../architecture/viewpoints/harness-runtime.md)
 defines broad Harness/Core roles, per-Agent bindings, Agent/Session facade, managed
@@ -29,7 +29,7 @@ dev31 delivers [H2a Local stateless Agent API](agent-api.md): immutable AgentHar
 Runtime-owned Local drive tasks, Agent/AgentRun/RunRef, observation-only wait,
 nested control ownership/waking and retryable drain/cancel closing. Full H1/H2
 are not complete; remote Sessions, Temporal bindings and automatic
-managed stages remain partial. SDK is dev40. The [Facade/Session target contract](../architecture/specs/agent-facade-session-contract.md)
+managed stages remain partial. SDK is dev41. The [Facade/Session target contract](../architecture/specs/agent-facade-session-contract.md)
 now specifies observation-only waiting, durable busy refusal, Session binding revisions,
 and ownership-aware closing. H2a implements the declared Local stateless subset;
 remaining shared routing and backend requirements are not changes to legacy
@@ -186,3 +186,6 @@ dev39 delivers H2b4b [remote composite root conversations](session-api.md#远程
 
 
 dev40 delivers the first Local H3a [managed rule-memory stage](managed-memory-stages.md) for native Agents and sequences. It is opt-in, separately host-granted, grounded and charged against Run execution credits. Original authority persists source/proposal/CAS intent/receipt evidence; unknown writes retain credits and explicit terminal recovery only inspects exact facts. Auxiliary failure does not replay business work or change terminal success. BindingCatalog supports stage_policy inherit/ref/disabled; JSON/TOML sourced-memory and sourced-memory-async reuse existing backend/client factories. Semantic7 activation is atomic with first enabled admission; dev39 readers refuse it. Default-off releases remain unchanged. Advanced/Temporal automatic stages, automatic model extraction, background jobs and semantic memory revision remain undelivered.
+
+
+dev41 delivers H3b1 [managed context preparation](managed-context-stages.md) for opt-in Local native Agents/sequences. Pure per-Agent context bindings plan complete omitted same-Run groups; the original Engine owns rule/model summaries, fixed source/reference snapshots, independent intent/response/projection evidence and original-budget accounting. Invalid responses use a fixed fallback; dispatched unknown calls retain credits without retries. Terminal adoption is evidence-only, reference versions are revalidated before business disclosure, and real task/thread ownership is preserved. JSON/TOML managed-summary factories reuse host providers and pure counter/budgeter ports. Semantic8 activates on first enabled admission; old dev40 refuses8 while default identities/schemas1–7 remain compatible. Automatic Session/RAG compression, advanced/Temporal stages, model extraction and full H3 remain open; no new real-model quality claim.

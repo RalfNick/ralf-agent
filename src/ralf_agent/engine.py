@@ -419,6 +419,14 @@ class LocalEngine:
         validate_journal(self, run)
         return copy.deepcopy(list(run.get("memory_stages", {}).values()))
 
+    def context_stages(self, run_id):
+        """Scope-authorized context preparation receipts, without model I/O."""
+        from .context_preparation import validate_journal
+
+        run = self._authorized(run_id)
+        validate_journal(self, run)
+        return copy.deepcopy(list(run.get("context_preparations", {}).values()))
+
     def patch_plan(self, run_id, proposal, *, expected_plan_revision, command_id):
         self._ensure_open()
         return self._orchestration._dag.patch(run_id, proposal, expected_plan_revision, command_id)
@@ -510,6 +518,11 @@ class LocalEngine:
             manifest["agent_limits"] = caps
         if self.runtime_profile is not None:
             manifest["runtime_profile"] = runtime_profile_identity(self.runtime_profile)
+        from .managed_context import context_stage_manifest
+
+        context_stage = context_stage_manifest(self, context)
+        if context_stage is not None:
+            manifest["managed_context"] = context_stage
         return manifest
 
     def _assemble_context(self, history, references, max_chars, *, context=None):
@@ -646,6 +659,9 @@ class LocalEngine:
         from .managed_memory import admit_stages
 
         admit_stages(self, manifest, definition["kind"], _parent_call)
+        from .managed_context import admit_context
+
+        admit_context(self, manifest, definition["kind"], _parent_call)
         data = {
             "id": run_id,
             "revision": 0,
@@ -806,6 +822,9 @@ class LocalEngine:
         )
 
     def _check_release(self, run):
+        from .context_preparation import validate_journal
+
+        validate_journal(self, run)
         from .remote_session_saves import check_remote_session_run
 
         check_remote_session_run(self, run)
@@ -928,6 +947,11 @@ class LocalEngine:
             raise CoordinatorBusy("The previous Action is still running; wait for its result")
         run = self._authorized(run_id)
         if run["state"] in TERMINAL:
+            if "context_preparations" in run or "context_preparation_markers" in run:
+                from .context_preparation import recover_terminal_context
+
+                await self._guarded(run_id, recover_terminal_context(self, run_id))
+                run = self._authorized(run_id)
             if "memory_stages" in run or any("memory_stage" in a for a in run["actions"]):
                 from .managed_memory_stage import recover_terminal_memory
 
@@ -1652,17 +1676,12 @@ class LocalEngine:
             messages = copy.deepcopy(action["snapshot"])
             descriptions = copy.deepcopy(action["request"]["tools"])
         else:
-            loaded = await self._load_references(run, step)
-            if loaded is None:
+            from .context_preparation import prepare_context
+
+            prepared = await prepare_context(self, run_id, step, components.context)
+            if prepared is None:
                 return True
-            references, recall_manifest, knowledge_refs, knowledge, facts, selected_policy = loaded
-            messages, context_manifest = self._assemble_context(
-                run["messages"], references, step["max_context_chars"], context=components.context
-            )
-            if recall_manifest is not None:
-                context_manifest["memory_recall"] = recall_manifest
-            if self.recall_planner is not None:
-                context_manifest["memory_recall_policy"] = selected_policy.identity
+            messages, context_manifest, knowledge_refs, facts = prepared
             request, manifest = self._prepare_model_request(run, step, messages, context_manifest)
             messages, descriptions = request.messages, request.tools
             action = {
@@ -1678,6 +1697,10 @@ class LocalEngine:
                 "context_manifest": manifest,
                 "attempts": [],
             }
+            if "context_preparation" in context_manifest:
+                action["context_preparation"] = copy.deepcopy(
+                    context_manifest["context_preparation"]
+                )
             if knowledge is not None:
                 action["knowledge_references"] = knowledge_refs
             if (

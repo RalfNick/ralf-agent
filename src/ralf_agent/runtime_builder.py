@@ -227,13 +227,19 @@ class ComponentRegistry:
             "tools", "empty", lambda c, ctx: ToolRegistry(), validator=lambda c: _fields(c, {})
         )
         self.register("context_assembler", "default", lambda c, ctx: ContextAssembler(**c))
-        from .context_factories import budgeted_context
+        from .context_factories import budgeted_context, managed_context
 
         self.register(
             "context_assembler",
             "budgeted",
             lambda c, ctx: budgeted_context(c),
             validator=lambda c: budgeted_context(c) and None,
+        )
+        self.register(
+            "context_assembler",
+            "managed-summary",
+            lambda c, ctx: managed_context(c),
+            validator=lambda c: managed_context(c) and None,
         )
         self.register(
             "harness", "native", lambda c, ctx: NativeHarness(), validator=lambda c: _fields(c, {})

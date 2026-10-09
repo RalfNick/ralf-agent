@@ -147,6 +147,12 @@ class TemporalRuntime:
         if harness is not None and type(harness) is not NativeHarness:
             raise ValidationError("Temporal currently supports only the native harness")
         if context_builder is not None:
+            from .managed_context import ManagedContextPipeline
+
+            if isinstance(context_builder, ManagedContextPipeline):
+                raise ValidationError(
+                    "Temporal managed automatic context preparation is not supported"
+                )
             from .temporal_context import context_registration
 
             try:

@@ -393,3 +393,27 @@ sdist/installed147 modules match;294 optional-free exports/20 starter maps and
 dependencies remain compatible. One fresh reviewer Important finding fixed in
 one RED→GREEN pass; no minors or re-review. No paid call/commit/push/publication.
 See [API guide](temporal-agent-api.md), [review and all decisions](../architecture/reviews/2026-10-09-temporal-composite-agent-facade.md). Temporal bindings/shared Sessions, complete H1/H2 and H3 default managed chains remain open.
+
+
+## 2026-10-09 — dev41 managed context preparation / H3b1
+
+Opt-in ManagedContextPipeline plans/consumes pure complete omitted history groups;
+original Local authority journals source/reference snapshots, summary intent/response,
+frozen business projection and independent execution credits. Native/sequence support
+rule excerpts or one tool-free host model call. Unknown calls retain credits and fall
+back without retries; terminal adoption performs no model I/O. JSON/TOML factories
+and per-Agent context selection reuse existing ports; semantic8 first admission is atomic.
+
+One fresh reviewer found four Important; six RED cases became GREEN in one fix pass
+with120 focused passes, no minors/re-review. Final2678 passed/66 configured-service
+skips391.27s; frozen installed163 passed. Actual dev40/dev41 default11 definitions
+recover in both directions with original receipts/Manifest and11 unique business effects
+each; actual old schema2–7 Sessions retain original receipts with no recovery model call.
+Old40 refuses8 in both modes; new41 separately reuses saved summary responses and holds
+unknown calls across restart without retries.159 source/wheel/sdist/installed modules
+match;295 root exports retained plus ManagedContextPipeline,21 actual starter maps
+unchanged. SDK version constant and distribution metadata both41; no dependency/script
+changes or paid model calls. Full H3, automatic Session/RAG compression, artifact
+offloading, model extraction and advanced/Temporal stages remain open. See
+[guide](managed-context-stages.md), [review/evidence](../architecture/reviews/2026-10-09-managed-context-preparation.md)
+and [remaining work](remaining-work.md).

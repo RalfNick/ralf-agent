@@ -43,7 +43,7 @@ class RunTaskSupervisor:
             # housekeeping; it never reopens the parent's business state.
             unresolved = self.unresolved(ref) if self.unresolved is not None else []
             if flow.get("quiescent") is not False and not any(
-                item.get("source") in {"remote_session", "memory"} for item in unresolved
+                item.get("source") in {"remote_session", "memory", "context"} for item in unresolved
             ):
                 return
         self.refs[ref.run_id] = ref

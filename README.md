@@ -231,7 +231,7 @@ facts = InMemoryMemory(backend_id="demo-facts:v1")
 # facts.put_fact(scope, "assistant", "language", "中文", expected_version=0)
 ```
 
-短期消息和长期事实使用作用域及 CAS 版本。本地向量索引、Hash Embedding 离线基线、混合检索和来源版本校验已有实现；[可选记忆 pipeline](docs/managed-memory.md)提供规则／模型字段选择与有来源的观察记录。观察记录不等于已经确认的事实。自动 in-Run 摘要、语义修订／撤回、线上语义质量和企业知识源撤权体系仍待完善。
+短期消息和长期事实使用作用域及 CAS 版本。本地向量索引、Hash Embedding 离线基线、混合检索和来源版本校验已有实现；[可选记忆 pipeline](docs/managed-memory.md)提供规则／模型字段选择与有来源的观察记录。观察记录不等于已经确认的事实。dev40–41 已提供 Local 原生／顺序的[自动规则记忆](docs/managed-memory-stages.md)与[受管理规则／模型摘要](docs/managed-context-stages.md)，默认关闭并可按 Agent 绑定。Session／RAG 自动压缩、高级／Temporal 自动阶段、语义修订／撤回、线上语义质量和企业知识源撤权体系仍待完善。
 
 常用 SDK 和 CLI 见 [API 指引](docs/api-reference.md)；更多接入约束、组件生命周期和测试方法见 [扩展指南](docs/extending.md)。
 
@@ -297,7 +297,7 @@ SDK、运行时和基础治理按 [Apache-2.0](LICENSE) 开源。外部模型／
 
 ### 上下文与大结果（dev20）
 
-`ralf init my-context-agent --template context` 提供第十七种离线模板，显式存储大工具结果并读取有界样本，支持提交后恢复。MessageCounter、ContextBudgeter、ContextSummarizer 可分别替换，BudgetedContextAssembler 提供字符／token 估算、完整消息组裁剪与显式历史摘录，实际 Harness 请求也受预算约束。ArtifactStore 有内存／SQLite 默认，实现 Scope、字节、TTL、摘要与事务容量；应用工具选择引用契约。旧默认保持。自动事实提炼、模型摘要、Temporal 自定义上下文与企业治理仍待完善，见 [上下文与 Artifact 指南](docs/context-artifacts.md)。
+`ralf init my-context-agent --template context` 提供第十七种离线模板，显式存储大工具结果并读取有界样本，支持提交后恢复。MessageCounter、ContextBudgeter、ContextSummarizer 可分别替换，BudgetedContextAssembler 提供字符／token 估算、完整消息组裁剪与显式历史摘录，实际 Harness 请求也受预算约束。ArtifactStore 有内存／SQLite 默认，实现 Scope、字节、TTL、摘要与事务容量；应用工具选择引用契约。旧默认保持。自动规则记忆和 Local 原生／顺序模型摘要已有 opt-in 原 Run 阶段；显式提炼／模型摘要及 Temporal 纯自定义上下文已有实现。自动模型提炼、高级／Temporal 阶段和企业治理仍待完善，见 [上下文与 Artifact 指南](docs/context-artifacts.md)及[自动上下文接入](docs/managed-context-stages.md)。
 
 Native Responses, keyword Python tools and managed compatibility scenarios: [dev22 guide](docs/sdk-model-tools.md). The [ordered alignment roadmap](docs/agentscope-alignment.md) tracks subsequent sandbox/interaction, semantic data, services and enterprise gates.
 

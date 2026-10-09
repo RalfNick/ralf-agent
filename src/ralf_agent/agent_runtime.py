@@ -337,6 +337,22 @@ class Runtime:
                             "ref": owner.to_dict(),
                         }
                     )
+            for stage in self._local.context_stages(owner.run_id):
+                if stage["status"] in {
+                    "prepared",
+                    "executing",
+                    "response_received",
+                    "outcome_unknown",
+                }:
+                    pending.append(
+                        {
+                            "kind": "auxiliary",
+                            "source": "context",
+                            "node": stage["node"],
+                            "status": stage["status"],
+                            "ref": owner.to_dict(),
+                        }
+                    )
             for action in info.snapshot.pending:
                 pending.append({"kind": "approval", "ref": owner.to_dict(), **action})
             for action in info.snapshot.actions:
@@ -454,6 +470,10 @@ class AgentRun:
 
     async def diagnostics(self):
         return await self._runtime._aobserve(self.ref, "diagnostics")
+
+    async def context_stages(self):
+        """Read original-authority context evidence without starting execution."""
+        return await self._runtime._aobserve(self.ref, "context_stages")
 
     async def memory_stages(self):
         """Local auxiliary receipts; explicit resume inspects unknown memory evidence."""

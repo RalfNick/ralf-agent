@@ -202,6 +202,8 @@ class AgentBindingResolver:
             manifest["kernel"] = "local-bindings-6"
         if any("managed_memory" in entry["manifest"] for entry in entries.values()):
             manifest["kernel"] = "local-bindings-7"
+        if any("managed_context" in entry["manifest"] for entry in entries.values()):
+            manifest["kernel"] = "local-bindings-8"
         if self.engine.runtime_profile is not None:
             manifest["runtime_profile"] = runtime_profile_identity(self.engine.runtime_profile)
         return manifest

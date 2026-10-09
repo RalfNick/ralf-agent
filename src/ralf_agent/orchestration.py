@@ -181,6 +181,9 @@ class OrchestrationRuntime:
         from .managed_memory import admit_stages
 
         admit_stages(engine, manifest, definition["kind"], parent_call)
+        from .managed_context import admit_context
+
+        admit_context(engine, manifest, definition["kind"], parent_call)
         from .session_resources import admit_sessions
 
         session_claim_data = admit_sessions(engine, manifest, [session])
