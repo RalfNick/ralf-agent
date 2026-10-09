@@ -1,6 +1,6 @@
 # Ordered framework alignment roadmap
 
-Baseline: local dev30 increment, 2026-10-08. The user approved this order after
+Baseline: local dev34 increment, 2026-10-09. The user approved this order after
 the capability checklist. Completion requires default behavior, extensibility,
 lifecycle/recovery, installed documentation and real evidence per component.
 Adding a Protocol or counting passing tests alone does not establish parity.
@@ -9,9 +9,7 @@ The [dev23 holistic review](../architecture/reviews/2026-10-08-agent-framework-a
 sets the architectural guardrails. dev24 closes its three reproduced runtime
 issues through [shared decision/evidence rules and recent Session projection](shared-model-context-contracts.md).
 dev25 delivers native Agent/sequence H1a; dev26 extends the same six roles to
-Local Graph/Team/Dynamic/nesting. dev27 adds selected Session backends and allowed namespaces with actual-address admission. dev28 adds explicit Facts/Knowledge namespace views and source-bound validation. dev29 adds pure Agent completion verification with durable receipt-based feedback. dev30 adds fixed Agent limits under mandatory host caps. Temporal bindings, remaining resource roles/selection,
-simple APIs and managed default chains
-remain open. The [remaining-work audit](remaining-work.md) maps the current gaps;
+Local Graph/Team/Dynamic/nesting. dev27 adds selected Session backends and allowed namespaces with actual-address admission. dev28 adds explicit Facts/Knowledge namespace views and source-bound validation. dev29 adds pure Agent completion verification with durable receipt-based feedback. dev30 adds fixed Agent limits under mandatory host caps. dev31 delivers Local stateless Agent/Runtime, independent hosting, pure observation and retryable closing. dev32 delivers colocated native/sequence durable Session/Turn admission and binding revisions. dev33 delivers native/sequence Temporal Agent entry with common async attachment, pinned RPC dispatch and client detach. dev34 adds the registered advanced Temporal facade and actual child control references. Temporal bindings, remaining resource roles/selection, remote/composite Session routes and managed default chains remain open. The [remaining-work audit](remaining-work.md) maps the current gaps;
 test coverage and adapter counts alone do not establish AgentScope parity.
 
 Continue the approved order with a cohesive Agent/session entry path, immutable
@@ -56,7 +54,7 @@ See [current support](implementation-status.md), [M1 gates](m1-acceptance.md) an
 
 The [target AgentHarness](../architecture/viewpoints/harness-runtime.md) implements
 this roadmap through five coherent stages. Remaining H1 capability bindings and
-H2 Agent/Session entry semantics are the next A2 dependencies; H3 is A3 managed default chains;
+H2b remote/composite Session semantics and Temporal bindings are the next A2 dependencies; colocated native/sequence H2b1, native Temporal H2c1 and registered advanced Temporal H2c2 are delivered. H3 is A3 managed default chains;
 H4 delivers the remaining A2 environment/cooperation work; H5 spans B1/B2/C1/C2
 service and backend governance. A4 real quality evidence runs throughout rather
 than waiting until all infrastructure exists. D parity requires matched experiments.
@@ -72,4 +70,4 @@ uses the user-selected local AgentScope 2.0.10dev commit rather than inferring
 behavior from the previous v2.0.9 overview. [H1a/Local H1b](agent-bindings.md) cover native Agent/sequential Workflow and
 Graph/Team/Dynamic/nesting with six selectable roles and versioned assembly.
 dev27 adds Local Session backend/namespace/address admission; dev28 adds scoped Facts/Knowledge; dev29 adds pure completion verifier bindings. Temporal bindings, other resource selectors, H2 SessionAdmission and
-Agent/Runtime Facade remain pending; no parity is inferred.
+full Agent/Runtime Facade remain pending. Local stateless H2a is delivered in dev31; no parity is inferred.

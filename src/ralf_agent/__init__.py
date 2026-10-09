@@ -9,7 +9,12 @@ from .a2a import (
     A2AToolSource,
     validate_a2a_client,
 )
+from .agent import Agent
+from .agent_harness import AgentHarness
 from .agent_limits import AgentLimitProposal, AgentLimitsPolicy, FixedAgentLimits
+from .agent_run import RunRef, WaitResult
+from .agent_runtime import AgentRun, CloseReport, Runtime
+from .agent_session import AgentSession
 from .artifacts import (
     ArtifactReference,
     ArtifactStore,
@@ -49,6 +54,13 @@ from .embedding_http import OpenAIEmbeddingProvider
 from .embedding_response import EmbeddingResponse
 from .embeddings import HashEmbeddingProvider
 from .engine import LocalEngine
+from .errors import (
+    CloseIncomplete,
+    ExecutionHostFailed,
+    RuntimeClosed,
+    SessionBindingMismatch,
+    SessionBusy,
+)
 from .event_records import AsyncRunEventSource, EventCursor, EventEnvelope, SyncRunEventSource
 from .event_stream import RunEventSubscription
 from .executors import DispatchEnvelope, EffectObservation, PythonToolExecutor, ToolExecutor
@@ -205,6 +217,8 @@ from .runtime_builder import (
 from .runtime_config import RuntimeCatalog, RuntimeProfile, load_catalog, load_spec
 from .runtime_router import CommandReceiptReader, ProfiledEngine, RunReader, SQLiteRunReader
 from .service_lifecycle import LocalA2AService
+from .session_ports import SessionAdmissionStore
+from .session_types import SessionKey, SessionRef, SessionSnapshot, TurnAdmission
 from .storage import SQLiteStore
 from .task_controls import AsyncTaskControls, SyncTaskControls, TaskControlBridge
 from .teams import RouterTeam, SequentialTeam, SupervisorTeam
@@ -259,7 +273,7 @@ from .workflow import (
     WorkflowSelection,
 )
 
-__version__ = "0.1.0.dev30"
+__version__ = "0.1.0.dev34"
 __all__ = [
     "EventCursor",
     "EventEnvelope",
@@ -558,3 +572,20 @@ __all__ += [
     "SchemaCompletionVerifier",
     "ToolReceiptVerifier",
 ]
+
+__all__ += [
+    "AgentHarness",
+    "RunRef",
+    "WaitResult",
+    "Agent",
+    "Runtime",
+    "AgentRun",
+    "CloseReport",
+    "CloseIncomplete",
+    "RuntimeClosed",
+    "ExecutionHostFailed",
+]
+
+__all__ += ["SessionKey", "SessionRef", "SessionSnapshot", "TurnAdmission", "SessionAdmissionStore"]
+
+__all__ += ["AgentSession", "SessionBusy", "SessionBindingMismatch"]

@@ -1,11 +1,16 @@
 # RALF 开源 Agent 平台架构设计
 
-版本：1.2（H1a／Local H1b／Session H1c／Facts与Knowledge范围H1d及纯完成Verifier H1e／执行限制H1f绑定实现、AgentHarness命名及Facade/Session/关闭契约；文档版本独立于产品版本）
+版本：1.6（Temporal 高级编排入口 H2c2、原生入口 H2c1、同库 Session H2b1、Local stateless H2a、H1a／Local H1b／Session H1c／Facts与Knowledge范围H1d及纯完成Verifier H1e／执行限制H1f绑定实现、AgentHarness命名及Facade/Session/关闭契约；文档版本独立于产品版本）
 
-日期：2026-10-08（Asia/Shanghai）
+日期：2026-10-09（Asia/Shanghai）
 
 状态：完整架构目标；当前已交付的 v0.1 开发增量及剩余工作见 [实现状态](../docs/implementation-status.md)，不宣称以下能力已全部实现。
-2026-10-08 实现基线：dev24 已有 Local／Temporal 原生 Agent、顺序流程及受限图／团队／动态编排，真实远程数据适配、可选记忆／摘要、中间件和持久事件订阅；上一轮三项P2已通过共享采纳／证据／近期Session规则修复，见[修复审查](reviews/2026-10-08-shared-model-context-contracts.md)。本次设计将广义Harness定义为包含Core的能力运行系统，现有Harness API保留为纯DecisionPolicy。dev25已实现[H1a绑定子集](../docs/agent-bindings.md)：原生Agent/顺序流程六类组件选择、逐步骤发布与Profile v2。dev26将同一六类选择扩展到Local图/Team/动态DAG/嵌套成员；dev27补齐Local Session后端、namespace视图与同权威实际地址占用；dev28交付Facts/Knowledge宿主允许namespace视图和来源校验；dev29增加Local纯完成Verifier绑定与耐久回执反馈；dev30交付Local限额策略的固定交集与工具动作额度；Temporal绑定、其他资源选择、环境角色、统一入口与受管理默认链路仍属于[目标设计](viewpoints/harness-runtime.md)。统一入口的等待、Session占用与资源关闭遵循[Facade契约](specs/agent-facade-session-contract.md)，三个审查空白与本地AgentScope参考见[修订记录](reviews/2026-10-08-agent-harness-facade.md)。后续沿用[建设顺序](../docs/agentscope-alignment.md)，不以设计或测试数量替代实际默认行为验收。
+2026-10-08 实现基线：dev24 已有 Local／Temporal 原生 Agent、顺序流程及受限图／团队／动态编排，真实远程数据适配、可选记忆／摘要、中间件和持久事件订阅；上一轮三项P2已通过共享采纳／证据／近期Session规则修复，见[修复审查](reviews/2026-10-08-shared-model-context-contracts.md)。本次设计将广义Harness定义为包含Core的能力运行系统，现有Harness API保留为纯DecisionPolicy。dev25已实现[H1a绑定子集](../docs/agent-bindings.md)：原生Agent/顺序流程六类组件选择、逐步骤发布与Profile v2。dev26将同一六类选择扩展到Local图/Team/动态DAG/嵌套成员；dev27补齐Local Session后端、namespace视图与同权威实际地址占用；dev28交付Facts/Knowledge宿主允许namespace视图和来源校验；dev29增加Local纯完成Verifier绑定与耐久回执反馈；dev30交付Local限额策略的固定交集与工具动作额度；Temporal绑定、其他资源选择、环境角色、完整统一入口与受管理默认链路仍属于[目标设计](viewpoints/harness-runtime.md)。统一入口的等待、Session占用与资源关闭遵循[Facade契约](specs/agent-facade-session-contract.md)，三个审查空白与本地AgentScope参考见[修订记录](reviews/2026-10-08-agent-harness-facade.md)。后续沿用[建设顺序](../docs/agentscope-alignment.md)，不以设计或测试数量替代实际默认行为验收。
+2026-10-09 dev31 交付 [Local stateless H2a 入口](../docs/agent-api.md)：AgentHarness 固定声明，Agent/Runtime 独立托管，AgentRun/RunRef/WaitResult 观察与控制原权威，owned/borrowed 关闭可重试。完整 Session/Turn、Temporal Facade 与自动能力阶段仍按既有 H2b/H3 门槛推进。
+2026-10-09 dev32 交付 [H2b1 同库原生／顺序 Sessions](../docs/session-api.md)：Session/Turn 与 Run 在原执行事务中接受，固定协调 locator 和绑定修订，busy/mismatch 回执持久化，idle CAS rebind 保留历史。首个 Session 原子启用 schema2，旧 SDK 在派发前拒绝；原 schema1 无状态发布保持兼容。远程／复合会话和完整 H2b 尚未交付。
+2026-10-09 dev34 交付 H2c2：通过同一 Agent API 提交／重连已注册 Graph、Team、Dynamic 与嵌套流程；固定派发视图读取实际子 Run 审批／未知效果，父级取消仍由 History 传播。Temporal 绑定与远程／复合 Session、H3 自动能力阶段继续待交付。
+
+2026-10-09 dev33 交付 [H2c1 Temporal 原生／顺序 Agent 入口](../docs/temporal-agent-api.md)：复用共同 DTO 和异步观察／控制钩子，以固定组件视图派发 RPC；服务器 History 仍独占执行，客户端 detach 不取消业务。高级编排入口、远程会话与完整 H2／受管理默认链路继续沿既有门槛推进。
 读者：项目维护者、SDK 开发者、架构师与企业实施团队。  
 项目名称：Ralf-Agent；RALF 表示 Reliable Agent Lifecycle Framework。仓库：[RalfNick/ralf-agent](https://github.com/RalfNick/ralf-agent)。
 

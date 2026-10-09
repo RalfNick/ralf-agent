@@ -13,13 +13,13 @@ from temporalio.exceptions import (
 )
 
 with workflow.unsafe.imports_passed_through():
-    from .errors import ValidationError
     from .orchestration_types import ChildCall
     from .temporal_parent_state import (
         CONTROL_ACTIVITY,
         PARENT_WORKFLOW_NAME,
         SELECTION_ACTIVITY,
         TemporalParentState,
+        ValidationError,
     )
     from .temporal_state import TERMINAL, WORKFLOW_NAME, detached
     from .temporal_workflow import TemporalRunWorkflow
@@ -76,6 +76,9 @@ class TemporalParentWorkflow(TemporalRunWorkflow):
 
     @workflow.run
     async def run(self, accepted: dict) -> None:
+        self.state.observation_version = (
+            2 if workflow.patched("ralf-parent-control-evidence-v2") else 1
+        )
         timeout = timedelta(seconds=accepted["activity_timeout"])
         deadline = self.state.policy.run_timeout_seconds
         if deadline is not None:

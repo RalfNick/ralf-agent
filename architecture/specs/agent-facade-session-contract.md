@@ -1,6 +1,6 @@
 # Agent Facade、Session与关闭契约 — 目标v1
 
-日期：2026-10-08；状态：H2实施前的行为规格，尚未实现；审查基线：dev24；dev25 H1a不改变本契约的未交付状态。
+日期：2026-10-09；状态：完整 H2 的目标行为规格。dev31 H2a 已实现 Local stateless 托管／观察／关闭子集；dev32 H2b1 实现同库原生／顺序 Session/Turn／busy／CAS rebind；dev33 H2c1 交付 Temporal 原生／顺序入口，dev34 H2c2 接通已注册高级编排；远程／复合会话、Temporal 绑定及完整 H2 尚未交付；历史审查基线为 dev24。
 本文与[AgentHarness设计](../viewpoints/harness-runtime.md)、
 [能力绑定](agent-capability-binding-contract.md)、[Run命令](run-command-contract.md)、
 [Action恢复](action-recovery-contract.md)共同约束统一入口。
@@ -46,7 +46,7 @@ wait_timeout、等待目标和close策略不进入submit的请求身份；deadli
 
 | 事件 | 观察行为 | 业务行为 |
 | --- | --- | --- |
-| wait_timeout到期 | 返回原Run当前snapshot，wait_reason=observation_timeout | 不提交取消；Runtime/Workers继续托管 |
+| wait_timeout到期 | 返回最近成功观察的 snapshot／真实 observed_at，wait_reason=observation_timeout | 不提交取消；Runtime/Workers继续托管 |
 | caller取消await wait/run的等待阶段 | 取消本次观察，传播CancelledError | 已接受Run不取消，不删除回执/待审批 |
 | HTTP/SSE断连、关闭事件迭代器 | 结束当前订阅与传输 | 不隐式提交业务取消；可凭游标/RunRef重连 |
 | deadline_at到期 | 可观察到耐久deadline_exceeded原因 | 权威按固定deadline政策停止新派发并进入取消路径 |
@@ -225,4 +225,19 @@ RunRef保存authority_locator、run_id、release_digest及Session定位，不带
 | 关闭后RunHandle/Reader/attach | live依赖明确、Ref可重连，查询不自动驱动/换Release |
 | 实际旧wheel与History | legacy drive/提交/编码保持；新Facade版本契约独立验收 |
 
-这些是设计验收要求，本轮没有执行上述新Facade行为测试或宣称H2已实现。
+这些仍是完整 H2 的设计验收要求。dev31 对 Local stateless 观察／独立托管／关闭及原审批升级提供实现和测试；[实际支持指南](../../docs/agent-api.md)记录各增量范围，不宣称后续 Session/Temporal 目标完整；deadline、queue、handoff 和未支持的绑定／会话组合仍明确拒绝，不宣称完整 H2 已实现。旧 RunHandle DTO 保留，在线句柄使用 AgentRun。
+
+## dev32 实际子集
+
+[同库 Session API](../../docs/session-api.md)交付原生／顺序及其绑定的 H2b1。schema2 的原子激活与旧 SDK 拒绝保护耐久路由，旧 raw schema1 请求／发布不变。远程会话目录／跨权威迁移、复合编排会话、FIFO、Temporal 完整组合及完整 H2 继续按上述目标验收。
+
+
+## dev33 实际子集
+
+[Temporal Agent API](../../docs/temporal-agent-api.md)交付 H2c1 原生／顺序入口，复用 AsyncExecutionEngine 与共同 Agent/AgentRun/RunRef/WaitResult，固定实际 Client／namespace／Scope／Release 派发。每个 RPC 的组件视图跨内部 await 保持；迟到配置漂移会报告，不能把控制重定向到替换资源。async areference/aattach 验证原发布；detach 只清理在途客户端 RPC／owned Engine facade，借用 Client/Workers 与服务器业务继续。
+
+远程超时必须区分本次观察计时器和查询自身错误。已有快照携带实际 observed_at，不能伪装成新服务端状态；Query TimeoutError 传播，只有观察计时器自身到期转换 observation_timeout。派发、控制、drive 和 owned close 必须返回其完成态协议值。高级编排入口、绑定、远程共享 Session 与完整 H2 继续待验收。
+
+## dev34 实际子集
+
+H2c2 接通已注册 Graph／Team／Dynamic／嵌套入口，不增加执行权威。pending 只从原生子 Run 读取审批与未知工具，携带实际持有者 RunRef；通过 aattach 控制子 Run，父级取消由服务器传播。单次遍历固定派发视图并校验原父子命令／请求／发布身份，最多 4096 个身份与 16 层；它是有界观察，不是树的原子快照。终态原生快照不再显示不可用审批；人工效果证据不能证明远端执行已停止。Temporal 绑定、共享 Session 和完整 H2 仍未完成。

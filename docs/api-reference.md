@@ -1,6 +1,21 @@
 # 常用 API 与 CLI 参考
 
-版本：0.1.0.dev23／local-4。公开 API 为预览契约；静态图、有限规划／团队和真实数据适配器有行为证据，完整 M1 未完成。已交付边界见[实现清单](implementation-status.md)，适配器要求见[扩展指南](extending.md)。以下为常用入口，不替代端口契约。
+版本：0.1.0.dev34；local-4 与已启用绑定的版本身份分别固定。公开 API 为预览契约；静态图、有限规划／团队和真实数据适配器有行为证据，完整 M1 未完成。已交付边界见[实现清单](implementation-status.md)，适配器要求见[扩展指南](extending.md)。以下为常用入口，不替代端口契约。
+
+## Local 应用入口
+
+[完整使用与关闭指南](agent-api.md)覆盖 H2a 已实现的 Local stateless 子集。
+
+| API | 使用方式与关键约束 |
+| --- | --- |
+| `AgentHarness(definition)` | 固定原生／绑定／复合声明；现有纯 Harness 策略不变，不隐藏 I/O |
+| `Runtime(engine, owned=False, ...)` | 独立托管 Local 任务；from_profile/afrom_profile 支持原 Builder 与可信 Scope |
+| `Agent(runtime=..., definition=...)`／`Agent(model=..., tools=..., db_path=...)` | 共享宿主或独立创建本地宿主；submit/run 必须提供 command_id |
+| `AgentRun` | 在线观察／显式控制；pending 定位嵌套动作原所属 Run；关闭后须显式重连 |
+| `RunRef`／`WaitResult`／`CloseReport` | 原权威／Scope／发布定位、观察结果、关闭责任；等待取消不取消业务 |
+| `RunHandle` | 保留旧 submit 返回的定义 DTO；不改名、不替换成在线 AgentRun |
+
+dev32 增加 [Agent.open_session／AgentSession／SessionRef](session-api.md)，同库原生／顺序 Turn 和 rebind 复用执行事务；更广的会话组合、deadline、queue、handoff 仍明确拒绝。dev33 [Temporal Agent API](temporal-agent-api.md)增加 Runtime.from_temporal、areference/aattach；原生／顺序远程入口采用固定 RPC 组件与 detach 关闭。dev34 H2c2 扩展到已注册 Graph／Team／Dynamic／嵌套定义，pending 携带实际子 Run 引用；通过 aattach 控制其原动作，父取消由服务器传播。
 
 ## 定义与装配
 

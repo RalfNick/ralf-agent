@@ -351,3 +351,45 @@ Delivered pure CompletionVerifier and detached DTOs, configurable committed-tool
 ## dev30 — Local Agent limits / H1f
 
 Delivered pure replaceable AgentLimitsPolicy and fixed default; accepted cap snapshots; mandatory host/Spec/Agent minimum; atomic over-limit tool-batch refusal and existing-Action recovery; Local native/sequence/graph/parallel/team/dynamic/nested selection and sync/async configuration. Global capacity, deadlines/currency and full H1/H2 remain pending. Evidence: architecture/reviews/2026-10-08-agent-limits.md.
+
+## 2026-10-09 — dev31 Local stateless facade / H2a
+
+Delivered immutable AgentHarness declaration composition, standalone Agent/shared Runtime, online AgentRun/portable RunRef/WaitResult, independent Local task hosting, pure observations, nested original-root controls and retryable owned/borrowed closing. Existing Harness remains pure; old RunHandle/request/Release/Action identities are preserved. Profile factories retain trusted Scope and loop-bound owned client cleanup.
+
+One fresh read-only review found two Important issues: child waits missed root host failures; first wrong-loop calls could prevent rightful owner-loop cleanup. Five permanent tests failed RED and passed GREEN in one fix pass; no Critical/Minor or re-review. Final full2235 passed/44 configured-service skips369.01s; actual installed wheel outside checkout176 passed7.07s; source/wheel/sdist/installed139-module byte comparison, optional-free286 exports and20 unchanged starter maps. Actual dev30/dev31 wheels recover ten approval scenarios in both directions, preserving original receipts/Manifest and one business effect each.
+
+Full H1/H2, durable Session/Turn, Temporal facade, automatic H3 stages, environments and production governance remain pending. No new base dependency, paid-model calls, commit/push/publication. See [API guide](agent-api.md), [review and all decisions](../architecture/reviews/2026-10-09-local-agent-facade.md), [remaining capability checklist](remaining-work.md).
+
+## 2026-10-09 — dev32 colocated Local Sessions / H2b1
+
+Delivered portable SessionKey/SessionRef/TurnAdmission, borrowed AgentSession and an optional transaction-bound SessionAdmissionStore with SQLite default. Native/sequence Turn admission shares existing command/Run acceptance, atomically preserves original bindings, sequence and route ownership, and provides stable busy/mismatch receipts and idle CAS rebind. Read-only observations do not advance occupancy or resume execution. Actual handlers, unknown effects and required result-save evidence retain occupancy across cancellation/restart. Registered physical routes reject legacy raw bypass even while idle.
+
+One fresh read-only review found three Important boundaries: lazy custom admission results, non-durable resolved manifest-drift refusal, and substituted Runtime locators. Ten permanent regressions failed RED then passed GREEN in one fix pass; no Critical/Minor or re-review. Final full2280 passed/44 configured-service skips375.83s, -W error; actual installed wheel outside checkout159 passed6.05s. Source/wheel/sdist/installed144-module comparison, optional-free294 exports and20 unchanged starter content maps pass. Actual dev31/dev32 wheels recover nine schema1 approval cases in each direction with original receipts/Manifest and one business effect each. An activated schema2 database refuses the old wheel before dispatch; the new wheel reconnects, repeats approval safely and confirms one actual business effect.
+
+Schema2 activation is opt-in, atomic and one-way; unchanged stateless databases remain schema1. Remote/composite Sessions, input/deadline/FIFO/handoff, Temporal facade and full H2b remain pending. No new base dependency, paid-model call, commit/push/publication or AgentScope parity claim. See [Session guide](session-api.md), [review and decisions](../architecture/reviews/2026-10-09-local-session-turns.md) and [remaining checklist](remaining-work.md).
+
+## 2026-10-09 — dev33 Temporal native Agent facade / H2c1
+
+Runtime.from_temporal shares Agent/AgentRun/RunRef/WaitResult for native/sequence, with async areference/aattach, pinned actual resource/Scope/release, strongly owned outbound RPCs, bounded pure observation and detach-only client lifecycle. Server History remains authoritative; Local behavior and schema1/schema2 remain. Unsupported advanced facade/bindings/shared Sessions refuse before acceptance.
+
+One fresh review found three Important: mutable dispatcher crossed services during an internal await, transport TimeoutError was swallowed as observation timeout, and malformed drive responses were ignored. Eight permanent RED cases plus one unraisable lazy-coroutine error became37 GREEN1.16s in one fix pass, no re-review. Final full2317 passed/47 configured-service skips337.65s; actual installed contracts206 passed8.25s. Actual persisted Service/Worker/history source3 passed7.45s and installed3 passed6.27s; same-model offline-provider lookup audit establishes the stated execution scenarios, no live-model quality.
+
+Actual dev32/dev33 wheels recover11 Local approvals each direction, including two schema2 Sessions, preserving original receipts/Manifest and one business effect each. Source/wheel/sdist/installed146-module equality,294 optional-free exports,20 unchanged starter maps and unchanged dependencies/extras/scripts pass. No paid call, commit/push/publication or full H2/AgentScope claim. See [guide](temporal-agent-api.md), [review and all decisions](../architecture/reviews/2026-10-09-temporal-agent-facade.md) and [remaining work](remaining-work.md).
+
+## 2026-10-09 — dev34 Temporal composite Agent facade / H2c2
+
+Registered Graph/Team/Dynamic/nested definitions now use the shared Agent API,
+original parent History refs/receipts and bounded pinned actual child controls.
+Unknown tools remain discoverable after root cancellation; contradictory pruning
+evidence is refused. Native terminal approval projection retains original actions.
+Actual Worker probes fixed sandbox planning imports and nested control-bookkeeping
+comparison through a compatible v2 patch marker; old histories keep v1 semantics.
+
+Final full2352passed56skipped; installed231passed; actual persisted Service/Worker
+12 source +12 installed probes passed. Actual dev33 wheel recovery preserves4 Runs
+and7 old/current parent-child histories; Local4 schema1/schema2 approvals recover
+each wheel direction with original receipts/manifest and effect1. Source/wheel/
+sdist/installed147 modules match;294 optional-free exports/20 starter maps and
+dependencies remain compatible. One fresh reviewer Important finding fixed in
+one RED→GREEN pass; no minors or re-review. No paid call/commit/push/publication.
+See [API guide](temporal-agent-api.md), [review and all decisions](../architecture/reviews/2026-10-09-temporal-composite-agent-facade.md). Temporal bindings/shared Sessions, complete H1/H2 and H3 default managed chains remain open.

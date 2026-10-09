@@ -1,6 +1,6 @@
 """Pure finite parent authority; child evidence is adopted by Workflow History."""
 
-from .dag_planning import DAGProposal
+from .dag_planning import DAGNode, DAGProposal
 from .errors import IdempotencyConflict, ValidationError
 from .governance import TemporalExecutionPolicy
 from .orchestration_types import ChildCall, TeamSelection
@@ -19,6 +19,7 @@ from .workflow import (
     ExecutionPlan,
     GraphNode,
     GraphWorkflowSpec,
+    Literal,
     StaticWorkflowCompiler,
     _choices,
     _resolve,
@@ -52,6 +53,7 @@ class TemporalParentState(TemporalRunState):
             detached(manifest),
         )
         self.epoch, self.depth = epoch or "history:" + run_id, depth
+        self.observation_version = 1  # Workflow patch marker selects v2 for new histories.
         self.policy = (
             TemporalExecutionPolicy.from_identity(manifest["execution_policy"])
             if "execution_policy" in manifest
@@ -273,9 +275,6 @@ class TemporalParentState(TemporalRunState):
             return
         else:
             if "steps" in value:
-                from .dag_planning import DAGNode
-                from .workflow import Literal
-
                 steps = [ChildCall(**call) for call in value["steps"]]
                 nodes = [
                     DAGNode(
@@ -458,7 +457,24 @@ class TemporalParentState(TemporalRunState):
                 raise ValidationError(
                     "Terminal quiescence contradicts pending credit/work evidence"
                 )
-            fingerprint = digest({"snapshot": snapshot, "budget": budget, "workflow": flow})
+            evidence_flow = flow
+            if self.observation_version == 2:
+                # A child's private cancellation/planning bookkeeping is not a
+                # resource observation. Its snapshot/budget and stop/uncertainty
+                # flags still must agree exactly at a given revision.
+                evidence_flow = {
+                    name: flow.get(name, False)
+                    for name in (
+                        "quiescent",
+                        "remote_stop_confirmed",
+                        "unknown_remote_execution",
+                        "evidence_ack_pending",
+                        "reconciliation_pending",
+                    )
+                }
+            fingerprint = digest(
+                {"snapshot": snapshot, "budget": budget, "workflow": evidence_flow}
+            )
             if revision == call.get("observed_revision", -1) and fingerprint != call.get(
                 "observation_digest"
             ):

@@ -1,6 +1,8 @@
 # Ralf-Agent
 
-dev30 增加[每 Agent 执行限制](docs/agent-limits.md)：可替换纯策略、宿主强制上限与固定 caps；决策／上下文／工具动作额度复用原执行、审批和恢复，支持 Local 绑定及配置。
+dev34 扩展[Temporal Agent 入口](docs/temporal-agent-api.md)：同一 Agent/AgentRun API 支持原生／顺序及已注册的 Graph、Team、动态 DAG 与嵌套流程；按实际子 Run 定位审批／核验，等待只观察，客户端 detach 保留服务端执行。Temporal 能力绑定、共享远程会话和完整 H2 仍待交付。
+
+dev32 增加[持久 Local Session／Turn](docs/session-api.md)：原生 Agent／顺序 Workflow 的会话占用、原发布固定、稳定忙碌回执与空闲 CAS rebind；会话与执行事实同 SQLite 权威。开启会话后启用 schema2，旧 SDK 明确拒绝，远程／图／团队会话和完整 H2b 仍待交付。
 
 dev29 增加[可替换完成验证](docs/completion-verification.md)：以已提交工具回执验证业务完成，有界反馈复用原预算和审批；支持 Local 每 Agent 绑定及 Profile 配置。模型／异步验证阶段、统一 Facade 和 Temporal 绑定仍待完成。
 
@@ -257,8 +259,10 @@ python examples/evaluate.py
 ## 架构与路线
 
 - [完整设计](architecture/design.md)与 [review 取舍](architecture/review-resolution.md)。
-- [dev27 剩余能力清单](docs/remaining-work.md)：逐层区分已交付子集、尚未实现与待验收能力，按 H1–H5 继续建设。
-- [AgentHarness目标架构](architecture/viewpoints/harness-runtime.md)：广义Harness/Core、每Agent绑定、统一入口、受管理默认链路与H1–H5开发门槛；首期见[能力绑定契约](architecture/specs/agent-capability-binding-contract.md)，H2见[Facade／Session／关闭契约](architecture/specs/agent-facade-session-contract.md)。dev25交付H1a，dev26将六类组件选择扩展到Local图／Team／动态DAG／嵌套成员；[使用教程](docs/agent-bindings.md)。dev27增加[Session后端／namespace／实际地址占用](docs/session-bindings.md)；Temporal绑定、其他资源选择／环境角色及Facade API仍待实现。
+- [dev34 剩余能力清单](docs/remaining-work.md)：逐层区分已交付子集、尚未实现与待验收能力，按 H1–H5 继续建设。
+- [Local Agent API](docs/agent-api.md)：dev31 H2a 的统一入口、独立执行托管、纯观察等待与可重试关闭；dev32 补齐同库原生／顺序 Session/Turn 子集。
+- [Temporal Agent API](docs/temporal-agent-api.md)：dev34 H2c2 高级编排入口、实际子 Run 控制引用、异步重连与客户端 detach；Temporal 绑定和完整 Session 组合仍待实现。
+- [AgentHarness目标架构](architecture/viewpoints/harness-runtime.md)：广义Harness/Core、每Agent绑定、统一入口、受管理默认链路与H1–H5开发门槛；首期见[能力绑定契约](architecture/specs/agent-capability-binding-contract.md)，H2见[Facade／Session／关闭契约](architecture/specs/agent-facade-session-contract.md)。H1a–H1f 与 Local stateless H2a 已交付；完整 H1/H2、Temporal 绑定、其他资源选择／环境角色及自动默认链路仍待实现。
 - [通用框架能力与扩展验收](architecture/viewpoints/framework-capabilities.md)：每层的契约、默认实现、替换入口和验收矩阵；覆盖 Pipeline／Graph／流式编排、动态 Plan、多 Agent 和可替换数据链路，按固定版本与场景对标 AgentScope。
 - [Run 命令](architecture/specs/run-command-contract.md)、[Action 恢复](architecture/specs/action-recovery-contract.md)、[Runner 能力](architecture/specs/runner-capability-contract.md)。
 - [实现状态与下一步](docs/implementation-status.md)。M1 继续完成命令／等待、质量和最小 Temporal 门槛；通用 SDK 先推进静态图、工具、规划／团队和数据适配，之后扩展流式编排及企业执行模式；v1.0 完成企业私有部署验收。

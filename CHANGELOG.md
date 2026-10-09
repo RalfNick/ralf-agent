@@ -1,5 +1,34 @@
 # Changelog
 
+## 0.1.0.dev34 — Temporal composite Agent facade
+
+- Extend Agent entry to registered Graph/Team/Dynamic/nested Temporal definitions with original parent History and receipts.
+- Discover actual native child approvals/unknown tools through pinned bounded observation and original parent intent/release validation.
+- Accept parent outcome_unknown observations; terminal native snapshots omit unusable approvals without altering action/receipt ledgers.
+- Fix real sandbox sequential-plan imports and use a compatible parent v2 patch marker for resource evidence, preserving marker-less legacy History rules.
+- Preserve Local schemas and client detach; Temporal bindings/shared Sessions, direct Tool/Transform graph nodes and public DAG patch helpers remain pending.
+
+## 0.1.0.dev33 — Temporal native Agent facade
+
+- Add Runtime.from_temporal plus common async areference/aattach through existing Agent/AgentRun APIs; native Agent/sequence only, original History/release/command formats unchanged.
+- Validate actual endpoint/namespace/Scope and original release; strongly own outbound RPC completion independently of caller cancellation.
+- Bound remote observations with last validated snapshots and actual observed_at; detach-only client close flushes RPCs without stopping borrowed Client/Workers.
+- Keep Local stateless/Session behavior and schema1/schema2 compatibility. Advanced Temporal facade combinations, shared Sessions and complete H2 remain pending.
+
+## 0.1.0.dev32 — Colocated durable Local Sessions
+
+- Add portable SessionKey/SessionRef/TurnAdmission, borrowed AgentSession and optional authority-bound SessionAdmissionStore.
+- Atomically accept native/sequence Turns, stable busy/mismatch receipts and idle CAS rebind through existing command/Run authority; preserve original bindings and raw native schema1 contracts.
+- Retain occupancy through real handlers/unknown effects and required result-save confirmation; protect physical route aliases and raw bypass.
+- Explicit Session activation enables schema2; older SDKs refuse it before dispatch. Remote/composite Sessions, FIFO, Temporal facade and complete H2b remain pending.
+
+## 0.1.0.dev31 — Local stateless Agent facade
+
+- Add immutable AgentHarness, portable RunRef, observation-only WaitResult and online AgentRun without changing legacy RunHandle or accepted releases.
+- Add standalone Agent and shared Runtime/Profile factories with independent Local task hosting, original-root control routing and explicit unsupported capability refusal.
+- Add owned/borrowed drain or explicit cancel closing, retained unknown effects, shielded cleanup and retryable CloseIncomplete; actual threads retain Coordinator responsibility.
+- Durable Session/Turn, Temporal facade and managed automatic Harness stages remain pending. No new runtime dependency or remote publication.
+
 ## 0.1.0.dev30 — Local Agent limits
 
 - Add pure AgentLimitsPolicy/FixedAgentLimits and immutable accepted decision/context/tool-Action caps.

@@ -388,6 +388,21 @@ class LocalEngine:
                 workflow_details(run, self.store),
             )
 
+    def parent_run_id(self, run_id):
+        """Read the durable managed-call owner without resolving a new release."""
+        with self.store.transaction():
+            run = self._authorized(run_id)
+            parent_id = run.get("parent_id")
+            if parent_id is None:
+                return None
+            parent = self._authorized(parent_id)
+            if not any(
+                call["run_id"] == run_id and call["id"] == run.get("call_id")
+                for call in parent.get("orchestration", {}).get("children", [])
+            ):
+                raise DefinitionMismatch("Managed child has no original parent ownership")
+            return parent_id
+
     def patch_plan(self, run_id, proposal, *, expected_plan_revision, command_id):
         self._ensure_open()
         return self._orchestration._dag.patch(run_id, proposal, expected_plan_revision, command_id)
@@ -520,126 +535,131 @@ class LocalEngine:
         canonical(payload)
 
         def apply():
-            if definition["kind"] in {"team", "dynamic"}:
-                return self._orchestration.accept(
-                    run_id, definition, payload["input"], budget, session_id, _parent_call
-                )
-            bound = "binding_definition" in definition
-            graph = definition["kind"] == "graph"
-            plan = self._workflow.compile(definition) if graph else None
-            manifest = (
-                self._bindings.manifest(definition, plan=plan)
-                if bound
-                else self._workflow.manifest(plan)
-                if graph
-                else self._manifest(definition["steps"])
-            )
-            if _parent_call is not None:
-                parent = self._authorized(_parent_call["parent_id"])
-                if (
-                    parent.get("orchestration") is None
-                    or parent["state"] in TERMINAL
-                    or parent["state"] == "cancelling"
-                ):
-                    raise ValidationError("A managed child requires an active orchestration parent")
-                self._check_parent_limits(parent, _parent_call, manifest)
-                manifest["parent_call"] = copy.deepcopy(_parent_call)
-            messages = (
-                [] if graph else self._initial_messages(definition["steps"][0], payload["input"])
-            )
-            if (
-                bound
-                and session_id is not None
-                and any(
-                    entry["manifest"]["session_backend"] is None
-                    for entry in manifest["agent_bindings"]["steps"].values()
-                )
-            ):
-                raise ValidationError("Explicit Session requires a Session binding")
-            if not graph:
-                from .agent_limits import apply_pinned_limits
-                from .binding_manifests import step_manifest
-
-                if bound:
-                    from .binding_runtime import descriptor_for
-
-                    components = self._bindings.resolve(
-                        definition["steps"][0], descriptor_for(definition, 0)
-                    )[0]
-                    self._assemble_context(
-                        messages,
-                        [],
-                        apply_pinned_limits(
-                            {**definition["steps"][0], "tools": list(components.tools)},
-                            step_manifest(manifest, 0),
-                        )["max_context_chars"],
-                        context=components.context,
-                    )
-                else:
-                    self._assemble_context(
-                        messages,
-                        [],
-                        apply_pinned_limits(definition["steps"][0], manifest)["max_context_chars"],
-                    )
-            execution_definition = definition
-            if graph:
-                # Old native kernels can read this shape and reject the new
-                # workflow Manifest before scheduling. It is not a second plan
-                # and never mutates the caller's idempotency payload.
-                execution_definition = {
-                    **definition,
-                    "steps": [node["agent"] for node in plan["nodes"] if node["agent"] is not None],
-                }
-            session_ids = [session_id or run_id]
-            parallel = graph and plan["schema_version"] == 3
-            if parallel:
-                session_ids += [f"{session_ids[0]}:node:{n['id']}" for n in plan["nodes"]]
-            from .session_resources import admit_sessions
-
-            session_claim_data = admit_sessions(self, manifest, session_ids, plan)
-            data = {
-                "id": run_id,
-                "revision": 0,
-                "scope": asdict(self.scope),
-                "state": "queued",
-                "definition": execution_definition,
-                "manifest": manifest,
-                "release_digest": digest(
-                    {"definition": execution_definition, "manifest": manifest}
-                ),
-                "input": payload["input"],
-                "result": None,
-                "error": None,
-                "node": None if graph else 0,
-                "decisions": 0,
-                "actions": [],
-                "messages": messages,
-                "session_id": session_id or run_id,
-                **({"session_ids": session_ids} if parallel else {}),
-                **session_claim_data,
-                **(
-                    {
-                        "parent_call": copy.deepcopy(_parent_call),
-                        "parent_id": _parent_call["parent_id"],
-                        "call_id": _parent_call["call_id"],
-                    }
-                    if _parent_call is not None
-                    else {}
-                ),
-            }
-            if graph:
-                data["plan"] = plan
-                data["workflow"] = {
-                    "current": None,
-                    "nodes": {node["id"]: {"state": "pending"} for node in plan["nodes"]},
-                }
-            self.store.insert_run(data)
-            self.store.create_budget(run_id, budget)
-            self.store.emit(run_id, "run_submitted", {"release_digest": data["release_digest"]})
-            return {"state_revision": 0}
+            return self._accept_submission(run_id, payload, _parent_call)
 
         receipt = self.store.command(self.scope, command_id, "submit", payload, run_id, apply)
         return RunHandle(receipt.run_id, receipt)
+
+    def _accept_submission(self, run_id, payload, _parent_call=None):
+        definition = payload["definition"]
+        if definition["kind"] in {"bound_agent", "bound_definition"}:
+            from .binding_runtime import unwrap_definition
+
+            definition = unwrap_definition(definition)
+        budget, session_id = payload["budget"], payload["session_id"]
+        if definition["kind"] in {"team", "dynamic"}:
+            return self._orchestration.accept(
+                run_id, definition, payload["input"], budget, session_id, _parent_call
+            )
+        bound = "binding_definition" in definition
+        graph = definition["kind"] == "graph"
+        plan = self._workflow.compile(definition) if graph else None
+        manifest = (
+            self._bindings.manifest(definition, plan=plan)
+            if bound
+            else self._workflow.manifest(plan)
+            if graph
+            else self._manifest(definition["steps"])
+        )
+        if _parent_call is not None:
+            parent = self._authorized(_parent_call["parent_id"])
+            if (
+                parent.get("orchestration") is None
+                or parent["state"] in TERMINAL
+                or parent["state"] == "cancelling"
+            ):
+                raise ValidationError("A managed child requires an active orchestration parent")
+            self._check_parent_limits(parent, _parent_call, manifest)
+            manifest["parent_call"] = copy.deepcopy(_parent_call)
+        messages = [] if graph else self._initial_messages(definition["steps"][0], payload["input"])
+        if (
+            bound
+            and session_id is not None
+            and any(
+                entry["manifest"]["session_backend"] is None
+                for entry in manifest["agent_bindings"]["steps"].values()
+            )
+        ):
+            raise ValidationError("Explicit Session requires a Session binding")
+        if not graph:
+            from .agent_limits import apply_pinned_limits
+            from .binding_manifests import step_manifest
+
+            if bound:
+                from .binding_runtime import descriptor_for
+
+                components = self._bindings.resolve(
+                    definition["steps"][0], descriptor_for(definition, 0)
+                )[0]
+                self._assemble_context(
+                    messages,
+                    [],
+                    apply_pinned_limits(
+                        {**definition["steps"][0], "tools": list(components.tools)},
+                        step_manifest(manifest, 0),
+                    )["max_context_chars"],
+                    context=components.context,
+                )
+            else:
+                self._assemble_context(
+                    messages,
+                    [],
+                    apply_pinned_limits(definition["steps"][0], manifest)["max_context_chars"],
+                )
+        execution_definition = definition
+        if graph:
+            # Old native kernels can read this shape and reject the new
+            # workflow Manifest before scheduling. It is not a second plan
+            # and never mutates the caller's idempotency payload.
+            execution_definition = {
+                **definition,
+                "steps": [node["agent"] for node in plan["nodes"] if node["agent"] is not None],
+            }
+        session_ids = [session_id or run_id]
+        parallel = graph and plan["schema_version"] == 3
+        if parallel:
+            session_ids += [f"{session_ids[0]}:node:{n['id']}" for n in plan["nodes"]]
+        from .session_resources import admit_sessions
+
+        session_claim_data = admit_sessions(self, manifest, session_ids, plan)
+        data = {
+            "id": run_id,
+            "revision": 0,
+            "scope": asdict(self.scope),
+            "state": "queued",
+            "definition": execution_definition,
+            "manifest": manifest,
+            "release_digest": digest({"definition": execution_definition, "manifest": manifest}),
+            "input": payload["input"],
+            "result": None,
+            "error": None,
+            "node": None if graph else 0,
+            "decisions": 0,
+            "actions": [],
+            "messages": messages,
+            "session_id": session_id or run_id,
+            **({"session_ids": session_ids} if parallel else {}),
+            **session_claim_data,
+            **(
+                {
+                    "parent_call": copy.deepcopy(_parent_call),
+                    "parent_id": _parent_call["parent_id"],
+                    "call_id": _parent_call["call_id"],
+                }
+                if _parent_call is not None
+                else {}
+            ),
+        }
+        if graph:
+            data["plan"] = plan
+            data["workflow"] = {
+                "current": None,
+                "nodes": {node["id"]: {"state": "pending"} for node in plan["nodes"]},
+            }
+        self.store.insert_run(data)
+        self.store.create_budget(run_id, budget)
+        self.store.emit(run_id, "run_submitted", {"release_digest": data["release_digest"]})
+        return {"state_revision": 0}
 
     @staticmethod
     def _initial_messages(step, input):

@@ -39,7 +39,7 @@ class SQLiteStore:
                 row = self.conn.execute(
                     "SELECT value FROM metadata WHERE key='schema_version'"
                 ).fetchone()
-                if row is None or row[0] != "1":
+                if row is None or row[0] not in {"1", "2"}:
                     raise ValidationError("Unsupported execution database Schema")
             except (sqlite3.DatabaseError, ValidationError) as exc:
                 self.close()
@@ -68,7 +68,7 @@ class SQLiteStore:
             CREATE INDEX IF NOT EXISTS reservation_run ON reservations(run_id);
         """)
         row = self.conn.execute("SELECT value FROM metadata WHERE key='schema_version'").fetchone()
-        if row and row[0] != "1":
+        if row and row[0] not in {"1", "2"}:
             self.close()
             raise ValidationError("Unsupported execution database Schema")
         self.conn.execute("INSERT OR IGNORE INTO metadata VALUES ('schema_version','1')")
@@ -127,6 +127,11 @@ class SQLiteStore:
         if self.readonly:
             raise ValidationError("Observation stores cannot initialize memory tables")
         return SQLiteMemory(self)
+
+    def create_session_admission(self):
+        from .sqlite_sessions import SQLiteSessionAdmission
+
+        return SQLiteSessionAdmission(self)
 
     @contextmanager
     def transaction(self):
@@ -228,6 +233,13 @@ class SQLiteStore:
             or any(not isinstance(value, str) or not value.strip() for value in resource.values())
         ):
             raise ValidationError("Session resource requires backend_id and actual session_id")
+        version = self.conn.execute(
+            "SELECT value FROM metadata WHERE key='schema_version'"
+        ).fetchone()[0]
+        if version == "2":
+            owner = self.create_session_admission().route_owner(scope, resource)
+            if owner is not None:
+                return owner
         for run in self._scoped_runs(scope):
             if any(same_session_address(resource, claim) for claim in run_session_claims(run)) and (
                 run["state"] not in {"succeeded", "failed", "cancelled"}

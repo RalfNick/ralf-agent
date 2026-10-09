@@ -365,7 +365,7 @@ class TemporalRunState:
                     "arguments": detached(a["arguments"]),
                 }
                 for a in self.actions
-                if a["status"] == "waiting_approval"
+                if a["status"] == "waiting_approval" and self.state not in TERMINAL
             ],
             "actions": detached(self.actions),
             "consistency": "authoritative",
