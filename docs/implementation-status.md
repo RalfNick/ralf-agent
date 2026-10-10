@@ -1,4 +1,4 @@
-# Implementation status — 0.1.0.dev41
+# Implementation status — 0.1.0.dev42
 
 Target architecture update: [AgentHarness](../architecture/viewpoints/harness-runtime.md)
 defines broad Harness/Core roles, per-Agent bindings, Agent/Session facade, managed
@@ -29,7 +29,7 @@ dev31 delivers [H2a Local stateless Agent API](agent-api.md): immutable AgentHar
 Runtime-owned Local drive tasks, Agent/AgentRun/RunRef, observation-only wait,
 nested control ownership/waking and retryable drain/cancel closing. Full H1/H2
 are not complete; remote Sessions, Temporal bindings and automatic
-managed stages remain partial. SDK is dev41. The [Facade/Session target contract](../architecture/specs/agent-facade-session-contract.md)
+managed stages remain partial. SDK is dev42. The [Facade/Session target contract](../architecture/specs/agent-facade-session-contract.md)
 now specifies observation-only waiting, durable busy refusal, Session binding revisions,
 and ownership-aware closing. H2a implements the declared Local stateless subset;
 remaining shared routing and backend requirements are not changes to legacy
@@ -189,3 +189,6 @@ dev40 delivers the first Local H3a [managed rule-memory stage](managed-memory-st
 
 
 dev41 delivers H3b1 [managed context preparation](managed-context-stages.md) for opt-in Local native Agents/sequences. Pure per-Agent context bindings plan complete omitted same-Run groups; the original Engine owns rule/model summaries, fixed source/reference snapshots, independent intent/response/projection evidence and original-budget accounting. Invalid responses use a fixed fallback; dispatched unknown calls retain credits without retries. Terminal adoption is evidence-only, reference versions are revalidated before business disclosure, and real task/thread ownership is preserved. JSON/TOML managed-summary factories reuse host providers and pure counter/budgeter ports. Semantic8 activates on first enabled admission; old dev40 refuses8 while default identities/schemas1–7 remain compatible. Automatic Session/RAG compression, advanced/Temporal stages, model extraction and full H3 remain open; no new real-model quality claim.
+
+
+dev42 adds H3a2 [automatic model-selected memory](managed-model-memory-stages.md), opt-in for Local native/sequence. Original memory_stages persist tool-free selection intent/response/keys and independent credits, before existing grounded CAS writes. Empty selection is valid; invalid/unknown selection writes nothing and never falls back to all fields. Actual provider/target/policy pinning, cancellation and evidence-only terminal settlement preserve the original authority. stage_policy and JSON/TOML sourced-memory(-async) factories reuse existing ports. Semantic9 first admission is atomic; dev41 refuses9; rule/default identities and schemas1–8 remain. Free-form/advanced/Temporal stages and full H3/quality remain open.

@@ -97,6 +97,7 @@ from .invocation_records import InvocationMiddleware, InvocationRecord
 from .knowledge_ingestion import AsyncIngestionKnowledgeStore, IngestionKnowledgeStore
 from .managed_context import ManagedContextPipeline
 from .managed_memory import ManagedMemoryPolicy
+from .managed_model_memory import ManagedModelMemoryPolicy
 from .mcp import MCPToolSource, MCPTransport
 from .mcp_stdio import MCPStdioTransport
 from .memory import (
@@ -275,7 +276,7 @@ from .workflow import (
     WorkflowSelection,
 )
 
-__version__ = "0.1.0.dev41"
+__version__ = "0.1.0.dev42"
 __all__ = [
     "EventCursor",
     "EventEnvelope",
@@ -551,6 +552,7 @@ __all__ += [
     "RuleMemoryExtractor",
     "MemoryPipeline",
     "ManagedMemoryPolicy",
+    "ManagedModelMemoryPolicy",
     "ManagedContextPipeline",
     "FrozenContextSummarizer",
     "ManagedModelSummarizer",

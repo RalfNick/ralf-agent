@@ -7,7 +7,13 @@ import time
 from dataclasses import asdict
 
 from .decisions import final_output
-from .errors import BudgetExceeded, DefinitionMismatch, RalfError, ValidationError
+from .errors import (
+    AuthorizationDenied,
+    BudgetExceeded,
+    DefinitionMismatch,
+    RalfError,
+    ValidationError,
+)
 from .memory import memory_call
 from .memory_extraction import FactProposal
 from .recall import RecallPage, RecallQuery, _fact_records
@@ -32,7 +38,7 @@ def _action(run, source):
 
 
 def _marker(record):
-    return {
+    value = {
         "schema_version": 1,
         "source_digest": digest(record["source"]),
         "proposal_digest": digest(
@@ -44,6 +50,12 @@ def _marker(record):
         ),
         "policy_digest": digest(record["policy"]),
     }
+
+    if "selection" in record:
+        from .memory_selection import marker
+
+        value["selection"] = marker(record)
+    return value
 
 
 def _receipt_data(record, fact):
@@ -77,6 +89,12 @@ def _validate_record(engine, run, record):
         raise DefinitionMismatch("Memory stage journal has invalid original ownership")
     if _action(run, source).get("memory_stage") != _marker(record):
         raise DefinitionMismatch("Memory stage journal lost its independent proposal marker")
+    if "selection" in record["policy"]:
+        from .memory_selection import validate_record
+
+        validate_record(engine, run, record)
+    elif "selection" in record:
+        raise DefinitionMismatch("Rule memory cannot silently adopt model selection")
     states = []
     for fact in record["facts"]:
         status = fact["status"]
@@ -185,16 +203,43 @@ def _check(engine, run_id, record):
     ):
         raise DefinitionMismatch("Memory stage result differs from adopted output")
     policy = engine._components(run, source["node"]).stage_policy
-    if policy is None or digest(policy.identity) != digest(record["policy"]):
+    from .managed_memory import stage_identity
+
+    if policy is None or digest(stage_identity(policy, engine.scope, engine=engine)) != digest(
+        record["policy"]
+    ):
         raise DefinitionMismatch("Memory stage policy differs from pinned admission")
     policy.check(engine.scope)
     return policy
+
+
+def _check_actual(engine, policy, record):
+    """A replacement cannot conceal drift in the component that just executed."""
+    from .managed_memory import stage_identity
+
+    try:
+        policy.check(engine.scope)
+        if digest(stage_identity(policy, engine.scope, engine=engine)) != digest(record["policy"]):
+            raise DefinitionMismatch("The actual memory policy differs from pinned admission")
+    except AuthorizationDenied as exc:
+        raise DefinitionMismatch("The actual memory policy lost its pinned Scope") from exc
+
+
+async def _call_target(engine, run_id, record, policy, method, *args, **kwargs):
+    _check_actual(engine, policy, record)
+    try:
+        return await memory_call(method, *args, **kwargs)
+    finally:
+        _check_actual(engine, policy, record)
+        _check(engine, run_id, record)
 
 
 def _save(engine, run_id, record, event):
     with engine.store.transaction():
         run = engine._authorized(run_id)
         run["memory_stages"][str(record["node"])] = copy.deepcopy(record)
+        if "selection" in record:
+            _action(run, record["source"])["memory_stage"] = _marker(record)
         engine._commit(run, event, {"node": record["node"], "status": record["status"]})
 
 
@@ -236,11 +281,16 @@ def _prepare(engine, run_id, result):
         "schema_version": 1,
         "node": run["node"],
         "source": source,
-        "policy": policy.identity,
+        "policy": engine._step_manifest(run)["managed_memory"],
         "facts": [],
         "status": "proposing",
         "error": None,
     }
+    if "selection" in record["policy"]:
+        from .memory_selection import prepare
+
+        record["selection"] = prepare(policy, record)
+        _check_actual(engine, policy, record)
     with engine.store.transaction():
         current = engine._authorized(run_id)
         current.setdefault("memory_stages", {})[str(run["node"])] = copy.deepcopy(record)
@@ -248,6 +298,16 @@ def _prepare(engine, run_id, result):
             record
         )
         engine._commit(current, "memory_stage_source_recorded", {"node": run["node"]})
+    if "selection" in record:
+        return record
+    return _prepare_proposals(engine, run_id, record)
+
+
+def _prepare_proposals(engine, run_id, record, proposals=None):
+    run = engine._authorized(run_id)
+    source = record["source"]
+    policy = _check(engine, run_id, record)
+    action = _action(run, source)
     phase = "selecting"
     try:
         if len(canonical(source)) > 65536:
@@ -255,7 +315,11 @@ def _prepare(engine, run_id, result):
         expiry = policy.admission.identity["expires_at"]
         if expiry is not None and expiry <= time.time():
             raise ValidationError("Memory admission policy has expired")
-        proposals = policy.propose(copy.deepcopy(source))
+        if proposals is None:
+            try:
+                proposals = policy.propose(copy.deepcopy(source))
+            finally:
+                _check_actual(engine, policy, record)
         if type(proposals) is not list:
             if inspect.iscoroutine(proposals) or inspect.isgenerator(proposals):
                 proposals.close()
@@ -264,15 +328,21 @@ def _prepare(engine, run_id, result):
             raise ValidationError("Memory stage proposal count exceeded allowance")
         admitted = []
         for proposal in proposals:
-            validated = policy.admission.validate(proposal, copy.deepcopy(source))
+            try:
+                validated = policy.admission.validate(proposal, copy.deepcopy(source))
+            finally:
+                _check_actual(engine, policy, record)
             if type(validated) is not FactProposal:
                 if inspect.iscoroutine(validated) or inspect.isgenerator(validated):
                     validated.close()
                 raise ValidationError("Memory admission requires a concrete grounded FactProposal")
             # Re-run the base allowlist, independent of a custom validator implementation.
             admitted.append(_validate_grounded(policy, validated, source).to_dict())
+        if "selection" in record and [p["key"] for p in admitted] != record["selection"]["keys"]:
+            raise ValidationError("Grounded proposal differs from adopted model field selection")
         if len({p["key"] for p in admitted}) != len(admitted):
             raise ValidationError("Memory stage contains duplicate logical keys")
+        _check_actual(engine, policy, record)
         _check(engine, run_id, record)
         facts = []
         for proposal in admitted:
@@ -344,8 +414,15 @@ async def _inspect(engine, run_id, record, fact):
             or found.get("expires_at") != fact["expires_at"]
         ):
             raise DefinitionMismatch("Memory stage CAS receipt conflicts with its intent")
-        result = await memory_call(
-            policy.memory.validate_facts, engine.scope, policy.namespace, [found]
+        result = await _call_target(
+            engine,
+            run_id,
+            record,
+            policy,
+            policy.memory.validate_facts,
+            engine.scope,
+            policy.namespace,
+            [found],
         )
         _check(engine, run_id, record)
         if result is not None:
@@ -353,8 +430,15 @@ async def _inspect(engine, run_id, record, fact):
         return _receipt_data(record, fact)
 
     if record["policy"]["inspection"] == "exact-v1":
-        found = await memory_call(
-            policy.memory.inspect_fact, engine.scope, policy.namespace, fact["key"]
+        found = await _call_target(
+            engine,
+            run_id,
+            record,
+            policy,
+            policy.memory.inspect_fact,
+            engine.scope,
+            policy.namespace,
+            fact["key"],
         )
         _check(engine, run_id, record)
         return None if found is None else await verify(found)
@@ -362,7 +446,11 @@ async def _inspect(engine, run_id, record, fact):
     cursor, snapshot, seen = continuation.get("cursor"), continuation.get("snapshot"), set()
     for _ in range(32):
         try:
-            page = await memory_call(
+            page = await _call_target(
+                engine,
+                run_id,
+                record,
+                policy,
                 policy.memory.recall,
                 engine.scope,
                 policy.namespace,
@@ -452,7 +540,11 @@ async def _execute(engine, run_id, record, *, query_only):
             fact["status"] = "writing"
             _save(engine, run_id, record, "memory_fact_intent_recorded")
             try:
-                version = await memory_call(
+                version = await _call_target(
+                    engine,
+                    run_id,
+                    record,
+                    policy,
                     policy.memory.put_fact,
                     engine.scope,
                     policy.namespace,
@@ -509,6 +601,12 @@ async def _run(engine, run_id, record, *, query_only):
 async def finish_memory_stage(engine, run_id, result):
     record = _prepare(engine, run_id, result)
     if record is not None:
+        if "selection" in record:
+            from .memory_selection import select_memory
+
+            record = await select_memory(engine, run_id, record)
+            if record["selection"]["status"] != "completed":
+                return
         await _run(engine, run_id, record, query_only=False)
 
 
@@ -519,5 +617,15 @@ async def recover_terminal_memory(engine, run_id):
         if "memory_stage" in action and "source_digest" in action["memory_stage"]:
             if str(action["node"]) not in records:
                 raise DefinitionMismatch("Memory stage lost its mandatory journal")
+    validate_journal(engine, run)
     for record in records.values():
+        if "selection" in record:
+            from .memory_selection import recover_terminal
+
+            record = recover_terminal(engine, run_id, copy.deepcopy(record))
+            if (
+                record["status"] in {"failed", "completed", "skipped"}
+                or record["selection"]["status"] != "completed"
+            ):
+                continue
         await _run(engine, run_id, copy.deepcopy(record), query_only=True)

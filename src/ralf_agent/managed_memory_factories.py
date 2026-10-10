@@ -2,6 +2,7 @@
 
 from .errors import ValidationError
 from .managed_memory import ManagedMemoryPolicy
+from .managed_model_memory import ManagedModelMemoryPolicy
 from .memory import InMemoryMemory
 from .memory_extraction import MemoryAdmissionPolicy
 from .ports import is_async_callable
@@ -14,11 +15,22 @@ def register_memory_stages(registry):
     from .runtime_builder import _completed, _fields
 
     def prepare(config, *, asynchronous):
-        _fields(config, ADMISSION | {"namespace", "timeout", "memory"})
+        _fields(
+            config,
+            ADMISSION | {"namespace", "timeout", "memory", "mode", "provider", "max_context_chars"},
+        )
+        mode = config.get("mode", "rule")
+        if mode not in {"rule", "model"} or (
+            mode == "rule" and set(config) & {"provider", "max_context_chars"}
+        ):
+            raise ValidationError("Model-only memory selection settings require mode=model")
         admission = MemoryAdmissionPolicy(**{k: v for k, v in config.items() if k in ADMISSION})
         # Validate all declarations before authority/client construction.
-        ManagedMemoryPolicy(
+        policy_type = ManagedModelMemoryPolicy if mode == "model" else ManagedMemoryPolicy
+        options = {k: config[k] for k in ("provider", "max_context_chars") if k in config}
+        policy_type(
             InMemoryMemory(),
+            **options,
             admission=admission,
             namespace=config.get("namespace", "auto-memory"),
             timeout=config.get("timeout", 5),
@@ -33,8 +45,14 @@ def register_memory_stages(registry):
         return admission, target
 
     def stage(config, context, admission, memory):
-        return ManagedMemoryPolicy(
+        policy_type = (
+            ManagedModelMemoryPolicy
+            if config.get("mode", "rule") == "model"
+            else ManagedMemoryPolicy
+        )
+        return policy_type(
             memory,
+            **{k: config[k] for k in ("provider", "max_context_chars") if k in config},
             admission=admission,
             scope=context.scope,
             namespace=config.get("namespace", "auto-memory"),

@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.0.dev42 — Managed model memory selection
+
+- Add opt-in pure ManagedModelMemoryPolicy and existing JSON/TOML stage factories with explicit model mode.
+- Original authority persists selector request/response/keys/credits before grounded CAS writes; unknown calls hold credits without retries or rule fallback.
+- Preserve original business evidence, actual operation ownership and evidence-only terminal selection recovery; schema9 admission is atomic.
+- Default rules and schemas1–8 stay compatible; free-form, advanced/Temporal automatic stages and model quality remain pending.
+
 ## 0.1.0.dev41 — Managed context preparation
 
 - Add opt-in per-Agent pure ManagedContextPipeline and JSON/TOML managed-summary factories for Local native Agents/sequences.

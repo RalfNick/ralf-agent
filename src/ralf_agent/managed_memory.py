@@ -121,11 +121,19 @@ class ManagedMemoryPolicy:
         ]
 
 
-def stage_identity(stage, scope):
+def stage_identity(stage, scope, *, engine=None):
     if not isinstance(stage, ManagedMemoryPolicy):
         raise ValidationError("stage_policy must be a ManagedMemoryPolicy")
     stage.check(scope)
-    return stage.identity
+    identity = stage.identity
+    if "selection" in identity and engine is not None:
+        provider = engine.providers.get(stage.provider)
+        if provider is None:
+            raise DefinitionMismatch("The host memory selection provider is unavailable")
+        identity["selector_provider"] = engine._component_identity(
+            provider, ("complete",), False, "Memory selector"
+        )
+    return identity
 
 
 def _enabled(manifest):
@@ -153,4 +161,21 @@ def admit_stages(engine, manifest, kind, parent_call=None):
         raise ValidationError(
             "Managed memory requires independent synchronous reservation evidence"
         )
-    _invoke_sync_none(getattr(store, "prepare_managed_stages", None), "Managed stage activation")
+    from .binding_manifests import all_step_manifests
+
+    model = any(
+        "selection" in view.get("managed_memory", {}) for view in all_step_manifests(manifest)
+    )
+    if model:
+        if (
+            type(getattr(store, "model_memory_stage_version", None)) is not int
+            or store.model_memory_stage_version != 1
+        ):
+            raise ValidationError("Model memory requires its optional atomic Store extension")
+        _invoke_sync_none(
+            getattr(store, "prepare_model_memory_stages", None), "Model memory activation"
+        )
+    else:
+        _invoke_sync_none(
+            getattr(store, "prepare_managed_stages", None), "Managed stage activation"
+        )

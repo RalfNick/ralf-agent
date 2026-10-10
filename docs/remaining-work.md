@@ -1,8 +1,8 @@
-# dev41 剩余能力与架构验收清单
+# dev42 剩余能力与架构验收清单
 
-版本：15；日期：2026-10-09；维护者：RALF maintainers。
+版本：16；日期：2026-10-10；维护者：RALF maintainers。
 读者：框架维护者、应用开发者及适配器贡献者。基线：da55f97 的 dev30，
-以及已提交1cad308的dev31–36与已提交1f27300的dev37配置／首用及已提交e6a6de7的dev38远程原生／顺序及已提交9fcbb84的dev39复合根会话与已提交7898b78的dev40自动规则记忆及当前dev41受管理上下文阶段。
+以及已提交1cad308的dev31–36与已提交1f27300的dev37配置／首用及已提交e6a6de7的dev38远程原生／顺序及已提交9fcbb84的dev39复合根会话与已提交7898b78的dev40自动规则记忆及已提交0d17976的dev41受管理上下文及当前dev42模型选择记忆阶段。
 
 ## 1. 结论与判定方式
 
@@ -80,7 +80,7 @@ PG Knowledge/Inbox/Outbox、Qdrant、HTTP Embedding、Hybrid/RRF／基础重排�
 | R12 工具接入／工具包 | typed Python/Schema/默认参数、ToolRegistry、async ToolSource、MCP stdio、A2A ToolSource、授权／审批／核验 | MCP HTTP/持续 Session/OAuth；固定 executable/argv 的 CLI Runner；通用受控 HTTP 工具适配；搜索／文件／浏览器工具包与发现；有状态工具租约和停止证据 | H4：子集已交付 |
 | R13 Workspace/Skills/Sandbox/Runner | 可信 Python、MCP 受管理进程生命周期；Runner 目标契约 | Workspace／文件权限／资源租约；Skills 生命周期／能力注册／来源；容器／远端 Sandbox 文件、网络、进程和资源隔离；Coding Runner、Codex 首个适配及各外部 Runner 验收。普通子进程不是安全沙箱 | H4：目标能力未交付 |
 | R14 上下文 | ContextBuilder/Counter/Budgeter/Summarizer、完整工具组／近期召回／摘录、实际快照；显式独立模型摘要；Temporal 纯自定义 Context；Local 原生／顺序受管理规则／模型摘要 | 模型 tokenizer／输出预留；Session／RAG／高级／Temporal 自动压缩及大结果卸载；覆盖／来源失效策略和辅助失败恢复；不同模型长上下文事实保留实测。UTF-8 token 估算不是精确用量 | H3：确定性与显式路径已交付 |
-| R15 短期／长期记忆 | memory/SQLite/Redis/PG 的 sync/async、CAS/去重/TTL/分页/来源；opt-in MemoryPipeline 规则／模型字段选择；原生／顺序受管理规则阶段与 JSON／TOML 默认工厂 | Graph／Team／动态／Temporal 自动阶段及自动模型提炼；语义冲突／修订／撤回／遗忘／可信度策略和多事实原子采纳；最终 Session append 大历史效率；导出／迁移／保留；真实记忆利用。追加来源观察不是自主信念修订 | H3／H5：存储和显式提炼已交付 |
+| R15 短期／长期记忆 | memory/SQLite/Redis/PG 的 sync/async、CAS/去重/TTL/分页/来源；opt-in MemoryPipeline 规则／模型字段选择；原生／顺序受管理规则／模型字段选择阶段与 JSON／TOML 默认工厂 | Graph／Team／动态／Temporal 自动阶段及自由合成；语义冲突／修订／撤回／遗忘／可信度策略和多事实原子采纳；最终 Session append 大历史效率；导出／迁移／保留；真实记忆利用。追加来源观察不是自主信念修订 | H3／H5：存储和显式提炼已交付 |
 | R16 摄取／知识生命周期 | text/Markdown Parser、字符／段落 Chunker；memory/SQLite/PG 原子文档／块／词项／回执 | PDF/HTML/Office、网页／业务连接器及游标／增量；token/语义分块；来源目录／ACL；后台索引、修复、删除传播和版本重建。knowledge_committed 不代表向量就绪 | H3／H5：基础已交付 |
 | R17 检索／Embedding／向量／重排 | HTTP Embedding、Hash 基线、本地 cosine/Qdrant、词法／向量／Hybrid、RRF/保序/词项重排、来源回读 | 可配置语义 Embedding 推荐组合／可选本地模型；语义 Reranker/query transform；pgvector 参考适配及其他库逐项验收；索引发布／修复／迁移；端到端召回、答案和引用质量。Hash/TokenOverlap 不证明语义质量 | H3／G4：子集已交付，语义默认／质量未闭环 |
 | R18 Artifact／缓存 | Scope 隔离 memory/SQLite JSON 产物、摘要／TTL／读取限额／事务容量 | 自动卸载／预览；文件/S3 等远端 Artifact；引用保留／孤儿 GC／全局磁盘限额及恢复依赖；CacheStore/Policy 的键、版本和失效。默认关闭缓存合法；语义答案缓存后置 | H3／H5：显式产物已交付，缓存未交付 |
@@ -226,3 +226,11 @@ dev41 H3b1 接通原生／顺序同 Run 完整遗漏历史组的受管理规则�
 终态恢复不发起模型调用。新能力原子启用 schema8，默认身份与旧 schema 保持。
 Session／RAG 自动摘要、产物卸载、Graph／Team／动态／嵌套／Temporal 阶段、
 模型提炼、默认智能组合和真实质量门槛仍未完成。见[使用与边界](managed-context-stages.md)。
+
+
+dev42 H3a2 接通 Local 原生／顺序的自动模型字段选择，复用已有 stage_policy
+与 sourced-memory(-async) JSON／TOML 工厂。原 Run 保存选择请求／响应／字段和
+独立预算，未确认调用不重试、非法输出不写事实；已完成结果值由宿主取回。
+新语义9原子准入，默认与schema1–8保持。自由合成、语义修订、Session／RAG
+压缩、产物卸载、推荐默认组合、高级／Temporal阶段与完整H3仍待交付。
+见[接入与边界](managed-model-memory-stages.md)。

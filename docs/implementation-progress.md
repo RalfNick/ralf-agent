@@ -417,3 +417,27 @@ changes or paid model calls. Full H3, automatic Session/RAG compression, artifac
 offloading, model extraction and advanced/Temporal stages remain open. See
 [guide](managed-context-stages.md), [review/evidence](../architecture/reviews/2026-10-09-managed-context-preparation.md)
 and [remaining work](remaining-work.md).
+
+## 2026-10-10 — dev42 managed model-selected memory / H3a2
+
+Opt-in ManagedModelMemoryPolicy adds pure request/select hooks over completed native/
+sequence result fields. Host values remain grounded; original memory_stages journal
+request/dispatch/response/keys, independent Action markers and one original selector
+credit. Empty selection completes without facts; unknown holds without retry/fallback.
+Existing CAS evidence, per-Agent grants and JSON/TOML sourced-memory(-async) factories
+remain the authority. Semantic9 first admission is atomic; defaults stay disabled.
+
+One fresh reviewer found four Important: dispatch proof, actual policy/target method
+drift hidden by replacement, expiry after validation and ordinary preparation failures.
+One RED→GREEN pass includes actual Scope drift and persistence failure isolation;
+150 focused regressions pass, no deferred minors or second review. Final frozen suite
+2738 passed/66 configured-service skips379.10s; actual installed contracts206 passed.
+Actual dev41/dev42 wheel defaults11 definitions recover both ways with original receipts/
+release and11 unique effects each. Old schema2–7 Sessions and schema8 saved summaries
+recover; four schema9 selector/CAS windows retain source/receipts without paid replay,
+and old41 refuses9 in both modes.161 source/wheel/sdist/installed modules match, original
+296 exports retained plus one,21 starter trees and dependencies unchanged. No paid model
+or remote push/publication. Free-form/advanced/Temporal stages, Session/RAG compression,
+semantic revision, default intelligent presets and full H3 remain open. See
+[guide](managed-model-memory-stages.md),
+[review and all rulings](../architecture/reviews/2026-10-10-managed-model-memory.md).

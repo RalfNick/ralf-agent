@@ -510,7 +510,7 @@ class LocalEngine:
         if stage is not None:
             from .managed_memory import stage_identity
 
-            manifest["managed_memory"] = stage_identity(stage, self.scope)
+            manifest["managed_memory"] = stage_identity(stage, self.scope, engine=self)
         from .agent_limits import limit_manifest
 
         caps = limit_manifest(self, steps, None if components is None else components.limits)
