@@ -6,6 +6,7 @@ import json
 import os
 from dataclasses import asdict
 from pathlib import Path
+from types import MappingProxyType
 
 from .context import ContextAssembler
 from .engine import LocalEngine
@@ -563,6 +564,9 @@ class RuntimeBuilder:
     def _prepare(self, profile, db_path, scope):
         if not isinstance(profile, RuntimeProfile):
             raise ValidationError("Build a RuntimeProfile")
+        from .query_factories import preflight_query_providers
+
+        preflight_query_providers(profile)
         scope = Scope() if scope is None else scope
         if not isinstance(scope, Scope):
             raise ValidationError("Runtime scope must be supplied by a trusted host")
@@ -615,6 +619,7 @@ class RuntimeBuilder:
             built_providers = {name: construct(prepared) for name, prepared in providers.items()}
             for provider in built_providers.values():
                 LocalEngine._component_identity(provider, ("complete",), False, "Provider")
+            context.providers = MappingProxyType(built_providers)
             context.tools = (
                 construct(components.pop("tools")) if "tools" in components else ToolRegistry()
             )
@@ -679,6 +684,7 @@ class RuntimeBuilder:
             }
             for provider in built_providers.values():
                 LocalEngine._component_identity(provider, ("complete",), False, "Provider")
+            context.providers = MappingProxyType(built_providers)
             context.tools = (
                 await construct(components.pop("tools"))
                 if "tools" in components

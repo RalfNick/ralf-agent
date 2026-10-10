@@ -65,6 +65,11 @@ class SemanticMemoryStore:
             raise ValidationError("Semantic threshold must be finite in[-1,1]")
         self.backend, self.embedding = backend, embedding
         self.transform = IdentityQueryTransform() if transform is None else transform
+        from .model_query import ModelQueryTransform
+
+        model_first = isinstance(self.transform, ModelQueryTransform)
+        if model_first:
+            self.recall = self._query_first_recall
         self._source = _FactsPort(backend)
         methods = ["recall", "validate_facts"]
         methods.extend(
@@ -89,7 +94,9 @@ class SemanticMemoryStore:
                 max_candidates=max_candidates,
                 max_candidate_chars=max_candidate_chars,
                 min_score=float(min_score),
-                candidate_policy="bounded-native-window-v1",
+                candidate_policy=(
+                    "query-first-native-window-v1" if model_first else "bounded-native-window-v1"
+                ),
                 components={k: v[1] for k, v in self._ports.items()},
                 implementation={
                     k: digest(_callable_identity(getattr(self, k))) for k in self._hooks
@@ -191,6 +198,102 @@ class SemanticMemoryStore:
             return RecallPage([], None, 2, page.scanned, page.scanned, page.snapshot_id, True)
         queries = query_proposal(await _invoke(self._ports["transform"], "transform", query.text))
         self._check()
+        texts = [*queries, *(_fact_text(item) for item in items)]
+        if (
+            len(texts) * config["dimensions"] > 4000000
+            or sum(map(len, texts)) > 262144
+            or any(len(t) > 32768 for t in texts)
+        ):
+            raise ValidationError("Semantic embedding input exceeds finite volume bounds")
+        try:
+            for text in texts:
+                text.encode("utf-8")
+        except UnicodeError:
+            raise ValidationError("Semantic input requires valid Unicode scalars") from None
+        await self.validate_facts(scope, namespace, items)
+        original = digest(texts)
+        vectors = await _invoke(self._ports["embedding"], "embed", texts)
+        self._check()
+        if (
+            digest(texts) != original
+            or not isinstance(vectors, (list, tuple))
+            or len(vectors) != len(texts)
+        ):
+            _lazy(vectors)
+            raise ValidationError("Semantic embedding changed inputs or returned wrong count")
+        units = [_unit(v, config["dimensions"]) for v in vectors]
+        await self.validate_facts(scope, namespace, items)
+        query_units = units[: len(queries)]
+        scores = [
+            max(
+                max(-1.0, min(1.0, sum(a * b for a, b in zip(q, v, strict=True))))
+                for q in query_units
+            )
+            for v in units[len(queries) :]
+        ]
+        selected = []
+        for index in sorted(range(len(items)), key=lambda i: (-scores[i], i)):
+            if scores[index] < config["min_score"]:
+                continue
+            if len(selected) >= query.max_items:
+                break
+            if len(canonical([*selected, items[index]])) <= query.max_chars:
+                selected.append(copy.deepcopy(items[index]))
+        self._expiry(selected)
+        snapshot = canonical(
+            {
+                "source": page.snapshot_id,
+                "query": digest(query.text),
+                "release": digest(config),
+                "candidates": digest(items),
+            }
+        )
+        return RecallPage(
+            selected,
+            None,
+            len(canonical(selected)),
+            page.scanned,
+            page.scanned - len(selected),
+            snapshot,
+            True,
+        )
+
+    # Separate opt-in implementation keeps existing recorded default releases replayable.
+    async def _query_first_recall(self, scope, namespace, query):
+        _scope(scope, namespace)
+        if not isinstance(query, RecallQuery) or query.cursor is not None:
+            raise ValidationError(
+                "Semantic recall requires a single candidate window, without cursor"
+            )
+        query = RecallQuery(**asdict(query))
+        query_text(query.text)
+        config = self.identity
+        queries = query_proposal(await _invoke(self._ports["transform"], "transform", query.text))
+        self._check()
+        limit = min(query.scan_limit, config["max_candidates"])
+        page = await _invoke(
+            self._ports["source"],
+            "recall",
+            scope,
+            namespace,
+            RecallQuery(max_items=limit, scan_limit=limit, max_chars=config["max_candidate_chars"]),
+        )
+        self._check()
+        if not isinstance(page, RecallPage):
+            _lazy(page)
+            raise ValidationError("Semantic source must return completed RecallPage")
+        page = RecallPage(**asdict(page))
+        if (
+            len(page.items) > limit
+            or page.scanned > limit
+            or page.used_chars > config["max_candidate_chars"]
+            or not page.backend_bounded
+        ):
+            raise ValidationError("Semantic source exceeded native candidate bounds")
+        items = _fact_inputs(scope, namespace, page.items)
+        await self.validate_facts(scope, namespace, items)
+        if not items:
+            return RecallPage([], None, 2, page.scanned, page.scanned, page.snapshot_id, True)
         texts = [*queries, *(_fact_text(item) for item in items)]
         if (
             len(texts) * config["dimensions"] > 4000000

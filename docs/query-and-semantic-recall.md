@@ -37,7 +37,7 @@ query_transform = {"type": "aliases", "config": {"aliases": {"car": "automobile"
 
 现有 Hybrid 工厂同步／异步模式保持；离线词法组合可选择 `sqlite-lexical-query`，配置字段与
 `sqlite-lexical` 一致，并增加上述 `query_transform`。SDK 可以替换为自定义 sync/async 端口；
-JSON／TOML 内置声明支持 `identity`／`aliases`，其他类型由应用自定义工厂装配。
+JSON／TOML 内置声明支持 `identity`／`aliases`；dev50 增加显式 `model`，见[模型查询改写](model-query-transform.md)。其他类型由应用自定义工厂装配。
 
 ## 语义长期记忆召回
 
@@ -80,7 +80,7 @@ Hash 仅是显式离线基线，新的语义 Profile／工厂拒绝 Hash 自动�
 默认最多256候选、64000候选字符，最多262144配置上限；单 Embedding 文本32768字符、
 总文本262144字符、向量值总数400万。完整输入／Unicode先校验再调用服务。
 源数据在改写后、Embedding后和原模型披露前复核；TTL还独立验证。
-空候选不调用 transform 或 Embedding；失败不回退词项匹配。
+确定性／自定义旧路径空候选不调用 transform 或 Embedding；dev50 原生 ModelQueryTransform 先校验提案再读取候选，空候选仍调用改写模型，但不调用 Embedding。失败不回退词项匹配。
 `min_score` 可设[-1,1]，默认-1保留候选；分数不是事实可信度。
 
 **这是候选窗口内的语义排序，不是全库向量索引。** 窗口之外的相关事实可能漏召回，`next_cursor=None`

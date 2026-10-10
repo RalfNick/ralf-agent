@@ -1,6 +1,8 @@
 import asyncio
 from dataclasses import asdict
 
+import pytest
+
 from ralf_agent import (
     AgentSpec,
     AliasQueryTransform,
@@ -8,6 +10,7 @@ from ralf_agent import (
     InMemoryKnowledgeStore,
     KnowledgeContext,
     LexicalRetriever,
+    ModelQueryTransform,
     ModelResponse,
     QueryTransformRetriever,
     Scope,
@@ -18,7 +21,8 @@ from ralf_agent.temporal_state import TemporalRunState
 from ralf_agent.types import submission_request
 
 
-def test_query_transform_uses_original_temporal_context_history_snapshot():
+@pytest.mark.parametrize("kind", ["aliases", "model"])
+def test_query_transform_uses_original_temporal_context_history_snapshot(kind):
     async def run():
         store = InMemoryKnowledgeStore()
         store.put(Scope(), "docs", Document("guide", "automobile"), expected_version=0)
@@ -37,7 +41,21 @@ def test_query_transform_uses_original_temporal_context_history_snapshot():
                 self.calls += 1
                 return super().transform(text)
 
-        transform = Transform({"car": "automobile"})
+        class QueryProvider:
+            identity = {"kind": "query-history-transform", "version": "1"}
+            calls = 0
+
+            async def complete(self, messages, tools):
+                self.calls += 1
+                assert not tools
+                return ModelResponse(output={"queries": ["automobile"]})
+
+        query_provider = QueryProvider()
+        transform = (
+            Transform({"car": "automobile"})
+            if kind == "aliases"
+            else ModelQueryTransform(query_provider)
+        )
         knowledge = KnowledgeContext(
             QueryTransformRetriever(LexicalRetriever(store), transform),
             namespace="docs",
@@ -68,6 +86,6 @@ def test_query_transform_uses_original_temporal_context_history_snapshot():
         assert action["kind"] == "model"
         restored.accept_model(action["id"], await runtime.complete_model(request))
         assert restored.state == "succeeded"
-        assert transform.calls == 1
+        assert (transform.calls if kind == "aliases" else query_provider.calls) == 1
 
     asyncio.run(run())

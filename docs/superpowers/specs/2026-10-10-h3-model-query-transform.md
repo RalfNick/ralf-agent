@@ -1,0 +1,21 @@
+# H3 model query transformation
+
+Baseline017db85/dev49. User authorizes continuous capability development, local commits and no push. Complete the existing R17 default adapter gap: opt-in model query transformation through the existing ModelProvider, with Knowledge/Facts configuration and original snapshot recovery. This is one subproject in the remaining H1–H5/R01–R26 roadmap; no claim that all framework capabilities are complete.
+
+## Choices and boundaries
+
+Prefer borrowing a named already-built provider over SDK-only wiring (poor configuration experience) or a separate new HTTP model stack (duplicate protocol/lifecycle). ModelQueryTransform(provider, *, max_queries=2, include_original=True, instructions="") implements AsyncQueryTransform. max_queries is an exact integer1..4; include_original is boolean, and include_original=True requires max_queries<=3. Additional instructions<=4096 valid Unicode characters. Query input follows the existing4096-character contract. Provider.complete receives only a system search-query instruction and a user JSON object containing query, with tools=[]; no source bodies/credential/tool execution. Completed async ModelProvider only, fixed declared identity and actual object/method bindings before and after await; detached message/tools arguments may not be modified.
+
+Require ModelResponse without tool calls. Its output is a JSON object or strict JSON string with exactly queries:list[str],1..max_queries. Reject duplicate/blank/oversized/non-Unicode queries, unknown fields, duplicate JSON keys, refusal/empty/lazy/wrong response and tool calls. Raw JSON text<=32768 chars; object canonical representation also<=32768 chars; final original+rewrites obey existing1..4 query and16384-character bounds. Preserve original exact input by default, deduplicating its one occurrence in model output only. No retry, lexical fallback, prompt caching or default activation. Borrowed provider is not closed by transform.
+
+## Configuration and compatibility
+
+query_transform={type:"model",config:{provider:"query",max_queries:2,include_original:true,instructions:""}} reuses a Profile provider alias. BuildContext exposes built providers to factories after original provider validation. Missing model alias in supported built-in Knowledge/Facts/root binding declarations fails in RuntimeBuilder preflight before storage creation. Do not interpret unrelated custom-adapter config. Model remains opt-in; existing default transforms, old eight Profile declarations and absent-option component identities stay unchanged.
+
+Split pure declaration validation from construction: query_transform_config validates model options without resolving resources; configured_query_transform(...,context=...) resolves a fixed provider. Existing lexical/Hybrid and semantic Facts factories use context at construction, original ownership ledger closes providers exactly as before. JSON/TOML and per-Agent Knowledge/Facts wrappers compose; no new component role, schema or execution authority. SDK can inject any compliant ModelProvider independently of Profile.
+
+## Recovery and acceptance
+
+Local Run/Temporal History persist already accepted references/model responses. A crash after model_response_recorded followed by approval recovery must not repeat same-Action model transform, embedding or business decision; next Action prepares independently. Preparation before acceptance may repeat paid model/embedding requests; execution credits do not cover these fees and there is no currency ceiling or exactly-once paid preparation. Temporal acceptance covers transformed Knowledge only, not Facts recall, shared Sessions or new Worker protocols. Live query relevance/citation/answer quality still requires separate evaluation.
+
+TDD covers real lexical/fact consumer selection, strict output/limits/tool refusal, input mutation, provider/config/method drift, cancellation propagation, preflight alias failure, owned/borrowed cleanup, JSON/TOML, scoped bindings, localhost native HTTP and actual process death, Temporal snapshot replay. Full source suite, package/source equality, installed tests and dev49↔50 exact old default/approval identities. One fresh final review, Important RED→GREEN fix pass, accurate capability docs, local commit only.

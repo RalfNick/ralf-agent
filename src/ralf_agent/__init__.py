@@ -126,6 +126,7 @@ from .model_compatibility import evaluate_model_compatibility
 from .model_context import FrozenContextSummarizer, ManagedModelSummarizer, ManagedSummary
 from .model_native import AnthropicProvider, GeminiProvider
 from .model_protocol import ModelCapabilities, ModelStreamEvent, StreamingModelProvider
+from .model_query import ModelQueryTransform
 from .model_responses import OpenAIResponsesProvider
 from .orchestration_types import (
     AgentCaller,
@@ -293,7 +294,7 @@ from .workflow import (
     WorkflowSelection,
 )
 
-__version__ = "0.1.0.dev49"
+__version__ = "0.1.0.dev50"
 __all__ = [
     "EventCursor",
     "EventEnvelope",
@@ -575,6 +576,7 @@ __all__ += [
     "recommended_profile",
     "recommended_harness",
     "ReferenceSelector",
+    "ModelQueryTransform",
     "QueryTransform",
     "AsyncQueryTransform",
     "IdentityQueryTransform",

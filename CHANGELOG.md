@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.0.dev50 — Opt-in model query transformation
+
+- Add ModelQueryTransform over borrowed completed async ModelProvider with bounded strict JSON proposals, original-query preservation, no tools and fixed provider/input contracts.
+- Add explicit named-provider Knowledge/Facts declarations, JSON/TOML and scoped binding preflight; preserve original eight defaults, provider ownership and execution authorities.
+- Cover native HTTP, actual process restart and Temporal accepted Knowledge snapshot reuse. Preparation before acceptance may repeat; automatic query policy, Temporal Facts and real quality remain open.
+
 ## 0.1.0.dev49 — Query transformation and semantic Facts recall
 
 - Add completed sync/async QueryTransform, deterministic identity/literal-alias defaults and bounded multiquery Retriever composition with original-source validation.

@@ -441,3 +441,18 @@ or remote push/publication. Free-form/advanced/Temporal stages, Session/RAG comp
 semantic revision, default intelligent presets and full H3 remain open. See
 [guide](managed-model-memory-stages.md),
 [review and all rulings](../architecture/reviews/2026-10-10-managed-model-memory.md).
+
+
+## 2026-10-10 — dev50 opt-in model query transformation / H3 R17
+
+ModelQueryTransform borrows a fixed completed async ModelProvider and returns strict
+bounded tool-free query proposals, preserving the original query by default. Native
+Knowledge/Local semantic Facts factories resolve named Profile providers; JSON/TOML,
+scoped resources and before-database alias validation reuse original assembly and ownership.
+Original eight defaults and Run/History authorities remain. Final3168 passed/92 configured-service skips529.76s; installed64 contracts,187
+source/wheel/sdist/installed modules byte-identical. Old8 Profiles recover both directions:
+12 approval runs each one effect,4 semantic identity-only; old49 rejects3 new model
+declarations before DB. One Important Facts ordering finding fixed in one12-case
+RED→GREEN pass,96 focused regressions; no deferred minors. Evidence
+in [review/evidence](../architecture/reviews/2026-10-10-model-query-transform.md).
+Preparation before acceptance may repeat paid calls; Temporal Facts and real quality remain open.

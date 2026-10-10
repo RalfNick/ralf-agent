@@ -1,9 +1,10 @@
 # Ralf-Agent
 
-当前工作区 **0.1.0.dev49** 提供显式语义知识库、相关事实召回和 Plan／Team 默认组合，
+当前工作区 **0.1.0.dev50** 提供显式语义知识库、相关事实召回和 Plan／Team 默认组合，
 复用原执行、审批和恢复协议。见[H3 使用与扩展指南](docs/h3-intelligent-combinations.md)。
 dev48 增加[显式 HTTP 语义重排](docs/http-reranking.md)，保留原知识来源及旧默认配置。
-dev49 增加[Query transform 与语义 Facts 召回](docs/query-and-semantic-recall.md)，支持显式语义记忆组合及保留语义顺序的上下文。候选窗口外事实、模型改写默认适配和真实质量仍待完善。
+dev49 增加[Query transform 与语义 Facts 召回](docs/query-and-semantic-recall.md)，支持显式语义记忆组合及保留语义顺序的上下文。候选窗口外事实和真实质量仍待完善。
+dev50 增加[显式模型查询改写](docs/model-query-transform.md)，借用已配置 Provider，支持知识检索及 Local 语义 Facts；默认保留原查询，自动查询策略与完整质量仍待验收。
 Local 十类及 Temporal 五类每 Agent 绑定、自动上下文与来源化记忆已接通；完整 H3、
 真实模型质量、H4 执行环境和 H5 企业治理仍待验收。当前适合开发者试点。
 

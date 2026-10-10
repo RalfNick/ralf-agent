@@ -5,7 +5,7 @@ import math
 from .errors import ValidationError
 from .knowledge_factories import embedding_options
 from .ports import is_async_callable
-from .query_factories import configured_query_transform
+from .query_factories import configured_query_transform, query_transform_config
 from .recall import _integer
 from .remote_factories import _env
 from .retrieval import _text
@@ -53,7 +53,7 @@ def register_semantic_memory(registry):
             **options,
             "api_key": _env(values, "api_key_env") if "api_key_env" in values else None,
         }
-        transform = configured_query_transform(config.get("query_transform"))
+        transform = query_transform_config(config.get("query_transform"))
         _integer(config.get("max_candidates", 256), "Semantic candidate limit", 1, 256)
         _integer(config.get("max_candidate_chars", 64000), "Semantic candidate chars", 2, 262144)
         score = config.get("min_score", -1)
@@ -62,7 +62,8 @@ def register_semantic_memory(registry):
         return registry.prepare("memory_store", backend), options, transform
 
     async def build(config, context):
-        (factory, values), options, transform = prepare(config)
+        (factory, values), options, declaration = prepare(config)
+        transform = configured_query_transform(declaration, context=context)
         backend = (
             await factory(values, context)
             if is_async_callable(factory)

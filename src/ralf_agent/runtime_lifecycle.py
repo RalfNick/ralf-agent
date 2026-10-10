@@ -4,6 +4,7 @@ import asyncio
 from dataclasses import dataclass
 from functools import wraps
 from pathlib import Path
+from types import MappingProxyType
 
 from .errors import ValidationError
 from .ports import _complete_sync_none, _invoke_sync_none, is_async_callable, is_sync_callable
@@ -30,6 +31,7 @@ class BuildContext:
         self.store, self.db_path, self.scope = store, str(db_path), scope
         self.base_dir = Path(base_dir).resolve()
         self.tools = None
+        self.providers = MappingProxyType({})
         self._resources = []
         self._allow_async = allow_async
         self._loop = None

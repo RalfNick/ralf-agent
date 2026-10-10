@@ -246,3 +246,6 @@ Realtime、TTS 等高级多模态，以及公网持续群聊在当前正式版�
 [组件设计草案](intelligent-data-pipeline.md)把 Parser／Chunker、语义 Embedding／混合重排、上下文预算／卸载、摘要／长期记忆提炼与业务 Verifier 的端口、默认实现、恢复及验收要求集中说明。D1 的独立 Parser／Chunker／原子摄取已实现；D2 的协议／Hybrid／融合重排已实现，真实语义质量及 D3–D4 尚未验收，当前交付能力仍以实现清单为准。
 
 Dev49 [Query transform／语义 Facts 召回](../../docs/query-and-semantic-recall.md)沿原检索与记忆端口组合，确定性默认和语义有序上下文均可替换；来源与已接受的引用快照仍由原权威管理。语义召回限候选窗口，Temporal仅 Query Knowledge 端口；不增加持久向量／自由记忆修订或第三套运行状态机。
+
+
+Dev50 [ModelQueryTransform](../../docs/model-query-transform.md)以已有 ModelProvider 提出有界搜索词，原 Retriever／Facts 后端接受并验证来源；JSON/TOML 显式命名模型、借用生命周期与每 Agent 数据绑定复用原装配。默认不开启收费改写；已接受 Run/History 快照可恢复，接受前准备仍可能重复。自动策略、全库索引和真实质量未完成。
