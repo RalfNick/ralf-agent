@@ -441,6 +441,11 @@ class ComponentRegistry:
         from .relevant_context_factories import register_relevant_context
 
         register_relevant_context(self)
+        from .query_factories import register_query_knowledge
+        from .semantic_memory_factories import register_semantic_memory
+
+        register_query_knowledge(self)
+        register_semantic_memory(self)
 
     def register(self, kind, name, factory, *, validator=None):
         self._register(kind, name, factory, validator, asynchronous=False)

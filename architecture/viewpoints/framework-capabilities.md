@@ -244,3 +244,5 @@ Realtime、TTS 等高级多模态，以及公网持续群聊在当前正式版�
 ## 智能数据链路的下一轮设计
 
 [组件设计草案](intelligent-data-pipeline.md)把 Parser／Chunker、语义 Embedding／混合重排、上下文预算／卸载、摘要／长期记忆提炼与业务 Verifier 的端口、默认实现、恢复及验收要求集中说明。D1 的独立 Parser／Chunker／原子摄取已实现；D2 的协议／Hybrid／融合重排已实现，真实语义质量及 D3–D4 尚未验收，当前交付能力仍以实现清单为准。
+
+Dev49 [Query transform／语义 Facts 召回](../../docs/query-and-semantic-recall.md)沿原检索与记忆端口组合，确定性默认和语义有序上下文均可替换；来源与已接受的引用快照仍由原权威管理。语义召回限候选窗口，Temporal仅 Query Knowledge 端口；不增加持久向量／自由记忆修订或第三套运行状态机。

@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.0.dev49 — Query transformation and semantic Facts recall
+
+- Add completed sync/async QueryTransform, deterministic identity/literal-alias defaults and bounded multiquery Retriever composition with original-source validation.
+- Add borrowed SemanticMemoryStore over native bounded Facts: explicit embeddings, finite cosine/dimensions/volume, stable source ordering, unchanged CAS/version/TTL and task-text recall planner.
+- Add semantic-memory async Profile and ordered pure reference selector; explicit Hybrid/lexical query declarations, JSON/TOML and original-ledger owned HTTP lifecycle. Old seven declarations/classes remain.
+- Cover real localhost embeddings, scoped Graph Facts, original Temporal Query Knowledge replay and process-death model-response/approval snapshot reuse. No corpus-wide index, built-in generative rewrite, Temporal semantic Facts or live-quality claim.
+
 ## 0.1.0.dev48 — Explicit HTTP reranking
 
 - Add HTTPReranker through existing AsyncReranker, detached original-ID/score/search-unit reports and bounded indexed-results HTTP; explicit model/endpoint, no redirects, retries, downloads or bootstrap calls.

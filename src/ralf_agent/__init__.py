@@ -169,6 +169,13 @@ from .postgres import PostgresKnowledgeStore, PostgresMemory
 from .postgres_handoff import PostgresInbox, PostgresOutbox
 from .providers import DeepSeekChatProvider, ModelProvider, OpenAIChatProvider
 from .qdrant import QdrantVectorIndex
+from .query_retrieval import QueryTransformRetriever
+from .query_transform import (
+    AliasQueryTransform,
+    AsyncQueryTransform,
+    IdentityQueryTransform,
+    QueryTransform,
+)
 from .recall import (
     AsyncFactReferenceValidator,
     AsyncPaginatedSessionStore,
@@ -226,6 +233,9 @@ from .runtime_builder import (
 )
 from .runtime_config import RuntimeCatalog, RuntimeProfile, load_catalog, load_spec
 from .runtime_router import CommandReceiptReader, ProfiledEngine, RunReader, SQLiteRunReader
+from .semantic_memory import SemanticMemoryStore
+from .semantic_recall import TaskRecallPlanner
+from .semantic_selection import OrderedReferenceSelector
 from .service_lifecycle import LocalA2AService
 from .session_ports import SessionAdmissionStore
 from .session_types import SessionKey, SessionRef, SessionSnapshot, TurnAdmission
@@ -283,7 +293,7 @@ from .workflow import (
     WorkflowSelection,
 )
 
-__version__ = "0.1.0.dev48"
+__version__ = "0.1.0.dev49"
 __all__ = [
     "EventCursor",
     "EventEnvelope",
@@ -565,6 +575,14 @@ __all__ += [
     "recommended_profile",
     "recommended_harness",
     "ReferenceSelector",
+    "QueryTransform",
+    "AsyncQueryTransform",
+    "IdentityQueryTransform",
+    "AliasQueryTransform",
+    "QueryTransformRetriever",
+    "SemanticMemoryStore",
+    "TaskRecallPlanner",
+    "OrderedReferenceSelector",
     "HTTPReranker",
     "RerankResponse",
     "OverlapReferenceSelector",

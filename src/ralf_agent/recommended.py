@@ -18,6 +18,7 @@ def recommended_profile(
     embedding=None,
     knowledge_namespace="default",
     reranker=None,
+    query_transform=None,
 ):
     """Return an editable-by-replacement Profile, not a new runtime authority.
 
@@ -31,6 +32,7 @@ def recommended_profile(
         "managed-memory",
         "semantic-knowledge",
         "memory-recall",
+        "semantic-memory",
         "plan-and-execute",
         "team",
     }:
@@ -42,9 +44,15 @@ def recommended_profile(
         "recall_policy": {"adapter": "bounded-recall"},
         "verifier": {"adapter": "schema"},
     }
-    if kind in {"semantic-knowledge", "memory-recall", "plan-and-execute", "team"}:
+    if kind in {
+        "semantic-knowledge",
+        "memory-recall",
+        "semantic-memory",
+        "plan-and-execute",
+        "team",
+    }:
         defaults["context_assembler"] = {"adapter": "relevant-data"}
-    if kind == "semantic-knowledge":
+    if kind in {"semantic-knowledge", "semantic-memory"}:
         if (
             not isinstance(embedding, dict)
             or set(embedding) != {"type", "config"}
@@ -53,30 +61,53 @@ def recommended_profile(
             or not {"model", "dimensions"} <= set(embedding["config"])
         ):
             raise ValidationError(
-                "Semantic knowledge requires explicit HTTP embedding model/dimensions"
+                "Semantic combination requires explicit HTTP embedding model/dimensions"
             )
         if not isinstance(knowledge_namespace, str) or not knowledge_namespace.strip():
             raise ValidationError("Knowledge namespace must be non-empty text")
-        defaults["knowledge"] = {
-            "adapter": "sqlite-hybrid-http",
-            "config": {
-                "namespace": knowledge_namespace,
-                "embedding": copy.deepcopy(embedding),
-                "failure_policy": "strict",
-                "reranker": "preserve-order" if reranker is None else copy.deepcopy(reranker),
-            },
-        }
+        if kind == "semantic-memory":
+            defaults["context_assembler"]["config"] = {"selector": {"adapter": "ordered"}}
+            defaults.pop("recall_policy")
+            defaults["recall_planner"] = {"adapter": "task-text"}
+            defaults["memory_store"] = {
+                "adapter": "semantic-recall-async",
+                "config": {
+                    "backend": {"adapter": "sqlite"},
+                    "embedding": copy.deepcopy(embedding),
+                    **(
+                        {"query_transform": copy.deepcopy(query_transform)}
+                        if query_transform is not None
+                        else {}
+                    ),
+                },
+            }
+        else:
+            defaults["knowledge"] = {
+                "adapter": "sqlite-hybrid-http",
+                "config": {
+                    "namespace": knowledge_namespace,
+                    "embedding": copy.deepcopy(embedding),
+                    "failure_policy": "strict",
+                    "reranker": "preserve-order" if reranker is None else copy.deepcopy(reranker),
+                },
+            }
+            if query_transform is not None:
+                defaults["knowledge"]["config"]["query_transform"] = copy.deepcopy(query_transform)
     elif embedding is not None:
         raise ValidationError("Embedding configuration requires semantic-knowledge")
     if reranker is not None and kind != "semantic-knowledge":
         raise ValidationError(
             "Reranker option requires semantic-knowledge or explicit knowledge component"
         )
+    if query_transform is not None and kind not in {"semantic-knowledge", "semantic-memory"}:
+        raise ValidationError(
+            "Query transform option requires a semantic combination or explicit knowledge component"
+        )
     if kind == "plan-and-execute":
         defaults["planners"] = {"adapter": "model"}
     if kind == "local-knowledge":
         defaults["knowledge"] = {"adapter": "sqlite-lexical"}
-    if kind in {"managed-memory", "memory-recall"}:
+    if kind in {"managed-memory", "memory-recall", "semantic-memory"}:
         defaults["stage_policy"] = {
             "adapter": "sourced-memory",
             "config": {"namespace": agent_name, "fields": {"result": ["result"]}},

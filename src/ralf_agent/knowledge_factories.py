@@ -31,6 +31,7 @@ _COMMON = {
     "failure_policy",
     "reranker",
     "fusion",
+    "query_transform",
 }
 _HTTP = {
     "model",
@@ -145,6 +146,10 @@ def hybrid_config(config, *, remote=False, http=False, rerank_http=False):
     if not remote and (kind == "openai") != http:
         raise ValidationError("Select explicit async HTTP or offline hash assembly")
     hybrid_options(config)
+    if "query_transform" in config:
+        from .query_factories import configured_query_transform
+
+        configured_query_transform(config["query_transform"])
     rank_kind, _ = reranker_options(config.get("reranker", "preserve-order"))
     if rank_kind == "http" and not (remote or http or rerank_http):
         raise ValidationError("HTTP reranker requires explicit async knowledge assembly")
@@ -196,6 +201,10 @@ def _context(config, store, index, embedding, context):
             config, reranker=configured_reranker(config.get("reranker", "preserve-order"), context)
         ),
     )
+    if "query_transform" in config:
+        from .query_factories import transformed_retriever
+
+        retriever = transformed_retriever(retriever, config["query_transform"])
     return KnowledgeContext(
         retriever,
         namespace=config.get("namespace", "default"),

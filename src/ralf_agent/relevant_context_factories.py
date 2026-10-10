@@ -6,6 +6,7 @@ from .ports import is_async_callable
 from .reference_selection import OverlapReferenceSelector
 from .relevant_context import RelevantDataContext
 from .runtime_config import component_declaration
+from .semantic_selection import OrderedReferenceSelector
 
 
 def register_relevant_context(registry):
@@ -20,6 +21,17 @@ def register_relevant_context(registry):
         "overlap",
         lambda c, ctx: OverlapReferenceSelector(**c),
         validator=selector_config,
+    )
+
+    def ordered_config(config):
+        _fields(config, {"max_references"})
+        OrderedReferenceSelector(**config)
+
+    registry.register(
+        "reference_selector",
+        "ordered",
+        lambda c, ctx: OrderedReferenceSelector(**c),
+        validator=ordered_config,
     )
 
     def prepare(config, asynchronous):
