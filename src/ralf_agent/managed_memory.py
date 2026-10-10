@@ -147,11 +147,21 @@ def _enabled(manifest):
 def admit_stages(engine, manifest, kind, parent_call=None):
     if not _enabled(manifest):
         return
-    if kind not in {"agent", "sequence"} or parent_call is not None:
-        raise ValidationError("Managed memory stages currently support native Agents and sequences")
+    if kind not in {"agent", "sequence", "graph", "team", "dynamic"}:
+        raise ValidationError("Unsupported managed memory definition")
     store = engine.store
     from .ports import _invoke_sync_none
 
+    if kind not in {"agent", "sequence"} or parent_call is not None:
+        if (
+            type(getattr(store, "composite_memory_stage_version", None)) is not int
+            or store.composite_memory_stage_version != 1
+        ):
+            raise ValidationError("Composite memory requires its atomic Store extension")
+        _invoke_sync_none(
+            getattr(store, "prepare_composite_memory_stages", None),
+            "Composite memory activation",
+        )
     if (
         type(getattr(store, "managed_stage_version", None)) is not int
         or store.managed_stage_version != 1

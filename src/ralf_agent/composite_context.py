@@ -8,11 +8,14 @@ from .errors import DefinitionMismatch
 def validate_frames(engine, run):
     from .context_artifacts import validate_journal as artifacts
     from .context_preparation import validate_journal as contexts
+    from .managed_memory_stage import validate_journal as memories
     from .node_execution import NodeEngine
 
     for action in run["actions"]:
-        if action.get("context_preparation") is not None or action.get("context_manifest", {}).get(
-            "artifact_projection"
+        if (
+            action.get("context_preparation") is not None
+            or action.get("context_manifest", {}).get("artifact_projection")
+            or "memory_stage" in action
         ):
             index = action.get("node")
             if type(index) is not int or not 0 <= index < len(run["plan"]["nodes"]):
@@ -31,6 +34,7 @@ def validate_frames(engine, run):
         view = NodeEngine(engine, run["id"], node["id"])
         contexts(view, frame)
         artifacts(view, frame)
+        memories(view, frame)
 
 
 def query(engine, run, field, validator):
@@ -49,6 +53,7 @@ def query(engine, run, field, validator):
 
 async def recover_terminal_frames(engine, run_id):
     from .context_preparation import recover_terminal_context
+    from .managed_memory_stage import recover_terminal_memory
     from .node_execution import NodeEngine
 
     run = engine._authorized(run_id)
@@ -56,3 +61,5 @@ async def recover_terminal_frames(engine, run_id):
     for node_id, node in run["workflow"]["nodes"].items():
         if "context_preparations" in node.get("execution", {}):
             await recover_terminal_context(NodeEngine(engine, run_id, node_id), run_id)
+        if "memory_stages" in node.get("execution", {}):
+            await recover_terminal_memory(NodeEngine(engine, run_id, node_id), run_id)

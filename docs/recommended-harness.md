@@ -9,7 +9,7 @@ dev43 提供三个版本为 `1` 的起步 Profile，复用现有 Agent／Runtime
 | `managed-memory` | Basic 加 allowlist 最终结果提炼，写入指定 Agent 的 Facts namespace | 业务字段、保留策略及事实正确性验证 |
 
 默认模型为 **offline-echo**，只验证装配与恢复。不会自动读取模型密钥、下载模型或访问网络。
-dev44 将 **Local Basic／Local Knowledge 的数据上下文**扩展到串行／并行图、Team、动态 Plan/DAG 和嵌套成员。`managed-memory` 的自动长期记忆写入仍限原生 Agent／顺序 Workflow，不能作为高级编排默认组合。
+dev44 将 **Local Basic／Local Knowledge 的数据上下文**扩展到串行／并行图、Team、动态 Plan/DAG 和嵌套成员。dev45 的 `managed-memory` 也支持这些 Local 实际 Agent 的规则／模型选择写入，见[高级记忆与恢复](composite-memory-stages.md)。
 Temporal 显式装配同一个纯策略，按原 History 协议运行；不直接使用 Local Profile 工厂，也不增加每 Agent Temporal 绑定。H3 尚未整体验收完成。见[高级编排与 Temporal 指南](composite-temporal-context.md)。
 
 ```python
@@ -36,7 +36,7 @@ asyncio.run(main())
 传入已有组件声明。覆盖以完整组件声明为单位；同名版本不能偷偷替换已接受的配置。
 JSON／TOML 使用普通 Profile 的 `context_assembler.adapter = "managed-data"`，不增加另一种配置语言。
 
-Managed Memory 的默认 `agent_name="assistant"` 必须与 AgentSpec 名称一致；其他名称传 `agent_name="support"`。
+Managed Memory 默认写 namespace 为 `agent_name="assistant"`；若按 Agent 名称召回应显式对齐读取 namespace，其他目标传 `agent_name="support"`。高级成员继承共同写 namespace，不会自动按成员命名切换；可用每成员 stage_policy 绑定选择不同后端与 namespace。
 默认保存整个最终结果，是显式选择该组合后的基础观察记录；业务使用应替换 `stage_policy` 的
 `fields` allowlist，只提炼需要保留的字段。存储值包含来源 Run／Release／字段／digest 和
 `completed-result-observation` 信任标记，不能把模型说法当成已核验事实。
@@ -76,4 +76,5 @@ SDK 注入的 ArtifactStore 是 **borrowed**，调用方负责关闭；Profile �
 
 该能力 opt-in 开启语义 Schema **10**；dev42 及以前代码拒绝该库。高级 Local 编排首次准入启用 Schema **11**，dev43 拒绝该库。普通默认仍为原 Schema，
 旧 Schema 1–9 可读取／恢复；退回旧代码需保留旧库或做显式迁移，不可编辑版本号绕过检查。
+高级自动记忆首次准入启用 Schema **12**，dev44 拒绝；原生／顺序记忆仍按已有 Schema7/9，组合数据上下文启用 Schema10。显式终态根 resume 可恢复原已结束子 Run 的记忆证据，不重新派发写入。
 当前无自动 GC、S3／对象存储适配、后台保留任务或统一 Artifact 能力选择角色。

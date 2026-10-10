@@ -11,9 +11,9 @@
 | Team、动态 Plan／DAG、嵌套 Agent | 原子父子额度、各子 Run 原上下文 | 已注册 orchestration_release；各实际 Agent 子 Run |
 | 历史摘录／可选模型摘要、大工具产物投影 | 支持；可按已有 Agent context 绑定替换 | 支持；宿主统一固定注册 |
 | 确定性 Session／Facts／Knowledge 引用摘录 | 支持原引用校验 | 已有 KnowledgeContext 引用；无共享 Session／Facts 自动召回 |
-| 自动长期记忆写入 | 仍限 Local 原生／顺序 | 未交付 |
+| 自动长期记忆写入 | dev45 已支持高级 Local 实际 Agent | 未交付 |
 
-`local-basic`／`local-knowledge` 可用于 Local 高级编排；`managed-memory` 的写阶段范围没有扩大。
+`local-basic`／`local-knowledge` 可用于 Local 高级编排；dev45 的 `managed-memory` 也支持高级 Local 实际 Agent；见[高级记忆阶段](composite-memory-stages.md)。
 高级 Local 受管理上下文第一次接受启用语义 **Schema11**；dev43 及以前明确拒绝该库。
 原生／顺序仍按原 Schema8／10 激活；普通默认发布身份保持不变。
 自定义 Store 要显式提供 `composite_context_stage_version=1` 和同步事务内 `prepare_composite_context_stages()`，不能把原子契约当成普通读写端口。
@@ -94,4 +94,4 @@ History 分别记录计划、只读查询、写派发、写后核验、摘要响
 原始工具结果仍保存于执行库／History：卸载降低模型输入，并不降低总存储。
 Temporal 大消息受服务载荷／History 大小限制，尚无外部 History payload 存储默认组合或自动压缩保留策略。
 引用摘录不是语义摘要；字符／token 估算不是精确模型计量。此轮不调用真实模型，不代表任务、引用或长期记忆质量已达标。
-H3 还缺语义默认组合、跨后端自动记忆写阶段、完整质量及长期保留治理。
+H3 还缺语义默认组合、Temporal 自动记忆写阶段、完整质量及长期保留治理。

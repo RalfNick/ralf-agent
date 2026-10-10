@@ -61,6 +61,37 @@ def test_unknown_preset_does_not_silently_select_defaults():
         recommended_profile("enterprise")
 
 
+@pytest.mark.parametrize("kind", ["graph", "parallel", "team", "dynamic", "dynamic-dag", "nested"])
+@pytest.mark.parametrize("assembly", ["sync", "async"])
+def test_managed_memory_preset_advanced_facade_reconnects(tmp_path, kind, assembly):
+    from ralf_agent import Runtime, recommended_profile
+    from tests.test_composite_memory_stages import definition, records
+
+    profile = recommended_profile("managed-memory")
+    builder = RuntimeBuilder(base_dir=tmp_path)
+
+    async def run():
+        instance = (
+            builder.build(profile, tmp_path / "runs.db")
+            if assembly == "sync"
+            else await builder.abuild(profile, tmp_path / "runs.db")
+        )
+        async with Runtime(instance, owned=True) as runtime:
+            h = await runtime.submit(definition(kind), "hello", command_id="s")
+            assert (await h.wait(wait_timeout=5)).snapshot.state == "succeeded"
+            assert len(instance.memory.facts(instance.scope, "assistant")) == 2
+            assert len(records(instance, h.ref.run_id)) == 2
+        instance = await builder.abuild(profile, tmp_path / "runs.db")
+        async with Runtime(instance, owned=True) as runtime:
+            again = await runtime.submit(definition(kind), "hello", command_id="s")
+            assert again.ref == h.ref
+            assert (await again.wait(wait_timeout=5)).snapshot.state == "succeeded"
+            assert len(instance.memory.facts(instance.scope, "assistant")) == 2
+            assert len(records(instance, again.ref.run_id)) == 2
+
+    asyncio.run(run())
+
+
 def test_async_artifact_factory_can_be_replaced_and_owned_resources_close(tmp_path):
     from ralf_agent import ComponentRegistry, InMemoryArtifactStore, recommended_profile
 

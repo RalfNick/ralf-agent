@@ -414,10 +414,10 @@ class LocalEngine:
     def memory_stages(self, run_id):
         """Scope-authorized immutable copy of auxiliary memory evidence, no I/O."""
         run = self._authorized(run_id)
+        from .composite_context import query
         from .managed_memory_stage import validate_journal
 
-        validate_journal(self, run)
-        return copy.deepcopy(list(run.get("memory_stages", {}).values()))
+        return query(self, run, "memory_stages", validate_journal)
 
     def context_stages(self, run_id):
         """Scope-authorized context preparation receipts, without model I/O."""
@@ -971,7 +971,9 @@ class LocalEngine:
 
                 await self._guarded(run_id, recover_terminal_context(self, run_id))
                 run = self._authorized(run_id)
-            if "memory_stages" in run or any("memory_stage" in a for a in run["actions"]):
+            if run.get("plan", {}).get("schema_version") != 3 and (
+                "memory_stages" in run or any("memory_stage" in a for a in run["actions"])
+            ):
                 from .managed_memory_stage import recover_terminal_memory
 
                 await self._guarded(run_id, recover_terminal_memory(self, run_id))
@@ -981,6 +983,9 @@ class LocalEngine:
 
                 await self._guarded(run_id, reconcile_terminal_saves(self, run_id))
             if run.get("orchestration") is not None:
+                from .composite_memory import recover_terminal_children
+
+                await self._guarded(run_id, recover_terminal_children(self, run_id))
                 self._orchestration.terminal(run_id)
                 return self.status(run_id)
             with self.store.transaction():

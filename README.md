@@ -25,7 +25,9 @@ Ralf-Agent 是 Python 优先的开源 Agent 运行时。它把模型决策、工
 
 dev44 接通[高级编排与 Temporal 自动上下文](docs/composite-temporal-context.md)：图／Team／动态／嵌套实际 Agent 的历史压缩与产物卸载，保留原 Run／History 阶段证据；高级自动记忆写入、语义质量与完整 H3 仍待完成。
 
-当前版本：**0.1.0.dev44，M1 核心预览**。提供原生 Agent SDK、顺序 Workflow、静态串行／有界并行图，以及有限动态规划与多 Agent 团队。SQLite 持久执行统一管理模型、工具、审批／取消、预算和未知效果恢复。模型层提供 Chat Completions、Anthropic、Gemini 文本及 DeepSeek 非思考模式适配；工具支持可信 Python、异步 ToolSource 和 MCP stdio。JSON／TOML 装配版本化组件，历史任务按原配置恢复。
+dev45 增加[Local 高级编排自动记忆](docs/composite-memory-stages.md)：原规则／模型字段选择、并行节点事实隔离、推荐 managed-memory 默认组合及终态根／子 Run 的证据恢复。Temporal 自动记忆写入、语义默认与完整 H3 质量仍待完成。
+
+当前版本：**0.1.0.dev45，M1 核心预览**。提供原生 Agent SDK、顺序 Workflow、静态串行／有界并行图，以及有限动态规划与多 Agent 团队。SQLite 持久执行统一管理模型、工具、审批／取消、预算和未知效果恢复。模型层提供 Chat Completions、Anthropic、Gemini 文本及 DeepSeek 非思考模式适配；工具支持可信 Python、异步 ToolSource 和 MCP stdio。JSON／TOML 装配版本化组件，历史任务按原配置恢复。
 
 dev14 增加真实 **Redis Session/Facts、PostgreSQL Memory/Knowledge 和 Qdrant VectorIndex**，通过[异步装配](docs/async-assembly.md)接入原有记忆／RAG 端口；提供默认规则 Planner、受管理 ModelPlanner、Verifier，以及 Sequential／Router／Supervisor 团队和独立 Plan／Team 模板。接入方式见[远程数据指南](docs/remote-data.md)与[规划及多 Agent 指南](docs/orchestration.md)。完整 M1 尚未验收，适合开发者试点；[实现清单](docs/implementation-status.md)记录支持边界。预览 API 尚未稳定。
 
@@ -235,7 +237,7 @@ facts = InMemoryMemory(backend_id="demo-facts:v1")
 # facts.put_fact(scope, "assistant", "language", "中文", expected_version=0)
 ```
 
-短期消息和长期事实使用作用域及 CAS 版本。本地向量索引、Hash Embedding 离线基线、混合检索和来源版本校验已有实现；[可选记忆 pipeline](docs/managed-memory.md)提供规则／模型字段选择与有来源的观察记录。观察记录不等于已经确认的事实。dev40–42 已提供 Local 原生／顺序的[自动规则记忆](docs/managed-memory-stages.md)、[自动模型字段选择](docs/managed-model-memory-stages.md)与[受管理规则／模型摘要](docs/managed-context-stages.md)，默认关闭并可按 Agent 绑定。Session／RAG 自动压缩、高级／Temporal 自动阶段、语义修订／撤回、线上语义质量和企业知识源撤权体系仍待完善。
+短期消息和长期事实使用作用域及 CAS 版本。本地向量索引、Hash Embedding 离线基线、混合检索和来源版本校验已有实现；[可选记忆 pipeline](docs/managed-memory.md)提供规则／模型字段选择与有来源的观察记录。观察记录不等于已经确认的事实。dev40–42 已提供 Local 原生／顺序的[自动规则记忆](docs/managed-memory-stages.md)、[自动模型字段选择](docs/managed-model-memory-stages.md)与[受管理规则／模型摘要](docs/managed-context-stages.md)，默认关闭并可按 Agent 绑定。Session／RAG 语义压缩、Temporal 自动记忆写入、语义修订／撤回、线上语义质量和企业知识源撤权体系仍待完善。
 
 常用 SDK 和 CLI 见 [API 指引](docs/api-reference.md)；更多接入约束、组件生命周期和测试方法见 [扩展指南](docs/extending.md)。
 

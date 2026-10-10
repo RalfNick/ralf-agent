@@ -1,6 +1,6 @@
 # Ordered framework alignment roadmap
 
-Baseline: dev44 increment, 2026-10-10. The user approved this order after
+Baseline: dev45 increment, 2026-10-10. The user approved this order after
 the capability checklist. Completion requires default behavior, extensibility,
 lifecycle/recovery, installed documentation and real evidence per component.
 Adding a Protocol or counting passing tests alone does not establish parity.
@@ -75,3 +75,5 @@ dev27 adds Local Session backend/namespace/address admission; dev28 adds scoped 
 full Agent/Runtime Facade remain pending. Local stateless H2a is delivered in dev31; no parity is inferred.
 
 Dev44 extends Basic/Knowledge data context to Local graph/Team/dynamic/nesting and registered Temporal Agent children. Actual Workflow History owns auxiliary phase evidence, with single-attempt writes/summaries and immutable snapshot validation. Advanced automatic memory writing, final default-model semantic quality, environment capabilities and full H3 are still open; no AgentScope parity claim.
+
+Dev45 closes the Local advanced rule/model-selected memory/default composition gap, with node-scoped original evidence, terminal root/child recovery and process-death coverage. Temporal memory writes and semantic memory/task quality remain separate pending gates.

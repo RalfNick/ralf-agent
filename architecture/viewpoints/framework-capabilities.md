@@ -5,6 +5,8 @@
 读者：框架维护者、应用开发者、适配器贡献者。
 状态：目标架构与交付要求。下表保留 dev9 设计基线；dev10–dev13 已交付静态图、MCP/Tool、本地并行和异步装配。dev14 增加有界规划/子 Run 团队及真实 Redis/PG/Qdrant；dev15 已增加DAG/嵌套、本地与真实Redis消息交接、A2A0.3轮询子集及独立Temporal Agent/sequence后端，dev16 已增加异步 A2A 控制、共享 PG Inbox／Outbox 和单机服务模板；dev17 通过显式扩展发布交付 Temporal Graph/Team/Dynamic/嵌套与注册 RAG、每任务执行策略和业务评测入口；dev18 已交付独立 Parser／Chunker 和原子知识摄取回执；dev19 增加显式 HTTP Embedding 和可组合 Hybrid／融合重排；企业治理、实时流和真实模型质量仍需验收。其他后端能力不默认为可用。当前范围见[实现清单](../../docs/implementation-status.md)、[编排指南](../../docs/orchestration.md)和[数据指南](../../docs/remote-data.md)。其余目标不构成已支持声明。
 
+Dev45 已交付 Local 图／并行／Team／动态／嵌套实际 Agent 的受管理规则／模型字段选择记忆和推荐默认组合；原节点／子 Run 保留来源与额度，显式终态根 resume 只恢复已结束子 Run 的证据，不新增派发。Temporal 自动记忆写入和完整 H3 质量仍未交付，见[高级记忆契约](../../docs/composite-memory-stages.md)。
+
 当前分层剩余能力及验收见[当前剩余清单](../../docs/remaining-work.md)：dev20–dev30 已增加显式上下文／产物、来源记忆提炼／模型摘要、Temporal 纯自定义上下文、Responses/typed工具、中间件／事件、共享采纳规则及 H1a/Local H1b/Session H1c/Facts与Knowledge范围H1d及纯完成Verifier H1e／执行限制H1f绑定；dev31 增加 Local stateless 入口，dev32 增加同库原生／顺序 Session/Turn 与 idle rebind；dev33 增加 Temporal 原生／顺序共同入口。dev34–39 已交付高级 Temporal 入口及同库／远程复合会话；dev40–43 已交付 Local 原生／顺序自动记忆、历史摘要、推荐组合与有来源引用／产物投影。下面 dev9 矩阵保持历史基线，不作为当前未实现清单。
 
 ## 1. 目标与达标定义
@@ -24,7 +26,7 @@ RALF 的目标是通用 Agent 框架：个人开发者用默认组件完成单 A
 每Agent绑定、统一Agent/Session入口、受管理默认链路、Workspace/Sandbox与Service按H1–H5推进，
 具体首期输入、作用域、版本和兼容规则见[绑定契约](../specs/agent-capability-binding-contract.md)。
 [Facade/Session契约](../specs/agent-facade-session-contract.md)补齐H2前置行为：Runtime独立托管执行、wait仅观察、首期耐久busy拒绝、绑定CAS修订及owned/borrowed关闭。队列是后续独立能力；远程客户端关闭不关闭Workers。命名与本地AgentScope源码取舍见[修订记录](../reviews/2026-10-08-agent-harness-facade.md)。
-dev25交付H1a，dev26交付[Local H1b绑定](../../docs/agent-bindings.md)，同一六类选择与Profile v2覆盖原生Agent/顺序/图/Team/动态DAG/嵌套成员；dev27交付Local Session后端/namespace/实际地址占用；dev31 增加 Local stateless Agent/Runtime、独立托管与观察／关闭子集；dev32 增加[同库原生／顺序 Session H2b1](../../docs/session-api.md)。dev33 增加[Temporal 原生入口 H2c1](../../docs/temporal-agent-api.md)。dev34 接通已注册高级 Temporal 入口。dev35–39 已交付同库／远程复合会话；dev40–43 增加 Local 原生／顺序自动记忆、历史摘要及推荐数据上下文。dev44扩展高级Local及Temporal自动历史压缩与产物卸载（原执行权威分阶段证据）。Temporal绑定、其他角色资源选择、环境角色、高级自动记忆写阶段及完整H2/H3仍待实现。原有数据角色、计划、授权和恢复契约继续有效。
+dev25交付H1a，dev26交付[Local H1b绑定](../../docs/agent-bindings.md)，同一六类选择与Profile v2覆盖原生Agent/顺序/图/Team/动态DAG/嵌套成员；dev27交付Local Session后端/namespace/实际地址占用；dev31 增加 Local stateless Agent/Runtime、独立托管与观察／关闭子集；dev32 增加[同库原生／顺序 Session H2b1](../../docs/session-api.md)。dev33 增加[Temporal 原生入口 H2c1](../../docs/temporal-agent-api.md)。dev34 接通已注册高级 Temporal 入口。dev35–39 已交付同库／远程复合会话；dev40–43 增加 Local 原生／顺序自动记忆、历史摘要及推荐数据上下文。dev44扩展高级Local及Temporal自动历史压缩与产物卸载（原执行权威分阶段证据）。Temporal绑定、其他角色资源选择、环境角色、Temporal自动记忆写阶段及完整H2/H3仍待实现。原有数据角色、计划、授权和恢复契约继续有效。
 
 ## 2. 分层及公共边界
 

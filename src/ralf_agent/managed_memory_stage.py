@@ -22,6 +22,19 @@ from .types import canonical, digest
 TERMINAL = {"succeeded", "failed", "cancelled"}
 
 
+def _projection(engine):
+    from .node_execution import NodeEngine
+
+    return engine.node_id if isinstance(engine, NodeEngine) else None
+
+
+def _fact_key(source, key):
+    node = (
+        {"workflow_node": source["workflow_node"]} if "workflow_node" in source else source["node"]
+    )
+    return "auto:" + digest([source["run_id"], node, key])
+
+
 def _action(run, source):
     action = next((a for a in run["actions"] if a["id"] == source["action_id"]), None)
     if (
@@ -84,6 +97,7 @@ def _validate_record(engine, run, record):
         or source["run_id"] != run["id"]
         or source["release_digest"] != run["release_digest"]
         or source["node"] != record["node"]
+        or source.get("workflow_node") != _projection(engine)
         or record["policy"] != engine._step_manifest(run, record["node"])["managed_memory"]
     ):
         raise DefinitionMismatch("Memory stage journal has invalid original ownership")
@@ -107,9 +121,9 @@ def _validate_record(engine, run, record):
             "skipped",
         }:
             raise DefinitionMismatch("Memory fact journal has invalid state")
-        if fact["key"] != "auto:" + digest(
-            [run["id"], record["node"], fact["value"]["key"]]
-        ) or fact["reservation_id"] != "memory:" + digest([run["id"], fact["key"]]):
+        if fact["key"] != _fact_key(source, fact["value"]["key"]) or fact[
+            "reservation_id"
+        ] != "memory:" + digest([run["id"], fact["key"]]):
             raise DefinitionMismatch("Memory fact identity differs from adopted proposal")
         receipt = fact["receipt"]
         if status in {"receipt_received", "completed"}:
@@ -277,6 +291,8 @@ def _prepare(engine, run_id, result):
         "scope": asdict(engine.scope),
         "release_digest": run["release_digest"],
     }
+    if _projection(engine) is not None:
+        source["workflow_node"] = _projection(engine)
     record = {
         "schema_version": 1,
         "node": run["node"],
@@ -346,7 +362,7 @@ def _prepare_proposals(engine, run_id, record, proposals=None):
         _check(engine, run_id, record)
         facts = []
         for proposal in admitted:
-            key = "auto:" + digest([run_id, run["node"], proposal["key"]])
+            key = _fact_key(source, proposal["key"])
             facts.append(
                 {
                     "key": key,
@@ -357,6 +373,11 @@ def _prepare_proposals(engine, run_id, record, proposals=None):
                         "source_digest": digest(source),
                         "release_digest": run["release_digest"],
                         "trust": "completed-result-observation",
+                        **(
+                            {"workflow_node": source["workflow_node"]}
+                            if "workflow_node" in source
+                            else {}
+                        ),
                     },
                     "expires_at": expiry,
                     "reservation_id": "memory:" + digest([run_id, key]),

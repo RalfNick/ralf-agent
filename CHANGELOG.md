@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.0.dev45 — Local composite automatic memory
+
+- Existing rule/model-selected grounded memory stages support Local graph/parallel/Team/dynamic/nested actual Agents; explicit optional Store admission enables Schema12.
+- Parallel source/fact keys include original workflow_node; journals, selector/fact budgets and pure queries remain in the original Run projection.
+- Explicit terminal root resume recovers original owned terminal children through existing drive locks, with no new model/CAS dispatch; unresolved evidence retains parent allowance.
+- Recommended managed-memory Profile supports advanced sync/async facade assembly and reconnect. Native/sequence policies, releases and Schema7/9 identities are retained.
+- Process-death and replacement/default acceptance are covered; Temporal memory stages, free-form semantic memory and full H3 quality remain pending.
+
 ## 0.1.0.dev44 — Composite and Temporal managed context
 
 - Local graph/parallel/Team/dynamic/nested Agent decisions reuse original managed history compression and artifact projections; optional semantic Schema11 admission.

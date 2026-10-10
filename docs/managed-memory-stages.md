@@ -1,5 +1,7 @@
 # 自动记忆阶段（dev40／H3a）
 
+dev45 将原协议扩展到 Local 图／并行／Team／动态／嵌套的实际 Agent，推荐默认组合也可使用；见[高级记忆阶段](composite-memory-stages.md)。下面保留原生／顺序的原契约，Temporal 自动记忆写入仍待实现。
+
 Local 原生 Agent 和顺序 Workflow 可在每步输出通过 Schema／完成验证、必需
 Session 保存后，自动提炼宿主允许的结果字段。默认关闭；原 Engine 负责额度、
 来源、提案、写入意图、回执和恢复，没有额外执行权威或后台任务。
@@ -94,8 +96,8 @@ ThreadedMemoryAdapter 复用 Engine 真实线程跟踪，线程退出前不会�
 与 `managed_stage_reservation(run_id, reservation_id)` 独立额度查询，在自己的
 执行事务内使旧读者拒绝新语义。未启用的提交保留原有 Schema／Manifest。
 
-本阶段不支持 Graph／Team／Dynamic／嵌套父编排的自动阶段，提交时明确拒绝；
-Temporal、自动模型提炼、背景记忆 Job、语义修订／撤回、多事实全局事务仍待交付。
+dev45 高级自动阶段明确准入；规则／模型选择在原实际 Agent 执行权威中运行。
+Temporal、自由合成模型记忆、背景记忆 Job、语义修订／撤回、多事实全局事务仍待交付。
 
 内置内存／SQLite／Redis／PostgreSQL 提供可选 `fact_inspection_version=1` 的
 `inspect_fact(scope, namespace, key)` 精确查询。自定义后端可实现该端口，或沿用

@@ -126,10 +126,11 @@ def test_stage_binding_ref_disabled_and_pinned_manifest(tmp_path):
         )
 
 
-def test_advanced_definition_refused_before_schema_or_run_admission(tmp_path):
+def test_unsupported_composite_store_refuses_before_schema_or_run_admission(tmp_path, monkeypatch):
     from ralf_agent import GraphNode, GraphWorkflowSpec
 
     spec = GraphWorkflowSpec("g", [GraphNode("a", agent=AgentSpec("a", "Answer"))])
+    monkeypatch.setattr(SQLiteStore, "composite_memory_stage_version", None)
     with engine(tmp_path / "run.sqlite", stage_policy=policy(InMemoryMemory())) as runtime:
         with pytest.raises(ValidationError):
             runtime.submit(spec, "q", command_id="s")

@@ -3,10 +3,12 @@
 版本：1.8；日期：2026-10-10；维护者：RALF maintainers。
 状态：根据用户认可的理想架构形成的目标设计；实现基线为0.1.0.dev43（H1a–H1f、Local stateless H2a、同库原生／顺序 H2b1／复合 Session H2b2／授权根 namespace H2b3／远程原生顺序 H2b4a／复合根 H2b4b、Temporal 原生入口 H2c1／高级编排入口 H2c2）。
 读者：框架维护者、Agent应用开发者、适配器作者与企业部署团队。
-除明确标为 H1a–H1f、dev31 Local stateless H2a 、dev32 同库原生／顺序 Session H2b1 与 dev33 Temporal 原生／顺序入口 H2c1 、dev34 高级编排入口 H2c2 与 dev35 同库复合会话 H2b2、dev36 授权根 namespace H2b3 与 dev38 远程原生／顺序 H2b4a 与 dev39 远程复合根 H2b4b 的子集外，本文中的接口和示例仍为目标设计。AgentHarness 当前固定声明并复用 Local 权威，dev40–42 已实现原生／顺序 Local 的规则记忆、受管理历史摘要和模型选择记忆；dev43 增加版本化 Local 推荐组合、确定性引用压缩和产物投影；dev44 已接通 Local 高级编排与 Temporal 自动历史压缩／大结果卸载，分别保留原 Run 节点投影与 History 阶段证据。高级／Temporal 自动记忆写入、语义引用质量及完整 H3 仍待补齐。
+除明确标为 H1a–H1f、dev31 Local stateless H2a 、dev32 同库原生／顺序 Session H2b1 与 dev33 Temporal 原生／顺序入口 H2c1 、dev34 高级编排入口 H2c2 与 dev35 同库复合会话 H2b2、dev36 授权根 namespace H2b3 与 dev38 远程原生／顺序 H2b4a 与 dev39 远程复合根 H2b4b 的子集外，本文中的接口和示例仍为目标设计。AgentHarness 当前固定声明并复用 Local 权威，dev40–42 已实现原生／顺序 Local 的规则记忆、受管理历史摘要和模型选择记忆；dev43 增加版本化 Local 推荐组合、确定性引用压缩和产物投影；dev44 已接通 Local 高级编排与 Temporal 自动历史压缩／大结果卸载，分别保留原 Run 节点投影与 History 阶段证据。Temporal 自动记忆写入、语义引用质量及完整 H3 仍待补齐。
 [绑定使用教程](../../docs/agent-bindings.md)与 [Local Agent API](../../docs/agent-api.md)记录实际支持与拒绝；dev32 同库原生／顺序 Session/Turn 子集已交付；dev33 Temporal 原生／顺序入口已交付；dev34 已注册高级入口已交付；dev35同库复合会话与dev36授权根namespace已交付；dev38–39 远程原生／顺序及复合根会话已交付；Temporal 绑定与完整 H2 尚未交付。
 已交付范围始终以[实现状态](../../docs/implementation-status.md)为准。
 历史文件名harness-runtime.md保留以保护已有审查/链接；目标组件名称统一为AgentHarness。
+
+Dev45 已交付 Local 图／并行／Team／动态／嵌套实际 Agent 的受管理规则／模型字段选择记忆和推荐默认组合；原节点／子 Run 保留来源与额度，显式终态根 resume 只恢复已结束子 Run 的证据，不新增派发。Temporal 自动记忆写入和完整 H3 质量仍未交付，见[高级记忆契约](../../docs/composite-memory-stages.md)。
 
 ## 1. 目标与术语
 

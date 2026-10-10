@@ -80,9 +80,10 @@ def test_selector_input_limit_is_bounded_integer(limit):
         policy(max_context_chars=limit)
 
 
-def test_advanced_model_stages_are_refused_before_activation(tmp_path):
+def test_unsupported_composite_model_store_refuses_before_activation(tmp_path, monkeypatch):
     from ralf_agent import GraphNode, GraphWorkflowSpec
 
+    monkeypatch.setattr("ralf_agent.storage.SQLiteStore.composite_memory_stage_version", None)
     with engine(tmp_path / "run.sqlite", stage_policy=policy()) as local:
         with pytest.raises(ValidationError):
             local.submit(
