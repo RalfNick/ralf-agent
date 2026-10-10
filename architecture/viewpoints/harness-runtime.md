@@ -430,3 +430,9 @@ KnowledgeBindingResource 使用原 catalog/Agent 路径选择；Scope、宿主 n
 知识来源 I/O 完成并复核后才请求 History dispatch admission；取消等待期间不启动新模型。
 SDK borrowed 资源由宿主在 Worker 停止后关闭，不创建第三执行权威；[指南与验收](../../docs/temporal-knowledge-bindings.md)。
 后续门槛仍含共享 Session／续接、其他绑定角色、自动 Temporal Profile、索引生命周期与语义质量。
+
+### dev60 Temporal History Session／Turn
+
+沿共同 Session DTO 增加原 Namespace UUID 资源、固定声明／发布／队列、耐久串行 Turn 与空闲 CAS；先全局登记命令再固定 Session，先接受原 Turn/RunID 再幂等启动。Session 协调 History 只保存交互与启动责任，原 Run/Parent History 独占业务审批／Action／预算。
+根与已启动后代的原请求／发布／静默／未知效果／ACK 证据独立确认后保存完整 Conversation 并释放；普通与 managed Context 将其作为独立来源，不改变当前任务查询。RPC 冻结／托管与 detach 责任复用已有 Facade。见[实际子集](../../docs/temporal-sessions.md)。
+History Conversation 是首个默认；外置 Session 数据、其余 binding、输入续接／FIFO、部署迁移／Continue-As-New 和完整 H2/H3 仍待交付。

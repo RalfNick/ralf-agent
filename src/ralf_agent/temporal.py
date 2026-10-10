@@ -133,6 +133,7 @@ class TemporalEngine:
         extended = "orchestration" in self._release
         return {
             **temporal_capabilities(),
+            "shared_session": self._release.get("session_protocol") == 1,
             **{name: extended for name in ("graph", "team", "dag", "nesting")},
             "rag": "knowledge_context" in self._release,
             **capabilities(self._release),
@@ -151,13 +152,15 @@ class TemporalEngine:
             "supported_binding_roles": sorted(ROLES)
             if self._release["kernel"] == "temporal-3"
             else [],
-            "session_modes": [],
+            "session_modes": ["history-conversation"]
+            if self._release.get("session_protocol") == 1
+            else [],
             "resource_selectors": self._release["kernel"] == "temporal-3",
             "resource_selector_roles": {"facts": ["namespace"], "knowledge": ["namespace"]}
             if self._release["kernel"] == "temporal-3"
             else [],
             "required_stage_kinds": [],
-            "session_admission": False,
+            "session_admission": self._release.get("session_protocol") == 1,
         }
 
     @property
@@ -432,6 +435,8 @@ def build_temporal_worker(client, *, task_queue, runtime, release=None, **worker
 
     from .temporal_control_activities import registered_parent_activities
     from .temporal_parent_workflow import TemporalParentWorkflow
+    from .temporal_session_activities import registered_session_activities
+    from .temporal_session_workflow import TemporalSessionWorkflow
     from .temporal_workflow import TemporalCommandRegistryWorkflow, TemporalRunWorkflow
 
     text(task_queue, "Temporal task queue")
@@ -449,9 +454,15 @@ def build_temporal_worker(client, *, task_queue, runtime, release=None, **worker
     return Worker(
         client,
         task_queue=task_queue,
-        workflows=[TemporalRunWorkflow, TemporalCommandRegistryWorkflow, TemporalParentWorkflow],
+        workflows=[
+            TemporalRunWorkflow,
+            TemporalCommandRegistryWorkflow,
+            TemporalParentWorkflow,
+            TemporalSessionWorkflow,
+        ],
         activities=registered_activities(runtime, client)
-        + registered_parent_activities(runtime, client),
+        + registered_parent_activities(runtime, client)
+        + registered_session_activities(runtime, client),
         **worker_options,
     )
 
@@ -462,10 +473,16 @@ async def replay_temporal_history(history):
     from temporalio.worker import Replayer
 
     from .temporal_parent_workflow import TemporalParentWorkflow
+    from .temporal_session_workflow import TemporalSessionWorkflow
     from .temporal_workflow import TemporalCommandRegistryWorkflow, TemporalRunWorkflow
 
     await Replayer(
-        workflows=[TemporalRunWorkflow, TemporalCommandRegistryWorkflow, TemporalParentWorkflow],
+        workflows=[
+            TemporalRunWorkflow,
+            TemporalCommandRegistryWorkflow,
+            TemporalParentWorkflow,
+            TemporalSessionWorkflow,
+        ],
         workflow_runner=_workflow_runner(),
     ).replay_workflow(history)
 
@@ -485,5 +502,6 @@ def _workflow_runner():
             "ralf_agent.temporal_memory_state",
             "ralf_agent.temporal_facts_state",
             "ralf_agent.temporal_knowledge_state",
+            "ralf_agent.temporal_session_state",
         )
     )

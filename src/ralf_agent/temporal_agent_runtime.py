@@ -102,6 +102,7 @@ class TemporalClientRuntime(Runtime):
         self.state, self._drained = "open", False
         self._close_task, self.close_report = None, None
         self._supervisor = RpcTaskSupervisor()
+        self._session_locator = None
 
     def _current_route(self):
         address = getattr(
@@ -129,14 +130,20 @@ class TemporalClientRuntime(Runtime):
 
     @property
     def capabilities(self):
+        sessions = self.engine.release.get("session_protocol") == 1
         return {
             "schema_version": 1,
             "local_hosting": False,
             "observation_only_wait": True,
-            "shared_sessions": False,
-            "durable_turns": False,
-            "session_definitions": [],
-            "session_storage": None,
+            "shared_sessions": sessions,
+            "durable_turns": sessions,
+            "session_definitions": (
+                ["agent", "sequence"]
+                + (["graph", "team", "dynamic"] if "orchestration" in self.engine.release else [])
+            )
+            if sessions
+            else [],
+            "session_storage": "temporal-history" if sessions else None,
             "queue": False,
             "deadline": False,
             "handoff": False,
@@ -149,6 +156,60 @@ class TemporalClientRuntime(Runtime):
 
     def _session_authority(self):
         raise ValidationError("Temporal client facade does not support shared Sessions")
+
+    async def _session_client(self):
+        self._check()
+        if self.engine.release.get("session_protocol") != 1:
+            raise ValidationError(
+                "Temporal Sessions require an explicitly registered Session release"
+            )
+        view = self._dispatch_engine()
+        from .temporal_session_activities import namespace_id
+        from .temporal_session_client import TemporalSessionClient
+        from .temporal_session_state import locator
+
+        value = await namespace_id(view.client)
+        self._check()
+        if self._drained:
+            raise RuntimeClosed("Client resources are closing")
+        current = locator(value)
+        if self._session_locator is not None and self._session_locator != current:
+            raise DefinitionMismatch("Temporal Session namespace resource changed")
+        self._session_locator = current
+        return TemporalSessionClient(view, value)
+
+    async def open_session(self, harness, session_id, *, command_id, namespace=None, **options):
+        self._check(accepting=True)
+        if options:
+            raise ValidationError("Temporal Sessions support only namespace selection")
+        from .session_types import SessionRef
+        from .temporal_agent_session import TemporalAgentSession
+
+        harness = harness if isinstance(harness, AgentHarness) else AgentHarness(harness)
+        text(command_id, "Command ID")
+
+        async def operation():
+            client = await self._session_client()
+            receipt = await client.open(
+                harness, session_id, command_id=command_id, namespace=namespace
+            )
+            ref = SessionRef.from_dict(receipt.outcome["session_ref"])
+            client.validate(ref)
+            self._check()
+            return TemporalAgentSession(self, ref, receipt=receipt)
+
+        return await self._supervisor.call(operation())
+
+    def attach_session(self, ref):
+        raise ValidationError("Temporal Session attachment requires await runtime.aattach_session")
+
+    async def aattach_session(self, ref):
+        from .temporal_agent_session import TemporalAgentSession
+
+        client = await self._session_client()
+        await client.status(ref)
+        self._check()
+        return TemporalAgentSession(self, ref)
 
     def _dispatch_engine(self):
         self._check()
@@ -178,7 +239,7 @@ class TemporalClientRuntime(Runtime):
             raise ValidationError("Attachment requires immutable RunRef")
         if (ref.workspace, ref.principal) != (self.scope.workspace, self.scope.principal):
             raise AuthorizationDenied("RunRef belongs to another trusted Scope")
-        if ref.authority_locator != self.authority_locator:
+        if ref.authority_locator not in {self.authority_locator, self._session_locator}:
             raise DefinitionMismatch("RunRef belongs to another actual Temporal resource")
 
     @staticmethod
@@ -221,6 +282,8 @@ class TemporalClientRuntime(Runtime):
         return self._ref(info)
 
     async def aattach(self, ref):
+        if isinstance(ref, RunRef) and ref.authority_locator.startswith("temporal-session-"):
+            await self._session_client()
         info = await self._aobserve(ref, "diagnostics")
         return TemporalAgentRun(self, ref, info.snapshot)
 

@@ -1,6 +1,6 @@
 # Temporal Agent API — dev34 / H2c1–H2c2
 
-Current dev46: [Temporal automatic memory and per-Agent bindings](temporal-memory-bindings.md) adds the opt-in temporal-3 protocol. Legacy protocol identities remain unchanged; shared Session/Facts recall and other binding roles remain unsupported.
+Current dev60: [Temporal automatic memory and per-Agent bindings](temporal-memory-bindings.md), [Facts recall](temporal-facts.md), [scoped Knowledge](temporal-knowledge-bindings.md) and opt-in [History Sessions](temporal-sessions.md) reuse original Histories. Legacy default-off identities remain unchanged; external Session data and other binding roles remain unsupported.
 
 Use the same Agent/AgentHarness/AgentRun API with an explicitly configured
 TemporalEngine. Native AgentSpec/WorkflowSpec are supported; an explicitly
@@ -169,7 +169,12 @@ completed tasks and historical Runs are not retained. RPC failures are counted,
 not inferred to be server failure or nonacceptance. A finished failed RPC can still
 leave a durable server intent, so recovery uses its original command ID.
 
-Capability/refusal checks are explicit: registered definition subset; no bound definitions,
-shared Sessions, queue, deadline_at, input or handoff. Local Session schema2 and
+Capability/refusal checks are explicit: six registered bound roles and registered definition subset.
+External SessionStore selection, queue, deadline_at, input and handoff remain refused.
+History Sessions require explicit session_protocol registration; see below. Local Session schema2 and
 legacy releases are unchanged. Full
 H2 and [remaining Harness stages](remaining-work.md) remain incomplete.
+
+## dev60 History Session entry
+
+Opt-in `TemporalRuntime(enable_sessions=True)` adds `await runtime.open_session`, `aattach_session` and asynchronous submit/status/turns/diagnostics/rebind. Native and registered advanced compositions share durable serial Turns. Session references use actual Namespace UUID identities, while original raw RunRef endpoint identities remain unchanged. Conversation is History-owned; external SessionStore binding selection remains refused. See [Session usage, recovery and bounds](temporal-sessions.md).

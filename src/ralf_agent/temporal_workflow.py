@@ -44,6 +44,18 @@ class TemporalRunWorkflow:
             info.run_id,
         )
         self.wake_revision = 0
+        self._check_session_parent(info)
+
+    def _check_session_parent(self, info):
+        turn = self.state.request.get("session_turn")
+        if turn is not None and (
+            info.parent is None or info.parent.workflow_id != turn["coordinator_id"]
+        ):
+            raise ApplicationError(
+                "Session Turn is not owned by its original coordinator",
+                type="definition_mismatch",
+                non_retryable=True,
+            )
 
     @workflow.run
     async def run(self, accepted: dict) -> None:
@@ -53,6 +65,7 @@ class TemporalRunWorkflow:
         timeout = timedelta(seconds=accepted["activity_timeout"])
         total_timeout = timedelta(seconds=accepted["activity_timeout"] * 2 + 5)
         while True:
+            await self._notify_session()
             observed_wake = self.wake_revision
             if self.state.pending_acks:
                 evidence = self.state.pending_acks.pop(0)
@@ -270,6 +283,14 @@ class TemporalRunWorkflow:
         try:
             self.state.authorize(request.get("scope"))
             kind = request["kind"]
+            if kind == "session_proof":
+                if "session_history" not in self.state.request:
+                    return {"error": "validation_error"}
+                return {
+                    "scope": self.state.scope,
+                    "request": self.state.request,
+                    **self.state.diagnostics(),
+                }
             if kind == "status":
                 return self.state.snapshot()
             if kind == "diagnostics":
@@ -303,6 +324,21 @@ class TemporalRunWorkflow:
             return {"error": "validation_error"}
         except Exception as exc:
             return {"error": getattr(exc, "code", "validation_error")}
+
+    async def _notify_session(self):
+        turn = self.state.request.get("session_turn", self.state.request.get("session_observer"))
+        if turn is None:
+            return
+        from .temporal_session_state import quiet
+
+        if (
+            quiet(self.state.diagnostics())
+            and getattr(self, "_session_notified", None) != self.state.revision
+        ):
+            await workflow.get_external_workflow_handle(turn["coordinator_id"]).signal(
+                "wake", {"scope": self.state.scope}
+            )
+            self._session_notified = self.state.revision
 
 
 with workflow.unsafe.imports_passed_through():

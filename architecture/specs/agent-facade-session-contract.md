@@ -1,6 +1,6 @@
 # Agent Facade、Session与关闭契约 — 目标v1
 
-日期：2026-10-09；状态：完整 H2 的目标行为规格。dev31 H2a 已实现 Local stateless 托管／观察／关闭子集；dev32 H2b1 实现同库原生／顺序 Session/Turn／busy／CAS rebind；dev33 H2c1 交付 Temporal 原生／顺序入口，dev34 H2c2 接通已注册高级编排；Local 远程／复合会话、Temporal 六类绑定及 Facts/Knowledge namespace 子集已交付（dev38–39、46、58–59）；Temporal 共享 Session／其余角色及完整 H2 尚未交付；历史审查基线为 dev24。
+日期：2026-10-11；状态：完整 H2 的目标行为规格。dev31–39 已交付 Local stateless、同库／远程复合 Session 和 Temporal 原生／高级入口；dev46、58–59 交付 Temporal 六类绑定及 Facts/Knowledge namespace；dev60 H2c3 接通 Temporal History Conversation、原 Namespace UUID、耐久串行 Turn 与 CAS rebind。Temporal 外置 Session 数据／其余角色、FIFO／续接／迁移和完整 H2 尚未交付；历史审查基线为 dev24。当前 [History Session 指南](../../docs/temporal-sessions.md) 明确实际支持边界。
 本文与[AgentHarness设计](../viewpoints/harness-runtime.md)、
 [能力绑定](agent-capability-binding-contract.md)、[Run命令](run-command-contract.md)、
 [Action恢复](action-recovery-contract.md)共同约束统一入口。

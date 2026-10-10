@@ -489,3 +489,7 @@ Adds PdfDocumentParser using lazy pypdf>=6.20,<7 and scoped Configuration, with 
 Dev53 targeted and installed contracts: 141 passed each; eight review reproductions RED→GREEN in one correction pass. Independent core environment without pypdf imports SDK, runs text starter ingest/replay/query, refuses PDF with typed extra guidance/no writes, and replays a committed PDF through the original coordinator. 190 Python modules match across source/wheel/sdist/installed; text/HTML/DOCX receipts recover bidirectionally under old52/new53 with identical fresh pipeline/content/chunk identities.
 
 Dev53 frozen final regression: **3256 passed, 92 skipped in 547.10s**; Ruff/format/Git whitespace/dependency/build checks pass. Twelve related documents/391 local links/9 Python blocks validate. No paid model, live remote-service recertification or remote publication.
+
+## dev60 Temporal History Session Turns
+
+Add opt-in Session coordination History, actual Namespace UUID identities, fixed bindings, durable serial Turns/busy receipts and idle CAS; preserve original business Run/Parent authority. Ordinary and managed Context keep Conversation separate from Facts/Knowledge and current-task retrieval. Frozen declarations and supervised RPC completion keep caller cancellation/detach separate from business cancellation. Default-off protocols remain. Evidence and open storage/lifecycle/quality gates appear in [dev60 acceptance](../architecture/reviews/2026-10-11-temporal-sessions.md).

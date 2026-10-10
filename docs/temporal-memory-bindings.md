@@ -1,4 +1,4 @@
-# Temporal 自动记忆与每 Agent 绑定（dev46；Facts dev58）
+# Temporal 自动记忆与每 Agent 绑定（dev46；Facts dev58、Knowledge dev59、History Session dev60）
 
 显式 `temporal-3` 发布复用 `AgentDefinition`、`BoundDefinition`、`AgentBindingDescriptor` 和宿主授权的 `BindingCatalog`。原 `temporal-1`／`temporal-2` 发布身份与执行流程保持；旧 Worker 拒绝新协议。History 是唯一执行权威，记忆数据库只保存事实和可核验版本。
 
@@ -8,7 +8,7 @@
 | --- | --- | --- |
 | provider | 每声明路径 inherit／版本 ref | 固定 Provider 与实际方法，选择不增加宿主权限 |
 | context | 每路径 inherit／ref；纯 builder 或受管理压缩／产物卸载 | required，不能 disabled；产物仍须共享后端 |
-| knowledge | inherit／ref／disabled | 原 references／validate 端口；无 namespace selector |
+| knowledge | inherit／ref／disabled；dev59 host namespace selector | 原 references／validate 端口与 scoped source evidence，见 [Knowledge 绑定](temporal-knowledge-bindings.md) |
 | tool_set | inherit／ref／disabled | 只能缩小 AgentSpec 已声明工具集合 |
 | stage_policy | inherit／ref／disabled | 规则／模型字段选择、每 Agent 写后端／namespace |
 | Agent／顺序／图／Team／动态 flat/DAG／嵌套 | 各实际 Agent 支持以上选择 | 高级编排使用 orchestration_release，子请求只带原声明子树 |
@@ -97,4 +97,4 @@ History 在推进下一步／确认业务完成前，分别记录来源、规则
 
 确定性测试使用真实 JSON 编码／解码，验证固定来源、额度、取消、目标漂移、无效响应及终态只读恢复。实际 localhost Temporal Service 使用独立 Worker 进程和 SQLite 审计，覆盖选择响应后／CAS 后退出、根子恢复、读取取消与父子 History replay；最终统计见[验收记录](../architecture/reviews/2026-10-10-temporal-memory-bindings.md)。没有调用真实模型，也没有重测远程数据库部署。
 
-剩余：Temporal 其他绑定角色／Knowledge selector／共享 Session、语义质量与冲突修订／撤回／遗忘、真实模型质量、远程产物默认组合、History payload 卸载／Continue-As-New、长期容量和保留治理。完整 H1／H3／M1 仍未验收。
+当前补充：dev58 Facts与dev59 Knowledge namespace、dev60 History Session已接通，见各专项指南。剩余：Temporal 其他绑定角色／外置 Session 数据、语义质量与冲突修订／撤回／遗忘、真实模型质量、远程产物默认组合、History payload 卸载／Continue-As-New、长期容量和保留治理。完整 H1／H3／M1 仍未验收。

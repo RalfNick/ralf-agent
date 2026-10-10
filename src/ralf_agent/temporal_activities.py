@@ -142,7 +142,11 @@ class TemporalRuntime:
         facts=None,
         recall_policy=None,
         recall_planner=None,
+        enable_sessions=False,
     ):
+        if type(enable_sessions) is not bool:
+            raise ValidationError("enable_sessions requires an explicit boolean")
+        self.enable_sessions = enable_sessions
         if not isinstance(providers, dict) or not providers:
             raise ValidationError("Temporal requires explicit model providers")
         if not isinstance(tools, ToolRegistry):
@@ -307,6 +311,9 @@ class TemporalRuntime:
                 self.journal, ("begin", "received", "observation", "acknowledge")
             ),
         }
+        if self.enable_sessions:
+            result["session_protocol"] = 1
+            result["dispatch_admission"] = "history-1"
         if self.knowledge is not None:
             result["knowledge_context"] = component_identity(
                 self.knowledge, ("references", "validate")
@@ -471,6 +478,11 @@ class TemporalRuntime:
         received = None
         try:
             self.validate_release(request["runtime_manifest"])
+            from .temporal_session_state import validate_context_evidence, validate_history
+
+            validate_history(request, request["runtime_manifest"], request.get("scope"))
+            if "context" in request:
+                validate_context_evidence(request["context"], request)
             step = AgentSpec(**request["step"])
             provider = self.providers[step.provider]
             complete = provider.complete
@@ -478,6 +490,8 @@ class TemporalRuntime:
                 self.facts is not None
                 or self.knowledge is not None
                 or "context_registration" in self._manifest
+                or self.enable_sessions
+                and "context" in request
             ):
                 evidence = request["context"]
                 from .temporal_knowledge_state import (
@@ -608,10 +622,14 @@ class TemporalRuntime:
             return await selected_runtime(self, request).prepare_context(request)
         try:
             self.validate_release(request["runtime_manifest"])
+            from .temporal_session_state import validate_history
+
+            validate_history(request, request["runtime_manifest"], request.get("scope"))
             if (
                 self.facts is None
                 and self.knowledge is None
                 and "context_registration" not in self._manifest
+                and "session_history" not in request
             ):
                 raise ValidationError("No registered custom or knowledge context")
             scope, step = Scope(**request["scope"]), AgentSpec(**request["step"])
@@ -639,12 +657,15 @@ class TemporalRuntime:
             from .temporal_facts import load
 
             evidence = await load(self, request, frozen)
+            from .temporal_session_state import context_evidence
+
+            evidence.update(context_evidence(request))
             from .temporal_context import assemble_context
 
             messages, identity = assemble_context(
                 self.context,
                 detached(request["messages"]),
-                evidence["references"],
+                evidence["references"] + evidence.get("session_references", []),
                 step.max_context_chars,
             )
             from .temporal_context import validate_context, validate_prepared

@@ -43,6 +43,9 @@ class TemporalParentState(TemporalRunState):
         text(command_id, "Command ID")
         credits(request["budget"])
         validate_manifest(manifest)
+        from .temporal_session_state import validate_history
+
+        validate_history(request, manifest, scope)
         if request["definition"]["kind"] not in {"graph", "team", "dynamic"}:
             raise ValidationError("A distributed parent requires graph/team/dynamic")
         if request.get("session_id") is not None:

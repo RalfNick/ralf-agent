@@ -1,7 +1,7 @@
 # 持续能力开发与验收队列
 
 用户授权：2026-10-10 持续执行直到能力完成；只本地提交，不推送远端。
-当前 dev59 Temporal Knowledge 子集已验收（基线3a2408b/dev58）；实际提交 SHA 以 Git 为准。此队列落实既有架构，不新增执行权威。
+当前 dev60 Temporal History Sessions 子集已验收（基线d548012/dev59）；实际提交 SHA 以 Git 为准。此队列落实既有架构，不新增执行权威。
 权威范围：[剩余清单](remaining-work.md) R01–R26、[Harness 架构](../architecture/viewpoints/harness-runtime.md) H1–H5。
 历史设计中明确后置的高级 Realtime/TTS、公共插件市场和运行中热迁移保持单独路线图；按需适配器不以数量定义完成。
 
@@ -82,3 +82,11 @@ Temporal KnowledgeBindingResource namespace、实际 effective namespace、纯 s
 真实源码与安装各12 Worker kill/restart/replay组合通过；真实PG16.15普通/managed Activity/state来源/TTL/版本/连接替换探针通过。
 最终：原Temporal28、全量3436/131（467.01s，66357 exit0）、安装63/202模块、core-only/58↔59原回执兼容通过；两项自有Service runner68836/97489 exit0，停止标记确认。验收/文档/构建同步，仅本地提交。当前任务目录 /private/tmp/ralf-agent-dev59-v76202ba。
 下一定位：Temporal现在支持Facts/Knowledge的namespace；Session仍明确拒绝shared session_id。需按原Session/Turn契约设计跨Run持久身份/占用/续接，保留原History权威；随后其余role和R15/H4/H5继续。未关闭整个目标。
+
+## dev60 当前批次与下一定位
+
+按原 H2 Session／Turn 契约补齐 Temporal History Conversation、实际 Namespace UUID、耐久串行占用／busy／CAS 与启动恢复；原 Run/Parent 保持业务执行权威。普通／managed 六种编排的真实 Worker kill／replay 及审批／重连分别验收；review 四项 P2 已复现修复，含冷入口预检、冻结声明与普通来源复验取消。
+下一定位：Temporal Session 数据目前仅 History，外置 SessionStore 路由／准确保存回执与其他绑定角色继续推进；R15 生命周期／H4 环境／H5 治理和真实语义质量仍未闭环。
+
+最终dev60：全量3466/146（536.83s、47316 exit0），原Temporal27＋最终入口3、安装Session15／契约103、207模块、core-only与59↔60默认Run／Manifest／Artifact／21 starter兼容。四项P2已修复；实际CLI1.9.1/Server1.32.0，最后Service35988 exit0且stopped。任务目录 /private/tmp/ralf-agent-dev60-_vif9k8h；日志与已验证CLI保留。
+下一批先完善 Temporal 其余角色的固定选择／受管理采纳，外置 Session 数据需先补资源身份／准确保存与同权威责任；继续 R15/H4/H5 和质量门槛。不以本批提交关闭全能力目标。

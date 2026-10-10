@@ -124,9 +124,13 @@ async def validate_snapshot(runtime, request):
 
 
 async def admit_dispatch(request, guard):
-    if request["runtime_manifest"]["kernel"] != "temporal-3" and (
-        request["runtime_manifest"].get("managed_context", {}).get("dispatch_admission")
-        != "history-1"
+    if (
+        request["runtime_manifest"]["kernel"] != "temporal-3"
+        and (
+            request["runtime_manifest"].get("managed_context", {}).get("dispatch_admission")
+            != "history-1"
+        )
+        and request["runtime_manifest"].get("dispatch_admission") != "history-1"
     ):
         return
     if guard is None:
@@ -147,6 +151,7 @@ def admit_history(state, payload):
     if (
         state.manifest["kernel"] != "temporal-3"
         and state.manifest.get("managed_context", {}).get("dispatch_admission") != "history-1"
+        and state.manifest.get("dispatch_admission") != "history-1"
     ) or payload.get("phase") not in {"model", "write", "summary", "select", "memory-write"}:
         raise ValidationError("Unsupported managed external dispatch admission")
     state.authorize(payload["scope"])
@@ -194,6 +199,9 @@ async def execute(runtime, request, *, dispatch_guard=None):
         _check(runtime, request, context)
         phase = request["phase"]
         if phase == "plan":
+            from .temporal_session_state import validate_history
+
+            validate_history(request, request["runtime_manifest"], request.get("scope"))
             scope = Scope(**request["scope"])
             references = (
                 []
@@ -223,7 +231,10 @@ async def execute(runtime, request, *, dispatch_guard=None):
             from .temporal_facts import load
 
             evidence = await load(runtime, request, references)
-            references = evidence["references"]
+            from .temporal_session_state import context_evidence
+
+            evidence.update(context_evidence(request))
+            references = evidence["references"] + evidence.get("session_references", [])
             history, limit = request["messages"], request["step"]["max_context_chars"]
             messages, identity = context.assemble(detached(history), detached(references), limit)
             validate_context(messages, identity, limit)
@@ -345,6 +356,11 @@ async def execute(runtime, request, *, dispatch_guard=None):
                 "messages": detached(messages),
                 "references": detached(request["references"]),
                 **(
+                    {"session_references": detached(request["session_references"])}
+                    if "session_references" in request
+                    else {}
+                ),
+                **(
                     {
                         k: detached(request[k])
                         for k in ("facts", "knowledge_references", "facts_recall")
@@ -425,6 +441,8 @@ def next_stage(state):
         request.update(action_id=action["id"], release_digest=state.release_digest)
     if phase == "plan":
         request["messages"] = detached(state.messages)
+        if "session_history" in state.request:
+            request["session_history"] = detached(state.request["session_history"])
     elif phase in {"read", "write", "verify"}:
         request["artifact"] = detached(stage["prepared"]["offloads"][stage["index"]])
         if phase == "write":
@@ -441,6 +459,8 @@ def next_stage(state):
     else:
         prepared = stage["prepared"]
         request.update({k: detached(prepared[k]) for k in ("plan", "fallback", "references")})
+        if "session_references" in prepared:
+            request["session_references"] = detached(prepared["session_references"])
         if "facts" in prepared:
             request.update(
                 {
@@ -558,6 +578,9 @@ def accept_stage(state, action_id, response):
         from .temporal_knowledge_state import validate_snapshot as validate_knowledge_snapshot
 
         validate_knowledge_snapshot(response, state.step_manifest, state.scope)
+        from .temporal_session_state import validate_context_evidence
+
+        validate_context_evidence(response, state.request)
         stage["status"], stage["snapshot"] = "completed", response
         state.context_snapshot = response
         state.context_signature = state.context_cache_signature()

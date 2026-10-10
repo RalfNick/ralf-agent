@@ -17,6 +17,8 @@ from .temporal_facts_state import validate_protocol as validate_facts_protocol
 from .temporal_facts_state import validate_snapshot as validate_facts_snapshot
 from .temporal_knowledge_state import validate_protocol as validate_knowledge_protocol
 from .temporal_knowledge_state import validate_snapshot as validate_knowledge_snapshot
+from .temporal_session_state import validate_history as validate_session_history
+from .temporal_session_state import validate_protocol as validate_session_protocol
 from .tools import ToolSpec
 from .types import AgentSpec, ToolCall, canonical, credits, digest
 
@@ -109,6 +111,7 @@ def validate_manifest(manifest):
         raise DefinitionMismatch("Managed context requires an explicit Temporal protocol")
     validate_facts_protocol(manifest)
     validate_knowledge_protocol(manifest)
+    validate_session_protocol(manifest)
     for key in ("tools", "providers", "harness", "context_builder", "tool_executor", "policy"):
         if not isinstance(manifest.get(key), dict):
             raise ValidationError(f"Temporal runtime release requires {key}")
@@ -136,6 +139,7 @@ def validate_manifest(manifest):
 
 
 def validate_request(request, manifest):
+    validate_session_history(request, manifest)
     credits(request["budget"])
     if request.get("session_id") is not None:
         raise ValidationError("Temporal shared sessions are not supported")
@@ -238,6 +242,7 @@ class TemporalRunState:
         validate_request(request, manifest)
         self.run_id, self.scope = run_id, detached(scope)
         self.request, self.manifest = detached(request), manifest
+        validate_session_history(request, manifest, scope)
         from .temporal_bindings import request_release_digest, validate_bindings
 
         validate_bindings(request, manifest, scope)
@@ -245,7 +250,7 @@ class TemporalRunState:
         self.epoch = execution_epoch or f"history:{run_id}"
         self.state, self.revision, self.result, self.error = "queued", 0, None, None
         self.node, self.decisions, self.actions = 0, 0, []
-        self.messages = self._messages(self.step, request["input"])
+        self.messages = self._turn_messages(self.step, request["input"])
         self.receipts, self.command_digests, self.event_log = {}, {}, []
         self.reservations, self.pending_acks = {}, []
         self.active_action, self.remote_uncertain = None, False
@@ -289,6 +294,8 @@ class TemporalRunState:
 
     def context_cache_signature(self):
         source = [self.step, self.messages]
+        if "session_history" in self.request:
+            source.append(self.request["session_history"])
         if self.manifest["kernel"] == "temporal-3":
             source.extend([self.node, self.step_bindings])
         return digest(source)
@@ -299,6 +306,9 @@ class TemporalRunState:
             {"role": "system", "content": step["instructions"]},
             {"role": "user", "content": value if isinstance(value, str) else canonical(value)},
         ]
+
+    def _turn_messages(self, step, value):
+        return self._messages(step, value)
 
     @property
     def budget(self):
@@ -587,6 +597,7 @@ class TemporalRunState:
             self.step_manifest.get("facts_context") is not None
             or self.step_manifest.get("knowledge_context") is not None
             or self.step_manifest.get("context_registration") is not None
+            or bool(self.request.get("session_history"))
         ):
             signature = self.context_cache_signature()
             if signature != self.context_signature:
@@ -612,6 +623,11 @@ class TemporalRunState:
                     ),
                     "messages": detached(self.messages),
                     **(
+                        {"session_history": detached(self.request["session_history"])}
+                        if "session_history" in self.request
+                        else {}
+                    ),
+                    **(
                         {"session_id": self.request.get("session_id") or self.run_id}
                         if "facts_context" in self.step_manifest
                         else {}
@@ -633,16 +649,22 @@ class TemporalRunState:
             "step": detached(self.step),
             "messages": detached(self.messages),
         }
+        if "session_history" in self.request:
+            request["session_history"] = detached(self.request["session_history"])
+        if self.manifest.get("session_protocol") == 1:
+            request["scope"] = self.scope
         if self.manifest["kernel"] == "temporal-3":
             request.update(step_bindings=self.step_bindings, scope=self.scope)
         if self.context_snapshot is not None and (
             self.step_manifest.get("facts_context") is not None
             or self.step_manifest.get("knowledge_context") is not None
             or self.step_manifest.get("context_registration") is not None
+            or bool(self.request.get("session_history"))
         ):
             request.update(context=detached(self.context_snapshot), scope=self.scope)
         if (
             self.manifest["kernel"] == "temporal-3"
+            or self.manifest.get("dispatch_admission") == "history-1"
             or self.step_manifest.get("managed_context", {}).get("dispatch_admission")
             == "history-1"
         ):
@@ -670,6 +692,9 @@ class TemporalRunState:
             raise ValidationError("Invalid received model context")
         validate_facts_snapshot(response, self.step_manifest)
         validate_knowledge_snapshot(response, self.step_manifest, self.scope)
+        from .temporal_session_state import validate_context_evidence
+
+        validate_context_evidence(response, self.request)
         self.context_snapshot = detached(response)
         self.context_signature = self.context_cache_signature()
         action["status"], action["response"] = "completed", detached(response)
@@ -838,7 +863,7 @@ class TemporalRunState:
         self._emit("node_completed", {"node": self.node, "result_digest": digest(result)})
         if self.node + 1 < len(self.request["definition"]["steps"]):
             self.node += 1
-            self.decisions, self.messages = 0, self._messages(self.step, result)
+            self.decisions, self.messages = 0, self._turn_messages(self.step, result)
         else:
             self.state, self.result = "succeeded", detached(result)
             self._emit("run_succeeded", {"result_digest": digest(result)})

@@ -40,6 +40,7 @@ class TemporalParentWorkflow(TemporalRunWorkflow):
             accepted.get("depth", 0),
         )
         self.wake_revision = 0
+        self._check_session_parent(info)
 
     async def _activity(self, name, value, activity_timeout):
         try:
@@ -84,6 +85,7 @@ class TemporalParentWorkflow(TemporalRunWorkflow):
         if deadline is not None:
             asyncio.create_task(self._deadline(deadline))
         while True:
+            await self._notify_session()
             observed_wake = self.wake_revision
             changed = False
             for call in tuple(self.state.children):
@@ -221,6 +223,7 @@ class TemporalParentWorkflow(TemporalRunWorkflow):
                     changed = True
             # Quiescent waiting/terminal parents sleep without producing polling
             # Activities; unsettled children keep resource evidence observable.
+            await self._notify_session()
             if self.state.state in TERMINAL and self.state.quiescent:
                 await workflow.wait_condition(lambda wake=observed_wake: self.wake_revision != wake)
             elif changed:

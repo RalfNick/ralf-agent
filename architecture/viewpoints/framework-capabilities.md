@@ -3,7 +3,7 @@
 
 Dev46 已增加[Temporal 自动记忆与五类 Agent 绑定](../../docs/temporal-memory-bindings.md)：显式 temporal-3、原声明子树、History 选择响应／CAS／核验与父子证据恢复；旧发布保持。其他 Temporal 绑定角色／资源 selector、共享 Session、语义质量与完整 H1/H3 仍待验收。
 
-文档版本：1.4；日期：2026-10-10（Asia/Shanghai）。
+文档版本：1.5；日期：2026-10-11（Asia/Shanghai）。
 作者：RALF 项目维护者与架构协作。
 读者：框架维护者、应用开发者、适配器贡献者。
 状态：目标架构与交付要求。下表保留 dev9 设计基线；dev10–dev13 已交付静态图、MCP/Tool、本地并行和异步装配。dev14 增加有界规划/子 Run 团队及真实 Redis/PG/Qdrant；dev15 已增加DAG/嵌套、本地与真实Redis消息交接、A2A0.3轮询子集及独立Temporal Agent/sequence后端，dev16 已增加异步 A2A 控制、共享 PG Inbox／Outbox 和单机服务模板；dev17 通过显式扩展发布交付 Temporal Graph/Team/Dynamic/嵌套与注册 RAG、每任务执行策略和业务评测入口；dev18 已交付独立 Parser／Chunker 和原子知识摄取回执；dev19 增加显式 HTTP Embedding 和可组合 Hybrid／融合重排；企业治理、实时流和真实模型质量仍需验收。其他后端能力不默认为可用。当前范围见[实现清单](../../docs/implementation-status.md)、[编排指南](../../docs/orchestration.md)和[数据指南](../../docs/remote-data.md)。其余目标不构成已支持声明。
@@ -256,3 +256,7 @@ Dev51 在 R16 增加[HTML 解析适配与摄取模板](../../docs/html-ingestion
 Dev52 延续 R16/H3 增加[DOCX 正文解析](../../docs/docx-ingestion.md)，通过原 DocumentParser 接入，不增加新存储接口或执行权威；段落／表格文本与原始来源回执可恢复。Word 排版、图片与完整 Office 兼容仍未实现。
 
 Dev53 在 R16 增加[可选文本 PDF 适配](../../docs/pdf-ingestion.md)，仍复用原解析／分块与原子知识回执。OCR／版面还原和真实 PDF 兼容语料仍待验收。
+
+## dev60 当前入口增量
+
+[Temporal History Sessions](../../docs/temporal-sessions.md) 接通实际 Namespace UUID、耐久 Turn／busy／CAS，覆盖原生／顺序／高级组合及普通／managed 上下文。Session 协调不拥有业务 Action；外置 Session 数据、其余角色、FIFO／续接／迁移及完整 H2/H3 仍未完成。当前能力以剩余清单和逐批验收为准。

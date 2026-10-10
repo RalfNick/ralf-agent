@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.0.dev60 — Temporal durable Session Turns
+
+- Add opt-in History-owned Session binding revisions, serial Turn admission, stable busy receipts, original Run start intents and idle CAS rebind.
+- Discover actual Namespace UUIDs for Session identities; reuse common asynchronous Session/AgentRun APIs with frozen declarations, managed RPC completion and detach-only client lifecycle.
+- Independently verify root and descendant execution quiescence before conversation commit; preserve ordinary/managed Context, Knowledge/Facts provenance and the current task query.
+- Preserve default-off protocols; cover actual worker-kill recovery and History replay. External Session data, retention, deployment migration and complete capability acceptance remain open.
+
 ## 0.1.0.dev59 — Temporal scoped Knowledge bindings
 
 - Add host-allowlisted Knowledge namespace selectors to per-Agent bindings, using the original Context Activity and native/composite Temporal Histories.

@@ -1,6 +1,6 @@
 # Independent Temporal execution — dev17 preview
 
-Current dev59: [Temporal automatic memory and per-Agent bindings](temporal-memory-bindings.md) adds the opt-in temporal-3 protocol. [Facts namespace selection and bounded recall](temporal-facts.md) extend this protocol over the original Context History. Legacy default-off protocol identities remain unchanged; [Knowledge namespace selectors](temporal-knowledge-bindings.md) add scoped source acceptance and fixed retrieval resources. Shared Sessions and other binding roles remain unsupported.
+Current dev60: [Temporal automatic memory and per-Agent bindings](temporal-memory-bindings.md) adds the opt-in temporal-3 protocol. [Facts namespace selection and bounded recall](temporal-facts.md) and [Knowledge namespace selectors](temporal-knowledge-bindings.md) extend the original Context History. Opt-in [History Sessions](temporal-sessions.md) provide durable serial Turns with actual Namespace UUID identities. Default-off protocol identities remain unchanged. External SessionStore routing and other binding roles remain unsupported.
 
 `TemporalEngine` implements the public AsyncExecutionEngine/AsyncRuntimeDiagnostics
 ports. Network controls are explicitly awaited. A Temporal Workflow owns commands,
@@ -50,7 +50,7 @@ and History context. Provider and ToolExecutor ports are replaceable; synchronou
 policy must return None after completed authorization, or raise a typed denial.
 The default `runtime.manifest` supports this native subset. The explicit
 `runtime.orchestration_release` adds Graph/DAG/Team/nesting and registered RAG,
-as described in [distributed composition](temporal-composition.md). The opt-in temporal-3 release adds catalog routing and bounded Facts/Knowledge reads. Shared Sessions and custom Harness remain refused.
+as described in [distributed composition](temporal-composition.md). The opt-in temporal-3 release adds catalog routing and bounded Facts/Knowledge reads. `enable_sessions=True` adds History-owned shared Sessions. Session binding selection, external SessionStore routing and custom Harness remain refused.
 Do not assume LocalEngine feature parity.
 
 Scoped command IDs are checked across Runs/control kinds by a History-backed

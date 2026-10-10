@@ -253,6 +253,11 @@ def selected_runtime(runtime, request):
 
 
 def project_child(parent_request, member, request):
+    if "session_history" in parent_request:
+        request = {**request, "session_history": detached(parent_request["session_history"])}
+        source = parent_request.get("session_turn", parent_request.get("session_observer"))
+        if source is not None:
+            request["session_observer"] = {"coordinator_id": source["coordinator_id"]}
     if "agent_bindings" not in parent_request or member == "@planner":
         return request
     prefix = f"{parent_request['definition']['kind']}/" + (

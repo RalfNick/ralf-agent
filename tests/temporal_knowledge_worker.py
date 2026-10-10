@@ -51,14 +51,16 @@ class Provider:
         for message in messages:
             if message.get("content", "").startswith("Reference memory;"):
                 values = [
-                    r["value"]["text"] for r in json.loads(message["content"].partition("\n")[2])
+                    r["value"]["text"]
+                    for r in json.loads(message["content"].partition("\n")[2])
+                    if "value" in r
                 ]
         with sqlite3.connect(self.root / "knowledge.sqlite") as db:
             db.execute("INSERT INTO audit VALUES ('model', ?)", (json.dumps(values),))
         return ModelResponse(output="pool")
 
 
-def runtime(root, queue, kind, managed):
+def runtime(root, queue, kind, managed, *, enable_sessions=False):
     root = Path(root)
     store = SQLiteStore(root / "knowledge.sqlite")
     with sqlite3.connect(store.path) as db:
@@ -129,8 +131,12 @@ def runtime(root, queue, kind, managed):
             target = "A" if kind == "native" else "B"
             if (
                 os.environ.get("RALF_KNOWLEDGE_MODE") == "crash"
-                and selected.get("selector", {}).get("namespace") == target
-            ):
+                or (
+                    enable_sessions
+                    and os.environ.get("RALF_SESSION_MODE") == "crash"
+                    and bool(request.get("session_history"))
+                )
+            ) and selected.get("selector", {}).get("namespace") == target:
                 (root / "read-ready").write_text(request["run_id"])
                 await asyncio.Event().wait()
 
@@ -148,6 +154,7 @@ def runtime(root, queue, kind, managed):
         tools=ToolRegistry(),
         binding_catalog=catalog,
         context_builder=ManagedContextPipeline() if managed else None,
+        enable_sessions=enable_sessions,
     )
     return execution, definition, store
 
