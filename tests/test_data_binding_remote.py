@@ -38,21 +38,21 @@ def test_real_redis_facts_namespace_recall_and_foreign_validation(redis_service)
 
 def test_real_postgres_knowledge_namespace_sources(postgres_dsn):
     async def run():
-        async with stores(postgres_dsn) as (memory, docs):
+        async with stores(postgres_dsn) as (memory, docs, scope):
             for namespace in ("red", "blue"):
                 await docs.put(
-                    Scope(), namespace, Document("same", "pool " + namespace), expected_version=0
+                    scope, namespace, Document("same", "pool " + namespace), expected_version=0
                 )
             resource = resources().KnowledgeBindingResource(
                 KnowledgeContext(LexicalRetriever(docs)),
                 namespaces=("red", "blue"),
                 default_namespace="red",
             )
-            red = resource.select({}, Scope())
-            blue = resource.select({"namespace": "blue"}, Scope())
-            references = await red.references(Scope(), "pool")
+            red = resource.select({}, scope)
+            blue = resource.select({"namespace": "blue"}, scope)
+            references = await red.references(scope, "pool")
             assert references[0]["value"]["text"] == "pool red"
-            assert (await blue.references(Scope(), "pool"))[0]["value"]["text"] == "pool blue"
-            assert await red.validate(Scope(), references) is None
+            assert (await blue.references(scope, "pool"))[0]["value"]["text"] == "pool blue"
+            assert await red.validate(scope, references) is None
 
     asyncio.run(run())

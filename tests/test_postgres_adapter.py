@@ -175,6 +175,7 @@ async def stores(dsn):
                 "ralf_memory_sessions",
                 "ralf_memory_facts",
                 "ralf_memory_fact_generations",
+                "ralf_memory_fact_scan_epochs",
             ):
                 await connection.execute(
                     f"DELETE FROM {table} WHERE workspace=%s", (scope.workspace,)

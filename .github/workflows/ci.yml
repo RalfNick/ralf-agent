@@ -122,6 +122,8 @@ jobs:
       - run: >-
           python -m pytest -q -W error
           tests/test_redis_memory_adapter.py tests/test_postgres_adapter.py
+          tests/test_fact_index_redis.py tests/test_fact_index_postgres.py
+          tests/test_session_binding_remote.py tests/test_data_binding_remote.py
           tests/test_qdrant_adapter.py tests/test_remote_assembly.py
           tests/test_messaging.py tests/test_redis_streams.py
           tests/test_handoff.py tests/test_a2a.py tests/test_a2a_http.py

@@ -1,6 +1,6 @@
 # 全库事实索引与权威召回
 
-dev56 提供显式全库派生索引基础；整个 R15/H3 的自动更新、治理和质量仍未完成。
+dev56 提供显式全库派生索引基础，dev57 补齐 PostgreSQL 原生扫描；整个 R15/H3 的自动更新、治理和质量仍未完成。
 它扩展既有 Facts、EmbeddingProvider、VectorIndex 与 CAS 存储，Local/Temporal 执行权威不变。
 
 ## 默认链路与替换
@@ -8,6 +8,7 @@ dev56 提供显式全库派生索引基础；整个 R15/H3 的自动更新、治
 FactScanner / AsyncFactScanner 提供 fact_snapshot 与 scan_facts。
 枚举包含 current/expired 原记录，按 UTF-8 字节和数量限制、Scope/namespace/epoch/generation 固定游标；
 一个记录放不下时拒绝，不跳过后伪装完成。SQLite 用有界原始字节读取，首用激活持久 epoch，重开保持。
+PostgreSQL 显式 initialize 增加 epoch 表，扫描沿既有 Facts writer/advisory 锁；named server cursor 每次只取一个有界 key/value 记录，避免普通 libpq 结果先缓冲整页。
 Redis 采用同 hash slot 原子 Lua，固定持久 epoch/generation；原始 JSON 不经 cjson 转换，保留大整数。
 普通 facts()/recall()仍不返回过期内容。扫描是宿主的显式索引／生命周期操作，不自动赋给 Agent 历史读取权限。
 
@@ -101,7 +102,11 @@ initialize 默认为 false，仅核验既有集合；true 才允许创建缺失�
 memory/SQLite 全库330事实、过期和他域排除；四个真实进程提交窗口保留2次 batch Embedding，最终4向量。
 FactsView分页/provenance、JSON/TOML装配及原Run重开有测试；真实本地Redis270条及客户端／SQLite向量重开通过，
 原ready回执复用不重做Embedding。Qdrant新工厂和collection切换采用HTTP fixture验证，仍需真实服务组合验收。
-PostgreSQL native scanner、Temporal Facts绑定仍是清单开放项。最终回归／安装证据见[验收](../architecture/reviews/2026-10-11-fact-indexing.md)。
+PostgreSQL16.15 真实服务已验证270条全库索引、连接／向量重开、配置Agent和四进程窗口；新[PG验收](../architecture/reviews/2026-10-11-postgres-fact-indexing.md)独立记录。
+Temporal Facts绑定仍是清单开放项。dev56回归／安装证据见[验收](../architecture/reviews/2026-10-11-fact-indexing.md)。
+PostgreSQL source/catalog 都可通过既有 backend adapter=postgres 配置 dsn_env、backend_id、initialize；使用 abuild，实际连接由资源账本 owned 关闭。
+旧数据库在首次采用新 Scanner 前显式调用 PostgresMemory.initialize 或设置 initialize=true；这是新增表，不是执行历史热迁移。
+更换数据库时更新 backend_id/Profile；隐藏环境别名移动不算同一个发布。
 多页期间的每次 SourceMutation 都须重新构建；索引损坏修复、旧 namespace GC、全局容量、删除传播、
 自由信念修订和真实语义质量继续按 R15/R17/R26 验收。native memory/SQLite cosine 搜索为小语料线性扫描，
 查询 scan_limit限制候选回读／输出，不是向量底层扫描成本或真实费用上限。

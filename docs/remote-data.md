@@ -10,6 +10,10 @@ dev14 提供真实服务适配器，默认内存/SQLite 继续可用。远程数
 | QdrantVectorIndex | 派生 Cosine 索引 | 固定维度/collection、Scope 过滤、稳定 UUID、确认写入完成 |
 | HashEmbeddingProvider | 可替换 EmbeddingProvider 的离线基线 | 确定性词项散列；不属于语义模型 |
 
+dev57 原生 PostgresMemory 也提供 FactScanner／fact_snapshot：持久 scoped epoch/generation、named server cursor 及读取前 key/value 字节限制。
+显式 initialize 新增 ralf_memory_fact_scan_epochs 表，不改已有 Session/Facts；旧应用不采用扫描时继续原接口。
+SDK和indexed-recall-async工厂可组合PG来源与PG或SQLite Catalog；见[全库事实索引](fact-indexing.md)。这是数据端口，仍不替代执行权威。
+
 ## 安装与直接接入
 
 源码开发环境安装可选客户端；Qdrant 使用既有 httpx，无 SDK 依赖。基础安装和公共导入不要求 redis/psycopg。

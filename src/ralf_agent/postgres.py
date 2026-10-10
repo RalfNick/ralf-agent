@@ -248,7 +248,21 @@ class PostgresMemory(_PostgresAdapter):
             raise
 
     async def initialize(self):
-        await self._initialize(_MEMORY_SCHEMA)
+        from .postgres_fact_scan import SCAN_SCHEMA
+
+        await self._initialize([*_MEMORY_SCHEMA, SCAN_SCHEMA])
+
+    fact_scan_version = 1
+
+    async def fact_snapshot(self, scope, namespace):
+        from .postgres_fact_scan import fact_snapshot
+
+        return await fact_snapshot(self, scope, namespace)
+
+    async def scan_facts(self, scope, namespace, query):
+        from .postgres_fact_scan import scan_facts
+
+        return await scan_facts(self, scope, namespace, query)
 
     async def read(self, scope, session_id):
         prefix = _prefix(scope, session_id)

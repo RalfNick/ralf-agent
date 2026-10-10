@@ -1,7 +1,7 @@
 # 持续能力开发与验收队列
 
 用户授权：2026-10-10 持续执行直到能力完成；只本地提交，不推送远端。
-当前 dev56 全库索引本地子集已验收（基线ce32d6a/dev55）；实际提交 SHA 以 Git 为准。此队列落实既有架构，不新增执行权威。
+当前 dev57 PostgreSQL全库扫描本地子集已验收（基线cb9a824/dev56）；实际提交 SHA 以 Git 为准。此队列落实既有架构，不新增执行权威。
 权威范围：[剩余清单](remaining-work.md) R01–R26、[Harness 架构](../architecture/viewpoints/harness-runtime.md) H1–H5。
 历史设计中明确后置的高级 Realtime/TTS、公共插件市场和运行中热迁移保持单独路线图；按需适配器不以数量定义完成。
 
@@ -43,7 +43,7 @@ Scanner是显式宿主枚举，含expired不自动扩张Agent权限；recall是�
 4. H5与横向：容量／保留／迁移／服务观察、模型一致性、可复用AdapterContractSuite及真实质量／首用／同场景比较。
 
 缺少服务只阻断相应真实验收，不停止其他能力实现；版本适配不能靠原型或接口声明标完成。
-PostgreSQL当前本机未找到initdb/pg_ctl；现有服务依赖测试保持配置跳过。继续寻找可用的隔离服务或推进不依赖该服务的主链路。
+PostgreSQL官方16.15源码已验证并在任务目录临时编译；本轮真实PG门槛已通过并停止实例，下一批可复用已构建binary。Temporal／Qdrant等缺失服务仍分别验收。
 
 ## 运行资源交接
 
@@ -52,3 +52,15 @@ full-suite.log确认3397/98，执行会话22663已exit0；所有fixture Redis已
 旧dev55目录 /private/tmp/ralf-agent-dev55-5hg43c2i 保留已SHA256校验的官方temporal-cli和验收日志。
 旧服务43396与下载6304均已确认结束；SDK默认下载失败后改用官方CLI成功，下一次复用该可执行文件启动新任务状态目录，避免重复下载。
 任何清理都先确认任务自有进程结束，不修改其他任务／用户服务。dist保留55／56产物；新功能仅本地提交，禁止push。
+
+## dev57 最终验收
+
+PostgresMemory增加native snapshot/scan；显式initialize新增epoch表，既有writer/advisory锁和CAS保持。named server cursor itersize1，原始key/value SQL截断再解码。
+官方PG16.15源码25181309字节／SHA256 c1575341fa7bd40f5274ea465b34390f4dc64cdd0770af327005caaeb9f6b7ed已验证并临时编译；无系统安装，仅0700 Unix socket。
+服务runner55632在 /private/tmp/ralf-agent-dev57-xjhrw5oj，DSN postgres.dsn，官方源码与binary在同目录；服务已正常关闭，runner55632 exit0且stopped=0确认；无运行中PG实例。
+初始4个实际服务RED缺端口已GREEN，四个进程窗口+配置Agent/owned关闭形成9个新PG案例。相关60／PG组合52与Qdrantskip1／安装69通过；独立review实际验证取消释放游标／事务／锁，未发现P1/P2。
+实际wheel56→57→56新数据库显式schema升级保持原事实，旧写者使新cursor/index失效；原默认Run／Manifest／SQLite引用和21 starter亦保持。198模块一致，独立core venv通过。
+首轮完整34197结束：2failed/3434passed/68skip，两处旧PG夹具解包错误修复并使用匹配Scope；远程绑定4项通过且补入CI。旧第二轮99904在运行早期被中断，已exit130且log无持有进程，不算成功。最终完整24107已exit0，full-suite-verified.log记录3436passed/68skip（653.58s），.pid记录实际子进程5885。最终安装4个远程绑定修复亦通过，总计73项；198模块字节保持。CI远程job已显式纳入新Redis/PG索引tests。
+自有Service已通过stop关闭并确认正常退出；验收已保存，随后仅本地提交。随后继续Temporal Facts绑定／索引生命周期及其他主能力；不因PG子集完成缩小整体目标。
+
+下一阶段定位：temporal_bindings.ROLES当前只有provider/context/knowledge/tool_set/stage_policy，selector被明确拒绝；TemporalActivityRuntime.manifest没有Facts召回注册/证据。后续优先扩展Facts注册／scoped view／原model accepted context receipt，再覆盖原生顺序与高级Agent-node实际History，不添加第三套状态机。agent-bindings旧导读已同步为实际Facade/Temporal子集，避免仍把已交付能力写为尚未实现。

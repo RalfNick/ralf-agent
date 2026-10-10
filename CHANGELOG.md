@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.0.dev57 — Native PostgreSQL Facts scanning
+
+- Add persistent scoped dataset epochs and bounded native PostgreSQL FactScanner under existing transaction/advisory locks. Named server cursors cap key/value bytes before JSON decoding and avoid buffering entire pages in libpq.
+- Reuse complete-corpus indexing and CAS metadata composition, explicit async configuration and owned lifecycle; add actual PostgreSQL connection/Agent/process recovery tests and remote CI coverage.
+- Initialization explicitly adds the epoch table; old session/fact schemas and existing data remain. Temporal Facts bindings, automatic indexing and actual semantic quality remain open.
+
 ## 0.1.0.dev56 — Complete-corpus Facts indexing
 
 - Add bounded FactScanner and snapshot ports for memory/SQLite/Redis; preserve original recall and scoped Agent visibility.

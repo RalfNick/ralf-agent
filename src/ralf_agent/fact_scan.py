@@ -155,3 +155,33 @@ def _scan_page(query, binding, snapshot, candidates):
         canonical(snapshot),
         True,
     )
+
+
+async def _async_scan_page(query, binding, snapshot, candidates):
+    """Bounded async row stream; loaders only decode an already capped row."""
+    items, used, last, more = [], 2, None, False
+    async for position, load in candidates:
+        if len(items) == query.limit:
+            more = True
+            break
+        try:
+            record = _fact_records([load()])[0]
+            size = _scan_size(record) + bool(items)
+            if used + size > query.max_bytes:
+                raise BudgetExceeded("Fact record does not fit scan byte budget")
+        except BudgetExceeded:
+            if not items:
+                raise
+            more = True
+            break
+        items.append(record)
+        used += size
+        last = position
+    return FactScanPage(
+        items,
+        _encode_cursor(binding, snapshot, last) if more else None,
+        used,
+        len(items),
+        canonical(snapshot),
+        True,
+    )

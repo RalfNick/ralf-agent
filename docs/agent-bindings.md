@@ -1,12 +1,15 @@
-# 每 Agent 能力绑定 — dev30 / H1a＋Local H1b＋H1c＋H1d＋H1e＋H1f
+# 每 Agent 能力绑定 — Local 基础与 Temporal 当前范围
 
 在同一个 LocalEngine 中，原生 Agent、顺序／图 Workflow、Team、Dynamic 及嵌套成员可以选择不同的模型、
 纯 DecisionPolicy、上下文、长期事实、知识库和工具子集。每个 Run 固定实际组件及身份；
 无需修改原 AgentSpec，也不为每个 Agent 新建执行权威。
 
-H1a、Local H1b、Session H1c 和 Facts／Knowledge 范围 H1d 已实现。Session 后端与宿主允许的 namespace 选择见[Session 教程](session-bindings.md)。Temporal 绑定、统一 Agent/Runtime Facade、耐久 Turn 准入、跨后端会话路由和
-关闭新语义仍遵循[目标契约](../architecture/specs/agent-facade-session-contract.md)，尚未实现。
-当前 submit/drive/close 保留原行为。
+H1a、Local H1b、Session H1c 和 Facts／Knowledge 范围 H1d 已实现。Session 后端与宿主允许的 namespace 选择见[Session 教程](session-bindings.md)。
+当前 Temporal 已提供版本化 provider/context/knowledge/tool_set/stage_policy 五类绑定，含高级 Agent-node 编排；
+Facts、共享 Session 和资源 selector 等其余组合仍未实现，详见[Temporal 执行范围](temporal-execution.md)。
+统一 Agent/Runtime Facade 和 Local 耐久 Session 已交付明确子集，见[Agent API](agent-api.md)；
+跨后端完整会话路由、其余能力及关闭／移交语义继续按[目标契约](../architecture/specs/agent-facade-session-contract.md)逐项验收。
+本页最小用法以 Local 为主，底层 submit/drive/close 与 Facade 的托管生命周期应分别使用各自契约。
 
 ## 1. 最小用法
 
