@@ -1,4 +1,4 @@
-# Implementation status — 0.1.0.dev42
+# Implementation status — 0.1.0.dev43
 
 Target architecture update: [AgentHarness](../architecture/viewpoints/harness-runtime.md)
 defines broad Harness/Core roles, per-Agent bindings, Agent/Session facade, managed
@@ -29,7 +29,7 @@ dev31 delivers [H2a Local stateless Agent API](agent-api.md): immutable AgentHar
 Runtime-owned Local drive tasks, Agent/AgentRun/RunRef, observation-only wait,
 nested control ownership/waking and retryable drain/cancel closing. Full H1/H2
 are not complete; remote Sessions, Temporal bindings and automatic
-managed stages remain partial. SDK is dev42. The [Facade/Session target contract](../architecture/specs/agent-facade-session-contract.md)
+managed stages remain partial. SDK is dev43. The [Facade/Session target contract](../architecture/specs/agent-facade-session-contract.md)
 now specifies observation-only waiting, durable busy refusal, Session binding revisions,
 and ownership-aware closing. H2a implements the declared Local stateless subset;
 remaining shared routing and backend requirements are not changes to legacy
@@ -192,3 +192,7 @@ dev41 delivers H3b1 [managed context preparation](managed-context-stages.md) for
 
 
 dev42 adds H3a2 [automatic model-selected memory](managed-model-memory-stages.md), opt-in for Local native/sequence. Original memory_stages persist tool-free selection intent/response/keys and independent credits, before existing grounded CAS writes. Empty selection is valid; invalid/unknown selection writes nothing and never falls back to all fields. Actual provider/target/policy pinning, cancellation and evidence-only terminal settlement preserve the original authority. stage_policy and JSON/TOML sourced-memory(-async) factories reuse existing ports. Semantic9 first admission is atomic; dev41 refuses9; rule/default identities and schemas1–8 remain. Free-form/advanced/Temporal stages and full H3/quality remain open.
+
+## dev43 H3 recommended data context
+
+Versioned Local Basic / Local Knowledge / Managed Memory Profiles now compose the existing ports. Opt-in ManagedDataContext adds deterministic Session/knowledge/fact excerpts, existing managed history summaries, and artifact-backed large tool context projections with original-Run intent/read-back/receipt recovery. Default SQLite artifact factories are owned; SDK targets are borrowed; registry sync/async replacements are supported. Native Local Agents/sequences only, semantic Schema10; original default releases and schemas1–9 remain supported. Raw execution evidence is retained. Semantic reference summaries, remote artifact adapters/GC, advanced/Temporal automatic stages, final-config model quality and full H3 acceptance remain open. See [guide](recommended-harness.md).

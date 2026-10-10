@@ -16,6 +16,7 @@ class SQLiteStore:
     managed_stage_version = 1
     context_stage_version = 1
     model_memory_stage_version = 1
+    data_context_stage_version = 1
 
     def __init__(self, path, *, readonly=False):
         # Resolve once: a later chdir or an input symlink must not move the WAL,
@@ -45,7 +46,7 @@ class SQLiteStore:
                 row = self.conn.execute(
                     "SELECT value FROM metadata WHERE key='schema_version'"
                 ).fetchone()
-                if row is None or row[0] not in {"1", "2", "3", "4", "5", "6", "7", "8", "9"}:
+                if row is None or row[0] not in {"1", "2", "3", "4", "5", "6", "7", "8", "9", "10"}:
                     raise ValidationError("Unsupported execution database Schema")
             except (sqlite3.DatabaseError, ValidationError) as exc:
                 self.close()
@@ -74,7 +75,7 @@ class SQLiteStore:
             CREATE INDEX IF NOT EXISTS reservation_run ON reservations(run_id);
         """)
         row = self.conn.execute("SELECT value FROM metadata WHERE key='schema_version'").fetchone()
-        if row and row[0] not in {"1", "2", "3", "4", "5", "6", "7", "8", "9"}:
+        if row and row[0] not in {"1", "2", "3", "4", "5", "6", "7", "8", "9", "10"}:
             self.close()
             raise ValidationError("Unsupported execution database Schema")
         self.conn.execute("INSERT OR IGNORE INTO metadata VALUES ('schema_version','1')")
@@ -106,6 +107,11 @@ class SQLiteStore:
         if self.readonly or not self.conn.in_transaction:
             raise ValidationError("Model memory requires its execution transaction")
         self.create_session_admission().prepare_model_memory_stages()
+
+    def prepare_data_context_stages(self):
+        if self.readonly or not self.conn.in_transaction:
+            raise ValidationError("Data context requires its execution transaction")
+        self.create_session_admission()._prepare(10)
 
     def prepare_context_stages(self):
         if self.readonly or not self.conn.in_transaction:
@@ -287,7 +293,7 @@ class SQLiteStore:
         version = self.conn.execute(
             "SELECT value FROM metadata WHERE key='schema_version'"
         ).fetchone()[0]
-        if version in {"2", "3", "4", "5", "6", "7", "8", "9"}:
+        if version in {"2", "3", "4", "5", "6", "7", "8", "9", "10"}:
             owner = self.create_session_admission().route_owner(scope, resource)
             if owner is not None:
                 return owner

@@ -49,6 +49,7 @@ from .context_pipeline import BudgetedContextAssembler
 from .context_summaries import ContextSummarizer, ContextSummary, ExcerptContextSummarizer
 from .coordinator import FileCoordinator, InProcessCoordinator
 from .dag_planning import DAGNode, DAGProposal, ModelDAGPlanner, PlanningConclusion, RuleDAGPlanner
+from .data_context import ManagedDataContext
 from .document_parsing import DocumentParser, TextDocumentParser
 from .embedding_http import OpenAIEmbeddingProvider
 from .embedding_response import EmbeddingResponse
@@ -182,6 +183,7 @@ from .recall import (
     RecallPlanner,
     RecallQuery,
 )
+from .recommended import recommended_profile
 from .redis_memory import RedisMemory
 from .redis_streams import RedisStreamsBus
 from .retrieval import (
@@ -276,7 +278,7 @@ from .workflow import (
     WorkflowSelection,
 )
 
-__version__ = "0.1.0.dev42"
+__version__ = "0.1.0.dev43"
 __all__ = [
     "EventCursor",
     "EventEnvelope",
@@ -554,6 +556,8 @@ __all__ += [
     "ManagedMemoryPolicy",
     "ManagedModelMemoryPolicy",
     "ManagedContextPipeline",
+    "ManagedDataContext",
+    "recommended_profile",
     "FrozenContextSummarizer",
     "ManagedModelSummarizer",
     "ManagedSummary",

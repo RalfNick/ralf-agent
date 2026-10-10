@@ -333,6 +333,10 @@ async def recover_terminal_context(engine, run_id):
 
 
 async def prepare_context(engine, run_id, step, context):
+    from .context_artifacts import prepare
+
+    if not await prepare(engine, run_id, context):
+        return None
     run = engine._authorized(run_id)
     validate_journal(engine, run)
     key = _key(run)

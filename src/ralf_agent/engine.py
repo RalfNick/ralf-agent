@@ -427,6 +427,14 @@ class LocalEngine:
         validate_journal(self, run)
         return copy.deepcopy(list(run.get("context_preparations", {}).values()))
 
+    def context_artifacts(self, run_id):
+        """Query original artifact evidence without touching live data storage."""
+        from .context_artifacts import validate_journal
+
+        run = self._authorized(run_id)
+        validate_journal(self, run)
+        return copy.deepcopy(list(run.get("context_artifacts", {}).values()))
+
     def patch_plan(self, run_id, proposal, *, expected_plan_revision, command_id):
         self._ensure_open()
         return self._orchestration._dag.patch(run_id, proposal, expected_plan_revision, command_id)
@@ -825,6 +833,9 @@ class LocalEngine:
         from .context_preparation import validate_journal
 
         validate_journal(self, run)
+        from .context_artifacts import validate_journal as validate_artifacts
+
+        validate_artifacts(self, run)
         from .remote_session_saves import check_remote_session_run
 
         check_remote_session_run(self, run)
@@ -1643,10 +1654,14 @@ class LocalEngine:
                 raise ValidationError("Context source is no longer available")
 
     async def _validate_model_references(self, run_id, knowledge, action, memory):
+        from .context_artifacts import validate_snapshot
+
+        await validate_snapshot(self, run_id, action)
         await self._validate_knowledge(run_id, knowledge, action.get("knowledge_references", []))
         # Knowledge validation can suspend. Check facts after it, at the last
         # boundary before actual model disclosure, including snapshot retries.
         await self._validate_memory_references(run_id, action.get("memory_references", []), memory)
+        self._check_reference_expiry(action.get("memory_references", []))
         self._check_reference_expiry(action.get("knowledge_references", []), knowledge=True)
 
     async def _model(self, run_id):

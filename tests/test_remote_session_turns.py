@@ -116,6 +116,8 @@ def test_registered_remote_address_refuses_raw_backend_alias(tmp_path):
 
 
 def test_observe_original_remote_binding_after_current_catalog_disappears(tmp_path):
+    from .test_remote_session_recovery import settled
+
     async def scenario():
         runtime, backend, _ = setup(
             tmp_path / "run.sqlite", tmp_path / "data.sqlite", [r.ModelResponse(output="ok")]
@@ -126,7 +128,8 @@ def test_observe_original_remote_binding_after_current_catalog_disappears(tmp_pa
                     "s", command_id="open"
                 )
                 one = await session.submit("q", command_id="one")
-                await one.wait(wait_timeout=1)
+                assert (await one.wait(wait_timeout=1)).snapshot.state == "succeeded"
+                await settled(runtime)
                 runtime.engine.binding_catalog = bound_catalog()
                 assert not (await session.status()).busy
                 assert len(await session.turns()) == 1

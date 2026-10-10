@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.0.dev43 — Recommended Local data context
+
+- Versioned Basic, Knowledge and Managed Memory Profiles with existing configurable ports.
+- Opt-in pure ManagedDataContext projections: original-Run artifact intents/read-back receipts, source-bound reference excerpts and existing history/model summaries.
+- Native Local/sequence semantic Schema10, owned SQLite or borrowed/replacement async artifacts; default and old release semantics retained.
+- Recovery coverage for durable intent, lost write acknowledgment, receipt, unavailable/changed artifacts and already received model responses. Full H3/semantic quality/advanced automatic stages remain pending.
+
 ## 0.1.0.dev42 — Managed model memory selection
 
 - Add opt-in pure ManagedModelMemoryPolicy and existing JSON/TOML stage factories with explicit model mode.

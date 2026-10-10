@@ -479,6 +479,10 @@ class AgentRun:
         """Local auxiliary receipts; explicit resume inspects unknown memory evidence."""
         return await self._runtime._aobserve(self.ref, "memory_stages")
 
+    async def context_artifacts(self):
+        """Local artifact intent and receipts; observation performs no artifact I/O."""
+        return await self._runtime._aobserve(self.ref, "context_artifacts")
+
     async def pending(self):
         return await self._runtime._apending(self.ref)
 

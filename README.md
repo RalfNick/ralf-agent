@@ -19,9 +19,11 @@ dev28 的[Facts／Knowledge 范围绑定](docs/data-bindings.md)支持共享客�
 
 Ralf-Agent 是 Python 优先的开源 Agent 运行时。它把模型决策、工具动作、审批与结果保存为明确的执行步骤，让任务在重启后继续，并核验可能已经发生的业务操作。
 
+[推荐 Local Harness 组合](docs/recommended-harness.md)提供版本化 Basic／Knowledge／Managed Memory，支持自动历史摘要、引用摘录和大工具结果产物投影，沿用原 Run 恢复权威。
+
 初次使用从[首用教程](docs/getting-started.md)开始；typed 工具与模型默认接入见[SDK 指南](docs/sdk-model-tools.md)，持久事件与调用中间件见[事件指南](docs/middleware-and-events.md)。[整体架构审查](architecture/reviews/2026-10-08-agent-framework-alignment.md)区分已有组件、默认组合、尚未实现的能力和三项已在dev24修复的问题与后续架构门槛。
 
-当前版本：**0.1.0.dev39，M1 核心预览**。提供原生 Agent SDK、顺序 Workflow、静态串行／有界并行图，以及有限动态规划与多 Agent 团队。SQLite 持久执行统一管理模型、工具、审批／取消、预算和未知效果恢复。模型层提供 Chat Completions、Anthropic、Gemini 文本及 DeepSeek 非思考模式适配；工具支持可信 Python、异步 ToolSource 和 MCP stdio。JSON／TOML 装配版本化组件，历史任务按原配置恢复。
+当前版本：**0.1.0.dev43，M1 核心预览**。提供原生 Agent SDK、顺序 Workflow、静态串行／有界并行图，以及有限动态规划与多 Agent 团队。SQLite 持久执行统一管理模型、工具、审批／取消、预算和未知效果恢复。模型层提供 Chat Completions、Anthropic、Gemini 文本及 DeepSeek 非思考模式适配；工具支持可信 Python、异步 ToolSource 和 MCP stdio。JSON／TOML 装配版本化组件，历史任务按原配置恢复。
 
 dev14 增加真实 **Redis Session/Facts、PostgreSQL Memory/Knowledge 和 Qdrant VectorIndex**，通过[异步装配](docs/async-assembly.md)接入原有记忆／RAG 端口；提供默认规则 Planner、受管理 ModelPlanner、Verifier，以及 Sequential／Router／Supervisor 团队和独立 Plan／Team 模板。接入方式见[远程数据指南](docs/remote-data.md)与[规划及多 Agent 指南](docs/orchestration.md)。完整 M1 尚未验收，适合开发者试点；[实现清单](docs/implementation-status.md)记录支持边界。预览 API 尚未稳定。
 

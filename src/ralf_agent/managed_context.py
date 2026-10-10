@@ -273,3 +273,6 @@ def admit_context(engine, manifest, kind, parent_call=None):
     _invoke_sync_none(
         getattr(engine.store, "prepare_context_stages", None), "Context stage activation"
     )
+    from .context_artifacts import admit
+
+    admit(engine, manifest)

@@ -30,7 +30,7 @@ class SQLiteSessionAdmission:
         row = self.transaction_owner.conn.execute(
             "SELECT value FROM metadata WHERE key='schema_version'"
         ).fetchone()
-        return row[0] in {"2", "3", "4", "5", "6", "7", "8", "9"}
+        return row[0] in {"2", "3", "4", "5", "6", "7", "8", "9", "10"}
 
     def _writing(self):
         if self.transaction_owner.readonly or not self.transaction_owner.conn.in_transaction:

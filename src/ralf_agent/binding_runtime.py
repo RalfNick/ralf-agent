@@ -210,6 +210,12 @@ class AgentBindingResolver:
             "selection" in entry["manifest"].get("managed_memory", {}) for entry in entries.values()
         ):
             manifest["kernel"] = "local-bindings-9"
+        if any(
+            entry["manifest"].get("managed_context", {}).get("policy", {}).get("kind")
+            == "managed-data-context"
+            for entry in entries.values()
+        ):
+            manifest["kernel"] = "local-bindings-10"
         return manifest
 
 
