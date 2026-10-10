@@ -90,8 +90,13 @@ def test_standalone_ingest_query_receipt_replay_and_reopen(tmp_path):
 
 @pytest.mark.parametrize(
     "name,data",
-    [("unsupported.pdf", b"pdf"), ("bad.md", b"\xff"), ("large.txt", b"a" * (1024 * 1024 + 1))],
-    ids=["unsupported", "invalid-utf8", "too-large"],
+    [
+        ("unsupported.pdf", b"pdf"),
+        ("bad.md", b"\xff"),
+        ("large.txt", b"a" * (1024 * 1024 + 1)),
+        ("bad.html", b"<![foo]><p>text</p>"),
+    ],
+    ids=["unsupported", "invalid-utf8", "too-large", "malformed-html"],
 )
 def test_ingest_starter_rejects_bad_user_source_without_writing(tmp_path, name, data):
     project = tmp_path / "app"
@@ -129,3 +134,39 @@ def test_ingest_starter_rejects_bad_user_source_without_writing(tmp_path, name, 
     )
     assert result.returncode == 2, result.stderr
     assert json.loads(result.stderr)["code"] == "validation_error"
+
+
+def test_standalone_html_ingest_query_and_receipt_replay(tmp_path):
+    project = tmp_path / "html-app"
+    create_starter(project, template="ingest")
+    source = tmp_path / "runbook.html"
+    source.write_text(
+        "<h1>Pool timeout</h1><script>not evidence</script><p>Inspect connections.</p>"
+    )
+    main = [sys.executable, "-m", "agent_app"]
+    cmd = [
+        *main,
+        "ingest",
+        source,
+        "--document-id",
+        "html-guide",
+        "--command-id",
+        "html-first",
+        "--expected-version",
+        "0",
+    ]
+    receipt = json.loads(subprocess_result(cmd, cwd=project))
+    assert receipt["status"] == "knowledge_committed"
+    assert json.loads(subprocess_result(cmd, cwd=project)) == receipt
+    result = json.loads(
+        subprocess_result(
+            [*main, "query", "--query", "pool timeout", "--command-id", "answer-html"], cwd=project
+        )
+    )
+    assert result["state"] == "succeeded" and result["result"]["grounded"] is True
+    citation = result["result"]["citations"][0]
+    assert citation["document_id"] == "html-guide" and citation["version"] == 1
+    assert citation["source_uri"] == source.resolve().as_uri()
+    assert (
+        "Inspect connections" in citation["excerpt"] and "not evidence" not in citation["excerpt"]
+    )

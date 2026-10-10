@@ -456,3 +456,18 @@ declarations before DB. One Important Facts ordering finding fixed in one12-case
 RED→GREEN pass,96 focused regressions; no deferred minors. Evidence
 in [review/evidence](../architecture/reviews/2026-10-10-model-query-transform.md).
 Preparation before acceptance may repeat paid calls; Temporal Facts and real quality remain open.
+
+
+## 2026-10-10 — dev51 native HTML ingestion / H3 R16
+
+Pure HtmlDocumentParser and installed ingest .html/.htm reuse original source, Chunker,
+atomic knowledge receipts and lexical citations. Preformatted code whitespace is preserved;
+actual policy/helper identities, typed malformed input and bounded parser callbacks are
+validated before commit. Text defaults remain unchanged.
+One fresh reviewer found4 Important/1 Minor;11 RED→GREEN cases fixed in one pass,
+84 focused passes/2 unconfigured PG skips. Installed82 contracts and188 byte-identical
+source/wheel/sdist/installed modules verified. Text receipt/pipeline recovery both ways
+and new HTML receipt recovery with old50 are verified; uncommitted HTML is refused
+by old50. Final3197 passed/92 configured-service skips533.12s; Ruff/format/whitespace and
+wheel/sdist pass. Evidence in
+[evidence](../architecture/reviews/2026-10-10-html-ingestion.md).

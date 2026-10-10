@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.0.dev51 — Native HTML ingestion
+
+- Add pure bounded UTF-8 HtmlDocumentParser over the existing parsing and atomic knowledge interfaces; preserve original source digest and parsed-character positions.
+- Extend the installed ingest template to explicit .html/.htm files, with offline cited evidence and unchanged text/Markdown defaults.
+- Cover excluded content, malformed fragments, structure limits, original receipt reopen and before/after-commit process loss. Browser/CSS rendering, network fetching, PDF/Office and live quality remain open.
+
 ## 0.1.0.dev50 — Opt-in model query transformation
 
 - Add ModelQueryTransform over borrowed completed async ModelProvider with bounded strict JSON proposals, original-query preservation, no tools and fixed provider/input contracts.

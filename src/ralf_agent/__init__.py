@@ -86,6 +86,7 @@ from .handoff import (
     validate_outbox,
 )
 from .harness import DecisionProposal, Harness, ModelRequest, NativeHarness
+from .html_parsing import HtmlDocumentParser
 from .ingestion import IngestionCoordinator
 from .ingestion_types import (
     ChunkSpan,
@@ -294,7 +295,7 @@ from .workflow import (
     WorkflowSelection,
 )
 
-__version__ = "0.1.0.dev50"
+__version__ = "0.1.0.dev51"
 __all__ = [
     "EventCursor",
     "EventEnvelope",
@@ -520,6 +521,7 @@ __all__ += [
     "ParagraphChunker",
     "DocumentParser",
     "TextDocumentParser",
+    "HtmlDocumentParser",
     "IngestionCoordinator",
     "ChunkSpan",
     "IngestionReceipt",

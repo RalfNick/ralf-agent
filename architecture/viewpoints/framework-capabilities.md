@@ -249,3 +249,6 @@ Dev49 [Query transform／语义 Facts 召回](../../docs/query-and-semantic-reca
 
 
 Dev50 [ModelQueryTransform](../../docs/model-query-transform.md)以已有 ModelProvider 提出有界搜索词，原 Retriever／Facts 后端接受并验证来源；JSON/TOML 显式命名模型、借用生命周期与每 Agent 数据绑定复用原装配。默认不开启收费改写；已接受 Run/History 快照可恢复，接受前准备仍可能重复。自动策略、全库索引和真实质量未完成。
+
+
+Dev51 在 R16 增加[HTML 解析适配与摄取模板](../../docs/html-ingestion.md)，沿原 DocumentParser／原子知识回执保持来源、分块和恢复；默认文本解析仍兼容。HTML 是归一化文本提取，不是 CSS／DOM 渲染或展示清洗，网页连接器和完整知识生命周期仍待交付。
