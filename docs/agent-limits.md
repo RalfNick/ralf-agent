@@ -1,4 +1,4 @@
-# 每 Agent 执行限制 — dev30 / Local H1f
+# 每 Agent 执行限制 — Local H1f / Temporal dev61
 
 `AgentLimitsPolicy` 是纯同步扩展端口，宿主与每 Agent 选择的策略共同约束执行。
 默认继续使用 `AgentSpec` 的决策次数／上下文上限和原 Run credits；没有配置策略时，
@@ -49,7 +49,8 @@ definition = AgentDefinition(
 Local 原生、顺序、Graph／并行、Team、动态 flat/DAG 和嵌套成员均支持，
 稳定成员路径沿用[绑定教程](agent-bindings.md)。每个 Agent 调用独立计数，父级预算仍约束整体消费。
 直接 Tool／Transform 图节点属于 Workflow 的执行链路，不算某个 Agent 的动作。
-Temporal 目前仍拒绝全部绑定声明，本轮不扩大其支持矩阵。
+Temporal dev61 支持宿主及每 Agent limits 策略，范围、History 采纳时机与恢复见
+[Temporal 限制指南](temporal-agent-limits.md)。下文 Manifest、配置和父级固定投影说明为 Local 契约。
 
 ```python
 from ralf_agent import AgentLimitProposal

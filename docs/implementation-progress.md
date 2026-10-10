@@ -493,3 +493,9 @@ Dev53 frozen final regression: **3256 passed, 92 skipped in 547.10s**; Ruff/form
 ## dev60 Temporal History Session Turns
 
 Add opt-in Session coordination History, actual Namespace UUID identities, fixed bindings, durable serial Turns/busy receipts and idle CAS; preserve original business Run/Parent authority. Ordinary and managed Context keep Conversation separate from Facts/Knowledge and current-task retrieval. Frozen declarations and supervised RPC completion keep caller cancellation/detach separate from business cancellation. Default-off protocols remain. Evidence and open storage/lifecycle/quality gates appear in [dev60 acceptance](../architecture/reviews/2026-10-11-temporal-sessions.md).
+
+## dev61 Temporal Agent limits
+
+沿 R01/H1f 复用纯 AgentLimitsPolicy 和 FixedAgentLimits，Worker 生成提案、原 History 校验并固定逐节点 caps。原 Context／model／Tool Actions 执行限制，原 Parent 投影绑定子树。取消与恢复保留原证据，默认发布保持；最终验收见[记录](../architecture/reviews/2026-10-11-temporal-agent-limits.md)。
+
+最终dev61：全量3492/164（523.45s、56122 exit0），源码实际12恢复+6超限、最终安装18真实Temporal/85契约、209模块、core-only与60→61→60原审批/回执/一次测试工具兼容。宿主入口P2、沙箱异常身份P2与错误码Minor已闭环，自有Service83761 exit0且stopped；只做本地提交。完整能力目标继续active。

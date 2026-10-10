@@ -9,7 +9,9 @@ from .errors import AuthorizationDenied, DefinitionMismatch, ValidationError
 from .temporal_state import detached
 from .types import Scope, digest, submission_request
 
-ROLES = frozenset({"provider", "context", "knowledge", "tool_set", "stage_policy", "facts"})
+ROLES = frozenset(
+    {"provider", "context", "knowledge", "tool_set", "stage_policy", "facts", "limits"}
+)
 
 
 def key(role, selection):
@@ -177,6 +179,10 @@ def catalog_registration(runtime):
             extra["facts_context"] = registration(original)
         elif role == "stage_policy":
             extra["managed_memory"] = memory_registration(component, runtime.providers)
+        elif role == "limits":
+            from .temporal_limits import registration as limits_registration
+
+            extra["agent_limits"] = limits_registration(component)
         records[key(role, choice)] = {**record, "configuration": extra}
     return {"version": 1, "scope": asdict(catalog.scope), "records": records}
 
@@ -296,4 +302,5 @@ def capabilities(manifest):
         ),
         "facts_recall": any("facts_context" in c for c in configurations),
         "rag": any("knowledge_context" in c for c in configurations),
+        "agent_limits": manifest.get("limits_protocol") == 1,
     }

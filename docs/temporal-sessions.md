@@ -18,17 +18,23 @@ from ralf_agent.temporal_activities import TemporalRuntime
 
 # client 和 provider 由宿主创建；实例保持 borrowed 所有权。
 execution = TemporalRuntime(
-    providers={"default": provider}, tools=ToolRegistry(), enable_sessions=True,
+    providers={"default": provider},
+    tools=ToolRegistry(),
+    enable_sessions=True,
 )
 engine = TemporalEngine(
-    client, task_queue="ralf-chat-v1", release=execution.manifest,
+    client,
+    task_queue="ralf-chat-v1",
+    release=execution.manifest,
     scope=Scope("workspace", "trusted-user"),
 )
 async with build_temporal_worker(client, task_queue="ralf-chat-v1", runtime=execution):
     async with Runtime.from_temporal(engine) as runtime:
         session = await runtime.open_session(
             AgentSpec("assistant", "Answer the user's question"),
-            "chat-123", namespace="support", command_id="open-chat-123",
+            "chat-123",
+            namespace="support",
+            command_id="open-chat-123",
         )
         run = await session.submit("hello", command_id="chat-123-turn-1", budget=32)
         result = await run.wait(wait_timeout=30)

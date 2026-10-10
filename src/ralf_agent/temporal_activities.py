@@ -143,6 +143,7 @@ class TemporalRuntime:
         recall_policy=None,
         recall_planner=None,
         enable_sessions=False,
+        limits=None,
     ):
         if type(enable_sessions) is not bool:
             raise ValidationError("enable_sessions requires an explicit boolean")
@@ -191,6 +192,16 @@ class TemporalRuntime:
                 "Global Temporal Facts require the original backend; select scoped resources through BindingCatalog"
             )
         self.binding_catalog, self.stage_policy = binding_catalog, stage_policy
+        from .temporal_limits import pin
+
+        self.limits, self._limits_owner = limits, limits
+        self._limits_pins = ([pin(limits)] if limits is not None else []) + [
+            pin(component)
+            for (role, _, _), (component, _) in (
+                binding_catalog._entries.items() if binding_catalog is not None else []
+            )
+            if role == "limits"
+        ]
         self._catalog_pin, self._stage_pin = binding_catalog, stage_policy
         self.providers, self.tools, self.policy = dict(providers), tools, policy
         if binding_catalog is not None:
@@ -314,6 +325,12 @@ class TemporalRuntime:
         if self.enable_sessions:
             result["session_protocol"] = 1
             result["dispatch_admission"] = "history-1"
+        if self._limits_pins:
+            from .temporal_limits import registration as limits_registration
+
+            result.update(limits_protocol=1, dispatch_admission="history-1")
+            if self.limits is not None:
+                result["host_limits"] = limits_registration(self.limits)
         if self.knowledge is not None:
             result["knowledge_context"] = component_identity(
                 self.knowledge, ("references", "validate")
@@ -351,7 +368,7 @@ class TemporalRuntime:
             result["facts_recall"] = recall_registration(self.recall_policy, self.recall_planner)
             result["facts_protocol"] = 1
         memory = memory_registration(self.stage_policy, self.providers)
-        if catalog is not None or memory is not None or has_facts:
+        if catalog is not None or memory is not None or has_facts or self._limits_pins:
             result.update(kernel="temporal-3", binding_protocol=1, dispatch_admission="history-1")
             if catalog is not None:
                 result["binding_catalog"] = catalog
@@ -382,6 +399,12 @@ class TemporalRuntime:
         if host is not None:
             host.validate_release(expected)
             return self.manifest
+        from .temporal_limits import check_pin as check_limits_pin
+
+        if self.limits is not self._limits_owner:
+            raise DefinitionMismatch("Temporal host limits owner changed")
+        for original in self._limits_pins:
+            check_limits_pin(original)
         from .temporal_facts import check_pin, recall_registration
 
         if self.facts is not self._facts_owner or any(
@@ -466,6 +489,11 @@ class TemporalRuntime:
         if expected is not None and digest(expected) != digest(self._manifest):
             raise DefinitionMismatch("Worker registration differs from this Run's pinned release")
         return self.manifest
+
+    async def propose_limits(self, request: dict) -> dict:
+        from .temporal_limits import evaluate
+
+        return await evaluate(self, request)
 
     async def complete_model(self, request: dict, *, dispatch_guard=None) -> dict:
         from .temporal_bindings import selected_runtime
@@ -881,4 +909,10 @@ def registered_activities(runtime, client=None):
     async def managed_memory(request: dict) -> dict:
         return await runtime.manage_memory(request, dispatch_guard=dispatch_guard)
 
-    return [model, tool, reconcile, evidence, managed_context, managed_memory]
+    from .temporal_limits_state import ACTIVITY as LIMITS_ACTIVITY
+
+    @activity.defn(name=LIMITS_ACTIVITY)
+    async def agent_limits(request: dict) -> dict:
+        return await runtime.propose_limits(request)
+
+    return [model, tool, reconcile, evidence, managed_context, managed_memory, agent_limits]

@@ -9,7 +9,13 @@ import copy
 from jsonschema import Draft202012Validator
 
 from .decisions import final_output, validate_call_ids, validate_decision
-from .errors import AuthorizationDenied, DefinitionMismatch, IdempotencyConflict, ValidationError
+from .errors import (
+    AgentLimitExceeded,
+    AuthorizationDenied,
+    DefinitionMismatch,
+    IdempotencyConflict,
+    ValidationError,
+)
 from .governance import TemporalExecutionPolicy
 from .harness import DecisionProposal
 from .model_evidence import settlement_usage, validate_model_usage, validate_received_response
@@ -112,6 +118,9 @@ def validate_manifest(manifest):
     validate_facts_protocol(manifest)
     validate_knowledge_protocol(manifest)
     validate_session_protocol(manifest)
+    from .temporal_limits_state import validate_protocol as validate_limits_protocol
+
+    validate_limits_protocol(manifest)
     for key in ("tools", "providers", "harness", "context_builder", "tool_executor", "policy"):
         if not isinstance(manifest.get(key), dict):
             raise ValidationError(f"Temporal runtime release requires {key}")
@@ -250,6 +259,7 @@ class TemporalRunState:
         self.epoch = execution_epoch or f"history:{run_id}"
         self.state, self.revision, self.result, self.error = "queued", 0, None, None
         self.node, self.decisions, self.actions = 0, 0, []
+        self.limits_stages = {}
         self.messages = self._turn_messages(self.step, request["input"])
         self.receipts, self.command_digests, self.event_log = {}, {}, []
         self.reservations, self.pending_acks = {}, []
@@ -276,9 +286,12 @@ class TemporalRunState:
     def step(self):
         from .temporal_bindings import effective_step
 
-        return effective_step(
+        step = effective_step(
             self.request["definition"]["steps"][self.node], self.manifest, self.step_bindings
         )
+        from .temporal_limits_state import effective_step as limited_step
+
+        return limited_step(self, step)
 
     @property
     def step_bindings(self):
@@ -477,6 +490,11 @@ class TemporalRunState:
             "release_digest": self.release_digest,
             "budget": self.budget,
             **(
+                {"limits_stages": detached(list(self.limits_stages.values()))}
+                if self.manifest.get("limits_protocol") == 1
+                else {}
+            ),
+            **(
                 {"memory_stages": detached(list(self.memory_stages.values()))}
                 if self.manifest["kernel"] == "temporal-3"
                 else {}
@@ -564,6 +582,11 @@ class TemporalRunState:
                 return operation
         if self.state in TERMINAL:
             return None
+        from .temporal_limits_state import next_stage as next_limits
+
+        operation = next_limits(self)
+        if operation is not None:
+            return operation
         pending = [
             a
             for a in self.actions
@@ -669,7 +692,10 @@ class TemporalRunState:
             == "history-1"
         ):
             request.update(
-                run_id=self.run_id, action_id=action["id"], release_digest=self.release_digest
+                run_id=self.run_id,
+                action_id=action["id"],
+                release_digest=self.release_digest,
+                scope=self.scope,
             )
             action["dispatch_request_digest"] = digest(request)
         return action, request
@@ -704,6 +730,11 @@ class TemporalRunState:
 
     def accept_managed_context(self, action_id, response):
         from .temporal_managed_context import accept_stage
+
+        accept_stage(self, action_id, response)
+
+    def accept_limits(self, action_id, response):
+        from .temporal_limits_state import accept_stage
 
         accept_stage(self, action_id, response)
 
@@ -821,6 +852,10 @@ class TemporalRunState:
                 )
             if received_v2:
                 validate_call_ids([item["call_id"] for item in proposals])
+            from .temporal_limits_state import tool_batch_allowed
+
+            if not tool_batch_allowed(self, proposals):
+                raise AgentLimitExceeded("Agent tool action limit exceeded")
             if proposals:
                 self.actions.extend(proposals)
                 self.messages.append(
@@ -852,7 +887,7 @@ class TemporalRunState:
 
                 if not prepare(self, action, result):
                     self.complete_node(result)
-        except (ValidationError, AuthorizationDenied) as exc:
+        except (ValidationError, AuthorizationDenied, AgentLimitExceeded) as exc:
             if received_v2:
                 self._reject_model(action, exc.code)
             else:

@@ -132,7 +132,7 @@ def test_original_parent_projects_each_declared_binding_subtree(kind):
     assert child.step["provider"] != "default"
 
 
-@pytest.mark.parametrize("role", ["session", "decision_policy", "sandbox", "limits"])
+@pytest.mark.parametrize("role", ["session", "decision_policy", "sandbox"])
 def test_unsupported_temporal_binding_refused_before_run(role):
     runtime, _, _, _ = setup()
     descriptor = AgentBindingDescriptor(**{role: BindingSelection.ref("missing", "1")})

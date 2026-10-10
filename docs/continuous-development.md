@@ -90,3 +90,11 @@ Temporal KnowledgeBindingResource namespace、实际 effective namespace、纯 s
 
 最终dev60：全量3466/146（536.83s、47316 exit0），原Temporal27＋最终入口3、安装Session15／契约103、207模块、core-only与59↔60默认Run／Manifest／Artifact／21 starter兼容。四项P2已修复；实际CLI1.9.1/Server1.32.0，最后Service35988 exit0且stopped。任务目录 /private/tmp/ralf-agent-dev60-_vif9k8h；日志与已验证CLI保留。
 下一批先完善 Temporal 其余角色的固定选择／受管理采纳，外置 Session 数据需先补资源身份／准确保存与同权威责任；继续 R15/H4/H5 和质量门槛。不以本批提交关闭全能力目标。
+
+## dev61 当前批次与下一定位
+
+Temporal H1f 复用可替换纯 LimitsPolicy，原 Run History 逐节点采纳宿主／AgentSpec 交集；同定义不同节点、普通／managed、图／Team／动态／嵌套保持固定绑定和 caps。实际 Worker 恢复与新旧审批兼容已验证；最终全量及本地提交在[验收记录](../architecture/reviews/2026-10-11-temporal-agent-limits.md)更新。自有 Temporal Service83761正常退出且stopped标记确认，源码和安装恢复都不调用真实模型。
+
+下一定位：Temporal 仍缺每 Agent CompletionVerifier 与纯 DecisionPolicy 替换。优先把现有 CompletionRequest/CompletionVerdict 接到原模型完成、原工具回执和原 History 受管理采纳，区分 retry/reject/accept，先验证再记忆／终态，不添加第三套状态机；随后其余角色、外置 Session 数据和 R15/H4/H5/真实质量。整个 R01–R26 目标继续 active。
+
+最终dev61：全量3492/164（523.45s、56122 exit0），源码实际12恢复+6超限、最终安装18真实Temporal/85契约、209模块、core-only与60→61→60原审批/回执/一次测试工具兼容。宿主入口P2、沙箱异常身份P2与错误码Minor已闭环，自有Service83761 exit0且stopped；只做本地提交。完整能力目标继续active。

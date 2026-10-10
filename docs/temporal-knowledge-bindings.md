@@ -9,9 +9,18 @@ Context Activity 负责读取，原 Temporal History 负责采纳和执行；没
 
 ```python
 from ralf_agent import (
-    AgentBindingDescriptor, AgentDefinition, AgentSpec, BindingCatalog,
-    BindingSelection, Document, KnowledgeBindingResource, KnowledgeContext,
-    LexicalRetriever, Scope, SQLiteKnowledgeStore, ToolRegistry,
+    AgentBindingDescriptor,
+    AgentDefinition,
+    AgentSpec,
+    BindingCatalog,
+    BindingSelection,
+    Document,
+    KnowledgeBindingResource,
+    KnowledgeContext,
+    LexicalRetriever,
+    Scope,
+    SQLiteKnowledgeStore,
+    ToolRegistry,
 )
 from ralf_agent.temporal_activities import TemporalRuntime
 
@@ -20,15 +29,19 @@ store = SQLiteKnowledgeStore("knowledge.sqlite")
 store.put(scope, "guides", Document("guide", "pool troubleshooting"), expected_version=0)
 catalog = BindingCatalog(scope=scope)
 catalog.register(
-    "knowledge", "docs", "1",
+    "knowledge",
+    "docs",
+    "1",
     KnowledgeBindingResource(
         KnowledgeContext(LexicalRetriever(store)),
-        namespaces=("guides", "policies"), default_namespace="guides",
+        namespaces=("guides", "policies"),
+        default_namespace="guides",
     ),
 )
 execution = TemporalRuntime(
     providers={"default": provider},  # 宿主已注册 Provider
-    tools=ToolRegistry(), binding_catalog=catalog,
+    tools=ToolRegistry(),
+    binding_catalog=catalog,
 )
 definition = AgentDefinition(
     AgentSpec("answer", "Answer from the supplied evidence"),

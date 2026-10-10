@@ -148,3 +148,13 @@ Local `limits` 支持纯同步 AgentLimitsPolicy；有效决策／上下文／�
 虚拟并行节点只投影已接受的上限。受管理子 Run 在接受及恢复时验证父级原成员上限，
 包括模型 Planner、绑定和嵌套成员；重新调用策略不能采纳更宽松的发布。
 存在 limits 的父子关系固定原成员身份，未配置 limits 的旧关系字段与回执形状保持兼容。
+
+## dev61 Temporal H1f 限制采纳子集
+
+宿主 limits 及目录中的 limits 策略增加显式 limits_protocol=1 和 temporal-3。固定登记包含策略 JSON 身份及纯 Python 方法指纹，原角色 descriptor 与稳定路径不变。只配置宿主限制而无 BindingCatalog 时，inherit/disabled 声明也必须可用；disabled 不能移除宿主与 AgentSpec。
+
+每实际 Agent 节点第一次推进时，原 Run History 保存限制请求意图。Worker 只产生严格完成的 AgentLimitProposal；History 独立核验原请求摘要、策略集合、合法字段／有限类型，再与原 AgentSpec 取交集。接受前安全纯提案可以重试，接受后 caps 是恢复事实，不因重启重新计算。Parent 不拥有或计算这些阶段。
+
+普通及 managed Context／model 消费 caps，决定数与累计工具 Action 数在原状态机检查；超限批次全部拒绝，原模型响应和计费证据保持。纯工具批次规则返回数据判定，由原 Workflow 状态机提交 agent_limit_exceeded，避免跨 SDK 沙箱异常身份影响失败状态推进。取消后的限制响应仅保存迟到证据。
+
+完整每 Agent verifier／decision_policy／外置 Session 数据与环境角色、父级共享配额、全局容量、真实费用和质量仍是独立能力。实际交付与验收见[指南](../../docs/temporal-agent-limits.md)。

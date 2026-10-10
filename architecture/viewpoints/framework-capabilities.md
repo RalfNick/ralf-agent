@@ -260,3 +260,7 @@ Dev53 在 R16 增加[可选文本 PDF 适配](../../docs/pdf-ingestion.md)，仍
 ## dev60 当前入口增量
 
 [Temporal History Sessions](../../docs/temporal-sessions.md) 接通实际 Namespace UUID、耐久 Turn／busy／CAS，覆盖原生／顺序／高级组合及普通／managed 上下文。Session 协调不拥有业务 Action；外置 Session 数据、其余角色、FIFO／续接／迁移及完整 H2/H3 仍未完成。当前能力以剩余清单和逐批验收为准。
+
+## dev61 Temporal 限制策略
+
+R01/H1f 在原 History 接通可替换 LimitsPolicy、宿主交集、逐节点固定和整批超限拒绝；绑定支持七类。纯策略 Activity 不拥有执行权威，恢复复用原 caps。见[指南](../../docs/temporal-agent-limits.md)；全局容量、其他角色和完整 H1/H3/M1 未完成。
