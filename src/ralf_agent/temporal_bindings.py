@@ -10,7 +10,17 @@ from .temporal_state import detached
 from .types import Scope, digest, submission_request
 
 ROLES = frozenset(
-    {"provider", "context", "knowledge", "tool_set", "stage_policy", "facts", "limits", "verifier"}
+    {
+        "provider",
+        "context",
+        "knowledge",
+        "tool_set",
+        "stage_policy",
+        "facts",
+        "limits",
+        "verifier",
+        "decision_policy",
+    }
 )
 
 
@@ -187,6 +197,13 @@ def catalog_registration(runtime):
             from .temporal_completion import registration as completion_registration
 
             extra["completion_verifier"] = completion_registration(component)
+        elif role == "decision_policy":
+            from .temporal_decision import registration as decision_registration
+
+            extra.update(
+                harness=detached(component.identity),
+                decision_registration=decision_registration(component),
+            )
         records[key(role, choice)] = {**record, "configuration": extra}
     return {"version": 1, "scope": asdict(catalog.scope), "records": records}
 
@@ -194,7 +211,7 @@ def catalog_registration(runtime):
 def effective_manifest(manifest, descriptor):
     choices = validate_descriptor(manifest, descriptor)
     result = detached(manifest)
-    for role in ("context", "knowledge", "stage_policy", "facts", "verifier"):
+    for role in ("context", "knowledge", "stage_policy", "facts", "verifier", "decision_policy"):
         selection = getattr(choices, role)
         if selection.mode == "inherit":
             continue
@@ -204,6 +221,7 @@ def effective_manifest(manifest, descriptor):
             "stage_policy": ("managed_memory",),
             "facts": ("facts_context",),
             "verifier": ("completion_verifier",),
+            "decision_policy": ("harness", "decision_registration"),
         }[role]
         for field in fields:
             result.pop(field, None)
@@ -252,6 +270,7 @@ def selected_runtime(runtime, request):
         ("stage_policy", "stage_policy"),
         ("facts", "facts"),
         ("verifier", "verifier"),
+        ("decision_policy", "harness"),
     ):
         selection = getattr(choices, role)
         if selection.mode == "ref":
@@ -310,4 +329,5 @@ def capabilities(manifest):
         "rag": any("knowledge_context" in c for c in configurations),
         "agent_limits": manifest.get("limits_protocol") == 1,
         "completion_verification": manifest.get("completion_protocol") == 1,
+        "custom_harness": manifest.get("decision_protocol") == 1,
     }

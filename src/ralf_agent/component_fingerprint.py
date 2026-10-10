@@ -4,6 +4,7 @@ No arbitrary object repr/state or globals are serialized. Captured configuration
 must be JSON and immutable; other deployment dependencies belong in identity.
 """
 
+import dis
 import inspect
 import types
 
@@ -45,6 +46,52 @@ def _code(code):
     }
 
 
+def _super_capture(cls, target, seen, depth):
+    if not inspect.isclass(cls) or "super" not in target.__code__.co_names:
+        raise ValidationError("Opaque class captures are not executable configuration")
+    instructions = list(dis.get_instructions(target))
+    for index, instruction in enumerate(instructions):
+        if instruction.argval != "__class__" or instruction.opname not in {
+            "LOAD_DEREF",
+            "LOAD_CLASSDEREF",
+            "STORE_DEREF",
+            "DELETE_DEREF",
+        }:
+            continue
+        # Python 3.12+ emits an implicit class/self pair for LOAD_SUPER_ATTR.
+        # Bit 1 distinguishes explicit two-argument super from the compiler pair.
+        if not (
+            instruction.opname == "LOAD_DEREF"
+            and index > 0
+            and index + 2 < len(instructions)
+            and instructions[index - 1].opname == "LOAD_GLOBAL"
+            and instructions[index - 1].argval == "super"
+            and instructions[index + 1].opname == "LOAD_FAST"
+            and instructions[index + 1].arg == 0
+            and instructions[index + 2].opname == "LOAD_SUPER_ATTR"
+            and not instructions[index + 2].arg & 2
+        ):
+            raise ValidationError("Only the compiler closure for zero-argument super is supported")
+    bases = []
+    for base in cls.__mro__[1:]:
+        methods = {}
+        for name in target.__code__.co_names:
+            value = vars(base).get(name)
+            if value is None:
+                continue
+            descriptor = type(value).__name__
+            if isinstance(value, (staticmethod, classmethod)):
+                value = value.__func__
+            if not inspect.isfunction(value):
+                raise ValidationError("super requires verifiable Python base methods")
+            methods[name] = {
+                "descriptor": descriptor,
+                "function": _function(value, seen, depth + 1),
+            }
+        bases.append({"module": base.__module__, "name": base.__qualname__, "methods": methods})
+    return {"super_class": {"module": cls.__module__, "name": cls.__qualname__, "bases": bases}}
+
+
 def _function(method, seen, depth=0):
     target = getattr(method, "__func__", method)
     if not inspect.isfunction(target):
@@ -61,8 +108,12 @@ def _function(method, seen, depth=0):
             else [cell.cell_contents for cell in target.__closure__]
         )
         captured = [
-            {"function": _function(item, seen, depth + 1)} if inspect.isfunction(item) else item
-            for item in captured
+            _super_capture(item, target, seen, depth)
+            if name == "__class__"
+            else {"function": _function(item, seen, depth + 1)}
+            if inspect.isfunction(item)
+            else item
+            for name, item in zip(target.__code__.co_freevars, captured, strict=True)
         ]
         wrapped = getattr(target, "__wrapped__", None)
         return {

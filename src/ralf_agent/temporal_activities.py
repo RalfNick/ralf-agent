@@ -155,8 +155,13 @@ class TemporalRuntime:
             raise ValidationError("Temporal requires an explicit ToolRegistry")
         if policy is not None and not is_sync_callable(policy):
             raise ValidationError("Authorization policy must execute synchronously")
-        if harness is not None and type(harness) is not NativeHarness:
-            raise ValidationError("Temporal currently supports only the native harness")
+        if harness is not None:
+            try:
+                component_identity(harness, ("prepare", "propose"), synchronous=True)
+            except ValidationError as exc:
+                raise ValidationError(
+                    "Temporal native harness or registered pure Harness required"
+                ) from exc
         if context_builder is not None:
             from .temporal_context import context_registration
 
@@ -243,7 +248,19 @@ class TemporalRuntime:
             )
             if getattr(component, method, None) is not None
         ]
-        self.harness = harness or NativeHarness()
+        self.harness = NativeHarness() if harness is None else harness
+        from .temporal_decision import default_policy
+        from .temporal_decision import pin as decision_pin
+
+        self._harness_owner = self.harness
+        self._decision_pins = [decision_pin(self.harness)] + [
+            decision_pin(component)
+            for (role, _, _), component in self._catalog_objects.items()
+            if role == "decision_policy"
+        ]
+        self._decision_enabled = not default_policy(self.harness) or any(
+            k[0] == "decision_policy" for k in self._catalog_objects
+        )
         self.context = context_builder or ContextAssembler()
         self.executor = tool_executor or PythonToolExecutor(tools)
         self.journal = journal
@@ -348,6 +365,12 @@ class TemporalRuntime:
             result["completion_protocol"] = 1
             if self.verifier is not None:
                 result["completion_verifier"] = completion_registration(self.verifier)
+        if self._decision_enabled:
+            from .temporal_decision import registration as decision_registration
+
+            result.update(
+                decision_protocol=1, decision_registration=decision_registration(self.harness)
+            )
         if self.knowledge is not None:
             result["knowledge_context"] = component_identity(
                 self.knowledge, ("references", "validate")
@@ -391,6 +414,7 @@ class TemporalRuntime:
             or has_facts
             or self._limits_pins
             or self._verifier_pins
+            or self._decision_enabled
         ):
             result.update(kernel="temporal-3", binding_protocol=1, dispatch_admission="history-1")
             if catalog is not None:
@@ -422,6 +446,12 @@ class TemporalRuntime:
         if host is not None:
             host.validate_release(expected)
             return self.manifest
+        from .temporal_decision import check_pin as check_decision_pin
+
+        if self.harness is not self._harness_owner:
+            raise DefinitionMismatch("Temporal DecisionPolicy owner changed")
+        for original in self._decision_pins:
+            check_decision_pin(original)
         from .temporal_completion import check_pin as check_completion_pin
 
         if self.verifier is not self._verifier_owner:
@@ -595,7 +625,18 @@ class TemporalRuntime:
             if not isinstance(prepared, ModelRequest):
                 _close_lazy(prepared)
                 raise ValidationError("Harness.prepare must return ModelRequest")
+            if self._manifest.get("decision_protocol") == 1:
+                from .temporal_decision import validate_prepared_tools
+
+                if type(prepared) is not ModelRequest:
+                    raise ValidationError("Pure Harness.prepare requires concrete ModelRequest")
+                validate_prepared_tools(prepared.tools, self.tools.descriptions(step.tools))
             frozen = ModelRequest(prepared.messages, prepared.tools)
+            prepared_evidence = (
+                detached({"messages": frozen.messages, "tools": frozen.tools})
+                if self._manifest.get("decision_protocol") == 1
+                else None
+            )
             from .temporal_context import validate_prepared
 
             validate_prepared(self.context, frozen.messages, step.max_context_chars)
@@ -644,6 +685,11 @@ class TemporalRuntime:
             if not isinstance(proposal, DecisionProposal):
                 _close_lazy(proposal)
                 raise ValidationError("Harness.propose must return DecisionProposal")
+            if (
+                self._manifest.get("decision_protocol") == 1
+                and type(proposal) is not DecisionProposal
+            ):
+                raise ValidationError("Pure Harness.propose requires concrete DecisionProposal")
             calls = []
             for call in proposal.tool_calls:
                 if call.name not in step.tools:
@@ -663,12 +709,23 @@ class TemporalRuntime:
                 self.tools.manifests(step.tools),
             )
             self.validate_release(request["runtime_manifest"])
+            selected_proposal = {
+                "output": detached(proposal.output),
+                "tool_calls": [asdict(call) for call in proposal.tool_calls],
+            }
+            decision = {}
+            if self._manifest.get("decision_protocol") == 1:
+                from .temporal_decision import evidence as decision_evidence
+
+                decision["decision_evidence"] = decision_evidence(
+                    self, request, prepared_evidence, received, selected_proposal
+                )
             return {
                 "ok": True,
                 "model_evidence_version": 2,
                 "received_response": received,
-                "output": detached(proposal.output),
-                "tool_calls": [asdict(call) for call in proposal.tool_calls],
+                **selected_proposal,
+                **decision,
                 "usage": usage,
             }
         except Exception as exc:

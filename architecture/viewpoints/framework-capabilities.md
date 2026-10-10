@@ -266,3 +266,7 @@ Dev53 在 R16 增加[可选文本 PDF 适配](../../docs/pdf-ingestion.md)，仍
 R01/H1f 在原 History 接通可替换 LimitsPolicy、宿主交集、逐节点固定和整批超限拒绝；绑定支持七类。纯策略 Activity 不拥有执行权威，恢复复用原 caps。见[指南](../../docs/temporal-agent-limits.md)；全局容量、其他角色和完整 H1/H3/M1 未完成。
 
 Dev62 接通 [Temporal 纯完成验证](../../docs/temporal-completion-verification.md)，原 History 采纳当前节点回执的 accept/reject/retry，再进入记忆或节点完成。Temporal 八类角色包括 verifier；DecisionPolicy、外置 Session、环境角色及完整智能质量仍待验收。
+
+### dev63 Temporal DecisionPolicy
+
+DecisionPolicy 复用公共纯 Harness prepare/propose。固定 host/ref/inherit 选择、identity及两个实际方法、原请求/响应/提案证据，原 History 校验并采纳；必需角色disabled拒绝。实际准备工具只能是原描述的无重复子集，mandatory Schema／权限／审批／限制保持。只支持编译器零参数super闭包及可验证Python基类方法，不允许直接类访问或其他opaque捕获。默认无额外策略的旧发布保持；源代码/解释器变更保留原Worker，不宣称跨版本指纹相等。九类绑定当前已包含decision_policy，外置Session、环境角色和完整H1/H2继续开放。见[指南](../../docs/temporal-decision-policy.md)。

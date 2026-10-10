@@ -157,8 +157,12 @@ Local `limits` 支持纯同步 AgentLimitsPolicy；有效决策／上下文／�
 
 普通及 managed Context／model 消费 caps，决定数与累计工具 Action 数在原状态机检查；超限批次全部拒绝，原模型响应和计费证据保持。纯工具批次规则返回数据判定，由原 Workflow 状态机提交 agent_limit_exceeded，避免跨 SDK 沙箱异常身份影响失败状态推进。取消后的限制响应仅保存迟到证据。
 
-完整每 Agent decision_policy／外置 Session 数据与环境角色、父级共享配额、全局容量、真实费用和质量仍是独立能力。实际交付与验收见[指南](../../docs/temporal-agent-limits.md)。
+dev63 已接通 Temporal 纯 decision_policy；外置 Session 数据与环境角色、父级共享配额、全局容量、真实费用和质量仍是独立能力。实际交付与验收见[指南](../../docs/temporal-agent-limits.md)。
 
 ## dev62 Temporal H1e 纯完成验证子集
 
 显式 completion_protocol=1／temporal-3 固定策略身份及方法指纹。原 History 在 mandatory final_output 校验后冻结当前节点原类型输入、候选及已提交工具回执；纯 Activity 的 accept/reject/retry 必须对应原 Scope／请求摘要。只有 accept 进入原记忆／节点完成；取消后的迟到结论只留证据。retry 不重置原决策、工具额度和预算，并保留受保护反馈尾组。Agent ref 替换可选宿主完成规则，disabled 只关闭补充规则；强制 Schema、授权、审批和 limits 保持。绑定子 Run 控制引用使用含 agent_bindings 的原 request_release_digest。详见[指南](../../docs/temporal-completion-verification.md)。
+
+### dev63 Temporal DecisionPolicy
+
+DecisionPolicy 复用公共纯 Harness prepare/propose。固定 host/ref/inherit 选择、identity及两个实际方法、原请求/响应/提案证据，原 History 校验并采纳；必需角色disabled拒绝。实际准备工具只能是原描述的无重复子集，mandatory Schema／权限／审批／限制保持。只支持编译器零参数super闭包及可验证Python基类方法，不允许直接类访问或其他opaque捕获。默认无额外策略的旧发布保持；源代码/解释器变更保留原Worker，不宣称跨版本指纹相等。九类绑定当前已包含decision_policy，外置Session、环境角色和完整H1/H2继续开放。见[指南](../../docs/temporal-decision-policy.md)。

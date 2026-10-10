@@ -5,7 +5,7 @@
 无需修改原 AgentSpec，也不为每个 Agent 新建执行权威。
 
 H1a、Local H1b、Session H1c 和 Facts／Knowledge 范围 H1d 已实现。Session 后端与宿主允许的 namespace 选择见[Session 教程](session-bindings.md)。
-当前 Temporal 已提供版本化 provider/context/knowledge/tool_set/stage_policy/facts/limits/verifier 八类绑定，含高级 Agent-node 编排；limits 见[History 限制采纳](temporal-agent-limits.md)。
+当前 Temporal 已提供版本化 provider/context/knowledge/tool_set/stage_policy/facts/limits/verifier/decision_policy 九类绑定，含高级 Agent-node 编排；limits 见[History 限制采纳](temporal-agent-limits.md)。
 verifier 的替换／关闭与恢复见[Temporal 完成验证](temporal-completion-verification.md)。
 Facts／Knowledge 宿主 namespace selector 和默认 History Session 已实现；外置 Session 数据路由及其他角色仍未实现，详见[Temporal 执行范围](temporal-execution.md)。
 统一 Agent/Runtime Facade 和 Local 耐久 Session 已交付明确子集，见[Agent API](agent-api.md)；
@@ -263,3 +263,5 @@ CLI inspect 和文本 status/run/resume 按逐步骤发布展示绑定；审批�
 自动记忆 stage_policy 的支持范围、写授权和独立恢复证据见[受管理记忆阶段](managed-memory-stages.md)。高级编排和 Temporal 自动阶段仍未交付。
 
 Temporal dev58 的 Facts allowlist namespace、可替换有界召回与恢复边界见[专项指南](temporal-facts.md)。dev59 [Knowledge namespace selector](temporal-knowledge-bindings.md) 已交付；其他角色／共享 Session 尚未交付。
+
+Temporal decision_policy 复用公共纯 Harness，支持宿主及每 Agent 选择；方法固定、工具描述子集及原 History 证据见[指南](temporal-decision-policy.md)。

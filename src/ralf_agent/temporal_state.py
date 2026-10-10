@@ -124,6 +124,9 @@ def validate_manifest(manifest):
     from .temporal_completion_state import validate_protocol as validate_completion_protocol
 
     validate_completion_protocol(manifest)
+    from .temporal_decision_state import validate_protocol as validate_decision_protocol
+
+    validate_decision_protocol(manifest)
     for key in ("tools", "providers", "harness", "context_builder", "tool_executor", "policy"):
         if not isinstance(manifest.get(key), dict):
             raise ValidationError(f"Temporal runtime release requires {key}")
@@ -792,7 +795,10 @@ class TemporalRunState:
         self._emit("run_failed", {"code": response.get("code", "activity_failed")})
 
     def accept_model(self, action_id, response):
-        received_v2 = response.get("model_evidence_version") == 2
+        decision_required = self.manifest.get("decision_protocol") == 1
+        received_v2 = response.get("model_evidence_version") == 2 or (
+            decision_required and "received_response" in response
+        )
         if not received_v2 and not response["ok"]:
             # Recorded legacy Activity failures must replay their original History.
             self.accept_failure(action_id, response)
@@ -810,6 +816,8 @@ class TemporalRunState:
             self._emit("late_model_evidence", {"action_id": action_id})
             return
         try:
+            if decision_required and not received_v2:
+                raise ValidationError("DecisionPolicy requires original received model evidence")
             if received_v2:
                 validate_received_response(received)
                 validate_model_usage(received["usage"])
@@ -818,6 +826,13 @@ class TemporalRunState:
                     return
                 if response.get("usage") != received["usage"]:
                     raise ValidationError("Model evidence usage disagrees with its proposal")
+                if self.manifest.get("decision_protocol") == 1:
+                    from .temporal_decision_state import valid_adoption
+
+                    if not valid_adoption(self, action, response):
+                        raise ValidationError(
+                            "Decision evidence differs from original request or registration"
+                        )
                 proposal = validate_decision(
                     AgentSpec(**self.step),
                     DecisionProposal(

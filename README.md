@@ -1,6 +1,6 @@
 # Ralf-Agent
 
-当前工作区 **0.1.0.dev62** 提供显式语义知识库、相关事实召回和 Plan／Team 默认组合，
+当前工作区 **0.1.0.dev63** 提供显式语义知识库、相关事实召回和 Plan／Team 默认组合，
 复用原执行、审批和恢复协议。见[H3 使用与扩展指南](docs/h3-intelligent-combinations.md)。
 dev48 增加[显式 HTTP 语义重排](docs/http-reranking.md)，保留原知识来源及旧默认配置。
 dev49 增加[Query transform 与语义 Facts 召回](docs/query-and-semantic-recall.md)，支持显式语义记忆组合及保留语义顺序的上下文。候选窗口外事实和真实质量仍待完善。
@@ -12,8 +12,9 @@ dev56 增加[全库事实索引](docs/fact-indexing.md)：有界扫描、独立�
 dev55 增加[文件 Artifact](docs/file-artifacts.md)：无需 extra，可通过 SDK 或 JSON/TOML 替换 SQLite，支持有界正文、作用域、TTL、原引用恢复和受管理卸载。POSIX 本地文件系统范围；孤儿清理、全局磁盘配额和 S3 继续待交付。
 dev60 增加 [Temporal 持久会话／Turn](docs/temporal-sessions.md)：原 Namespace UUID 身份、串行占用、稳定拒绝与空闲重绑定；图／Team／动态／嵌套复用原执行 History，支持上下文和 Worker 恢复。外置 Session 数据和长期治理继续待交付。
 dev61 增加 [Temporal 每 Agent 限制策略](docs/temporal-agent-limits.md)：可替换纯策略、强制宿主交集、逐节点固定及超限工具批次拒绝。
+dev63 增加 [Temporal DecisionPolicy](docs/temporal-decision-policy.md)：宿主／每 Agent 纯 prepare/propose、自定义请求与原决策证据。
 dev62 增加 [Temporal 完成验证](docs/temporal-completion-verification.md)：原节点工具回执、纯规则采纳、有界重试及完成前记忆门禁。
-Local 十类及 Temporal 八类每 Agent 绑定、自动上下文与来源化记忆已接通；完整 H3、
+Local 十类及 Temporal 九类每 Agent 绑定、自动上下文与来源化记忆已接通；完整 H3、
 真实模型质量、H4 执行环境和 H5 企业治理仍待验收。当前适合开发者试点。
 
 以下版本演进说明保留其发布时的边界；当前支持范围以[能力清单](docs/implementation-status.md)为准。
@@ -294,7 +295,7 @@ python examples/evaluate.py
 - [完整设计](architecture/design.md)与 [review 取舍](architecture/review-resolution.md)。
 - [当前剩余能力清单](docs/remaining-work.md)：逐层区分已交付子集、尚未实现与待验收能力，按 H1–H5 继续建设。
 - [Local Agent API](docs/agent-api.md)：dev31 H2a 的统一入口、独立执行托管、纯观察等待与可重试关闭；dev32 补齐同库原生／顺序 Session/Turn 子集。
-- [Temporal Agent API](docs/temporal-agent-api.md)：高级编排入口、实际子 Run 控制引用、异步重连与客户端 detach；八类绑定和默认 History Session 已交付，其余角色及外置 Session 数据继续待实现。
+- [Temporal Agent API](docs/temporal-agent-api.md)：高级编排入口、实际子 Run 控制引用、异步重连与客户端 detach；九类绑定和默认 History Session 已交付，其余角色及外置 Session 数据继续待实现。
 - [AgentHarness目标架构](architecture/viewpoints/harness-runtime.md)：广义Harness/Core、每Agent绑定、统一入口、受管理默认链路与H1–H5开发门槛；首期见[能力绑定契约](architecture/specs/agent-capability-binding-contract.md)，H2见[Facade／Session／关闭契约](architecture/specs/agent-facade-session-contract.md)。H1a–H1f 与入口子集已交付；完整 H1/H2、Temporal 其余角色、其他资源选择／环境角色及完整智能默认链路仍待实现。
 - [通用框架能力与扩展验收](architecture/viewpoints/framework-capabilities.md)：每层的契约、默认实现、替换入口和验收矩阵；覆盖 Pipeline／Graph／流式编排、动态 Plan、多 Agent 和可替换数据链路，按固定版本与场景对标 AgentScope。
 - [Run 命令](architecture/specs/run-command-contract.md)、[Action 恢复](architecture/specs/action-recovery-contract.md)、[Runner 能力](architecture/specs/runner-capability-contract.md)。
