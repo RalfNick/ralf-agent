@@ -9,7 +9,7 @@ from .errors import AuthorizationDenied, DefinitionMismatch, ValidationError
 from .temporal_state import detached
 from .types import Scope, digest, submission_request
 
-ROLES = frozenset({"provider", "context", "knowledge", "tool_set", "stage_policy"})
+ROLES = frozenset({"provider", "context", "knowledge", "tool_set", "stage_policy", "facts"})
 
 
 def key(role, selection):
@@ -53,13 +53,23 @@ def validate_descriptor(manifest, descriptor, scope=None):
         choice = getattr(descriptor, role)
         if choice.mode == "inherit":
             continue
-        if role not in ROLES or choice.selector:
+        if role not in ROLES or (choice.selector and role != "facts"):
             raise ValidationError("Unsupported Temporal binding role or resource selector")
         if choice.mode == "ref":
             record = records.get(key(role, choice))
             if record is None or record["role"] != role:
                 raise DefinitionMismatch("Original Temporal binding version unavailable")
             configuration = record["configuration"]
+            if role == "facts":
+                identity = configuration["facts_context"]["identity"]
+                if identity.get("kind") == "facts-binding-resource":
+                    if set(choice.selector) - {"namespace"}:
+                        raise ValidationError("Facts selector supports only namespace")
+                    namespace = choice.selector.get("namespace", identity["default_namespace"])
+                    if namespace not in identity["namespaces"]:
+                        raise AuthorizationDenied("Facts namespace is not authorized by the host")
+                elif choice.selector:
+                    raise ValidationError("Facts selectors require a host namespace resource")
             memory = configuration.get("managed_memory", {}).get("policy", {})
             context = configuration.get("managed_context", {}).get("policy", {})
             if scope is not None and (
@@ -147,6 +157,11 @@ def catalog_registration(runtime):
             from .temporal_activities import component_identity
 
             extra["knowledge_context"] = component_identity(component, ("references", "validate"))
+        elif role == "facts":
+            from .temporal_facts import registration
+
+            original = catalog._entries[(role, component_id, version)][0]
+            extra["facts_context"] = registration(original)
         elif role == "stage_policy":
             extra["managed_memory"] = memory_registration(component, runtime.providers)
         records[key(role, choice)] = {**record, "configuration": extra}
@@ -156,7 +171,7 @@ def catalog_registration(runtime):
 def effective_manifest(manifest, descriptor):
     choices = validate_descriptor(manifest, descriptor)
     result = detached(manifest)
-    for role in ("context", "knowledge", "stage_policy"):
+    for role in ("context", "knowledge", "stage_policy", "facts"):
         selection = getattr(choices, role)
         if selection.mode == "inherit":
             continue
@@ -164,6 +179,7 @@ def effective_manifest(manifest, descriptor):
             "context": ("context_builder", "context_registration", "managed_context"),
             "knowledge": ("knowledge_context",),
             "stage_policy": ("managed_memory",),
+            "facts": ("facts_context",),
         }[role]
         for field in fields:
             result.pop(field, None)
@@ -203,6 +219,7 @@ def selected_runtime(runtime, request):
         ("context", "context"),
         ("knowledge", "knowledge"),
         ("stage_policy", "stage_policy"),
+        ("facts", "facts"),
     ):
         selection = getattr(choices, role)
         if selection.mode == "ref":
@@ -252,5 +269,6 @@ def capabilities(manifest):
             c.get("managed_context", {}).get("policy", {}).get("kind") == "managed-data-context"
             for c in configurations
         ),
+        "facts_recall": any("facts_context" in c for c in configurations),
         "rag": any("knowledge_context" in c for c in configurations),
     }

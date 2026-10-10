@@ -13,6 +13,8 @@ from .errors import AuthorizationDenied, DefinitionMismatch, IdempotencyConflict
 from .governance import TemporalExecutionPolicy
 from .harness import DecisionProposal
 from .model_evidence import settlement_usage, validate_model_usage, validate_received_response
+from .temporal_facts_state import validate_protocol as validate_facts_protocol
+from .temporal_facts_state import validate_snapshot as validate_facts_snapshot
 from .tools import ToolSpec
 from .types import AgentSpec, ToolCall, canonical, credits, digest
 
@@ -103,6 +105,7 @@ def validate_manifest(manifest):
             raise DefinitionMismatch("Unsupported managed Temporal context release")
     elif "managed_context" in manifest:
         raise DefinitionMismatch("Managed context requires an explicit Temporal protocol")
+    validate_facts_protocol(manifest)
     for key in ("tools", "providers", "harness", "context_builder", "tool_executor", "policy"):
         if not isinstance(manifest.get(key), dict):
             raise ValidationError(f"Temporal runtime release requires {key}")
@@ -578,7 +581,8 @@ class TemporalRunState:
             if operation is not None or self.state in TERMINAL:
                 return operation
         if ("managed_context" not in self.step_manifest) and (
-            self.step_manifest.get("knowledge_context") is not None
+            self.step_manifest.get("facts_context") is not None
+            or self.step_manifest.get("knowledge_context") is not None
             or self.step_manifest.get("context_registration") is not None
         ):
             signature = self.context_cache_signature()
@@ -604,6 +608,11 @@ class TemporalRunState:
                         else {}
                     ),
                     "messages": detached(self.messages),
+                    **(
+                        {"session_id": self.request.get("session_id") or self.run_id}
+                        if "facts_context" in self.step_manifest
+                        else {}
+                    ),
                 }
         self.decisions += 1
         action = {
@@ -624,7 +633,8 @@ class TemporalRunState:
         if self.manifest["kernel"] == "temporal-3":
             request.update(step_bindings=self.step_bindings, scope=self.scope)
         if self.context_snapshot is not None and (
-            self.step_manifest.get("knowledge_context") is not None
+            self.step_manifest.get("facts_context") is not None
+            or self.step_manifest.get("knowledge_context") is not None
             or self.step_manifest.get("context_registration") is not None
         ):
             request.update(context=detached(self.context_snapshot), scope=self.scope)
@@ -655,6 +665,7 @@ class TemporalRunState:
             or len(canonical(response["messages"])) > self.step["max_context_chars"]
         ):
             raise ValidationError("Invalid received model context")
+        validate_facts_snapshot(response, self.step_manifest)
         self.context_snapshot = detached(response)
         self.context_signature = self.context_cache_signature()
         action["status"], action["response"] = "completed", detached(response)

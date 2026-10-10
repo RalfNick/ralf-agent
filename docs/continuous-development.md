@@ -1,7 +1,7 @@
 # 持续能力开发与验收队列
 
 用户授权：2026-10-10 持续执行直到能力完成；只本地提交，不推送远端。
-当前 dev57 PostgreSQL全库扫描本地子集已验收（基线cb9a824/dev56）；实际提交 SHA 以 Git 为准。此队列落实既有架构，不新增执行权威。
+当前 dev58 Temporal Facts 子集已验收（基线6c69cb8/dev57）；实际提交 SHA 以 Git 为准。此队列落实既有架构，不新增执行权威。
 权威范围：[剩余清单](remaining-work.md) R01–R26、[Harness 架构](../architecture/viewpoints/harness-runtime.md) H1–H5。
 历史设计中明确后置的高级 Realtime/TTS、公共插件市场和运行中热迁移保持单独路线图；按需适配器不以数量定义完成。
 
@@ -64,3 +64,12 @@ PostgresMemory增加native snapshot/scan；显式initialize新增epoch表，既�
 自有Service已通过stop关闭并确认正常退出；验收已保存，随后仅本地提交。随后继续Temporal Facts绑定／索引生命周期及其他主能力；不因PG子集完成缩小整体目标。
 
 下一阶段定位：temporal_bindings.ROLES当前只有provider/context/knowledge/tool_set/stage_policy，selector被明确拒绝；TemporalActivityRuntime.manifest没有Facts召回注册/证据。后续优先扩展Facts注册／scoped view／原model accepted context receipt，再覆盖原生顺序与高级Agent-node实际History，不添加第三套状态机。agent-bindings旧导读已同步为实际Facade/Temporal子集，避免仍把已交付能力写为尚未实现。
+
+## dev58 当前批次与下一定位
+
+Temporal Facts 绑定、host namespace、纯planner与有界pages沿原 Context History 采纳；源码及安装真实12恢复组合、原服务16、安装94、core与57↔58默认回执通过。
+审查3项P2已RED→GREEN并复核，纯Scope/JSON与新证据模块预加载/passthrough覆盖真实sandbox；未知model不重试。
+真实Redis/PG16.15 Activity/state scoped read、TTL、stale与物理connection替换探针通过。两项自有Service runner39428/13352已exit0，服务停止标记确认。
+初次全量唯一版本一致性失败因pytest收集时载入旧dev57；代码及版本固定后full-suite-final.log记录3417 passed/119 skipped（577.74s），58529 exit0；Ruff/格式/空白通过。
+当前目录 /private/tmp/ralf-agent-dev58-7f724wa1；最终提交及全量结果见[dev58验收](../architecture/reviews/2026-10-11-temporal-facts.md)。
+下一定位：temporal_bindings已支持facts与其namespace，但knowledge selector仍拒绝；KnowledgeBindingResource.resolve已有Local scoped view。先补Temporal Knowledge原始resource/method/backend固定和独立来源验证、实际History/绑定矩阵，再推进共享Session/续接与其余R01–R26门槛。不把本批次当完整goal完成。

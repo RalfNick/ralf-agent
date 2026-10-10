@@ -152,7 +152,10 @@ class TemporalEngine:
             if self._release["kernel"] == "temporal-3"
             else [],
             "session_modes": [],
-            "resource_selectors": False,
+            "resource_selectors": self._release["kernel"] == "temporal-3",
+            "resource_selector_roles": {"facts": ["namespace"]}
+            if self._release["kernel"] == "temporal-3"
+            else [],
             "required_stage_kinds": [],
             "session_admission": False,
         }
@@ -480,5 +483,6 @@ def _workflow_runner():
             "jsonschema",
             "ralf_agent.temporal_bindings",
             "ralf_agent.temporal_memory_state",
+            "ralf_agent.temporal_facts_state",
         )
     )

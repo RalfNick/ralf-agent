@@ -408,3 +408,10 @@ SDK borrowed、工厂 owned；默认 SQLite/Hash 与显式 async Redis/Qdrant �
 复用Facts扫描契约、原事务／writer advisory锁与CAS Catalog；新增持久epoch表及有界named cursor。
 PG来源／Catalog可以在SDK或已有async工厂中替换，保留owned/borrowed及Scope边界。只做数据能力补齐，不引入执行权威。
 实际PG恢复和取消释放通过独立验证；Temporal绑定和索引自动维护另验收。
+
+### dev58 Temporal Facts 读链路
+
+沿原 temporal-3 增加显式 Facts 注册、每 Agent inherit/ref/disabled 和 host namespace allowlist。
+有界 recall/planner、Knowledge/Facts 来源分类、snapshot采纳、原生资源固定与取消最终admission由原组件/History承担。
+不添加执行权威，也不把事实写授权作为读范围；纯 RuntimeKernel 规则与 Activity I/O 分离。
+[专项契约与验收](../../docs/temporal-facts.md)记录原生、顺序及高级实际Agent恢复；共享Session、Knowledge视图及其他角色继续后续门槛。

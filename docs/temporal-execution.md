@@ -1,6 +1,6 @@
 # Independent Temporal execution — dev17 preview
 
-Current dev46: [Temporal automatic memory and per-Agent bindings](temporal-memory-bindings.md) adds the opt-in temporal-3 protocol. Legacy protocol identities remain unchanged; shared Session/Facts recall and other binding roles remain unsupported.
+Current dev58: [Temporal automatic memory and per-Agent bindings](temporal-memory-bindings.md) adds the opt-in temporal-3 protocol. [Facts namespace selection and bounded recall](temporal-facts.md) extend this protocol over the original Context History. Legacy default-off protocol identities remain unchanged; shared Sessions, Knowledge selectors and other binding roles remain unsupported.
 
 `TemporalEngine` implements the public AsyncExecutionEngine/AsyncRuntimeDiagnostics
 ports. Network controls are explicitly awaited. A Temporal Workflow owns commands,

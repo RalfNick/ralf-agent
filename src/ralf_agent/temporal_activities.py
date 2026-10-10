@@ -139,6 +139,9 @@ class TemporalRuntime:
         execution_policy=None,
         binding_catalog=None,
         stage_policy=None,
+        facts=None,
+        recall_policy=None,
+        recall_planner=None,
     ):
         if not isinstance(providers, dict) or not providers:
             raise ValidationError("Temporal requires explicit model providers")
@@ -161,6 +164,28 @@ class TemporalRuntime:
 
         if binding_catalog is not None and not isinstance(binding_catalog, BindingCatalog):
             raise ValidationError("Temporal bindings require a scoped BindingCatalog")
+        from .temporal_facts import pins, recall_registration
+
+        self.facts, self.recall_policy, self.recall_planner = facts, recall_policy, recall_planner
+        self._facts_owner = facts
+        self._recall_owners = recall_policy, recall_planner
+        self._facts_pins = ([pins(facts)] if facts is not None else []) + [
+            pins(component)
+            for (role, _, _), (component, _) in (
+                binding_catalog._entries.items() if binding_catalog is not None else []
+            )
+            if role == "facts"
+        ]
+        self._recall_registration = recall_registration(recall_policy, recall_planner)
+        from .task_controls import _binding
+
+        self._recall_method = None if recall_planner is None else _binding(recall_planner.plan)
+        from .binding_data import FactsBindingResource, FactsView
+
+        if isinstance(facts, (FactsBindingResource, FactsView)):
+            raise ValidationError(
+                "Global Temporal Facts require the original backend; select scoped resources through BindingCatalog"
+            )
         self.binding_catalog, self.stage_policy = binding_catalog, stage_policy
         self._catalog_pin, self._stage_pin = binding_catalog, stage_policy
         self.providers, self.tools, self.policy = dict(providers), tools, policy
@@ -291,8 +316,18 @@ class TemporalRuntime:
         from .temporal_bindings import catalog_registration, memory_registration
 
         catalog = catalog_registration(self)
+        if self.facts is not None:
+            from .temporal_facts import registration as facts_registration
+
+            result["facts_context"] = facts_registration(self.facts)
+        has_facts = self.facts is not None or any(k[0] == "facts" for k in self._catalog_objects)
+        if has_facts:
+            from .temporal_facts import recall_registration
+
+            result["facts_recall"] = recall_registration(self.recall_policy, self.recall_planner)
+            result["facts_protocol"] = 1
         memory = memory_registration(self.stage_policy, self.providers)
-        if catalog is not None or memory is not None:
+        if catalog is not None or memory is not None or has_facts:
             result.update(kernel="temporal-3", binding_protocol=1, dispatch_admission="history-1")
             if catalog is not None:
                 result["binding_catalog"] = catalog
@@ -323,6 +358,24 @@ class TemporalRuntime:
         if host is not None:
             host.validate_release(expected)
             return self.manifest
+        from .temporal_facts import check_pin, recall_registration
+
+        if self.facts is not self._facts_owner or any(
+            current is not original
+            for current, original in zip(
+                (self.recall_policy, self.recall_planner), self._recall_owners, strict=True
+            )
+        ):
+            raise DefinitionMismatch("Temporal Facts recall owner changed")
+        for pin in self._facts_pins:
+            check_pin(pin)
+        if digest(recall_registration(self.recall_policy, self.recall_planner)) != digest(
+            self._recall_registration
+        ) or (
+            self.recall_planner is not None
+            and _binding(self.recall_planner.plan) != self._recall_method
+        ):
+            raise DefinitionMismatch("Temporal recall planner changed")
         if (
             self.binding_catalog is not self._catalog_pin
             or self.stage_policy is not self._stage_pin
@@ -402,7 +455,11 @@ class TemporalRuntime:
             step = AgentSpec(**request["step"])
             provider = self.providers[step.provider]
             complete = provider.complete
-            if self.knowledge is not None or "context_registration" in self._manifest:
+            if (
+                self.facts is not None
+                or self.knowledge is not None
+                or "context_registration" in self._manifest
+            ):
                 evidence = request["context"]
                 from .temporal_managed_context import validate_snapshot
 
@@ -410,10 +467,15 @@ class TemporalRuntime:
                 if self.knowledge is not None:
                     _completed_none(
                         await self.knowledge.validate(
-                            Scope(**request["scope"]), detached(evidence["references"])
+                            Scope(**request["scope"]),
+                            detached(evidence.get("knowledge_references", evidence["references"])),
                         ),
                         "Knowledge validation",
                     )
+                if self.facts is not None:
+                    from .temporal_facts import validate as validate_facts
+
+                    await validate_facts(self, request, request["context"])
                 self.validate_release(request["runtime_manifest"])
                 messages, context_identity = (
                     detached(evidence["messages"]),
@@ -444,11 +506,16 @@ class TemporalRuntime:
                 raise DefinitionMismatch("Executing business provider changed before dispatch")
             from .temporal_managed_context import admit_dispatch
 
+            if self.facts is not None:
+                from .temporal_facts import validate as validate_facts
+
+                await validate_facts(self, request, request["context"])
             await admit_dispatch(request, dispatch_guard)
             if "managed_context" in self._manifest and self.knowledge is not None:
                 _completed_none(
                     await self.knowledge.validate(
-                        Scope(**request["scope"]), detached(evidence["references"])
+                        Scope(**request["scope"]),
+                        detached(evidence.get("knowledge_references", evidence["references"])),
                     ),
                     "Knowledge validation",
                 )
@@ -514,7 +581,11 @@ class TemporalRuntime:
             return await selected_runtime(self, request).prepare_context(request)
         try:
             self.validate_release(request["runtime_manifest"])
-            if self.knowledge is None and "context_registration" not in self._manifest:
+            if (
+                self.facts is None
+                and self.knowledge is None
+                and "context_registration" not in self._manifest
+            ):
                 raise ValidationError("No registered custom or knowledge context")
             scope, step = Scope(**request["scope"]), AgentSpec(**request["step"])
             references = (
@@ -538,10 +609,16 @@ class TemporalRuntime:
                     await self.knowledge.validate(scope, frozen), "Knowledge validation"
                 )
             self.validate_release(request["runtime_manifest"])
+            from .temporal_facts import load
+
+            evidence = await load(self, request, frozen)
             from .temporal_context import assemble_context
 
             messages, identity = assemble_context(
-                self.context, detached(request["messages"]), frozen, step.max_context_chars
+                self.context,
+                detached(request["messages"]),
+                evidence["references"],
+                step.max_context_chars,
             )
             from .temporal_context import validate_context, validate_prepared
 
@@ -550,7 +627,7 @@ class TemporalRuntime:
             result = {
                 "ok": True,
                 "messages": messages,
-                "references": frozen,
+                **evidence,
                 "context_identity": identity,
             }
             canonical(result)

@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.0.dev58 — Temporal scoped Facts recall
+
+- Add opt-in Facts registration, per-Agent inherit/ref/disabled and host namespace selectors over the original native/composite Temporal Histories.
+- Reuse bounded recall policy/planner and legacy adapters; fix page-query identity and total allowances, native client/resource pins, independently validated Knowledge/Facts provenance and accepted context evidence.
+- Preserve completed responses, History dispatch admission and conservative unknown-model behavior; document borrowed ownership and SDK assembly boundaries.
+
 ## 0.1.0.dev57 — Native PostgreSQL Facts scanning
 
 - Add persistent scoped dataset epochs and bounded native PostgreSQL FactScanner under existing transaction/advisory locks. Named server cursors cap key/value bytes before JSON decoding and avoid buffering entire pages in libpq.

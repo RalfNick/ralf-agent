@@ -103,7 +103,7 @@ memory/SQLite 全库330事实、过期和他域排除；四个真实进程提交
 FactsView分页/provenance、JSON/TOML装配及原Run重开有测试；真实本地Redis270条及客户端／SQLite向量重开通过，
 原ready回执复用不重做Embedding。Qdrant新工厂和collection切换采用HTTP fixture验证，仍需真实服务组合验收。
 PostgreSQL16.15 真实服务已验证270条全库索引、连接／向量重开、配置Agent和四进程窗口；新[PG验收](../architecture/reviews/2026-10-11-postgres-fact-indexing.md)独立记录。
-Temporal Facts绑定仍是清单开放项。dev56回归／安装证据见[验收](../architecture/reviews/2026-10-11-fact-indexing.md)。
+dev58 [Temporal Facts绑定](temporal-facts.md)已接通原Context History与scope/namespace视图；跨机器索引服务及真实语义质量仍独立验收。dev56回归／安装证据见[验收](../architecture/reviews/2026-10-11-fact-indexing.md)。
 PostgreSQL source/catalog 都可通过既有 backend adapter=postgres 配置 dsn_env、backend_id、initialize；使用 abuild，实际连接由资源账本 owned 关闭。
 旧数据库在首次采用新 Scanner 前显式调用 PostgresMemory.initialize 或设置 initialize=true；这是新增表，不是执行历史热迁移。
 更换数据库时更新 backend_id/Profile；隐藏环境别名移动不算同一个发布。

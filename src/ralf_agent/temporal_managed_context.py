@@ -220,6 +220,10 @@ async def execute(runtime, request, *, dispatch_guard=None):
                     "Knowledge validation",
                 )
                 _check(runtime, request, context)
+            from .temporal_facts import load
+
+            evidence = await load(runtime, request, references)
+            references = evidence["references"]
             history, limit = request["messages"], request["step"]["max_context_chars"]
             messages, identity = context.assemble(detached(history), detached(references), limit)
             validate_context(messages, identity, limit)
@@ -228,7 +232,7 @@ async def execute(runtime, request, *, dispatch_guard=None):
                 "ok": True,
                 "plan": detached(plan),
                 "fallback": {"messages": messages, "manifest": identity},
-                "references": references,
+                **evidence,
                 "offloads": context.offloads(history)
                 if isinstance(context, ManagedDataContext)
                 else [],
@@ -340,6 +344,14 @@ async def execute(runtime, request, *, dispatch_guard=None):
                 "ok": True,
                 "messages": detached(messages),
                 "references": detached(request["references"]),
+                **(
+                    {
+                        k: detached(request[k])
+                        for k in ("facts", "knowledge_references", "facts_recall")
+                    }
+                    if "facts" in request
+                    else {}
+                ),
                 "context_identity": detached(identity),
             }
         raise ValidationError("Unknown managed context phase")
@@ -407,6 +419,8 @@ def next_stage(state):
             else {}
         ),
     }
+    if "facts_context" in state.step_manifest:
+        request["session_id"] = state.request.get("session_id") or state.run_id
     if state.step_manifest["managed_context"].get("dispatch_admission") == "history-1":
         request.update(action_id=action["id"], release_digest=state.release_digest)
     if phase == "plan":
@@ -427,6 +441,13 @@ def next_stage(state):
     else:
         prepared = stage["prepared"]
         request.update({k: detached(prepared[k]) for k in ("plan", "fallback", "references")})
+        if "facts" in prepared:
+            request.update(
+                {
+                    k: detached(prepared[k])
+                    for k in ("facts", "knowledge_references", "facts_recall")
+                }
+            )
         request["summary_response"] = detached(stage.get("summary_response", {}))
     state._emit(
         "context_stage_intent_recorded",
@@ -523,10 +544,17 @@ def accept_stage(state, action_id, response):
     elif phase == "finalize":
         if (
             response.get("references") != stage["prepared"]["references"]
+            or any(
+                response.get(k) != stage["prepared"].get(k)
+                for k in ("facts", "knowledge_references", "facts_recall")
+            )
             or not isinstance(response.get("messages"), list)
             or len(canonical(response["messages"])) > state.step["max_context_chars"]
         ):
             raise ValidationError("Invalid adopted context snapshot")
+        from .temporal_facts_state import validate_snapshot
+
+        validate_snapshot(response, state.step_manifest)
         stage["status"], stage["snapshot"] = "completed", response
         state.context_snapshot = response
         state.context_signature = state.context_cache_signature()

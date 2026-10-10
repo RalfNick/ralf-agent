@@ -1,4 +1,4 @@
-# Temporal 自动记忆与每 Agent 绑定（dev46）
+# Temporal 自动记忆与每 Agent 绑定（dev46；Facts dev58）
 
 显式 `temporal-3` 发布复用 `AgentDefinition`、`BoundDefinition`、`AgentBindingDescriptor` 和宿主授权的 `BindingCatalog`。原 `temporal-1`／`temporal-2` 发布身份与执行流程保持；旧 Worker 拒绝新协议。History 是唯一执行权威，记忆数据库只保存事实和可核验版本。
 
@@ -12,9 +12,10 @@
 | tool_set | inherit／ref／disabled | 只能缩小 AgentSpec 已声明工具集合 |
 | stage_policy | inherit／ref／disabled | 规则／模型字段选择、每 Agent 写后端／namespace |
 | Agent／顺序／图／Team／动态 flat/DAG／嵌套 | 各实际 Agent 支持以上选择 | 高级编排使用 orchestration_release，子请求只带原声明子树 |
-| Session／Facts 召回、custom Harness／Verifier／limits 与环境角色 | 未支持 Temporal 绑定 | 非 inherit 的未支持选择在接受前拒绝 |
+| facts | inherit／ref／disabled，有界召回与宿主 namespace selector | [Facts 契约](temporal-facts.md)；来源／额度／客户端固定 |
+| Session、custom Harness／Verifier／limits 与环境角色 | 未支持 Temporal 绑定 | 非 inherit 的未支持选择在接受前拒绝 |
 
-字段选择的写阶段是长期记忆来源观察链路，不是自动信念修订。它不会自动注入 Facts 到后续上下文；召回仍需显式检索组件。模型只选允许的字段，值来自已通过最终输出校验的结果。
+字段选择的写阶段是长期记忆来源观察链路，不是自动信念修订。Facts 召回需显式注册读后端／绑定；dev58 的读链路与写阶段独立选择，不因授权写入扩大召回范围。模型只选允许的字段，值来自已通过最终输出校验的结果。
 
 ## 显式装配
 
@@ -96,4 +97,4 @@ History 在推进下一步／确认业务完成前，分别记录来源、规则
 
 确定性测试使用真实 JSON 编码／解码，验证固定来源、额度、取消、目标漂移、无效响应及终态只读恢复。实际 localhost Temporal Service 使用独立 Worker 进程和 SQLite 审计，覆盖选择响应后／CAS 后退出、根子恢复、读取取消与父子 History replay；最终统计见[验收记录](../architecture/reviews/2026-10-10-temporal-memory-bindings.md)。没有调用真实模型，也没有重测远程数据库部署。
 
-剩余：Temporal 其他绑定角色／资源 selector／共享 Session、语义质量与冲突修订／撤回／遗忘、真实模型质量、远程产物默认组合、History payload 卸载／Continue-As-New、长期容量和保留治理。完整 H1／H3／M1 仍未验收。
+剩余：Temporal 其他绑定角色／Knowledge selector／共享 Session、语义质量与冲突修订／撤回／遗忘、真实模型质量、远程产物默认组合、History payload 卸载／Continue-As-New、长期容量和保留治理。完整 H1／H3／M1 仍未验收。

@@ -5,8 +5,8 @@
 无需修改原 AgentSpec，也不为每个 Agent 新建执行权威。
 
 H1a、Local H1b、Session H1c 和 Facts／Knowledge 范围 H1d 已实现。Session 后端与宿主允许的 namespace 选择见[Session 教程](session-bindings.md)。
-当前 Temporal 已提供版本化 provider/context/knowledge/tool_set/stage_policy 五类绑定，含高级 Agent-node 编排；
-Facts、共享 Session 和资源 selector 等其余组合仍未实现，详见[Temporal 执行范围](temporal-execution.md)。
+当前 Temporal 已提供版本化 provider/context/knowledge/tool_set/stage_policy/facts 六类绑定，含高级 Agent-node 编排；
+Knowledge selector、共享 Session 和其他角色等其余组合仍未实现，详见[Temporal 执行范围](temporal-execution.md)。
 统一 Agent/Runtime Facade 和 Local 耐久 Session 已交付明确子集，见[Agent API](agent-api.md)；
 跨后端完整会话路由、其余能力及关闭／移交语义继续按[目标契约](../architecture/specs/agent-facade-session-contract.md)逐项验收。
 本页最小用法以 Local 为主，底层 submit/drive/close 与 Facade 的托管生命周期应分别使用各自契约。
@@ -260,3 +260,5 @@ CLI inspect 和文本 status/run/resume 按逐步骤发布展示绑定；审批�
 决策／上下文／工具动作 caps 与默认配置见[H1f 教程](agent-limits.md)。
 
 自动记忆 stage_policy 的支持范围、写授权和独立恢复证据见[受管理记忆阶段](managed-memory-stages.md)。高级编排和 Temporal 自动阶段仍未交付。
+
+Temporal dev58 的 Facts allowlist namespace、可替换有界召回与恢复边界见[专项指南](temporal-facts.md)。Knowledge selector／其他角色／共享 Session 尚未交付。
