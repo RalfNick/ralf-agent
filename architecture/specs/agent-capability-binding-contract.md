@@ -166,3 +166,7 @@ dev63 已接通 Temporal 纯 decision_policy；外置 Session 数据与环境角
 ### dev63 Temporal DecisionPolicy
 
 DecisionPolicy 复用公共纯 Harness prepare/propose。固定 host/ref/inherit 选择、identity及两个实际方法、原请求/响应/提案证据，原 History 校验并采纳；必需角色disabled拒绝。实际准备工具只能是原描述的无重复子集，mandatory Schema／权限／审批／限制保持。只支持编译器零参数super闭包及可验证Python基类方法，不允许直接类访问或其他opaque捕获。默认无额外策略的旧发布保持；源代码/解释器变更保留原Worker，不宣称跨版本指纹相等。九类绑定当前已包含decision_policy，外置Session、环境角色和完整H1/H2继续开放。见[指南](../../docs/temporal-decision-policy.md)。
+
+### dev64 默认 Session 数据核验前置
+
+内存/SQLite 增加精确 scoped message receipt，同步与异步端口共用结果契约；Local 独立数据复用原保存恢复，同库默认保持。完整 Temporal 外置数据责任见[目标规格](temporal-session-data-contract.md)，原 Run/Parent 承担数据完成门禁，Session Coordinator 保留占用/静默责任。规格与 SPI 不构成 Temporal 第十类绑定或完整 H1/H2/H3 交付。

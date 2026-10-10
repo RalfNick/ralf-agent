@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.0.dev64 — Default exact Session receipts
+
+- Add synchronous memory/SQLite message receipt inspection and the async thread-safe bridge, preserving exact Scope/address/ID, original revision and detached JSON.
+- Preserve original message ID types with independently invalidated SQLite receipt metadata; retain old data formats, colocated Local routes and borrowed lifecycle.
+- Cover actual native/Team process loss before/after Session commit, default composite roots and old/new wheel Session/data/approval compatibility.
+- Specify complete Temporal external Session responsibilities; managed external reads/writes and per-Agent Session bindings remain open.
+
 ## 0.1.0.dev60 — Temporal durable Session Turns
 
 - Add opt-in History-owned Session binding revisions, serial Turn admission, stable busy receipts, original Run start intents and idle CAS rebind.

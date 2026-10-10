@@ -1,7 +1,7 @@
 # 持续能力开发与验收队列
 
 用户授权：2026-10-10 持续执行直到能力完成；只本地提交，不推送远端。
-当前 dev63 Temporal DecisionPolicy 子集已验收（基线cb370f9/dev62）；实际提交 SHA 以 Git 为准。此队列落实既有架构，不新增执行权威。
+当前 dev64 默认精确 Session 回执批次（基线9a1b067/dev63）；实际提交 SHA 以 Git 为准。此队列落实既有架构，不新增执行权威。
 权威范围：[剩余清单](remaining-work.md) R01–R26、[Harness 架构](../architecture/viewpoints/harness-runtime.md) H1–H5。
 历史设计中明确后置的高级 Realtime/TTS、公共插件市场和运行中热迁移保持单独路线图；按需适配器不以数量定义完成。
 
@@ -110,3 +110,11 @@ Temporal H1f 复用可替换纯 LimitsPolicy，原 Run History 逐节点采纳�
 沿 R01/H1 公共纯 Harness 的 prepare/propose，提供宿主默认／每 Agent inherit/ref；固定实际方法、编译器 super 闭包及原 Scope。实际模型请求与原响应/提案证据由原 Run History 一次采纳；不改变审批、Schema、limits、完成规则和记忆责任。Temporal 九类绑定已接通，外置 Session/环境角色、完整 Profile/服务治理和真实质量仍待交付。见[指南](temporal-decision-policy.md)和[验收](../architecture/reviews/2026-10-11-temporal-decision-policy.md)。
 
 最终dev63：全量3563 passed/198 skipped（485.75s，95622 exit0）；冻结源码实际16/125.73s、最终安装实际16/126.11s及195契约。214模块、core-only与62→63→62原审批／回执／一次工具兼容通过。独立审查2项P2由2RED→195GREEN闭环，无待办Minor。自有Service75051正常exit0且stopped。未调用真实模型／重验远端数据库；仅本地提交，完整R01–R26继续active。
+
+## dev64 默认数据前置与下一批
+
+默认 memory/SQLite 现在提供与 Redis/PG 相同形状的精确 Session 回执；Local 原绑定/保存恢复复用原执行权威。Temporal 外置 Session 尚未交付；按[完整数据契约](../architecture/specs/temporal-session-data-contract.md)接通受管理读、原写意图/回执、成功门禁与根/成员绑定，不能把这一前置能力作为目标完成。随后继续输入续接/deadline、H4/H5 与 R01–R26 其余能力；真实质量与外部采用保持独立验收。
+
+### dev64 最终证据与资源
+
+最终完整3613/198（563.98s）、安装146、默认/原会话122、源/wheel/sdist/install214模块、core-only与实际63↔64兼容通过；新外置默认后端旧版拒绝派发。独立审查1P2类型ID已3RED→GREEN。见[验收](../architecture/reviews/2026-10-11-default-session-receipts.md)。root由 `/private/tmp/ralf-agent-dev64-current` 指向 `/private/tmp/ralf-agent-dev64-hk711mpa`，full22252 exit0；本批无托管Temporal/PG服务，完整回归及fixture已结束。下一批从实际本地提交SHA接续完整外置Session契约，不关闭R01–R26。

@@ -9,10 +9,30 @@ from .errors import ValidationError
 from .types import Scope, canonical
 
 
+class SyncSessionReceiptBackend(Protocol):
+    """Synchronous equivalent; callers use the existing memory_call bridge."""
+
+    session_receipt_version: int
+
+    def inspect_message(self, scope: Scope, session_id: str, message_id: str) -> dict: ...
+
+
 class SessionReceiptBackend(Protocol):
+    """Native async receipt backend, retained for existing remote adapters."""
+
     session_receipt_version: int
 
     async def inspect_message(self, scope: Scope, session_id: str, message_id: str) -> dict: ...
+
+
+def inspection_inputs(scope, session_id, message_id):
+    if not isinstance(scope, Scope):
+        raise ValidationError("Session inspection requires trusted Scope")
+    for value in (session_id, message_id):
+        if not isinstance(value, str) or not value.strip():
+            raise ValidationError(
+                "Session inspection requires non-empty storage/message identities"
+            )
 
 
 def supports_remote_session(backend):

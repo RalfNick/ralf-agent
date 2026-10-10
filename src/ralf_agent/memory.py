@@ -8,6 +8,7 @@ import math
 import threading
 import time
 import uuid
+from dataclasses import asdict
 from pathlib import Path
 from typing import Protocol
 
@@ -162,6 +163,7 @@ class ThreadedMemoryAdapter:
                 "validate_facts",
                 "scan_facts",
                 "fact_snapshot",
+                "inspect_message",
             )
         ):
             raise ValidationError("Use native async memory directly without the threaded bridge")
@@ -178,6 +180,17 @@ class ThreadedMemoryAdapter:
     @property
     def fact_scan_version(self):
         return getattr(self.backend, "fact_scan_version", None)
+
+    @property
+    def session_receipt_version(self):
+        return getattr(self.backend, "session_receipt_version", None)
+
+    async def inspect_message(self, scope, session_id, message_id):
+        from .session_receipts import inspection_inputs, validate_inspection
+
+        inspection_inputs(scope, session_id, message_id)
+        result = await self._page_call("inspect_message", scope, session_id, message_id)
+        return validate_inspection(result, scope, session_id, message_id)
 
     async def inspect_fact(self, *args, **kwargs):
         return await self._call(self.backend.inspect_fact, *args, **kwargs)
@@ -214,8 +227,8 @@ class ThreadedMemoryAdapter:
         identity = backend.backend_id
         method = getattr(backend, name, None)
         if not callable(method):
-            if name in {"scan_facts", "fact_snapshot"}:
-                raise ValidationError("Backend does not provide bounded Fact scanning")
+            if name in {"scan_facts", "fact_snapshot", "inspect_message"}:
+                raise ValidationError(f"Backend does not provide {name}")
             method = getattr(LegacyMemoryRecallAdapter(backend), name)
         owner, owner_identity = _method_backend(method)
         result = await self._call(method, *args, **kwargs)
@@ -223,7 +236,7 @@ class ThreadedMemoryAdapter:
             if inspect.iscoroutine(result):
                 result.close()
             raise ValidationError("Threaded memory methods must return synchronously")
-        if backend.backend_id != identity:
+        if self.backend is not backend or backend.backend_id != identity:
             raise DefinitionMismatch("Memory backend identity changed during recall")
         if owner is not None and owner.backend_id != owner_identity:
             raise DefinitionMismatch("Memory method backend identity changed during recall")
@@ -239,6 +252,7 @@ class ThreadedMemoryAdapter:
 class InMemoryMemory:
     fact_scan_version = 1
     fact_inspection_version = 1
+    session_receipt_version = 1
 
     def __init__(self, *, backend_id=None):
         self.backend_id = backend_id or f"memory:{uuid.uuid4().hex}"
@@ -253,6 +267,32 @@ class InMemoryMemory:
         with self._lock:
             records = self._sessions.get((scope.workspace, scope.principal, session_id), [])
             return len(records), [copy.deepcopy(record[1]) for record in records]
+
+    def inspect_message(self, scope, session_id, message_id):
+        from .session_receipts import inspection_inputs, validate_inspection
+
+        inspection_inputs(scope, session_id, message_id)
+        with self._lock:
+            records = self._sessions.get((scope.workspace, scope.principal, session_id), [])
+            found = [
+                (index, message)
+                for index, (identity, message) in enumerate(records, 1)
+                if identity == message_id
+            ]
+            if len(found) > 1:
+                raise ValidationError("Ambiguous Session message identity")
+            return validate_inspection(
+                {
+                    "scope": asdict(scope),
+                    "session_id": session_id,
+                    "message_id": message_id,
+                    "revision": len(records),
+                    "receipt": {"revision": found[0][0], "message": found[0][1]} if found else None,
+                },
+                scope,
+                session_id,
+                message_id,
+            )
 
     def append(self, scope, session_id, message, *, expected_revision, message_id):
         _require_text(session_id, "Session ID")
@@ -412,6 +452,7 @@ class InMemoryMemory:
 class SQLiteMemory:
     fact_scan_version = 1
     fact_inspection_version = 1
+    session_receipt_version = 1
 
     def __init__(self, path_or_store):
         self._owns_store = not isinstance(path_or_store, SQLiteStore)
@@ -428,6 +469,19 @@ class SQLiteMemory:
             CREATE TABLE IF NOT EXISTS memory_fact_generations (workspace TEXT, principal TEXT, namespace TEXT, generation INTEGER NOT NULL, PRIMARY KEY(workspace,principal,namespace));
             CREATE TABLE IF NOT EXISTS memory_session_index_state (workspace TEXT, principal TEXT, session TEXT, generation INTEGER NOT NULL DEFAULT 0, revision INTEGER NOT NULL DEFAULT 0, dirty INTEGER NOT NULL DEFAULT 1, PRIMARY KEY(workspace,principal,session));
             CREATE TABLE IF NOT EXISTS memory_session_items (workspace TEXT, principal TEXT, session TEXT, seq INTEGER NOT NULL, message_id TEXT NOT NULL, data TEXT NOT NULL, PRIMARY KEY(workspace,principal,session,seq));
+            CREATE TABLE IF NOT EXISTS memory_session_receipt_ids (workspace TEXT, principal TEXT, session TEXT, seq INTEGER NOT NULL, message_id TEXT NOT NULL, PRIMARY KEY(workspace,principal,session,seq));
+            CREATE INDEX IF NOT EXISTS memory_session_receipt_id_lookup ON memory_session_receipt_ids(workspace,principal,session,message_id,seq);
+            CREATE TABLE IF NOT EXISTS memory_session_receipt_state (workspace TEXT, principal TEXT, session TEXT, dirty INTEGER NOT NULL DEFAULT 1, PRIMARY KEY(workspace,principal,session));
+            CREATE TRIGGER IF NOT EXISTS memory_session_receipt_insert AFTER INSERT ON memory_sessions BEGIN
+                INSERT INTO memory_session_receipt_state VALUES (NEW.workspace,NEW.principal,NEW.session,1) ON CONFLICT(workspace,principal,session) DO UPDATE SET dirty=1;
+            END;
+            CREATE TRIGGER IF NOT EXISTS memory_session_receipt_update AFTER UPDATE ON memory_sessions BEGIN
+                INSERT INTO memory_session_receipt_state VALUES (NEW.workspace,NEW.principal,NEW.session,1) ON CONFLICT(workspace,principal,session) DO UPDATE SET dirty=1;
+                INSERT INTO memory_session_receipt_state VALUES (OLD.workspace,OLD.principal,OLD.session,1) ON CONFLICT(workspace,principal,session) DO UPDATE SET dirty=1;
+            END;
+            CREATE TRIGGER IF NOT EXISTS memory_session_receipt_delete AFTER DELETE ON memory_sessions BEGIN
+                INSERT INTO memory_session_receipt_state VALUES (OLD.workspace,OLD.principal,OLD.session,1) ON CONFLICT(workspace,principal,session) DO UPDATE SET dirty=1;
+            END;
             CREATE TRIGGER IF NOT EXISTS memory_fact_generation_insert AFTER INSERT ON memory_facts BEGIN
                 INSERT INTO memory_fact_generations VALUES (NEW.workspace,NEW.principal,NEW.namespace,1) ON CONFLICT(workspace,principal,namespace) DO UPDATE SET generation=generation+1;
             END;
@@ -468,6 +522,34 @@ class SQLiteMemory:
         records = self._records(scope, session_id)
         return len(records), [r[1] for r in records]
 
+    def inspect_message(self, scope, session_id, message_id):
+        from .session_receipts import inspection_inputs, validate_inspection
+
+        inspection_inputs(scope, session_id, message_id)
+        with self.store.transaction():
+            _, revision = self._sync_session_index(scope, session_id)
+            self._sync_receipt_ids(scope, session_id)
+            rows = self.store.conn.execute(
+                "SELECT i.seq,i.data FROM memory_session_receipt_ids r JOIN memory_session_items i USING(workspace,principal,session,seq) WHERE r.workspace=? AND r.principal=? AND r.session=? AND r.message_id=? ORDER BY r.seq LIMIT 2",
+                (scope.workspace, scope.principal, session_id, message_id),
+            ).fetchall()
+            if len(rows) > 1:
+                raise ValidationError("Ambiguous Session message identity")
+            return validate_inspection(
+                {
+                    "scope": asdict(scope),
+                    "session_id": session_id,
+                    "message_id": message_id,
+                    "revision": revision,
+                    "receipt": {"revision": rows[0]["seq"], "message": json.loads(rows[0]["data"])}
+                    if rows
+                    else None,
+                },
+                scope,
+                session_id,
+                message_id,
+            )
+
     def append(self, scope, session_id, message, *, expected_revision, message_id):
         canonical(message)
         with self.store.transaction():
@@ -500,6 +582,7 @@ class SQLiteMemory:
                 "UPDATE memory_session_index_state SET revision=?,dirty=0 WHERE workspace=? AND principal=? AND session=?",
                 (len(records), scope.workspace, scope.principal, session_id),
             )
+            self._sync_receipt_ids(scope, session_id, records=records)
             return len(records)
 
     def facts(self, scope, namespace):
@@ -664,6 +747,34 @@ class SQLiteMemory:
                 _scan_snapshot(scope, namespace, _scan_epoch(self.store), row[0] if row else 0)
             )
 
+    def _sync_receipt_ids(self, scope, session_id, *, records=None):
+        """Retain original string IDs, independently invalidated by older writers."""
+        parameters = (scope.workspace, scope.principal, session_id)
+        state = self.store.conn.execute(
+            "SELECT dirty FROM memory_session_receipt_state WHERE workspace=? AND principal=? AND session=?",
+            parameters,
+        ).fetchone()
+        if state is not None and not state["dirty"]:
+            return
+        if records is None:
+            records = self._records(scope, session_id)
+        self.store.conn.execute(
+            "DELETE FROM memory_session_receipt_ids WHERE workspace=? AND principal=? AND session=?",
+            parameters,
+        )
+        self.store.conn.executemany(
+            "INSERT INTO memory_session_receipt_ids VALUES (?,?,?,?,?)",
+            [
+                (*parameters, seq, identity)
+                for seq, (identity, _) in enumerate(records, 1)
+                if isinstance(identity, str)
+            ],
+        )
+        self.store.conn.execute(
+            "INSERT INTO memory_session_receipt_state VALUES (?,?,?,0) ON CONFLICT(workspace,principal,session) DO UPDATE SET dirty=0",
+            parameters,
+        )
+
     def _sync_session_index(self, scope, session_id, *, records=None):
         parameters = (scope.workspace, scope.principal, session_id)
         state = self.store.conn.execute(
@@ -700,6 +811,7 @@ class SQLiteMemory:
             "INSERT INTO memory_session_index_state VALUES (?,?,?,?,?,0) ON CONFLICT(workspace,principal,session) DO UPDATE SET generation=excluded.generation,revision=excluded.revision,dirty=0",
             (*parameters, generation, len(records)),
         )
+        self._sync_receipt_ids(scope, session_id, records=records)
         return generation, len(records)
 
     def read_page(self, scope, session_id, query):

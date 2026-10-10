@@ -1,4 +1,14 @@
-# Implementation status — 0.1.0.dev63
+# Implementation status — 0.1.0.dev64
+
+dev64 adds [default exact Session receipts](session-receipts.md): memory/SQLite sync inspection,
+thread-safe sync bridge validation and Local independent data recovery. SQLite uses its
+existing atomic projection with an additive message lookup index; original data format and
+colocated Local route remain. The [Temporal external Session contract](../architecture/specs/temporal-session-data-contract.md)
+fixes original Run/Parent completion responsibility, but that managed I/O chain is not delivered.
+Final3613 passed/198 skipped,146 installed contracts,214 identical modules, core-only
+and actual dev63↔64 default/data/original Session receipt compatibility pass; new independent
+default Session refuses old backends before dispatch. See [dev64 evidence](../architecture/reviews/2026-10-11-default-session-receipts.md).
+Full H1/H2/H3/M1 and cross-authority Session leases remain open.
 
 dev63 adds [Temporal DecisionPolicy](temporal-decision-policy.md): replaceable pure request/proposal policies and original History evidence acceptance.
 Dev62 adds [Temporal completion verification](temporal-completion-verification.md): pure host/per-Agent rules, current-node committed receipts, durable retry/accept and memory gates.

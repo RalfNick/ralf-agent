@@ -131,3 +131,5 @@ Conversation 不替代 Run 的原工具消息、记忆提炼来源或知识版�
 真实模型上下文质量、完整 H1/H2/H3/M1 与企业部署分别验收。
 
 证据见 [dev60 验收](../architecture/reviews/2026-10-11-temporal-sessions.md)。
+
+外置数据的下一阶段完整责任见[Temporal Session 数据目标契约](../architecture/specs/temporal-session-data-contract.md)。dev64 默认存储 SPI 是前置能力，当前 History Session 不自动写入外部数据库。

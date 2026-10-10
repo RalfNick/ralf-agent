@@ -103,3 +103,7 @@ SQLite 在既有接受事务内推导旧 Run 的资源并记录新 Session ref �
 Session ref 使用 local-bindings-3；同时选择[H1d 数据 Resource](data-bindings.md)时使用 local-bindings-4，Session 实际地址准入保持。原生／顺序 H1a 与图／团队 H1b 在未选择新 Resource 时保持原发布字节。原回执先于目录查找，组件缺失不能回退默认；模型响应收到后先持久化，再拒绝身份漂移。
 
 H1c 没有实现 H2 Agent/Runtime Facade、SessionKey/Turn 队列、CAS rebind、仅观察等待或新关闭协议；也没有交付 Temporal 绑定、企业资源 ACL、其他角色的 selector 和跨执行权威共享 Session。完整 H1、默认 AgentHarness 与企业验收继续沿[剩余清单](remaining-work.md)推进。
+
+## 默认精确核验（dev64）
+
+内存/SQLite 默认支持精确消息回执，与 Redis/PG 的 native async 契约一致；独立 Local Session 可复用远程 admission。内存不是跨重启耐久存储，同库 SQLite 保持原路由。使用与替换见[回执指南](session-receipts.md)；Temporal 外置数据尚未交付。

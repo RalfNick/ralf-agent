@@ -5,18 +5,29 @@
 `SchemaCompletionVerifier` 是可替换的 Schema 基线；`ToolReceiptVerifier` 可要求真实已提交的工具结果。
 
 ```python
-from ralf_agent import AgentBindingDescriptor, AgentDefinition, BindingSelection, ToolReceiptVerifier
+from ralf_agent import (
+    AgentBindingDescriptor,
+    AgentDefinition,
+    BindingSelection,
+    ToolReceiptVerifier,
+)
 from ralf_agent.temporal_activities import TemporalRuntime
 
 rule = ToolReceiptVerifier(
     "apply_fix",
     argument_bindings={"ticket_id": "/ticket_id"},
-    result_schema={"type": "object", "required": ["applied"], "properties": {"applied": {"const": True}}},
+    result_schema={
+        "type": "object",
+        "required": ["applied"],
+        "properties": {"applied": {"const": True}},
+    },
     on_missing="retry",
 )
 catalog.register("verifier", "business", "1", rule)
 execution = TemporalRuntime(providers=providers, tools=tools, binding_catalog=catalog)
-definition = AgentDefinition(spec, AgentBindingDescriptor(verifier=BindingSelection.ref("business", "1")))
+definition = AgentDefinition(
+    spec, AgentBindingDescriptor(verifier=BindingSelection.ref("business", "1"))
+)
 # 原 TemporalEngine / Runtime.from_temporal；高级编排使用 orchestration_release。
 ```
 

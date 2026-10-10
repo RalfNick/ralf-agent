@@ -5,10 +5,14 @@ DecisionPolicy 复用公共纯 `Harness` 的 `prepare/propose`，与组合入口
 
 ```python
 from ralf_agent import (
-    AgentBindingDescriptor, AgentDefinition, BindingSelection,
-    ModelRequest, NativeHarness,
+    AgentBindingDescriptor,
+    AgentDefinition,
+    BindingSelection,
+    ModelRequest,
+    NativeHarness,
 )
 from ralf_agent.temporal_activities import TemporalRuntime
+
 
 class EvidencePolicy(NativeHarness):
     identity = {"kind": "evidence-policy", "version": "1"}
@@ -20,11 +24,13 @@ class EvidencePolicy(NativeHarness):
             prepared.tools,
         )
 
+
 policy = EvidencePolicy()
 catalog.register("decision_policy", "evidence", "1", policy)
 execution = TemporalRuntime(providers=providers, tools=tools, binding_catalog=catalog)
 definition = AgentDefinition(
-    spec, AgentBindingDescriptor(decision_policy=BindingSelection.ref("evidence", "1")),
+    spec,
+    AgentBindingDescriptor(decision_policy=BindingSelection.ref("evidence", "1")),
 )
 # 通过原 TemporalEngine／Runtime.from_temporal 运行；高级编排使用 orchestration_release。
 ```

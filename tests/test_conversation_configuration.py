@@ -193,7 +193,9 @@ def test_foreign_custom_root_does_not_close_borrowed_store_or_leak_authority(tmp
     async def scenario():
         registry = r.ComponentRegistry()
         foreign = r.SQLiteStore(tmp_path / "foreign.sqlite")
-        borrowed = r.SessionBindingResource(r.SQLiteMemory(foreign))
+        backend = r.SQLiteMemory(foreign)
+        backend.session_receipt_version = None
+        borrowed = r.SessionBindingResource(backend)
 
         async def construct(config, context):
             return borrowed

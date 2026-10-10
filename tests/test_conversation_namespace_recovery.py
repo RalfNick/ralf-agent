@@ -375,6 +375,7 @@ def test_changed_resource_or_scope_refuses_child_dispatch_and_observation_stays_
 def test_invalid_root_resource_constructor_keeps_borrowed_backend_and_store_usable(tmp_path):
     store = r.SQLiteStore(tmp_path / "main.sqlite")
     borrowed = r.SQLiteMemory(tmp_path / "foreign.sqlite")
+    borrowed.session_receipt_version = None
     try:
         with pytest.raises(ValidationError):
             r.LocalEngine(

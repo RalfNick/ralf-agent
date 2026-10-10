@@ -174,11 +174,17 @@ def test_composite_sessions_refuse_without_advertised_admission_extension(kind, 
     asyncio.run(scenario())
 
 
-def test_remote_or_separate_session_database_refuses_before_activation(tmp_path):
+def test_external_session_without_receipt_protocol_refuses_before_activation(tmp_path):
     async def scenario():
         from ralf_agent import InMemoryMemory
 
-        for backend in [InMemoryMemory(), r.SQLiteMemory(tmp_path / "other.sqlite")]:
+        class UnverifiedMemory(InMemoryMemory):
+            session_receipt_version = None
+
+        class UnverifiedSQLite(r.SQLiteMemory):
+            session_receipt_version = None
+
+        for backend in [UnverifiedMemory(), UnverifiedSQLite(tmp_path / "other.sqlite")]:
             async with api()(
                 engine(tmp_path / "remote.sqlite", ScriptedProvider([]), session_store=backend),
                 owned=True,
