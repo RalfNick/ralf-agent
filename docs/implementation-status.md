@@ -15,7 +15,9 @@ read limits, original references and managed offload protocols remain. Process-l
 publication/replay and composite Local recovery are tested; final evidence is
 recorded in [dev55 acceptance](../architecture/reviews/2026-10-11-file-artifacts.md).
 Final3343 passed/98 configured-service skips,117 installed contracts and193 identical modules.
-Actual file Worker/History remains unverified while the local Service binary downloads.
+Separately, installed file6 and original SQLite6 actual Temporal Worker/History contracts pass
+on the verified official CLI1.9.1/Server1.32.0 with SDK1.34.0, including restart and cancellation.
+This is same-host resource recovery, not distributed filesystem consistency.
 Retention/GC, global disk quota, S3 and distributed filesystem consistency remain open.
 
 Target architecture update: [AgentHarness](../architecture/viewpoints/harness-runtime.md)

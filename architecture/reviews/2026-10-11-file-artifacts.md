@@ -1,7 +1,7 @@
 # dev55 — 文件 Artifact 验收
 
 基线：6001fef/dev54。范围：R18 与既有受管理卸载，不新增执行权威。
-状态：本地 POSIX 文件后端子集完成验收；真实 Temporal file Worker/History 尚未验收。
+状态：本地 POSIX 文件后端和同机真实 Temporal Worker/History 子集完成验收。
 
 ## 实现与兼容
 
@@ -43,7 +43,7 @@ Temporal runtime/state 重开复用原阶段及真实 Worker 装配的发布身�
 - 独立 core venv，只有12个核心依赖分发包，无 temporalio/pypdf/tiktoken：冷导入、文件原引用重放、容量／读取限额、async 配置和 owned 关闭通过。
 - Ruff、格式、Git 空白与 pip check 通过；9份相关文档340个本地链接及4个Python示例校验。
 - 完整最终回归：3343 passed／98配置依赖跳过，589.88s；原生 FD 复用最后修复后重新运行。首轮3341/98只是中间检查点。
-- 真实 Temporal：本批次服务下载进程仍在运行，尚未取得地址，新增6项 Worker/History 测试未实跑。
+- 真实 Temporal：SDK自动下载最终解包失败；从官方 temporalio/cli v1.9.1 下载 macOS arm64 43,195,714字节资产，按官方SHA256校验后以 SDK existing_path 启动持久本机 Service（Server1.32.0、SDK1.34.0）。源码外安装 dev55 wheel 的 file 六项65.23s、原SQLite对照六项65.98s全部通过；native/parallel/team/dynamic-dag/nested Worker kill/restart 与 cancel-read 均实际 History replay 成功。此证据是同机原资源重启，不是跨主机文件存储。
 
 范围详见[文件指南](../../docs/file-artifacts.md)与[持续队列](../../docs/continuous-development.md)。
 不声明完整 H3/M1、分布式文件存储、GC／硬磁盘配额或 AgentScope 整体对齐。

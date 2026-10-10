@@ -344,4 +344,4 @@ R18 增加 FileArtifactStore、SDK／JSON/TOML 配置和 owned 关闭，默认 S
 Temporal runtime/state 与真实 Worker/History 的证据分开，详见[验收](../architecture/reviews/2026-10-11-file-artifacts.md)。
 文件后端不是云对象存储；GC／引用保留／全局磁盘限额继续开放。
 
-最终3343 passed／98配置依赖跳过、实际安装包117项及193模块一致、独立 core venv 和 dev54↔55 原回执兼容通过。真实 Temporal file Worker/History 新六项尚未实跑；服务下载继续，不能以98项跳过作为验收。
+最终3343 passed／98配置依赖跳过、实际安装包117项及193模块一致、独立 core venv 和 dev54↔55 原回执兼容通过。后续另行验证实际本机 Service：安装 dev55 wheel 的 file6及原SQLite6实际 Worker/History 全部通过；98配置跳过仍是原全量结果，不作为真实服务验收。

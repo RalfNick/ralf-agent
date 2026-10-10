@@ -38,3 +38,15 @@ SDK／JSON/TOML 配置、真实进程发布窗口／并发容量、Local 图／T
 下一批 R15 优先补有界、可续接的事实枚举，不直接扩大旧 SemanticMemoryStore 候选窗口。原始 Facts 仍是权威；新 scanner 必须覆盖 current/expired 记录、固定 generation、Scope、字节限额、无遗漏 continuation 及版本变化拒绝，默认 memory/SQLite，async/远端独立适配。此端口用于全库派生索引与显式迁移，不能把分页完成当成语义质量或全库索引已交付。随后索引构建／激活和检索前源版本校验仍按 R15/R17 独立闭环。
 
 下一批暂存 tests/protocol 原型位于任务目录 test_fact_scan_next.py／fact_scan_next.py，六项核心缺失功能 RED 已确认；尚未加入源码。dev55 本地提交后转入 dev56，不用原型存在宣称完成。服务及已下载 binary 文件由本线程继续托管，暂不清理该任务目录。
+
+## dev56 进行中（cde3966 后）
+
+有界 FactScanQuery/Page、sync/async Scanner协议及 memory/SQLite 原生 scan_facts 初步实现，六项最初 RED 转为 GREEN。查询包括 expired 原记录，旧事实召回仍排除过期；native generation 与 Scope/namespace/query 固定游标、懒读取与线性 UTF-8 字节预算用于避免遗漏。还需接口边界、异步／ scoped 适配、进程恢复、完整索引后续链路、文档和完整验收。SDK目前仍55，未提交本批次。
+
+2026-10-11 服务后续：原会话6304已以exit1确认结束，RuntimeError invalid ephemeral server download / could not extract tar archive entry；未创建address／启动Service。SDK已移除.downloading，不能把此次失败视作真实Temporal验收。继续查询官方CLI资产，准备独立校验下载；真实Worker六项仍未验收。旧任务目录暂保留最终日志和下一批原型，不删除实际仍运行的其他任务。
+
+官方 temporalio/cli v1.9.1 macOS arm64 43,195,714字节资产已通过官方SHA256验证（41e0425378fcb4fb5766340b97435e20fe47bbff2d7bf644ec2d51f7662b7c56），独立下载会话60999成功结束；任务目录 temporal-cli 可复用。新服务 temporal-official-runner.py 正在启动，状态／stop/stopped/地址在 temporal-official 子目录；其进程必须停止后再清理目录。新脚本采用 SDK dev_server_existing_path，避免重复自动下载。
+
+实际服务后续：已安装 dev55 wheel 的 file6（65.23s）及原SQLite6（65.98s）全部通过，含真实Worker kill/restart、cancel-read 和History replay。SDK1.34.0、官方CLI1.9.1/Server1.32.0；默认SDK下载失败由校验官方资产成功绕过。服务43396已发送任务stop，等待stopped／退出证据；临时目录保留 verified CLI 供下一批复用。
+
+当前 FactScanner 尚未最终验收：22项新增测试和原memory/recall共119 passed（1.12s）；包括Unicode非法源2项RED→GREEN、330事实超过旧候选窗口、空页、无遗漏字节续接与原SQLite大值截取先于JSON解码。还需async/scoped/远端、重启、完整索引链路和文档；不提前标为完整语义索引。

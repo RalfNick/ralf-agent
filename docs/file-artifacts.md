@@ -71,3 +71,5 @@ Temporal 使用自身 History 和受管理 Activity，Worker 必须部署相同�
 
 详见[上下文与产物协议](context-artifacts.md)、[自动上下文](managed-context-stages.md)
 和[持续能力清单](remaining-work.md)。
+
+实际 installed dev55 的文件6项及原SQLite6项 Temporal Worker/History 对照已通过，详见[验收](../architecture/reviews/2026-10-11-file-artifacts.md)。Worker 在同机原资源重开；跨主机要求真实共享原资源，不由路径相同或接口存在推导一致性。
