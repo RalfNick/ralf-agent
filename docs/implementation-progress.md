@@ -481,3 +481,11 @@ Initial 21 missing-API failures and one unsupported-template failure were observ
 Dev52 final targeted/installed evidence: 115 passed each; five review/text regressions RED→GREEN. 189 Python modules match source/wheel/sdist/installed. Actual old51/new52 text and HTML receipts recover bidirectionally with unchanged fresh pipeline/content/chunk identities; committed new DOCX replays under old51, which refuses uncommitted DOCX without writes. See the acceptance record for the independent review and bounded scope rulings.
 
 Dev52 frozen final regression: **3230 passed, 92 skipped in 580.41s**. Ruff, format, Git whitespace, dependency checks and wheel/sdist build pass; 11 changed documents/380 local links/8 Python blocks validate. No paid model, live remote-service certification or remote publication in this increment.
+
+## 2026-10-10 — dev53 optional text PDF / H3 R16
+
+Adds PdfDocumentParser using lazy pypdf>=6.20,<7 and scoped Configuration, with no core runtime dependency. Original source/hash/URI/metadata and atomic ingestion authority are retained; no OCR/rendering/URL/script execution or new scheduler. Eleven initial missing-API failures, one template unsupported-PDF failure and two registration/commit identity failures observed before their implementation/fix. Process recovery and final evidence in [acceptance record](../architecture/reviews/2026-10-10-pdf-ingestion.md). Full H3/M1 and real PDF corpus compatibility remain open.
+
+Dev53 targeted and installed contracts: 141 passed each; eight review reproductions RED→GREEN in one correction pass. Independent core environment without pypdf imports SDK, runs text starter ingest/replay/query, refuses PDF with typed extra guidance/no writes, and replays a committed PDF through the original coordinator. 190 Python modules match across source/wheel/sdist/installed; text/HTML/DOCX receipts recover bidirectionally under old52/new53 with identical fresh pipeline/content/chunk identities.
+
+Dev53 frozen final regression: **3256 passed, 92 skipped in 547.10s**; Ruff/format/Git whitespace/dependency/build checks pass. Twelve related documents/391 local links/9 Python blocks validate. No paid model, live remote-service recertification or remote publication.

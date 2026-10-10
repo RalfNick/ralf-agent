@@ -139,6 +139,7 @@ from .orchestration_types import (
     TeamSpec,
     TeamStrategy,
 )
+from .pdf_parsing import PdfDocumentParser
 from .planning import (
     CompleteVerifier,
     ModelPlanner,
@@ -296,7 +297,7 @@ from .workflow import (
     WorkflowSelection,
 )
 
-__version__ = "0.1.0.dev52"
+__version__ = "0.1.0.dev53"
 __all__ = [
     "EventCursor",
     "EventEnvelope",
@@ -522,6 +523,7 @@ __all__ += [
     "ParagraphChunker",
     "DocumentParser",
     "DocxDocumentParser",
+    "PdfDocumentParser",
     "TextDocumentParser",
     "HtmlDocumentParser",
     "IngestionCoordinator",

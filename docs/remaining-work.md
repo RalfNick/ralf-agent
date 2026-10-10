@@ -1,6 +1,6 @@
-# dev52 剩余能力与架构验收清单
+# dev53 剩余能力与架构验收清单
 
-版本：26；日期：2026-10-10；维护者：RALF maintainers。当前增量基线：55961c3/dev51，dev52验收见文末。
+版本：27；日期：2026-10-10；维护者：RALF maintainers。当前增量基线：0395c1c/dev52，dev53验收见文末。
 读者：框架维护者、应用开发者及适配器贡献者。基线：da55f97 的 dev30，
 以及已提交1cad308的dev31–36与已提交1f27300的dev37配置／首用及已提交e6a6de7的dev38远程原生／顺序及已提交9fcbb84的dev39复合根会话与已提交7898b78的dev40自动规则记忆及已提交0d17976的dev41受管理上下文及已提交ec9b5f5的dev42模型选择记忆阶段及已提交e413ddc的dev44高级／Temporal数据上下文和已提交5528670的dev45 Local高级自动记忆，以及已提交 adbc328 的 dev46 Temporal自动记忆与五类Agent绑定。
 
@@ -59,7 +59,7 @@ PG Knowledge/Inbox/Outbox、Qdrant、HTTP Embedding、Hybrid/RRF／基础重排�
 
 ### 组合、入口、模型与编排
 
-| ID／层 | dev52 已交付基础 | 尚未完成的具体能力 | 阶段／状态 |
+| ID／层 | dev53 已交付基础 | 尚未完成的具体能力 | 阶段／状态 |
 | --- | --- | --- | --- |
 | R01 每 Agent 绑定 | Local 原生 Agent／顺序／Graph／Team／Dynamic／嵌套成员六类选择：provider、decision_policy、context、facts、knowledge、tool_set；稳定路径、固定父子发布与 Profile v2；Session 后端／允许的 namespace／同权威实际地址占用；Facts／Knowledge 宿主范围视图与来源校验；纯完成 verifier 的 inherit/ref/disabled；宿主与 Agent limits 的固定交集与动作额度；原生／顺序及高级 stage_policy 写目标；Temporal 五类版本化 provider/context/knowledge/tool_set/stage_policy 与原有子 Run 子树 | Temporal 其他绑定角色；其他资源身份／selector／作用域视图；artifacts／workspace／sandbox／skills 绑定与准入；stage_policy 已支持 Local 原生／顺序／图／Team／动态／嵌套规则／模型选择记忆；上下文历史摘要与引用／产物组合已交付，其他阶段／组合仍待交付。前四类角色显式选择仍被拒绝 | H1：子集已交付 |
 | R02 Agent／Session 入口 | H2a Local stateless Agent/Runtime/AgentRun、RunRef/WaitResult；独立任务托管、纯观察等待、原根流程控制路由、owned/borrowed 关闭与 CloseIncomplete 重试、显式重连；保留旧 RunHandle DTO；H2b1 同库原生／顺序及 H2b2 图／团队／动态／嵌套及 H2b3 授权根 namespace、H2b4a 远程原生／顺序及 H2b4b 复合根保存意图／准确回执／终态只查询恢复、异步 Profile 配置，SessionKey／路由／Turn／busy／CAS rebind；H2c1 Temporal 原生／顺序共同入口、异步重连、固定 RPC 组件与客户端 detach；H2c2 已注册 Graph／Team／Dynamic／嵌套入口与实际子 Run 控制 | 跨权威会话租约、输入续接／业务 deadline、Temporal 其他绑定角色／共享会话、移交与耐久 FIFO | H2a／H2b1／H2b2／H2b3／H2b4a／H2b4b／H2c1／H2c2：子集已交付；完整 H2 未交付 |
@@ -75,19 +75,19 @@ PG Knowledge/Inbox/Outbox、Qdrant、HTTP Embedding、Hybrid/RRF／基础重排�
 
 ### 工具、上下文、记忆与知识
 
-| ID／层 | dev52 已交付基础 | 尚未完成的具体能力 | 阶段／状态 |
+| ID／层 | dev53 已交付基础 | 尚未完成的具体能力 | 阶段／状态 |
 | --- | --- | --- | --- |
 | R12 工具接入／工具包 | typed Python/Schema/默认参数、ToolRegistry、async ToolSource、MCP stdio、A2A ToolSource、授权／审批／核验 | MCP HTTP/持续 Session/OAuth；固定 executable/argv 的 CLI Runner；通用受控 HTTP 工具适配；搜索／文件／浏览器工具包与发现；有状态工具租约和停止证据 | H4：子集已交付 |
 | R13 Workspace/Skills/Sandbox/Runner | 可信 Python、MCP 受管理进程生命周期；Runner 目标契约 | Workspace／文件权限／资源租约；Skills 生命周期／能力注册／来源；容器／远端 Sandbox 文件、网络、进程和资源隔离；Coding Runner、Codex 首个适配及各外部 Runner 验收。普通子进程不是安全沙箱 | H4：目标能力未交付 |
 | R14 上下文 | ContextBuilder/Counter/Budgeter/Summarizer、完整工具组／近期召回／摘录、实际快照；显式独立模型摘要；Temporal 纯自定义 Context；Local 原生／顺序及高级编排受管理规则／模型摘要与引用摘录／产物投影；Temporal History 受管理摘要／Knowledge 摘录／产物阶段 | 模型 tokenizer／输出预留；Session／RAG 语义压缩和质量；覆盖／来源失效策略和辅助失败恢复；不同模型长上下文事实保留实测。UTF-8 token 估算不是精确用量 | H3：确定性与显式路径已交付 |
 | R15 短期／长期记忆 | memory/SQLite/Redis/PG 的 sync/async、CAS/去重/TTL/分页/来源；opt-in MemoryPipeline 规则／模型字段选择；原生／顺序及高级实际 Agent 的受管理规则／模型字段选择阶段、原节点／子 Run 证据恢复与 JSON／TOML 默认工厂；Temporal History 自动规则／模型选择、准确CAS核验与根子证据恢复；dev47 有界候选词项相关排序；dev49 有界原生候选语义排序／任务查询与有序上下文组合 | 全库事实语义索引； 自由合成；语义冲突／修订／撤回／遗忘／可信度策略和多事实原子采纳；最终 Session append 大历史效率；导出／迁移／保留；真实记忆利用。追加来源观察不是自主信念修订 | H3／H5：存储和显式提炼已交付 |
-| R16 摄取／知识生命周期 | text/Markdown Parser；dev51 HTML／dev52 DOCX 正文 Parser／摄取模板；字符／段落 Chunker；memory/SQLite/PG 原子文档／块／词项／回执 | PDF／其他 Office、网页／业务连接器及游标／增量；token/语义分块；来源目录／ACL；后台索引、修复、删除传播和版本重建。knowledge_committed 不代表向量就绪 | H3／H5：基础已交付 |
+| R16 摄取／知识生命周期 | text/Markdown Parser；dev51 HTML／dev52 DOCX 正文／dev53 可选文本 PDF Parser 与摄取模板；字符／段落 Chunker；memory/SQLite/PG 原子文档／块／词项／回执 | PDF OCR／布局与兼容语料、其他 Office、网页／业务连接器及游标／增量；token/语义分块；来源目录／ACL；后台索引、修复、删除传播和版本重建。knowledge_committed 不代表向量就绪 | H3／H5：基础已交付 |
 | R17 检索／Embedding／向量／重排 | HTTP Embedding、Hash 基线、本地 cosine/Qdrant、词法／向量／Hybrid、RRF/保序/词项重排、来源回读、dev47 显式 HTTP 语义组合、dev48 HTTP 语义重排适配；dev49 替换式查询改写及默认字面 aliases；dev50 显式模型改写适配 | 可选本地语义模型；自动查询策略；pgvector 参考适配及其他库逐项验收；索引发布／修复／迁移；端到端召回、答案和引用质量。Hash/TokenOverlap 不证明语义质量 | H3／G4：显式语义组合已交付，质量未闭环 |
 | R18 Artifact／缓存 | Scope 隔离 memory/SQLite JSON 产物、摘要／TTL／读取限额／事务容量；Local 原生／顺序及高级编排、Temporal 上下文自动卸载／预览与独立意图／回执 | 文件/S3 等远端 Artifact；引用保留／孤儿 GC／全局磁盘限额及恢复依赖；CacheStore/Policy 的键、版本和失效。默认关闭缓存合法；语义答案缓存后置 | H3／H5：显式产物已交付，缓存未交付 |
 
 ### 执行、通信、服务与验收
 
-| ID／层 | dev52 已交付基础 | 尚未完成的具体能力 | 阶段／状态 |
+| ID／层 | dev53 已交付基础 | 尚未完成的具体能力 | 阶段／状态 |
 | --- | --- | --- | --- |
 | R19 执行模式／后端一致性 | Local 单 Coordinator/SQLite；Temporal 独立 History，原生 Agent/sequence 与显式发布的 Agent-node Graph/Team/Dynamic/嵌套、RAG | 单 Coordinator 多 Process Worker；Temporal 其他绑定角色／selector、共享 Session/Facts/custom Harness、直接 Tool/Transform 图节点等组合；共同能力／故障／升级门禁；Continue-As-New、部署版本及长期容量。PG Facts/Knowledge 不等于 PG ExecutionStore/分布式调度 | H5／C1：分布式子集已交付 |
 | R20 MQ／A2A | memory/SQLite/Redis Streams、Inbox/Outbox、PG 共享回执；A2A JSON-RPC0.3 文本/数据 polling、async controls | 保留／压缩／积压／重投递与 failover 认证；额外 Broker 按需；A2A SSE/push/files/Task continuation 及真实停止约定。ack 不等于效果确认，不承诺跨系统全局恰好一次 | H4／H5：子集已交付 |
@@ -319,3 +319,9 @@ R16 增加可替换纯 HTML Parser 和 ingest 模板 .html/.htm 支持，复用�
 R16 增加纯 DocxDocumentParser 与 ingest 模板 .docx 支持，复用原知识／分块／词项／回执。正文段落和表格文本保持来源、空白和解析文本位置；ZIP/XML 预算及无效包在提交前拒绝。完整 Word 排版／样式、图片、页眉脚注、PDF／其他 Office、连接器和知识生命周期仍待交付。验收见[记录](../architecture/reviews/2026-10-10-docx-ingestion.md)。
 
 dev52 最终验收：3230 passed／92 skipped，实际安装包115 passed；189个 Python 模块工件一致。旧新文本／HTML回执双向恢复与旧版重读已提交 DOCX 已验证；未提交 DOCX 在旧版拒绝且无写入。审查1个 P2与常见文本结构共五项复现经一轮 RED→GREEN修复。
+
+### dev53 H3 可选文本 PDF 摄取
+
+R16 增加可替换 PdfDocumentParser 和 ingest 模板 .pdf 支持；核心安装不依赖 pypdf，需显式 pdf extra。原知识权威／来源／分块／回执保持。原子恢复与身份边界见[验收](../architecture/reviews/2026-10-10-pdf-ingestion.md)；OCR／布局、复杂字体与实际语料兼容、来源／索引生命周期仍待完善。
+
+dev53 最终验收：3256 passed／92 skipped，实际安装包141 passed；190模块工件一致。实际无 pypdf 环境的核心／文本首用／既有 PDF 回执重读通过；三种旧 Parser 与默认 pipeline 双向旧新恢复兼容。审查 P1 Form 静默缺失和 P2 RTL 身份经八项复现在一轮修复闭环，详见验收记录。

@@ -103,3 +103,5 @@ await retriever.index_document(scope, "runbooks", "pool")
 dev51 增加显式 [HtmlDocumentParser 与 HTML 摄取模板](html-ingestion.md)，默认 TextDocumentParser／原回执格式仍保持。HTML 位置对应解析文本，pre 内保留代码换行和缩进，不自动联网或渲染 CSS。
 
 dev52 增加显式 [DocxDocumentParser 与 DOCX 摄取模板](docx-ingestion.md)，支持正文段落、表格文本和原回执恢复，不改变文本／HTML 默认策略。
+
+dev53 增加 [PdfDocumentParser 与可选 PDF 摄取](pdf-ingestion.md)，复用原同步解析端口和原子回执；核心无需 pypdf，显式启用 pdf extra。原默认解析仍保持。

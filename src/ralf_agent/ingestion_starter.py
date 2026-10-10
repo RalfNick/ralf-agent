@@ -3,10 +3,10 @@
 _INGEST_MAIN = r"""
 def main(argv=None):
     from pathlib import Path
-    from ralf_agent import DocxDocumentParser, HtmlDocumentParser, IngestionCoordinator, SourceDocument
+    from ralf_agent import DocxDocumentParser, HtmlDocumentParser, PdfDocumentParser, IngestionCoordinator, SourceDocument
     from ralf_agent.errors import ValidationError
 
-    parser = argparse.ArgumentParser(description="Ingest your text/Markdown/HTML or DOCX, then query stored evidence offline.")
+    parser = argparse.ArgumentParser(description="Ingest your text/Markdown/HTML, DOCX or text PDF, then query stored evidence offline.")
     parser.add_argument("--db", default=".ralf/runs.sqlite")
     sub = parser.add_subparsers(dest="command", required=True)
     ingest = sub.add_parser("ingest")
@@ -22,21 +22,21 @@ def main(argv=None):
     try:
         if args.command == "ingest":
             path = Path(args.file).expanduser().resolve()
-            if path.suffix.lower() not in {".txt", ".md", ".markdown", ".html", ".htm", ".docx"}:
-                raise ValidationError("Use a .txt, .md, .markdown, .html, .htm or .docx source")
+            if path.suffix.lower() not in {".txt", ".md", ".markdown", ".html", ".htm", ".docx", ".pdf"}:
+                raise ValidationError("Use a .txt, .md, .markdown, .html, .htm, .docx or .pdf source")
             try:
                 with path.open("rb") as file:
                     data = file.read(1024 * 1024 + 1)
             except OSError as exc:
                 raise ValidationError("Cannot read the selected source file") from exc
             source = SourceDocument(args.document_id, data,
-                media_type=("application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                media_type=("application/pdf" if path.suffix.lower() == ".pdf" else "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
                     if path.suffix.lower() == ".docx" else "text/html" if path.suffix.lower() in {".html", ".htm"}
                     else "text/plain" if path.suffix.lower() == ".txt" else "text/markdown"),
                 source_uri=path.as_uri())
             database = str(Path(args.db).expanduser().resolve()) + ".knowledge.sqlite"
             with SQLiteKnowledgeStore(database) as store:
-                receipt = asyncio.run(IngestionCoordinator(store, parser=(DocxDocumentParser() if path.suffix.lower() == ".docx"
+                receipt = asyncio.run(IngestionCoordinator(store, parser=(PdfDocumentParser() if path.suffix.lower() == ".pdf" else DocxDocumentParser() if path.suffix.lower() == ".docx"
                     else HtmlDocumentParser() if source.media_type == "text/html" else None)).ingest(Scope(), "runbooks", source,
                     command_id=args.command_id, expected_version=args.expected_version))
                 print(json.dumps(receipt.to_dict(), ensure_ascii=False, allow_nan=False))
@@ -73,7 +73,7 @@ def ingestion_files(rag_runtime, rag_files):
         "README.md": """# My document Agent
 
 Install ralf-agent and run from this application directory. The default corpus
-is empty. Explicitly select your own UTF-8 text/Markdown/HTML or DOCX file (maximum 1MiB):
+is empty. Explicitly select your own UTF-8 text/Markdown/HTML, DOCX or text PDF file (maximum 1MiB):
 
 ```sh
 python -m agent_app ingest /absolute/path/runbook.md --document-id runbook --command-id ingest-first --expected-version 0
@@ -89,6 +89,11 @@ table cells, including finite content-control wrappers. Direct hidden runs, dele
 and moved-from content are excluded; it never opens
 attachments, executes Office fields or follows relationships. It does not render Word
 styles/layout or read headers, notes, images or arbitrary Office formats.
+Text PDF requires `ralf-agent[pdf]` (pypdf>=6.20,<7); the core SDK does not require
+this dependency. Strict unencrypted PDF text is extracted in page order; no OCR,
+layout rendering, script/attachment execution or URL fetching. Empty/no-text,
+encrypted, malformed and over-limit sources are rejected. Parsing caps pages,
+primary content bytes and output; these are not host CPU/memory isolation.
 The character Chunker follows the store
 settings, and SQLite atomically saves document/chunks/lexical terms and the
 knowledge_committed receipt. Repeating identical ingestion returns the original

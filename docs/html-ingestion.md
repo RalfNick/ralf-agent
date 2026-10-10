@@ -48,3 +48,5 @@ python -m agent_app query --query 'pool timeout' --command-id answer-first
 模板显式读取 .txt/.md/.markdown/.html/.htm；dev52 另支持 .docx，先按原1MiB预算读取所选文件，再选择对应 Parser。
 词法证据 Provider 仍为离线演示；不生成 Embedding 或证明真实模型质量。运行恢复与其他数据适配见[摄取指南](document-ingestion.md)。
 DOCX 正文见[新指南](docx-ingestion.md)；PDF／其他 Office、网页连接器、CSS／语义解析、索引与来源生命周期仍见[剩余清单](remaining-work.md)。
+
+文本型 PDF 可选适配器见[PDF 指南](pdf-ingestion.md)，原 HTML 默认保持。

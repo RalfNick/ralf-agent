@@ -60,3 +60,5 @@ python -m agent_app query --query 'pool timeout' --command-id answer-first
 其离线词法证据 Provider 展示查询和来源引用，不生成向量、不证明真实模型答案质量。
 原 memory/SQLite/PostgreSQL 原子知识端口与自定义 Chunker 继续适用；本轮恢复测试使用 SQLite。
 其余后端接入见[摄取指南](document-ingestion.md)，完整待交付能力见[清单](remaining-work.md)。
+
+文本型 PDF 的独立可选适配器见[PDF 指南](pdf-ingestion.md)，不改变此 DOCX 的版本化提取规则。
