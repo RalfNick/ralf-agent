@@ -5,6 +5,9 @@ AgentHarness／Runtime、模型、工具、子 Run、审批和恢复协议。没
 旧 `local-basic`／`local-knowledge`／`managed-memory` 的版本 `1` 声明及
 ManagedDataContext 实现身份保持兼容。
 
+dev48 可在语义 Profile 中显式配置[HTTP 重排](http-reranking.md)，沿原 Hybrid 来源校验；
+省略 `reranker` 时保留原保序行为。服务、模型、鉴权和限额均由调用方声明。
+
 | Profile | 默认能力 | 应用补充 |
 | --- | --- | --- |
 | `semantic-knowledge` | SQLite 知识与向量索引、显式 HTTP Embedding、lexical/vector 并行召回、RRF、来源回读、相关上下文 | Embedding 服务、知识导入与索引、真实生成模型、答案及引用验证 |
@@ -22,12 +25,16 @@ ManagedDataContext 实现身份保持兼容。
 import asyncio
 from ralf_agent import Runtime, RuntimeBuilder, recommended_harness, recommended_profile
 
+
 async def main():
     profile = recommended_profile("team")
     instance = await RuntimeBuilder().abuild(profile, "runs.sqlite")
     async with Runtime(instance, owned=True) as runtime:
-        run = await runtime.submit(recommended_harness("team"), "Analyze this task", command_id="one")
+        run = await runtime.submit(
+            recommended_harness("team"), "Analyze this task", command_id="one"
+        )
         print(await run.wait())
+
 
 asyncio.run(main())
 ```
@@ -59,23 +66,33 @@ from ralf_agent import AgentSpec, Document, Runtime, RuntimeBuilder, recommended
 
 profile = recommended_profile(
     "semantic-knowledge",
-    embedding={"type": "openai", "config": {
-        "model": "YOUR_EMBEDDING_MODEL", "dimensions": 1024,
-        "base_url": "https://YOUR_EMBEDDING_SERVICE/v1",
-        "api_key_env": "APP_EMBEDDING_KEY",
-    }},
+    embedding={
+        "type": "openai",
+        "config": {
+            "model": "YOUR_EMBEDDING_MODEL",
+            "dimensions": 1024,
+            "base_url": "https://YOUR_EMBEDDING_SERVICE/v1",
+            "api_key_env": "APP_EMBEDDING_KEY",
+        },
+    },
     knowledge_namespace="manuals",
     # provider={"adapter": ..., "config": ...},  # 显式配置生成模型
 )
+
 
 async def answer():
     instance = await RuntimeBuilder().abuild(profile, "knowledge-runs.sqlite")
     async with Runtime(instance, owned=True) as runtime:
         hybrid = instance.knowledge.retriever
-        hybrid.store.put(instance.scope, "manuals", Document("guide", "Your guide text"), expected_version=0)
+        hybrid.store.put(
+            instance.scope, "manuals", Document("guide", "Your guide text"), expected_version=0
+        )
         await hybrid.retrievers["vector"].index_document(instance.scope, "manuals", "guide")
-        run = await runtime.submit(AgentSpec("answer", "Answer using evidence; identify uncertainty"),
-                                   "Your question", command_id="question-1")
+        run = await runtime.submit(
+            AgentSpec("answer", "Answer using evidence; identify uncertainty"),
+            "Your question",
+            command_id="question-1",
+        )
         print(await run.wait())
 ```
 
@@ -107,9 +124,13 @@ Session 超出总预算时只保留完整近期轮次，最新完整轮次放不
 ```python
 from ralf_agent import RelevantDataContext, OverlapReferenceSelector
 
-context = RelevantDataContext(artifact_store,  # SDK 注入的资源由调用方关闭
+context = RelevantDataContext(
+    artifact_store,  # SDK 注入的资源由调用方关闭
     selector=OverlapReferenceSelector(max_references=16),
-    mode="model", provider="summary", summary_max_chars=512)
+    mode="model",
+    provider="summary",
+    summary_max_chars=512,
+)
 ```
 
 Profile 对应 `context_assembler.adapter="relevant-data"`；异步产物用 `relevant-data-async`／abuild。

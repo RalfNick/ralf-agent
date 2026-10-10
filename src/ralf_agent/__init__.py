@@ -189,6 +189,8 @@ from .redis_memory import RedisMemory
 from .redis_streams import RedisStreamsBus
 from .reference_selection import OverlapReferenceSelector, ReferenceSelector
 from .relevant_context import RelevantDataContext
+from .rerank_http import HTTPReranker
+from .rerank_response import RerankResponse
 from .retrieval import (
     Chunk,
     Document,
@@ -281,7 +283,7 @@ from .workflow import (
     WorkflowSelection,
 )
 
-__version__ = "0.1.0.dev47"
+__version__ = "0.1.0.dev48"
 __all__ = [
     "EventCursor",
     "EventEnvelope",
@@ -563,6 +565,8 @@ __all__ += [
     "recommended_profile",
     "recommended_harness",
     "ReferenceSelector",
+    "HTTPReranker",
+    "RerankResponse",
     "OverlapReferenceSelector",
     "RelevantDataContext",
     "FrozenContextSummarizer",

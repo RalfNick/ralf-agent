@@ -17,6 +17,7 @@ def recommended_profile(
     version="1",
     embedding=None,
     knowledge_namespace="default",
+    reranker=None,
 ):
     """Return an editable-by-replacement Profile, not a new runtime authority.
 
@@ -62,11 +63,15 @@ def recommended_profile(
                 "namespace": knowledge_namespace,
                 "embedding": copy.deepcopy(embedding),
                 "failure_policy": "strict",
-                "reranker": "preserve-order",
+                "reranker": "preserve-order" if reranker is None else copy.deepcopy(reranker),
             },
         }
     elif embedding is not None:
         raise ValidationError("Embedding configuration requires semantic-knowledge")
+    if reranker is not None and kind != "semantic-knowledge":
+        raise ValidationError(
+            "Reranker option requires semantic-knowledge or explicit knowledge component"
+        )
     if kind == "plan-and-execute":
         defaults["planners"] = {"adapter": "model"}
     if kind == "local-knowledge":

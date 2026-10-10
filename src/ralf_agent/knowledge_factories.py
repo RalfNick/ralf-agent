@@ -4,6 +4,7 @@ from .embedding_http import OpenAIEmbeddingProvider
 from .embeddings import HashEmbeddingProvider
 from .errors import ValidationError
 from .remote_factories import _env
+from .rerank_factories import configured_reranker, reranker_options
 from .retrieval import (
     KnowledgeContext,
     LexicalRetriever,
@@ -13,7 +14,7 @@ from .retrieval import (
     _text,
 )
 from .retrieval_pipeline import HybridRetriever
-from .retrieval_ranking import PreserveOrderReranker, RRFFusion, TokenOverlapReranker
+from .retrieval_ranking import RRFFusion
 from .vector import SQLiteVectorIndex, VectorRetriever
 
 _COMMON = {
@@ -83,19 +84,17 @@ def embedding_options(config):
     return kind, options
 
 
-def hybrid_options(config):
+def hybrid_options(config, *, reranker=None):
     fusion = config.get("fusion", {})
     if not isinstance(fusion, dict) or set(fusion) - {"rank_constant", "weights"}:
         raise ValidationError("Unknown fusion fields")
     fusion = RRFFusion(**fusion)
     if set(fusion.identity["weights"]) - {"lexical", "vector"}:
         raise ValidationError("Fusion weights name an unregistered branch")
-    if config.get("reranker", "preserve-order") not in {"preserve-order", "token-overlap"}:
-        raise ValidationError("Unknown default reranker")
     reranker = (
-        TokenOverlapReranker()
-        if config.get("reranker") == "token-overlap"
-        else PreserveOrderReranker()
+        configured_reranker(config.get("reranker", "preserve-order"))
+        if reranker is None
+        else reranker
     )
     for name in ["branch_limit", "candidate_limit"]:
         _integer(config.get(name, 10 if name == "branch_limit" else 32), name, minimum=1)
@@ -119,7 +118,7 @@ def hybrid_options(config):
     }
 
 
-def hybrid_config(config, *, remote=False, http=False):
+def hybrid_config(config, *, remote=False, http=False, rerank_http=False):
     allowed = _COMMON | (
         {
             "dsn_env",
@@ -146,6 +145,11 @@ def hybrid_config(config, *, remote=False, http=False):
     if not remote and (kind == "openai") != http:
         raise ValidationError("Select explicit async HTTP or offline hash assembly")
     hybrid_options(config)
+    rank_kind, _ = reranker_options(config.get("reranker", "preserve-order"))
+    if rank_kind == "http" and not (remote or http or rerank_http):
+        raise ValidationError("HTTP reranker requires explicit async knowledge assembly")
+    if rerank_http and rank_kind != "http":
+        raise ValidationError("Select HTTP reranker for sqlite-hybrid-rerank-http")
     if remote:
         for name in ["dsn_env", "url_env"]:
             _env(config, name)
@@ -183,10 +187,14 @@ def _embedding(config, context):
     )
 
 
-def _context(config, store, index, embedding):
+def _context(config, store, index, embedding, context):
     vector = VectorRetriever(store, index, embedding)
     retriever = HybridRetriever(
-        store, {"lexical": LexicalRetriever(store), "vector": vector}, **hybrid_options(config)
+        store,
+        {"lexical": LexicalRetriever(store), "vector": vector},
+        **hybrid_options(
+            config, reranker=configured_reranker(config.get("reranker", "preserve-order"), context)
+        ),
     )
     return KnowledgeContext(
         retriever,
@@ -215,7 +223,7 @@ def sqlite_hybrid(config, context):
             dimensions=embedding.dimensions,
         )
     )
-    return _context(config, store, index, embedding)
+    return _context(config, store, index, embedding, context)
 
 
 async def sqlite_hybrid_http(config, context):
@@ -251,4 +259,4 @@ async def postgres_qdrant_hybrid(config, context):
             )
         )
         await index.initialize(create=config.get("initialize", False))
-        return _context(config, store, index, embedding)
+        return _context(config, store, index, embedding, context)

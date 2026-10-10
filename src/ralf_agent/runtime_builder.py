@@ -418,6 +418,12 @@ class ComponentRegistry:
         )
         self.register_async(
             "knowledge",
+            "sqlite-hybrid-rerank-http",
+            sqlite_hybrid_http,
+            validator=lambda c: hybrid_config(c, rerank_http=True),
+        )
+        self.register_async(
+            "knowledge",
             "postgres-qdrant-hybrid",
             postgres_qdrant_hybrid,
             validator=lambda c: hybrid_config(c, remote=True),

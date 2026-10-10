@@ -14,6 +14,8 @@ Dev45 已交付 Local 图／并行／Team／动态／嵌套实际 Agent 的受�
 
 Dev47 提供[显式语义知识、相关事实召回与 Plan／Team 起步组合](../../docs/h3-intelligent-combinations.md)，复用原受管理阶段和唯一执行权威；旧版本 1 Profile／ManagedDataContext 身份保持。词项相关排序只覆盖有界候选，完整 H3 质量尚未验收。
 
+Dev48 新增[显式 HTTP 重排](../../docs/http-reranking.md)，沿既有 AsyncReranker／原知识权威完成来源前后校验及 owned 异步装配；不改变旧排序和默认组合。检索准备不是持久化模型 Action，不保证付费调用恰好一次或计费上限。
+
 ## 1. 目标与达标定义
 
 RALF 的目标是通用 Agent 框架：个人开发者用默认组件完成单 Agent、知识问答与工作流，业务团队通过替换组件和组合流程满足需求，企业沿同一套定义扩展到独立服务、隔离执行与分布式部署。审批与业务效果恢复是贯穿框架的能力；项目范围同时包含模型、工具、Agent、多 Agent、编排、上下文、记忆、RAG、配置、数据与运维。

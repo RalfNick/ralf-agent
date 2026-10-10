@@ -1,7 +1,8 @@
 # Ralf-Agent
 
-当前工作区 **0.1.0.dev47** 提供显式语义知识库、相关事实召回和 Plan／Team 默认组合，
+当前工作区 **0.1.0.dev48** 提供显式语义知识库、相关事实召回和 Plan／Team 默认组合，
 复用原执行、审批和恢复协议。见[H3 使用与扩展指南](docs/h3-intelligent-combinations.md)。
+dev48 增加[显式 HTTP 语义重排](docs/http-reranking.md)，保留原知识来源及旧默认配置。
 Local 十类及 Temporal 五类每 Agent 绑定、自动上下文与来源化记忆已接通；完整 H3、
 真实模型质量、H4 执行环境和 H5 企业治理仍待验收。当前适合开发者试点。
 

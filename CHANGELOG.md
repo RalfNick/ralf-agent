@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.0.dev48 — Explicit HTTP reranking
+
+- Add HTTPReranker through existing AsyncReranker, detached original-ID/score/search-unit reports and bounded indexed-results HTTP; explicit model/endpoint, no redirects, retries, downloads or bootstrap calls.
+- Add async hash+HTTP rerank configuration and optional nested HTTP rerank in existing HTTP Hybrid/PG-Qdrant factories and semantic recommended Profile; old pure ranks and absent-option identities retained.
+- Pin source/method/client ownership, validate before and after awaits, track active requests and retryable close; malformed rankings fail and branch degradation cannot silently bypass the reranker.
+- Cover localhost HTTP/source update, actual process-exit snapshot/approval reuse and pure Temporal Context→Model integration. Paid retrieval preparation is not durable model execution; no currency ceiling or live quality claim.
+
 ## 0.1.0.dev47 — H3 semantic retrieval, relevant recall and orchestration combinations
 
 - Add explicit semantic-knowledge, memory-recall, plan-and-execute and team Profiles; semantic retrieval requires caller-selected HTTP Embedding and async assembly, with no hash fallback or bootstrap requests.
