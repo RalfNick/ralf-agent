@@ -264,3 +264,5 @@ Dev53 在 R16 增加[可选文本 PDF 适配](../../docs/pdf-ingestion.md)，仍
 ## dev61 Temporal 限制策略
 
 R01/H1f 在原 History 接通可替换 LimitsPolicy、宿主交集、逐节点固定和整批超限拒绝；绑定支持七类。纯策略 Activity 不拥有执行权威，恢复复用原 caps。见[指南](../../docs/temporal-agent-limits.md)；全局容量、其他角色和完整 H1/H3/M1 未完成。
+
+Dev62 接通 [Temporal 纯完成验证](../../docs/temporal-completion-verification.md)，原 History 采纳当前节点回执的 accept/reject/retry，再进入记忆或节点完成。Temporal 八类角色包括 verifier；DecisionPolicy、外置 Session、环境角色及完整智能质量仍待验收。

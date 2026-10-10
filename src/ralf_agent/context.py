@@ -2,6 +2,7 @@
 
 import copy
 
+from .context_feedback import protect_feedback_tail
 from .context_references import select_references
 from .errors import ValidationError
 from .types import canonical, digest
@@ -17,6 +18,7 @@ class ContextAssembler:
             if message.get("role") == "assistant" or not groups:
                 groups.append([])
             groups[-1].append(copy.deepcopy(message))
+        groups = protect_feedback_tail(groups)
         dropped = 0
         messages = head + [message for group in groups for message in group]
         while len(canonical(messages)) > max_chars and len(groups) > 1:

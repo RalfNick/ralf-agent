@@ -334,6 +334,10 @@ class TemporalEngine:
         """Pure History evidence; no backend reads or implicit recovery."""
         return await self._view(run_id, "memory_stages")
 
+    async def completion_stages(self, run_id):
+        """Observe original completion intents/verdicts; never invoke the verifier."""
+        return await self._view(run_id, "completion_stages")
+
     async def context_stages(self, run_id):
         """Read this Run's original History evidence; no Activity or child traversal."""
         return await self._view(run_id, "context_stages")
@@ -504,5 +508,6 @@ def _workflow_runner():
             "ralf_agent.temporal_knowledge_state",
             "ralf_agent.temporal_session_state",
             "ralf_agent.temporal_limits_state",
+            "ralf_agent.temporal_completion_state",
         )
     )

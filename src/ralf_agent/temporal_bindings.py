@@ -10,7 +10,7 @@ from .temporal_state import detached
 from .types import Scope, digest, submission_request
 
 ROLES = frozenset(
-    {"provider", "context", "knowledge", "tool_set", "stage_policy", "facts", "limits"}
+    {"provider", "context", "knowledge", "tool_set", "stage_policy", "facts", "limits", "verifier"}
 )
 
 
@@ -183,6 +183,10 @@ def catalog_registration(runtime):
             from .temporal_limits import registration as limits_registration
 
             extra["agent_limits"] = limits_registration(component)
+        elif role == "verifier":
+            from .temporal_completion import registration as completion_registration
+
+            extra["completion_verifier"] = completion_registration(component)
         records[key(role, choice)] = {**record, "configuration": extra}
     return {"version": 1, "scope": asdict(catalog.scope), "records": records}
 
@@ -190,7 +194,7 @@ def catalog_registration(runtime):
 def effective_manifest(manifest, descriptor):
     choices = validate_descriptor(manifest, descriptor)
     result = detached(manifest)
-    for role in ("context", "knowledge", "stage_policy", "facts"):
+    for role in ("context", "knowledge", "stage_policy", "facts", "verifier"):
         selection = getattr(choices, role)
         if selection.mode == "inherit":
             continue
@@ -199,6 +203,7 @@ def effective_manifest(manifest, descriptor):
             "knowledge": ("knowledge_context", "knowledge_registration"),
             "stage_policy": ("managed_memory",),
             "facts": ("facts_context",),
+            "verifier": ("completion_verifier",),
         }[role]
         for field in fields:
             result.pop(field, None)
@@ -246,6 +251,7 @@ def selected_runtime(runtime, request):
         ("knowledge", "knowledge"),
         ("stage_policy", "stage_policy"),
         ("facts", "facts"),
+        ("verifier", "verifier"),
     ):
         selection = getattr(choices, role)
         if selection.mode == "ref":
@@ -303,4 +309,5 @@ def capabilities(manifest):
         "facts_recall": any("facts_context" in c for c in configurations),
         "rag": any("knowledge_context" in c for c in configurations),
         "agent_limits": manifest.get("limits_protocol") == 1,
+        "completion_verification": manifest.get("completion_protocol") == 1,
     }

@@ -121,6 +121,9 @@ def validate_manifest(manifest):
     from .temporal_limits_state import validate_protocol as validate_limits_protocol
 
     validate_limits_protocol(manifest)
+    from .temporal_completion_state import validate_protocol as validate_completion_protocol
+
+    validate_completion_protocol(manifest)
     for key in ("tools", "providers", "harness", "context_builder", "tool_executor", "policy"):
         if not isinstance(manifest.get(key), dict):
             raise ValidationError(f"Temporal runtime release requires {key}")
@@ -260,6 +263,8 @@ class TemporalRunState:
         self.state, self.revision, self.result, self.error = "queued", 0, None, None
         self.node, self.decisions, self.actions = 0, 0, []
         self.limits_stages = {}
+        self.completion_stages, self.pending_verification = {}, None
+        self.completion_task = detached(request["input"])
         self.messages = self._turn_messages(self.step, request["input"])
         self.receipts, self.command_digests, self.event_log = {}, {}, []
         self.reservations, self.pending_acks = {}, []
@@ -397,6 +402,9 @@ class TemporalRunState:
             if self.state == "cancelled":
                 return {"reason": "already_terminal"}
             self.state = "cancelled"
+            from .temporal_completion_state import close_pending
+
+            close_pending(self)
             self._emit(
                 "cancel_applied", {"state": self.state, "remote_stop_confirmed": self.quiescent}
             )
@@ -490,6 +498,11 @@ class TemporalRunState:
             "release_digest": self.release_digest,
             "budget": self.budget,
             **(
+                {"completion_stages": detached(list(self.completion_stages.values()))}
+                if self.manifest.get("completion_protocol") == 1
+                else {}
+            ),
+            **(
                 {"limits_stages": detached(list(self.limits_stages.values()))}
                 if self.manifest.get("limits_protocol") == 1
                 else {}
@@ -582,6 +595,11 @@ class TemporalRunState:
                 return operation
         if self.state in TERMINAL:
             return None
+        from .temporal_completion_state import next_stage as next_completion
+
+        operation = next_completion(self)
+        if operation is not None:
+            return operation
         from .temporal_limits_state import next_stage as next_limits
 
         operation = next_limits(self)
@@ -883,10 +901,10 @@ class TemporalRunState:
                 )
             else:
                 result = final_output(response["output"], self.step["output_schema"])
-                from .temporal_memory_state import prepare
+                from .temporal_completion_state import prepare as prepare_completion
 
-                if not prepare(self, action, result):
-                    self.complete_node(result)
+                if not prepare_completion(self, action, result):
+                    self.finish_output(action, result)
         except (ValidationError, AuthorizationDenied, AgentLimitExceeded) as exc:
             if received_v2:
                 self._reject_model(action, exc.code)
@@ -894,10 +912,22 @@ class TemporalRunState:
                 self.state, self.error = "failed", {"code": exc.code}
                 self._emit("run_failed", self.error)
 
+    def finish_output(self, action, result):
+        from .temporal_memory_state import prepare
+
+        if not prepare(self, action, result):
+            self.complete_node(result)
+
+    def accept_completion(self, action_id, response):
+        from .temporal_completion_state import accept_stage
+
+        accept_stage(self, action_id, response)
+
     def complete_node(self, result):
         self._emit("node_completed", {"node": self.node, "result_digest": digest(result)})
         if self.node + 1 < len(self.request["definition"]["steps"]):
             self.node += 1
+            self.completion_task = detached(result)
             self.decisions, self.messages = 0, self._turn_messages(self.step, result)
         else:
             self.state, self.result = "succeeded", detached(result)

@@ -139,7 +139,7 @@ H1的资源关闭原则不等于已实现Agent上下文退出；AgentHarness也�
 
 ## dev29 H1e 已交付范围
 
-Local `verifier` 支持纯同步 `CompletionVerifier` 的 inherit/ref/disabled；回执、重试与恢复契约见[完成验证](../../docs/completion-verification.md)。显式选择使用 local-bindings-5；无验证器的旧继承发布身份保持兼容。此端口独立于动态 PlanVerifier，受管理 async/model 验证、阶段策略及 Temporal 绑定仍未交付。
+Local `verifier` 支持纯同步 `CompletionVerifier` 的 inherit/ref/disabled；回执、重试与恢复契约见[完成验证](../../docs/completion-verification.md)。显式选择使用 local-bindings-5；无验证器的旧继承发布身份保持兼容。此端口独立于动态 PlanVerifier；dev62 已提供 Temporal 纯验证绑定，受管理 async/model 验证仍待交付。
 
 ## dev30 H1f 已交付范围
 
@@ -157,4 +157,8 @@ Local `limits` 支持纯同步 AgentLimitsPolicy；有效决策／上下文／�
 
 普通及 managed Context／model 消费 caps，决定数与累计工具 Action 数在原状态机检查；超限批次全部拒绝，原模型响应和计费证据保持。纯工具批次规则返回数据判定，由原 Workflow 状态机提交 agent_limit_exceeded，避免跨 SDK 沙箱异常身份影响失败状态推进。取消后的限制响应仅保存迟到证据。
 
-完整每 Agent verifier／decision_policy／外置 Session 数据与环境角色、父级共享配额、全局容量、真实费用和质量仍是独立能力。实际交付与验收见[指南](../../docs/temporal-agent-limits.md)。
+完整每 Agent decision_policy／外置 Session 数据与环境角色、父级共享配额、全局容量、真实费用和质量仍是独立能力。实际交付与验收见[指南](../../docs/temporal-agent-limits.md)。
+
+## dev62 Temporal H1e 纯完成验证子集
+
+显式 completion_protocol=1／temporal-3 固定策略身份及方法指纹。原 History 在 mandatory final_output 校验后冻结当前节点原类型输入、候选及已提交工具回执；纯 Activity 的 accept/reject/retry 必须对应原 Scope／请求摘要。只有 accept 进入原记忆／节点完成；取消后的迟到结论只留证据。retry 不重置原决策、工具额度和预算，并保留受保护反馈尾组。Agent ref 替换可选宿主完成规则，disabled 只关闭补充规则；强制 Schema、授权、审批和 limits 保持。绑定子 Run 控制引用使用含 agent_bindings 的原 request_release_digest。详见[指南](../../docs/temporal-completion-verification.md)。

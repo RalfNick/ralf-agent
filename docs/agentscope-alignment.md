@@ -79,3 +79,5 @@ Dev44 extends Basic/Knowledge data context to Local graph/Team/dynamic/nesting a
 Dev45 closes the Local advanced rule/model-selected memory/default composition gap, with node-scoped original evidence, terminal root/child recovery and process-death coverage. Temporal memory writes and semantic memory/task quality remain separate pending gates.
 
 Dev46 adds explicit Temporal History-managed grounded memory and five scoped per-Agent binding roles across actual composite members. Worker recovery/replay evidence does not establish semantic memory quality or whole-framework parity. [Scope and acceptance](temporal-memory-bindings.md).
+
+当前 dev62 增量已把 Temporal 纯完成验证接入原节点／回执／记忆链路。dev58–61 的 Facts／Knowledge 范围、History Sessions 和数值限制，连同 verifier 构成八类 Temporal 绑定。下一依赖为 DecisionPolicy 与外置 Session／环境角色、输入续接和治理；完整 R01–R26、A/B/C/D 门槛继续以剩余清单为准。完成绑定子集和 scripted 恢复不代表 AgentScope 整体对齐或真实质量通过。

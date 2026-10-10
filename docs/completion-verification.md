@@ -1,4 +1,4 @@
-# Agent 完成验证 — dev29 / Local H1e
+# Agent 完成验证 — Local H1e / Temporal dev62
 
 模型给出合法 JSON，仅证明输出符合 Schema。业务完成条件需要读取执行证据。
 `CompletionVerifier` 是纯同步策略；Engine 负责校验、记录结论、继续决策和提交结果。
@@ -77,7 +77,8 @@ Profile 的 `components.verifier` 支持 `schema` 与 `tool-receipt` 适配器�
 使用上例构造参数；`binding_components` 中的 role 为 `verifier`。
 自定义适配器用 `ComponentRegistry.register`／`register_async` 注册同名 component kind。
 异步工厂用于装配，实际 `verify` 仍是纯同步方法，资源所有权遵循现有 BuildContext。
-Temporal 当前拒绝全部绑定声明，这一增量不扩大其支持矩阵。
+Temporal dev62 支持宿主／每 Agent 纯完成规则，见[History 采纳与恢复](temporal-completion-verification.md)。
+下文 Local 的 Manifest／配置说明保持原契约；异步／模型验证仍未交付。
 
 ## 执行与恢复
 

@@ -11,6 +11,7 @@ from .context_budget import (
     WholeGroupBudgeter,
     _positive,
 )
+from .context_feedback import protect_feedback_tail
 from .context_references import select_references
 from .context_summaries import ContextSummary, ExcerptContextSummarizer
 from .errors import DefinitionMismatch, RalfError, ValidationError
@@ -100,11 +101,22 @@ def _groups(history):
         elif message.get("role") == "tool" and message.get("tool_call_id") in expected:
             expected.remove(message["tool_call_id"])
             groups[-1].append(message)
+        elif (
+            message.get("role") == "user"
+            and not expected
+            and groups
+            and len(groups[-1]) == 1
+            and groups[-1][0].get("role") == "assistant"
+            and not groups[-1][0].get("tool_calls")
+            and isinstance(message.get("content"), str)
+            and message["content"].startswith("Completion verification: ")
+        ):
+            groups[-1].append(message)
         else:
             raise ValidationError("Context contains an unmatched tool or unsupported history role")
     if expected or len(groups) > 1024:
         raise ValidationError("Context requires bounded complete tool groups")
-    return history[:2], groups
+    return history[:2], protect_feedback_tail(groups)
 
 
 class BudgetedContextAssembler:

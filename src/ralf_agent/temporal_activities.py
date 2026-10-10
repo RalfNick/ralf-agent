@@ -144,6 +144,7 @@ class TemporalRuntime:
         recall_planner=None,
         enable_sessions=False,
         limits=None,
+        verifier=None,
     ):
         if type(enable_sessions) is not bool:
             raise ValidationError("enable_sessions requires an explicit boolean")
@@ -192,6 +193,16 @@ class TemporalRuntime:
                 "Global Temporal Facts require the original backend; select scoped resources through BindingCatalog"
             )
         self.binding_catalog, self.stage_policy = binding_catalog, stage_policy
+        from .temporal_completion import pin as completion_pin
+
+        self.verifier, self._verifier_owner = verifier, verifier
+        self._verifier_pins = ([completion_pin(verifier)] if verifier is not None else []) + [
+            completion_pin(component)
+            for (role, _, _), (component, _) in (
+                binding_catalog._entries.items() if binding_catalog is not None else []
+            )
+            if role == "verifier"
+        ]
         from .temporal_limits import pin
 
         self.limits, self._limits_owner = limits, limits
@@ -331,6 +342,12 @@ class TemporalRuntime:
             result.update(limits_protocol=1, dispatch_admission="history-1")
             if self.limits is not None:
                 result["host_limits"] = limits_registration(self.limits)
+        if self._verifier_pins:
+            from .temporal_completion import registration as completion_registration
+
+            result["completion_protocol"] = 1
+            if self.verifier is not None:
+                result["completion_verifier"] = completion_registration(self.verifier)
         if self.knowledge is not None:
             result["knowledge_context"] = component_identity(
                 self.knowledge, ("references", "validate")
@@ -368,7 +385,13 @@ class TemporalRuntime:
             result["facts_recall"] = recall_registration(self.recall_policy, self.recall_planner)
             result["facts_protocol"] = 1
         memory = memory_registration(self.stage_policy, self.providers)
-        if catalog is not None or memory is not None or has_facts or self._limits_pins:
+        if (
+            catalog is not None
+            or memory is not None
+            or has_facts
+            or self._limits_pins
+            or self._verifier_pins
+        ):
             result.update(kernel="temporal-3", binding_protocol=1, dispatch_admission="history-1")
             if catalog is not None:
                 result["binding_catalog"] = catalog
@@ -399,6 +422,12 @@ class TemporalRuntime:
         if host is not None:
             host.validate_release(expected)
             return self.manifest
+        from .temporal_completion import check_pin as check_completion_pin
+
+        if self.verifier is not self._verifier_owner:
+            raise DefinitionMismatch("Temporal completion verifier owner changed")
+        for original in self._verifier_pins:
+            check_completion_pin(original)
         from .temporal_limits import check_pin as check_limits_pin
 
         if self.limits is not self._limits_owner:
@@ -492,6 +521,11 @@ class TemporalRuntime:
 
     async def propose_limits(self, request: dict) -> dict:
         from .temporal_limits import evaluate
+
+        return await evaluate(self, request)
+
+    async def verify_completion(self, request: dict) -> dict:
+        from .temporal_completion import evaluate
 
         return await evaluate(self, request)
 
@@ -915,4 +949,19 @@ def registered_activities(runtime, client=None):
     async def agent_limits(request: dict) -> dict:
         return await runtime.propose_limits(request)
 
-    return [model, tool, reconcile, evidence, managed_context, managed_memory, agent_limits]
+    from .temporal_completion_state import ACTIVITY as COMPLETION_ACTIVITY
+
+    @activity.defn(name=COMPLETION_ACTIVITY)
+    async def agent_completion(request: dict) -> dict:
+        return await runtime.verify_completion(request)
+
+    return [
+        model,
+        tool,
+        reconcile,
+        evidence,
+        managed_context,
+        managed_memory,
+        agent_limits,
+        agent_completion,
+    ]

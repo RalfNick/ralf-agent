@@ -77,3 +77,53 @@ def test_replacing_registry_container_cannot_bypass_pinned_implementation():
     runtime.teams = {**runtime.teams, "sequential": Replacement()}
     with pytest.raises(DefinitionMismatch):
         runtime.validate_release()
+
+
+@pytest.mark.parametrize("bind_child", [False, True])
+def test_child_control_reference_keeps_original_projected_binding_release(bind_child):
+    from dataclasses import asdict
+    from types import SimpleNamespace
+
+    from ralf_agent import AgentBindingDescriptor, BindingCatalog, BoundDefinition, RunRef, Scope
+    from ralf_agent.temporal_agent_controls import child_reference
+    from ralf_agent.temporal_bindings import normalize_request, request_release_digest
+    from ralf_agent.temporal_parent_state import TemporalParentState
+    from ralf_agent.temporal_state import TemporalRunState
+    from ralf_agent.types import submission_request
+
+    scope = Scope()
+    runtime = TemporalRuntime(
+        providers={"default": Provider()},
+        tools=ToolRegistry(),
+        binding_catalog=BindingCatalog(scope=scope),
+    )
+    graph = GraphWorkflowSpec(
+        "graph",
+        [
+            GraphNode("a", agent=AgentSpec("a", "answer")),
+            GraphNode("b", agent=AgentSpec("b", "answer")),
+        ],
+    )
+    # A bound root projects an explicit empty map to unselected children too.
+    declaration = BoundDefinition(
+        graph, {"graph/nodes/a" if bind_child else "graph/nodes/b": AgentBindingDescriptor()}
+    )
+    parent = TemporalParentState(
+        "root",
+        asdict(scope),
+        "submit",
+        normalize_request(submission_request(declaration, "task", budget=16)),
+        runtime.orchestration_release,
+    )
+    call = parent.next_calls()[0]
+    native = TemporalRunState(
+        call["run_id"], asdict(scope), call["command_id"], call["request"], parent.manifest
+    )
+    reference = child_reference(
+        SimpleNamespace(scope=scope),
+        RunRef("resource", scope.workspace, scope.principal, "root", parent.release_digest),
+        SimpleNamespace(manifest=parent.manifest),
+        call,
+    )
+    assert reference.release_digest == request_release_digest(call["request"], parent.manifest)
+    assert reference.release_digest == native.release_digest

@@ -14,6 +14,7 @@ from temporalio.exceptions import ActivityError, ApplicationError
 
 with workflow.unsafe.imports_passed_through():
     from .temporal_bindings import ROLES as _binding_roles  # noqa: F401
+    from .temporal_completion_state import ACTIVITY as COMPLETION_ACTIVITY
     from .temporal_limits_state import ACTIVITY as LIMITS_ACTIVITY
     from .temporal_managed_context import ACTIVITY as MANAGED_CONTEXT_ACTIVITY
     from .temporal_memory import ACTIVITY as MEMORY_ACTIVITY
@@ -176,7 +177,9 @@ class TemporalRunWorkflow:
             action, request = operation
             try:
                 response = await workflow.execute_activity(
-                    LIMITS_ACTIVITY
+                    COMPLETION_ACTIVITY
+                    if action["kind"] == "agent_completion"
+                    else LIMITS_ACTIVITY
                     if action["kind"] == "agent_limits"
                     else MEMORY_ACTIVITY
                     if action["kind"] == "managed_memory"
@@ -192,7 +195,7 @@ class TemporalRunWorkflow:
                     schedule_to_close_timeout=total_timeout,
                     retry_policy=RetryPolicy(
                         maximum_attempts=3
-                        if action["kind"] == "agent_limits"
+                        if action["kind"] in {"agent_limits", "agent_completion"}
                         or (
                             action["kind"] == "managed_context"
                             and action["phase"] not in {"write", "summary"}
@@ -209,10 +212,18 @@ class TemporalRunWorkflow:
                     ),
                     activity_id=action["id"]
                     if action["kind"]
-                    in {"context", "managed_context", "managed_memory", "agent_limits"}
+                    in {
+                        "context",
+                        "managed_context",
+                        "managed_memory",
+                        "agent_limits",
+                        "agent_completion",
+                    }
                     else action["attempts"][0]["id"],
                 )
-                if action["kind"] == "agent_limits":
+                if action["kind"] == "agent_completion":
+                    self.state.accept_completion(action["id"], response)
+                elif action["kind"] == "agent_limits":
                     self.state.accept_limits(action["id"], response)
                 elif action["kind"] == "managed_memory":
                     self.state.accept_memory(action["id"], response)
@@ -227,7 +238,11 @@ class TemporalRunWorkflow:
             except ActivityError:
                 # A server timeout is not evidence that a Python thread or
                 # downstream request stopped. Preserve the dispatched identity.
-                if action["kind"] == "agent_limits":
+                if action["kind"] == "agent_completion":
+                    self.state.accept_completion(
+                        action["id"], {"ok": False, "code": "validation_error"}
+                    )
+                elif action["kind"] == "agent_limits":
                     self.state.accept_limits(action["id"], {"ok": False, "code": "limits_failed"})
                 elif action["kind"] == "managed_memory":
                     self.state.accept_memory(
@@ -306,6 +321,8 @@ class TemporalRunWorkflow:
                 return self.state.diagnostics()
             if kind == "memory_stages":
                 return detached(list(getattr(self.state, "memory_stages", {}).values()))
+            if kind == "completion_stages":
+                return detached(list(getattr(self.state, "completion_stages", {}).values()))
             if kind == "context_stages":
                 return detached(list(getattr(self.state, "managed_context_stages", {}).values()))
             if kind == "context_artifacts":

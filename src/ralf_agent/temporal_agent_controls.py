@@ -4,6 +4,7 @@ from dataclasses import asdict
 
 from .errors import DefinitionMismatch
 from .run_supervisor import TERMINAL
+from .temporal_bindings import request_release_digest
 from .types import digest
 
 
@@ -27,7 +28,7 @@ def child_reference(runtime, parent, info, call):
         parent.workspace,
         parent.principal,
         run_id,
-        digest({"definition": call["request"]["definition"], "manifest": info.manifest}),
+        request_release_digest(call["request"], info.manifest),
     )
 
 

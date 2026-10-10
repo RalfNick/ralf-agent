@@ -1,6 +1,7 @@
 # Independent Temporal execution — dev17 preview
 
-Current dev61: [Temporal automatic memory and per-Agent bindings](temporal-memory-bindings.md) adds the opt-in temporal-3 protocol. [Facts namespace selection and bounded recall](temporal-facts.md) and [Knowledge namespace selectors](temporal-knowledge-bindings.md) extend the original Context History. Opt-in [History Sessions](temporal-sessions.md) provide durable serial Turns with actual Namespace UUID identities. [Agent limits](temporal-agent-limits.md) add pure replaceable policy proposals and pinned per-node caps. Default-off protocol identities remain unchanged. External SessionStore routing and other binding roles remain unsupported.
+Current dev62: [Temporal automatic memory and per-Agent bindings](temporal-memory-bindings.md) adds the opt-in temporal-3 protocol. [Facts namespace selection and bounded recall](temporal-facts.md) and [Knowledge namespace selectors](temporal-knowledge-bindings.md) extend the original Context History. Opt-in [History Sessions](temporal-sessions.md) provide durable serial Turns with actual Namespace UUID identities. [Agent limits](temporal-agent-limits.md) add pure replaceable policy proposals and pinned per-node caps. Default-off protocol identities remain unchanged. External SessionStore routing and other binding roles remain unsupported.
+[Completion verification](temporal-completion-verification.md) pins pure policies and current-node receipts; original History accepts, rejects or retries before memory/completion.
 
 `TemporalEngine` implements the public AsyncExecutionEngine/AsyncRuntimeDiagnostics
 ports. Network controls are explicitly awaited. A Temporal Workflow owns commands,
