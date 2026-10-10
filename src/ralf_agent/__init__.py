@@ -66,6 +66,9 @@ from .errors import (
 from .event_records import AsyncRunEventSource, EventCursor, EventEnvelope, SyncRunEventSource
 from .event_stream import RunEventSubscription
 from .executors import DispatchEnvelope, EffectObservation, PythonToolExecutor, ToolExecutor
+from .fact_index import IndexedMemoryStore
+from .fact_index_ports import AsyncFactIndexMetadataStore, FactIndexCatalog, FactIndexMetadataStore
+from .fact_scan import AsyncFactScanner, FactScanner, FactScanPage, FactScanQuery
 from .file_artifacts import FileArtifactStore
 from .governance import TemporalExecutionPolicy
 from .handoff import (
@@ -300,7 +303,7 @@ from .workflow import (
     WorkflowSelection,
 )
 
-__version__ = "0.1.0.dev55"
+__version__ = "0.1.0.dev56"
 __all__ = [
     "EventCursor",
     "EventEnvelope",
@@ -522,6 +525,14 @@ __all__ += [
 
 __all__ += [
     "CharacterChunker",
+    "AsyncFactScanner",
+    "FactScanner",
+    "FactScanPage",
+    "FactScanQuery",
+    "FactIndexCatalog",
+    "FactIndexMetadataStore",
+    "AsyncFactIndexMetadataStore",
+    "IndexedMemoryStore",
     "FileArtifactStore",
     "TextTokenizer",
     "TokenChunker",

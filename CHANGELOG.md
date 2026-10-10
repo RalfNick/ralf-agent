@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.0.dev56 — Complete-corpus Facts indexing
+
+- Add bounded FactScanner and snapshot ports for memory/SQLite/Redis; preserve original recall and scoped Agent visibility.
+- Add IndexedMemoryStore, replaceable sync/async CAS metadata SPI and explicit embedding/vector/catalog factories; offline SQLite/Hash defaults, HTTP embedding and Qdrant configuration.
+- Persist accepted embedding responses and complete index publication; cover real process loss, authority validation, scoped recall and Redis reconnection. Writes need explicit rebuild; PostgreSQL scanning, Temporal Facts binding, repair/GC and semantic quality remain open.
+
 ## 0.1.0.dev55 — Durable file artifacts
 
 - Add core-only POSIX FileArtifactStore, bounded JSON payloads and a SQLite receipt index through the existing ArtifactStore contract; preserve Scope, TTL, capacity, digest and original references.

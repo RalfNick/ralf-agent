@@ -1,4 +1,4 @@
-# Implementation status — 0.1.0.dev55
+# Implementation status — 0.1.0.dev56
 
 dev54 adds opt-in [TextTokenizer, token chunks and output reserve](tokenization.md),
 dependency-free UTF-8 byte units and optional owned tiktoken vocabulary. Budgeted/managed
@@ -19,6 +19,16 @@ Separately, installed file6 and original SQLite6 actual Temporal Worker/History 
 on the verified official CLI1.9.1/Server1.32.0 with SDK1.34.0, including restart and cancellation.
 This is same-host resource recovery, not distributed filesystem consistency.
 Retention/GC, global disk quota, S3 and distributed filesystem consistency remain open.
+
+dev56 adds explicit [complete-corpus Facts indexing](fact-indexing.md): bounded
+memory/SQLite/Redis enumeration, fixed source snapshots, replaceable CAS metadata,
+accepted embedding receipts, idempotent vector writes and complete activation.
+Default SQLite/Hash assembly remains offline; HTTP embedding and Qdrant are explicit.
+Recall hydrates original facts and checks publication/version/value/TTL. Writes require
+explicit rebuild. PostgreSQL scanning, Temporal Facts bindings, repair/GC and actual
+semantic quality remain separate gates. Final3397 passed/98 configured skips,74 installed contracts,197 identical modules,
+core-only offline indexing and dev55↔56 original receipt compatibility are recorded in
+[dev56 acceptance](../architecture/reviews/2026-10-11-fact-indexing.md).
 
 Target architecture update: [AgentHarness](../architecture/viewpoints/harness-runtime.md)
 defines broad Harness/Core roles, per-Agent bindings, Agent/Session facade, managed
@@ -49,7 +59,7 @@ dev31 delivers [H2a Local stateless Agent API](agent-api.md): immutable AgentHar
 Runtime-owned Local drive tasks, Agent/AgentRun/RunRef, observation-only wait,
 nested control ownership/waking and retryable drain/cancel closing. Full H1/H2
 are not complete; remote Sessions, Temporal bindings and automatic
-managed stages remain partial. SDK is dev55. The [Facade/Session target contract](../architecture/specs/agent-facade-session-contract.md)
+managed stages remain partial. SDK is dev56. The [Facade/Session target contract](../architecture/specs/agent-facade-session-contract.md)
 now specifies observation-only waiting, durable busy refusal, Session binding revisions,
 and ownership-aware closing. H2a implements the declared Local stateless subset;
 remaining shared routing and backend requirements are not changes to legacy
@@ -71,7 +81,7 @@ dev37 adds root conversation declarations through JSON/TOML Profile components a
 The [current remaining-work checklist](remaining-work.md) maps each layer to delivered
 subsets, missing capabilities and outstanding acceptance, with H1–H5 priorities.
 
-2026-10-11. Current baseline: dev55, based on committed dev54 / 6001fef. This is the M1 core preview. Full M1 acceptance, enterprise architecture and a production-ready v0.1 release have not been completed. Public interfaces remain experimental. Static Graph Workflow, managed Tool/MCP nodes, bounded parallel execution and explicit async component lifecycle are available. dev14 adds real Redis/PostgreSQL/Qdrant data adapters, bounded plan/execute/verify/replan and local child-Run teams. dev15 adds dynamic DAG/plan patches, nested local workflows, MQ/A2A handoff and an independently History-owned Temporal subset. dev16 adds native async A2A controls, shared PostgreSQL Inbox/Outbox and a packaged local HTTP service with tracked shutdown. dev17 adds History-owned distributed Graph/Team/Dynamic/nesting, fixed RAG snapshots with shared PG/Qdrant ports, per-Run execution policy/timers and an installed Temporal starter; business evaluation remains not_run without model configuration. dev18 adds replaceable UTF-8 parsing/chunking and atomic memory/SQLite/PostgreSQL ingestion receipts plus a user-document starter. dev19 adds explicit float HTTP embeddings, replaceable RRF/rerank and authority-validated parallel Hybrid retrieval with additive assembly and an offline user-document starter. dev20 adds opt-in pure context measurement/complete-group selection/excerpts, actual Harness-request measurement and scoped memory/SQLite artifacts with a seventeenth offline starter. dev21 adds opt-in sourced memory consolidation, managed model summaries, pure custom Temporal context and a bounded real DeepSeek trial. dev22 adds stateless native Responses/JSON/SSE, typed Python tools and an offline-first compatibility suite. dev47 adds explicit semantic/recall/Plan/Team combinations through existing authorities; see [H3 guide](h3-intelligent-combinations.md). Default native local-4/request/Manifest identities and original flat parents remain compatible; new nested/DAG definitions require dev15. Evidence is recorded in [implementation progress](implementation-progress.md).
+2026-10-11. Current baseline: dev56, based on committed dev55 / ce32d6a. This is the M1 core preview. Full M1 acceptance, enterprise architecture and a production-ready v0.1 release have not been completed. Public interfaces remain experimental. Static Graph Workflow, managed Tool/MCP nodes, bounded parallel execution and explicit async component lifecycle are available. dev14 adds real Redis/PostgreSQL/Qdrant data adapters, bounded plan/execute/verify/replan and local child-Run teams. dev15 adds dynamic DAG/plan patches, nested local workflows, MQ/A2A handoff and an independently History-owned Temporal subset. dev16 adds native async A2A controls, shared PostgreSQL Inbox/Outbox and a packaged local HTTP service with tracked shutdown. dev17 adds History-owned distributed Graph/Team/Dynamic/nesting, fixed RAG snapshots with shared PG/Qdrant ports, per-Run execution policy/timers and an installed Temporal starter; business evaluation remains not_run without model configuration. dev18 adds replaceable UTF-8 parsing/chunking and atomic memory/SQLite/PostgreSQL ingestion receipts plus a user-document starter. dev19 adds explicit float HTTP embeddings, replaceable RRF/rerank and authority-validated parallel Hybrid retrieval with additive assembly and an offline user-document starter. dev20 adds opt-in pure context measurement/complete-group selection/excerpts, actual Harness-request measurement and scoped memory/SQLite artifacts with a seventeenth offline starter. dev21 adds opt-in sourced memory consolidation, managed model summaries, pure custom Temporal context and a bounded real DeepSeek trial. dev22 adds stateless native Responses/JSON/SSE, typed Python tools and an offline-first compatibility suite. dev47 adds explicit semantic/recall/Plan/Team combinations through existing authorities; see [H3 guide](h3-intelligent-combinations.md). Default native local-4/request/Manifest identities and original flat parents remain compatible; new nested/DAG definitions require dev15. Evidence is recorded in [implementation progress](implementation-progress.md).
 
 | Capability | Delivered in this increment | Boundary / next work |
 | --- | --- | --- |

@@ -4,7 +4,7 @@
 Dev46 已增加[Temporal 自动记忆与五类 Agent 绑定](../../docs/temporal-memory-bindings.md)：显式 temporal-3、原声明子树、History 选择响应／CAS／核验与父子证据恢复；旧发布保持。其他 Temporal 绑定角色／资源 selector、共享 Session、语义质量与完整 H1/H3 仍待验收。
 
 版本：1.9；日期：2026-10-10；维护者：RALF maintainers。
-状态：根据用户认可的理想架构形成的目标设计；当前实现基线为0.1.0.dev55（基于已提交 dev54/6001fef）；dev43 的历史入口基线为（H1a–H1f、Local stateless H2a、同库原生／顺序 H2b1／复合 Session H2b2／授权根 namespace H2b3／远程原生顺序 H2b4a／复合根 H2b4b、Temporal 原生入口 H2c1／高级编排入口 H2c2）。
+状态：根据用户认可的理想架构形成的目标设计；当前实现基线为0.1.0.dev56（基于已提交 dev55/ce32d6a）；dev43 的历史入口基线为（H1a–H1f、Local stateless H2a、同库原生／顺序 H2b1／复合 Session H2b2／授权根 namespace H2b3／远程原生顺序 H2b4a／复合根 H2b4b、Temporal 原生入口 H2c1／高级编排入口 H2c2）。
 读者：框架维护者、Agent应用开发者、适配器作者与企业部署团队。
 除明确标为 H1a–H1f、dev31 Local stateless H2a 、dev32 同库原生／顺序 Session H2b1 与 dev33 Temporal 原生／顺序入口 H2c1 、dev34 高级编排入口 H2c2 与 dev35 同库复合会话 H2b2、dev36 授权根 namespace H2b3 与 dev38 远程原生／顺序 H2b4a 与 dev39 远程复合根 H2b4b 的子集外，本文中的接口和示例仍为目标设计。AgentHarness 当前固定声明并复用 Local 权威，dev40–42 已实现原生／顺序 Local 的规则记忆、受管理历史摘要和模型选择记忆；dev43 增加版本化 Local 推荐组合、确定性引用压缩和产物投影；dev44 已接通 Local 高级编排与 Temporal 自动历史压缩／大结果卸载，分别保留原 Run 节点投影与 History 阶段证据。dev46 已接通 Temporal 自动记忆与五类绑定；dev47 增加显式语义知识、相关候选排序及 Plan／Team 推荐组合，语义引用质量及完整 H3 仍待验收。
 [绑定使用教程](../../docs/agent-bindings.md)与 [Local Agent API](../../docs/agent-api.md)记录实际支持与拒绝；dev32 同库原生／顺序 Session/Turn 子集已交付；dev33 Temporal 原生／顺序入口已交付；dev34 已注册高级入口已交付；dev35同库复合会话与dev36授权根namespace已交付；dev38–39 远程原生／顺序及复合根会话已交付；dev46 已交付 Temporal 五类绑定子集；其余角色／共享 Session 与完整 H2 尚未交付。
@@ -393,3 +393,12 @@ dev53 使用原 DocumentParser／知识权威接入可选文本 PDF，显式依�
 
 dev54 通过现有 Counter／Chunker 组合可替换 TextTokenizer、可选本地装配 tiktoken、canonical 输出预留与 token 分块，保持字符默认、原知识原子回执和 Local/Temporal 权威。词表装配属于宿主 I/O，纯 Harness 计量不下载资产。详见[tokenizer 子集](../../docs/tokenization.md)，协议开销、质量和完整 H3 继续独立验收。
 dev55 复用 ArtifactStore 引用与受管理阶段加入可选 FileArtifactStore：本地 POSIX 正文文件与有界 SQLite 回执，声明固定／owned 关闭及进程提交窗口恢复；不增加执行权威。详见[文件 Artifact](../../docs/file-artifacts.md)。GC、引用保留、S3／磁盘全局配额仍独立验收。
+
+### dev56 派生事实索引
+
+FactScanner 提供独立宿主扫描能力；包含过期记录不意味着赋给 Agent 历史事实权限。
+IndexedMemoryStore 组合 source／embedding／vector／metadata，数据原记录始终为权威；独立 CAS Catalog 只保存派生构建证据，不新增 Run 调度。
+接收 embedding、向量发布、页进度和完整 active 分阶段保存；召回走原 FactsView／validate_facts 和执行权威采纳。
+SDK borrowed、工厂 owned；默认 SQLite/Hash 与显式 async Redis/Qdrant 接入保持原身份和生命周期约定。
+新组合仅 Local Facts 范围；Temporal Facts binding、自动增量与真实语义质量继续按 H1/H3 逐项验收。
+见[设计与限制](../../docs/fact-indexing.md)。

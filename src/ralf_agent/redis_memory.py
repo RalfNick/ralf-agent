@@ -13,7 +13,7 @@ import time
 from dataclasses import asdict
 from urllib.parse import urlsplit
 
-from .errors import IdempotencyConflict, MemoryBackendError, ValidationError
+from .errors import BudgetExceeded, IdempotencyConflict, MemoryBackendError, ValidationError
 from .memory import _session_cursor, _validate_expires_at
 from .ports import is_async_callable
 from .recall import (
@@ -99,6 +99,41 @@ _VALIDATE_FACTS = """
 local rows = {}
 for i, key in ipairs(ARGV) do rows[i] = redis.call('HGET', KEYS[1], key) end
 return rows
+"""
+
+_FACT_SCAN_HEADER = """
+local epoch = redis.call('GET', KEYS[1])
+if not epoch then
+    redis.call('SET', KEYS[1], ARGV[1])
+    epoch = ARGV[1]
+end
+return {epoch, redis.call('GET', KEYS[2]) or '0'}
+"""
+
+_FACT_SCAN = """
+local epoch = redis.call('GET', KEYS[4])
+if not epoch then redis.call('SET', KEYS[4], ARGV[1]); epoch = ARGV[1] end
+local generation = redis.call('GET', KEYS[3]) or '0'
+local count = redis.call('LLEN', KEYS[2])
+local after, limit, budget = tonumber(ARGV[4]), tonumber(ARGV[5]), tonumber(ARGV[6])
+if ARGV[2] ~= '' and (epoch ~= ARGV[2] or generation ~= ARGV[3]) then return {0} end
+if after > count then return {0} end
+local keys = redis.call('LRANGE', KEYS[2], after, after + limit - 1)
+local rows, used, position = {}, 2, after
+for i, key in ipairs(keys) do
+    local row = redis.call('HGET', KEYS[1], key)
+    if not row then return {3} end
+    local separator = 0
+    if #rows > 0 then separator = 1 end
+    if used + #row + separator > budget then
+        if #rows == 0 then return {2} end
+        break
+    end
+    rows[#rows + 1] = row
+    used = used + #row + separator
+    position = after + i
+end
+return {1, epoch, generation, count, position, used, rows}
 """
 
 
@@ -446,6 +481,74 @@ class RedisMemory:
         return _page(
             candidates, query, "facts", binding, snapshot, has_more=after + len(rows) < count
         )
+
+    fact_scan_version = 1
+
+    async def fact_snapshot(self, scope, namespace):
+        from .fact_scan import _scan_snapshot
+
+        _inputs(scope, namespace)
+        response = await self._eval(
+            _FACT_SCAN_HEADER,
+            self._keys(scope, "facts", namespace, "scan-epoch", "generation"),
+            secrets.token_hex(16),
+        )
+        if not isinstance(response, list) or len(response) != 2:
+            raise MemoryBackendError("Redis fact snapshot returned invalid data")
+        epoch = response[0].decode("ascii") if isinstance(response[0], bytes) else response[0]
+        return canonical(_scan_snapshot(scope, namespace, epoch, _number(response[1])))
+
+    async def scan_facts(self, scope, namespace, query):
+        from .fact_scan import FactScanPage, _scan_binding, _scan_size, _scan_snapshot
+        from .recall import _encode_cursor
+
+        _inputs(scope, namespace)
+        binding, query = _scan_binding(self.backend_id, scope, namespace, query)
+        decoded = _decode_cursor(query.cursor, binding)
+        previous, after = decoded if decoded is not None else (None, 0)
+        if previous is not None and (
+            not isinstance(previous, dict) or set(previous) != {"epoch", "generation", "address"}
+        ):
+            raise ValidationError("Invalid Redis fact scan snapshot")
+        if previous is not None:
+            if (
+                _scan_snapshot(scope, namespace, previous["epoch"], previous["generation"])
+                != previous
+            ):
+                raise ValidationError("Invalid Redis fact scan address")
+        response = await self._eval(
+            _FACT_SCAN,
+            self._keys(scope, "facts", namespace, "values", "order", "generation", "scan-epoch"),
+            secrets.token_hex(16),
+            "" if previous is None else previous["epoch"],
+            "" if previous is None else str(previous["generation"]),
+            str(after),
+            str(query.limit),
+            str(query.max_bytes),
+        )
+        if response == [0]:
+            raise ValidationError("Fact scan snapshot or position is no longer current")
+        if response == [2]:
+            raise BudgetExceeded("Fact record does not fit scan byte budget")
+        if not isinstance(response, list) or len(response) != 7 or response[0] != 1:
+            raise MemoryBackendError("Redis fact scan returned invalid data")
+        epoch = response[1].decode("ascii") if isinstance(response[1], bytes) else response[1]
+        generation, count, position, used = self._counts(response[2:6], 4)
+        snapshot = _scan_snapshot(scope, namespace, epoch, generation)
+        items = _facts(response[6])
+        if (
+            position < after
+            or position > count
+            or position - after != len(items)
+            or len(items) > query.limit
+            or _scan_size(items) != used
+            or used > query.max_bytes
+            or (previous is not None and previous != snapshot)
+            or (not items and position < count)
+        ):
+            raise MemoryBackendError("Redis fact scan exceeded its declared bounds")
+        cursor = _encode_cursor(binding, snapshot, position) if position < count else None
+        return FactScanPage(items, cursor, used, len(items), canonical(snapshot), True)
 
     async def validate_facts(self, scope, namespace, items):
         _inputs(scope, namespace)

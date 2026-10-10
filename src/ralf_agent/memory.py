@@ -160,6 +160,8 @@ class ThreadedMemoryAdapter:
                 "read_page",
                 "recall",
                 "validate_facts",
+                "scan_facts",
+                "fact_snapshot",
             )
         ):
             raise ValidationError("Use native async memory directly without the threaded bridge")
@@ -172,6 +174,10 @@ class ThreadedMemoryAdapter:
     @property
     def fact_inspection_version(self):
         return getattr(self.backend, "fact_inspection_version", None)
+
+    @property
+    def fact_scan_version(self):
+        return getattr(self.backend, "fact_scan_version", None)
 
     async def inspect_fact(self, *args, **kwargs):
         return await self._call(self.backend.inspect_fact, *args, **kwargs)
@@ -197,11 +203,19 @@ class ThreadedMemoryAdapter:
     async def validate_facts(self, *args, **kwargs):
         return await self._page_call("validate_facts", *args, **kwargs)
 
+    async def scan_facts(self, *args, **kwargs):
+        return await self._page_call("scan_facts", *args, **kwargs)
+
+    async def fact_snapshot(self, *args, **kwargs):
+        return await self._page_call("fact_snapshot", *args, **kwargs)
+
     async def _page_call(self, name, *args, **kwargs):
         backend = self.backend
         identity = backend.backend_id
         method = getattr(backend, name, None)
         if not callable(method):
+            if name in {"scan_facts", "fact_snapshot"}:
+                raise ValidationError("Backend does not provide bounded Fact scanning")
             method = getattr(LegacyMemoryRecallAdapter(backend), name)
         owner, owner_identity = _method_backend(method)
         result = await self._call(method, *args, **kwargs)
@@ -223,6 +237,7 @@ class ThreadedMemoryAdapter:
 
 
 class InMemoryMemory:
+    fact_scan_version = 1
     fact_inspection_version = 1
 
     def __init__(self, *, backend_id=None):
@@ -355,11 +370,47 @@ class InMemoryMemory:
                     raise ValidationError("Fact reference is no longer current")
                 _current_fact(reference, actual["version"], actual["expires_at"], now)
 
+    def scan_facts(self, scope, namespace, query):
+        from .fact_scan import _scan_binding, _scan_page, _scan_position
+
+        binding, query = _scan_binding(self.backend_id, scope, namespace, query)
+        with self._lock:
+            namespace_id = (scope.workspace, scope.principal, namespace)
+            positions = self._fact_positions.get(namespace_id, [])
+            snapshot, after = _scan_position(
+                binding, json.loads(self.fact_snapshot(scope, namespace)), query
+            )
+            if after > len(positions):
+                raise ValidationError("Fact scan position is unavailable")
+            candidates = (
+                (index, lambda identity=identity: self._facts[identity])
+                for index, identity in enumerate(
+                    positions[after : after + query.limit + 1], start=after + 1
+                )
+            )
+            return _scan_page(query, binding, snapshot, candidates)
+
+    def fact_snapshot(self, scope, namespace):
+        from .fact_scan import _scan_snapshot
+
+        with self._lock:
+            if not hasattr(self, "_fact_scan_epoch"):
+                self._fact_scan_epoch = uuid.uuid4().hex
+            return canonical(
+                _scan_snapshot(
+                    scope,
+                    namespace,
+                    self._fact_scan_epoch,
+                    self._fact_generations.get((scope.workspace, scope.principal, namespace), 0),
+                )
+            )
+
     def close(self):
         pass
 
 
 class SQLiteMemory:
+    fact_scan_version = 1
     fact_inspection_version = 1
 
     def __init__(self, path_or_store):
@@ -552,6 +603,66 @@ class SQLiteMemory:
                 is not None
             )
             return _page(candidates, query, "facts", binding, snapshot, has_more=has_more)
+
+    def scan_facts(self, scope, namespace, query):
+        from .errors import BudgetExceeded
+        from .fact_scan import (
+            _scan_binding,
+            _scan_epoch,
+            _scan_page,
+            _scan_position,
+            _scan_snapshot,
+        )
+
+        binding, query = _scan_binding(self.backend_id, scope, namespace, query)
+        parameters = (scope.workspace, scope.principal, namespace)
+        with self.store.transaction():
+            row = self.store.conn.execute(
+                "SELECT generation FROM memory_fact_generations WHERE workspace=? AND principal=? AND namespace=?",
+                parameters,
+            ).fetchone()
+            snapshot, after = _scan_position(
+                binding,
+                _scan_snapshot(scope, namespace, _scan_epoch(self.store), row[0] if row else 0),
+                query,
+            )
+            rows = self.store.conn.execute(
+                "SELECT rowid AS position,substr(CAST(key AS BLOB),1,?) AS key,substr(CAST(value AS BLOB),1,?) AS payload,version,expires_at FROM memory_facts WHERE workspace=? AND principal=? AND namespace=? AND rowid>? ORDER BY rowid LIMIT ?",
+                (query.max_bytes + 1, query.max_bytes + 1, *parameters, after, query.limit + 1),
+            )
+
+            def load(row):
+                if len(row["payload"]) > query.max_bytes or len(row["key"]) > query.max_bytes:
+                    raise BudgetExceeded("Fact record does not fit scan byte budget")
+                return {
+                    "key": row["key"].decode("utf-8"),
+                    "value": json.loads(row["payload"]),
+                    "version": row["version"],
+                    "expires_at": row["expires_at"],
+                }
+
+            try:
+                return _scan_page(
+                    query,
+                    binding,
+                    snapshot,
+                    ((row["position"], lambda row=row: load(row)) for row in rows),
+                )
+            finally:
+                rows.close()
+
+    def fact_snapshot(self, scope, namespace):
+        from .fact_scan import _scan_epoch, _scan_snapshot
+
+        _fact_inputs(scope, namespace, [])
+        with self.store.transaction():
+            row = self.store.conn.execute(
+                "SELECT generation FROM memory_fact_generations WHERE workspace=? AND principal=? AND namespace=?",
+                (scope.workspace, scope.principal, namespace),
+            ).fetchone()
+            return canonical(
+                _scan_snapshot(scope, namespace, _scan_epoch(self.store), row[0] if row else 0)
+            )
 
     def _sync_session_index(self, scope, session_id, *, records=None):
         parameters = (scope.workspace, scope.principal, session_id)

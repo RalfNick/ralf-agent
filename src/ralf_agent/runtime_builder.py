@@ -447,6 +447,9 @@ class ComponentRegistry:
 
         register_query_knowledge(self)
         register_semantic_memory(self)
+        from .fact_index_factories import register_fact_index
+
+        register_fact_index(self)
 
     def register(self, kind, name, factory, *, validator=None):
         self._register(kind, name, factory, validator, asynchronous=False)
@@ -458,7 +461,15 @@ class ComponentRegistry:
         if (
             kind
             not in COMPONENT_KINDS
-            | {"provider", "tool_set", "artifact_store", "reference_selector"}
+            | {
+                "provider",
+                "tool_set",
+                "artifact_store",
+                "reference_selector",
+                "embedding_provider",
+                "vector_index",
+                "fact_index_catalog",
+            }
             or not isinstance(name, str)
             or not name.strip()
         ):
