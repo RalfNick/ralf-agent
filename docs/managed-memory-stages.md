@@ -1,6 +1,8 @@
 # 自动记忆阶段（dev40／H3a）
 
-dev45 将原协议扩展到 Local 图／并行／Team／动态／嵌套的实际 Agent，推荐默认组合也可使用；见[高级记忆阶段](composite-memory-stages.md)。下面保留原生／顺序的原契约，Temporal 自动记忆写入仍待实现。
+Current dev46: [Temporal automatic memory and per-Agent bindings](temporal-memory-bindings.md) adds the opt-in temporal-3 protocol. Legacy protocol identities remain unchanged; shared Session/Facts recall and other binding roles remain unsupported.
+
+dev45 将原协议扩展到 Local 图／并行／Team／动态／嵌套的实际 Agent，推荐默认组合也可使用；见[高级记忆阶段](composite-memory-stages.md)。下面保留原生／顺序的原契约，Temporal 支持范围见上述 dev46 指南。
 
 Local 原生 Agent 和顺序 Workflow 可在每步输出通过 Schema／完成验证、必需
 Session 保存后，自动提炼宿主允许的结果字段。默认关闭；原 Engine 负责额度、

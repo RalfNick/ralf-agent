@@ -137,6 +137,8 @@ class TemporalRuntime:
         plan_verifiers=None,
         knowledge=None,
         execution_policy=None,
+        binding_catalog=None,
+        stage_policy=None,
     ):
         if not isinstance(providers, dict) or not providers:
             raise ValidationError("Temporal requires explicit model providers")
@@ -155,7 +157,41 @@ class TemporalRuntime:
                 raise ValidationError(
                     "Temporal default History context or registered synchronous ContextBuilder required"
                 ) from None
+        from .binding_catalog import BindingCatalog
+
+        if binding_catalog is not None and not isinstance(binding_catalog, BindingCatalog):
+            raise ValidationError("Temporal bindings require a scoped BindingCatalog")
+        self.binding_catalog, self.stage_policy = binding_catalog, stage_policy
+        self._catalog_pin, self._stage_pin = binding_catalog, stage_policy
         self.providers, self.tools, self.policy = dict(providers), tools, policy
+        if binding_catalog is not None:
+            from .binding_types import BindingSelection
+            from .temporal_bindings import provider_alias
+
+            for (role, cid, version), (component, _) in binding_catalog._entries.items():
+                if role == "provider":
+                    self.providers[provider_alias(BindingSelection.ref(cid, version))] = component
+        self._provider_pins = dict(self.providers)
+        from .task_controls import _binding
+
+        self._provider_method_pins = {n: _binding(p.complete) for n, p in self.providers.items()}
+        self._catalog_objects = (
+            {}
+            if binding_catalog is None
+            else {k: v[0] for k, v in binding_catalog._entries.items()}
+        )
+        self._catalog_method_pins = [
+            (component, method, _binding(getattr(component, method)))
+            for (role, _, _), component in self._catalog_objects.items()
+            for method in (
+                ("references", "validate")
+                if role == "knowledge"
+                else ("assemble", "validate_request")
+                if role == "context"
+                else ()
+            )
+            if getattr(component, method, None) is not None
+        ]
         self.harness = harness or NativeHarness()
         self.context = context_builder or ContextAssembler()
         self.executor = tool_executor or PythonToolExecutor(tools)
@@ -252,11 +288,21 @@ class TemporalRuntime:
         managed = registration(self)
         if managed is not None:
             result.update(kernel="temporal-2", managed_context=managed)
+        from .temporal_bindings import catalog_registration, memory_registration
+
+        catalog = catalog_registration(self)
+        memory = memory_registration(self.stage_policy, self.providers)
+        if catalog is not None or memory is not None:
+            result.update(kernel="temporal-3", binding_protocol=1, dispatch_admission="history-1")
+            if catalog is not None:
+                result["binding_catalog"] = catalog
+            if memory is not None:
+                result["managed_memory"] = memory
         return result
 
     @property
     def capabilities(self):
-        from .temporal_managed_context import capabilities
+        from .temporal_bindings import capabilities
 
         return {**temporal_capabilities(), **capabilities(self._manifest)}
 
@@ -273,6 +319,35 @@ class TemporalRuntime:
         from .task_controls import _binding
         from .temporal_components import orchestration_identity
 
+        host = getattr(self, "_selected_host", None)
+        if host is not None:
+            host.validate_release(expected)
+            return self.manifest
+        if (
+            self.binding_catalog is not self._catalog_pin
+            or self.stage_policy is not self._stage_pin
+        ):
+            raise DefinitionMismatch("Temporal capability owner changed")
+        if self._manifest["kernel"] == "temporal-3" and any(
+            self.providers.get(n) is not p for n, p in self._provider_pins.items()
+        ):
+            raise DefinitionMismatch("Temporal provider instance changed")
+        if self._manifest["kernel"] == "temporal-3":
+            if any(
+                _binding(self.providers[n].complete) != b
+                for n, b in self._provider_method_pins.items()
+            ):
+                raise DefinitionMismatch("Temporal provider method changed")
+            if self.binding_catalog is not None and any(
+                self.binding_catalog._entries.get(k, (None,))[0] is not c
+                for k, c in self._catalog_objects.items()
+            ):
+                raise DefinitionMismatch("Temporal catalog instance changed")
+            if any(
+                _binding(getattr(component, method, None)) != original
+                for component, method, original in self._catalog_method_pins
+            ):
+                raise DefinitionMismatch("Temporal catalog method changed")
         context, assemble, validator = self._context_binding
         current_validator = getattr(self.context, "validate_request", None)
         if (
@@ -314,6 +389,12 @@ class TemporalRuntime:
         return self.manifest
 
     async def complete_model(self, request: dict, *, dispatch_guard=None) -> dict:
+        from .temporal_bindings import selected_runtime
+
+        if not getattr(self, "_selected_host", None) and self._manifest["kernel"] == "temporal-3":
+            return await selected_runtime(self, request).complete_model(
+                request, dispatch_guard=dispatch_guard
+            )
         dispatched = False
         received = None
         try:
@@ -427,6 +508,10 @@ class TemporalRuntime:
             return failure
 
     async def prepare_context(self, request):
+        from .temporal_bindings import selected_runtime
+
+        if not getattr(self, "_selected_host", None) and self._manifest["kernel"] == "temporal-3":
+            return await selected_runtime(self, request).prepare_context(request)
         try:
             self.validate_release(request["runtime_manifest"])
             if self.knowledge is None and "context_registration" not in self._manifest:
@@ -437,6 +522,7 @@ class TemporalRuntime:
                 if self.knowledge is None
                 else await self.knowledge.references(scope, request["messages"][1]["content"])
             )
+            self.validate_release(request["runtime_manifest"])
             if (
                 not isinstance(references, list)
                 or any(not isinstance(item, dict) for item in references)
@@ -474,9 +560,23 @@ class TemporalRuntime:
             return {"ok": False, "code": _code(exc, "context_failed")}
 
     async def manage_context(self, request, *, dispatch_guard=None):
+        from .temporal_bindings import selected_runtime
+
+        if not getattr(self, "_selected_host", None) and self._manifest["kernel"] == "temporal-3":
+            return await selected_runtime(self, request).manage_context(
+                request, dispatch_guard=dispatch_guard
+            )
         from .temporal_managed_context import execute
 
         return await execute(self, request, dispatch_guard=dispatch_guard)
+
+    async def manage_memory(self, request, *, dispatch_guard=None):
+        from .temporal_bindings import selected_runtime
+        from .temporal_memory import execute
+
+        return await execute(
+            selected_runtime(self, request), request, dispatch_guard=dispatch_guard
+        )
 
     def _envelope(self, request):
         self.validate_release(request["runtime_manifest"])
@@ -650,4 +750,10 @@ def registered_activities(runtime, client=None):
     async def managed_context(request: dict) -> dict:
         return await runtime.manage_context(request, dispatch_guard=dispatch_guard)
 
-    return [model, tool, reconcile, evidence, managed_context]
+    from .temporal_memory import ACTIVITY as MEMORY_ACTIVITY
+
+    @activity.defn(name=MEMORY_ACTIVITY)
+    async def managed_memory(request: dict) -> dict:
+        return await runtime.manage_memory(request, dispatch_guard=dispatch_guard)
+
+    return [model, tool, reconcile, evidence, managed_context, managed_memory]

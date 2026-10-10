@@ -1,5 +1,8 @@
 # RALF 通用框架能力与扩展验收
 
+
+Dev46 已增加[Temporal 自动记忆与五类 Agent 绑定](../../docs/temporal-memory-bindings.md)：显式 temporal-3、原声明子树、History 选择响应／CAS／核验与父子证据恢复；旧发布保持。其他 Temporal 绑定角色／资源 selector、共享 Session、语义质量与完整 H1/H3 仍待验收。
+
 文档版本：1.2；日期：2026-10-09（Asia/Shanghai）。
 作者：RALF 项目维护者与架构协作。
 读者：框架维护者、应用开发者、适配器贡献者。

@@ -82,6 +82,9 @@ async def control(runtime, client, value):
         result = {"run_id": call["run_id"], "registered": True}
     elif mode == "observe":
         result = {**asdict(await engine.diagnostics(call["run_id"])), "scope": value["scope"]}
+    elif mode == "recover" and value["runtime_manifest"]["kernel"] == "temporal-3":
+        await engine.drive(call["run_id"], wait_seconds=0)
+        result = {"run_id": call["run_id"], "recovery_requested": True}
     elif mode == "cancel":
         command = "ralf-parent-stop:" + digest([value["parent_id"], call["run_id"]])
         result = asdict(await engine.cancel(call["run_id"], command_id=command))

@@ -6,6 +6,7 @@ from .governance import TemporalExecutionPolicy
 from .orchestration_types import ChildCall, TeamSelection
 from .planning import PlanningRequest
 from .spec_codec import decode_spec
+from .temporal_bindings import request_release_digest
 from .temporal_state import (
     TERMINAL,
     TemporalRunState,
@@ -67,7 +68,10 @@ class TemporalParentState(TemporalRunState):
         if self.max_concurrency > self.policy.max_concurrency:
             raise ValidationError("Concurrency exceeds execution policy")
         self.child_cap = self.definition.get("child_budget", 8)
-        self.release_digest = digest({"definition": self.definition, "manifest": self.manifest})
+        from .temporal_bindings import request_release_digest, validate_bindings
+
+        validate_bindings(request, manifest, scope)
+        self.release_digest = request_release_digest(request, manifest)
         self.state, self.revision, self.result, self.error = "queued", 0, None, None
         self.children, self.queue, self.event_log = [], [], []
         self.receipts, self.command_digests = {}, {}
@@ -76,6 +80,7 @@ class TemporalParentState(TemporalRunState):
         self.dag = None
         self.results = {}
         self.selections = 0
+        self.memory_recovery_revision = 0
         payload = {"kind": "submit", "scope": self.scope, "request": self.request}
         self.command_digests[command_id] = digest(payload)
         self.receipts[command_id] = self._receipt(command_id, "submit", {"state_revision": 0})
@@ -207,6 +212,8 @@ class TemporalParentState(TemporalRunState):
 
     def _apply(self, kind, payload, command_id):
         if kind == "drive":
+            if self.manifest["kernel"] == "temporal-3":
+                self.memory_recovery_revision += 1
             return {"state_revision": self.revision}
         if kind == "cancel":
             if self.state in {"succeeded", "failed"}:
@@ -324,6 +331,9 @@ class TemporalParentState(TemporalRunState):
         else:
             member = decode_spec(self._member(call.member))
         request = submission_request(member, call.input, budget=self.child_cap)
+        from .temporal_bindings import project_child
+
+        request = project_child(self.request, call.member, request)
         entry = {
             "id": identity,
             "call_id": call.id,
@@ -433,8 +443,7 @@ class TemporalParentState(TemporalRunState):
                     "cancelling",
                 }
                 or value["manifest"] != self.manifest
-                or value["release_digest"]
-                != digest({"definition": call["request"]["definition"], "manifest": self.manifest})
+                or value["release_digest"] != request_release_digest(call["request"], self.manifest)
                 or type(budget["allowance"]) is not int
                 or budget["allowance"] != call["cap"]
                 or any(type(amount) is not int or amount < 0 for amount in amounts)

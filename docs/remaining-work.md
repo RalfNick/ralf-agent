@@ -1,8 +1,8 @@
-# dev45 剩余能力与架构验收清单
+# dev46 剩余能力与架构验收清单
 
-版本：19；日期：2026-10-10；维护者：RALF maintainers。
+版本：20；日期：2026-10-10；维护者：RALF maintainers。
 读者：框架维护者、应用开发者及适配器贡献者。基线：da55f97 的 dev30，
-以及已提交1cad308的dev31–36与已提交1f27300的dev37配置／首用及已提交e6a6de7的dev38远程原生／顺序及已提交9fcbb84的dev39复合根会话与已提交7898b78的dev40自动规则记忆及已提交0d17976的dev41受管理上下文及已提交ec9b5f5的dev42模型选择记忆阶段及已提交e413ddc的dev44高级／Temporal数据上下文和当前dev45 Local高级自动记忆。
+以及已提交1cad308的dev31–36与已提交1f27300的dev37配置／首用及已提交e6a6de7的dev38远程原生／顺序及已提交9fcbb84的dev39复合根会话与已提交7898b78的dev40自动规则记忆及已提交0d17976的dev41受管理上下文及已提交ec9b5f5的dev42模型选择记忆阶段及已提交e413ddc的dev44高级／Temporal数据上下文和已提交5528670的dev45 Local高级自动记忆，以及当前dev46 Temporal自动记忆与五类Agent绑定。
 
 ## 1. 结论与判定方式
 
@@ -59,10 +59,10 @@ PG Knowledge/Inbox/Outbox、Qdrant、HTTP Embedding、Hybrid/RRF／基础重排�
 
 ### 组合、入口、模型与编排
 
-| ID／层 | dev45 已交付基础 | 尚未完成的具体能力 | 阶段／状态 |
+| ID／层 | dev46 已交付基础 | 尚未完成的具体能力 | 阶段／状态 |
 | --- | --- | --- | --- |
-| R01 每 Agent 绑定 | Local 原生 Agent／顺序／Graph／Team／Dynamic／嵌套成员六类选择：provider、decision_policy、context、facts、knowledge、tool_set；稳定路径、固定父子发布与 Profile v2；Session 后端／允许的 namespace／同权威实际地址占用；Facts／Knowledge 宿主范围视图与来源校验；纯完成 verifier 的 inherit/ref/disabled；宿主与 Agent limits 的固定交集与动作额度；原生／顺序 stage_policy 的宿主写目标与固定额度 | Temporal 绑定；其他资源身份／selector／作用域视图；artifacts／workspace／sandbox／skills 绑定与准入；stage_policy 已支持 Local 原生／顺序／图／Team／动态／嵌套规则／模型选择记忆；上下文历史摘要与引用／产物组合已交付，其他阶段／组合仍待交付。前四类角色显式选择仍被拒绝 | H1：子集已交付 |
-| R02 Agent／Session 入口 | H2a Local stateless Agent/Runtime/AgentRun、RunRef/WaitResult；独立任务托管、纯观察等待、原根流程控制路由、owned/borrowed 关闭与 CloseIncomplete 重试、显式重连；保留旧 RunHandle DTO；H2b1 同库原生／顺序及 H2b2 图／团队／动态／嵌套及 H2b3 授权根 namespace、H2b4a 远程原生／顺序及 H2b4b 复合根保存意图／准确回执／终态只查询恢复、异步 Profile 配置，SessionKey／路由／Turn／busy／CAS rebind；H2c1 Temporal 原生／顺序共同入口、异步重连、固定 RPC 组件与客户端 detach；H2c2 已注册 Graph／Team／Dynamic／嵌套入口与实际子 Run 控制 | 跨权威会话租约、输入续接／业务 deadline、Temporal 绑定、移交与耐久 FIFO | H2a／H2b1／H2b2／H2b3／H2b4a／H2b4b／H2c1／H2c2：子集已交付；完整 H2 未交付 |
+| R01 每 Agent 绑定 | Local 原生 Agent／顺序／Graph／Team／Dynamic／嵌套成员六类选择：provider、decision_policy、context、facts、knowledge、tool_set；稳定路径、固定父子发布与 Profile v2；Session 后端／允许的 namespace／同权威实际地址占用；Facts／Knowledge 宿主范围视图与来源校验；纯完成 verifier 的 inherit/ref/disabled；宿主与 Agent limits 的固定交集与动作额度；原生／顺序及高级 stage_policy 写目标；Temporal 五类版本化 provider/context/knowledge/tool_set/stage_policy 与原有子 Run 子树 | Temporal 其他绑定角色；其他资源身份／selector／作用域视图；artifacts／workspace／sandbox／skills 绑定与准入；stage_policy 已支持 Local 原生／顺序／图／Team／动态／嵌套规则／模型选择记忆；上下文历史摘要与引用／产物组合已交付，其他阶段／组合仍待交付。前四类角色显式选择仍被拒绝 | H1：子集已交付 |
+| R02 Agent／Session 入口 | H2a Local stateless Agent/Runtime/AgentRun、RunRef/WaitResult；独立任务托管、纯观察等待、原根流程控制路由、owned/borrowed 关闭与 CloseIncomplete 重试、显式重连；保留旧 RunHandle DTO；H2b1 同库原生／顺序及 H2b2 图／团队／动态／嵌套及 H2b3 授权根 namespace、H2b4a 远程原生／顺序及 H2b4b 复合根保存意图／准确回执／终态只查询恢复、异步 Profile 配置，SessionKey／路由／Turn／busy／CAS rebind；H2c1 Temporal 原生／顺序共同入口、异步重连、固定 RPC 组件与客户端 detach；H2c2 已注册 Graph／Team／Dynamic／嵌套入口与实际子 Run 控制 | 跨权威会话租约、输入续接／业务 deadline、Temporal 其他绑定角色／共享会话、移交与耐久 FIFO | H2a／H2b1／H2b2／H2b3／H2b4a／H2b4b／H2c1／H2c2：子集已交付；完整 H2 未交付 |
 | R03 Harness 与公共规则 | 纯 Harness/NativeHarness、ToolExecutor、共享决策／证据规则、Workflow Compiler/Interpreter、固定声明的 AgentHarness 组合入口；Local 原生／顺序规则／模型选择记忆、历史摘要和推荐数据上下文，独立来源／提案／意图／回执与 Run 额度 | 其余广义 Harness 受管理阶段及默认组合；逐步提取 RuntimeKernel 纯规则；Prepare/Verify/Memory 等阶段的身份、证据、取消和恢复协议。保持 Local/Temporal 各自唯一执行权威 | H1–H3：部分抽象已实现 |
 | R04 配置与装配 | 版本 Profile/Catalog、JSON/TOML、注册工厂、sync/async 装配、owned 清理、历史配置路由 | 完整绑定／推荐组合配置；CLI/ProfiledEngine 异步工厂路由；插件显式安装／激活／兼容检查；配置／组件迁移、旧代码归档、部署版本管理；配置来源／监听按需分期 | H1／H5：子集已交付 |
 | R05 模型适配 | Chat Completions、DeepSeek 非思考、Anthropic 文本／工具、Gemini 文本、stateless Responses/JSON/完整 SSE | Gemini 函数调用、Responses 续接及受限字段；能力／用量／错误／超时／重试一致性；路由/fallback/负载策略及效果不重复契约；国内外及本地模型真实兼容矩阵。兼容 URL 不证明每个模型支持同一能力 | A1／H5：协议子集已交付，线上验收未完成 |
@@ -71,25 +71,25 @@ PG Knowledge/Inbox/Outbox、Qdrant、HTTP Embedding、Hybrid/RRF／基础重排�
 | R08 静态 Workflow | 顺序、串行／有界并行 Graph、条件／映射、Agent/Transform/Tool 节点及嵌套 | 通用受管理异步自定义节点；HumanInput/Retrieve/Planner/Verifier 节点族；受限循环；first-success/quorum/reducer 合并和类型化工作流状态。复用审批、预算与恢复 | G1/G2／H5：子集已交付 |
 | R09 流式 Workflow | 模型完整 SSE 收集、耐久 Run 事件游标 | 逐记录 StreamChannel/Source/Operator/Sink、背压、关闭／失败传播、检查点／重放和 Sink 效果身份。事件订阅和模型 delta 展示均不等于节点数据流 | G5：未交付 |
 | R10 动态规划／验证 | Rule/Model Planner、Plan/Revision、动态 DAG/CAS 修订、受限 execute/verify/replan；CompleteVerifier 取最后结果；Local Agent 纯 CompletionVerifier 与持久回执／有界重试 | 受管理 async/model Verifier、计划级业务 oracle／停止条件；needs_input/send_input 续接；完整重复规划、依赖、参数、拒绝与停止实测。Schema 合法不等于业务计划正确 | H2／H3／A4：子集已交付，质量未验收 |
-| R11 多 Agent | Sequential/Router/Supervisor、子 Run、隔离 Session、递归预算／取消和恢复；Local 成员及嵌套六类独立绑定 | 其余角色及 Temporal 成员绑定；类型化交接／受控共享状态／reducer；按需 Debate/Critic 策略；跨权威关联、停止和未知远端效果；全局容量及团队质量验收。普通消息不能作为成功回执 | H1／H4／H5：基础团队已交付 |
+| R11 多 Agent | Sequential/Router/Supervisor、子 Run、隔离 Session、递归预算／取消和恢复；Local 成员及嵌套六类独立绑定 | 其余角色及 Temporal 其他成员绑定；类型化交接／受控共享状态／reducer；按需 Debate/Critic 策略；跨权威关联、停止和未知远端效果；全局容量及团队质量验收。普通消息不能作为成功回执 | H1／H4／H5：基础团队已交付 |
 
 ### 工具、上下文、记忆与知识
 
-| ID／层 | dev45 已交付基础 | 尚未完成的具体能力 | 阶段／状态 |
+| ID／层 | dev46 已交付基础 | 尚未完成的具体能力 | 阶段／状态 |
 | --- | --- | --- | --- |
 | R12 工具接入／工具包 | typed Python/Schema/默认参数、ToolRegistry、async ToolSource、MCP stdio、A2A ToolSource、授权／审批／核验 | MCP HTTP/持续 Session/OAuth；固定 executable/argv 的 CLI Runner；通用受控 HTTP 工具适配；搜索／文件／浏览器工具包与发现；有状态工具租约和停止证据 | H4：子集已交付 |
 | R13 Workspace/Skills/Sandbox/Runner | 可信 Python、MCP 受管理进程生命周期；Runner 目标契约 | Workspace／文件权限／资源租约；Skills 生命周期／能力注册／来源；容器／远端 Sandbox 文件、网络、进程和资源隔离；Coding Runner、Codex 首个适配及各外部 Runner 验收。普通子进程不是安全沙箱 | H4：目标能力未交付 |
 | R14 上下文 | ContextBuilder/Counter/Budgeter/Summarizer、完整工具组／近期召回／摘录、实际快照；显式独立模型摘要；Temporal 纯自定义 Context；Local 原生／顺序及高级编排受管理规则／模型摘要与引用摘录／产物投影；Temporal History 受管理摘要／Knowledge 摘录／产物阶段 | 模型 tokenizer／输出预留；Session／RAG 语义压缩和质量；覆盖／来源失效策略和辅助失败恢复；不同模型长上下文事实保留实测。UTF-8 token 估算不是精确用量 | H3：确定性与显式路径已交付 |
-| R15 短期／长期记忆 | memory/SQLite/Redis/PG 的 sync/async、CAS/去重/TTL/分页/来源；opt-in MemoryPipeline 规则／模型字段选择；原生／顺序及高级实际 Agent 的受管理规则／模型字段选择阶段、原节点／子 Run 证据恢复与 JSON／TOML 默认工厂 | Temporal 自动记忆写入及自由合成；语义冲突／修订／撤回／遗忘／可信度策略和多事实原子采纳；最终 Session append 大历史效率；导出／迁移／保留；真实记忆利用。追加来源观察不是自主信念修订 | H3／H5：存储和显式提炼已交付 |
+| R15 短期／长期记忆 | memory/SQLite/Redis/PG 的 sync/async、CAS/去重/TTL/分页/来源；opt-in MemoryPipeline 规则／模型字段选择；原生／顺序及高级实际 Agent 的受管理规则／模型字段选择阶段、原节点／子 Run 证据恢复与 JSON／TOML 默认工厂；Temporal History 自动规则／模型选择、准确CAS核验与根子证据恢复 | 自由合成；语义冲突／修订／撤回／遗忘／可信度策略和多事实原子采纳；最终 Session append 大历史效率；导出／迁移／保留；真实记忆利用。追加来源观察不是自主信念修订 | H3／H5：存储和显式提炼已交付 |
 | R16 摄取／知识生命周期 | text/Markdown Parser、字符／段落 Chunker；memory/SQLite/PG 原子文档／块／词项／回执 | PDF/HTML/Office、网页／业务连接器及游标／增量；token/语义分块；来源目录／ACL；后台索引、修复、删除传播和版本重建。knowledge_committed 不代表向量就绪 | H3／H5：基础已交付 |
 | R17 检索／Embedding／向量／重排 | HTTP Embedding、Hash 基线、本地 cosine/Qdrant、词法／向量／Hybrid、RRF/保序/词项重排、来源回读 | 可配置语义 Embedding 推荐组合／可选本地模型；语义 Reranker/query transform；pgvector 参考适配及其他库逐项验收；索引发布／修复／迁移；端到端召回、答案和引用质量。Hash/TokenOverlap 不证明语义质量 | H3／G4：子集已交付，语义默认／质量未闭环 |
 | R18 Artifact／缓存 | Scope 隔离 memory/SQLite JSON 产物、摘要／TTL／读取限额／事务容量；Local 原生／顺序及高级编排、Temporal 上下文自动卸载／预览与独立意图／回执 | 文件/S3 等远端 Artifact；引用保留／孤儿 GC／全局磁盘限额及恢复依赖；CacheStore/Policy 的键、版本和失效。默认关闭缓存合法；语义答案缓存后置 | H3／H5：显式产物已交付，缓存未交付 |
 
 ### 执行、通信、服务与验收
 
-| ID／层 | dev45 已交付基础 | 尚未完成的具体能力 | 阶段／状态 |
+| ID／层 | dev46 已交付基础 | 尚未完成的具体能力 | 阶段／状态 |
 | --- | --- | --- | --- |
-| R19 执行模式／后端一致性 | Local 单 Coordinator/SQLite；Temporal 独立 History，原生 Agent/sequence 与显式发布的 Agent-node Graph/Team/Dynamic/嵌套、RAG | 单 Coordinator 多 Process Worker；Temporal 新绑定、共享 Session/Facts/custom Harness、直接 Tool/Transform 图节点等组合；共同能力／故障／升级门禁；Continue-As-New、部署版本及长期容量。PG Facts/Knowledge 不等于 PG ExecutionStore/分布式调度 | H5／C1：分布式子集已交付 |
+| R19 执行模式／后端一致性 | Local 单 Coordinator/SQLite；Temporal 独立 History，原生 Agent/sequence 与显式发布的 Agent-node Graph/Team/Dynamic/嵌套、RAG | 单 Coordinator 多 Process Worker；Temporal 其他绑定角色／selector、共享 Session/Facts/custom Harness、直接 Tool/Transform 图节点等组合；共同能力／故障／升级门禁；Continue-As-New、部署版本及长期容量。PG Facts/Knowledge 不等于 PG ExecutionStore/分布式调度 | H5／C1：分布式子集已交付 |
 | R20 MQ／A2A | memory/SQLite/Redis Streams、Inbox/Outbox、PG 共享回执；A2A JSON-RPC0.3 文本/数据 polling、async controls | 保留／压缩／积压／重投递与 failover 认证；额外 Broker 按需；A2A SSE/push/files/Task continuation 及真实停止约定。ack 不等于效果确认，不承诺跨系统全局恰好一次 | H4／H5：子集已交付 |
 | R21 控制／审批／预算／容量 | 幂等命令与 DAG patch、local policy、固定动作、unknown holds／父子额度；每 Agent 固定决策／上下文／工具Action caps；Temporal timer/审批期限 | Local deadline／审批过期、输入／鉴权续接；not-executed/in-progress 核验证据；业务资源别名规范化；真实费用／共享账户；独立并发／工作区额度／背压，真实调用未退出仍占容量 | H2／H5：基础已交付 |
 | R22 事件／展示／观察 | 耐久 Run 事件／游标／分页、pull 订阅、SSE 编码、只读 CLI、opt-in middleware | 托管 HTTP/SSE/WebSocket；类型化 Agent/model delta、结束／取消／重连；OTel trace/metrics、跨 Run/远端关联、审计／脱敏／保留。展示 hook 不得丢失业务证据 | H2／H5／B2：观察基础已交付 |
@@ -129,7 +129,7 @@ flowchart LR
 ~~~
 
 1. **H1/H2 闭环组合与入口。** R01–R04，以及 R10/R21/R22 的续接与等待。
-   H2a 已有 Local stateless 入口与独立托管，H2b1 已有同库原生／顺序 Session／Turn 占用及稳定绑定，H2c1 已有 Temporal 原生／顺序共同入口，H2c2 已接通已注册高级编排、H2b2 已接通同库复合会话；继续完成远程会话 与 Temporal 绑定。
+   H2a 已有 Local stateless 入口与独立托管，H2b1 已有同库原生／顺序 Session／Turn 占用及稳定绑定，H2c1 已有 Temporal 原生／顺序共同入口，H2c2 已接通已注册高级编排、H2b2 已接通同库复合会话；继续完成跨权威会话与 Temporal 其余绑定角色。
    旧审批、原发布恢复及 caller/HTTP 断连共同验收；H2b 首期忙碌拒绝，耐久 FIFO 后续 opt-in。
 2. **H3 做三个可安装、可替换的参考组合。** Local Basic、Local Knowledge、Managed Memory；
    补 R07/R14–R18 的受管理阶段、自动卸载、语义可选组件和明确失败降级。
@@ -260,3 +260,11 @@ Basic／Knowledge 数据上下文已扩展；高级／Temporal 自动记忆写�
 纯观察不做恢复；显式终态根 resume 通过原有子 Run 锁恢复已结束 Agent／嵌套子 Run 证据，再结算父额度，不新增模型或 CAS。未知且不可证明的事实继续保留。Temporal 自动记忆写入、自由合成／语义修订、真实质量与完整 H3 未完成。
 
 最终 dev45：2877 passed／72 skipped；安装后 186 契约通过，24 个进程退出窗口、dev44↔45 十项实际审批恢复、旧版 Schema12 拒绝与原 Policy 类不变通过。独立审查无阻塞问题；Ruff／格式／空白检查和 wheel／sdist 构建通过。[验收记录](../architecture/reviews/2026-10-10-composite-memory-stages.md)
+
+### dev46 Temporal 自动记忆与每 Agent 绑定
+
+[Temporal 指南](temporal-memory-bindings.md)：temporal-3 发布复用 AgentDefinition／BoundDefinition 与 scoped catalog；provider／context／knowledge／tool_set／stage_policy 五类选择沿原声明子树进入各实际 Agent。History 分阶段保存来源、选择响应、字段采纳、CAS 与核验，选择／写只有一次尝试。显式根 drive 通过原有子 Run 控制恢复未知事实；无法证明的效果／远程停止继续持有父额度。
+
+旧 temporal-1／2 发布保持；未支持角色／selector、共享 Session、语义修订／遗忘、真实模型质量和完整 H3 仍待完成。
+
+最终 dev46：2919 passed／92 skipped；真实 localhost Temporal 26 passed，安装后 151 契约通过；旧协议六项双向审批 JSON 快照恢复、原 manifest 相等与旧 wheel 拒绝 temporal-3 通过。独立 review 三项 Important 由七项 RED→GREEN 测试修复，无待办 Minor。Ruff／格式／空白检查与 wheel／sdist 构建通过。未调用真实模型，完整 H3／M1 继续待验收。[证据与决策](../architecture/reviews/2026-10-10-temporal-memory-bindings.md)

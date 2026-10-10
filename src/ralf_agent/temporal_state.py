@@ -79,9 +79,21 @@ def validate_schema_references(schema):
 
 
 def validate_manifest(manifest):
-    if not isinstance(manifest, dict) or manifest.get("kernel") not in {KERNEL, "temporal-2"}:
+    if not isinstance(manifest, dict) or manifest.get("kernel") not in {
+        KERNEL,
+        "temporal-2",
+        "temporal-3",
+    }:
         raise DefinitionMismatch("Unsupported Temporal runtime release")
-    if manifest["kernel"] == "temporal-2":
+    if manifest["kernel"] == "temporal-3":
+        if (
+            manifest.get("binding_protocol") != 1
+            or manifest.get("dispatch_admission") != "history-1"
+        ):
+            raise DefinitionMismatch("Unsupported Temporal binding/memory protocol")
+    if manifest["kernel"] == "temporal-2" or (
+        manifest["kernel"] == "temporal-3" and "managed_context" in manifest
+    ):
         managed = manifest.get("managed_context", {})
         if (
             managed.get("version") != 1
@@ -175,6 +187,20 @@ def validate_request(request, manifest):
         if not isinstance(definition.get("steps"), list) or not definition["steps"]:
             raise ValidationError("Temporal requires at least one native Agent step")
         steps = definition["steps"]
+    if request.get("agent_bindings"):
+        from .binding_paths import agent_paths
+        from .binding_types import AgentBindingDescriptor
+        from .temporal_bindings import effective_step, validate_bindings
+
+        validate_bindings(request, manifest)
+        steps = [
+            effective_step(
+                value,
+                manifest,
+                request["agent_bindings"].get(path, AgentBindingDescriptor().to_dict()),
+            )
+            for path, value in agent_paths(definition).items()
+        ] + (planner_agents if definition["kind"] in {"graph", "team", "dynamic"} else [])
     for value in steps:
         spec = AgentSpec(**value)
         validate_schema_references(spec.output_schema)
@@ -185,6 +211,14 @@ def validate_request(request, manifest):
                 raise ValidationError("Tool forbidden by execution policy")
             if name not in manifest["tools"]:
                 raise DefinitionMismatch(f"Tool not registered: {name}")
+    from .temporal_bindings import validate_bindings
+
+    validate_bindings(request, manifest)
+    from .binding_paths import agent_paths
+    from .temporal_bindings import effective_step
+
+    for path, descriptor in request.get("agent_bindings", {}).items():
+        effective_step(agent_paths(definition)[path], manifest, descriptor)
     canonical(request)
 
 
@@ -198,7 +232,10 @@ class TemporalRunState:
         validate_request(request, manifest)
         self.run_id, self.scope = run_id, detached(scope)
         self.request, self.manifest = detached(request), manifest
-        self.release_digest = digest({"definition": request["definition"], "manifest": manifest})
+        from .temporal_bindings import request_release_digest, validate_bindings
+
+        validate_bindings(request, manifest, scope)
+        self.release_digest = request_release_digest(request, manifest)
         self.epoch = execution_epoch or f"history:{run_id}"
         self.state, self.revision, self.result, self.error = "queued", 0, None, None
         self.node, self.decisions, self.actions = 0, 0, []
@@ -212,6 +249,7 @@ class TemporalRunState:
         self.deferred_acks = []
         self.context_snapshot = None
         self.context_signature = None
+        self.memory_stages, self.pending_completion, self.memory_recovery = {}, None, []
         self.managed_context_stages = {}
         self.context_artifact_dispatches = {}
         self.context_artifact_receipts = {}
@@ -225,7 +263,29 @@ class TemporalRunState:
 
     @property
     def step(self):
-        return self.request["definition"]["steps"][self.node]
+        from .temporal_bindings import effective_step
+
+        return effective_step(
+            self.request["definition"]["steps"][self.node], self.manifest, self.step_bindings
+        )
+
+    @property
+    def step_bindings(self):
+        from .temporal_bindings import step_descriptor
+
+        return step_descriptor(self.request, self.node)
+
+    @property
+    def step_manifest(self):
+        from .temporal_bindings import effective_manifest
+
+        return effective_manifest(self.manifest, self.step_bindings)
+
+    def context_cache_signature(self):
+        source = [self.step, self.messages]
+        if self.manifest["kernel"] == "temporal-3":
+            source.extend([self.node, self.step_bindings])
+        return digest(source)
 
     @staticmethod
     def _messages(step, value):
@@ -364,7 +424,14 @@ class TemporalRunState:
 
     @property
     def quiescent(self):
-        return self.active_action is None and not self.remote_uncertain
+        return (
+            self.active_action is None
+            and not self.remote_uncertain
+            and (
+                self.manifest["kernel"] != "temporal-3"
+                or self.budget["reserved"] == self.budget["unknown"] == 0
+            )
+        )
 
     def snapshot(self):
         return {
@@ -393,6 +460,11 @@ class TemporalRunState:
             "manifest": detached(self.manifest),
             "release_digest": self.release_digest,
             "budget": self.budget,
+            **(
+                {"memory_stages": detached(list(self.memory_stages.values()))}
+                if self.manifest["kernel"] == "temporal-3"
+                else {}
+            ),
             **(
                 {"context_stages": detached(list(self.managed_context_stages.values()))}
                 if "managed_context" in self.manifest
@@ -464,7 +536,17 @@ class TemporalRunState:
         }
 
     def next_operation(self):
-        if self.state in TERMINAL or self.active_action is not None:
+        if self.active_action is not None:
+            return None
+        if self.manifest["kernel"] == "temporal-3" and (
+            self.pending_completion is not None or self.memory_recovery
+        ):
+            from .temporal_memory_state import next_stage
+
+            operation = next_stage(self)
+            if operation is not None:
+                return operation
+        if self.state in TERMINAL:
             return None
         pending = [
             a
@@ -475,7 +557,7 @@ class TemporalRunState:
             action = pending[0]
             if action["status"] in {"outcome_unknown", "waiting_approval", "blocked"}:
                 return None
-            manifest = self.manifest["tools"][action["tool"]]
+            manifest = self.step_manifest["tools"][action["tool"]]
             if manifest["requires_approval"] and not action["approved"]:
                 action["status"], self.state = "waiting_approval", "waiting_approval"
                 self._emit(
@@ -489,17 +571,17 @@ class TemporalRunState:
             self.state, self.error = "failed", {"code": "decision_limit"}
             self._emit("run_failed", self.error)
             return None
-        if "managed_context" in self.manifest:
+        if "managed_context" in self.step_manifest:
             from .temporal_managed_context import next_stage
 
             operation = next_stage(self)
             if operation is not None or self.state in TERMINAL:
                 return operation
-        if ("managed_context" not in self.manifest) and (
-            self.manifest.get("knowledge_context") is not None
-            or self.manifest.get("context_registration") is not None
+        if ("managed_context" not in self.step_manifest) and (
+            self.step_manifest.get("knowledge_context") is not None
+            or self.step_manifest.get("context_registration") is not None
         ):
-            signature = digest([self.step, self.messages])
+            signature = self.context_cache_signature()
             if signature != self.context_signature:
                 action = {
                     "id": f"{self.run_id}:context:{self.node}:{self.decisions + 1}",
@@ -516,6 +598,11 @@ class TemporalRunState:
                     "scope": self.scope,
                     "run_id": self.run_id,
                     "step": detached(self.step),
+                    **(
+                        {"step_bindings": self.step_bindings}
+                        if self.manifest["kernel"] == "temporal-3"
+                        else {}
+                    ),
                     "messages": detached(self.messages),
                 }
         self.decisions += 1
@@ -534,12 +621,18 @@ class TemporalRunState:
             "step": detached(self.step),
             "messages": detached(self.messages),
         }
+        if self.manifest["kernel"] == "temporal-3":
+            request.update(step_bindings=self.step_bindings, scope=self.scope)
         if self.context_snapshot is not None and (
-            self.manifest.get("knowledge_context") is not None
-            or self.manifest.get("context_registration") is not None
+            self.step_manifest.get("knowledge_context") is not None
+            or self.step_manifest.get("context_registration") is not None
         ):
             request.update(context=detached(self.context_snapshot), scope=self.scope)
-        if self.manifest.get("managed_context", {}).get("dispatch_admission") == "history-1":
+        if (
+            self.manifest["kernel"] == "temporal-3"
+            or self.step_manifest.get("managed_context", {}).get("dispatch_admission")
+            == "history-1"
+        ):
             request.update(
                 run_id=self.run_id, action_id=action["id"], release_digest=self.release_digest
             )
@@ -563,7 +656,7 @@ class TemporalRunState:
         ):
             raise ValidationError("Invalid received model context")
         self.context_snapshot = detached(response)
-        self.context_signature = digest([self.step, self.messages])
+        self.context_signature = self.context_cache_signature()
         action["status"], action["response"] = "completed", detached(response)
         self._emit(
             "context_snapshot_recorded", {"action_id": action_id, "digest": digest(response)}
@@ -715,19 +808,30 @@ class TemporalRunState:
                 )
             else:
                 result = final_output(response["output"], self.step["output_schema"])
-                self._emit("node_completed", {"node": self.node, "result_digest": digest(result)})
-                if self.node + 1 < len(self.request["definition"]["steps"]):
-                    self.node += 1
-                    self.decisions, self.messages = 0, self._messages(self.step, result)
-                else:
-                    self.state, self.result = "succeeded", detached(result)
-                    self._emit("run_succeeded", {"result_digest": digest(result)})
+                from .temporal_memory_state import prepare
+
+                if not prepare(self, action, result):
+                    self.complete_node(result)
         except (ValidationError, AuthorizationDenied) as exc:
             if received_v2:
                 self._reject_model(action, exc.code)
             else:
                 self.state, self.error = "failed", {"code": exc.code}
                 self._emit("run_failed", self.error)
+
+    def complete_node(self, result):
+        self._emit("node_completed", {"node": self.node, "result_digest": digest(result)})
+        if self.node + 1 < len(self.request["definition"]["steps"]):
+            self.node += 1
+            self.decisions, self.messages = 0, self._messages(self.step, result)
+        else:
+            self.state, self.result = "succeeded", detached(result)
+            self._emit("run_succeeded", {"result_digest": digest(result)})
+
+    def accept_memory(self, action_id, response):
+        from .temporal_memory_state import accept_stage
+
+        accept_stage(self, action_id, response)
 
     def _reject_model(self, action, code):
         action.update(status="rejected", decision_error={"code": code})
@@ -783,6 +887,10 @@ class TemporalRunState:
         self.deferred_acks = []
         # Retrying a journal acknowledgement is safe after business terminal;
         # dispatching a blocked operation is not. No control may reopen a Run.
+        if self.manifest["kernel"] == "temporal-3":
+            from .temporal_memory_state import request_recovery
+
+            request_recovery(self)
         if self.state in TERMINAL:
             return
         for action in self.actions:

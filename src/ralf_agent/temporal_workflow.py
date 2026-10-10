@@ -13,7 +13,9 @@ from temporalio.common import RetryPolicy
 from temporalio.exceptions import ActivityError, ApplicationError
 
 with workflow.unsafe.imports_passed_through():
+    from .temporal_bindings import ROLES as _binding_roles  # noqa: F401
     from .temporal_managed_context import ACTIVITY as MANAGED_CONTEXT_ACTIVITY
+    from .temporal_memory import ACTIVITY as MEMORY_ACTIVITY
     from .temporal_state import (
         ACK_ACTIVITY,
         CONTEXT_ACTIVITY,
@@ -160,7 +162,9 @@ class TemporalRunWorkflow:
             action, request = operation
             try:
                 response = await workflow.execute_activity(
-                    MANAGED_CONTEXT_ACTIVITY
+                    MEMORY_ACTIVITY
+                    if action["kind"] == "managed_memory"
+                    else MANAGED_CONTEXT_ACTIVITY
                     if action["kind"] == "managed_context"
                     else CONTEXT_ACTIVITY
                     if action["kind"] == "context"
@@ -172,15 +176,27 @@ class TemporalRunWorkflow:
                     schedule_to_close_timeout=total_timeout,
                     retry_policy=RetryPolicy(
                         maximum_attempts=3
-                        if action["kind"] == "managed_context"
-                        and action["phase"] not in {"write", "summary"}
+                        if (
+                            action["kind"] == "managed_context"
+                            and action["phase"] not in {"write", "summary"}
+                        )
+                        or (
+                            action["kind"] == "managed_memory"
+                            and action["phase"] not in {"select", "memory-write"}
+                        )
+                        or (
+                            action["kind"] == "context"
+                            and self.state.manifest["kernel"] == "temporal-3"
+                        )
                         else 1
                     ),
                     activity_id=action["id"]
-                    if action["kind"] in {"context", "managed_context"}
+                    if action["kind"] in {"context", "managed_context", "managed_memory"}
                     else action["attempts"][0]["id"],
                 )
-                if action["kind"] == "managed_context":
+                if action["kind"] == "managed_memory":
+                    self.state.accept_memory(action["id"], response)
+                elif action["kind"] == "managed_context":
                     self.state.accept_managed_context(action["id"], response)
                 elif action["kind"] == "context":
                     self.state.accept_context(action["id"], response)
@@ -191,7 +207,17 @@ class TemporalRunWorkflow:
             except ActivityError:
                 # A server timeout is not evidence that a Python thread or
                 # downstream request stopped. Preserve the dispatched identity.
-                if action["kind"] == "managed_context":
+                if action["kind"] == "managed_memory":
+                    self.state.accept_memory(
+                        action["id"],
+                        {
+                            "ok": False,
+                            "code": "activity_outcome_unknown",
+                            "dispatched": action["phase"] in {"select", "memory-write"},
+                            "execution_uncertain": action["phase"] == "memory-write",
+                        },
+                    )
+                elif action["kind"] == "managed_context":
                     self.state.accept_managed_context(
                         action["id"],
                         {
@@ -248,6 +274,8 @@ class TemporalRunWorkflow:
                 return self.state.snapshot()
             if kind == "diagnostics":
                 return self.state.diagnostics()
+            if kind == "memory_stages":
+                return detached(list(getattr(self.state, "memory_stages", {}).values()))
             if kind == "context_stages":
                 return detached(list(getattr(self.state, "managed_context_stages", {}).values()))
             if kind == "context_artifacts":

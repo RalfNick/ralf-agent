@@ -1,5 +1,7 @@
 # Temporal Agent API — dev34 / H2c1–H2c2
 
+Current dev46: [Temporal automatic memory and per-Agent bindings](temporal-memory-bindings.md) adds the opt-in temporal-3 protocol. Legacy protocol identities remain unchanged; shared Session/Facts recall and other binding roles remain unsupported.
+
 Use the same Agent/AgentHarness/AgentRun API with an explicitly configured
 TemporalEngine. Native AgentSpec/WorkflowSpec are supported; an explicitly
 registered orchestration release also enables Graph, Team, Dynamic and nested
@@ -118,7 +120,8 @@ DynamicWorkflowSpec with a registered planner supports both sequential plans and
 DAG plans, with existing bounded verification/replanning. Model planners run their
 existing managed child Agent; using the facade does not establish planning quality.
 Graph nodes must contain supported Agent definitions; direct Tool/Transform nodes
-and binding wrappers remain unsupported on Temporal. Native/sequence support does
+and other binding roles remain unsupported on Temporal. Dev46 temporal-3 accepts
+the five versioned roles described above. Native/sequence support does
 not require the orchestration extension. Capabilities reflect the current release;
 an attached historical parent remains queryable if current defaults move.
 

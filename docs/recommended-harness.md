@@ -10,7 +10,7 @@ dev43 提供三个版本为 `1` 的起步 Profile，复用现有 Agent／Runtime
 
 默认模型为 **offline-echo**，只验证装配与恢复。不会自动读取模型密钥、下载模型或访问网络。
 dev44 将 **Local Basic／Local Knowledge 的数据上下文**扩展到串行／并行图、Team、动态 Plan/DAG 和嵌套成员。dev45 的 `managed-memory` 也支持这些 Local 实际 Agent 的规则／模型选择写入，见[高级记忆与恢复](composite-memory-stages.md)。
-Temporal 显式装配同一个纯策略，按原 History 协议运行；不直接使用 Local Profile 工厂，也不增加每 Agent Temporal 绑定。H3 尚未整体验收完成。见[高级编排与 Temporal 指南](composite-temporal-context.md)。
+Temporal 显式装配同一个纯策略，按原 History 协议运行；不直接使用 Local Profile 工厂，dev46 另以显式 temporal-3 支持五类每 Agent 绑定与自动记忆，见[Temporal 记忆绑定](temporal-memory-bindings.md)。H3 尚未整体验收完成。见[高级编排与 Temporal 指南](composite-temporal-context.md)。
 
 ```python
 import asyncio

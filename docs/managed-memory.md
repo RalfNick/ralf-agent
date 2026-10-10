@@ -1,5 +1,7 @@
 # Automatic memory and managed model summaries
 
+Current dev46: [Temporal automatic memory and per-Agent bindings](temporal-memory-bindings.md) adds the opt-in temporal-3 protocol. Legacy protocol identities remain unchanged; shared Session/Facts recall and other binding roles remain unsupported.
+
 dev21 adds an explicit application pipeline over the existing execution and
 memory ports. Business success and memory completion have separate receipts.
 Importing the SDK or using a normal LocalEngine does not enable model extraction.

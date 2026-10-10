@@ -1,4 +1,4 @@
-# Implementation status — 0.1.0.dev45
+# Implementation status — 0.1.0.dev46
 
 Target architecture update: [AgentHarness](../architecture/viewpoints/harness-runtime.md)
 defines broad Harness/Core roles, per-Agent bindings, Agent/Session facade, managed
@@ -29,7 +29,7 @@ dev31 delivers [H2a Local stateless Agent API](agent-api.md): immutable AgentHar
 Runtime-owned Local drive tasks, Agent/AgentRun/RunRef, observation-only wait,
 nested control ownership/waking and retryable drain/cancel closing. Full H1/H2
 are not complete; remote Sessions, Temporal bindings and automatic
-managed stages remain partial. SDK is dev45. The [Facade/Session target contract](../architecture/specs/agent-facade-session-contract.md)
+managed stages remain partial. SDK is dev46. The [Facade/Session target contract](../architecture/specs/agent-facade-session-contract.md)
 now specifies observation-only waiting, durable busy refusal, Session binding revisions,
 and ownership-aware closing. H2a implements the declared Local stateless subset;
 remaining shared routing and backend requirements are not changes to legacy
@@ -206,3 +206,9 @@ Original History atomically admits managed external dispatch after preparatory r
 ## dev45 Local composite automatic memory
 
 [Composite memory stages](composite-memory-stages.md) reuse rule/model-selected grounded policies and original CAS source/intent/receipt protocols for Local graph/parallel/Team/dynamic/nested actual Agents. Schema12 is optional and atomic; native/sequence identities and activation stay unchanged. Parallel workflow_node scopes source/fact keys, journals and budgets in original Run projections. Pure observations stay I/O-free; explicit closed-root resume recovers original terminal children under existing drive locks, never new selector/CAS dispatch, then settles parent escrow only with evidence. Versioned managed-memory defaults and per-Agent target bindings compose through existing sync/async factories. Temporal writes, semantic revision and full H3 quality remain pending.
+
+## dev46 Temporal automatic memory and scoped Agent bindings
+
+Explicit temporal-3 releases support versioned provider/context/knowledge/tool_set/stage_policy choices through original AgentDefinition/BoundDefinition paths, including actual native/sequence/graph/Team/dynamic/nested Agents. History owns source/selector/adoption/read/CAS/verification phases and independent credits. Exact fact inspection v1 required; no selector/CAS retry after dispatch. Explicit root drive recovers original uncertain child evidence without implicit query I/O. Found facts do not prove timed-out remote execution stopped; parent allowance remains held.
+
+Legacy temporal-1/2 retained. Other Temporal binding roles, resource selectors, shared Sessions, semantic memory quality and full H3 remain pending. See [usage and boundaries](temporal-memory-bindings.md) and [acceptance](../architecture/reviews/2026-10-10-temporal-memory-bindings.md).

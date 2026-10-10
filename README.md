@@ -27,7 +27,9 @@ dev44 接通[高级编排与 Temporal 自动上下文](docs/composite-temporal-c
 
 dev45 增加[Local 高级编排自动记忆](docs/composite-memory-stages.md)：原规则／模型字段选择、并行节点事实隔离、推荐 managed-memory 默认组合及终态根／子 Run 的证据恢复。Temporal 自动记忆写入、语义默认与完整 H3 质量仍待完成。
 
-当前版本：**0.1.0.dev45，M1 核心预览**。提供原生 Agent SDK、顺序 Workflow、静态串行／有界并行图，以及有限动态规划与多 Agent 团队。SQLite 持久执行统一管理模型、工具、审批／取消、预算和未知效果恢复。模型层提供 Chat Completions、Anthropic、Gemini 文本及 DeepSeek 非思考模式适配；工具支持可信 Python、异步 ToolSource 和 MCP stdio。JSON／TOML 装配版本化组件，历史任务按原配置恢复。
+dev46 增加[Temporal 自动记忆与每 Agent 绑定](docs/temporal-memory-bindings.md)：显式 temporal-3 发布支持五类版本化选择、实际子 Run 路径、History 记忆阶段及只读证据恢复。其他 Temporal 绑定角色、共享 Session 与完整 H3 质量仍待完成。
+
+当前版本：**0.1.0.dev46，M1 核心预览**。提供原生 Agent SDK、顺序 Workflow、静态串行／有界并行图，以及有限动态规划与多 Agent 团队。SQLite 持久执行统一管理模型、工具、审批／取消、预算和未知效果恢复。模型层提供 Chat Completions、Anthropic、Gemini 文本及 DeepSeek 非思考模式适配；工具支持可信 Python、异步 ToolSource 和 MCP stdio。JSON／TOML 装配版本化组件，历史任务按原配置恢复。
 
 dev14 增加真实 **Redis Session/Facts、PostgreSQL Memory/Knowledge 和 Qdrant VectorIndex**，通过[异步装配](docs/async-assembly.md)接入原有记忆／RAG 端口；提供默认规则 Planner、受管理 ModelPlanner、Verifier，以及 Sequential／Router／Supervisor 团队和独立 Plan／Team 模板。接入方式见[远程数据指南](docs/remote-data.md)与[规划及多 Agent 指南](docs/orchestration.md)。完整 M1 尚未验收，适合开发者试点；[实现清单](docs/implementation-status.md)记录支持边界。预览 API 尚未稳定。
 

@@ -128,7 +128,7 @@ class TemporalEngine:
 
     @property
     def capabilities(self):
-        from .temporal_managed_context import capabilities
+        from .temporal_bindings import capabilities
 
         extended = "orchestration" in self._release
         return {
@@ -140,10 +140,17 @@ class TemporalEngine:
 
     @property
     def binding_capabilities(self):
+        from .temporal_bindings import ROLES
+
         return {
             "schema_version": 1,
-            "supported_definition_kinds": [],
-            "supported_binding_roles": [],
+            "supported_definition_kinds": ["agent", "sequence"]
+            + (["graph", "team", "dynamic"] if "orchestration" in self._release else [])
+            if self._release["kernel"] == "temporal-3"
+            else [],
+            "supported_binding_roles": sorted(ROLES)
+            if self._release["kernel"] == "temporal-3"
+            else [],
             "session_modes": [],
             "resource_selectors": False,
             "required_stage_kinds": [],
@@ -222,8 +229,14 @@ class TemporalEngine:
         # Registry acceptance is deliberately not returned as a Run receipt.
 
     async def submit(self, spec, input, *, command_id, budget=32, session_id=None):
+        from .binding_definitions import AgentDefinition, BoundDefinition
         from .temporal_managed_context import check_scope
 
+        if (
+            isinstance(spec, (AgentDefinition, BoundDefinition))
+            and self._release["kernel"] != "temporal-3"
+        ):
+            raise ValidationError("Per-Agent bindings require temporal-3")
         check_scope(self._release, asdict(self.scope))
         if session_id is not None:
             raise ValidationError("Temporal shared sessions are not supported")
@@ -235,7 +248,7 @@ class TemporalEngine:
             raise ValidationError(
                 "Temporal supports native AgentSpec or sequential WorkflowSpec; registered orchestration release required"
             )
-        if not isinstance(spec, AgentSpec) and not composite:
+        if not isinstance(spec, (AgentSpec, AgentDefinition, BoundDefinition)) and not composite:
             from .types import WorkflowSpec
 
             if not isinstance(spec, WorkflowSpec):
@@ -245,6 +258,10 @@ class TemporalEngine:
         text(command_id, "Command ID")
         credits(budget)
         request = submission_request(spec, input, budget=budget, session_id=session_id)
+        from .temporal_bindings import normalize_request
+
+        request = normalize_request(request)
+        composite = request["definition"]["kind"] in {"graph", "team", "dynamic"}
         from .spec_codec import agent_steps
 
         for step in agent_steps(request["definition"]):
@@ -259,6 +276,9 @@ class TemporalEngine:
         except NotFound:
             pass
         validate_request(request, self._release)
+        from .temporal_bindings import validate_bindings
+
+        validate_bindings(request, self._release, asdict(self.scope))
         sdk = _sdk()
         try:
             from .temporal_parent_state import PARENT_WORKFLOW_NAME
@@ -303,6 +323,10 @@ class TemporalEngine:
             value["budget"],
             value["workflow"],
         )
+
+    async def memory_stages(self, run_id):
+        """Pure History evidence; no backend reads or implicit recovery."""
+        return await self._view(run_id, "memory_stages")
 
     async def context_stages(self, run_id):
         """Read this Run's original History evidence; no Activity or child traversal."""
@@ -451,5 +475,10 @@ def _workflow_runner():
     # through avoids replay-time import side effects while retaining the
     # SDK sandbox around our Workflow implementation.
     return SandboxedWorkflowRunner(
-        restrictions=SandboxRestrictions.default.with_passthrough_modules("httpx", "jsonschema")
+        restrictions=SandboxRestrictions.default.with_passthrough_modules(
+            "httpx",
+            "jsonschema",
+            "ralf_agent.temporal_bindings",
+            "ralf_agent.temporal_memory_state",
+        )
     )

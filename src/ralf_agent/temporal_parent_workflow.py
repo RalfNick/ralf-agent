@@ -89,6 +89,16 @@ class TemporalParentWorkflow(TemporalRunWorkflow):
             for call in tuple(self.state.children):
                 if call.get("settled"):
                     continue
+                recovery = getattr(self.state, "memory_recovery_revision", 0)
+                if (
+                    self.state.manifest["kernel"] == "temporal-3"
+                    and call.get("dispatch_started")
+                    and call.get("uncertain")
+                    and recovery > call.get("memory_recovered_revision", 0)
+                ):
+                    result = await self._control("recover", call, timeout)
+                    if result["ok"]:
+                        call["memory_recovered_revision"] = recovery
                 if self.state.state in TERMINAL:
                     if not call.get("dispatch_started"):
                         call.update(state="cancelled", settled=True, spent=0)

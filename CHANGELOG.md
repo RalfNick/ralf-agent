@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.0.dev46 — Temporal automatic memory and Agent bindings
+
+- Explicit temporal-3 releases reuse scoped AgentDefinition/BoundDefinition selections for provider, context, knowledge, tool_set and stage_policy across actual native/sequence/graph/Team/dynamic/nested Agents.
+- History records independent grounded memory source, selector response/adoption, first-version CAS intent and exact inspection; selector/write Activities never retry, optional stages reserve execution credits.
+- Dispatch grants prevent new model/selector/CAS disclosure after cancellation; fixed targets and methods are checked across awaits. Terminal recovery reads original fact evidence, and uncertain remote execution retains parent allowance.
+- Worker restart, parent/child replay, JSON identity, scoped target replacement and installed compatibility gates cover the new protocol; old temporal-1/2 releases retain their behavior.
+- Temporal shared Sessions, other binding roles/resource selectors, semantic memory quality and complete H3 remain pending.
+
 ## 0.1.0.dev45 — Local composite automatic memory
 
 - Existing rule/model-selected grounded memory stages support Local graph/parallel/Team/dynamic/nested actual Agents; explicit optional Store admission enables Schema12.

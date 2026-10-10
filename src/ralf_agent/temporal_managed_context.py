@@ -39,7 +39,11 @@ def artifact_records(state):
                     "release_digest": state.release_digest,
                     "scope": detached(state.scope),
                     "reference": detached(reference),
-                    "policy": detached(state.manifest["managed_context"]["policy"]),
+                    "policy": detached(
+                        stage["policy"]
+                        if "policy" in stage
+                        else state.manifest["managed_context"]["policy"]
+                    ),
                 },
                 "value": detached(item["value"]),
                 "status": "verified"
@@ -120,7 +124,7 @@ async def validate_snapshot(runtime, request):
 
 
 async def admit_dispatch(request, guard):
-    if (
+    if request["runtime_manifest"]["kernel"] != "temporal-3" and (
         request["runtime_manifest"].get("managed_context", {}).get("dispatch_admission")
         != "history-1"
     ):
@@ -140,9 +144,10 @@ async def admit_dispatch(request, guard):
 
 
 def admit_history(state, payload):
-    if state.manifest.get("managed_context", {}).get(
-        "dispatch_admission"
-    ) != "history-1" or payload.get("phase") not in {"model", "write", "summary"}:
+    if (
+        state.manifest["kernel"] != "temporal-3"
+        and state.manifest.get("managed_context", {}).get("dispatch_admission") != "history-1"
+    ) or payload.get("phase") not in {"model", "write", "summary", "select", "memory-write"}:
         raise ValidationError("Unsupported managed external dispatch admission")
     state.authorize(payload["scope"])
     if payload.get("release_digest") != state.release_digest:
@@ -348,7 +353,7 @@ async def execute(runtime, request, *, dispatch_guard=None):
 
 
 def next_stage(state):
-    signature = digest([state.step, state.messages])
+    signature = state.context_cache_signature()
     if signature == state.context_signature:
         return None
     key = f"{state.node}:{state.decisions}"
@@ -361,6 +366,14 @@ def next_stage(state):
             "phase": "plan",
             "operations": [],
             "index": 0,
+            **(
+                {
+                    "policy": detached(state.step_manifest["managed_context"]["policy"]),
+                    "step_bindings": state.step_bindings,
+                }
+                if state.manifest["kernel"] == "temporal-3"
+                else {}
+            ),
         },
     )
     if stage["phase"] == "summary" and state.budget["remaining"] < 1:
@@ -388,8 +401,13 @@ def next_stage(state):
         "scope": detached(state.scope),
         "run_id": state.run_id,
         "step": detached(state.step),
+        **(
+            {"step_bindings": state.step_bindings}
+            if state.manifest["kernel"] == "temporal-3"
+            else {}
+        ),
     }
-    if state.manifest["managed_context"].get("dispatch_admission") == "history-1":
+    if state.step_manifest["managed_context"].get("dispatch_admission") == "history-1":
         request.update(action_id=action["id"], release_digest=state.release_digest)
     if phase == "plan":
         request["messages"] = detached(state.messages)
@@ -426,7 +444,7 @@ def _after_artifacts(state, stage):
         stage["phase"] = (
             "summary"
             if prepared["plan"] is not None
-            and state.manifest["managed_context"]["policy"]["mode"] == "model"
+            and state.step_manifest["managed_context"]["policy"]["mode"] == "model"
             else "finalize"
         )
 
@@ -511,7 +529,7 @@ def accept_stage(state, action_id, response):
             raise ValidationError("Invalid adopted context snapshot")
         stage["status"], stage["snapshot"] = "completed", response
         state.context_snapshot = response
-        state.context_signature = digest([state.step, state.messages])
+        state.context_signature = state.context_cache_signature()
         state._emit(
             "context_snapshot_recorded", {"action_id": action_id, "digest": digest(response)}
         )

@@ -23,6 +23,7 @@ from .types import (
     canonical,
     credits,
     digest,
+    submission_request,
 )
 
 REMOTE_PAUSED = PAUSED | {"outcome_unknown"}
@@ -268,6 +269,14 @@ class TemporalClientRuntime(Runtime):
             raise ValidationError("Temporal facade refuses Session/queue/deadline")
         harness = harness if isinstance(harness, AgentHarness) else AgentHarness(harness)
         declaration = json.loads(harness._definition_json)
+        from .temporal_bindings import normalize_request
+
+        if declaration["kind"] in {"bound_agent", "bound_definition"}:
+            if self.engine.release["kernel"] != "temporal-3":
+                raise ValidationError("Temporal bindings require their explicit registered release")
+            declaration = normalize_request(submission_request(harness.definition, None))[
+                "definition"
+            ]
         if declaration["kind"] not in self.capabilities["supported_definition_kinds"]:
             raise ValidationError("Temporal definition requires its supported registered release")
         input = json.loads(canonical(input))

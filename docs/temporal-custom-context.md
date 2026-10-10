@@ -1,5 +1,7 @@
 # Registered Temporal custom context
 
+Current dev46: [Temporal automatic memory and per-Agent bindings](temporal-memory-bindings.md) adds the opt-in temporal-3 protocol. Legacy protocol identities remain unchanged; shared Session/Facts recall and other binding roles remain unsupported.
+
 dev21 accepts custom synchronous ContextBuilders, including the budgeted pipeline,
 as explicit worker dependencies. Native default releases retain the dev20 manifest;
 custom builders add `context_registration` with configuration and implementation

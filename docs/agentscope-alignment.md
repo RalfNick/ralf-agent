@@ -1,6 +1,6 @@
 # Ordered framework alignment roadmap
 
-Baseline: dev45 increment, 2026-10-10. The user approved this order after
+Baseline: dev46 increment, 2026-10-10. The user approved this order after
 the capability checklist. Completion requires default behavior, extensibility,
 lifecycle/recovery, installed documentation and real evidence per component.
 Adding a Protocol or counting passing tests alone does not establish parity.
@@ -56,7 +56,7 @@ See [current support](implementation-status.md), [M1 gates](m1-acceptance.md) an
 
 The [target AgentHarness](../architecture/viewpoints/harness-runtime.md) implements
 this roadmap through five coherent stages. Remaining H1 capability bindings and
-H2b remote Session semantics and Temporal bindings are the next A2 dependencies; colocated native/sequence H2b1 and composite H2b2, native Temporal H2c1 and registered advanced Temporal H2c2 are delivered. H3 is A3 managed default chains;
+H2b remote Session semantics and remaining Temporal binding roles are the next A2 dependencies; colocated native/sequence H2b1 and composite H2b2, native Temporal H2c1 and registered advanced Temporal H2c2 are delivered. H3 is A3 managed default chains;
 H4 delivers the remaining A2 environment/cooperation work; H5 spans B1/B2/C1/C2
 service and backend governance. A4 real quality evidence runs throughout rather
 than waiting until all infrastructure exists. D parity requires matched experiments.
@@ -77,3 +77,5 @@ full Agent/Runtime Facade remain pending. Local stateless H2a is delivered in de
 Dev44 extends Basic/Knowledge data context to Local graph/Team/dynamic/nesting and registered Temporal Agent children. Actual Workflow History owns auxiliary phase evidence, with single-attempt writes/summaries and immutable snapshot validation. Advanced automatic memory writing, final default-model semantic quality, environment capabilities and full H3 are still open; no AgentScope parity claim.
 
 Dev45 closes the Local advanced rule/model-selected memory/default composition gap, with node-scoped original evidence, terminal root/child recovery and process-death coverage. Temporal memory writes and semantic memory/task quality remain separate pending gates.
+
+Dev46 adds explicit Temporal History-managed grounded memory and five scoped per-Agent binding roles across actual composite members. Worker recovery/replay evidence does not establish semantic memory quality or whole-framework parity. [Scope and acceptance](temporal-memory-bindings.md).

@@ -1,5 +1,8 @@
 # RALF AgentHarness 目标架构
 
+
+Dev46 已增加[Temporal 自动记忆与五类 Agent 绑定](../../docs/temporal-memory-bindings.md)：显式 temporal-3、原声明子树、History 选择响应／CAS／核验与父子证据恢复；旧发布保持。其他 Temporal 绑定角色／资源 selector、共享 Session、语义质量与完整 H1/H3 仍待验收。
+
 版本：1.8；日期：2026-10-10；维护者：RALF maintainers。
 状态：根据用户认可的理想架构形成的目标设计；实现基线为0.1.0.dev43（H1a–H1f、Local stateless H2a、同库原生／顺序 H2b1／复合 Session H2b2／授权根 namespace H2b3／远程原生顺序 H2b4a／复合根 H2b4b、Temporal 原生入口 H2c1／高级编排入口 H2c2）。
 读者：框架维护者、Agent应用开发者、适配器作者与企业部署团队。

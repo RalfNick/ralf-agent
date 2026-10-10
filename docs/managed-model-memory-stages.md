@@ -1,6 +1,8 @@
 # Automatic model-selected memory (dev42)
 
-Dev45 additionally supports Local graph/parallel/Team/dynamic/nested actual Agents through the same original protocol. See [composite memory](composite-memory-stages.md); Temporal automatic writes remain pending.
+Current dev46: [Temporal automatic memory and per-Agent bindings](temporal-memory-bindings.md) adds the opt-in temporal-3 protocol. Legacy protocol identities remain unchanged; shared Session/Facts recall and other binding roles remain unsupported.
+
+Dev45 additionally supports Local graph/parallel/Team/dynamic/nested actual Agents through the same original protocol. See [composite memory](composite-memory-stages.md); Temporal support is described in the dev46 guide above.
 
 Local native Agents and sequential Workflows can opt into a model selecting durable
 observations from an already adopted final result. This extends the existing
