@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.0.dev55 — Durable file artifacts
+
+- Add core-only POSIX FileArtifactStore, bounded JSON payloads and a SQLite receipt index through the existing ArtifactStore contract; preserve Scope, TTL, capacity, digest and original references.
+- Add explicit sync/async JSON/TOML file factories with owned lifecycle; keep SQLite defaults and existing release identities.
+- Cover process-loss publication, orphan replay durability, descriptor/index drift, shared process capacity and managed Local/Temporal restoration. GC, disk quota and cloud storage remain open.
+
 ## 0.1.0.dev54 — Replaceable tokenization and token budgets
 
 - Add pure TextTokenizer, UTF8ByteTokenizer, optional owned TiktokenTokenizer, TokenizerMessageCounter and TokenChunker. Keep character defaults unchanged.

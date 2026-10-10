@@ -1,12 +1,13 @@
 # Ralf-Agent
 
-当前工作区 **0.1.0.dev54** 提供显式语义知识库、相关事实召回和 Plan／Team 默认组合，
+当前工作区 **0.1.0.dev55** 提供显式语义知识库、相关事实召回和 Plan／Team 默认组合，
 复用原执行、审批和恢复协议。见[H3 使用与扩展指南](docs/h3-intelligent-combinations.md)。
 dev48 增加[显式 HTTP 语义重排](docs/http-reranking.md)，保留原知识来源及旧默认配置。
 dev49 增加[Query transform 与语义 Facts 召回](docs/query-and-semantic-recall.md)，支持显式语义记忆组合及保留语义顺序的上下文。候选窗口外事实和真实质量仍待完善。
 dev50 增加[显式模型查询改写](docs/model-query-transform.md)，借用已配置 Provider，支持知识检索及 Local 语义 Facts；默认保留原查询，自动查询策略与完整质量仍待验收。
 dev53 增加[可选文本 PDF 摄取](docs/pdf-ingestion.md)，与已有[DOCX 正文](docs/docx-ingestion.md)和[HTML 摄取](docs/html-ingestion.md)共用可安装 ingest 模板、原子知识回执、分块及来源引用。
 dev54 增加[可替换 tokenizer、输出预留与 token 分块](docs/tokenization.md)，保持原字符默认；模型词表由宿主显式装配，纯计量不隐藏联网。
+dev55 增加[文件 Artifact](docs/file-artifacts.md)：无需 extra，可通过 SDK 或 JSON/TOML 替换 SQLite，支持有界正文、作用域、TTL、原引用恢复和受管理卸载。POSIX 本地文件系统范围；孤儿清理、全局磁盘配额和 S3 继续待交付。
 Local 十类及 Temporal 五类每 Agent 绑定、自动上下文与来源化记忆已接通；完整 H3、
 真实模型质量、H4 执行环境和 H5 企业治理仍待验收。当前适合开发者试点。
 
@@ -317,7 +318,7 @@ SDK、运行时和基础治理按 [Apache-2.0](LICENSE) 开源。外部模型／
 
 ### 上下文与大结果（dev20）
 
-`ralf init my-context-agent --template context` 提供第十七种离线模板，显式存储大工具结果并读取有界样本，支持提交后恢复。MessageCounter、ContextBudgeter、ContextSummarizer 可分别替换，BudgetedContextAssembler 提供字符／token 估算、完整消息组裁剪与显式历史摘录，实际 Harness 请求也受预算约束。ArtifactStore 有内存／SQLite 默认，实现 Scope、字节、TTL、摘要与事务容量；应用工具选择引用契约。旧默认保持。自动规则记忆和 Local 原生／顺序模型摘要已有 opt-in 原 Run 阶段；显式提炼／模型摘要及 Temporal 纯自定义上下文已有实现。自由合成、高级／Temporal 阶段和企业治理仍待完善，见 [上下文与 Artifact 指南](docs/context-artifacts.md)及[自动上下文接入](docs/managed-context-stages.md)。
+`ralf init my-context-agent --template context` 提供第十七种离线模板，显式存储大工具结果并读取有界样本，支持提交后恢复。MessageCounter、ContextBudgeter、ContextSummarizer 可分别替换，BudgetedContextAssembler 提供字符／token 估算、完整消息组裁剪与显式历史摘录，实际 Harness 请求也受预算约束。ArtifactStore 有内存／SQLite 默认及 opt-in 文件后端，实现 Scope、字节、TTL、摘要与事务容量；应用工具选择引用契约。旧默认保持。自动规则记忆和 Local 原生／顺序模型摘要已有 opt-in 原 Run 阶段；显式提炼／模型摘要及 Temporal 纯自定义上下文已有实现。自由合成、高级／Temporal 阶段和企业治理仍待完善，见 [上下文与 Artifact 指南](docs/context-artifacts.md)及[自动上下文接入](docs/managed-context-stages.md)。
 
 Native Responses, keyword Python tools and managed compatibility scenarios: [dev22 guide](docs/sdk-model-tools.md). The [ordered alignment roadmap](docs/agentscope-alignment.md) tracks subsequent sandbox/interaction, semantic data, services and enterprise gates.
 

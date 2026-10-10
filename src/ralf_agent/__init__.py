@@ -66,6 +66,7 @@ from .errors import (
 from .event_records import AsyncRunEventSource, EventCursor, EventEnvelope, SyncRunEventSource
 from .event_stream import RunEventSubscription
 from .executors import DispatchEnvelope, EffectObservation, PythonToolExecutor, ToolExecutor
+from .file_artifacts import FileArtifactStore
 from .governance import TemporalExecutionPolicy
 from .handoff import (
     AsyncCommandAdapter,
@@ -299,7 +300,7 @@ from .workflow import (
     WorkflowSelection,
 )
 
-__version__ = "0.1.0.dev54"
+__version__ = "0.1.0.dev55"
 __all__ = [
     "EventCursor",
     "EventEnvelope",
@@ -521,6 +522,7 @@ __all__ += [
 
 __all__ += [
     "CharacterChunker",
+    "FileArtifactStore",
     "TextTokenizer",
     "TokenChunker",
     "TokenizerMessageCounter",

@@ -1,7 +1,7 @@
 # 持续能力开发与验收队列
 
 用户授权：2026-10-10 持续执行直到能力完成；只本地提交，不推送远端。
-本轮交付基线：dev54（前一提交177bd7d/dev53；本轮 SHA 以 Git 为准）。此队列落实既有架构，不新增执行权威。
+当前 dev55 已验收本地 POSIX 子集（基线6001fef/dev54）；实际提交 SHA 以 Git 为准。此队列落实既有架构，不新增执行权威。
 权威范围：[剩余清单](remaining-work.md) R01–R26、[Harness 架构](../architecture/viewpoints/harness-runtime.md) H1–H5。
 历史设计中明确后置的高级 Realtime/TTS、公共插件市场和运行中热迁移保持单独路线图；按需适配器不以数量定义完成。
 
@@ -24,5 +24,17 @@
 ## 当前批次
 
 - [x] dev54：TextTokenizer、字节基线、可选 tiktoken、同单位输出预留和 token 分块；字符默认保持。3296/92 全量、127安装包、192模块一致、真实 cl100k_base25块和原回执兼容，见[验收](../architecture/reviews/2026-10-10-tokenization.md)。
-- [ ] dev55：FileArtifactStore 与显式配置，复用 Scope／digest／TTL／读取限额及 namespace 容量；补掉电／原回执／受管理卸载恢复。文件 payload 和耐久 metadata 必须完整确认，缺失／损坏不静默成功；孤儿清理与全局配额另验收。
+- [x] dev55 本地子集：FileArtifactStore 与显式配置，复用 Scope／digest／TTL／读取限额及 namespace 容量；补掉电／原回执／受管理卸载恢复。文件 payload 和耐久 metadata 必须完整确认，缺失／损坏不静默成功；孤儿清理与全局配额另验收。
 随后继续上述队列，只有实际验收闭环的项才关闭。
+
+### dev55 进行中（6001fef 后）
+
+SDK／JSON/TOML 配置、真实进程发布窗口／并发容量、Local 图／Team／动态 DAG／嵌套卸载崩溃恢复，以及 Temporal runtime/state 和实际 Worker 装配已通过。独立审查三个 Important（孤儿同步、索引入口别名、实际持有的描述符）均 RED→GREEN 修复。115项初步源码与117项最终安装包契约、193模块一致、独立 core venv 和 dev54↔55 原默认／Run／SQLite引用兼容、21 starter 字节保持通过。最终完整3343/98、最终 wheel117通过；本批次真实 Temporal 服务仍下载，实际 History 不由状态测试替代。详见[实施验收](../architecture/reviews/2026-10-11-file-artifacts.md)。
+
+任务临时目录由 /private/tmp/ralf-agent-dev55-current 指针定位；只有其服务进程确认停止后才能清理。服务下载在 /private/tmp/ralf-agent-dev55-5hg43c2i/temporal/bin，活跃 runner 原会话6304。dev54 临时目录已清理，dist产物保留。批次提交后继续 R15 全库语义索引与记忆生命周期、H4/H1其余主链路。
+
+最终回归已成功结束（3343/98，589.88s），日志 full-suite-final.log；旧首轮亦结束。close 增加 fstat 身份后释放，避免 fd 数值被复用时误关闭其他资源。重新构建安装包并重跑相关门槛已通过。
+
+下一批 R15 优先补有界、可续接的事实枚举，不直接扩大旧 SemanticMemoryStore 候选窗口。原始 Facts 仍是权威；新 scanner 必须覆盖 current/expired 记录、固定 generation、Scope、字节限额、无遗漏 continuation 及版本变化拒绝，默认 memory/SQLite，async/远端独立适配。此端口用于全库派生索引与显式迁移，不能把分页完成当成语义质量或全库索引已交付。随后索引构建／激活和检索前源版本校验仍按 R15/R17 独立闭环。
+
+下一批暂存 tests/protocol 原型位于任务目录 test_fact_scan_next.py／fact_scan_next.py，六项核心缺失功能 RED 已确认；尚未加入源码。dev55 本地提交后转入 dev56，不用原型存在宣称完成。服务及已下载 binary 文件由本线程继续托管，暂不清理该任务目录。

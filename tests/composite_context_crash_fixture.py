@@ -9,12 +9,13 @@ from contextlib import contextmanager
 from dataclasses import replace
 from pathlib import Path
 
-from ralf_agent import LocalEngine, SQLiteArtifactStore, SQLiteStore
+from ralf_agent import FileArtifactStore, LocalEngine, SQLiteArtifactStore, SQLiteStore
 from tests.test_composite_data_context import Provider, definition, registry
 from tests.test_managed_data_context import context
 
 root, kind, window, mode = Path(sys.argv[1]), sys.argv[2], sys.argv[3], sys.argv[4]
-relevant = len(sys.argv) == 6 and sys.argv[5] == "relevant"
+relevant = "relevant" in sys.argv[5:]
+file_artifacts = "file" in sys.argv[5:]
 
 
 class Store(SQLiteStore):
@@ -46,7 +47,7 @@ class RecordedProvider(Provider):
         return await super().complete(messages, tools)
 
 
-class Artifacts(SQLiteArtifactStore):
+class Artifacts(FileArtifactStore if file_artifacts else SQLiteArtifactStore):
     def put(self, *args, **kwargs):
         with sqlite3.connect(root / "business.sqlite") as db:
             db.execute("INSERT INTO calls VALUES ('artifact')")
@@ -59,7 +60,7 @@ class Artifacts(SQLiteArtifactStore):
 with sqlite3.connect(root / "business.sqlite") as db:
     db.execute("CREATE TABLE IF NOT EXISTS calls (kind TEXT)")
     db.execute("CREATE TABLE IF NOT EXISTS effects (key TEXT PRIMARY KEY, result TEXT)")
-artifacts = Artifacts(root / "artifacts.sqlite")
+artifacts = Artifacts(root / ("file-artifacts" if file_artifacts else "artifacts.sqlite"))
 tools = registry([])
 registered = tools.get("lookup")
 original = registered.handler

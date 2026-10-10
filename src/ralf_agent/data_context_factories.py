@@ -5,6 +5,7 @@ from .context_factories import managed_context
 from .context_summaries import ExcerptContextSummarizer
 from .data_context import ManagedDataContext
 from .errors import ValidationError
+from .file_artifacts import FileArtifactStore
 from .ports import is_async_callable
 from .runtime_config import component_declaration
 
@@ -31,6 +32,21 @@ def register_data_context(registry):
         )
 
     registry.register("artifact_store", "sqlite", sqlite, validator=artifact_options)
+
+    def file_options(config):
+        artifact_options(config)
+        try:
+            import fcntl  # noqa: F401
+        except ImportError:
+            raise ValidationError("File artifacts require POSIX locks") from None
+
+    def file(config, context):
+        path = context.path(config["path"]) if "path" in config else context.db_path + ".artifacts"
+        return context.own(
+            FileArtifactStore(path, **{k: v for k, v in config.items() if k != "path"})
+        )
+
+    registry.register("artifact_store", "file", file, validator=file_options)
 
     def prepare(config, asynchronous):
         if not isinstance(config, dict):

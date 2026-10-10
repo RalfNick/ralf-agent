@@ -238,7 +238,7 @@ MemoryService 组合接口，允许 Redis 会话＋PostgreSQL 长期事实＋Qdr
 
 预览阶段先用默认实现验证接口，新增后端须通过共同契约测试才列为已支持。用户可以自行实现接口并配置注入；尚未验证的扩展声明 experimental，不因接口存在承诺全部后端已可互换。
 
-dev7／local-4 已提供可选 `MemoryRecallPolicy`、同步／异步分页召回与事实有效性端口；内存／SQLite 原生实现限制候选数和返回字符，Legacy 桥明确保留全量读取。知识权威存储、Retriever、EmbeddingProvider 与 VectorIndex 分离，默认中英文词法检索，真实 cosine 向量索引显式配置。Engine 保存引用和实际请求快照，在真正派发模型前检查原来源；已收到响应直接采纳。默认 dev6 Manifest 保持兼容，只有启用新组件才增加身份。当前不包含企业 SourceCatalog／ACL、外部连接器或自动语义记忆；索引重建、旧 blob 写入、最终会话 revision 读取仍可能 O(n)。实现与额度边界见 [召回与 RAG 教程](../docs/recall-and-rag.md)。
+dev7／local-4 已提供可选 `MemoryRecallPolicy`、同步／异步分页召回与事实有效性端口；内存／SQLite 原生实现限制候选数和返回字符，Legacy 桥明确保留全量读取。知识权威存储、Retriever、EmbeddingProvider 与 VectorIndex 分离，默认中英文词法检索，真实 cosine 向量索引显式配置。Engine 保存引用和实际请求快照，在真正派发模型前检查原来源；已收到响应直接采纳。默认 dev6 Manifest 保持兼容，只有启用新组件才增加身份。当前不包含企业 SourceCatalog／ACL、外部连接器或全库事实语义索引；有界候选语义召回与显式模型字段选择已按清单交付。索引重建、旧 blob 写入、最终会话 revision 读取仍可能 O(n)。实现与额度边界见 [召回与 RAG 教程](../docs/recall-and-rag.md)。
 
 执行计划、审批、工具效果和恢复日志属于可靠运行、控制与效果体系，分别遵循第 9.2 节的权威划分；不能通过替换 SessionStore 改变这些记录的权威来源。
 
@@ -268,9 +268,11 @@ SourceCatalog 为外部内容记录来源 ID、版本、授权引用、有效性
 
 ### 6.5 ContextAssembler
 
-ContextPipeline目标层通过受管理阶段从Session、Facts、Knowledge和产物端口取得证据，再由纯ContextBuilder/Counter/Budgeter选择内容。当前Local由Engine读取并调用构建器，再交给纯Harness准备请求；实际请求快照与预算由执行权威验收。可选知识检索、模型摘要与记忆提炼已有明确实现，dev24修复默认近期Session选择；自动in-Run压缩和推荐智能管线仍待交付。
+ContextPipeline目标层通过受管理阶段从Session、Facts、Knowledge和产物端口取得证据，再由纯ContextBuilder/Counter/Budgeter选择内容。Local由Engine读取并调用构建器，再交给纯Harness准备请求；实际请求快照与预算由执行权威验收。当前已按清单提供 opt-in 语义知识／有界事实召回、Plan／Team 推荐组合，以及 Local 原生／高级编排和 Temporal History 受管理摘要、引用摘录、产物卸载和规则／模型选择记忆。完整 H3、全库索引、自由合成和真实质量继续按独立门槛验收。
 
 装配处理 Token 预算、优先级、去重、摘要和大内容卸载。输出 ContextManifest，记录采用的来源版本、授权范围、内容引用／摘要、选择与丢弃原因、使用策略和预算。
+
+ArtifactStore 当前提供 memory／SQLite 默认与 dev55 显式 POSIX 文件后端，沿用作用域、digest、TTL、读取限额及 namespace 容量。文件正文先同步，再由有界 SQLite 回执确认；恢复核验原引用与固定实际资源。声明／SDK 装配与 owned／borrowed 关闭复用原层，不在数据适配器创建第三套 Run 权威。S3、引用保留、孤儿 GC 和全局磁盘限额仍在 R18，详见[文件 Artifact](../docs/file-artifacts.md)。
 
 需要运行恢复的上下文同时保存必要快照，Manifest 不替代实际恢复数据。运行定义固定不表示授权固定：后续注入重新验证当前权限，失效时按模板中明确的失败或降级策略处理。
 

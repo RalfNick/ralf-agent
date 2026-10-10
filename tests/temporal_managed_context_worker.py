@@ -5,19 +5,19 @@ import os
 import sqlite3
 from pathlib import Path
 
-from ralf_agent import Scope, SQLiteArtifactStore
+from ralf_agent import FileArtifactStore, Scope, SQLiteArtifactStore
 from ralf_agent.temporal import build_temporal_worker
 from ralf_agent.temporal_activities import TemporalRuntime
 from tests.test_composite_data_context import Provider, registry
 from tests.test_managed_data_context import context
 
 
-def runtime(root, queue):
+def runtime(root, queue, *, artifact_backend="sqlite"):
     root = Path(root)
     with sqlite3.connect(root / "business.sqlite") as db:
         db.execute("CREATE TABLE IF NOT EXISTS calls (kind TEXT)")
 
-    class Artifacts(SQLiteArtifactStore):
+    class Artifacts(FileArtifactStore if artifact_backend == "file" else SQLiteArtifactStore):
         block = False
 
         async def put(self, *args, **kwargs):
@@ -36,7 +36,9 @@ def runtime(root, queue):
                     raise TimeoutError("Test controller did not release the artifact read")
             return result
 
-    artifacts = Artifacts(root / "artifacts.sqlite")
+    artifacts = Artifacts(
+        root / ("file-artifacts" if artifact_backend == "file" else "artifacts.sqlite")
+    )
 
     class RecordedProvider(Provider):
         async def complete(self, messages, tools):
@@ -74,7 +76,9 @@ async def run():
     from temporalio.client import Client
 
     root, queue = Path(os.environ["RALF_H3_ROOT"]), os.environ["RALF_TEST_TEMPORAL_QUEUE"]
-    value, artifacts = runtime(root, queue)
+    value, artifacts = runtime(
+        root, queue, artifact_backend=os.environ.get("RALF_H3_ARTIFACT_BACKEND", "sqlite")
+    )
     original = value.manage_context
 
     async def gated(request, *, dispatch_guard=None):

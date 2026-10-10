@@ -17,13 +17,17 @@ def api():
     return importlib.import_module("ralf_agent.artifacts")
 
 
-@pytest.fixture(params=["memory", "sqlite"])
+@pytest.fixture(params=["memory", "sqlite", "file"])
 def store(request, tmp_path):
     a = api()
     s = (
         a.InMemoryArtifactStore(max_bytes=1024, capacity=2)
         if request.param == "memory"
         else a.SQLiteArtifactStore(tmp_path / "artifacts.sqlite", max_bytes=1024, capacity=2)
+        if request.param == "sqlite"
+        else importlib.import_module("ralf_agent").FileArtifactStore(
+            tmp_path / "artifacts", max_bytes=1024, capacity=2
+        )
     )
     yield s
     s.close()

@@ -21,13 +21,16 @@ pytestmark = pytest.mark.skipif(
 @pytest.mark.parametrize(
     "kind", ["native", "parallel", "team", "dynamic-dag", "nested", "cancel-read"]
 )
-def test_actual_history_restores_summary_before_adoption_after_worker_kill(tmp_path, kind):
+@pytest.mark.parametrize("artifact_backend", ["sqlite", "file"])
+def test_actual_history_restores_summary_before_adoption_after_worker_kill(
+    tmp_path, kind, artifact_backend
+):
     async def run():
         from temporalio.client import Client
 
         client = await Client.connect(os.environ["RALF_TEST_TEMPORAL_ADDRESS"])
         queue = "h3-context-" + uuid.uuid4().hex
-        execution, artifacts = runtime(tmp_path, queue)
+        execution, artifacts = runtime(tmp_path, queue, artifact_backend=artifact_backend)
         engine = TemporalEngine(
             client,
             task_queue=queue,
@@ -49,6 +52,7 @@ def test_actual_history_restores_summary_before_adoption_after_worker_kill(tmp_p
                 "RALF_TEST_TEMPORAL_QUEUE": queue,
                 "RALF_H3_ROOT": str(tmp_path),
                 "RALF_H3_MODE": mode,
+                "RALF_H3_ARTIFACT_BACKEND": artifact_backend,
             }
             with log.open("w") as output:
                 process = await asyncio.to_thread(
