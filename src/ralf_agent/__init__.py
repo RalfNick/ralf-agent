@@ -184,8 +184,11 @@ from .recall import (
     RecallQuery,
 )
 from .recommended import recommended_profile
+from .recommended_orchestration import recommended_harness
 from .redis_memory import RedisMemory
 from .redis_streams import RedisStreamsBus
+from .reference_selection import OverlapReferenceSelector, ReferenceSelector
+from .relevant_context import RelevantDataContext
 from .retrieval import (
     Chunk,
     Document,
@@ -278,7 +281,7 @@ from .workflow import (
     WorkflowSelection,
 )
 
-__version__ = "0.1.0.dev46"
+__version__ = "0.1.0.dev47"
 __all__ = [
     "EventCursor",
     "EventEnvelope",
@@ -558,6 +561,10 @@ __all__ += [
     "ManagedContextPipeline",
     "ManagedDataContext",
     "recommended_profile",
+    "recommended_harness",
+    "ReferenceSelector",
+    "OverlapReferenceSelector",
+    "RelevantDataContext",
     "FrozenContextSummarizer",
     "ManagedModelSummarizer",
     "ManagedSummary",

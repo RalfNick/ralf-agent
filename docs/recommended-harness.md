@@ -1,5 +1,9 @@
 # 推荐 Local Harness 组合
 
+dev47 另增加显式 `semantic-knowledge`、`memory-recall`、`plan-and-execute`、`team`，
+以及保持原 Spec／绑定路径的 `recommended_harness`。
+见[语义检索、相关召回与编排组合](h3-intelligent-combinations.md)。原三个版本 `1` 组合保持兼容。
+
 dev43 提供三个版本为 `1` 的起步 Profile，复用现有 Agent／Runtime、绑定、原 Run 日志及工厂：
 
 | 组合 | 默认能力 | 应用需要补充 |

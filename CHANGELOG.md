@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.0.dev47 — H3 semantic retrieval, relevant recall and orchestration combinations
+
+- Add explicit semantic-knowledge, memory-recall, plan-and-execute and team Profiles; semantic retrieval requires caller-selected HTTP Embedding and async assembly, with no hash fallback or bootstrap requests.
+- Add replaceable pure ReferenceSelector and opt-in RelevantDataContext: retain recent Session and Knowledge retrieval ordering, rank bounded Facts by task overlap, persist original selection through managed summary recovery.
+- Add recommended_harness using existing DynamicWorkflowSpec/TeamSpec, immutable AgentHarness, scoped member bindings, approvals and managed child execution; original version-1 presets and ManagedDataContext retain their identities.
+- Cover real localhost embedding transport/index/source invalidation, JSON/TOML and owned cleanup, custom/nested approval reconnect, model planner fixtures and eight process-exit summary recovery windows.
+- Full semantic recall, memory revision, autonomous search/tools, business verification and live model/answer/citation quality remain unverified; Temporal integration here is protocol-level only.
+
 ## 0.1.0.dev46 — Temporal automatic memory and Agent bindings
 
 - Explicit temporal-3 releases reuse scoped AgentDefinition/BoundDefinition selections for provider, context, knowledge, tool_set and stage_policy across actual native/sequence/graph/Team/dynamic/nested Agents.

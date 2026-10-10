@@ -432,6 +432,9 @@ class ComponentRegistry:
         from .data_context_factories import register_data_context
 
         register_data_context(self)
+        from .relevant_context_factories import register_relevant_context
+
+        register_relevant_context(self)
 
     def register(self, kind, name, factory, *, validator=None):
         self._register(kind, name, factory, validator, asynchronous=False)
@@ -441,7 +444,9 @@ class ComponentRegistry:
 
     def _register(self, kind, name, factory, validator, *, asynchronous):
         if (
-            kind not in COMPONENT_KINDS | {"provider", "tool_set", "artifact_store"}
+            kind
+            not in COMPONENT_KINDS
+            | {"provider", "tool_set", "artifact_store", "reference_selector"}
             or not isinstance(name, str)
             or not name.strip()
         ):

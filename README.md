@@ -1,6 +1,13 @@
 # Ralf-Agent
 
-当前工作区 **0.1.0.dev39** 接通 Graph／并行图、Team、动态 Plan／DAG 和嵌套流程的远程根会话。复用 Redis／PostgreSQL 准确回执和原 Local 执行权威，丢失保存响应后直接恢复最终结果，不重跑编排决策或业务工具。见 [远程复合 Session 指南](docs/session-api.md#远程复合根会话dev39h2b4b)。
+当前工作区 **0.1.0.dev47** 提供显式语义知识库、相关事实召回和 Plan／Team 默认组合，
+复用原执行、审批和恢复协议。见[H3 使用与扩展指南](docs/h3-intelligent-combinations.md)。
+Local 十类及 Temporal 五类每 Agent 绑定、自动上下文与来源化记忆已接通；完整 H3、
+真实模型质量、H4 执行环境和 H5 企业治理仍待验收。当前适合开发者试点。
+
+以下版本演进说明保留其发布时的边界；当前支持范围以[能力清单](docs/implementation-status.md)为准。
+
+dev39 接通 Graph／并行图、Team、动态 Plan／DAG 和嵌套流程的远程根会话。复用 Redis／PostgreSQL 准确回执和原 Local 执行权威，丢失保存响应后直接恢复最终结果，不重跑编排决策或业务工具。见 [远程复合 Session 指南](docs/session-api.md#远程复合根会话dev39h2b4b)。
 
 dev36 增加[授权根会话 namespace](docs/session-api.md)：
 图／Team／动态／嵌套会话在宿主允许范围中选择 namespace，根资源与成员默认分离，

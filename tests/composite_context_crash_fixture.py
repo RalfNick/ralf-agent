@@ -14,6 +14,7 @@ from tests.test_composite_data_context import Provider, definition, registry
 from tests.test_managed_data_context import context
 
 root, kind, window, mode = Path(sys.argv[1]), sys.argv[2], sys.argv[3], sys.argv[4]
+relevant = len(sys.argv) == 6 and sys.argv[5] == "relevant"
 
 
 class Store(SQLiteStore):
@@ -84,13 +85,30 @@ def reconcile(arguments, invocation):
 
 tools = type(tools)()
 tools.register(replace(registered.spec, effect="idempotent_write"), lookup, reconciler=reconcile)
+if relevant:
+    from ralf_agent import RelevantDataContext
+
+    builder = RelevantDataContext(
+        artifacts, tool_result_chars=1024, preview_chars=64, mode="model", summary_max_chars=256
+    )
+else:
+    builder = context(artifacts, mode="model", summary_max_chars=256)
 with LocalEngine(
     Store(root / "runs.sqlite"),
     providers={"default": RecordedProvider()},
     tools=tools,
-    context_assembler=context(artifacts, mode="model", summary_max_chars=256),
+    context_assembler=builder,
 ) as engine:
     if mode == "crash":
+        if relevant:
+            for namespace in ("a", "b"):
+                engine.memory.put_fact(
+                    engine.scope,
+                    namespace,
+                    "language",
+                    "task preferred language zh-CN",
+                    expected_version=0,
+                )
         h = engine.submit(definition(kind), "task", command_id="s", budget=32)
         (root / "run-id").write_text(h.run_id)
     else:
