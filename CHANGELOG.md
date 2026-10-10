@@ -1,5 +1,21 @@
 # Changelog
 
+## 0.1.0.dev54 — Replaceable tokenization and token budgets
+
+- Add pure TextTokenizer, UTF8ByteTokenizer, optional owned TiktokenTokenizer, TokenizerMessageCounter and TokenChunker. Keep character defaults unchanged.
+- Add explicit output reserve in canonical-text units and byte counter declarations for budgeted/managed context. Vendor framing, tool schema, exact billing and model quality remain separate.
+- Cover Unicode/special markers, bounded chunks, invalid/lazy completions, original knowledge receipts, process-loss atomicity, Local approval recovery and Temporal state acceptance.
+
+## 0.1.0.dev53 — Optional bounded PDF ingestion
+
+- Add explicit optional pypdf text extraction with bounded page/Form work and fixed native configuration, shared source/chunk/atomic receipt contracts and installed PDF ingest.
+- Keep core import and original text/HTML/DOCX declarations independent of pypdf; test receipt replay without the parser dependency and commit-window process loss. OCR/layout and corpus-wide compatibility remain open.
+
+## 0.1.0.dev52 — Native DOCX body ingestion
+
+- Add bounded ZIP/XML DOCX body parsing over the original DocumentParser and atomic knowledge ports; preserve paragraphs, tables and original source provenance.
+- Extend installed ingest to .docx with malformed/hidden/deleted content checks, ZIP alias rejection and original receipt/process-loss recovery. Other Office formats remain open.
+
 ## 0.1.0.dev51 — Native HTML ingestion
 
 - Add pure bounded UTF-8 HtmlDocumentParser over the existing parsing and atomic knowledge interfaces; preserve original source digest and parsed-character positions.

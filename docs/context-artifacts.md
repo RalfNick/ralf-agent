@@ -190,3 +190,6 @@ artifacts and complete semantic quality remain pending. Temporal shared Session
 support remains unsupported. The [dev25 gap audit](remaining-work.md) records the
 current boundaries; the [dev20 review](../architecture/reviews/2026-10-07-context-artifacts.md)
 preserves that increment's original evidence.
+
+
+dev54 增加[TextTokenizer／TokenizerMessageCounter](tokenization.md)，用于显式词表计量及同单位输出预留；纯与受管理 context 工厂支持字节基线声明，原字符／UTF8 estimate 默认身份保留。该计量不覆盖供应商 framing 或实际账单。

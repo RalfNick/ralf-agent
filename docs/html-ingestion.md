@@ -4,11 +4,19 @@
 原默认 `TextDocumentParser` 仍仅支持 text/plain、text/markdown；无需新依赖，不自动读取文件或抓取 URL。
 
 ```python
-from ralf_agent import HtmlDocumentParser, IngestionCoordinator, Scope, SourceDocument, SQLiteKnowledgeStore
+from ralf_agent import (
+    HtmlDocumentParser,
+    IngestionCoordinator,
+    Scope,
+    SourceDocument,
+    SQLiteKnowledgeStore,
+)
 
 source = SourceDocument(
-    "runbook", b"<h1>Pool timeout</h1><p>Inspect connections.</p>",
-    media_type="text/html", source_uri="book://runbook",
+    "runbook",
+    b"<h1>Pool timeout</h1><p>Inspect connections.</p>",
+    media_type="text/html",
+    source_uri="book://runbook",
 )
 # 在应用自己的 async 函数中：
 # with SQLiteKnowledgeStore("knowledge.sqlite") as store:

@@ -105,3 +105,6 @@ dev51 增加显式 [HtmlDocumentParser 与 HTML 摄取模板](html-ingestion.md)
 dev52 增加显式 [DocxDocumentParser 与 DOCX 摄取模板](docx-ingestion.md)，支持正文段落、表格文本和原回执恢复，不改变文本／HTML 默认策略。
 
 dev53 增加 [PdfDocumentParser 与可选 PDF 摄取](pdf-ingestion.md)，复用原同步解析端口和原子回执；核心无需 pypdf，显式启用 pdf extra。原默认解析仍保持。
+
+
+dev54 增加[可替换 tokenizer 与 token 分块](tokenization.md)，保留原字符默认和 parsed_character 来源位置；SDK 显式选择词表和预算，重复摄取仍先返回原回执。

@@ -1,11 +1,12 @@
 # Ralf-Agent
 
-当前工作区 **0.1.0.dev53** 提供显式语义知识库、相关事实召回和 Plan／Team 默认组合，
+当前工作区 **0.1.0.dev54** 提供显式语义知识库、相关事实召回和 Plan／Team 默认组合，
 复用原执行、审批和恢复协议。见[H3 使用与扩展指南](docs/h3-intelligent-combinations.md)。
 dev48 增加[显式 HTTP 语义重排](docs/http-reranking.md)，保留原知识来源及旧默认配置。
 dev49 增加[Query transform 与语义 Facts 召回](docs/query-and-semantic-recall.md)，支持显式语义记忆组合及保留语义顺序的上下文。候选窗口外事实和真实质量仍待完善。
 dev50 增加[显式模型查询改写](docs/model-query-transform.md)，借用已配置 Provider，支持知识检索及 Local 语义 Facts；默认保留原查询，自动查询策略与完整质量仍待验收。
 dev53 增加[可选文本 PDF 摄取](docs/pdf-ingestion.md)，与已有[DOCX 正文](docs/docx-ingestion.md)和[HTML 摄取](docs/html-ingestion.md)共用可安装 ingest 模板、原子知识回执、分块及来源引用。
+dev54 增加[可替换 tokenizer、输出预留与 token 分块](docs/tokenization.md)，保持原字符默认；模型词表由宿主显式装配，纯计量不隐藏联网。
 Local 十类及 Temporal 五类每 Agent 绑定、自动上下文与来源化记忆已接通；完整 H3、
 真实模型质量、H4 执行环境和 H5 企业治理仍待验收。当前适合开发者试点。
 

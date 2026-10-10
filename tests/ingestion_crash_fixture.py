@@ -17,6 +17,9 @@ def crash():
 
 async def run():
     backend, mode, path, workspace = sys.argv[1:]
+    token_mode = mode.startswith("token-")
+    if token_mode:
+        mode = mode.removeprefix("token-")
     if backend == "sqlite":
         store = SQLiteKnowledgeStore(path)
         if mode == "before":
@@ -51,10 +54,14 @@ async def run():
 
         store = await Store.connect(os.environ["RALF_TEST_POSTGRES_DSN"], backend_id="crash-pg")
         await store.initialize()
-    await IngestionCoordinator(store).ingest(
+    from ralf_agent import TokenChunker
+
+    await IngestionCoordinator(
+        store, **({"chunker": TokenChunker(size=7, overlap=3)} if token_mode else {})
+    ).ingest(
         Scope(workspace, "owner"),
         "docs",
-        SourceDocument("guide", b"pool timeout diagnosis"),
+        SourceDocument("guide", "中文🙂abc".encode() if token_mode else b"pool timeout diagnosis"),
         command_id="first",
         expected_version=0,
     )

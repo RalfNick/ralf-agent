@@ -4,11 +4,18 @@
 无需新增依赖，不读取文件或访问 URL。原 `TextDocumentParser` 和 `HtmlDocumentParser` 策略保持。
 
 ```python
-from ralf_agent import DocxDocumentParser, IngestionCoordinator, Scope, SourceDocument, SQLiteKnowledgeStore
+from ralf_agent import (
+    DocxDocumentParser,
+    IngestionCoordinator,
+    Scope,
+    SourceDocument,
+    SQLiteKnowledgeStore,
+)
 
 # docx_bytes 由应用读取，最大 1MiB；source_uri 只作为来源标识。
 source = SourceDocument(
-    "runbook", docx_bytes,
+    "runbook",
+    docx_bytes,
     media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
     source_uri="book://runbook",
 )

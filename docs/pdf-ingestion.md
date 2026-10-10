@@ -16,7 +16,13 @@ python -m pip install 'dist/ralf_agent-0.1.0.dev53-py3-none-any.whl[pdf]'
 该身份不归档依赖代码，也不认证任意库内部运行时猴子补丁；保留原发布环境仍是应用责任。
 
 ```python
-from ralf_agent import PdfDocumentParser, IngestionCoordinator, Scope, SourceDocument, SQLiteKnowledgeStore
+from ralf_agent import (
+    PdfDocumentParser,
+    IngestionCoordinator,
+    Scope,
+    SourceDocument,
+    SQLiteKnowledgeStore,
+)
 
 source = SourceDocument("runbook", pdf_bytes, "application/pdf", "book://runbook")
 # 在应用自己的 async 函数中：
