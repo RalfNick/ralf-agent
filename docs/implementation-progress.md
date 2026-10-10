@@ -471,3 +471,13 @@ and new HTML receipt recovery with old50 are verified; uncommitted HTML is refus
 by old50. Final3197 passed/92 configured-service skips533.12s; Ruff/format/whitespace and
 wheel/sdist pass. Evidence in
 [evidence](../architecture/reviews/2026-10-10-html-ingestion.md).
+
+## 2026-10-10 — dev52 canonical DOCX body ingestion / H3 R16
+
+Adds a pure stdlib DocumentParser and installed ingest template for canonical DOCX paragraphs and table text. Reuses original source identity, parsed-character chunks and atomic knowledge receipts, with no new runtime dependency, file/URL fetching or execution authority. Native text/HTML definitions stay unchanged.
+
+Initial 21 missing-API failures and one unsupported-template failure were observed before implementation. The first 109 adjacent parser/ingestion/starter tests pass, including actual SQLite process loss inside and after the transaction; full final evidence is recorded in the [acceptance review](../architecture/reviews/2026-10-10-docx-ingestion.md). Full H3/M1 and real Office interoperability remain open.
+
+Dev52 final targeted/installed evidence: 115 passed each; five review/text regressions RED→GREEN. 189 Python modules match source/wheel/sdist/installed. Actual old51/new52 text and HTML receipts recover bidirectionally with unchanged fresh pipeline/content/chunk identities; committed new DOCX replays under old51, which refuses uncommitted DOCX without writes. See the acceptance record for the independent review and bounded scope rulings.
+
+Dev52 frozen final regression: **3230 passed, 92 skipped in 580.41s**. Ruff, format, Git whitespace, dependency checks and wheel/sdist build pass; 11 changed documents/380 local links/8 Python blocks validate. No paid model, live remote-service certification or remote publication in this increment.

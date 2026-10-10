@@ -51,6 +51,7 @@ from .coordinator import FileCoordinator, InProcessCoordinator
 from .dag_planning import DAGNode, DAGProposal, ModelDAGPlanner, PlanningConclusion, RuleDAGPlanner
 from .data_context import ManagedDataContext
 from .document_parsing import DocumentParser, TextDocumentParser
+from .docx_parsing import DocxDocumentParser
 from .embedding_http import OpenAIEmbeddingProvider
 from .embedding_response import EmbeddingResponse
 from .embeddings import HashEmbeddingProvider
@@ -295,7 +296,7 @@ from .workflow import (
     WorkflowSelection,
 )
 
-__version__ = "0.1.0.dev51"
+__version__ = "0.1.0.dev52"
 __all__ = [
     "EventCursor",
     "EventEnvelope",
@@ -520,6 +521,7 @@ __all__ += [
     "Chunker",
     "ParagraphChunker",
     "DocumentParser",
+    "DocxDocumentParser",
     "TextDocumentParser",
     "HtmlDocumentParser",
     "IngestionCoordinator",

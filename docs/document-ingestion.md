@@ -97,7 +97,9 @@ retriever = VectorRetriever(store, index, embedding)
 await retriever.index_document(scope, "runbooks", "pool")
 ```
 
-默认 HashEmbedding 是词项散列基线。查询向量命中仍回读知识权威，拒绝删除、过期、跨 Scope 和旧版本块。[远程接入](remote-data.md)说明 PostgreSQL/Qdrant 与资源所有权；HTTP 语义 Embedding、融合／重排、后台索引、PDF／Office／网页连接器、源 ACL、自动摘要和记忆提炼仍未交付，见[智能数据链路设计](../architecture/viewpoints/intelligent-data-pipeline.md)。
+默认 HashEmbedding 是词项散列基线。查询向量命中仍回读知识权威，拒绝删除、过期、跨 Scope 和旧版本块。[远程接入](remote-data.md)说明 PostgreSQL/Qdrant 与资源所有权；HTTP 语义 Embedding、融合／重排、受管理摘要及显式记忆提炼已有实现；后台索引、PDF／其他 Office／网页连接器、源 ACL 仍待交付，见[智能数据链路设计](../architecture/viewpoints/intelligent-data-pipeline.md)。
 
 
 dev51 增加显式 [HtmlDocumentParser 与 HTML 摄取模板](html-ingestion.md)，默认 TextDocumentParser／原回执格式仍保持。HTML 位置对应解析文本，pre 内保留代码换行和缩进，不自动联网或渲染 CSS。
+
+dev52 增加显式 [DocxDocumentParser 与 DOCX 摄取模板](docx-ingestion.md)，支持正文段落、表格文本和原回执恢复，不改变文本／HTML 默认策略。

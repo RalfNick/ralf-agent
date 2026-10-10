@@ -95,8 +95,9 @@ def test_standalone_ingest_query_receipt_replay_and_reopen(tmp_path):
         ("bad.md", b"\xff"),
         ("large.txt", b"a" * (1024 * 1024 + 1)),
         ("bad.html", b"<![foo]><p>text</p>"),
+        ("bad.docx", b"not a ZIP package"),
     ],
-    ids=["unsupported", "invalid-utf8", "too-large", "malformed-html"],
+    ids=["unsupported", "invalid-utf8", "too-large", "malformed-html", "malformed-docx"],
 )
 def test_ingest_starter_rejects_bad_user_source_without_writing(tmp_path, name, data):
     project = tmp_path / "app"
@@ -170,3 +171,37 @@ def test_standalone_html_ingest_query_and_receipt_replay(tmp_path):
     assert (
         "Inspect connections" in citation["excerpt"] and "not evidence" not in citation["excerpt"]
     )
+
+
+def test_standalone_docx_ingest_query_and_original_receipt_replay(tmp_path):
+    from tests.docx_fixture import docx, xml
+
+    project = tmp_path / "docx-app"
+    create_starter(project, template="ingest")
+    source = tmp_path / "runbook.docx"
+    source.write_bytes(docx(xml()))
+    main = [sys.executable, "-m", "agent_app"]
+    cmd = [
+        *main,
+        "ingest",
+        source,
+        "--document-id",
+        "docx-guide",
+        "--command-id",
+        "docx-first",
+        "--expected-version",
+        "0",
+    ]
+    receipt = json.loads(subprocess_result(cmd, cwd=project))
+    assert receipt["status"] == "knowledge_committed"
+    assert json.loads(subprocess_result(cmd, cwd=project)) == receipt
+    result = json.loads(
+        subprocess_result(
+            [*main, "query", "--query", "pool timeout", "--command-id", "answer-docx"], cwd=project
+        )
+    )
+    assert result["state"] == "succeeded" and result["result"]["grounded"] is True
+    citation = result["result"]["citations"][0]
+    assert citation["document_id"] == "docx-guide" and citation["version"] == 1
+    assert citation["source_uri"] == source.resolve().as_uri()
+    assert "Inspect connections" in citation["excerpt"]

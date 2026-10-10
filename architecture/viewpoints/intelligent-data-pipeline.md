@@ -1,8 +1,8 @@
 # 智能数据链路组件设计
 
 版本：设计与交付状态 3；日期：2026-10-08；维护者：Ralf-Agent maintainers。
-面向框架实现者、数据适配器作者及应用开发者。当前基线为 dev25。
-D1 Parser／Chunker／原子摄取已实现，具体 API 见[摄取指南](../../docs/document-ingestion.md)；D2 的显式 HTTP Embedding／Hybrid／融合重排已实现，见[混合检索指南](../../docs/hybrid-retrieval.md)；D3a 的纯上下文与显式 Artifact 默认已实现，见[上下文指南](../../docs/context-artifacts.md)；D3b 的 opt-in 来源提炼、受管理模型摘要及 Temporal 纯自定义上下文已在 dev21 交付，见[记忆指南](../../docs/managed-memory.md)。运行内自动阶段、语义冲突／撤回及 D4 质量仍待完成；分层缺口见[dev25 清单](../../docs/remaining-work.md)。
+面向框架实现者、数据适配器作者及应用开发者。当前实现基线为 dev52；阶段表和 dev20/dev21 小节保留历史交付边界。
+D1 Parser／Chunker／原子摄取已实现，具体 API 见[摄取指南](../../docs/document-ingestion.md)；D2 的显式 HTTP Embedding／Hybrid／融合重排已实现，见[混合检索指南](../../docs/hybrid-retrieval.md)；D3a 的纯上下文与显式 Artifact 默认已实现，见[上下文指南](../../docs/context-artifacts.md)；D3b 的 opt-in 来源提炼、受管理模型摘要及 Temporal 纯自定义上下文已在 dev21 交付，见[记忆指南](../../docs/managed-memory.md)。Local/Temporal 受管理自动阶段已有子集（dev40–46）；语义冲突／撤回及 D4 完整质量仍待完成；分层缺口见[当前清单](../../docs/remaining-work.md)。
 
 ## 范围与当前基础
 
@@ -40,7 +40,7 @@ flowchart LR
 
 | 组件 | 输入／输出契约 | 首批默认实现 | 自定义与依赖 |
 | --- | --- | --- | --- |
-| DocumentParser（D1 已交付） | SourceDocument（有界字节／媒体类型／来源）→ ParsedDocument（正文与源摘要） | UTF-8 文本、Markdown | PDF／HTML／Office 插件后续提供；宿主显式读取文件，不由解析器任意抓取 URL |
+| DocumentParser（D1 已交付） | SourceDocument（有界字节／媒体类型／来源）→ ParsedDocument（正文与源摘要） | UTF-8 文本、Markdown、显式 HTML／DOCX 正文 | PDF／其他 Office 插件后续提供；宿主显式读取文件，不由解析器任意抓取 URL |
 | Chunker（D1 已交付） | ParsedDocument → 有界 ChunkSpan（解析后字符范围／可选块元数据） | 保持现有字符分块结果的兼容适配；段落分块可显式选择 | token／语义分块替换，算法 identity 纳入摄取配置 |
 | IngestionCoordinator（D1 已交付） | Scope、namespace、SourceDocument、command_id、expected_version → 不可变摄取回执 | 默认知识库原子 CAS 文档／块／词项／回执 | knowledge_committed 不代表向量就绪；索引单独显式调用，无分布式事务／后台索引调度 |
 | EmbeddingProvider | 有界文本批次 → 按输入顺序排列的有限向量 | 保留 HashEmbedding；增加显式 HTTP 适配入口 | 模型／端点／维度由用户指定；借用或 owned 客户端声明清楚 |
@@ -124,3 +124,7 @@ ArtifactStore／AsyncArtifactStore 有内存／SQLite 显式 JSON 默认，包�
 ## dev21 D3b 交付边界
 
 MemoryPipeline 显式开启成功任务后的规则／受管理模型字段选择和来源约束采纳，兼容现有同步／异步 CAS、召回和事实校验。只追加来源观察，不实现语义真值、全局原子事实批次或信念修订。模型摘要经过独立 Run 保存证据，再交给冻结纯构建器；没有隐藏的模型 I/O 或自动运行中压缩。Temporal 自定义纯 ContextBuilder 已有原生 History 快照和实际 Worker 重启证据。真实 DeepSeek 小范围结果见[质量报告](../../docs/live-model-quality.md)，完整 D3／M1 仍未验收。
+
+## dev52 当前补充
+
+显式[HTML](../../docs/html-ingestion.md)与[DOCX 正文](../../docs/docx-ingestion.md)解析已通过原 D1 端口接入。D3 受管理自动阶段现有 Local/Temporal 子集见[当前能力清单](../../docs/remaining-work.md)；历史小节的“尚未交付”仅描述对应版本。全库语义记忆、完整修订／遗忘、连接器／索引生命周期及真实端到端质量仍待验收。

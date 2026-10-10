@@ -86,7 +86,7 @@ flowchart TB
 | 短期记忆 | SessionStore／AsyncSessionStore；分页召回 | SQLite、内存 Session，去重／CAS／分页 | Redis、PostgreSQL、外部会话服务 | 本地实现已交付；外部适配器未交付 |
 | 长期记忆 | LongTermMemoryStore／异步及召回端口 | SQLite 显式事实；可选提炼、冲突确认 | PostgreSQL／Redis Facts、外部记忆系统 | 本地事实／TTL／CAS 已交付；自动提炼未交付 |
 | 原始知识 | KnowledgeStore／KnowledgeContextPort | SQLite 文档、版本、来源及删除 | PostgreSQL、业务知识库、连接器 | 内存／SQLite 与来源校验已交付；连接器／ACL 目录待补 |
-| 文档摄入 | DocumentParser／Chunker／IngestionKnowledgeStore | UTF-8 文本／Markdown、兼容字符／可选段落分块、原子知识回执 | PDF／Office、网页、业务 API、Token／语义分块 | dev18 D1 已交付；向量索引显式独立，后台连接器仍待补 |
+| 文档摄入 | DocumentParser／Chunker／IngestionKnowledgeStore | UTF-8 文本／Markdown、HTML／DOCX 正文、兼容字符／可选段落分块、原子知识回执 | PDF／其他 Office、网页、业务 API、Token／语义分块 | dev18 D1 已交付；向量索引显式独立，后台连接器仍待补 |
 | Embedding | EmbeddingProvider | 配置即用的 Embeddings API 适配器；可选本地模型 | 厂商原生协议、sentence-transformers 等独立扩展 | 只有可注入端口，没有内置 Provider |
 | 向量索引 | VectorIndex | 内存／SQLite 精确检索；企业 pgvector | Qdrant；其他后端按贡献逐项验证 | 本地 cosine 已交付；外部向量库和 ANN 待补 |
 | 检索与重排 | Retriever；目标 Reranker／RetrievalPipeline | 词法检索；向量检索、混合融合、默认保序重排 | 业务 Retriever、交叉编码器／模型 Reranker | 词法与注入式向量检索已交付；混合、重排待补 |
@@ -252,3 +252,5 @@ Dev50 [ModelQueryTransform](../../docs/model-query-transform.md)以已有 ModelP
 
 
 Dev51 在 R16 增加[HTML 解析适配与摄取模板](../../docs/html-ingestion.md)，沿原 DocumentParser／原子知识回执保持来源、分块和恢复；默认文本解析仍兼容。HTML 是归一化文本提取，不是 CSS／DOM 渲染或展示清洗，网页连接器和完整知识生命周期仍待交付。
+
+Dev52 延续 R16/H3 增加[DOCX 正文解析](../../docs/docx-ingestion.md)，通过原 DocumentParser 接入，不增加新存储接口或执行权威；段落／表格文本与原始来源回执可恢复。Word 排版、图片与完整 Office 兼容仍未实现。
