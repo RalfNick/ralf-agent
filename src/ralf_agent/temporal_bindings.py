@@ -53,23 +53,29 @@ def validate_descriptor(manifest, descriptor, scope=None):
         choice = getattr(descriptor, role)
         if choice.mode == "inherit":
             continue
-        if role not in ROLES or (choice.selector and role != "facts"):
+        if role not in ROLES or (choice.selector and role not in {"facts", "knowledge"}):
             raise ValidationError("Unsupported Temporal binding role or resource selector")
         if choice.mode == "ref":
             record = records.get(key(role, choice))
             if record is None or record["role"] != role:
                 raise DefinitionMismatch("Original Temporal binding version unavailable")
             configuration = record["configuration"]
-            if role == "facts":
-                identity = configuration["facts_context"]["identity"]
-                if identity.get("kind") == "facts-binding-resource":
+            if role in {"facts", "knowledge"}:
+                identity = (
+                    configuration["facts_context"]["identity"]
+                    if role == "facts"
+                    else record["identity"]
+                )
+                if identity.get("kind") == role + "-binding-resource":
+                    if role == "knowledge" and manifest.get("knowledge_protocol") != 1:
+                        raise DefinitionMismatch("Scoped Knowledge requires its original protocol")
                     if set(choice.selector) - {"namespace"}:
-                        raise ValidationError("Facts selector supports only namespace")
+                        raise ValidationError("Data selector supports only namespace")
                     namespace = choice.selector.get("namespace", identity["default_namespace"])
                     if namespace not in identity["namespaces"]:
-                        raise AuthorizationDenied("Facts namespace is not authorized by the host")
+                        raise AuthorizationDenied("Data namespace is not authorized by the host")
                 elif choice.selector:
-                    raise ValidationError("Facts selectors require a host namespace resource")
+                    raise ValidationError("Data selectors require a host namespace resource")
             memory = configuration.get("managed_memory", {}).get("policy", {})
             context = configuration.get("managed_context", {}).get("policy", {})
             if scope is not None and (
@@ -157,6 +163,13 @@ def catalog_registration(runtime):
             from .temporal_activities import component_identity
 
             extra["knowledge_context"] = component_identity(component, ("references", "validate"))
+            from .binding_data import KnowledgeBindingResource
+
+            original = catalog._entries[(role, component_id, version)][0]
+            if isinstance(original, KnowledgeBindingResource):
+                from .temporal_knowledge import KnowledgeRegistration
+
+                extra["knowledge_registration"] = KnowledgeRegistration(original).identity
         elif role == "facts":
             from .temporal_facts import registration
 
@@ -177,16 +190,23 @@ def effective_manifest(manifest, descriptor):
             continue
         fields = {
             "context": ("context_builder", "context_registration", "managed_context"),
-            "knowledge": ("knowledge_context",),
+            "knowledge": ("knowledge_context", "knowledge_registration"),
             "stage_policy": ("managed_memory",),
             "facts": ("facts_context",),
         }[role]
         for field in fields:
             result.pop(field, None)
         if selection.mode == "ref":
-            result.update(
-                result["binding_catalog"]["records"][key(role, selection)]["configuration"]
-            )
+            record = result["binding_catalog"]["records"][key(role, selection)]
+            configuration = detached(record["configuration"])
+            if (
+                role == "knowledge"
+                and record["identity"].get("kind") == "knowledge-binding-resource"
+            ):
+                configuration["knowledge_context"]["namespace"] = selection.selector.get(
+                    "namespace", record["identity"]["default_namespace"]
+                )
+            result.update(configuration)
     return result
 
 

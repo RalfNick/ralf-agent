@@ -1,6 +1,6 @@
-# dev58 剩余能力与架构验收清单
+# dev59 剩余能力与架构验收清单
 
-版本：32；日期：2026-10-11；维护者：RALF maintainers。当前增量基线：6c69cb8/dev57，dev58验收见文末。
+版本：33；日期：2026-10-11；维护者：RALF maintainers。当前增量基线：3a2408b/dev58，dev59验收见文末。
 读者：框架维护者、应用开发者及适配器贡献者。基线：da55f97 的 dev30，
 以及已提交1cad308的dev31–36与已提交1f27300的dev37配置／首用及已提交e6a6de7的dev38远程原生／顺序及已提交9fcbb84的dev39复合根会话与已提交7898b78的dev40自动规则记忆及已提交0d17976的dev41受管理上下文及已提交ec9b5f5的dev42模型选择记忆阶段及已提交e413ddc的dev44高级／Temporal数据上下文和已提交5528670的dev45 Local高级自动记忆，以及已提交 adbc328 的 dev46 Temporal自动记忆与五类Agent绑定。
 
@@ -59,9 +59,9 @@ PG Knowledge/Inbox/Outbox、Qdrant、HTTP Embedding、Hybrid/RRF／基础重排�
 
 ### 组合、入口、模型与编排
 
-| ID／层 | dev58 已交付基础 | 尚未完成的具体能力 | 阶段／状态 |
+| ID／层 | dev59 已交付基础 | 尚未完成的具体能力 | 阶段／状态 |
 | --- | --- | --- | --- |
-| R01 每 Agent 绑定 | Local 原生 Agent／顺序／Graph／Team／Dynamic／嵌套成员六类选择：provider、decision_policy、context、facts、knowledge、tool_set；稳定路径、固定父子发布与 Profile v2；Session 后端／允许的 namespace／同权威实际地址占用；Facts／Knowledge 宿主范围视图与来源校验；纯完成 verifier 的 inherit/ref/disabled；宿主与 Agent limits 的固定交集与动作额度；原生／顺序及高级 stage_policy 写目标；Temporal 六类版本化 provider/context/knowledge/tool_set/stage_policy/facts 与 Facts 宿主 namespace selector 与原有子 Run 子树 | Temporal 其他绑定角色；其他资源身份／selector／作用域视图；artifacts／workspace／sandbox／skills 绑定与准入；stage_policy 已支持 Local 原生／顺序／图／Team／动态／嵌套规则／模型选择记忆；上下文历史摘要与引用／产物组合已交付，其他阶段／组合仍待交付。前四类角色显式选择仍被拒绝 | H1：子集已交付 |
+| R01 每 Agent 绑定 | Local 原生 Agent／顺序／Graph／Team／Dynamic／嵌套成员六类选择：provider、decision_policy、context、facts、knowledge、tool_set；稳定路径、固定父子发布与 Profile v2；Session 后端／允许的 namespace／同权威实际地址占用；Facts／Knowledge 宿主范围视图与来源校验；纯完成 verifier 的 inherit/ref/disabled；宿主与 Agent limits 的固定交集与动作额度；原生／顺序及高级 stage_policy 写目标；Temporal 六类版本化 provider/context/knowledge/tool_set/stage_policy/facts 与 Facts／Knowledge 宿主 namespace selector、原始检索资源固定及原有子 Run 子树 | Temporal 其他绑定角色；其他资源身份／selector／作用域视图；artifacts／workspace／sandbox／skills 绑定与准入；stage_policy 已支持 Local 原生／顺序／图／Team／动态／嵌套规则／模型选择记忆；上下文历史摘要与引用／产物组合已交付，其他阶段／组合仍待交付。前四类角色显式选择仍被拒绝 | H1：子集已交付 |
 | R02 Agent／Session 入口 | H2a Local stateless Agent/Runtime/AgentRun、RunRef/WaitResult；独立任务托管、纯观察等待、原根流程控制路由、owned/borrowed 关闭与 CloseIncomplete 重试、显式重连；保留旧 RunHandle DTO；H2b1 同库原生／顺序及 H2b2 图／团队／动态／嵌套及 H2b3 授权根 namespace、H2b4a 远程原生／顺序及 H2b4b 复合根保存意图／准确回执／终态只查询恢复、异步 Profile 配置，SessionKey／路由／Turn／busy／CAS rebind；H2c1 Temporal 原生／顺序共同入口、异步重连、固定 RPC 组件与客户端 detach；H2c2 已注册 Graph／Team／Dynamic／嵌套入口与实际子 Run 控制 | 跨权威会话租约、输入续接／业务 deadline、Temporal 其他绑定角色／共享会话、移交与耐久 FIFO | H2a／H2b1／H2b2／H2b3／H2b4a／H2b4b／H2c1／H2c2：子集已交付；完整 H2 未交付 |
 | R03 Harness 与公共规则 | 纯 Harness/NativeHarness、ToolExecutor、共享决策／证据规则、Workflow Compiler/Interpreter、固定声明的 AgentHarness 组合入口；Local 原生／顺序及高级实际 Agent、Temporal 的规则／模型选择记忆、历史摘要和数据上下文，独立来源／提案／意图／回执与 Run 额度 | 其余广义 Harness 受管理阶段及默认组合；逐步提取 RuntimeKernel 纯规则；Prepare/Verify/Memory 等阶段的身份、证据、取消和恢复协议。保持 Local/Temporal 各自唯一执行权威 | H1–H3：部分抽象已实现 |
 | R04 配置与装配 | 版本 Profile/Catalog、JSON/TOML、注册工厂、sync/async 装配、owned 清理、历史配置路由 | 完整绑定／推荐组合配置；CLI/ProfiledEngine 异步工厂路由；插件显式安装／激活／兼容检查；配置／组件迁移、旧代码归档、部署版本管理；配置来源／监听按需分期 | H1／H5：子集已交付 |
@@ -75,7 +75,7 @@ PG Knowledge/Inbox/Outbox、Qdrant、HTTP Embedding、Hybrid/RRF／基础重排�
 
 ### 工具、上下文、记忆与知识
 
-| ID／层 | dev58 已交付基础 | 尚未完成的具体能力 | 阶段／状态 |
+| ID／层 | dev59 已交付基础 | 尚未完成的具体能力 | 阶段／状态 |
 | --- | --- | --- | --- |
 | R12 工具接入／工具包 | typed Python/Schema/默认参数、ToolRegistry、async ToolSource、MCP stdio、A2A ToolSource、授权／审批／核验 | MCP HTTP/持续 Session/OAuth；固定 executable/argv 的 CLI Runner；通用受控 HTTP 工具适配；搜索／文件／浏览器工具包与发现；有状态工具租约和停止证据 | H4：子集已交付 |
 | R13 Workspace/Skills/Sandbox/Runner | 可信 Python、MCP 受管理进程生命周期；Runner 目标契约 | Workspace／文件权限／资源租约；Skills 生命周期／能力注册／来源；容器／远端 Sandbox 文件、网络、进程和资源隔离；Coding Runner、Codex 首个适配及各外部 Runner 验收。普通子进程不是安全沙箱 | H4：目标能力未交付 |
@@ -87,7 +87,7 @@ PG Knowledge/Inbox/Outbox、Qdrant、HTTP Embedding、Hybrid/RRF／基础重排�
 
 ### 执行、通信、服务与验收
 
-| ID／层 | dev58 已交付基础 | 尚未完成的具体能力 | 阶段／状态 |
+| ID／层 | dev59 已交付基础 | 尚未完成的具体能力 | 阶段／状态 |
 | --- | --- | --- | --- |
 | R19 执行模式／后端一致性 | Local 单 Coordinator/SQLite；Temporal 独立 History，原生 Agent/sequence 与显式发布的 Agent-node Graph/Team/Dynamic/嵌套、RAG | 单 Coordinator 多 Process Worker；Temporal 其他绑定角色／selector、共享 Session/Facts/custom Harness、直接 Tool/Transform 图节点等组合；共同能力／故障／升级门禁；Continue-As-New、部署版本及长期容量。PG Facts/Knowledge 不等于 PG ExecutionStore/分布式调度 | H5／C1：分布式子集已交付 |
 | R20 MQ／A2A | memory/SQLite/Redis Streams、Inbox/Outbox、PG 共享回执；A2A JSON-RPC0.3 文本/数据 polling、async controls | 保留／压缩／积压／重投递与 failover 认证；额外 Broker 按需；A2A SSE/push/files/Task continuation 及真实停止约定。ack 不等于效果确认，不承诺跨系统全局恰好一次 | H4／H5：子集已交付 |
@@ -373,3 +373,13 @@ Knowledge/Facts 的校验与来源分类分开，普通/managed采纳固定证�
 Temporal其他角色、Knowledge selector、共享Session、索引自动生命周期及完整H1/H3/M1继续未验收。
 
 最终dev58：3417 passed/119未配置服务跳过；真实Temporal新增12＋原组合16、安装新增12、安装94契约／200模块一致、core-only／57↔58默认Run与Temporal manifest兼容、真实Redis/PG Activity探针通过。全量已固定版本并完成。仅本地提交；完整能力与质量门槛继续开放。
+
+
+## dev59 Temporal Knowledge 绑定增量
+
+新增 KnowledgeBindingResource 宿主 namespace selector，原 Context History 采纳具体 Scope／namespace／版本／文本摘要，保留原路径与实际 Agent 子树。
+原生 SQLite/PG 资源、Lexical/Vector/Hybrid/Query 组合、方法和 HTTP client 固定；最后来源 await 在 History admission 前。
+原 raw/global Knowledge 发布保持；新 scoped 发布启用 knowledge_protocol=1。SDK borrowed 工厂装配，未新增独立执行状态机。
+恢复／安装／兼容证据见[dev59验收](../architecture/reviews/2026-10-11-temporal-knowledge.md)。共享 Session、其余绑定角色、自动 Temporal Profile、索引生命周期和真实语义质量继续开放。
+
+最终dev59：3436 passed/131未配置服务跳过；真实源码Temporal12+原组合28、安装Temporal12+独立63、202模块一致、core-only与58↔59原默认/raw发布兼容、真实PG Activity探针通过。两项review P2已闭环，服务正常退出。仅本地提交，不将子集验收当全能力完成。

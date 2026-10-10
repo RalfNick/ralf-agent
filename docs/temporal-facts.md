@@ -108,5 +108,5 @@ Knowledge 的校验器只收到 Knowledge 引用；Facts 的校验器复核原 S
 跨机器使用远程事实库，并承担各自服务一致性、权限和运维要求。
 
 真实服务、安装包与验收详见 [dev58 记录](../architecture/reviews/2026-10-11-temporal-facts.md)。
-仍未完成：Temporal Knowledge namespace 视图、其他绑定角色、共享 Session／续接、
+dev59 补齐 [Temporal Knowledge namespace 视图](temporal-knowledge-bindings.md)。仍未完成：其他绑定角色、共享 Session／续接、
 全库索引自动生命周期、真实语义质量和完整 H1/H3/M1。

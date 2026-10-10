@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.0.dev59 — Temporal scoped Knowledge bindings
+
+- Add host-allowlisted Knowledge namespace selectors to per-Agent bindings, using the original Context Activity and native/composite Temporal Histories.
+- Fix the selected namespace in effective releases, independently validate original source evidence and preserve Facts/Knowledge classification through managed finalization.
+- Pin native retrieval composition, methods, SQLite/PG addresses and HTTP clients; validate sources before History dispatch admission so cancellation during reads stops model dispatch.
+- Preserve default-off and raw Knowledge releases; document borrowed SDK assembly, recovery and remaining Session/role/quality boundaries.
+
 ## 0.1.0.dev58 — Temporal scoped Facts recall
 
 - Add opt-in Facts registration, per-Agent inherit/ref/disabled and host namespace selectors over the original native/composite Temporal Histories.

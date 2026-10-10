@@ -555,6 +555,9 @@ def accept_stage(state, action_id, response):
         from .temporal_facts_state import validate_snapshot
 
         validate_snapshot(response, state.step_manifest)
+        from .temporal_knowledge_state import validate_snapshot as validate_knowledge_snapshot
+
+        validate_knowledge_snapshot(response, state.step_manifest, state.scope)
         stage["status"], stage["snapshot"] = "completed", response
         state.context_snapshot = response
         state.context_signature = state.context_cache_signature()

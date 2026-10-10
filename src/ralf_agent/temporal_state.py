@@ -15,6 +15,8 @@ from .harness import DecisionProposal
 from .model_evidence import settlement_usage, validate_model_usage, validate_received_response
 from .temporal_facts_state import validate_protocol as validate_facts_protocol
 from .temporal_facts_state import validate_snapshot as validate_facts_snapshot
+from .temporal_knowledge_state import validate_protocol as validate_knowledge_protocol
+from .temporal_knowledge_state import validate_snapshot as validate_knowledge_snapshot
 from .tools import ToolSpec
 from .types import AgentSpec, ToolCall, canonical, credits, digest
 
@@ -106,6 +108,7 @@ def validate_manifest(manifest):
     elif "managed_context" in manifest:
         raise DefinitionMismatch("Managed context requires an explicit Temporal protocol")
     validate_facts_protocol(manifest)
+    validate_knowledge_protocol(manifest)
     for key in ("tools", "providers", "harness", "context_builder", "tool_executor", "policy"):
         if not isinstance(manifest.get(key), dict):
             raise ValidationError(f"Temporal runtime release requires {key}")
@@ -666,6 +669,7 @@ class TemporalRunState:
         ):
             raise ValidationError("Invalid received model context")
         validate_facts_snapshot(response, self.step_manifest)
+        validate_knowledge_snapshot(response, self.step_manifest, self.scope)
         self.context_snapshot = detached(response)
         self.context_signature = self.context_cache_signature()
         action["status"], action["response"] = "completed", detached(response)

@@ -222,6 +222,15 @@ class TemporalRuntime:
         self.executor = tool_executor or PythonToolExecutor(tools)
         self.journal = journal
         self.knowledge = knowledge
+        from .temporal_knowledge import KnowledgeRegistration
+
+        self._knowledge_pins = (
+            [KnowledgeRegistration(knowledge)] if knowledge is not None else []
+        ) + [
+            KnowledgeRegistration(component)
+            for (role, _, _), component in self._catalog_objects.items()
+            if role == "knowledge"
+        ]
         if knowledge is not None:
             component_identity(knowledge, ("references", "validate"))
             for name in ("limit", "max_chars"):
@@ -316,6 +325,14 @@ class TemporalRuntime:
         from .temporal_bindings import catalog_registration, memory_registration
 
         catalog = catalog_registration(self)
+        from .binding_data import KnowledgeBindingResource
+
+        if any(
+            isinstance(component, KnowledgeBindingResource)
+            for (role, _, _), component in self._catalog_objects.items()
+            if role == "knowledge"
+        ):
+            result["knowledge_protocol"] = 1
         if self.facts is not None:
             from .temporal_facts import registration as facts_registration
 
@@ -369,6 +386,8 @@ class TemporalRuntime:
             raise DefinitionMismatch("Temporal Facts recall owner changed")
         for pin in self._facts_pins:
             check_pin(pin)
+        for pin in self._knowledge_pins:
+            pin.check()
         if digest(recall_registration(self.recall_policy, self.recall_planner)) != digest(
             self._recall_registration
         ) or (
@@ -461,6 +480,11 @@ class TemporalRuntime:
                 or "context_registration" in self._manifest
             ):
                 evidence = request["context"]
+                from .temporal_knowledge_state import (
+                    validate_snapshot as validate_knowledge_snapshot,
+                )
+
+                validate_knowledge_snapshot(evidence, self._manifest, request["scope"])
                 from .temporal_managed_context import validate_snapshot
 
                 await validate_snapshot(self, request)
@@ -510,8 +534,9 @@ class TemporalRuntime:
                 from .temporal_facts import validate as validate_facts
 
                 await validate_facts(self, request, request["context"])
-            await admit_dispatch(request, dispatch_guard)
-            if "managed_context" in self._manifest and self.knowledge is not None:
+            if self.knowledge is not None and (
+                "managed_context" in self._manifest or "knowledge_registration" in self._manifest
+            ):
                 _completed_none(
                     await self.knowledge.validate(
                         Scope(**request["scope"]),
@@ -519,6 +544,8 @@ class TemporalRuntime:
                     ),
                     "Knowledge validation",
                 )
+            self.validate_release(request["runtime_manifest"])
+            await admit_dispatch(request, dispatch_guard)
             self.validate_release(request["runtime_manifest"])
             if "managed_context" in self._manifest and (
                 self.providers.get(step.provider) is not provider or provider.complete != complete

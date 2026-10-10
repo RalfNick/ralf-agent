@@ -1,7 +1,7 @@
 # 持续能力开发与验收队列
 
 用户授权：2026-10-10 持续执行直到能力完成；只本地提交，不推送远端。
-当前 dev58 Temporal Facts 子集已验收（基线6c69cb8/dev57）；实际提交 SHA 以 Git 为准。此队列落实既有架构，不新增执行权威。
+当前 dev59 Temporal Knowledge 子集已验收（基线3a2408b/dev58）；实际提交 SHA 以 Git 为准。此队列落实既有架构，不新增执行权威。
 权威范围：[剩余清单](remaining-work.md) R01–R26、[Harness 架构](../architecture/viewpoints/harness-runtime.md) H1–H5。
 历史设计中明确后置的高级 Realtime/TTS、公共插件市场和运行中热迁移保持单独路线图；按需适配器不以数量定义完成。
 
@@ -38,7 +38,7 @@ Scanner是显式宿主枚举，含expired不自动扩张Agent权限；recall是�
 ## 下一批依赖与主链路
 
 1. R15/R17：PostgreSQL native snapshot／有界scan、真实远端索引组合和全库索引质量；再推进自动增量、信念修订／遗忘与索引生命周期。
-2. H1/H2：Temporal其余Facts/Knowledge绑定、共享Session与输入续接；业务deadline／审批期限和移交。
+2. H1/H2：Temporal其余绑定角色、共享Session与输入续接；业务deadline／审批期限和移交。
 3. H4：Workspace／文件权限与固定CLI Runner，MCP HTTP／受控Sandbox／Skills与首个外部Coding Runner。
 4. H5与横向：容量／保留／迁移／服务观察、模型一致性、可复用AdapterContractSuite及真实质量／首用／同场景比较。
 
@@ -73,3 +73,12 @@ Temporal Facts 绑定、host namespace、纯planner与有界pages沿原 Context 
 初次全量唯一版本一致性失败因pytest收集时载入旧dev57；代码及版本固定后full-suite-final.log记录3417 passed/119 skipped（577.74s），58529 exit0；Ruff/格式/空白通过。
 当前目录 /private/tmp/ralf-agent-dev58-7f724wa1；最终提交及全量结果见[dev58验收](../architecture/reviews/2026-10-11-temporal-facts.md)。
 下一定位：temporal_bindings已支持facts与其namespace，但knowledge selector仍拒绝；KnowledgeBindingResource.resolve已有Local scoped view。先补Temporal Knowledge原始resource/method/backend固定和独立来源验证、实际History/绑定矩阵，再推进共享Session/续接与其余R01–R26门槛。不把本批次当完整goal完成。
+
+
+## dev59 当前批次与下一定位
+
+Temporal KnowledgeBindingResource namespace、实际 effective namespace、纯 source evidence 和原生检索资源固定已实现，原 Context History 仍唯一采纳。
+两项review P2已复现RED→GREEN并复核；Facts/Knowledge共存、取消最终来源await、来源变化、跨Scope和非法selector/protocol均有测试。
+真实源码与安装各12 Worker kill/restart/replay组合通过；真实PG16.15普通/managed Activity/state来源/TTL/版本/连接替换探针通过。
+最终：原Temporal28、全量3436/131（467.01s，66357 exit0）、安装63/202模块、core-only/58↔59原回执兼容通过；两项自有Service runner68836/97489 exit0，停止标记确认。验收/文档/构建同步，仅本地提交。当前任务目录 /private/tmp/ralf-agent-dev59-v76202ba。
+下一定位：Temporal现在支持Facts/Knowledge的namespace；Session仍明确拒绝shared session_id。需按原Session/Turn契约设计跨Run持久身份/占用/续接，保留原History权威；随后其余role和R15/H4/H5继续。未关闭整个目标。

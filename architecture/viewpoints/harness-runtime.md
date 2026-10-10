@@ -1,10 +1,15 @@
 # RALF AgentHarness 目标架构
 
+当前 dev59：Temporal 已交付六类绑定及 Facts/Knowledge 宿主 namespace 视图，来源读链路沿原 Context History 采纳。
+后文 dev46 等版本记录为各批次历史范围；最新子集见文末 dev58/dev59 和[实现清单](../../docs/implementation-status.md)。
+共享 Session、其余角色、H4/H5 与真实质量仍未完成。
+
+
 
 Dev46 已增加[Temporal 自动记忆与五类 Agent 绑定](../../docs/temporal-memory-bindings.md)：显式 temporal-3、原声明子树、History 选择响应／CAS／核验与父子证据恢复；旧发布保持。其他 Temporal 绑定角色／资源 selector、共享 Session、语义质量与完整 H1/H3 仍待验收。
 
-版本：1.9；日期：2026-10-10；维护者：RALF maintainers。
-状态：根据用户认可的理想架构形成的目标设计；当前实现基线为0.1.0.dev57（基于已提交 dev56/cb9a824）；dev43 的历史入口基线为（H1a–H1f、Local stateless H2a、同库原生／顺序 H2b1／复合 Session H2b2／授权根 namespace H2b3／远程原生顺序 H2b4a／复合根 H2b4b、Temporal 原生入口 H2c1／高级编排入口 H2c2）。
+版本：1.10；日期：2026-10-11；维护者：RALF maintainers。
+状态：根据用户认可的理想架构形成的目标设计；当前实现基线为0.1.0.dev59（基于已提交 dev58/3a2408b）；dev43 的历史入口基线为（H1a–H1f、Local stateless H2a、同库原生／顺序 H2b1／复合 Session H2b2／授权根 namespace H2b3／远程原生顺序 H2b4a／复合根 H2b4b、Temporal 原生入口 H2c1／高级编排入口 H2c2）。
 读者：框架维护者、Agent应用开发者、适配器作者与企业部署团队。
 除明确标为 H1a–H1f、dev31 Local stateless H2a 、dev32 同库原生／顺序 Session H2b1 与 dev33 Temporal 原生／顺序入口 H2c1 、dev34 高级编排入口 H2c2 与 dev35 同库复合会话 H2b2、dev36 授权根 namespace H2b3 与 dev38 远程原生／顺序 H2b4a 与 dev39 远程复合根 H2b4b 的子集外，本文中的接口和示例仍为目标设计。AgentHarness 当前固定声明并复用 Local 权威，dev40–42 已实现原生／顺序 Local 的规则记忆、受管理历史摘要和模型选择记忆；dev43 增加版本化 Local 推荐组合、确定性引用压缩和产物投影；dev44 已接通 Local 高级编排与 Temporal 自动历史压缩／大结果卸载，分别保留原 Run 节点投影与 History 阶段证据。dev46 已接通 Temporal 自动记忆与五类绑定；dev47 增加显式语义知识、相关候选排序及 Plan／Team 推荐组合，语义引用质量及完整 H3 仍待验收。
 [绑定使用教程](../../docs/agent-bindings.md)与 [Local Agent API](../../docs/agent-api.md)记录实际支持与拒绝；dev32 同库原生／顺序 Session/Turn 子集已交付；dev33 Temporal 原生／顺序入口已交付；dev34 已注册高级入口已交付；dev35同库复合会话与dev36授权根namespace已交付；dev38–39 远程原生／顺序及复合根会话已交付；dev46 已交付 Temporal 五类绑定子集；其余角色／共享 Session 与完整 H2 尚未交付。
@@ -415,3 +420,13 @@ PG来源／Catalog可以在SDK或已有async工厂中替换，保留owned/borrow
 有界 recall/planner、Knowledge/Facts 来源分类、snapshot采纳、原生资源固定与取消最终admission由原组件/History承担。
 不添加执行权威，也不把事实写授权作为读范围；纯 RuntimeKernel 规则与 Activity I/O 分离。
 [专项契约与验收](../../docs/temporal-facts.md)记录原生、顺序及高级实际Agent恢复；共享Session、Knowledge视图及其他角色继续后续门槛。
+
+
+### dev59 Temporal Knowledge 范围与检索固定
+
+KnowledgeBindingResource 使用原 catalog/Agent 路径选择；Scope、宿主 namespace allowlist、默认与显式选择在原 History 固定。
+具体 namespace 写入 effective manifest，独立 Knowledge source evidence 经纯采纳边界校验；Facts 同时启用时保持来源分类。
+原生检索组合（Lexical/Vector/Hybrid/Query）、实际 SQLite/PG 资源、方法、HTTP 客户端固定，旧 global/raw 发布保持。
+知识来源 I/O 完成并复核后才请求 History dispatch admission；取消等待期间不启动新模型。
+SDK borrowed 资源由宿主在 Worker 停止后关闭，不创建第三执行权威；[指南与验收](../../docs/temporal-knowledge-bindings.md)。
+后续门槛仍含共享 Session／续接、其他绑定角色、自动 Temporal Profile、索引生命周期与语义质量。
