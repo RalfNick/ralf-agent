@@ -13,6 +13,7 @@ from temporalio.common import RetryPolicy
 from temporalio.exceptions import ActivityError, ApplicationError
 
 with workflow.unsafe.imports_passed_through():
+    from .temporal_managed_context import ACTIVITY as MANAGED_CONTEXT_ACTIVITY
     from .temporal_state import (
         ACK_ACTIVITY,
         CONTEXT_ACTIVITY,
@@ -159,7 +160,9 @@ class TemporalRunWorkflow:
             action, request = operation
             try:
                 response = await workflow.execute_activity(
-                    CONTEXT_ACTIVITY
+                    MANAGED_CONTEXT_ACTIVITY
+                    if action["kind"] == "managed_context"
+                    else CONTEXT_ACTIVITY
                     if action["kind"] == "context"
                     else MODEL_ACTIVITY
                     if action["kind"] == "model"
@@ -167,12 +170,19 @@ class TemporalRunWorkflow:
                     request,
                     start_to_close_timeout=timeout,
                     schedule_to_close_timeout=total_timeout,
-                    retry_policy=RetryPolicy(maximum_attempts=1),
+                    retry_policy=RetryPolicy(
+                        maximum_attempts=3
+                        if action["kind"] == "managed_context"
+                        and action["phase"] not in {"write", "summary"}
+                        else 1
+                    ),
                     activity_id=action["id"]
-                    if action["kind"] == "context"
+                    if action["kind"] in {"context", "managed_context"}
                     else action["attempts"][0]["id"],
                 )
-                if action["kind"] == "context":
+                if action["kind"] == "managed_context":
+                    self.state.accept_managed_context(action["id"], response)
+                elif action["kind"] == "context":
                     self.state.accept_context(action["id"], response)
                 elif action["kind"] == "model":
                     self.state.accept_model(action["id"], response)
@@ -181,7 +191,17 @@ class TemporalRunWorkflow:
             except ActivityError:
                 # A server timeout is not evidence that a Python thread or
                 # downstream request stopped. Preserve the dispatched identity.
-                if action["kind"] == "context":
+                if action["kind"] == "managed_context":
+                    self.state.accept_managed_context(
+                        action["id"],
+                        {
+                            "ok": False,
+                            "code": "activity_outcome_unknown",
+                            "dispatched": action["phase"] in {"write", "summary"},
+                            "execution_uncertain": action["phase"] == "write",
+                        },
+                    )
+                elif action["kind"] == "context":
                     self.state.accept_context(action["id"], {"ok": False, "code": "context_failed"})
                 else:
                     self.state.operation_unknown(action["id"], "activity_outcome_unknown")
@@ -208,6 +228,17 @@ class TemporalRunWorkflow:
                 non_retryable=True,
             ) from None
 
+    @workflow.update(name="admit_context_dispatch")
+    async def admit_context_dispatch(self, request: dict) -> dict:
+        try:
+            return self.state.admit_context_dispatch(request)
+        except Exception as exc:
+            raise ApplicationError(
+                "Context dispatch admission rejected",
+                type=getattr(exc, "code", "validation_error"),
+                non_retryable=True,
+            ) from None
+
     @workflow.query(name="view")
     def view(self, request: dict) -> dict:
         try:
@@ -217,6 +248,12 @@ class TemporalRunWorkflow:
                 return self.state.snapshot()
             if kind == "diagnostics":
                 return self.state.diagnostics()
+            if kind == "context_stages":
+                return detached(list(getattr(self.state, "managed_context_stages", {}).values()))
+            if kind == "context_artifacts":
+                from .temporal_managed_context import artifact_records
+
+                return detached(artifact_records(self.state))
             if kind == "events":
                 return detached(
                     [e for e in self.state.event_log if e["seq"] > request["after"]][

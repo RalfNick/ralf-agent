@@ -204,6 +204,10 @@ class ParallelWorkflowRuntime:
                 engine.cancel(run_id, command_id=f"parallel-cancel:{run_id}:{id(active)}")
             await self._drain(active)
             raise
+        if engine._authorized(run_id)["state"] in CLOSED:
+            from .composite_context import recover_terminal_frames
+
+            await recover_terminal_frames(engine, run_id)
         engine._mark_workflow_quiescent(run_id, supervisor=True)
         return engine.status(run_id)
 

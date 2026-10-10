@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.0.dev44 — Composite and Temporal managed context
+
+- Local graph/parallel/Team/dynamic/nested Agent decisions reuse original managed history compression and artifact projections; optional semantic Schema11 admission.
+- Parallel frame evidence and node-scoped summary reservations stay in the original Run; terminal recovery settles already received auxiliary responses.
+- Explicit temporal-2 worker registration separates planning, artifact read/write/verification, summary response and snapshot adoption in History; writes and summaries are single-attempt, unknown effects retain evidence and credits.
+- Original History atomically admits managed external dispatch after preparatory reads; accepted cancellation blocks unadmitted calls. Unknown artifact execution retains parent allowance even after a receipt or later successful tool.
+- Actual process crash coverage and real Temporal Worker kill/restart/History replay. Raw execution storage is retained; advanced automatic memory writes and full H3 quality acceptance remain open.
+
 ## 0.1.0.dev43 — Recommended Local data context
 
 - Versioned Basic, Knowledge and Managed Memory Profiles with existing configurable ports.

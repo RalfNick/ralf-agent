@@ -424,16 +424,18 @@ class LocalEngine:
         from .context_preparation import validate_journal
 
         run = self._authorized(run_id)
-        validate_journal(self, run)
-        return copy.deepcopy(list(run.get("context_preparations", {}).values()))
+        from .composite_context import query
+
+        return query(self, run, "context_preparations", validate_journal)
 
     def context_artifacts(self, run_id):
         """Query original artifact evidence without touching live data storage."""
         from .context_artifacts import validate_journal
 
         run = self._authorized(run_id)
-        validate_journal(self, run)
-        return copy.deepcopy(list(run.get("context_artifacts", {}).values()))
+        from .composite_context import query
+
+        return query(self, run, "context_artifacts", validate_journal)
 
     def patch_plan(self, run_id, proposal, *, expected_plan_revision, command_id):
         self._ensure_open()
@@ -832,10 +834,16 @@ class LocalEngine:
     def _check_release(self, run):
         from .context_preparation import validate_journal
 
-        validate_journal(self, run)
+        parallel = run.get("plan", {}).get("schema_version") == 3
+        journal_run = {**run, "actions": []} if parallel else run
+        validate_journal(self, journal_run)
         from .context_artifacts import validate_journal as validate_artifacts
 
-        validate_artifacts(self, run)
+        validate_artifacts(self, journal_run)
+        if parallel:
+            from .composite_context import validate_frames
+
+            validate_frames(self, run)
         from .remote_session_saves import check_remote_session_run
 
         check_remote_session_run(self, run)
@@ -980,6 +988,9 @@ class LocalEngine:
                     self._commit(run, "abandoned_attempts_unknown")
             self._adopt_received_evidence(run_id)
             if run.get("plan", {}).get("schema_version") == 3:
+                from .composite_context import recover_terminal_frames
+
+                await recover_terminal_frames(self, run_id)
                 self._mark_workflow_quiescent(run_id)
             return self.status(run_id)
         self._check_release(run)

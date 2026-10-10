@@ -87,6 +87,28 @@ class NodeExecutionStore:
     def __getattr__(self, name):
         return getattr(self.authority, name)
 
+    def _reservation_id(self, value):
+        return (
+            "node-context:" + digest([self.run_id, self.node_id, value])
+            if value.startswith("context:")
+            else value
+        )
+
+    def reserve(self, run_id, reservation_id, amount):
+        return self.authority.reserve(run_id, self._reservation_id(reservation_id), amount)
+
+    def settle(self, reservation_id, actual, usage):
+        return self.authority.settle(self._reservation_id(reservation_id), actual, usage)
+
+    def mark_unknown(self, reservation_id):
+        return self.authority.mark_unknown(self._reservation_id(reservation_id))
+
+    def managed_stage_reservation(self, run_id, reservation_id):
+        proof = self.authority.managed_stage_reservation(
+            run_id, self._reservation_id(reservation_id)
+        )
+        return None if proof is None else {**proof, "id": reservation_id}
+
     def _index(self, parent):
         return next(i for i, n in enumerate(parent["plan"]["nodes"]) if n["id"] == self.node_id)
 

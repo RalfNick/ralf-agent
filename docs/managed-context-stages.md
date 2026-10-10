@@ -1,5 +1,7 @@
 # Managed automatic context preparation (dev41)
 
+Dev44 also supports Local graph/parallel/Team/dynamic/nested Agent decisions and explicit Temporal managed registration; see [advanced context](composite-temporal-context.md). Automatic memory writes remain narrower.
+
 Opt-in Local native Agents and sequential Workflows can summarize **complete omitted
 history groups from the same Run** before freezing a business model request. Original
 Run/Action/tool evidence and Session messages are retained. The latest complete tool

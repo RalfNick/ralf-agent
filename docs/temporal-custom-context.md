@@ -46,3 +46,5 @@ The real-service acceptance test uses two separate Worker processes, records con
 before an approval pause, kills both Workers, restarts them, resumes the same Run,
 then replays Run and summary History. This is separate from baseline native History
 compatibility and deterministic state tests.
+
+Dev44 additionally accepts explicitly registered `ManagedContextPipeline`/`ManagedDataContext` via temporal-2: History owns independent auxiliary stages and actual child Agent decisions. Pure custom builders keep temporal-1. See [managed Temporal context](composite-temporal-context.md); this does not add Session/Temporal per-Agent bindings or automatic memory writes.

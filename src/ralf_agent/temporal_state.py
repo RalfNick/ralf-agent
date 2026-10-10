@@ -79,8 +79,18 @@ def validate_schema_references(schema):
 
 
 def validate_manifest(manifest):
-    if not isinstance(manifest, dict) or manifest.get("kernel") != KERNEL:
+    if not isinstance(manifest, dict) or manifest.get("kernel") not in {KERNEL, "temporal-2"}:
         raise DefinitionMismatch("Unsupported Temporal runtime release")
+    if manifest["kernel"] == "temporal-2":
+        managed = manifest.get("managed_context", {})
+        if (
+            managed.get("version") != 1
+            or managed.get("summary_credits") != 1
+            or managed.get("policy") != manifest.get("context_builder")
+        ):
+            raise DefinitionMismatch("Unsupported managed Temporal context release")
+    elif "managed_context" in manifest:
+        raise DefinitionMismatch("Managed context requires an explicit Temporal protocol")
     for key in ("tools", "providers", "harness", "context_builder", "tool_executor", "policy"):
         if not isinstance(manifest.get(key), dict):
             raise ValidationError(f"Temporal runtime release requires {key}")
@@ -202,6 +212,12 @@ class TemporalRunState:
         self.deferred_acks = []
         self.context_snapshot = None
         self.context_signature = None
+        self.managed_context_stages = {}
+        self.context_artifact_dispatches = {}
+        self.context_artifact_receipts = {}
+        from .temporal_managed_context import check_scope
+
+        check_scope(manifest, self.scope)
         payload = {"kind": "submit", "scope": self.scope, "request": self.request}
         self.command_digests[command_id] = digest(payload)
         self.receipts[command_id] = self._receipt(command_id, "submit", {"state_revision": 0})
@@ -377,6 +393,11 @@ class TemporalRunState:
             "manifest": detached(self.manifest),
             "release_digest": self.release_digest,
             "budget": self.budget,
+            **(
+                {"context_stages": detached(list(self.managed_context_stages.values()))}
+                if "managed_context" in self.manifest
+                else {}
+            ),
             "workflow": {
                 "backend": "temporal",
                 "node": self.node,
@@ -468,7 +489,13 @@ class TemporalRunState:
             self.state, self.error = "failed", {"code": "decision_limit"}
             self._emit("run_failed", self.error)
             return None
-        if (
+        if "managed_context" in self.manifest:
+            from .temporal_managed_context import next_stage
+
+            operation = next_stage(self)
+            if operation is not None or self.state in TERMINAL:
+                return operation
+        if ("managed_context" not in self.manifest) and (
             self.manifest.get("knowledge_context") is not None
             or self.manifest.get("context_registration") is not None
         ):
@@ -512,6 +539,11 @@ class TemporalRunState:
             or self.manifest.get("context_registration") is not None
         ):
             request.update(context=detached(self.context_snapshot), scope=self.scope)
+        if self.manifest.get("managed_context", {}).get("dispatch_admission") == "history-1":
+            request.update(
+                run_id=self.run_id, action_id=action["id"], release_digest=self.release_digest
+            )
+            action["dispatch_request_digest"] = digest(request)
         return action, request
 
     def accept_context(self, action_id, response):
@@ -536,6 +568,16 @@ class TemporalRunState:
         self._emit(
             "context_snapshot_recorded", {"action_id": action_id, "digest": digest(response)}
         )
+
+    def accept_managed_context(self, action_id, response):
+        from .temporal_managed_context import accept_stage
+
+        accept_stage(self, action_id, response)
+
+    def admit_context_dispatch(self, payload):
+        from .temporal_managed_context import admit_history
+
+        return admit_history(self, payload)
 
     def operation_unknown(self, action_id, code):
         action = next(a for a in self.actions if a["id"] == action_id)

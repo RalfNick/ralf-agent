@@ -10,7 +10,17 @@ from .types import canonical
 
 
 def context_registration(builder):
+    from .managed_context import ManagedContextPipeline
     from .temporal_activities import component_identity
+    from .types import digest
+
+    if isinstance(builder, ManagedContextPipeline):
+        policy = builder.identity
+        return {
+            "identity": component_identity(builder, ("assemble",), synchronous=True),
+            "implementation_digest": digest(policy["implementation"]),
+            "request_validator": policy["implementation"]["validate_request"],
+        }
 
     result = {
         "identity": component_identity(builder, ("assemble",), synchronous=True),

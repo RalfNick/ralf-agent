@@ -1,3 +1,4 @@
+import asyncio
 import copy
 import importlib
 
@@ -95,17 +96,17 @@ def test_pipeline_admission_pins_provider_and_enables_semantic8(tmp_path):
         assert local.store.conn.execute("SELECT value FROM metadata").fetchone()[0] == "8"
 
 
-def test_advanced_pipeline_is_refused_before_admission(tmp_path):
+def test_advanced_pipeline_activates_composite_schema(tmp_path):
     from ralf_agent import GraphNode, GraphWorkflowSpec
 
     with engine(tmp_path / "run.sqlite", context_assembler=pipeline()) as local:
-        with pytest.raises(ValidationError):
-            local.submit(
-                GraphWorkflowSpec("g", [GraphNode("a", agent=AgentSpec("a", "Answer"))]),
-                "q",
-                command_id="s",
-            )
-        assert local.store.conn.execute("SELECT value FROM metadata").fetchone()[0] == "1"
+        h = local.submit(
+            GraphWorkflowSpec("g", [GraphNode("a", agent=AgentSpec("a", "Answer"))]),
+            "q",
+            command_id="s",
+        )
+        assert local.store.conn.execute("SELECT value FROM metadata").fetchone()[0] == "11"
+        assert asyncio.run(local.drive(h.run_id)).state == "succeeded"
 
 
 def test_existing_context_binding_selects_pipeline_per_agent(tmp_path):
@@ -146,14 +147,15 @@ def test_pipeline_rejects_lazy_preparation_override():
 
 
 @pytest.mark.parametrize("mode", ["excerpt", "model"])
-def test_temporal_refuses_managed_automatic_context_at_registration(mode):
+def test_temporal_managed_context_is_explicitly_versioned(mode):
     from ralf_agent import ManagedContextPipeline, ToolRegistry
     from ralf_agent.temporal_activities import TemporalRuntime
     from tests.helpers import ScriptedProvider
 
-    with pytest.raises(ValidationError):
-        TemporalRuntime(
-            providers={"default": ScriptedProvider([])},
-            tools=ToolRegistry(),
-            context_builder=ManagedContextPipeline(mode=mode),
-        )
+    runtime = TemporalRuntime(
+        providers={"default": ScriptedProvider([])},
+        tools=ToolRegistry(),
+        context_builder=ManagedContextPipeline(mode=mode),
+    )
+    assert runtime.manifest["kernel"] == "temporal-2"
+    assert runtime.manifest["managed_context"]["policy"]["mode"] == mode

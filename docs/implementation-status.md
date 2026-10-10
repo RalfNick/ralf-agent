@@ -1,4 +1,4 @@
-# Implementation status — 0.1.0.dev43
+# Implementation status — 0.1.0.dev44
 
 Target architecture update: [AgentHarness](../architecture/viewpoints/harness-runtime.md)
 defines broad Harness/Core roles, per-Agent bindings, Agent/Session facade, managed
@@ -29,7 +29,7 @@ dev31 delivers [H2a Local stateless Agent API](agent-api.md): immutable AgentHar
 Runtime-owned Local drive tasks, Agent/AgentRun/RunRef, observation-only wait,
 nested control ownership/waking and retryable drain/cancel closing. Full H1/H2
 are not complete; remote Sessions, Temporal bindings and automatic
-managed stages remain partial. SDK is dev43. The [Facade/Session target contract](../architecture/specs/agent-facade-session-contract.md)
+managed stages remain partial. SDK is dev44. The [Facade/Session target contract](../architecture/specs/agent-facade-session-contract.md)
 now specifies observation-only waiting, durable busy refusal, Session binding revisions,
 and ownership-aware closing. H2a implements the declared Local stateless subset;
 remaining shared routing and backend requirements are not changes to legacy
@@ -196,3 +196,9 @@ dev42 adds H3a2 [automatic model-selected memory](managed-model-memory-stages.md
 ## dev43 H3 recommended data context
 
 Versioned Local Basic / Local Knowledge / Managed Memory Profiles now compose the existing ports. Opt-in ManagedDataContext adds deterministic Session/knowledge/fact excerpts, existing managed history summaries, and artifact-backed large tool context projections with original-Run intent/read-back/receipt recovery. Default SQLite artifact factories are owned; SDK targets are borrowed; registry sync/async replacements are supported. Native Local Agents/sequences only, semantic Schema10; original default releases and schemas1–9 remain supported. Raw execution evidence is retained. Semantic reference summaries, remote artifact adapters/GC, advanced/Temporal automatic stages, final-config model quality and full H3 acceptance remain open. See [guide](recommended-harness.md).
+
+## dev44 H3 composite and Temporal managed context
+
+[Local advanced and Temporal context](composite-temporal-context.md) reuse the original pure policies, provider/artifact ports and execution authorities. Local graph/parallel/Team/dynamic/nested actual Agent decisions now support compression/offload; node frame journals and scoped summary reservations remain in the original Run. Optional semantic Schema11 rejects older readers. Temporal explicitly registers temporal-2 and separates pure plan, artifact read/write/verification, single-attempt summary response and final snapshot in History; source validation follows artifact awaits before model disclosure. Original temporal-1/default releases remain. Unknown summaries hold credits and remote uncertainty; late receipts settle after cancellation. Native/advanced real Worker kill/restart and parent/child History replay are tested. Automatic memory writes remain Local native/sequence only; Temporal per-Agent binding/shared Sessions, semantic reference quality, remote artifact defaults/GC, payload/storage governance and full H3 remain open.
+
+Original History atomically admits managed external dispatch after preparatory reads; accepted cancellation blocks unadmitted calls. Previously granted operations retain late evidence. Unknown artifact execution remains nonquiescent after a receipt or successful later tool, holding the parent's child allowance. Knowledge adapters use the public references/validation contract; missing parallel execution frames fail against surviving original Action evidence.

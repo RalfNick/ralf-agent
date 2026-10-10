@@ -24,7 +24,7 @@ RALF 的目标是通用 Agent 框架：个人开发者用默认组件完成单 A
 每Agent绑定、统一Agent/Session入口、受管理默认链路、Workspace/Sandbox与Service按H1–H5推进，
 具体首期输入、作用域、版本和兼容规则见[绑定契约](../specs/agent-capability-binding-contract.md)。
 [Facade/Session契约](../specs/agent-facade-session-contract.md)补齐H2前置行为：Runtime独立托管执行、wait仅观察、首期耐久busy拒绝、绑定CAS修订及owned/borrowed关闭。队列是后续独立能力；远程客户端关闭不关闭Workers。命名与本地AgentScope源码取舍见[修订记录](../reviews/2026-10-08-agent-harness-facade.md)。
-dev25交付H1a，dev26交付[Local H1b绑定](../../docs/agent-bindings.md)，同一六类选择与Profile v2覆盖原生Agent/顺序/图/Team/动态DAG/嵌套成员；dev27交付Local Session后端/namespace/实际地址占用；dev31 增加 Local stateless Agent/Runtime、独立托管与观察／关闭子集；dev32 增加[同库原生／顺序 Session H2b1](../../docs/session-api.md)。dev33 增加[Temporal 原生入口 H2c1](../../docs/temporal-agent-api.md)。dev34 接通已注册高级 Temporal 入口。dev35–39 已交付同库／远程复合会话；dev40–43 增加 Local 原生／顺序自动记忆、历史摘要及推荐数据上下文。Temporal绑定、其他角色资源选择、环境角色及完整H2/H3仍待实现。原有数据角色、计划、授权和恢复契约继续有效。
+dev25交付H1a，dev26交付[Local H1b绑定](../../docs/agent-bindings.md)，同一六类选择与Profile v2覆盖原生Agent/顺序/图/Team/动态DAG/嵌套成员；dev27交付Local Session后端/namespace/实际地址占用；dev31 增加 Local stateless Agent/Runtime、独立托管与观察／关闭子集；dev32 增加[同库原生／顺序 Session H2b1](../../docs/session-api.md)。dev33 增加[Temporal 原生入口 H2c1](../../docs/temporal-agent-api.md)。dev34 接通已注册高级 Temporal 入口。dev35–39 已交付同库／远程复合会话；dev40–43 增加 Local 原生／顺序自动记忆、历史摘要及推荐数据上下文。dev44扩展高级Local及Temporal自动历史压缩与产物卸载（原执行权威分阶段证据）。Temporal绑定、其他角色资源选择、环境角色、高级自动记忆写阶段及完整H2/H3仍待实现。原有数据角色、计划、授权和恢复契约继续有效。
 
 ## 2. 分层及公共边界
 

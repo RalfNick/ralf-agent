@@ -9,8 +9,8 @@ dev43 提供三个版本为 `1` 的起步 Profile，复用现有 Agent／Runtime
 | `managed-memory` | Basic 加 allowlist 最终结果提炼，写入指定 Agent 的 Facts namespace | 业务字段、保留策略及事实正确性验证 |
 
 默认模型为 **offline-echo**，只验证装配与恢复。不会自动读取模型密钥、下载模型或访问网络。
-组合目前用于 **Local 原生 Agent／顺序 Workflow**；图、Team、动态／嵌套及 Temporal 拒绝这套自动阶段。
-其他执行能力继续使用已有 Profile。H3 尚未整体验收完成。
+dev44 将 **Local Basic／Local Knowledge 的数据上下文**扩展到串行／并行图、Team、动态 Plan/DAG 和嵌套成员。`managed-memory` 的自动长期记忆写入仍限原生 Agent／顺序 Workflow，不能作为高级编排默认组合。
+Temporal 显式装配同一个纯策略，按原 History 协议运行；不直接使用 Local Profile 工厂，也不增加每 Agent Temporal 绑定。H3 尚未整体验收完成。见[高级编排与 Temporal 指南](composite-temporal-context.md)。
 
 ```python
 import asyncio
@@ -74,6 +74,6 @@ SDK 注入的 ArtifactStore 是 **borrowed**，调用方负责关闭；Profile �
 尚未派发且后端明确不存在时才写入。已保存的模型响应可直接采纳，恢复不依赖产物仍然在线。
 取消或终态恢复不会新增产物写入，离线证据可通过 `context_artifacts()` 查询。
 
-该能力 opt-in 开启语义 Schema **10**；dev42 及以前代码拒绝该库。普通默认仍为原 Schema，
+该能力 opt-in 开启语义 Schema **10**；dev42 及以前代码拒绝该库。高级 Local 编排首次准入启用 Schema **11**，dev43 拒绝该库。普通默认仍为原 Schema，
 旧 Schema 1–9 可读取／恢复；退回旧代码需保留旧库或做显式迁移，不可编辑版本号绕过检查。
 当前无自动 GC、S3／对象存储适配、后台保留任务或统一 Artifact 能力选择角色。

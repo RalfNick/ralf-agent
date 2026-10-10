@@ -15,6 +15,8 @@ from .types import digest
 def admit(engine, manifest):
     from .binding_manifests import all_step_manifests
 
+    for member in manifest.get("orchestration", {}).get("members", {}).values():
+        admit(engine, member)
     for step in all_step_manifests(manifest):
         policy = step.get("managed_context", {}).get("policy", {})
         if policy.get("kind") != "managed-data-context":

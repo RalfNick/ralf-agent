@@ -128,11 +128,14 @@ class TemporalEngine:
 
     @property
     def capabilities(self):
+        from .temporal_managed_context import capabilities
+
         extended = "orchestration" in self._release
         return {
             **temporal_capabilities(),
             **{name: extended for name in ("graph", "team", "dag", "nesting")},
             "rag": "knowledge_context" in self._release,
+            **capabilities(self._release),
         }
 
     @property
@@ -219,6 +222,9 @@ class TemporalEngine:
         # Registry acceptance is deliberately not returned as a Run receipt.
 
     async def submit(self, spec, input, *, command_id, budget=32, session_id=None):
+        from .temporal_managed_context import check_scope
+
+        check_scope(self._release, asdict(self.scope))
         if session_id is not None:
             raise ValidationError("Temporal shared sessions are not supported")
         from .orchestration_types import DynamicWorkflowSpec, TeamSpec
@@ -297,6 +303,14 @@ class TemporalEngine:
             value["budget"],
             value["workflow"],
         )
+
+    async def context_stages(self, run_id):
+        """Read this Run's original History evidence; no Activity or child traversal."""
+        return await self._view(run_id, "context_stages")
+
+    async def context_artifacts(self, run_id):
+        """Read artifact dispatch/receipt proofs without accessing storage."""
+        return await self._view(run_id, "context_artifacts")
 
     async def _command(self, run_id, kind, command_id, **values):
         text(command_id, "Command ID")
@@ -409,7 +423,8 @@ def build_temporal_worker(client, *, task_queue, runtime, release=None, **worker
         client,
         task_queue=task_queue,
         workflows=[TemporalRunWorkflow, TemporalCommandRegistryWorkflow, TemporalParentWorkflow],
-        activities=registered_activities(runtime) + registered_parent_activities(runtime, client),
+        activities=registered_activities(runtime, client)
+        + registered_parent_activities(runtime, client),
         **worker_options,
     )
 

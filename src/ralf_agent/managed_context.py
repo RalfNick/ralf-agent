@@ -262,8 +262,18 @@ def admit_context(engine, manifest, kind, parent_call=None):
         return
     from .ports import _invoke_sync_none, is_sync_callable
 
+    if kind not in {"agent", "sequence", "graph", "team", "dynamic"}:
+        raise ValidationError("Unsupported managed context definition")
     if kind not in {"agent", "sequence"} or parent_call is not None:
-        raise ValidationError("Managed context currently supports native Agents and sequences")
+        if (
+            type(getattr(engine.store, "composite_context_stage_version", None)) is not int
+            or engine.store.composite_context_stage_version != 1
+        ):
+            raise ValidationError("Composite context requires its atomic Store extension")
+        _invoke_sync_none(
+            getattr(engine.store, "prepare_composite_context_stages", None),
+            "Composite context activation",
+        )
     if (
         type(getattr(engine.store, "context_stage_version", None)) is not int
         or engine.store.context_stage_version != 1

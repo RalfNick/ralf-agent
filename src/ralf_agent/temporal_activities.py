@@ -147,12 +147,6 @@ class TemporalRuntime:
         if harness is not None and type(harness) is not NativeHarness:
             raise ValidationError("Temporal currently supports only the native harness")
         if context_builder is not None:
-            from .managed_context import ManagedContextPipeline
-
-            if isinstance(context_builder, ManagedContextPipeline):
-                raise ValidationError(
-                    "Temporal managed automatic context preparation is not supported"
-                )
             from .temporal_context import context_registration
 
             try:
@@ -253,11 +247,18 @@ class TemporalRuntime:
             result["context_registration"] = context_registration(self.context)
         if self.execution_policy is not None:
             result["execution_policy"] = self.execution_policy.identity
+        from .temporal_managed_context import registration
+
+        managed = registration(self)
+        if managed is not None:
+            result.update(kernel="temporal-2", managed_context=managed)
         return result
 
     @property
     def capabilities(self):
-        return temporal_capabilities()
+        from .temporal_managed_context import capabilities
+
+        return {**temporal_capabilities(), **capabilities(self._manifest)}
 
     @property
     def manifest(self):
@@ -312,15 +313,19 @@ class TemporalRuntime:
             raise DefinitionMismatch("Worker registration differs from this Run's pinned release")
         return self.manifest
 
-    async def complete_model(self, request: dict) -> dict:
+    async def complete_model(self, request: dict, *, dispatch_guard=None) -> dict:
         dispatched = False
         received = None
         try:
             self.validate_release(request["runtime_manifest"])
             step = AgentSpec(**request["step"])
             provider = self.providers[step.provider]
+            complete = provider.complete
             if self.knowledge is not None or "context_registration" in self._manifest:
                 evidence = request["context"]
+                from .temporal_managed_context import validate_snapshot
+
+                await validate_snapshot(self, request)
                 if self.knowledge is not None:
                     _completed_none(
                         await self.knowledge.validate(
@@ -352,8 +357,27 @@ class TemporalRuntime:
 
             validate_prepared(self.context, frozen.messages, step.max_context_chars)
             self.validate_release(request["runtime_manifest"])
+            if "managed_context" in self._manifest and (
+                self.providers.get(step.provider) is not provider or provider.complete != complete
+            ):
+                raise DefinitionMismatch("Executing business provider changed before dispatch")
+            from .temporal_managed_context import admit_dispatch
+
+            await admit_dispatch(request, dispatch_guard)
+            if "managed_context" in self._manifest and self.knowledge is not None:
+                _completed_none(
+                    await self.knowledge.validate(
+                        Scope(**request["scope"]), detached(evidence["references"])
+                    ),
+                    "Knowledge validation",
+                )
+            self.validate_release(request["runtime_manifest"])
+            if "managed_context" in self._manifest and (
+                self.providers.get(step.provider) is not provider or provider.complete != complete
+            ):
+                raise DefinitionMismatch("Executing business provider changed during admission")
             dispatched = True
-            response = await provider.complete(frozen.messages, frozen.tools)
+            response = await complete(frozen.messages, frozen.tools)
             if not isinstance(response, ModelResponse):
                 _close_lazy(response)
                 raise ValidationError("ModelProvider.complete must return ModelResponse")
@@ -361,6 +385,10 @@ class TemporalRuntime:
             validate_received_response(received)
             usage = validate_model_usage(received["usage"])
             self.validate_release(request["runtime_manifest"])
+            if "managed_context" in self._manifest and (
+                self.providers.get(step.provider) is not provider or provider.complete != complete
+            ):
+                raise DefinitionMismatch("Executing business provider changed")
             proposal = self.harness.propose(step, response)
             if not isinstance(proposal, DecisionProposal):
                 _close_lazy(proposal)
@@ -444,6 +472,11 @@ class TemporalRuntime:
             return result
         except Exception as exc:
             return {"ok": False, "code": _code(exc, "context_failed")}
+
+    async def manage_context(self, request, *, dispatch_guard=None):
+        from .temporal_managed_context import execute
+
+        return await execute(self, request, dispatch_guard=dispatch_guard)
 
     def _envelope(self, request):
         self.validate_release(request["runtime_manifest"])
@@ -571,17 +604,33 @@ class TemporalRuntime:
             return {"ok": False, "code": _code(exc, "effect_journal_error")}
 
 
-def registered_activities(runtime):
+def registered_activities(runtime, client=None):
     """Register only these four fixed names, with explicit captured dependencies."""
     try:
         from temporalio import activity
     except ImportError as exc:
         raise ValidationError("Temporal workers require the optional temporal dependency") from exc
     runtime.validate_release()
+    from .temporal_managed_context import ADMISSION_UPDATE
+
+    async def dispatch_guard(request):
+        if client is None:
+            raise ValidationError("Managed worker requires its original Temporal client")
+        return await client.get_workflow_handle(request["run_id"]).execute_update(
+            ADMISSION_UPDATE,
+            {
+                "scope": request["scope"],
+                "action_id": request["action_id"],
+                "release_digest": request["release_digest"],
+                "phase": request.get("phase", "model"),
+                "request_digest": digest(request),
+            },
+            id="ralf-context-dispatch:" + request["action_id"],
+        )
 
     @activity.defn(name=MODEL_ACTIVITY)
     async def model(request: dict) -> dict:
-        return await runtime.complete_model(request)
+        return await runtime.complete_model(request, dispatch_guard=dispatch_guard)
 
     @activity.defn(name=TOOL_ACTIVITY)
     async def tool(request: dict) -> dict:
@@ -595,4 +644,10 @@ def registered_activities(runtime):
     async def evidence(request: dict) -> dict:
         return await runtime.acknowledge_evidence(request)
 
-    return [model, tool, reconcile, evidence]
+    from .temporal_managed_context import ACTIVITY
+
+    @activity.defn(name=ACTIVITY)
+    async def managed_context(request: dict) -> dict:
+        return await runtime.manage_context(request, dispatch_guard=dispatch_guard)
+
+    return [model, tool, reconcile, evidence, managed_context]
