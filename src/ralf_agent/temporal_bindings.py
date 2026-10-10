@@ -20,6 +20,7 @@ ROLES = frozenset(
         "limits",
         "verifier",
         "decision_policy",
+        "session",
     }
 )
 
@@ -65,14 +66,14 @@ def validate_descriptor(manifest, descriptor, scope=None):
         choice = getattr(descriptor, role)
         if choice.mode == "inherit":
             continue
-        if role not in ROLES or (choice.selector and role not in {"facts", "knowledge"}):
+        if role not in ROLES or (choice.selector and role not in {"facts", "knowledge", "session"}):
             raise ValidationError("Unsupported Temporal binding role or resource selector")
         if choice.mode == "ref":
             record = records.get(key(role, choice))
             if record is None or record["role"] != role:
                 raise DefinitionMismatch("Original Temporal binding version unavailable")
             configuration = record["configuration"]
-            if role in {"facts", "knowledge"}:
+            if role in {"facts", "knowledge", "session"}:
                 identity = (
                     configuration["facts_context"]["identity"]
                     if role == "facts"
@@ -112,6 +113,13 @@ def validate_bindings(request, manifest, scope=None):
         raise DefinitionMismatch("Per-Agent bindings require temporal-3")
     for descriptor in selections.values():
         validate_descriptor(manifest, descriptor, scope)
+    if selected_session_data(request, manifest) and (
+        request["definition"]["kind"] not in {"agent", "sequence"}
+        or any(k in request for k in ("session_history", "session_turn", "session_observer"))
+    ):
+        raise ValidationError(
+            "Temporal external Session writes/member addresses are not implemented"
+        )
     memory = manifest.get("managed_memory")
     if memory is not None and scope is not None and memory["policy"]["scope"] != scope:
         raise AuthorizationDenied("Temporal memory belongs to another Scope")
@@ -182,6 +190,11 @@ def catalog_registration(runtime):
                 from .temporal_knowledge import KnowledgeRegistration
 
                 extra["knowledge_registration"] = KnowledgeRegistration(original).identity
+        elif role == "session":
+            from .temporal_session_data import registration
+
+            original = catalog._entries[(role, component_id, version)][0]
+            extra["session_data"] = registration(original, runtime.session_query)
         elif role == "facts":
             from .temporal_facts import registration
 
@@ -211,7 +224,15 @@ def catalog_registration(runtime):
 def effective_manifest(manifest, descriptor):
     choices = validate_descriptor(manifest, descriptor)
     result = detached(manifest)
-    for role in ("context", "knowledge", "stage_policy", "facts", "verifier", "decision_policy"):
+    for role in (
+        "context",
+        "knowledge",
+        "stage_policy",
+        "facts",
+        "verifier",
+        "decision_policy",
+        "session",
+    ):
         selection = getattr(choices, role)
         if selection.mode == "inherit":
             continue
@@ -222,6 +243,7 @@ def effective_manifest(manifest, descriptor):
             "facts": ("facts_context",),
             "verifier": ("completion_verifier",),
             "decision_policy": ("harness", "decision_registration"),
+            "session": ("session_data",),
         }[role]
         for field in fields:
             result.pop(field, None)
@@ -234,6 +256,10 @@ def effective_manifest(manifest, descriptor):
             ):
                 configuration["knowledge_context"]["namespace"] = selection.selector.get(
                     "namespace", record["identity"]["default_namespace"]
+                )
+            if role == "session":
+                configuration["session_data"]["namespace"] = selection.selector.get(
+                    "namespace", configuration["session_data"]["identity"]["default_namespace"]
                 )
             result.update(configuration)
     return result
@@ -271,6 +297,7 @@ def selected_runtime(runtime, request):
         ("facts", "facts"),
         ("verifier", "verifier"),
         ("decision_policy", "harness"),
+        ("session", "session_store"),
     ):
         selection = getattr(choices, role)
         if selection.mode == "ref":
@@ -330,4 +357,37 @@ def capabilities(manifest):
         "agent_limits": manifest.get("limits_protocol") == 1,
         "completion_verification": manifest.get("completion_protocol") == 1,
         "custom_harness": manifest.get("decision_protocol") == 1,
+        "session_data_reads": manifest.get("session_data_protocol") == 1,
+        "external_session_store": False,
     }
+
+
+def selected_session_data(request, manifest):
+    from .binding_paths import agent_paths
+
+    values = [
+        value
+        for path in agent_paths(request["definition"])
+        if (
+            value := effective_manifest(
+                manifest,
+                request.get("agent_bindings", {}).get(path, AgentBindingDescriptor().to_dict()),
+            ).get("session_data")
+        )
+        is not None
+    ]
+
+    # Model planners are managed child Agents and inherit host capabilities.
+    # They are absent from the public member binding paths.
+    def visit(definition):
+        if definition.get("kind") == "dynamic":
+            planner = (
+                manifest.get("orchestration", {}).get("planners", {}).get(definition["planner"], {})
+            )
+            if planner.get("agent") is not None and manifest.get("session_data") is not None:
+                values.append(manifest["session_data"])
+        for member in definition.get("members", {}).values():
+            visit(member)
+
+    visit(request["definition"])
+    return values

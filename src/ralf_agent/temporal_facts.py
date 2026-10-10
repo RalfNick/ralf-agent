@@ -3,36 +3,13 @@
 from dataclasses import asdict, replace
 
 from .binding_data import FactsBindingResource, FactsView, facts_identity
+from .data_resources import remote_physical as _physical
 from .errors import DefinitionMismatch, ValidationError
 from .fact_index_ports import _FixedPorts
 from .memory import memory_call
 from .recall import LegacyMemoryRecallAdapter, MemoryRecallPolicy, RecallPage, _fact_records
 from .temporal_state import detached
 from .types import Scope, canonical, digest
-
-
-def _physical(backend):
-    from .postgres import PostgresMemory
-    from .redis_memory import RedisMemory
-
-    if isinstance(backend, RedisMemory):
-        pool = backend._client.connection_pool
-        settings = pool.connection_kwargs
-        return {
-            "kind": "redis",
-            "prefix": backend._prefix,
-            "address": {k: settings[k] for k in ("host", "port", "db", "path") if k in settings},
-            "connection_class": pool.connection_class.__module__
-            + "."
-            + pool.connection_class.__qualname__,
-        }
-    if isinstance(backend, PostgresMemory):
-        info = backend.connection.info
-        return {
-            "kind": "postgres",
-            "address": {k: getattr(info, k) for k in ("host", "port", "dbname")},
-        }
-    return {}
 
 
 def registration(facts):

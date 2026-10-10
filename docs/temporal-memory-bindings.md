@@ -98,3 +98,6 @@ History 在推进下一步／确认业务完成前，分别记录来源、规则
 确定性测试使用真实 JSON 编码／解码，验证固定来源、额度、取消、目标漂移、无效响应及终态只读恢复。实际 localhost Temporal Service 使用独立 Worker 进程和 SQLite 审计，覆盖选择响应后／CAS 后退出、根子恢复、读取取消与父子 History replay；最终统计见[验收记录](../architecture/reviews/2026-10-10-temporal-memory-bindings.md)。没有调用真实模型，也没有重测远程数据库部署。
 
 当前补充：dev58 Facts与dev59 Knowledge namespace、dev60 History Session已接通，见各专项指南。剩余：Temporal 其他绑定角色／外置 Session 数据、语义质量与冲突修订／撤回／遗忘、真实模型质量、远程产物默认组合、History payload 卸载／Continue-As-New、长期容量和保留治理。完整 H1／H3／M1 仍未验收。
+
+
+dev65 的 session role 只提供原生／顺序 stateless 固定有界读，详见[指南](temporal-session-data-reads.md)；不把读取 SPI 当作完整持久 Session。

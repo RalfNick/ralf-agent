@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.0.dev65 — Temporal fixed Session data reads
+
+- Add opt-in host/per-Agent scoped Session read registrations, bounded original Context evidence and managed Context forwarding for stateless native/sequence Runs.
+- Pin original bridge methods, actual clients and PostgreSQL initialized table schema routing; include nested managed model planners in unsupported-combination preflight.
+- Keep History Conversation separate. External Session writes, persistent SessionKey routing and advanced member addressing remain open; selected unsupported combinations refuse before admission.
+- Document recovery, real-service and installed-package evidence separately; no live model quality claim.
+
 ## 0.1.0.dev64 — Default exact Session receipts
 
 - Add synchronous memory/SQLite message receipt inspection and the async thread-safe bridge, preserving exact Scope/address/ID, original revision and detached JSON.

@@ -55,10 +55,12 @@ async def scan_facts(source, scope, namespace, query):
         ) as cursor:
             cursor.itersize = 1
             await cursor.execute(
-                "SELECT position,substr(convert_to(key,'UTF8'),1,%s),"
-                "substr(convert_to(value,'UTF8'),1,%s),version,expires_at "
-                "FROM ralf_memory_facts WHERE workspace=%s AND principal=%s "
-                "AND namespace=%s AND position>%s ORDER BY position LIMIT %s",
+                source._statement(
+                    "SELECT position,substr(convert_to(key,'UTF8'),1,%s),"
+                    "substr(convert_to(value,'UTF8'),1,%s),version,expires_at "
+                    "FROM ralf_memory_facts WHERE workspace=%s AND principal=%s "
+                    "AND namespace=%s AND position>%s ORDER BY position LIMIT %s",
+                ),
                 (query.max_bytes + 1, query.max_bytes + 1, *prefix, after, query.limit + 1),
             )
 

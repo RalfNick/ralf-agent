@@ -1,4 +1,7 @@
-# Implementation status — 0.1.0.dev64
+# Implementation status — 0.1.0.dev65
+
+dev65 adds opt-in [Temporal scoped Session data reads](temporal-session-data-reads.md): stateless native/sequence host/per-Agent selectors, fixed original resources and bounded Context evidence accepted by original History. Ordinary/managed Context preserve the original snapshot after data changes and Worker restart. PostgreSQL initialize pins actual table schema routing; bridge source methods and nested model Planner preflight are checked.
+No external answer saving or cross-Run Conversation is delivered. Selected external data with History Sessions or advanced parents refuses before admission. Full SessionKey/write/completion gates, H1/H2/H3/M1 and R01–R26 remain open. Final3642 passed/204 configured skips, installed140 + separate39 overlapping contracts, actual installed7 plus final source/wheel Temporal4 each, 217 identical modules, core-only/guide and actual64↔65 compatibility pass. See [dev65 evidence](../architecture/reviews/2026-10-11-temporal-session-data-reads.md).
 
 dev64 adds [default exact Session receipts](session-receipts.md): memory/SQLite sync inspection,
 thread-safe sync bridge validation and Local independent data recovery. SQLite uses its

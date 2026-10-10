@@ -9,6 +9,7 @@ callers must not independently use that connection during an adapter operation.
 import asyncio
 import inspect
 import json
+import re
 import time
 import weakref
 from contextlib import asynccontextmanager
@@ -139,6 +140,20 @@ class _PostgresAdapter:
         self._lock = lock
         self._owns_connection = owns_connection
         self._closed = False
+        self._table_schemas = {}
+
+    def _statement(self, statement):
+        """Use the tables resolved during initialize, independent of search_path."""
+        if not self._table_schemas:
+            return statement
+        from psycopg import sql
+
+        pattern = r"\b(" + "|".join(self._table_schemas) + r")\b"
+        parts = re.split(pattern, statement)
+        return sql.Composed(
+            sql.Identifier(self._table_schemas[part], part) if index % 2 else sql.SQL(part)
+            for index, part in enumerate(parts)
+        )
 
     @asynccontextmanager
     async def _transaction(self, key=None):
@@ -163,6 +178,7 @@ class _PostgresAdapter:
     async def _execute(self, statement, parameters=(), *, fetch=None, many=False):
         from psycopg.rows import tuple_row
 
+        statement = self._statement(statement)
         async with self.connection.cursor(row_factory=tuple_row) as cursor:
             if many:
                 await cursor.executemany(statement, parameters)
@@ -174,10 +190,23 @@ class _PostgresAdapter:
                 return await cursor.fetchall()
             return None
 
-    async def _initialize(self, schema):
+    async def _initialize(self, schema, *, tables=()):
         async with self._transaction(("schema",)):
             for statement in schema:
                 await self._execute(statement)
+            if tables and not self._table_schemas:
+                routing = {}
+                for table in tables:
+                    row = await self._execute(
+                        "SELECT n.nspname FROM pg_class c JOIN pg_namespace n "
+                        "ON n.oid=c.relnamespace WHERE c.oid=to_regclass(%s)",
+                        (table,),
+                        fetch="one",
+                    )
+                    if row is None:
+                        raise MemoryBackendError("PostgreSQL data table unavailable")
+                    routing[table] = row[0]
+                self._table_schemas = routing
 
     async def aclose(self):
         async with self._lock:
@@ -250,7 +279,16 @@ class PostgresMemory(_PostgresAdapter):
     async def initialize(self):
         from .postgres_fact_scan import SCAN_SCHEMA
 
-        await self._initialize([*_MEMORY_SCHEMA, SCAN_SCHEMA])
+        await self._initialize(
+            [*_MEMORY_SCHEMA, SCAN_SCHEMA],
+            tables=(
+                "ralf_memory_sessions",
+                "ralf_memory_messages",
+                "ralf_memory_facts",
+                "ralf_memory_fact_generations",
+                "ralf_memory_fact_scan_epochs",
+            ),
+        )
 
     fact_scan_version = 1
 

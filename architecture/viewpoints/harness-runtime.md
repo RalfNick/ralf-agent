@@ -1,15 +1,15 @@
 # RALF AgentHarness 目标架构
 
-当前 dev59：Temporal 已交付六类绑定及 Facts/Knowledge 宿主 namespace 视图，来源读链路沿原 Context History 采纳。
-后文 dev46 等版本记录为各批次历史范围；最新子集见文末 dev58/dev59 和[实现清单](../../docs/implementation-status.md)。
-共享 Session、其余角色、H4/H5 与真实质量仍未完成。
+当前 dev65：Temporal 九类绑定支持原生及高级组合；session 增加 stateless 原生／顺序的有界读子集。
+History Sessions 已交付，外置持久会话写／路由、环境角色、H4/H5 与真实质量仍待验收。
+后文早期记录为历史范围；最新支持与拒绝见[实现清单](../../docs/implementation-status.md)及文末增量。
 
 
 
 Dev46 已增加[Temporal 自动记忆与五类 Agent 绑定](../../docs/temporal-memory-bindings.md)：显式 temporal-3、原声明子树、History 选择响应／CAS／核验与父子证据恢复；旧发布保持。其他 Temporal 绑定角色／资源 selector、共享 Session、语义质量与完整 H1/H3 仍待验收。
 
 版本：1.10；日期：2026-10-11；维护者：RALF maintainers。
-状态：根据用户认可的理想架构形成的目标设计；当前实现基线为0.1.0.dev63（基于已提交 dev62/cb370f9）；dev43 的历史入口基线为（H1a–H1f、Local stateless H2a、同库原生／顺序 H2b1／复合 Session H2b2／授权根 namespace H2b3／远程原生顺序 H2b4a／复合根 H2b4b、Temporal 原生入口 H2c1／高级编排入口 H2c2）。
+状态：根据用户认可的理想架构形成的目标设计；当前实现基线为0.1.0.dev65（基于已提交 dev64/1b02e72）；dev43 的历史入口基线为（H1a–H1f、Local stateless H2a、同库原生／顺序 H2b1／复合 Session H2b2／授权根 namespace H2b3／远程原生顺序 H2b4a／复合根 H2b4b、Temporal 原生入口 H2c1／高级编排入口 H2c2）。
 读者：框架维护者、Agent应用开发者、适配器作者与企业部署团队。
 除明确标为 H1a–H1f、dev31 Local stateless H2a 、dev32 同库原生／顺序 Session H2b1 与 dev33 Temporal 原生／顺序入口 H2c1 、dev34 高级编排入口 H2c2 与 dev35 同库复合会话 H2b2、dev36 授权根 namespace H2b3 与 dev38 远程原生／顺序 H2b4a 与 dev39 远程复合根 H2b4b 的子集外，本文中的接口和示例仍为目标设计。AgentHarness 当前固定声明并复用 Local 权威，dev40–42 已实现原生／顺序 Local 的规则记忆、受管理历史摘要和模型选择记忆；dev43 增加版本化 Local 推荐组合、确定性引用压缩和产物投影；dev44 已接通 Local 高级编排与 Temporal 自动历史压缩／大结果卸载，分别保留原 Run 节点投影与 History 阶段证据。dev46 已接通 Temporal 自动记忆与五类绑定；dev47 增加显式语义知识、相关候选排序及 Plan／Team 推荐组合，语义引用质量及完整 H3 仍待验收。
 [绑定使用教程](../../docs/agent-bindings.md)与 [Local Agent API](../../docs/agent-api.md)记录实际支持与拒绝；dev32 同库原生／顺序 Session/Turn 子集已交付；dev33 Temporal 原生／顺序入口已交付；dev34 已注册高级入口已交付；dev35同库复合会话与dev36授权根namespace已交付；dev38–39 远程原生／顺序及复合根会话已交付；dev46 已交付 Temporal 五类绑定子集；其余角色／共享 Session 与完整 H2 尚未交付。
@@ -452,3 +452,9 @@ DecisionPolicy 复用公共纯 Harness prepare/propose。固定 host/ref/inherit
 ### dev64 默认 Session 数据核验前置
 
 内存/SQLite 增加精确 scoped message receipt，同步与异步端口共用结果契约；Local 独立数据复用原保存恢复，同库默认保持。完整 Temporal 外置数据责任见[目标规格](../specs/temporal-session-data-contract.md)，原 Run/Parent 承担数据完成门禁，Session Coordinator 保留占用/静默责任。规格与 SPI 不构成 Temporal 第十类绑定或完整 H1/H2/H3 交付。
+
+
+### dev65 Temporal 固定 Session 数据读（依赖子集）
+
+[有界读指南](../../docs/temporal-session-data-reads.md)接通 stateless 原生／顺序的 host 与每 Agent session inherit/ref/disabled、宿主 namespace、原始端口／客户端／物理资源固定。普通及 managed Context 将原 Scope、Run/node 私有地址、页、revision 和来源引用交给原 History 采纳；重放使用已接受证据。PostgreSQL 显式 initialize 固定解析后的 table schema。
+这只是完整外置 Session 的读取依赖；不保存最终答案，不提供跨 Run Conversation。显式 History Session 与选中外置数据的高级组合（含嵌套模型 Planner）接受前拒绝。外置 CAS 写／原完成门禁、持久 SessionKey／跨 Turn 成员路径、Profile 组合与租约仍须按原目标交付。完整 H1/H2/H3/M1、R01–R26 和真实质量门槛继续开放。

@@ -256,6 +256,7 @@ class InMemoryMemory:
 
     def __init__(self, *, backend_id=None):
         self.backend_id = backend_id or f"memory:{uuid.uuid4().hex}"
+        self._session_instance_id = uuid.uuid4().hex
         self._sessions = {}
         self._facts = {}
         self._fact_positions = {}

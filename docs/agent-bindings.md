@@ -265,3 +265,6 @@ CLI inspect 和文本 status/run/resume 按逐步骤发布展示绑定；审批�
 Temporal dev58 的 Facts allowlist namespace、可替换有界召回与恢复边界见[专项指南](temporal-facts.md)。dev59 [Knowledge namespace selector](temporal-knowledge-bindings.md) 已交付；其他角色／共享 Session 尚未交付。
 
 Temporal decision_policy 复用公共纯 Harness，支持宿主及每 Agent 选择；方法固定、工具描述子集及原 History 证据见[指南](temporal-decision-policy.md)。
+
+
+Temporal session 的 host／每 Agent inherit/ref/disabled 有界读子集见[实际指南](temporal-session-data-reads.md)；仅 stateless native/sequence，不提供持久会话保存。

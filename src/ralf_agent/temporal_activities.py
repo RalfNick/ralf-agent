@@ -145,10 +145,23 @@ class TemporalRuntime:
         enable_sessions=False,
         limits=None,
         verifier=None,
+        session_store=None,
+        session_query=None,
     ):
         if type(enable_sessions) is not bool:
             raise ValidationError("enable_sessions requires an explicit boolean")
         self.enable_sessions = enable_sessions
+        from .recall import RecallQuery
+        from .temporal_session_data import SessionReadRegistration
+
+        self.session_store = session_store
+        self.session_query = RecallQuery(max_items=20) if session_query is None else session_query
+        self._session_owner = session_store
+        self._session_read_pins = (
+            [SessionReadRegistration(session_store, self.session_query)]
+            if session_store is not None
+            else []
+        )
         if not isinstance(providers, dict) or not providers:
             raise ValidationError("Temporal requires explicit model providers")
         if not isinstance(tools, ToolRegistry):
@@ -175,6 +188,15 @@ class TemporalRuntime:
 
         if binding_catalog is not None and not isinstance(binding_catalog, BindingCatalog):
             raise ValidationError("Temporal bindings require a scoped BindingCatalog")
+        self._session_read_pins.extend(
+            SessionReadRegistration(component, self.session_query)
+            for (role, _, _), (component, _) in (
+                binding_catalog._entries.items() if binding_catalog is not None else []
+            )
+            if role == "session"
+        )
+        if not self._session_read_pins and session_query is not None:
+            raise ValidationError("An explicit Session query requires a registered source")
         from .temporal_facts import pins, recall_registration
 
         self.facts, self.recall_policy, self.recall_planner = facts, recall_policy, recall_planner
@@ -353,6 +375,14 @@ class TemporalRuntime:
         if self.enable_sessions:
             result["session_protocol"] = 1
             result["dispatch_admission"] = "history-1"
+        if self._session_read_pins:
+            from .temporal_session_data import registration as session_registration
+
+            result["session_data_protocol"] = 1
+            if self.session_store is not None:
+                result["session_data"] = session_registration(
+                    self.session_store, self.session_query
+                )
         if self._limits_pins:
             from .temporal_limits import registration as limits_registration
 
@@ -415,6 +445,7 @@ class TemporalRuntime:
             or self._limits_pins
             or self._verifier_pins
             or self._decision_enabled
+            or self._session_read_pins
         ):
             result.update(kernel="temporal-3", binding_protocol=1, dispatch_admission="history-1")
             if catalog is not None:
@@ -446,6 +477,10 @@ class TemporalRuntime:
         if host is not None:
             host.validate_release(expected)
             return self.manifest
+        if self.session_store is not self._session_owner:
+            raise DefinitionMismatch("Temporal Session source owner changed")
+        for pin in self._session_read_pins:
+            pin.check()
         from .temporal_decision import check_pin as check_decision_pin
 
         if self.harness is not self._harness_owner:
@@ -575,11 +610,17 @@ class TemporalRuntime:
             validate_history(request, request["runtime_manifest"], request.get("scope"))
             if "context" in request:
                 validate_context_evidence(request["context"], request)
+                from .temporal_session_data_state import (
+                    validate_snapshot as validate_session_snapshot,
+                )
+
+                validate_session_snapshot(request["context"], self._manifest, request)
             step = AgentSpec(**request["step"])
             provider = self.providers[step.provider]
             complete = provider.complete
             if (
                 self.facts is not None
+                or self.session_store is not None
                 or self.knowledge is not None
                 or "context_registration" in self._manifest
                 or self.enable_sessions
@@ -746,6 +787,7 @@ class TemporalRuntime:
             validate_history(request, request["runtime_manifest"], request.get("scope"))
             if (
                 self.facts is None
+                and self.session_store is None
                 and self.knowledge is None
                 and "context_registration" not in self._manifest
                 and "session_history" not in request
@@ -779,12 +821,17 @@ class TemporalRuntime:
             from .temporal_session_state import context_evidence
 
             evidence.update(context_evidence(request))
+            from .temporal_session_data import load as load_session
+
+            evidence.update(await load_session(self, request))
             from .temporal_context import assemble_context
 
             messages, identity = assemble_context(
                 self.context,
                 detached(request["messages"]),
-                evidence["references"] + evidence.get("session_references", []),
+                evidence["references"]
+                + evidence.get("session_references", [])
+                + evidence.get("session_data_references", []),
                 step.max_context_chars,
             )
             from .temporal_context import validate_context, validate_prepared

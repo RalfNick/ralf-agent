@@ -23,6 +23,8 @@ from .temporal_facts_state import validate_protocol as validate_facts_protocol
 from .temporal_facts_state import validate_snapshot as validate_facts_snapshot
 from .temporal_knowledge_state import validate_protocol as validate_knowledge_protocol
 from .temporal_knowledge_state import validate_snapshot as validate_knowledge_snapshot
+from .temporal_session_data_state import validate_protocol as validate_session_data_protocol
+from .temporal_session_data_state import validate_snapshot as validate_session_snapshot
 from .temporal_session_state import validate_history as validate_session_history
 from .temporal_session_state import validate_protocol as validate_session_protocol
 from .tools import ToolSpec
@@ -118,6 +120,7 @@ def validate_manifest(manifest):
     validate_facts_protocol(manifest)
     validate_knowledge_protocol(manifest)
     validate_session_protocol(manifest)
+    validate_session_data_protocol(manifest)
     from .temporal_limits_state import validate_protocol as validate_limits_protocol
 
     validate_limits_protocol(manifest)
@@ -638,7 +641,8 @@ class TemporalRunState:
             if operation is not None or self.state in TERMINAL:
                 return operation
         if ("managed_context" not in self.step_manifest) and (
-            self.step_manifest.get("facts_context") is not None
+            self.step_manifest.get("session_data") is not None
+            or self.step_manifest.get("facts_context") is not None
             or self.step_manifest.get("knowledge_context") is not None
             or self.step_manifest.get("context_registration") is not None
             or bool(self.request.get("session_history"))
@@ -660,6 +664,11 @@ class TemporalRunState:
                     "scope": self.scope,
                     "run_id": self.run_id,
                     "step": detached(self.step),
+                    **(
+                        {"session_data_node": self.node}
+                        if "session_data" in self.step_manifest
+                        else {}
+                    ),
                     **(
                         {"step_bindings": self.step_bindings}
                         if self.manifest["kernel"] == "temporal-3"
@@ -693,6 +702,8 @@ class TemporalRunState:
             "step": detached(self.step),
             "messages": detached(self.messages),
         }
+        if "session_data" in self.step_manifest:
+            request["session_data_node"] = self.node
         if "session_history" in self.request:
             request["session_history"] = detached(self.request["session_history"])
         if self.manifest.get("session_protocol") == 1:
@@ -700,7 +711,8 @@ class TemporalRunState:
         if self.manifest["kernel"] == "temporal-3":
             request.update(step_bindings=self.step_bindings, scope=self.scope)
         if self.context_snapshot is not None and (
-            self.step_manifest.get("facts_context") is not None
+            self.step_manifest.get("session_data") is not None
+            or self.step_manifest.get("facts_context") is not None
             or self.step_manifest.get("knowledge_context") is not None
             or self.step_manifest.get("context_registration") is not None
             or bool(self.request.get("session_history"))
@@ -742,6 +754,16 @@ class TemporalRunState:
         from .temporal_session_state import validate_context_evidence
 
         validate_context_evidence(response, self.request)
+        validate_session_snapshot(
+            response,
+            self.step_manifest,
+            {
+                "scope": self.scope,
+                "run_id": self.run_id,
+                "session_data_node": self.node,
+                "step": self.step,
+            },
+        )
         self.context_snapshot = detached(response)
         self.context_signature = self.context_cache_signature()
         action["status"], action["response"] = "completed", detached(response)

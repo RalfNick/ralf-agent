@@ -234,7 +234,14 @@ async def execute(runtime, request, *, dispatch_guard=None):
             from .temporal_session_state import context_evidence
 
             evidence.update(context_evidence(request))
-            references = evidence["references"] + evidence.get("session_references", [])
+            from .temporal_session_data import load as load_session
+
+            evidence.update(await load_session(runtime, request))
+            references = (
+                evidence["references"]
+                + evidence.get("session_references", [])
+                + evidence.get("session_data_references", [])
+            )
             history, limit = request["messages"], request["step"]["max_context_chars"]
             messages, identity = context.assemble(detached(history), detached(references), limit)
             validate_context(messages, identity, limit)
@@ -356,6 +363,11 @@ async def execute(runtime, request, *, dispatch_guard=None):
                 "messages": detached(messages),
                 "references": detached(request["references"]),
                 **(
+                    {k: detached(request[k]) for k in ("session_data", "session_data_references")}
+                    if "session_data" in request
+                    else {}
+                ),
+                **(
                     {"session_references": detached(request["session_references"])}
                     if "session_references" in request
                     else {}
@@ -435,6 +447,8 @@ def next_stage(state):
             else {}
         ),
     }
+    if "session_data" in state.step_manifest:
+        request["session_data_node"] = state.node
     if "facts_context" in state.step_manifest:
         request["session_id"] = state.request.get("session_id") or state.run_id
     if state.step_manifest["managed_context"].get("dispatch_admission") == "history-1":
@@ -459,6 +473,10 @@ def next_stage(state):
     else:
         prepared = stage["prepared"]
         request.update({k: detached(prepared[k]) for k in ("plan", "fallback", "references")})
+        if "session_data" in prepared:
+            request.update(
+                {k: detached(prepared[k]) for k in ("session_data", "session_data_references")}
+            )
         if "session_references" in prepared:
             request["session_references"] = detached(prepared["session_references"])
         if "facts" in prepared:
@@ -533,6 +551,18 @@ def accept_stage(state, action_id, response):
     if phase == "plan":
         if response["source_digest"] != stage["source_digest"]:
             raise DefinitionMismatch("Context plan changed original history")
+        from .temporal_session_data_state import validate_snapshot as validate_session_snapshot
+
+        validate_session_snapshot(
+            response,
+            state.step_manifest,
+            {
+                "scope": state.scope,
+                "run_id": state.run_id,
+                "session_data_node": state.node,
+                "step": state.step,
+            },
+        )
         stage["prepared"] = response
         _after_artifacts(state, stage)
     elif phase in {"read", "verify"}:
@@ -566,7 +596,13 @@ def accept_stage(state, action_id, response):
             response.get("references") != stage["prepared"]["references"]
             or any(
                 response.get(k) != stage["prepared"].get(k)
-                for k in ("facts", "knowledge_references", "facts_recall")
+                for k in (
+                    "facts",
+                    "knowledge_references",
+                    "facts_recall",
+                    "session_data",
+                    "session_data_references",
+                )
             )
             or not isinstance(response.get("messages"), list)
             or len(canonical(response["messages"])) > state.step["max_context_chars"]
@@ -581,6 +617,18 @@ def accept_stage(state, action_id, response):
         from .temporal_session_state import validate_context_evidence
 
         validate_context_evidence(response, state.request)
+        from .temporal_session_data_state import validate_snapshot as validate_session_snapshot
+
+        validate_session_snapshot(
+            response,
+            state.step_manifest,
+            {
+                "scope": state.scope,
+                "run_id": state.run_id,
+                "session_data_node": state.node,
+                "step": state.step,
+            },
+        )
         stage["status"], stage["snapshot"] = "completed", response
         state.context_snapshot = response
         state.context_signature = state.context_cache_signature()

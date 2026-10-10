@@ -117,3 +117,8 @@ ThreadedMemoryAdapter 只用于明确线程安全的同步后端，真实线程�
 
 默认端口 dev64 验收见[精确 Session 回执指南](../../docs/session-receipts.md)。本规格、内部测试与
 真实数据库运行都不能替代真实模型质量或外部首用验收；完整 H1/H2/H3/M1 继续开放。
+
+
+## dev65 实际依赖范围
+
+仅交付固定资源／有界读／原 History 证据采纳，见[实际指南](../../docs/temporal-session-data-reads.md)。读地址是原 stateless Run/node 私有地址，尚非本规格的持久 SessionKey／跨 Turn 路径；没有外置自动保存。当前 native/sequence 允许此读子集，显式 SessionTurn 与选中来源的高级组合接受前拒绝。完整写／根保存／物理会话租约与上列六组验收保持目标，不被此增量替换。

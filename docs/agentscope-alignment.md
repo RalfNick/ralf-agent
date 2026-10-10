@@ -83,3 +83,6 @@ Dev46 adds explicit Temporal History-managed grounded memory and five scoped per
 当前 dev62 增量已把 Temporal 纯完成验证接入原节点／回执／记忆链路。dev58–61 的 Facts／Knowledge 范围、History Sessions 和数值限制，连同 verifier 构成八类 Temporal 绑定。下一依赖为 DecisionPolicy 与外置 Session／环境角色、输入续接和治理；完整 R01–R26、A/B/C/D 门槛继续以剩余清单为准。完成绑定子集和 scripted 恢复不代表 AgentScope 整体对齐或真实质量通过。
 
 Dev63接通原生及高级Temporal纯DecisionPolicy，形成九类每Agent绑定。默认与纯策略可替换、原History恢复闭环分别验收；外置Session/环境角色、H3质量、H4/H5和对等外部采用仍待交付，不能以绑定数或回归测试推断整体对齐。
+
+
+dev65 增加 Temporal Session 有界读依赖，仍缺外置会话写和跨 Turn 路由；不能据此宣称完整第十类绑定或 AgentScope 整体对齐。

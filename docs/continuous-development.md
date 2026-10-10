@@ -118,3 +118,19 @@ Temporal H1f 复用可替换纯 LimitsPolicy，原 Run History 逐节点采纳�
 ### dev64 最终证据与资源
 
 最终完整3613/198（563.98s）、安装146、默认/原会话122、源/wheel/sdist/install214模块、core-only与实际63↔64兼容通过；新外置默认后端旧版拒绝派发。独立审查1P2类型ID已3RED→GREEN。见[验收](../architecture/reviews/2026-10-11-default-session-receipts.md)。root由 `/private/tmp/ralf-agent-dev64-current` 指向 `/private/tmp/ralf-agent-dev64-hk711mpa`，full22252 exit0；本批无托管Temporal/PG服务，完整回归及fixture已结束。下一批从实际本地提交SHA接续完整外置Session契约，不关闭R01–R26。
+
+
+## dev65 固定有界 Session 数据读与下一批
+
+原生／顺序 stateless 支持 session 选择与 namespace，原 Context/managed History 固定 scoped 私有 Run/node 原快照；资源／方法／客户端／PG 初始化实际 schema 固定。三个 review P2 已 RED→GREEN：桥接原方法、嵌套模型 Planner 准入、真实 PostgreSQL schema 切换。见[验收](../architecture/reviews/2026-10-11-temporal-session-data-reads.md)。
+这只是完整外置 Session 的依赖，不关闭持久数据契约。下一阶段按原规格实现原生／顺序的保存意图／派发／CAS／精确消息回执与终态门禁，之后根／成员稳定跨 Turn 路径、Parent 根保存与租约。还需补齐 Profile 工厂／资源拥有与借用、故障窗口和旧 Worker 门槛，继而输入续接／deadline、H4/H5 与其余 R01–R26。禁止用私有读地址替代最终持久 SessionKey，禁止把 SPI 或回归数量当作全部能力完成。
+本轮未调用真实模型，不修改用户提供的密钥配置，不推送远端。最终全量、制品和本地提交状态见本批验收；整个目标继续 active。
+
+### dev65 阶段门槛与资源记录
+
+安装140契约、真实安装服务7项及加强源码/安装各4项Context采纳后模型调度前窗口、freshcore默认/Session/文档例子、实际64↔65默认/审批/TemporalHistory兼容均已通过。初次加强夹具错误地停在已启动模型Activity，失败保持正确unknown语义；已改为SDK outbound命令调度前fault injection，不修改业务重试规则。三项自有服务48054/96105/74178全部exit0且stopped，无遗留Worker。产品Python在全量前冻结；后续仅服务测试夹具加强，真实最终源码/安装重验，未以skip作为此窗口通过。最终全量和制品数字填入本批验收后才本地提交。
+
+
+### dev65 最终结果
+
+最终全量3642 passed/204 skipped（620.69s，44944 exit0）；安装140契约及独立相关39项（有重叠）、真实安装服务7及最终源码/安装各4个Temporal窗口、217模块一致、freshcore/文档例子及实际64↔65默认/审批/History兼容通过。Ruff/格式/空白通过；三项自有服务全部关闭。只本地提交，无真实模型或完整H1/H2/H3/M1质量宣称。后续按完整外置Session写/持久路由继续，不关闭R01–R26目标。

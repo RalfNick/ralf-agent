@@ -170,6 +170,10 @@ def validate_binding(binding, scope):
         raise DefinitionMismatch("Session binding requires its original protocol")
     validate_request(binding["request"], manifest)
     validate_bindings(binding["request"], manifest, scope)
+    from .temporal_bindings import selected_session_data
+
+    if selected_session_data(binding["request"], manifest):
+        raise ValidationError("Temporal external Session completion writes are not implemented")
     if any(
         k in binding["request"] for k in ("session_turn", "session_history", "session_observer")
     ):
