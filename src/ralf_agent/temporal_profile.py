@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from .errors import DefinitionMismatch, ValidationError
-from .runtime_config import RuntimeProfile, read_declaration
+from .runtime_config import RuntimeProfile, component_declaration, read_declaration
 from .types import canonical, digest, runtime_profile_identity
 
 LOCAL_COMPONENTS = frozenset(
@@ -49,6 +49,12 @@ class TemporalProfile:
         binding_components=None,
         execution=None,
     ):
+        journal = None
+        if type(components) is dict and "effect_journal" in components:
+            journal = component_declaration(components["effect_journal"])
+            components = {
+                key: value for key, value in components.items() if key != "effect_journal"
+            }
         original = RuntimeProfile(name, version, providers, components, binding_components)
         if set(original.components) & LOCAL_COMPONENTS:
             raise ValidationError("Local execution components cannot configure Temporal authority")
@@ -80,6 +86,8 @@ class TemporalProfile:
             "components": original.components,
             "execution": flags,
         }
+        if journal is not None:
+            payload["components"]["effect_journal"] = journal
         if original.binding_components is not None:
             payload["binding_components"] = original.binding_components
         object.__setattr__(self, "name", name)
@@ -143,6 +151,10 @@ class TemporalProfileCatalog:
         if self._default is None:
             raise DefinitionMismatch("No default Temporal profile is selected")
         return self._profiles[self._default]
+
+    @property
+    def profiles(self):
+        return tuple(TemporalProfile(**item.to_dict()) for item in self._profiles.values())
 
     def resolve(self, identity):
         identity = runtime_profile_identity(identity)

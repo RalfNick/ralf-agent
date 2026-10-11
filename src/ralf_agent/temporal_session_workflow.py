@@ -134,6 +134,8 @@ class TemporalSessionWorkflow:
         try:
             if request["kind"] == "status":
                 return self.state.snapshot()
+            if request["kind"] == "profile_binding":
+                return self.state.profile_binding()
             if request["kind"] == "turns":
                 return self.state.turns(after=request["after"], limit=request["limit"])
             return {"error": "validation_error"}

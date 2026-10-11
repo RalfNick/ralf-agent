@@ -532,3 +532,9 @@ Redis/PG、原 Histories replay、独立 Worker kill+wait/restart、67↔68原�
 fixture 采用明确2s Activity deadline、正常 Worker 关闭与原双完成门禁，已通过。
 完整 H1/H2/H3/M1、R01–R26 和真实质量继续开放；不做远端推送。
 详见[验收](../architecture/reviews/2026-10-11-temporal-context-read-lifetime.md)。
+
+## dev70 Temporal 多版本 Host（子集验收通过）
+
+沿 R04/H1/H5，TemporalProfileHost 只组合原 Assembly 与 Facade，不创建第三套业务状态。全 Catalog 固定和纯预检先于 I/O；原 Registry/Coordinator 队列需保留，默认选择不迁移旧 Run/Session。可信 Scope、实际 namespace UUID、原 Manifest 与版本均参与重连验证。所有版本实际调用、桥接线程和原结束通知排空后，才停止所有 Worker 并清理共享 owned ledger。借用 SDK Client 不清理。配置现在可声明既有 PostgreSQL EffectJournal；Local 与旧 dev69 拒绝该新声明。
+
+见[指南](temporal-profiles.md)及[验收](../architecture/reviews/2026-10-11-temporal-profile-host.md)。本子集最终全量／安装／兼容门槛通过；完整 R01–R26、其余环境角色、部署版本／迁移、容量／保留、企业身份及真实质量继续开放。

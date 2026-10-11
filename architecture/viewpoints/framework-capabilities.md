@@ -289,3 +289,9 @@ DecisionPolicy 复用公共纯 Harness prepare/propose。固定 host/ref/inherit
 ## dev69 Temporal 声明装配
 
 TemporalProfile／Catalog 与 TemporalRuntimeBuilder 复用现有组件端口、十类绑定和原执行权威；Assembly 只持有真实 SDK 调用／线程／生命周期，不推进业务状态。关闭保留原 end Update 接收责任，等待真实工作再释放资源。默认未配置 Profile 的发布／请求格式保持兼容；新的显式配置与安装模块见[指南](../../docs/temporal-profiles.md)，最终证据见[验收](../reviews/2026-10-11-temporal-profile-assembly.md)。完整配置、环境角色、长期治理与质量继续开放。
+
+## dev70 Temporal 多版本 Host（子集验收通过）
+
+沿 R04/H1/H5，TemporalProfileHost 只组合原 Assembly 与 Facade，不创建第三套业务状态。全 Catalog 固定和纯预检先于 I/O；原 Registry/Coordinator 队列需保留，默认选择不迁移旧 Run/Session。可信 Scope、实际 namespace UUID、原 Manifest 与版本均参与重连验证。所有版本实际调用、桥接线程和原结束通知排空后，才停止所有 Worker 并清理共享 owned ledger。借用 SDK Client 不清理。配置现在可声明既有 PostgreSQL EffectJournal；Local 与旧 dev69 拒绝该新声明。
+
+见[指南](../../docs/temporal-profiles.md)及[验收](../reviews/2026-10-11-temporal-profile-host.md)。本子集最终全量／安装／兼容门槛通过；完整 R01–R26、其余环境角色、部署版本／迁移、容量／保留、企业身份及真实质量继续开放。

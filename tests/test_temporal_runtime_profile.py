@@ -2,11 +2,12 @@
 
 import pytest
 
-from ralf_agent import TemporalRuntime, ToolRegistry
+from ralf_agent import AgentSpec, TemporalRuntime, ToolRegistry
 from ralf_agent.errors import DefinitionMismatch, ValidationError
 from ralf_agent.runtime_builder import EchoProvider
 from ralf_agent.temporal_profile import TemporalProfile
-from ralf_agent.temporal_state import validate_manifest
+from ralf_agent.temporal_state import TemporalRunState, validate_manifest
+from ralf_agent.types import submission_request
 
 
 def runtime(**options):
@@ -23,6 +24,25 @@ def test_legacy_runtime_has_no_profile_marker():
     original = runtime()
     assert "runtime_profile" not in original.manifest
     assert runtime(runtime_profile=None).manifest == original.manifest
+
+
+@pytest.mark.parametrize("profiled", [False, True])
+def test_stateless_profile_model_request_has_trusted_scope_and_legacy_payload_stays_exact(profiled):
+    manifest = runtime(**({"runtime_profile": identity()} if profiled else {})).manifest
+    scope = {"workspace": "profile", "principal": "operator"}
+    state = TemporalRunState(
+        "run",
+        scope,
+        "submit",
+        submission_request(AgentSpec("answer", "Answer"), "task", budget=16),
+        manifest,
+    )
+    action, request = state.next_operation()
+    assert action["kind"] == "model"
+    if profiled:
+        assert request["scope"] == scope
+    else:
+        assert set(request) == {"runtime_manifest", "step", "messages"}
 
 
 def test_explicit_profile_is_detached_and_pinned():

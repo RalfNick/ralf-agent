@@ -471,3 +471,9 @@ UUID 提交准确证明。配置装配、自动监督与完整 H1/H2/H3 另验�
 ### dev69 Temporal Profile 工厂与托管 Worker
 
 显式 TemporalProfile Catalog 接入原组件工厂和十类 BindingCatalog 角色；BuildContext 无 Local Store。TemporalRuntimeAssembly 固定 Scope／版本／客户端／队列，只托管实际 Activity 与资源。原 Session／Context Owner 仍提交准确 end proof，原 History 唯一推进业务。SDK hosting Task 保持整个 Worker 生命周期；关闭或致命退出拒绝新入口，实际调用和通知排空后才释放工厂资源。高级宿主只可在执行前明确移交拥有关系。完整多版本路由、环境角色、集群容量与质量仍未交付，见[配置指南](../../docs/temporal-profiles.md)和[子集验收](../reviews/2026-10-11-temporal-profile-assembly.md)。
+
+## dev70 Temporal 多版本 Host（子集验收通过）
+
+沿 R04/H1/H5，TemporalProfileHost 只组合原 Assembly 与 Facade，不创建第三套业务状态。全 Catalog 固定和纯预检先于 I/O；原 Registry/Coordinator 队列需保留，默认选择不迁移旧 Run/Session。可信 Scope、实际 namespace UUID、原 Manifest 与版本均参与重连验证。所有版本实际调用、桥接线程和原结束通知排空后，才停止所有 Worker 并清理共享 owned ledger。借用 SDK Client 不清理。配置现在可声明既有 PostgreSQL EffectJournal；Local 与旧 dev69 拒绝该新声明。
+
+见[指南](../../docs/temporal-profiles.md)及[验收](../reviews/2026-10-11-temporal-profile-host.md)。本子集最终全量／安装／兼容门槛通过；完整 R01–R26、其余环境角色、部署版本／迁移、容量／保留、企业身份及真实质量继续开放。

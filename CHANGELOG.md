@@ -1,5 +1,29 @@
 # Changelog
 
+## 0.1.0.dev70 — Temporal multiversion Profile Host
+
+- Snapshot and preflight up to32 registered Profiles before construction, retaining one owned-resource ledger and original version queues.
+- Keep ordinary Facade dispatch and attachment pinned to original Scope/Client/namespace UUID/release; reject unavailable historical queues and observed stale Session bindings.
+- Drain original RPCs and all actual handlers/threads/end notifications before stopping every Worker and releasing shared resources, including admission configuration drift.
+- Declare the existing PostgreSQL EffectJournal through Temporal-only configuration; add an offline-first installed catalog example.
+- Final frozen full/installed/service/compatibility gates pass; full R01–R26 and production quality remain open.
+
+## 0.1.0.dev69 — Temporal Profile assembly
+
+- Add explicit immutable Temporal catalogs, ten binding-role factory assembly and owned async resources without a Local execution store.
+- Retain actual SDK Activity calls, bridge threads, Worker lifetime and original end acknowledgment during retryable close.
+- Add an installed offline-first configuration module and actual process/service recovery evidence.
+
+## 0.1.0.dev68 — Temporal Context read lifetime
+
+- Retain original read admission, actual handler/thread completion and accurate end notification separately in the original History.
+- Keep default-off and native save-v1 compatible; extend shared context ownership across actual native and composite service recovery.
+
+## 0.1.0.dev67 — Temporal persistent Session trees
+
+- Add explicit advanced root/member persistent data addresses, original root/private source snapshots and cross-Turn recall.
+- Keep business completion, actual handler stop and original Session busy responsibility distinct.
+
 ## 0.1.0.dev66 — Native persistent Temporal Session saves
 
 - Add explicit original History save intents, admitted CAS writes, exact received receipts and separate adoption/completion gates.

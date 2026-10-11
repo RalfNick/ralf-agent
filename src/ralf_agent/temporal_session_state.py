@@ -514,6 +514,15 @@ class TemporalSessionState:
             "error": detached(self.error),
         }
 
+    def profile_binding(self):
+        return {
+            "schema_version": 1,
+            "session_ref": self.ref.to_dict(),
+            "profile_identity": detached(self.binding["manifest"].get("runtime_profile")),
+            "task_queue": self.binding["task_queue"],
+            "manifest_digest": digest(self.binding["manifest"]),
+        }
+
     def turns(self, *, after=0, limit=100):
         if type(after) is not int or after < 0 or type(limit) is not int or not 1 <= limit <= 100:
             raise ValidationError("Turns require a nonnegative cursor and limit1..100")

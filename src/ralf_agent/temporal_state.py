@@ -753,7 +753,7 @@ class TemporalRunState:
         if "session_history" in self.request:
             request["session_history"] = detached(self.request["session_history"])
         request.update(self.session_context_fields())
-        if self.manifest.get("session_protocol") == 1:
+        if self.manifest.get("session_protocol") == 1 or "runtime_profile" in self.manifest:
             request["scope"] = self.scope
         if self.manifest["kernel"] == "temporal-3":
             request.update(step_bindings=self.step_bindings, scope=self.scope)

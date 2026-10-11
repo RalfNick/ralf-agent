@@ -219,46 +219,55 @@ class TemporalRuntimeAssembly:
         if self._aclosing:
             raise ValidationError("Temporal assembly is already closing")
         self._closing, self._aclosing = True, True
-        self._calls.stop_admission()
+        self._begin_close()
         try:
-            for engine in self._engines:
-                await engine.aclose()
-            if self._worker_start is not None:
-                try:
-                    await _bounded_task(self._worker_ready, wait_timeout)
-                except (Exception, asyncio.CancelledError):
-                    if not self._worker_ready.done():
-                        raise
-                    # A failed startup still owns its partially started Worker.
-                    # Finish the original SDK shutdown before factory cleanup.
-            await self._calls.aclose(wait_timeout=wait_timeout)
-            await self._runtime.close_context_execution(wait_timeout=wait_timeout)
-            await self._runtime.close_session_execution(wait_timeout=wait_timeout)
-            if self._worker is not None:
-                if self._worker_stop is None:
-                    self._worker_stop = asyncio.create_task(self._stop_worker())
-                    self._worker_stop.add_done_callback(_observe)
-                try:
-                    self._worker_failure = await _bounded_task(self._worker_stop, wait_timeout)
-                except BaseException:
-                    if self._worker_stop.done():
-                        self._worker_stop = None
-                    raise
-                self._worker_lifetime.set()
-                try:
-                    await _bounded_task(self._worker_start, wait_timeout)
-                except asyncio.CancelledError:
-                    if not self._worker_start.cancelled():
-                        raise
-                except Exception:
-                    if self._worker_ready.exception() is None:
-                        raise
+            await self._drain_execution(wait_timeout)
+            await self._finish_worker(wait_timeout)
             await self._context.cleanup_async()
             self._closed = True
             if self._worker_failure is not None:
                 raise self._worker_failure
         finally:
             self._aclosing = False
+
+    def _begin_close(self):
+        self._closing = True
+        self._calls.stop_admission()
+        for engine in self._engines:
+            engine._closed = True
+
+    async def _drain_execution(self, wait_timeout):
+        if self._worker_start is not None:
+            try:
+                await _bounded_task(self._worker_ready, wait_timeout)
+            except (Exception, asyncio.CancelledError):
+                if not self._worker_ready.done():
+                    raise
+        await self._calls.aclose(wait_timeout=wait_timeout)
+        await self._runtime.close_context_execution(wait_timeout=wait_timeout)
+        await self._runtime.close_session_execution(wait_timeout=wait_timeout)
+
+    async def _finish_worker(self, wait_timeout):
+        if self._worker is None:
+            return
+        if self._worker_stop is None:
+            self._worker_stop = asyncio.create_task(self._stop_worker())
+            self._worker_stop.add_done_callback(_observe)
+        try:
+            self._worker_failure = await _bounded_task(self._worker_stop, wait_timeout)
+        except BaseException:
+            if self._worker_stop.done():
+                self._worker_stop = None
+            raise
+        self._worker_lifetime.set()
+        try:
+            await _bounded_task(self._worker_start, wait_timeout)
+        except asyncio.CancelledError:
+            if not self._worker_start.cancelled():
+                raise
+        except Exception:
+            if self._worker_ready.exception() is None:
+                raise
 
     async def _stop_worker(self):
         cancelled = self._worker_start.cancelled()

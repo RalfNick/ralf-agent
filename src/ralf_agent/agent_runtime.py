@@ -440,6 +440,12 @@ class Runtime:
         if self.state == "closed":
             return self.close_report
         self._check()
+        return await self._close_resources(close_timeout=close_timeout)
+
+    async def _close_resources(self, *, close_timeout=None):
+        """Drain retained work after the owning lifecycle validates its origin."""
+        if self.state == "closed":
+            return self.close_report
         timeout = (
             self.close_timeout if close_timeout is None else seconds(close_timeout, "Close timeout")
         )

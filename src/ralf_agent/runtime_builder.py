@@ -487,6 +487,9 @@ class ComponentRegistry:
         from .fact_index_factories import register_fact_index
 
         register_fact_index(self)
+        from .temporal_journal_factories import register_effect_journal
+
+        register_effect_journal(self)
 
     def register(self, kind, name, factory, *, validator=None):
         self._register(kind, name, factory, validator, asynchronous=False)
@@ -506,6 +509,7 @@ class ComponentRegistry:
                 "embedding_provider",
                 "vector_index",
                 "fact_index_catalog",
+                "effect_journal",
             }
             or not isinstance(name, str)
             or not name.strip()

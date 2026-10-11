@@ -18,7 +18,7 @@ from .runtime_config import component_declaration
 from .runtime_lifecycle import BuildContext
 from .temporal_activities import TemporalRuntime
 from .temporal_assembly_lifecycle import TemporalRuntimeAssembly
-from .temporal_profile import TemporalProfile
+from .temporal_profile import TemporalProfile, TemporalProfileCatalog
 from .temporal_session_topology import CompositeSessionTopology
 from .tools import ThreadExecutionTracker, ToolRegistry, current_thread_tracker
 from .types import Scope
@@ -51,30 +51,33 @@ class _ConstructionCleanup:
             raise
 
     async def aclose(self, *, wait_timeout=30):
+        self._context._check_cleanup_origin()
+        if self._aclosing:
+            raise ValidationError("Temporal construction cleanup is already closing")
+        self._aclosing = True
+        try:
+            await self.wait(wait_timeout=wait_timeout)
+            await self._context.cleanup_async()
+        finally:
+            self._aclosing = False
+
+    async def wait(self, *, wait_timeout=30):
         if (
             type(wait_timeout) not in (int, float)
             or not math.isfinite(wait_timeout)
             or wait_timeout < 0
         ):
             raise ValidationError("Construction close timeout must be finite and nonnegative")
-        self._context._check_cleanup_origin()
-        if self._aclosing:
-            raise ValidationError("Temporal construction cleanup is already closing")
-        self._aclosing = True
-        try:
-            pending = [task for task in self._tasks if not task.done()]
+        pending = [task for task in self._tasks if not task.done()]
+        if pending:
+            _, pending = await asyncio.wait(pending, timeout=wait_timeout)
             if pending:
-                _, pending = await asyncio.wait(pending, timeout=wait_timeout)
-                if pending:
-                    raise CloseIncomplete("Actual component construction remains owned")
-            if self._threads.has_active:
-                try:
-                    await asyncio.wait_for(self._threads.drain(), wait_timeout)
-                except TimeoutError:
-                    raise CloseIncomplete("Actual construction bridge remains owned") from None
-            await self._context.cleanup_async()
-        finally:
-            self._aclosing = False
+                raise CloseIncomplete("Actual component construction remains owned")
+        if self._threads.has_active:
+            try:
+                await asyncio.wait_for(self._threads.drain(), wait_timeout)
+            except TimeoutError:
+                raise CloseIncomplete("Actual construction bridge remains owned") from None
 
 
 def _paths(declaration, kind, data_path):
@@ -117,7 +120,7 @@ class TemporalRuntimeBuilder:
             raise ValidationError("Temporal construction requires an explicit ComponentRegistry")
         self.base_dir = Path.cwd().resolve() if base_dir is None else Path(base_dir).resolve()
 
-    async def abuild(self, profile, *, data_path=None, scope=None):
+    def _prepare(self, profile, *, data_path=None, scope=None):
         if not isinstance(profile, TemporalProfile):
             raise ValidationError("Build an immutable TemporalProfile")
         scope = Scope() if scope is None else scope
@@ -143,12 +146,24 @@ class TemporalRuntimeBuilder:
             prepared_bindings.append(
                 (value, self.registry.prepare(kind, _paths(value["component"], kind, data_path)))
             )
+        return profile, scope, data_path, prepared_providers, prepared_components, prepared_bindings
+
+    async def abuild(self, profile, *, data_path=None, scope=None):
+        return await self._construct_profile(
+            self._prepare(profile, data_path=data_path, scope=scope)
+        )
+
+    async def _construct_profile(self, prepared, *, resource_owner=None):
+        profile, scope, data_path, prepared_providers, prepared_components, prepared_bindings = (
+            prepared
+        )
         context = BuildContext(
             None,
             data_path or self.base_dir / "temporal-data.sqlite",
             scope,
             self.base_dir,
             allow_async=True,
+            resource_owner=resource_owner,
         )
         cleanup = _ConstructionCleanup(context)
 
@@ -188,6 +203,8 @@ class TemporalRuntimeBuilder:
                 options["facts"] = options.pop("memory_store")
             if "context_assembler" in options:
                 options["context_builder"] = options.pop("context_assembler")
+            if "effect_journal" in options:
+                options["journal"] = options.pop("effect_journal")
             execution = profile.execution
             composite = execution.pop("composite_sessions")
             if execution["session_writes"]:
@@ -228,8 +245,12 @@ class TemporalRuntimeBuilder:
                 **options,
                 **execution,
             )
-            return TemporalRuntimeAssembly(runtime, context, profile, scope)
+            assembly = TemporalRuntimeAssembly(runtime, context, profile, scope)
+            assembly._construction = cleanup
+            return assembly
         except BaseException as exc:
+            if resource_owner is not None:
+                raise RuntimeBuildError(cleanup) from exc
             try:
                 await cleanup.aclose(wait_timeout=0)
             except BaseException as cleanup_error:
@@ -238,4 +259,40 @@ class TemporalRuntimeBuilder:
                 raise
             if not isinstance(exc, Exception):
                 raise
+            raise RuntimeBuildError(cleanup) from exc
+
+    async def abuild_catalog(self, catalog, *, data_path=None, scope=None):
+        from .temporal_profile_host import CatalogConstructionCleanup, TemporalProfileHost
+
+        if not isinstance(catalog, TemporalProfileCatalog):
+            raise ValidationError("Build an explicit TemporalProfileCatalog")
+        profiles = catalog.profiles
+        if not 1 <= len(profiles) <= 32:
+            raise ValidationError("Temporal Host requires1 to32 explicit Profiles")
+        selected = catalog.default_profile.identity
+        builder = TemporalRuntimeBuilder(self.registry, base_dir=catalog.base_dir)
+        scope = Scope() if scope is None else scope
+        prepared = [builder._prepare(p, data_path=data_path, scope=scope) for p in profiles]
+        root = BuildContext(
+            None,
+            builder.base_dir / "temporal-data.sqlite",
+            scope,
+            builder.base_dir,
+            allow_async=True,
+        )
+        handles, assemblies = [], []
+        cleanup = CatalogConstructionCleanup(root, handles)
+        try:
+            for value in prepared:
+                assembly = await builder._construct_profile(value, resource_owner=root)
+                assemblies.append(assembly)
+                handles.append(assembly._construction)
+            return TemporalProfileHost(assemblies, root, handles, selected, scope)
+        except BaseException as exc:
+            if isinstance(exc, RuntimeBuildError):
+                handles.append(exc.cleanup)
+            try:
+                await cleanup.aclose(wait_timeout=0)
+            except BaseException as close_error:
+                raise RuntimeBuildError(cleanup) from close_error
             raise RuntimeBuildError(cleanup) from exc

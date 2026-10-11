@@ -261,6 +261,7 @@ from .temporal_context_execution import (
 )
 from .temporal_journal import PostgresEffectJournal
 from .temporal_profile import TemporalProfile, TemporalProfileCatalog
+from .temporal_profile_host import TemporalProfileHost
 from .temporal_session_topology import (
     CompositeSessionTopology,
     NativeSessionTopology,
@@ -316,7 +317,7 @@ from .workflow import (
     WorkflowSelection,
 )
 
-__version__ = "0.1.0.dev69"
+__version__ = "0.1.0.dev70"
 __all__ = [
     "EventCursor",
     "EventEnvelope",
@@ -515,6 +516,7 @@ __all__ += [
     "TemporalRuntimeBuilder",
     "TemporalProfile",
     "TemporalProfileCatalog",
+    "TemporalProfileHost",
     "SessionTopology",
     "NativeSessionTopology",
     "CompositeSessionTopology",

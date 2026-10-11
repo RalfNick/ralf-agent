@@ -27,7 +27,7 @@ async def _close_async(method):
 
 
 class BuildContext:
-    def __init__(self, store, db_path, scope, base_dir, *, allow_async=False):
+    def __init__(self, store, db_path, scope, base_dir, *, allow_async=False, resource_owner=None):
         self.store, self.db_path, self.scope = store, str(db_path), scope
         self.base_dir = Path(base_dir).resolve()
         self.tools = None
@@ -35,6 +35,19 @@ class BuildContext:
         self._resources = []
         self._allow_async = allow_async
         self._loop = None
+        self._resource_owner = resource_owner
+        if resource_owner is not None:
+            if (
+                not isinstance(resource_owner, BuildContext)
+                or resource_owner._resource_owner is not None
+                or store is not None
+                or resource_owner.store is not None
+                or scope != resource_owner.scope
+                or self.base_dir != resource_owner.base_dir
+                or allow_async != resource_owner._allow_async
+            ):
+                raise ValidationError("Shared resources require one compatible owning context")
+            self._resources = resource_owner._resources
 
     def own(self, resource):
         if resource is self.store:
@@ -49,6 +62,8 @@ class BuildContext:
         return self._own(resource, asynchronous=True)
 
     def _own(self, resource, *, asynchronous):
+        if self._resource_owner is not None:
+            return self._resource_owner._own(resource, asynchronous=asynchronous)
         method = getattr(resource, "aclose" if asynchronous else "close", None)
         if not (is_async_callable(method) if asynchronous else is_sync_callable(method)):
             raise ValidationError(
@@ -80,6 +95,8 @@ class BuildContext:
         return any(owned.asynchronous for owned in self._resources)
 
     def _check_loop(self):
+        if self._resource_owner is not None:
+            return self._resource_owner._check_loop()
         if self.has_async_resources and asyncio.get_running_loop() is not self._loop:
             raise ValidationError("Async cleanup must use the resource creation loop")
 
@@ -93,6 +110,7 @@ class BuildContext:
             raise ValidationError("Resource cleanup cannot reenter its owning runtime cleanup")
 
     def cleanup(self):
+        self._require_resource_ownership()
         self._require_sync_cleanup()
         while self._resources:
             owned = self._resources[-1]
@@ -100,6 +118,7 @@ class BuildContext:
             self._resources.pop()
 
     async def cleanup_async(self):
+        self._require_resource_ownership()
         self._check_loop()
         self._check_cleanup_origin()
         while self._resources:
@@ -123,6 +142,10 @@ class BuildContext:
                     owned.task = None
                     raise
             self._resources.pop()
+
+    def _require_resource_ownership(self):
+        if self._resource_owner is not None:
+            raise ValidationError("Shared resources require their owning Host cleanup")
 
 
 _GUARDED_METHODS = {

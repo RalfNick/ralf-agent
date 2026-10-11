@@ -121,6 +121,9 @@ async def run(directory, phase, kind, window):
             done = await handle.wait(wait_timeout=5, terminal_only=True)
             assert done.snapshot.state == "succeeded", done
             assert done.snapshot.result == "applied"
+            async with asyncio.timeout(5):
+                while (await session.status()).busy:  # noqa: ASYNC110 -- original Session actual-stop gate
+                    await asyncio.sleep(0.01)
             assert not (await session.status()).busy
             assert (
                 asdict((await session.submit("q", command_id="submit", budget=64)).receipt)
