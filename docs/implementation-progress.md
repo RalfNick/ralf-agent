@@ -1,5 +1,7 @@
 # Implementation progress — 2026-10-05 M1 local runtime
 
+Dev74：MCP HTTP JSON／POST SSE与async声明交付。最终源码4304通过／337配置跳过，核心安装79／扩展320、真实源码及安装各8项Temporal／PG通过；实际73兼容、22个原模板与254模块一致。3项Important经一轮RED→GREEN修复，自有服务已停止；[验收](../architecture/reviews/2026-10-11-mcp-http.md)记录边界，完整目标仍开放。
+
 Dev73：固定POST HTTP工具与CLI读取／纯规划／审批／写入示例交付。本批最终源码4225通过／333配置跳过，核心安装111／扩展241、真实源码及安装各4项Temporal／PG、实际72双向默认／旧CLI恢复与250模块一致通过。自有服务已停止，2项Important已RED→GREEN；[验收](../architecture/reviews/2026-10-11-fixed-business-tools.md)记录完整边界，完整目标开放。
 
 Dev72 沿 R12/H4 接通固定命令 CLI ToolSource、实际进程／线程生命周期、async 声明工厂与 cli starter；原幂等／未知效果、本地重启和真实 Temporal Activity 已验证；1项Important修复，最终4159 pass／331配置跳过、核心45／扩展154安装契约、源码与安装真实服务各2项、旧71双向恢复和246模块一致通过。自有服务已停止；3项CLI较小缺口与完整目标保持开放，本地提交随后执行。[本批记录](../architecture/reviews/2026-10-11-cli-tools.md)。

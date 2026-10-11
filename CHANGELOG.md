@@ -1,11 +1,17 @@
 # Changelog
 
-## 0.1.0.dev73 — Fixed business tools (candidate)
+## 0.1.0.dev74 — MCP HTTP tools
+
+- Add fixed HTTP MCP JSON/POST SSE transport, bounded RPC/session framing and actual thread/client ownership.
+- Add async tools/mcp-http declaration using original discovery, explicit policy and effect recovery.
+- Final source4304 passed/337 configured skips; core79/installed320 contracts and required source/installed8 actual Temporal/PostgreSQL cases pass. Original73 compatibility and254 product modules remain consistent. Three Important review findings fixed; owned services stopped.
+
+## 0.1.0.dev73 — Fixed business tools
 
 - Add fixed POST JSON HTTP ToolSource with copied host configuration, actual client/thread ownership and original effect contracts.
 - Add async tools/http-json factory; share finite UTF-8 JSON adoption with CLI.
 - Refuse malformed CLI cwd before allocation, allow fixed empty arguments and provide version2 read/plan/approved-write starter.
-- Original generated version1 apps remain recoverable with their original code; final review/delivery gates pending.
+- Original generated version1 apps remain recoverable with their original code; final source4225/333 configured skips and installation/actual service/old72 compatibility gates pass.
 
 ## 0.1.0.dev72 — Fixed-command CLI tools
 

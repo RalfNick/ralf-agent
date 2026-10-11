@@ -1,6 +1,6 @@
 # Ralf-Agent
 
-当前工作区 **0.1.0.dev73** 提供显式语义知识库、相关事实召回和 Plan／Team 默认组合，
+当前工作区 **0.1.0.dev74** 提供显式语义知识库、相关事实召回和 Plan／Team 默认组合，
 复用原执行、审批和恢复协议。见[H3 使用与扩展指南](docs/h3-intelligent-combinations.md)。
 dev48 增加[显式 HTTP 语义重排](docs/http-reranking.md)，保留原知识来源及旧默认配置。
 dev49 增加[Query transform 与语义 Facts 召回](docs/query-and-semantic-recall.md)，支持显式语义记忆组合及保留语义顺序的上下文。候选窗口外事实和真实质量仍待完善。
@@ -342,3 +342,5 @@ twentieth observable starter. [Alignment order](docs/agentscope-alignment.md)
 retains separate input/Workspace/Sandbox and production acceptance gates.
 
 Dev73提供[固定目标HTTP JSON工具](docs/http-tools.md)，完善[CLI](docs/cli-tools.md)读取／规划／审批示例；最终门槛见[记录](architecture/reviews/2026-10-11-fixed-business-tools.md)。
+
+Dev74增加[MCP HTTP JSON／POST SSE](docs/mcp-http.md)，接入原ToolSource与async声明；[子集验收](architecture/reviews/2026-10-11-mcp-http.md)通过，持久Session／GET恢复／OAuth仍待实现。

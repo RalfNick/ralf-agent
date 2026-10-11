@@ -108,6 +108,7 @@ from .managed_context import ManagedContextPipeline
 from .managed_memory import ManagedMemoryPolicy
 from .managed_model_memory import ManagedModelMemoryPolicy
 from .mcp import MCPToolSource, MCPTransport
+from .mcp_http import MCPHTTPTransport
 from .mcp_stdio import MCPStdioTransport
 from .memory import (
     AsyncLongTermMemoryStore,
@@ -319,7 +320,7 @@ from .workflow import (
     WorkflowSelection,
 )
 
-__version__ = "0.1.0.dev73"
+__version__ = "0.1.0.dev74"
 __all__ = [
     "EventCursor",
     "EventEnvelope",
@@ -337,6 +338,7 @@ __all__ = [
     "OpenAIResponsesProvider",
     "MCPToolSource",
     "MCPTransport",
+    "MCPHTTPTransport",
     "MCPStdioTransport",
     "CLIToolSource",
     "HTTPToolSource",

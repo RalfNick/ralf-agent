@@ -489,3 +489,7 @@ UUID 提交准确证明。配置装配、自动监督与完整 H1/H2/H3 另验�
 ## dev73 固定业务工具
 
 Toolkit沿原ToolSource扩展HTTP固定POST，CLI补齐读取与纯规划示例；实际客户端／线程关闭不依赖等待者，Action效果仍由原权威管理。[工具指南](../../docs/http-tools.md)／[验收](../reviews/2026-10-11-fixed-business-tools.md)。
+
+## dev74 MCP HTTP（子集验收通过）
+
+Toolkit仅替换固定传输，MCPToolSource、PolicyGate和Local／History权威保持。实际Client关闭与未知效果证据独立；[指南](../../docs/mcp-http.md)／[验收](../reviews/2026-10-11-mcp-http.md)。完整环境绑定与H4仍待交付。
