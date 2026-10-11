@@ -252,12 +252,15 @@ from .task_controls import AsyncTaskControls, SyncTaskControls, TaskControlBridg
 from .teams import RouterTeam, SequentialTeam, SupervisorTeam
 from .temporal import TemporalEngine, build_temporal_worker, replay_temporal_history
 from .temporal_activities import TemporalRuntime
+from .temporal_assembly_lifecycle import TemporalRuntimeAssembly
+from .temporal_builder import TemporalRuntimeBuilder
 from .temporal_context_execution import (
     ContextExecutionOwner,
     ContextExecutionPort,
     ContextExecutionRejected,
 )
 from .temporal_journal import PostgresEffectJournal
+from .temporal_profile import TemporalProfile, TemporalProfileCatalog
 from .temporal_session_topology import (
     CompositeSessionTopology,
     NativeSessionTopology,
@@ -313,7 +316,7 @@ from .workflow import (
     WorkflowSelection,
 )
 
-__version__ = "0.1.0.dev68"
+__version__ = "0.1.0.dev69"
 __all__ = [
     "EventCursor",
     "EventEnvelope",
@@ -508,6 +511,10 @@ __all__ += [
     "SyncTaskControls",
     "TaskControlBridge",
     "TemporalRuntime",
+    "TemporalRuntimeAssembly",
+    "TemporalRuntimeBuilder",
+    "TemporalProfile",
+    "TemporalProfileCatalog",
     "SessionTopology",
     "NativeSessionTopology",
     "CompositeSessionTopology",

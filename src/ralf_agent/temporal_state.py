@@ -94,6 +94,10 @@ def validate_schema_references(schema):
 
 
 def validate_manifest(manifest):
+    if isinstance(manifest, dict) and "runtime_profile" in manifest:
+        from .types import runtime_profile_identity
+
+        runtime_profile_identity(manifest["runtime_profile"])
     if not isinstance(manifest, dict) or manifest.get("kernel") not in {
         KERNEL,
         "temporal-2",

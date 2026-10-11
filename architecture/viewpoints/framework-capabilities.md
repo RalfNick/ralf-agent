@@ -2,7 +2,7 @@
 
 dev67 的[Temporal 会话树](../../docs/temporal-session-trees.md)已覆盖高级根／成员保存。
 dev68 增加[Context 实际读取生命周期](../../docs/temporal-context-read-lifetime.md)，
-原 History 统一响应与实际结束门禁；[子集验收](../reviews/2026-10-11-temporal-context-read-lifetime.md)已通过。Temporal 配置装配、
+原 History 统一响应与实际结束门禁；[子集验收](../reviews/2026-10-11-temporal-context-read-lifetime.md)已通过。完整 Temporal 配置／恢复路由、
 其他环境角色、治理、真实质量及完整 R01–R26 保持开放。
 
 
@@ -285,3 +285,7 @@ DecisionPolicy 复用公共纯 Harness prepare/propose。固定 host/ref/inherit
 
 [有界读指南](../../docs/temporal-session-data-reads.md)接通 stateless 原生／顺序的 host 与每 Agent session inherit/ref/disabled、宿主 namespace、原始端口／客户端／物理资源固定。普通及 managed Context 将原 Scope、Run/node 私有地址、页、revision 和来源引用交给原 History 采纳；重放使用已接受证据。PostgreSQL 显式 initialize 固定解析后的 table schema。
 这只是完整外置 Session 的读取依赖；不保存最终答案，不提供跨 Run Conversation。显式 History Session 与选中外置数据的高级组合（含嵌套模型 Planner）接受前拒绝。外置 CAS 写／原完成门禁、持久 SessionKey／跨 Turn 成员路径、Profile 组合与租约仍须按原目标交付。完整 H1/H2/H3/M1、R01–R26 和真实质量门槛继续开放。
+
+## dev69 Temporal 声明装配
+
+TemporalProfile／Catalog 与 TemporalRuntimeBuilder 复用现有组件端口、十类绑定和原执行权威；Assembly 只持有真实 SDK 调用／线程／生命周期，不推进业务状态。关闭保留原 end Update 接收责任，等待真实工作再释放资源。默认未配置 Profile 的发布／请求格式保持兼容；新的显式配置与安装模块见[指南](../../docs/temporal-profiles.md)，最终证据见[验收](../reviews/2026-10-11-temporal-profile-assembly.md)。完整配置、环境角色、长期治理与质量继续开放。

@@ -238,6 +238,11 @@ class TemporalParentWorkflow(TemporalRunWorkflow):
                         else None,
                         "planner_snapshot": snapshot,
                     }
+                    if "runtime_profile" in self.state.manifest:
+                        # Explicit managed Profile Workers validate the original
+                        # Scope on every Activity, including pure selection.
+                        # Historical unprofiled payloads retain their exact shape.
+                        request["scope"] = self.state.scope
                     response = await self._activity(SELECTION_ACTIVITY, request, timeout)
                     if self.state.state not in TERMINAL:
                         try:

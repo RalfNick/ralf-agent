@@ -70,6 +70,12 @@ def preflight_query_providers(profile):
 
     def check(kind, declaration):
         adapter, config = declaration["adapter"], declaration.get("config", {})
+        if kind == "stage_policy" and adapter in {"sourced-memory", "sourced-memory-async"}:
+            from .runtime_config import component_declaration
+
+            if "memory" in config:
+                check("memory_store", component_declaration(config["memory"]))
+            return
         if (kind, adapter) in {
             ("knowledge", "knowledge-resource"),
             ("memory_store", "facts-resource"),
@@ -101,7 +107,11 @@ def preflight_query_providers(profile):
     for kind, declaration in profile.components.items():
         check(kind, declaration)
     for binding in profile.binding_components or []:
-        role = {"facts": "memory_store", "knowledge": "knowledge"}.get(binding["role"])
+        role = {
+            "facts": "memory_store",
+            "knowledge": "knowledge",
+            "stage_policy": "stage_policy",
+        }.get(binding["role"])
         if role:
             check(role, binding["component"])
 

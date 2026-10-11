@@ -151,7 +151,13 @@ class TemporalRuntime:
         session_topology=None,
         context_reads=False,
         context_execution=None,
+        runtime_profile=None,
     ):
+        from .types import runtime_profile_identity
+
+        self.runtime_profile = (
+            None if runtime_profile is None else runtime_profile_identity(runtime_profile)
+        )
         from .temporal_context_execution import ContextExecutionOwner
         from .temporal_context_read_protocol import ContextExecutionRegistration
 
@@ -428,6 +434,10 @@ class TemporalRuntime:
                 self.journal, ("begin", "received", "observation", "acknowledge")
             ),
         }
+        if self.runtime_profile is not None:
+            from .types import runtime_profile_identity
+
+            result["runtime_profile"] = runtime_profile_identity(self.runtime_profile)
         if self.enable_sessions:
             result["session_protocol"] = 1
             result["dispatch_admission"] = "history-1"

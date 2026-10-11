@@ -154,6 +154,23 @@ def _sqlite_memory(config, context):
     )
 
 
+def _sqlite_memory_config(config):
+    _fields(config, {"path"})
+    if "path" in config and (type(config["path"]) is not str or not config["path"].strip()):
+        raise ValidationError("Resource path must be a non-empty string")
+
+
+def _lexical_config(config):
+    from .retrieval import RetrievalQuery, _chunk_config, _text
+
+    _fields(config, {"path", "namespace", "limit", "max_chars", "chunk_size", "overlap"})
+    _chunk_config(config.get("chunk_size", 1000), config.get("overlap", 100))
+    _text(config.get("namespace", "default"), "Knowledge namespace")
+    if "path" in config:
+        _text(config["path"], "Knowledge path")
+    RetrievalQuery("", config.get("limit", 5), config.get("max_chars", 8000))
+
+
 def _lexical(config, context):
     _fields(config, {"path", "namespace", "limit", "max_chars", "chunk_size", "overlap"})
     path = (
@@ -227,7 +244,12 @@ class ComponentRegistry:
         self.register(
             "tools", "empty", lambda c, ctx: ToolRegistry(), validator=lambda c: _fields(c, {})
         )
-        self.register("context_assembler", "default", lambda c, ctx: ContextAssembler(**c))
+        self.register(
+            "context_assembler",
+            "default",
+            lambda c, ctx: ContextAssembler(**c),
+            validator=lambda c: _fields(c, {}),
+        )
         from .context_factories import budgeted_context, managed_context
 
         self.register(
@@ -287,11 +309,26 @@ class ComponentRegistry:
             lambda c, ctx: PythonToolExecutor(ctx.tools),
             validator=lambda c: _fields(c, {}),
         )
-        self.register("recall_policy", "bounded-recall", _policy)
-        self.register("recall_planner", "fixed", lambda c, ctx: FixedRecallPlanner(_policy(c, ctx)))
+        self.register(
+            "recall_policy",
+            "bounded-recall",
+            _policy,
+            validator=lambda c: _policy(c, None) and None,
+        )
+        self.register(
+            "recall_planner",
+            "fixed",
+            lambda c, ctx: FixedRecallPlanner(_policy(c, ctx)),
+            validator=lambda c: _policy(c, None) and None,
+        )
         for kind in ("session_store", "memory_store"):
-            self.register(kind, "sqlite", _sqlite_memory)
-            self.register(kind, "in-memory", lambda c, ctx: InMemoryMemory(**c))
+            self.register(kind, "sqlite", _sqlite_memory, validator=_sqlite_memory_config)
+            self.register(
+                kind,
+                "in-memory",
+                lambda c, ctx: InMemoryMemory(**c),
+                validator=lambda c: (_fields(c, {"backend_id"}) or InMemoryMemory(**c)) and None,
+            )
         from .conversation_factories import colocated_conversation, conversation_config
 
         self.register(
@@ -300,7 +337,7 @@ class ComponentRegistry:
             colocated_conversation,
             validator=conversation_config,
         )
-        self.register("knowledge", "sqlite-lexical", _lexical)
+        self.register("knowledge", "sqlite-lexical", _lexical, validator=_lexical_config)
         from .workflow import IdentityTransform, StaticWorkflowCompiler, StaticWorkflowInterpreter
         from .workflow_scheduler import StaticWorkflowScheduler
 

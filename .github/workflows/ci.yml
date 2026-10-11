@@ -40,6 +40,11 @@ jobs:
           ralf --format text init wheel-starter
           cd wheel-starter
           python -m agent_app --ticket CI-STARTER
+      - name: Installed Temporal declarations without an implicit connection
+        working-directory: ${{ runner.temp }}
+        run: |
+          python -m pytest -q -W error -p no:cacheprovider -c /dev/null "$RUNNER_TEMP/session-contracts/tests/test_temporal_profiles.py" "$RUNNER_TEMP/session-contracts/tests/test_temporal_runtime_profile.py" "$RUNNER_TEMP/session-contracts/tests/test_temporal_assembly.py" "$RUNNER_TEMP/session-contracts/tests/test_temporal_assembly_cleanup.py" "$RUNNER_TEMP/session-contracts/tests/test_temporal_assembly_review.py" "$RUNNER_TEMP/session-contracts/tests/test_temporal_assembly_lifetime.py" "$RUNNER_TEMP/session-contracts/tests/test_temporal_worker_wrapping.py" "$RUNNER_TEMP/session-contracts/tests/test_temporal_profile_example.py"
+          python -m ralf_agent.temporal_profile_example --data-dir "$RUNNER_TEMP/temporal-profile-config"
       - name: Installed graph starter outside checkout
         working-directory: ${{ runner.temp }}
         run: |
@@ -99,8 +104,14 @@ jobs:
 
   remote-contracts:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 45
     services:
+      redis:
+        image: redis:7
+        ports: ['6379:6379']
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s --health-timeout 5s --health-retries 10
       postgres:
         image: postgres:16
         env:
@@ -115,6 +126,7 @@ jobs:
         image: qdrant/qdrant:v1.19.2
         ports: ['6333:6333']
     env:
+      RALF_TEST_REDIS_URL: 'redis://127.0.0.1:6379/0'
       RALF_TEST_POSTGRES_DSN: 'host=127.0.0.1 user=postgres password=local-test-only dbname=postgres'
       RALF_TEST_QDRANT_URL: 'http://127.0.0.1:6333'
     steps:
@@ -145,6 +157,8 @@ jobs:
           echo "RALF_TEST_TEMPORAL_ADDRESS=$(cat "$RUNNER_TEMP/ralf-temporal/address")" >> "$GITHUB_ENV"
       - name: Two-worker Temporal contracts and History replay
         run: python -m pytest -q -W error tests/test_model_adoption_contracts.py tests/test_recent_session_context.py tests/test_temporal_engine.py tests/test_temporal_service.py tests/test_a2a_temporal.py tests/test_temporal_composite_service.py tests/test_temporal_composites.py tests/test_temporal_context.py tests/test_temporal_facts.py tests/test_temporal_facts_service.py tests/test_temporal_knowledge_bindings.py tests/test_temporal_knowledge_service.py tests/test_temporal_sessions.py tests/test_temporal_session_client.py tests/test_temporal_session_service.py tests/test_temporal_session_recovery_service.py tests/test_temporal_limits.py tests/test_temporal_limits_service.py tests/test_temporal_completion.py tests/test_temporal_completion_service.py tests/test_temporal_decision.py tests/test_temporal_decision_service.py tests/test_temporal_binding_service.py tests/test_temporal_managed_context_service.py tests/test_temporal_session_data.py tests/test_temporal_session_data_service.py tests/test_temporal_parent_facade.py tests/test_temporal_starter.py tests/test_temporal_review.py tests/test_temporal_custom_context.py tests/test_temporal_custom_service.py tests/test_observable_temporal_service.py tests/test_temporal_session_tree_service.py tests/test_temporal_session_tree_crash_service.py tests/test_temporal_session_tree_remote.py tests/test_temporal_session_tree_data_context.py tests/test_temporal_session_tree_memory_rag.py tests/test_temporal_context_read_service.py tests/test_temporal_context_read_crash_service.py tests/test_temporal_context_read_remote.py tests/test_temporal_context_read_h3_service.py
+      - name: Temporal Profile factories, owned shutdown and recovery
+        run: python -m pytest -q -W error tests/test_temporal_assembly_review.py tests/test_temporal_profiles.py tests/test_temporal_runtime_profile.py tests/test_temporal_assembly.py tests/test_temporal_assembly_lifetime.py tests/test_temporal_assembly_cleanup.py tests/test_temporal_worker_wrapping.py tests/test_temporal_profile_example.py tests/test_temporal_profile_service.py tests/test_temporal_profile_remote.py tests/test_temporal_profile_close_service.py
       - name: Stop task-owned Temporal Service
         if: always()
         run: |

@@ -57,6 +57,11 @@ class _ContextThreads(ThreadExecutionTracker):
         super().__init__()
         self._finished = finished
 
+    def _register(self, group):
+        # Delegators may supply their logical Run ID. This tracker belongs to
+        # the actual owning invocation, whose end callback must see that work.
+        return super()._register(current_thread_group.get() or group)
+
     def _finish(self, token):
         with self._lock:
             call = self._calls.get(token)

@@ -1,9 +1,9 @@
-# dev68 剩余能力与架构验收清单
+# dev69 剩余能力与架构验收清单
 
 dev66 原生／顺序持久 Turn 保持兼容；dev67 接通[Temporal 会话树](temporal-session-trees.md)，
-包括高级根保存、稳定成员私有地址和跨 Turn 召回。最终验收见文末；配置装配、租约和完整 R01–R26 继续开放。
+包括高级根保存、稳定成员私有地址和跨 Turn 召回。dev69 增加显式 Temporal Profile 工厂与实际 Worker 生命周期；完整配置／路由、租约和 R01–R26 继续开放。
 
-版本：42；日期：2026-10-11；维护者：RALF maintainers。当前增量基线：0917d72/dev67；dev68 子集最终门槛见验收记录。
+版本：43；日期：2026-10-11；维护者：RALF maintainers。当前增量基线：ddb6dbb/dev68；dev69 子集已通过冻结源码／安装服务／旧68兼容门槛，见验收记录。
 读者：框架维护者、应用开发者及适配器贡献者。基线：da55f97 的 dev30，
 以及已提交1cad308的dev31–36与已提交1f27300的dev37配置／首用及已提交e6a6de7的dev38远程原生／顺序及已提交9fcbb84的dev39复合根会话与已提交7898b78的dev40自动规则记忆及已提交0d17976的dev41受管理上下文及已提交ec9b5f5的dev42模型选择记忆阶段及已提交e413ddc的dev44高级／Temporal数据上下文和已提交5528670的dev45 Local高级自动记忆，以及已提交 adbc328 的 dev46 Temporal自动记忆与五类Agent绑定。
 
@@ -67,7 +67,7 @@ PG Knowledge/Inbox/Outbox、Qdrant、HTTP Embedding、Hybrid/RRF／基础重排�
 | R01 每 Agent 绑定 | Local 原生 Agent／顺序／Graph／Team／Dynamic／嵌套成员六类选择：provider、decision_policy、context、facts、knowledge、tool_set；稳定路径、固定父子发布与 Profile v2；Session 后端／允许的 namespace／同权威实际地址占用；Facts／Knowledge 宿主范围视图与来源校验；纯完成 verifier 的 inherit/ref/disabled；宿主与 Agent limits 的固定交集与动作额度；原生／顺序及高级 stage_policy 写目标；Temporal 十类版本化 provider/context/knowledge/tool_set/stage_policy/facts/limits/verifier/decision_policy/session；session 有 stateless 有界读、原生／顺序持久 Turn／CAS 保存及显式高级根／成员会话树，与 Facts／Knowledge 宿主 namespace selector、原始检索资源固定及原有子 Run 子树 | 其余环境绑定角色及完整 Temporal 配置；其他资源身份／selector／作用域视图；artifacts／workspace／sandbox／skills 绑定与准入；stage_policy 已支持 Local 原生／顺序／图／Team／动态／嵌套规则／模型选择记忆；上下文历史摘要与引用／产物组合已交付，其他阶段／组合仍待交付。前四类角色显式选择仍被拒绝 | H1：子集已交付 |
 | R02 Agent／Session 入口 | H2a Local stateless Agent/Runtime/AgentRun、RunRef/WaitResult；独立任务托管、纯观察等待、原根流程控制路由、owned/borrowed 关闭与 CloseIncomplete 重试、显式重连；保留旧 RunHandle DTO；H2b1 同库原生／顺序及 H2b2 图／团队／动态／嵌套及 H2b3 授权根 namespace、H2b4a 远程原生／顺序及 H2b4b 复合根保存意图／准确回执／终态只查询恢复、异步 Profile 配置，SessionKey／路由／Turn／busy／CAS rebind；H2c1 Temporal 原生／顺序共同入口、异步重连、固定 RPC 组件与客户端 detach；H2c2 已注册 Graph／Team／Dynamic／嵌套入口与实际子 Run 控制；H2c3 Temporal History Session／原 Namespace UUID／耐久 Turn／busy／启动意图／空闲 CAS，普通与 managed Conversation 及原后代静默证据；dev66 原生／顺序外置Root保存及 dev67 图／Team／Plan／DAG／嵌套根保存、稳定成员地址、原根／私有数据只读取一次、数据集身份与跨Turn召回 | 跨权威会话租约、输入续接／业务 deadline、Temporal 推荐配置／其他绑定角色、移交与耐久 FIFO | H2a／H2b1／H2b2／H2b3／H2b4a／H2b4b／H2c1／H2c2／H2c3：子集已交付；完整 H2 未交付 |
 | R03 Harness 与公共规则 | 纯 Harness/NativeHarness、ToolExecutor、共享决策／证据规则、Workflow Compiler/Interpreter、固定声明的 AgentHarness 组合入口；Local 原生／顺序及高级实际 Agent、Temporal 的规则／模型选择记忆、历史摘要和数据上下文，独立来源／提案／意图／回执与 Run 额度 | 其余广义 Harness 受管理阶段及默认组合；逐步提取 RuntimeKernel 纯规则；Prepare/Verify/Memory 等阶段的身份、证据、取消和恢复协议。保持 Local/Temporal 各自唯一执行权威 | H1–H3：部分抽象已实现 |
-| R04 配置与装配 | 版本 Profile/Catalog、JSON/TOML、注册工厂、sync/async 装配、owned 清理、历史配置路由 | 完整绑定／推荐组合配置；CLI/ProfiledEngine 异步工厂路由；插件显式安装／激活／兼容检查；配置／组件迁移、旧代码归档、部署版本管理；配置来源／监听按需分期 | H1／H5：子集已交付 |
+| R04 配置与装配 | Local 版本 Profile/Catalog、JSON/TOML、工厂、sync/async 装配与历史路由；dev69 显式 Temporal Profile／十类绑定工厂、实际 Worker 排空与离线起步模块 | Temporal 多版本恢复路由／配置迁移、剩余环境角色、完整绑定／推荐组合配置；CLI/ProfiledEngine 异步工厂路由；插件显式安装／激活／兼容检查；配置／组件迁移、旧代码归档、部署版本管理；配置来源／监听按需分期 | H1／H5：子集已交付 |
 | R05 模型适配 | Chat Completions、DeepSeek 非思考、Anthropic 文本／工具、Gemini 文本、stateless Responses/JSON/完整 SSE | Gemini 函数调用、Responses 续接及受限字段；能力／用量／错误／超时／重试一致性；路由/fallback/负载策略及效果不重复契约；国内外及本地模型真实兼容矩阵。兼容 URL 不证明每个模型支持同一能力 | A1／H5：协议子集已交付，线上验收未完成 |
 | R06 多模态／实时 | 当前 Provider 链路为文本 | 图片／音频／视频媒体类型、来源／访问／限额及逐适配器验收；Realtime/TTS/高级压缩后置，不作为当前 v1 目标业务链路先决条件 | 能力未交付；高级实时后置 |
 | R07 Agent 能力包 | 原生循环、可定制 AgentSpec、规划／团队／RAG starter、dev47 显式 semantic-knowledge／memory-recall／Plan／Team 默认组合 | 更完整 Search／业务 Plan／Team 与 Coding 能力包；默认 verifier／上下文／工具、替换示例、诊断及业务验收。Coding 依赖环境／Runner | H3／H4：组件有基础，完整默认组合未交付 |
@@ -463,3 +463,11 @@ History 分别采纳许可、响应和准确结束证明。普通 Context 与 pl
 
 完整 H1/H2/H3/M1、R01–R26、Temporal Profile 装配、其他环境角色、自动监督恢复、
 跨权威会话租约、治理与真实质量继续开放。见[指南](temporal-context-read-lifetime.md)与[验收](../architecture/reviews/2026-10-11-temporal-context-read-lifetime.md)。
+
+## dev69 Temporal Profile 装配子集
+
+新增不可变声明与单客户端／单队列 Assembly，原 Scope、Release、数据集与实际 Activity 身份固定。模型／工具／摘要／写入和 Context／Session 原通知排空后才关闭 Worker 与工厂资源；启动、取消、失败和重试保留责任。高级裸 Runtime 只能在执行前明确移交。
+
+真实服务验证含七类编排的独立 Worker／两Turn／重启与原 History replay、Redis／PostgreSQL 根及选择私有 Session、四类处理器关闭窗口和审批重复命令；最终冻结版本、安装包、旧新兼容及独立 review 结果以[dev69 验收](../architecture/reviews/2026-10-11-temporal-profile-assembly.md)为准。文档与接口实现不代替最后门槛。
+
+完整 R04/H1/H3/H5/M1 仍开放：多版本路由、SDK／环境绑定角色、EffectJournal 声明工厂、跨权威租约、容量／保留／迁移、真实语义质量与独立采用。见[配置指南](temporal-profiles.md)。

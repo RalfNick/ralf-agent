@@ -467,3 +467,7 @@ Native History 独占许可、响应和结束事实及业务推进，原 Parent/
 责任不代表模型、工具、产物写或整个 Worker 已静默。显式新协议为 binding2，旧
 默认与 native save-v1 保持。真实进程退出后丢失结束通知仍需受信监督方确认并向原
 UUID 提交准确证明。配置装配、自动监督与完整 H1/H2/H3 另验收，见[指南](../../docs/temporal-context-read-lifetime.md)。
+
+### dev69 Temporal Profile 工厂与托管 Worker
+
+显式 TemporalProfile Catalog 接入原组件工厂和十类 BindingCatalog 角色；BuildContext 无 Local Store。TemporalRuntimeAssembly 固定 Scope／版本／客户端／队列，只托管实际 Activity 与资源。原 Session／Context Owner 仍提交准确 end proof，原 History 唯一推进业务。SDK hosting Task 保持整个 Worker 生命周期；关闭或致命退出拒绝新入口，实际调用和通知排空后才释放工厂资源。高级宿主只可在执行前明确移交拥有关系。完整多版本路由、环境角色、集群容量与质量仍未交付，见[配置指南](../../docs/temporal-profiles.md)和[子集验收](../reviews/2026-10-11-temporal-profile-assembly.md)。

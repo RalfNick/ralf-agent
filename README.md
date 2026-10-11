@@ -259,7 +259,7 @@ facts = InMemoryMemory(backend_id="demo-facts:v1")
 # facts.put_fact(scope, "assistant", "language", "中文", expected_version=0)
 ```
 
-短期消息和长期事实使用作用域及 CAS 版本。本地向量索引、Hash Embedding 离线基线、混合检索和来源版本校验已有实现；[可选记忆 pipeline](docs/managed-memory.md)提供规则／模型字段选择与有来源的观察记录。观察记录不等于已经确认的事实。dev40–42 已提供 Local 原生／顺序的[自动规则记忆](docs/managed-memory-stages.md)、[自动模型字段选择](docs/managed-model-memory-stages.md)与[受管理规则／模型摘要](docs/managed-context-stages.md)，默认关闭并可按 Agent 绑定。Session／RAG 语义压缩、Temporal 自动记忆写入、语义修订／撤回、线上语义质量和企业知识源撤权体系仍待完善。
+短期消息和长期事实使用作用域及 CAS 版本。本地向量索引、Hash Embedding 离线基线、混合检索和来源版本校验已有实现；[可选记忆 pipeline](docs/managed-memory.md)提供规则／模型字段选择与有来源的观察记录。观察记录不等于已经确认的事实。dev40–42 已提供 Local 原生／顺序的[自动规则记忆](docs/managed-memory-stages.md)、[自动模型字段选择](docs/managed-model-memory-stages.md)与[受管理规则／模型摘要](docs/managed-context-stages.md)，默认关闭并可按 Agent 绑定。高级及 Temporal 自动记忆、摘要和大结果卸载已有显式原 Run 阶段；完整 Session／RAG 语义管理、语义修订／撤回、线上质量和企业知识源撤权体系仍待完善。
 
 常用 SDK 和 CLI 见 [API 指引](docs/api-reference.md)；更多接入约束、组件生命周期和测试方法见 [扩展指南](docs/extending.md)。
 
@@ -296,6 +296,7 @@ python examples/evaluate.py
 - [完整设计](architecture/design.md)与 [review 取舍](architecture/review-resolution.md)。
 - [当前剩余能力清单](docs/remaining-work.md)：逐层区分已交付子集、尚未实现与待验收能力，按 H1–H5 继续建设。
 - [Local Agent API](docs/agent-api.md)：dev31 H2a 的统一入口、独立执行托管、纯观察等待与可重试关闭；dev32 补齐同库原生／顺序 Session/Turn 子集。
+- [Temporal Profile 配置装配](docs/temporal-profiles.md)：JSON／TOML、十类绑定工厂与真实 Worker 资源排空；安装包提供离线起步模块，完整路由／治理仍待完善。
 - [Temporal Context read lifetime](docs/temporal-context-read-lifetime.md)：显式托管 Context 读取与准确结束通知，关闭和恢复责任独立；[dev68 子集验收](architecture/reviews/2026-10-11-temporal-context-read-lifetime.md)已通过。
 - [Temporal Agent API](docs/temporal-agent-api.md)：高级编排入口、实际子 Run 控制引用、异步重连与客户端 detach；已有版本化绑定、History Session 与原生／顺序外置保存；高级根／成员私有数据见[Temporal 会话树](docs/temporal-session-trees.md)。其余环境角色、配置及完整验收仍待完善。
 - [AgentHarness目标架构](architecture/viewpoints/harness-runtime.md)：广义Harness/Core、每Agent绑定、统一入口、受管理默认链路与H1–H5开发门槛；首期见[能力绑定契约](architecture/specs/agent-capability-binding-contract.md)，H2见[Facade／Session／关闭契约](architecture/specs/agent-facade-session-contract.md)。H1a–H1f 与入口子集已交付；完整 H1/H2、Temporal 其余角色、其他资源选择／环境角色及完整智能默认链路仍待实现。
@@ -326,7 +327,7 @@ SDK、运行时和基础治理按 [Apache-2.0](LICENSE) 开源。外部模型／
 
 ### 上下文与大结果（dev20）
 
-`ralf init my-context-agent --template context` 提供第十七种离线模板，显式存储大工具结果并读取有界样本，支持提交后恢复。MessageCounter、ContextBudgeter、ContextSummarizer 可分别替换，BudgetedContextAssembler 提供字符／token 估算、完整消息组裁剪与显式历史摘录，实际 Harness 请求也受预算约束。ArtifactStore 有内存／SQLite 默认及 opt-in 文件后端，实现 Scope、字节、TTL、摘要与事务容量；应用工具选择引用契约。旧默认保持。自动规则记忆和 Local 原生／顺序模型摘要已有 opt-in 原 Run 阶段；显式提炼／模型摘要及 Temporal 纯自定义上下文已有实现。自由合成、高级／Temporal 阶段和企业治理仍待完善，见 [上下文与 Artifact 指南](docs/context-artifacts.md)及[自动上下文接入](docs/managed-context-stages.md)。
+`ralf init my-context-agent --template context` 提供第十七种离线模板，显式存储大工具结果并读取有界样本，支持提交后恢复。MessageCounter、ContextBudgeter、ContextSummarizer 可分别替换，BudgetedContextAssembler 提供字符／token 估算、完整消息组裁剪与显式历史摘录，实际 Harness 请求也受预算约束。ArtifactStore 有内存／SQLite 默认及 opt-in 文件后端，实现 Scope、字节、TTL、摘要与事务容量；应用工具选择引用契约。旧默认保持。自动规则记忆和 Local 原生／顺序模型摘要已有 opt-in 原 Run 阶段；显式提炼／模型摘要及 Temporal 纯自定义上下文已有实现。自由合成、剩余环境角色、完整智能默认链路和企业治理仍待完善，见 [上下文与 Artifact 指南](docs/context-artifacts.md)及[自动上下文接入](docs/managed-context-stages.md)。
 
 Native Responses, keyword Python tools and managed compatibility scenarios: [dev22 guide](docs/sdk-model-tools.md). The [ordered alignment roadmap](docs/agentscope-alignment.md) tracks subsequent sandbox/interaction, semantic data, services and enterprise gates.
 

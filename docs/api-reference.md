@@ -1,6 +1,6 @@
 # 常用 API 与 CLI 参考
 
-版本：0.1.0.dev34；local-4 与已启用绑定的版本身份分别固定。公开 API 为预览契约；静态图、有限规划／团队和真实数据适配器有行为证据，完整 M1 未完成。已交付边界见[实现清单](implementation-status.md)，适配器要求见[扩展指南](extending.md)。以下为常用入口，不替代端口契约。
+版本：0.1.0.dev69；local-4 与已启用绑定的版本身份分别固定。公开 API 为预览契约；静态图、有限规划／团队和真实数据适配器有行为证据，完整 M1 未完成。已交付边界见[实现清单](implementation-status.md)，适配器要求见[扩展指南](extending.md)。以下为常用入口，不替代端口契约。
 
 ## Local 应用入口
 
@@ -294,3 +294,7 @@ See [binding examples and refusal matrix](agent-bindings.md); Agent/Runtime Faca
 ## Local 每 Agent 执行限制
 
 `LocalEngine(..., limits=None)` 的宿主上限与 `limits` Agent 绑定始终取交集；`FixedAgentLimits(max_decisions=None,max_context_chars=None,max_tool_actions=None)` 是 opt-in 默认，`AgentLimitsPolicy.propose(AgentSpec)->AgentLimitProposal` 可替换。接受时固定 caps，执行读取原发布；Profile 的 limits/fixed 适配及声明路径见[教程](agent-limits.md)。
+
+## Temporal 声明装配
+
+`TemporalProfile`／`TemporalProfileCatalog.from_file` 是纯不可变声明和版本查找；`TemporalRuntimeBuilder.abuild` 复用明确工厂与原执行权威，返回 `TemporalRuntimeAssembly`。Assembly 提供固定 `profile/scope/release/capabilities`、`start_worker/create_engine/aclose` 与执行前 `detach_components`。Owned 清理、Scope／队列绑定、线程及原通知排空、远程数据和默认关闭开关见[完整指南](temporal-profiles.md)。

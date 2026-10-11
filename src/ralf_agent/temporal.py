@@ -441,7 +441,9 @@ class TemporalEngine:
         self._closed = True
 
 
-def build_temporal_worker(client, *, task_queue, runtime, release=None, **worker_options):
+def build_temporal_worker(
+    client, *, task_queue, runtime, release=None, activity_owner=None, **worker_options
+):
     """Explicit worker registration with fixed identity and no hidden fallbacks."""
     from .temporal_activities import TemporalRuntime, registered_activities
 
@@ -466,6 +468,19 @@ def build_temporal_worker(client, *, task_queue, runtime, release=None, **worker
     worker_options.setdefault("build_id", digest(manifest))
     worker_options.setdefault("sticky_queue_schedule_to_start_timeout", timedelta(seconds=1))
     worker_options.setdefault("disable_eager_activity_execution", True)
+    activities = (
+        registered_activities(runtime, client)
+        + registered_parent_activities(runtime, client)
+        + registered_session_activities(runtime, client)
+    )
+    if activity_owner is not None:
+        from .temporal_assembly_lifecycle import WorkerExecutionOwner
+
+        if not isinstance(activity_owner, WorkerExecutionOwner):
+            raise ValidationError("Worker requires its original mechanical Activity owner")
+        if activity_owner.release_digest != digest(runtime.orchestration_release):
+            raise DefinitionMismatch("Worker owner must retain the original release")
+        activities = activity_owner.wrap_activities(activities, client=client)
     return Worker(
         client,
         task_queue=task_queue,
@@ -475,9 +490,7 @@ def build_temporal_worker(client, *, task_queue, runtime, release=None, **worker
             TemporalParentWorkflow,
             TemporalSessionWorkflow,
         ],
-        activities=registered_activities(runtime, client)
-        + registered_parent_activities(runtime, client)
-        + registered_session_activities(runtime, client),
+        activities=activities,
         **worker_options,
     )
 
