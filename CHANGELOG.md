@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.0.dev75 — Read-only Workspace
+
+- Add replaceable bounded WorkspacePort and POSIX/Memory defaults with pinned resource identities.
+- Add three original managed read tools and async workspace-read declarations, true handler/FD lifetime and host Scope preallocation checks.
+- Final source4431 passed/339 configured skips; core127/installed191 contracts, required source/installed2 actual Temporal cases, old74 recovery and22 templates pass.258 product modules match. Eight Important fixes verified; owned service stopped. One C1-control path Minor remains deferred. Workspace binding, writes, Skills and Sandbox remain open.
+
 ## 0.1.0.dev74 — MCP HTTP tools
 
 - Add fixed HTTP MCP JSON/POST SSE transport, bounded RPC/session framing and actual thread/client ownership.

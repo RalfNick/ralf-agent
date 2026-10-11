@@ -1,5 +1,7 @@
 # Implementation progress — 2026-10-05 M1 local runtime
 
+Dev75：只读Workspace Port／文件和内存默认、受管理工具及async声明交付。最终源码4431／339配置跳过，核心安装127／扩展191、真实源码及安装各2项、旧74双向恢复／22原模板／258模块一致通过。8项Important经一轮RED→GREEN闭环，自有服务停止并等待退出；1项C1路径Minor延后。[验收](../architecture/reviews/2026-10-11-workspace-read.md)记录全部边界，完整目标仍开放。
+
 Dev74：MCP HTTP JSON／POST SSE与async声明交付。最终源码4304通过／337配置跳过，核心安装79／扩展320、真实源码及安装各8项Temporal／PG通过；实际73兼容、22个原模板与254模块一致。3项Important经一轮RED→GREEN修复，自有服务已停止；[验收](../architecture/reviews/2026-10-11-mcp-http.md)记录边界，完整目标仍开放。
 
 Dev73：固定POST HTTP工具与CLI读取／纯规划／审批／写入示例交付。本批最终源码4225通过／333配置跳过，核心安装111／扩展241、真实源码及安装各4项Temporal／PG、实际72双向默认／旧CLI恢复与250模块一致通过。自有服务已停止，2项Important已RED→GREEN；[验收](../architecture/reviews/2026-10-11-fixed-business-tools.md)记录完整边界，完整目标开放。

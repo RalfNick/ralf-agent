@@ -320,7 +320,11 @@ from .workflow import (
     WorkflowSelection,
 )
 
-__version__ = "0.1.0.dev74"
+__version__ = "0.1.0.dev75"
+from .filesystem_workspace import FileSystemWorkspace
+from .workspace import InMemoryWorkspace, WorkspaceError, WorkspacePort
+from .workspace_tools import WorkspaceToolSource
+
 __all__ = [
     "EventCursor",
     "EventEnvelope",
@@ -685,3 +689,8 @@ __all__ += ["SessionKey", "SessionRef", "SessionSnapshot", "TurnAdmission", "Ses
 
 __all__ += ["AgentSession", "SessionBusy", "SessionBindingMismatch"]
 __all__ += ["ContextExecutionOwner", "ContextExecutionPort", "ContextExecutionRejected"]
+
+
+__all__ += ["WorkspacePort", "WorkspaceError", "InMemoryWorkspace", "FileSystemWorkspace"]
+
+__all__ += ["WorkspaceToolSource"]

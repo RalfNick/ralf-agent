@@ -10,6 +10,7 @@ from jsonschema import Draft202012Validator
 from jsonschema.exceptions import SchemaError
 
 from .errors import DefinitionMismatch, RalfError, ValidationError
+from .ports import _complete_sync_none, is_sync_callable
 from .tools import ToolRegistry, ToolSpec
 from .types import InvocationContext, canonical, credits, digest
 
@@ -209,6 +210,11 @@ async def register_tool_source(registry, source, *, policies, prefix=""):
     entries, names = [], []
     for name, policy in policies.items():
         descriptor = ToolDescriptor(**by_name[name].to_dict())
+        admission = getattr(source, "validate_tool_policy", None)
+        if admission is not None:
+            if not is_sync_callable(admission):
+                raise ValidationError("Tool source policy admission must be synchronous")
+            _complete_sync_none(admission(descriptor, policy), "Tool source policy admission")
         schema = _caller_schema(descriptor, policy)
         local_name = prefix + name
         binding = _SourceBinding(source, identity, descriptor, policy, schema)

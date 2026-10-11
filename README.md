@@ -344,3 +344,5 @@ retains separate input/Workspace/Sandbox and production acceptance gates.
 Dev73提供[固定目标HTTP JSON工具](docs/http-tools.md)，完善[CLI](docs/cli-tools.md)读取／规划／审批示例；最终门槛见[记录](architecture/reviews/2026-10-11-fixed-business-tools.md)。
 
 Dev74增加[MCP HTTP JSON／POST SSE](docs/mcp-http.md)，接入原ToolSource与async声明；[子集验收](architecture/reviews/2026-10-11-mcp-http.md)通过，持久Session／GET恢复／OAuth仍待实现。
+
+Dev75增加[只读Workspace Port与文件／内存默认实现](docs/workspace.md)，沿原工具与async装配接入；[子集验收](architecture/reviews/2026-10-11-workspace-read.md)通过。环境绑定与Sandbox仍开放。

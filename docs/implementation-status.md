@@ -1,4 +1,6 @@
-# Implementation status — 0.1.0.dev74
+# Implementation status — 0.1.0.dev75
+
+Dev75 adds replaceable read-only WorkspacePort/POSIX/Memory defaults, three original managed tools and async declarations. Final source4431 passed/339 configured skips, core127/installed191 contracts and required source/installed2 actual Temporal FS/Memory cases pass; groups overlap. Actual74 recovery and22 templates,258 product modules and installed examples remain consistent. Eight Important fixes verified; owned service stopped. One C1-control path Minor deferred. Agent.workspace binding, writes, Skills and Sandbox remain open. [Evidence](../architecture/reviews/2026-10-11-workspace-read.md).
 
 Dev74 adds bounded fixedHTTP MCP JSON/POST SSE and async declarations through original ToolSource/authority. Final source4304 passed/337 configured skips, core79/installed320 contracts and required source/installed8 actual Temporal/PG cases pass; groups overlap. Actual73 compatibility,22 original templates and254 product modules remain consistent. Three Important review findings fixed; owned services stopped. Persistent sessions, GET resume, OAuth and full MCP remain open. [Scope/evidence](../architecture/reviews/2026-10-11-mcp-http.md).
 

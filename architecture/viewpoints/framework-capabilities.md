@@ -303,3 +303,7 @@ TemporalProfile／Catalog 与 TemporalRuntimeBuilder 复用现有组件端口、
 Dev73沿R12增加[固定目标HTTP JSON工具](../../docs/http-tools.md)和CLI完整起步；共享有限JSON采纳与原Policy/实际线程，保留执行权威；[最终验收](../reviews/2026-10-11-fixed-business-tools.md)通过，完整目标仍开放。
 
 Dev74沿原MCPTransport提供[HTTP JSON／POST SSE](../../docs/mcp-http.md)，保持原Action、效果核验和真实线程归属。[子集验收](../reviews/2026-10-11-mcp-http.md)通过；持久Session/OAuth/GET恢复仍开放。
+
+## dev75 只读Workspace（子集验收通过）
+
+沿原工具接入可替换WorkspacePort／POSIX文件／内存默认实现，有界路径与可信Scope、实际线程／FD拥有和原结果恢复。[指南](../../docs/workspace.md)／[子集验收](../reviews/2026-10-11-workspace-read.md)通过；Agent.workspace角色、写入租约、Skills／Sandbox／Runner和完整H4仍开放。

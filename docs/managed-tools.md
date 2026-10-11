@@ -159,3 +159,7 @@ stdio 每次操作启动独立会话，按 initialize → initialized → tools/
 原 Agent／顺序 Workflow／Graph v1 的声明、默认身份和回执保持兼容。包含 Tool 节点的计划使用 v2；没有 Tool 的计划保持 v1。旧运行时会拒绝 v2，不能把历史任务在执行中迁移成新计划。生成的 MCP 工程以服务脚本摘要固定默认 peer 版本，修改脚本后需保留旧实现才能继续旧 Run。
 
 本增量是 G2 工具路径的一部分。并行、动态 Plan、ChildRun／团队、MCP HTTP／OAuth／资源／提示、持久连接、CLI 沙箱、分布式执行与真实模型质量仍按[实现清单](implementation-status.md)交付。AgentScope 的组件组合和资源边界提供了参考，源码独立实现；这不表示整体能力已经达到 AgentScope。
+
+[只读Workspace](workspace.md)提供文件／内存替换、三项受管理读取工具与async声明；root与caps由宿主固定，所有Action仍沿原执行权威。
+
+工具源可选实现纯同步validate_tool_policy(descriptor, policy)；原注册路径仅接受完成后的None并在发布handler前拒绝惰性返回。Workspace源据此固定read_only，仍保留原PolicyGate／审批／效果协议。

@@ -493,3 +493,7 @@ Toolkit沿原ToolSource扩展HTTP固定POST，CLI补齐读取与纯规划示例�
 ## dev74 MCP HTTP（子集验收通过）
 
 Toolkit仅替换固定传输，MCPToolSource、PolicyGate和Local／History权威保持。实际Client关闭与未知效果证据独立；[指南](../../docs/mcp-http.md)／[验收](../reviews/2026-10-11-mcp-http.md)。完整环境绑定与H4仍待交付。
+
+## dev75 只读Workspace（子集验收通过）
+
+沿原工具接入可替换WorkspacePort／POSIX文件／内存默认实现，有界路径与可信Scope、实际线程／FD拥有和原结果恢复。[指南](../../docs/workspace.md)／[子集验收](../reviews/2026-10-11-workspace-read.md)通过；Agent.workspace角色、写入租约、Skills／Sandbox／Runner和完整H4仍开放。

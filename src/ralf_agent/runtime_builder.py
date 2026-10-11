@@ -499,6 +499,9 @@ class ComponentRegistry:
         from .mcp_http_factories import register_mcp_http
 
         register_mcp_http(self)
+        from .workspace_factories import register_workspace_tools
+
+        register_workspace_tools(self)
 
     def register(self, kind, name, factory, *, validator=None):
         self._register(kind, name, factory, validator, asynchronous=False)
