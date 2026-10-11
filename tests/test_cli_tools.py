@@ -222,6 +222,63 @@ def test_invalid_unicode_input_is_refused_before_launch(tmp_path):
     asyncio.run(run())
 
 
+@pytest.mark.parametrize("cwd", [False, 0, ""])
+def test_malformed_cwd_refuses_before_process(tmp_path, cwd):
+    with pytest.raises(ValidationError):
+        public().CLIToolSource(descriptor(), [sys.executable], version="1", cwd=cwd)
+    assert not (tmp_path / "pid").exists()
+
+
+def test_fixed_empty_argument_is_delivered_unchanged(tmp_path):
+    async def run():
+        remote = public().CLIToolSource(
+            descriptor(),
+            [
+                sys.executable,
+                str(Path(__file__).with_name("cli_tool_fixture.py")),
+                "environment",
+                str(tmp_path),
+                "",
+            ],
+            version="empty-fixed-arg-v1",
+            cwd=tmp_path,
+        )
+        try:
+            result = await remote.call_tool(descriptor(), {"value": 1}, context())
+            assert result["argv"] == [""]
+        finally:
+            await remote.aclose()
+
+    asyncio.run(run())
+    gone(tmp_path)
+
+
+def test_explicit_none_cwd_uses_current_directory(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+
+    async def run():
+        remote = public().CLIToolSource(
+            descriptor(),
+            [
+                sys.executable,
+                str(Path(__file__).with_name("cli_tool_fixture.py")),
+                "environment",
+                str(tmp_path),
+            ],
+            version="1",
+            cwd=None,
+        )
+        try:
+            assert (await remote.call_tool(descriptor(), {"value": 1}, context()))["cwd"] == str(
+                tmp_path.resolve()
+            )
+        finally:
+            await remote.aclose()
+
+    asyncio.run(run())
+    gone(tmp_path)
+
+
 def test_both_trackers_keep_cancelled_handler_until_actual_cleanup(tmp_path, monkeypatch):
     import threading
 

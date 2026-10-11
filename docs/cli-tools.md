@@ -15,7 +15,8 @@ python -m agent_app approve RUN_ID ACTION_ID --digest DIGEST --command-id approv
 python -m agent_app resume RUN_ID
 ```
 
-Run、Action 与 digest 来自首次返回的 pending 条目。模板只演示批准后的幂等写入；完整读取→规划示例仍待补齐。模板在批准前不启动业务命令，
+Run、Action 与 digest 来自首次返回的 pending 条目。新模板使用版本2的读取→确定性规划→批准写入流程。读取和规划证据先持久化，
+等待审批／重启时不会重复读取；写入命令在批准前不启动，
 使用下游 SQLite 幂等键去重，重复控制和提交保留原回执。模板使用自己的异步
 run／approve／resume 管理装配与清理，主 `ralf --factory` 的同步契约保持。
 源码 checkout、模型、Redis、PostgreSQL 和 Temporal 均不是本地示例的依赖。
@@ -89,5 +90,11 @@ Temporal 写工具继续要求真实耐久 EffectJournal，CLI 适配器不代�
 不自动再次派发。退出 0 不能证明任意外部业务正确性，下游核验／业务 Verifier
 继续属于应用契约。验收范围见[本批记录](../architecture/reviews/2026-10-11-cli-tools.md)。
 
-当前较小缺口：固定 argv 中暂不接受空字符串参数；声明 cwd 应使用非空路径，
-异常空值可能在构造时才拒绝。以上边界尚待补齐，不能视为完整 R12 验收。
+SDK cwd=None 选择当前目录；其他 cwd 使用非空字符串／Path。声明 cwd 必须是
+非空文本路径，省略时使用装配 base_dir；异常值在分配前拒绝。固定 executable
+必须非空，后续 argv 允许空字符串。保留已生成版本1应用及原程序以恢复旧Run，
+新模板不会覆盖使用者应用。完整 R12 仍包含其他工具、隔离和运行器能力。
+
+升级SDK时同样保留已固定的工具执行路径。模板使用`sys.executable`选择CLI解释器；
+更换虚拟环境会改变工具argv，从而按原发布契约拒绝恢复。需要固定原工具解释器
+或保留原应用环境，不能通过删除身份检查实现自动迁移。

@@ -1,14 +1,13 @@
 """Bounded trusted POSIX process execution, without a shell or sandbox claim."""
 
-import json
 import os
 import selectors
 import signal
 import subprocess
 import time
 
+from .tool_json import decode_output
 from .tool_sources import ToolSourceError
-from .types import canonical
 
 
 def stop_process(process):
@@ -25,15 +24,6 @@ def stop_process(process):
     process.wait()
     process.stdin.close()
     process.stdout.close()
-
-
-def _unique_object(pairs):
-    result = {}
-    for key, value in pairs:
-        if key in result:
-            raise ValueError("Duplicate JSON field")
-        result[key] = value
-    return result
 
 
 def execute(command, cwd, env, payload, timeout, output_limit, stopped):
@@ -81,9 +71,7 @@ def execute(command, cwd, env, payload, timeout, output_limit, stopped):
                         continue
         if process.wait() != 0:
             raise ToolSourceError("CLI process exited unsuccessfully")
-        result = json.loads(output.decode("utf-8"), object_pairs_hook=_unique_object)
-        canonical(result).encode("utf-8")
-        return result
+        return decode_output(output)
     except (OSError, ValueError, RecursionError):
         raise ToolSourceError("CLI returned invalid JSON or failed process I/O") from None
     finally:

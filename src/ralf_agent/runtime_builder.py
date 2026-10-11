@@ -493,6 +493,9 @@ class ComponentRegistry:
         from .cli_tool_factories import register_cli_tools
 
         register_cli_tools(self)
+        from .http_tool_factories import register_http_tools
+
+        register_http_tools(self)
 
     def register(self, kind, name, factory, *, validator=None):
         self._register(kind, name, factory, validator, asynchronous=False)

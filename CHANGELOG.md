@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.0.dev73 — Fixed business tools (candidate)
+
+- Add fixed POST JSON HTTP ToolSource with copied host configuration, actual client/thread ownership and original effect contracts.
+- Add async tools/http-json factory; share finite UTF-8 JSON adoption with CLI.
+- Refuse malformed CLI cwd before allocation, allow fixed empty arguments and provide version2 read/plan/approved-write starter.
+- Original generated version1 apps remain recoverable with their original code; final review/delivery gates pending.
+
 ## 0.1.0.dev72 — Fixed-command CLI tools
 
 - Add bounded JSON CLI ToolSource with fixed host argv/environment and real process/thread ownership.

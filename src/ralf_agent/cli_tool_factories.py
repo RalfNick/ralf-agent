@@ -33,6 +33,10 @@ def _entry(value):
     except (TypeError, KeyError):
         raise ValidationError("CLI descriptor or policy fields are incomplete") from None
     options = {field: value[field] for field in SOURCE_FIELDS if field in value}
+    if "cwd" in options and (
+        type(options["cwd"]) is not str or not options["cwd"].strip() or "\x00" in options["cwd"]
+    ):
+        raise ValidationError("Declared CLI cwd requires a nonempty text path")
     CLIToolSource(descriptor, value["command"], version=value["version"], **options)
     # Preserve the existing flat-Schema reserved effect-key contract in preflight.
     ToolSpec(

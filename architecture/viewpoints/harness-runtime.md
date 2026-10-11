@@ -485,3 +485,7 @@ UUID 提交准确证明。配置装配、自动监督与完整 H1/H2/H3 另验�
 ## dev72 CLI 工具子集
 
 沿原 Toolkit/ToolSource 增加固定命令 JSON 工具、受管理进程／线程与 async owned 装配。PolicyGate、Action 和效果恢复仍由原 Engine/History 管理；普通进程不替代 Workspace/Sandbox 或 DelegatedRunner。详见[指南](../../docs/cli-tools.md)及[验收记录](../reviews/2026-10-11-cli-tools.md)。
+
+## dev73 固定业务工具
+
+Toolkit沿原ToolSource扩展HTTP固定POST，CLI补齐读取与纯规划示例；实际客户端／线程关闭不依赖等待者，Action效果仍由原权威管理。[工具指南](../../docs/http-tools.md)／[验收](../reviews/2026-10-11-fixed-business-tools.md)。

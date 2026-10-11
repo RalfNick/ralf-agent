@@ -13,7 +13,16 @@ import sys
 from dataclasses import asdict
 from pathlib import Path
 
-from ralf_agent import GraphNode, GraphWorkflowSpec, RuntimeBuilder, RuntimeProfile, ValueRef
+from ralf_agent import ComponentRegistry, GraphNode, GraphWorkflowSpec, RuntimeBuilder, RuntimeProfile, ValueRef
+
+
+class ChangePlan:
+    identity = {"kind": "cli-starter-change-plan", "version": "1"}
+
+    def transform(self, evidence, config):
+        if config or evidence["applied_count"] < 0:
+            raise ValueError("Invalid change evidence")
+        return {"value": evidence["value"]}
 
 
 async def create_runtime(db_path):
@@ -26,15 +35,30 @@ async def create_runtime(db_path):
         "output_schema": {"type": "object", "properties": {"value": {"type": "integer"},
             "effect_key": {"type": "string"}}, "required": ["value", "effect_key"],
             "additionalProperties": False}}
-    selected = RuntimeProfile("cli-change", "1", {"default": {"adapter": "offline-echo"}},
-        {"tools": {"adapter": "cli-json", "config": {"tools": [{
+    read_descriptor = {"name": "read_state", "description": "Read change evidence",
+        "input_schema": {"type": "object", "properties": {"value": {"type": "integer"}},
+            "required": ["value"], "additionalProperties": False},
+        "output_schema": {"type": "object", "properties": {"value": {"type": "integer"},
+            "applied_count": {"type": "integer", "minimum": 0}},
+            "required": ["value", "applied_count"], "additionalProperties": False}}
+    database = str(Path(db_path).resolve().parent / "business.sqlite")
+    version = hashlib.sha256(business.read_bytes()).hexdigest()
+    selected = RuntimeProfile("cli-change", "2", {"default": {"adapter": "offline-echo"}},
+        {"workflow_transforms": {"adapter": "change-plan"},
+         "tools": {"adapter": "cli-json", "config": {"tools": [{
+            "descriptor": read_descriptor,
+            "command": [sys.executable, str(business), database, "read"],
+            "version": version, "cwd": str(root), "prefix": "cli_",
+            "policy": {"version": "1", "effect": "read_only", "requires_approval": False}}, {
             "descriptor": descriptor,
-            "command": [sys.executable, str(business), str(Path(db_path).resolve().parent / "business.sqlite")],
-            "version": hashlib.sha256(business.read_bytes()).hexdigest(),
+            "command": [sys.executable, str(business), database],
+            "version": version,
             "cwd": str(root), "prefix": "cli_",
             "policy": {"version": "1", "effect": "idempotent_write", "requires_approval": True,
                        "effect_key_argument": "effect_key"}}]}}})
-    return await RuntimeBuilder(base_dir=root).abuild(selected, db_path)
+    registry = ComponentRegistry()
+    registry.register("workflow_transforms", "change-plan", lambda config, context: {"change-plan": ChangePlan()})
+    return await RuntimeBuilder(registry, base_dir=root).abuild(selected, db_path)
 
 
 async def execute(args):
@@ -44,7 +68,10 @@ async def execute(args):
                                           command_id=args.command_id))
         if args.operation == "resume":
             return asdict(await runtime.drive(args.run_id))
-        flow = GraphWorkflowSpec("cli-change", [GraphNode("apply", tool="cli_apply_change")],
+        flow = GraphWorkflowSpec("cli-change", [
+            GraphNode("read", tool="cli_read_state"),
+            GraphNode("plan", transform="change-plan", depends_on=("read",), input=ValueRef("read")),
+            GraphNode("apply", tool="cli_apply_change", depends_on=("plan",), input=ValueRef("plan"))],
                                  output=ValueRef("apply"))
         handle = runtime.submit(flow, {"value": args.value}, command_id=args.command_id)
         return asdict(await runtime.drive(handle.run_id))
@@ -75,6 +102,15 @@ from pathlib import Path
 arguments = json.load(sys.stdin)
 path = Path(sys.argv[1])
 path.parent.mkdir(parents=True, exist_ok=True)
+if len(sys.argv) > 2 and sys.argv[2] == "read":
+    with (path.parent / "read-audit").open("a") as audit:
+        audit.write("read\\n")
+    count = 0
+    if path.exists():
+        with sqlite3.connect(path.resolve().as_uri() + "?mode=ro", uri=True) as connection:
+            count = connection.execute("SELECT count(*) FROM effects").fetchone()[0]
+    print(json.dumps({"value": arguments["value"], "applied_count": count}), flush=True)
+    sys.exit(0)
 with (path.parent / "call-audit").open("a") as audit:
     audit.write("call\\n")
 with sqlite3.connect(path) as connection:
@@ -91,7 +127,8 @@ print(json.dumps(result), flush=True)
     "README.md": """# Fixed-command JSON tools
 
 Run `python -m agent_app run --value 3 --command-id first-change`.
-The business command waits for approval before starting. Copy Run ID, Action ID
+The read command and deterministic plan finish before the write waits for approval.
+Restart retains their evidence and does not read again. Copy Run ID, Action ID
 and digest from the returned pending entry:
 
 ```sh
@@ -110,5 +147,7 @@ Retain original code, executable environment and Profile for historical recovery
 An arbitrary command's dependencies are the host's responsibility. This example
 runs trusted code; it provides process management, not a security sandbox or
 external Coding Agent. No model or network service is required.
+This generated app uses Profile version2. Retain old version1 applications and
+their original executable/code to recover previously accepted Runs.
 """,
 }

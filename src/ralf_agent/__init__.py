@@ -93,6 +93,7 @@ from .handoff import (
 )
 from .harness import DecisionProposal, Harness, ModelRequest, NativeHarness
 from .html_parsing import HtmlDocumentParser
+from .http_tools import HTTPToolSource
 from .ingestion import IngestionCoordinator
 from .ingestion_types import (
     ChunkSpan,
@@ -318,7 +319,7 @@ from .workflow import (
     WorkflowSelection,
 )
 
-__version__ = "0.1.0.dev72"
+__version__ = "0.1.0.dev73"
 __all__ = [
     "EventCursor",
     "EventEnvelope",
@@ -338,6 +339,7 @@ __all__ = [
     "MCPTransport",
     "MCPStdioTransport",
     "CLIToolSource",
+    "HTTPToolSource",
     "ToolDescriptor",
     "ToolPolicy",
     "ToolSource",

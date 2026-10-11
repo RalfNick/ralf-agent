@@ -34,12 +34,17 @@ class CLIToolSource:
         if (
             type(command) not in (tuple, list)
             or not command
-            or any(type(part) is not str or not part or "\x00" in part for part in command)
+            or any(type(part) is not str or "\x00" in part for part in command)
+            or not command[0]
             or not Path(command[0]).is_absolute()
         ):
             raise ValidationError("CLI command requires fixed argv and an absolute executable")
         if type(version) is not str or not version.strip():
             raise ValidationError("CLI source requires an explicit behavior version")
+        if cwd is not None and (
+            not isinstance(cwd, (str, Path)) or not str(cwd) or "\x00" in str(cwd)
+        ):
+            raise ValidationError("CLI cwd requires a nonempty filesystem path")
         if type(timeout) not in (int, float) or not 0 < timeout <= 300:
             raise ValidationError("CLI timeout must be finite seconds in (0,300]")
         for value in (max_input_bytes, max_output_bytes):
@@ -60,7 +65,7 @@ class CLIToolSource:
             raise ValidationError("CLI environment requires explicit string fields")
         self._descriptor = ToolDescriptor(**descriptor.to_dict())
         self._command, self._version = tuple(command), version
-        self._cwd, self._env = str(Path(cwd or Path.cwd()).resolve()), values
+        self._cwd, self._env = str(Path(Path.cwd() if cwd is None else cwd).resolve()), values
         self._timeout, self._input_limit, self._output_limit = (
             timeout,
             max_input_bytes,

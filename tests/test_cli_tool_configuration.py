@@ -108,6 +108,15 @@ def test_duplicate_local_names_are_refused_during_prepare(tmp_path):
     assert not (tmp_path / "pid").exists()
 
 
+@pytest.mark.parametrize("cwd", [None, False, 0, "", " ", "\t"])
+def test_declared_cwd_refuses_during_pure_prepare(tmp_path, cwd):
+    declared = config(tmp_path)
+    declared["tools"][0]["cwd"] = cwd
+    with pytest.raises(ValidationError):
+        ComponentRegistry().prepare("tools", {"adapter": "cli-json", "config": declared})
+    assert not (tmp_path / "runs.sqlite").exists() and not (tmp_path / "pid").exists()
+
+
 def test_temporal_declares_cli_tools_without_creating_local_authority_or_process(tmp_path):
     async def run():
         assembly = await TemporalRuntimeBuilder(base_dir=tmp_path).abuild(
