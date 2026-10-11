@@ -51,4 +51,4 @@
 
 - [x] Sync scope/75, build/install minimal+SDK; actual installed services, dev74 defaults/22 templates/CLI identity compatible; no false workspace-role claim.
 - [x] ExactlyONE fresh whole-batch read-only review; full report/regrade every decline and all rulings before ONE unified Important RED→GREEN fixpass; ledger Minor only.
-- [ ] Frozen fullsource/build/install/service/old74compatibility/hashdocs; stop and wait original owned service sessions; localcommit then formalTask3done; archive/delete only own completedSDD. Expected: all required true services pass, no push, fullgoal stays active.
+- [x] Frozen fullsource/build/install/service/old74compatibility/hashdocs; stop and wait original owned service sessions; localcommit then formalTask3done; archive/delete only own completedSDD. Expected: all required true services pass, no push, fullgoal stays active.
