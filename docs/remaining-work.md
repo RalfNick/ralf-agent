@@ -1,9 +1,9 @@
-# dev67 剩余能力与架构验收清单
+# dev68 剩余能力与架构验收清单
 
 dev66 原生／顺序持久 Turn 保持兼容；dev67 接通[Temporal 会话树](temporal-session-trees.md)，
 包括高级根保存、稳定成员私有地址和跨 Turn 召回。最终验收见文末；配置装配、租约和完整 R01–R26 继续开放。
 
-版本：41；日期：2026-10-11；维护者：RALF maintainers。当前增量基线：ae9854e/dev66，dev67 最终门槛见验收记录。
+版本：42；日期：2026-10-11；维护者：RALF maintainers。当前增量基线：0917d72/dev67；dev68 子集最终门槛见验收记录。
 读者：框架维护者、应用开发者及适配器贡献者。基线：da55f97 的 dev30，
 以及已提交1cad308的dev31–36与已提交1f27300的dev37配置／首用及已提交e6a6de7的dev38远程原生／顺序及已提交9fcbb84的dev39复合根会话与已提交7898b78的dev40自动规则记忆及已提交0d17976的dev41受管理上下文及已提交ec9b5f5的dev42模型选择记忆阶段及已提交e413ddc的dev44高级／Temporal数据上下文和已提交5528670的dev45 Local高级自动记忆，以及已提交 adbc328 的 dev46 Temporal自动记忆与五类Agent绑定。
 
@@ -62,7 +62,7 @@ PG Knowledge/Inbox/Outbox、Qdrant、HTTP Embedding、Hybrid/RRF／基础重排�
 
 ### 组合、入口、模型与编排
 
-| ID／层 | dev67 已交付基础 | 尚未完成的具体能力 | 阶段／状态 |
+| ID／层 | 当前已交付基础 | 尚未完成的具体能力 | 阶段／状态 |
 | --- | --- | --- | --- |
 | R01 每 Agent 绑定 | Local 原生 Agent／顺序／Graph／Team／Dynamic／嵌套成员六类选择：provider、decision_policy、context、facts、knowledge、tool_set；稳定路径、固定父子发布与 Profile v2；Session 后端／允许的 namespace／同权威实际地址占用；Facts／Knowledge 宿主范围视图与来源校验；纯完成 verifier 的 inherit/ref/disabled；宿主与 Agent limits 的固定交集与动作额度；原生／顺序及高级 stage_policy 写目标；Temporal 十类版本化 provider/context/knowledge/tool_set/stage_policy/facts/limits/verifier/decision_policy/session；session 有 stateless 有界读、原生／顺序持久 Turn／CAS 保存及显式高级根／成员会话树，与 Facts／Knowledge 宿主 namespace selector、原始检索资源固定及原有子 Run 子树 | 其余环境绑定角色及完整 Temporal 配置；其他资源身份／selector／作用域视图；artifacts／workspace／sandbox／skills 绑定与准入；stage_policy 已支持 Local 原生／顺序／图／Team／动态／嵌套规则／模型选择记忆；上下文历史摘要与引用／产物组合已交付，其他阶段／组合仍待交付。前四类角色显式选择仍被拒绝 | H1：子集已交付 |
 | R02 Agent／Session 入口 | H2a Local stateless Agent/Runtime/AgentRun、RunRef/WaitResult；独立任务托管、纯观察等待、原根流程控制路由、owned/borrowed 关闭与 CloseIncomplete 重试、显式重连；保留旧 RunHandle DTO；H2b1 同库原生／顺序及 H2b2 图／团队／动态／嵌套及 H2b3 授权根 namespace、H2b4a 远程原生／顺序及 H2b4b 复合根保存意图／准确回执／终态只查询恢复、异步 Profile 配置，SessionKey／路由／Turn／busy／CAS rebind；H2c1 Temporal 原生／顺序共同入口、异步重连、固定 RPC 组件与客户端 detach；H2c2 已注册 Graph／Team／Dynamic／嵌套入口与实际子 Run 控制；H2c3 Temporal History Session／原 Namespace UUID／耐久 Turn／busy／启动意图／空闲 CAS，普通与 managed Conversation 及原后代静默证据；dev66 原生／顺序外置Root保存及 dev67 图／Team／Plan／DAG／嵌套根保存、稳定成员地址、原根／私有数据只读取一次、数据集身份与跨Turn召回 | 跨权威会话租约、输入续接／业务 deadline、Temporal 推荐配置／其他绑定角色、移交与耐久 FIFO | H2a／H2b1／H2b2／H2b3／H2b4a／H2b4b／H2c1／H2c2／H2c3：子集已交付；完整 H2 未交付 |
@@ -78,7 +78,7 @@ PG Knowledge/Inbox/Outbox、Qdrant、HTTP Embedding、Hybrid/RRF／基础重排�
 
 ### 工具、上下文、记忆与知识
 
-| ID／层 | dev67 已交付基础 | 尚未完成的具体能力 | 阶段／状态 |
+| ID／层 | 当前已交付基础 | 尚未完成的具体能力 | 阶段／状态 |
 | --- | --- | --- | --- |
 | R12 工具接入／工具包 | typed Python/Schema/默认参数、ToolRegistry、async ToolSource、MCP stdio、A2A ToolSource、授权／审批／核验 | MCP HTTP/持续 Session/OAuth；固定 executable/argv 的 CLI Runner；通用受控 HTTP 工具适配；搜索／文件／浏览器工具包与发现；有状态工具租约和停止证据 | H4：子集已交付 |
 | R13 Workspace/Skills/Sandbox/Runner | 可信 Python、MCP 受管理进程生命周期；Runner 目标契约 | Workspace／文件权限／资源租约；Skills 生命周期／能力注册／来源；容器／远端 Sandbox 文件、网络、进程和资源隔离；Coding Runner、Codex 首个适配及各外部 Runner 验收。普通子进程不是安全沙箱 | H4：目标能力未交付 |
@@ -90,7 +90,7 @@ PG Knowledge/Inbox/Outbox、Qdrant、HTTP Embedding、Hybrid/RRF／基础重排�
 
 ### 执行、通信、服务与验收
 
-| ID／层 | dev67 已交付基础 | 尚未完成的具体能力 | 阶段／状态 |
+| ID／层 | 当前已交付基础 | 尚未完成的具体能力 | 阶段／状态 |
 | --- | --- | --- | --- |
 | R19 执行模式／后端一致性 | Local 单 Coordinator/SQLite；Temporal 独立 History，原生 Agent/sequence 与显式发布的 Agent-node Graph/Team/Dynamic/嵌套、RAG；scoped Facts/Knowledge 与 opt-in History Sessions／原生顺序及显式高级根／成员外置数据保存 | 单 Coordinator 多 Process Worker；Temporal 其余环境绑定角色／selector、完整配置／数据迁移、其他受管理 Harness 阶段及直接 Tool/Transform 图节点等组合；共同能力／故障／升级门禁；Continue-As-New、部署版本及长期容量。PG Facts/Knowledge 不等于 PG ExecutionStore/分布式调度 | H5／C1：分布式子集已交付 |
 | R20 MQ／A2A | memory/SQLite/Redis Streams、Inbox/Outbox、PG 共享回执；A2A JSON-RPC0.3 文本/数据 polling、async controls | 保留／压缩／积压／重投递与 failover 认证；额外 Broker 按需；A2A SSE/push/files/Task continuation 及真实停止约定。ack 不等于效果确认，不承诺跨系统全局恰好一次 | H4／H5：子集已交付 |
@@ -451,3 +451,15 @@ SQLite／Redis／PostgreSQL、History-only 根加远程私有源、混合 namesp
 详见[本批验收](../architecture/reviews/2026-10-11-temporal-session-trees.md)。
 完整 Temporal Profile／starter、跨权威租约、FIFO／输入续接、其余环境绑定、
 全量原生读者生命周期治理、容量／保留／迁移、真实模型与外部首用仍开放。
+
+## dev68 Temporal Context 实际读取生命周期（本批验收通过）
+
+R01/R02/R14/R19：显式 context_reads=True 固定可替换处理器 Owner，并由原 Native
+History 分别采纳许可、响应和准确结束证明。普通 Context 与 plan/read/verify/finalize
+只读阶段实际线程、async 与通知尚未结束时保持原后代非静默／Turn busy。
+默认 False 不改变旧发布；新 binding2 由 dev67 接受前拒绝。Redis/PG、七类组合、
+摘要／产物／自动记忆及真实 Worker kill+wait/restart 已有测试，最终源码3940/306、安装241契约与39真实服务、231模块和 core-only、
+旧67↔新68默认／save-v1兼容已通过。根读取、Session 保存、模型／工具／写效果保持独立责任。
+
+完整 H1/H2/H3/M1、R01–R26、Temporal Profile 装配、其他环境角色、自动监督恢复、
+跨权威会话租约、治理与真实质量继续开放。见[指南](temporal-context-read-lifetime.md)与[验收](../architecture/reviews/2026-10-11-temporal-context-read-lifetime.md)。

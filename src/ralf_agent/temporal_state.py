@@ -102,7 +102,7 @@ def validate_manifest(manifest):
         raise DefinitionMismatch("Unsupported Temporal runtime release")
     if manifest["kernel"] == "temporal-3":
         if (
-            manifest.get("binding_protocol") != 1
+            manifest.get("binding_protocol") not in (1, 2)
             or manifest.get("dispatch_admission") != "history-1"
         ):
             raise DefinitionMismatch("Unsupported Temporal binding/memory protocol")
@@ -118,6 +118,9 @@ def validate_manifest(manifest):
             raise DefinitionMismatch("Unsupported managed Temporal context release")
     elif "managed_context" in manifest:
         raise DefinitionMismatch("Managed context requires an explicit Temporal protocol")
+    from .temporal_context_read_protocol import validate_protocol as validate_context_reads
+
+    validate_context_reads(manifest)
     validate_facts_protocol(manifest)
     validate_knowledge_protocol(manifest)
     validate_session_protocol(manifest)
@@ -268,6 +271,15 @@ class TemporalRunState:
         validate_bindings(request, manifest, scope)
         self.release_digest = request_release_digest(request, manifest)
         self.epoch = execution_epoch or f"history:{run_id}"
+        if "context_read_protocol" in manifest and (
+            execution_epoch is not None
+            and (
+                type(execution_epoch) is not str
+                or not execution_epoch.strip()
+                or len(execution_epoch) > 1024
+            )
+        ):
+            raise ValidationError("Context reads require a bounded original execution epoch")
         self.state, self.revision, self.result, self.error = "queued", 0, None, None
         self.node, self.decisions, self.actions = 0, 0, []
         self.limits_stages = {}
@@ -287,6 +299,7 @@ class TemporalRunState:
         self.memory_stages, self.pending_completion, self.memory_recovery = {}, None, []
         self.session_stages, self.pending_session, self.session_recovery = {}, None, []
         self.managed_context_stages = {}
+        self.context_read_stages = {}
         self.context_artifact_dispatches = {}
         self.context_artifact_receipts = {}
         from .temporal_managed_context import check_scope
@@ -532,6 +545,11 @@ class TemporalRunState:
                 if "managed_context" in self.manifest or self.managed_context_stages
                 else {}
             ),
+            **(
+                {"context_reads": detached(list(self.context_read_stages.values()))}
+                if "context_read_protocol" in self.manifest
+                else {}
+            ),
             "workflow": {
                 "backend": "temporal",
                 "node": self.node,
@@ -679,7 +697,7 @@ class TemporalRunState:
                 self.actions.append(action)
                 self.active_action, self.state = action["id"], "running"
                 self._emit("context_dispatch_intent_recorded", {"action_id": action["id"]})
-                return action, {
+                request = {
                     "runtime_manifest": detached(self.manifest),
                     "scope": self.scope,
                     "run_id": self.run_id,
@@ -707,6 +725,9 @@ class TemporalRunState:
                         else {}
                     ),
                 }
+                from .temporal_context_read_state import envelope as read_envelope
+
+                return action, read_envelope(self, action, request, "context")
         self.decisions += 1
         action = {
             "id": f"{self.run_id}:model:{self.node}:{self.decisions}",
@@ -762,6 +783,13 @@ class TemporalRunState:
         return request_fields(self)
 
     def accept_context(self, action_id, response):
+        from .temporal_context_read_state import observe, owns
+
+        if owns(self, action_id):
+            return observe(self, action_id, response, TemporalRunState._accept_context)
+        return self._accept_context(action_id, response)
+
+    def _accept_context(self, action_id, response):
         action = next(a for a in self.actions if a["id"] == action_id)
         self.active_action = None
         if not response.get("ok"):
@@ -804,9 +832,17 @@ class TemporalRunState:
         )
 
     def accept_managed_context(self, action_id, response):
+        from .temporal_context_read_state import observe, owns
         from .temporal_managed_context import accept_stage
 
+        if owns(self, action_id):
+            return observe(self, action_id, response, accept_stage)
         accept_stage(self, action_id, response)
+
+    def context_execution_ended(self, payload):
+        from .temporal_context_read_state import ended
+
+        return ended(self, payload)
 
     def accept_limits(self, action_id, response):
         from .temporal_limits_state import accept_stage

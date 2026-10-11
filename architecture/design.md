@@ -270,6 +270,8 @@ SourceCatalog 为外部内容记录来源 ID、版本、授权引用、有效性
 
 ContextPipeline目标层通过受管理阶段从Session、Facts、Knowledge和产物端口取得证据，再由纯ContextBuilder/Counter/Budgeter选择内容。Local由Engine读取并调用构建器，再交给纯Harness准备请求；实际请求快照与预算由执行权威验收。当前已按清单提供 opt-in 语义知识／有界事实召回、Plan／Team 推荐组合，以及 Local 原生／高级编排和 Temporal History 受管理摘要、引用摘录、产物卸载和规则／模型选择记忆。完整 H3、全库索引、自由合成和真实质量继续按独立门槛验收。
 
+Temporal Context 只读阶段的实际处理器拥有关系由 ContextExecutionOwner 管理；原 Native History 分别采纳响应与结束证据，原父子／会话静默门禁保持。等待取消和 Activity 超时不能证明线程停止；Context 关闭也不替代模型／工具／写效果责任。具体子集见[读取生命周期](../docs/temporal-context-read-lifetime.md)。
+
 装配处理 Token 预算、优先级、去重、摘要和大内容卸载。输出 ContextManifest，记录采用的来源版本、授权范围、内容引用／摘要、选择与丢弃原因、使用策略和预算。
 
 ArtifactStore 当前提供 memory／SQLite 默认与 dev55 显式 POSIX 文件后端，沿用作用域、digest、TTL、读取限额及 namespace 容量。文件正文先同步，再由有界 SQLite 回执确认；恢复核验原引用与固定实际资源。声明／SDK 装配与 owned／borrowed 关闭复用原层，不在数据适配器创建第三套 Run 权威。S3、引用保留、孤儿 GC 和全局磁盘限额仍在 R18，详见[文件 Artifact](../docs/file-artifacts.md)。

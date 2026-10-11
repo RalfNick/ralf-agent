@@ -19,7 +19,9 @@ pytestmark = pytest.mark.skipif(
 
 
 @pytest.mark.parametrize("artifact_backend", ["sqlite", "file"])
-def test_actual_tree_summary_and_offload_preserve_sources_across_turns(tmp_path, artifact_backend):
+def test_actual_tree_summary_and_offload_preserve_sources_across_turns(
+    tmp_path, artifact_backend, context_reads=False
+):
     async def run():
         from temporalio.client import Client
 
@@ -45,6 +47,7 @@ def test_actual_tree_summary_and_offload_preserve_sources_across_turns(tmp_path,
             enable_sessions=True,
             session_writes=True,
             session_topology=CompositeSessionTopology(),
+            **({"context_reads": True} if context_reads else {}),
         )
         engine = TemporalEngine(
             client,
@@ -74,6 +77,13 @@ def test_actual_tree_summary_and_offload_preserve_sources_across_turns(tmp_path,
                     proof = await engine.diagnostics(turn.turn.run.run_id)
                     child_id = proof.workflow["children"][0]["run_id"]
                     raw = await engine._view(child_id, "diagnostics")
+                    if context_reads:
+                        reads = await engine.context_read_stages(child_id)
+                        assert reads and all(read["status"] == "completed" for read in reads)
+                        expected = {"plan", "read", "finalize"}
+                        if index == 0:
+                            expected.add("verify")
+                        assert {read["phase"] for read in reads} >= expected
                     contexts = raw["context_stages"]
                     assert any(stage.get("summary_response") for stage in contexts)
                     assert any(stage.get("prepared", {}).get("offloads") for stage in contexts)
@@ -92,6 +102,8 @@ def test_actual_tree_summary_and_offload_preserve_sources_across_turns(tmp_path,
             # independent of subsequent model/summary/offload context rebuilds.
             assert len(backend.reads) == 4
         finally:
+            if context_reads:
+                await execution.close_context_execution()
             await execution.close_session_execution()
             await host.aclose()
             await engine.aclose()

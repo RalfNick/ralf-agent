@@ -149,7 +149,28 @@ class TemporalRuntime:
         session_query=None,
         session_writes=False,
         session_topology=None,
+        context_reads=False,
+        context_execution=None,
     ):
+        from .temporal_context_execution import ContextExecutionOwner
+        from .temporal_context_read_protocol import ContextExecutionRegistration
+
+        if type(context_reads) is not bool:
+            raise ValidationError("Context reads require an explicit boolean")
+        if context_execution is not None and not context_reads:
+            raise ValidationError("Context execution owner requires enabled read ownership")
+        self.context_reads = context_reads
+        self.context_execution = (
+            ContextExecutionOwner()
+            if context_reads and context_execution is None
+            else context_execution
+        )
+        self._context_execution_owner = self.context_execution
+        self._context_execution_owned = context_reads and context_execution is None
+        self._context_execution_pin = (
+            ContextExecutionRegistration(self.context_execution) if context_reads else None
+        )
+        self._context_read_closing = False
         if type(enable_sessions) is not bool:
             raise ValidationError("enable_sessions requires an explicit boolean")
         self.enable_sessions = enable_sessions
@@ -503,6 +524,17 @@ class TemporalRuntime:
             from .temporal_session_tree_protocol import propose_manifest
 
             result = propose_manifest(result, self._session_topology_pin)
+        if self.context_reads:
+            from .temporal_context_read_protocol import publish
+
+            result = publish(result, self._context_execution_pin)
+            bridges = {
+                digest(pin.physical): pin.dataset_bridge_fixed.identity
+                for pin in self._session_read_pins
+                if self.session_writes and pin.dataset_bridge_fixed is not None
+            }
+            if bridges:
+                result["context_read_metadata_bridges"] = bridges
         return result
 
     @property
@@ -528,6 +560,9 @@ class TemporalRuntime:
         if host is not None:
             host.validate_release(expected)
             return self.manifest
+        from .temporal_context_read_runtime import owner as context_owner
+
+        context_owner(self)
         if self.session_store is not self._session_owner:
             raise DefinitionMismatch("Temporal Session source owner changed")
         if self.session_topology is not self._session_topology_owner:
@@ -542,6 +577,8 @@ class TemporalRuntime:
                 raise DefinitionMismatch("Temporal Session execution owner closed")
         for pin in self._session_read_pins:
             pin.check()
+            if self.context_reads and pin.dataset_bridge_fixed is not None:
+                pin.dataset_bridge_fixed.check()
         from .temporal_decision import check_pin as check_decision_pin
 
         if self.harness is not self._harness_owner:
@@ -888,11 +925,22 @@ class TemporalRuntime:
                 and request.get("action_id") not in self.session_execution._entries,
             }
 
-    async def prepare_context(self, request):
+    async def prepare_context(self, request, *, dispatch_guard=None, on_end=None):
         from .temporal_bindings import selected_runtime
 
         if not getattr(self, "_selected_host", None) and self._manifest["kernel"] == "temporal-3":
-            return await selected_runtime(self, request).prepare_context(request)
+            return await selected_runtime(self, request).prepare_context(
+                request, dispatch_guard=dispatch_guard, on_end=on_end
+            )
+        if "context_read_protocol" in self._manifest:
+            from .temporal_context_read_runtime import execute
+
+            return await execute(
+                self, request, self._prepare_context, dispatch_guard=dispatch_guard, on_end=on_end
+            )
+        return await self._prepare_context(request)
+
+    async def _prepare_context(self, request):
         try:
             self.validate_release(request["runtime_manifest"])
             from .temporal_session_state import validate_history
@@ -963,16 +1011,39 @@ class TemporalRuntime:
         except Exception as exc:
             return {"ok": False, "code": _code(exc, "context_failed")}
 
-    async def manage_context(self, request, *, dispatch_guard=None):
+    async def manage_context(self, request, *, dispatch_guard=None, on_end=None):
         from .temporal_bindings import selected_runtime
 
         if not getattr(self, "_selected_host", None) and self._manifest["kernel"] == "temporal-3":
             return await selected_runtime(self, request).manage_context(
-                request, dispatch_guard=dispatch_guard
+                request, dispatch_guard=dispatch_guard, on_end=on_end
             )
         from .temporal_managed_context import execute
 
+        if "context_read_protocol" in self._manifest:
+            from .temporal_context_read_protocol import PHASES
+            from .temporal_context_read_runtime import execute as read_execute
+
+            if request.get("phase") in PHASES:
+
+                async def read(value):
+                    return await execute(self, value, dispatch_guard=dispatch_guard)
+
+                return await read_execute(
+                    self, request, read, dispatch_guard=dispatch_guard, on_end=on_end
+                )
+
         return await execute(self, request, dispatch_guard=dispatch_guard)
+
+    async def wait_context_executions(self, *, wait_timeout=30):
+        from .temporal_context_read_runtime import wait
+
+        return await wait(self, wait_timeout=wait_timeout)
+
+    async def close_context_execution(self, *, wait_timeout=30):
+        from .temporal_context_read_runtime import close
+
+        return await close(self, wait_timeout=wait_timeout)
 
     async def manage_session(self, request, *, dispatch_guard=None, on_end=None):
         from .temporal_bindings import selected_runtime
@@ -1177,6 +1248,16 @@ def registered_activities(runtime, client=None):
 
     @activity.defn(name=ACTIVITY)
     async def managed_context(request: dict) -> dict:
+        from .temporal_context_read_protocol import PHASES
+
+        if (
+            "context_read_protocol" in request["runtime_manifest"]
+            and request.get("phase") in PHASES
+        ):
+            from .temporal_context_read_activities import callbacks
+
+            guard, ended = callbacks(client, request, activity.info())
+            return await runtime.manage_context(request, dispatch_guard=guard, on_end=ended)
         await tree_guard(request)
         return await runtime.manage_context(request, dispatch_guard=dispatch_guard)
 

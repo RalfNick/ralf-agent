@@ -192,6 +192,9 @@ class ThreadedMemoryAdapter:
         result = await self._page_call("inspect_message", scope, session_id, message_id)
         return validate_inspection(result, scope, session_id, message_id)
 
+    async def inspect_session_identity(self):
+        return await self._call(self.backend.inspect_session_identity)
+
     async def inspect_fact(self, *args, **kwargs):
         return await self._call(self.backend.inspect_fact, *args, **kwargs)
 

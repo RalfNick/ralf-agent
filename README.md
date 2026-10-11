@@ -296,6 +296,7 @@ python examples/evaluate.py
 - [完整设计](architecture/design.md)与 [review 取舍](architecture/review-resolution.md)。
 - [当前剩余能力清单](docs/remaining-work.md)：逐层区分已交付子集、尚未实现与待验收能力，按 H1–H5 继续建设。
 - [Local Agent API](docs/agent-api.md)：dev31 H2a 的统一入口、独立执行托管、纯观察等待与可重试关闭；dev32 补齐同库原生／顺序 Session/Turn 子集。
+- [Temporal Context read lifetime](docs/temporal-context-read-lifetime.md)：显式托管 Context 读取与准确结束通知，关闭和恢复责任独立；[dev68 子集验收](architecture/reviews/2026-10-11-temporal-context-read-lifetime.md)已通过。
 - [Temporal Agent API](docs/temporal-agent-api.md)：高级编排入口、实际子 Run 控制引用、异步重连与客户端 detach；已有版本化绑定、History Session 与原生／顺序外置保存；高级根／成员私有数据见[Temporal 会话树](docs/temporal-session-trees.md)。其余环境角色、配置及完整验收仍待完善。
 - [AgentHarness目标架构](architecture/viewpoints/harness-runtime.md)：广义Harness/Core、每Agent绑定、统一入口、受管理默认链路与H1–H5开发门槛；首期见[能力绑定契约](architecture/specs/agent-capability-binding-contract.md)，H2见[Facade／Session／关闭契约](architecture/specs/agent-facade-session-contract.md)。H1a–H1f 与入口子集已交付；完整 H1/H2、Temporal 其余角色、其他资源选择／环境角色及完整智能默认链路仍待实现。
 - [通用框架能力与扩展验收](architecture/viewpoints/framework-capabilities.md)：每层的契约、默认实现、替换入口和验收矩阵；覆盖 Pipeline／Graph／流式编排、动态 Plan、多 Agent 和可替换数据链路，按固定版本与场景对标 AgentScope。

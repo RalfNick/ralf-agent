@@ -124,6 +124,11 @@ def registered_parent_activities(runtime, client):
     async def context(value: dict) -> dict:
         from .temporal_session_activities import validate_tree_activity
 
+        if "context_read_protocol" in value["runtime_manifest"]:
+            from .temporal_context_read_activities import callbacks
+
+            guard, ended = callbacks(client, value, activity.info())
+            return await runtime.prepare_context(value, dispatch_guard=guard, on_end=ended)
         await validate_tree_activity(client, value, workflow_id=activity.info().workflow_id)
         result = await runtime.prepare_context(value)
         await validate_tree_activity(client, value, workflow_id=activity.info().workflow_id)

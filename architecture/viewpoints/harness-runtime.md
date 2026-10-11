@@ -458,3 +458,12 @@ DecisionPolicy 复用公共纯 Harness prepare/propose。固定 host/ref/inherit
 
 [有界读指南](../../docs/temporal-session-data-reads.md)接通 stateless 原生／顺序的 host 与每 Agent session inherit/ref/disabled、宿主 namespace、原始端口／客户端／物理资源固定。普通及 managed Context 将原 Scope、Run/node 私有地址、页、revision 和来源引用交给原 History 采纳；重放使用已接受证据。PostgreSQL 显式 initialize 固定解析后的 table schema。
 这只是完整外置 Session 的读取依赖；不保存最终答案，不提供跨 Run Conversation。显式 History Session 与选中外置数据的高级组合（含嵌套模型 Planner）接受前拒绝。外置 CAS 写／原完成门禁、持久 SessionKey／跨 Turn 成员路径、Profile 组合与租约仍须按原目标交付。完整 H1/H2/H3/M1、R01–R26 和真实质量门槛继续开放。
+
+### dev68 Temporal Context 读取责任（子集验收通过）
+
+ContextExecutionOwner/Port 只托管实际 Task、明确桥接的线程和准确结束通知；原
+Native History 独占许可、响应和结束事实及业务推进，原 Parent/Coordinator 复用静默
+门禁。每 Agent 视图继承宿主拥有关系，数据／客户端仍 borrowed；关闭 Context
+责任不代表模型、工具、产物写或整个 Worker 已静默。显式新协议为 binding2，旧
+默认与 native save-v1 保持。真实进程退出后丢失结束通知仍需受信监督方确认并向原
+UUID 提交准确证明。配置装配、自动监督与完整 H1/H2/H3 另验收，见[指南](../../docs/temporal-context-read-lifetime.md)。

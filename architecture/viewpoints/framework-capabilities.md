@@ -1,12 +1,14 @@
 # RALF 通用框架能力与扩展验收
 
-dev66 增加[Temporal 原生／顺序外置保存与持久 Turn](../../docs/temporal-session-data-writes.md)，
-原生／顺序子集已验收。高级根／成员保存、配置／迁移、真实质量及完整 R01–R26 保持未验收。
+dev67 的[Temporal 会话树](../../docs/temporal-session-trees.md)已覆盖高级根／成员保存。
+dev68 增加[Context 实际读取生命周期](../../docs/temporal-context-read-lifetime.md)，
+原 History 统一响应与实际结束门禁；[子集验收](../reviews/2026-10-11-temporal-context-read-lifetime.md)已通过。Temporal 配置装配、
+其他环境角色、治理、真实质量及完整 R01–R26 保持开放。
 
 
 Dev46 已增加[Temporal 自动记忆与五类 Agent 绑定](../../docs/temporal-memory-bindings.md)：显式 temporal-3、原声明子树、History 选择响应／CAS／核验与父子证据恢复；旧发布保持。其他 Temporal 绑定角色／资源 selector、共享 Session、语义质量与完整 H1/H3 仍待验收。
 
-文档版本：1.5；日期：2026-10-11（Asia/Shanghai）。
+文档版本：1.6；日期：2026-10-11（Asia/Shanghai）。
 作者：RALF 项目维护者与架构协作。
 读者：框架维护者、应用开发者、适配器贡献者。
 状态：目标架构与交付要求。下表保留 dev9 设计基线；dev10–dev13 已交付静态图、MCP/Tool、本地并行和异步装配。dev14 增加有界规划/子 Run 团队及真实 Redis/PG/Qdrant；dev15 已增加DAG/嵌套、本地与真实Redis消息交接、A2A0.3轮询子集及独立Temporal Agent/sequence后端，dev16 已增加异步 A2A 控制、共享 PG Inbox／Outbox 和单机服务模板；dev17 通过显式扩展发布交付 Temporal Graph/Team/Dynamic/嵌套与注册 RAG、每任务执行策略和业务评测入口；dev18 已交付独立 Parser／Chunker 和原子知识摄取回执；dev19 增加显式 HTTP Embedding 和可组合 Hybrid／融合重排；企业治理、实时流和真实模型质量仍需验收。其他后端能力不默认为可用。当前范围见[实现清单](../../docs/implementation-status.md)、[编排指南](../../docs/orchestration.md)和[数据指南](../../docs/remote-data.md)。其余目标不构成已支持声明。

@@ -13,9 +13,13 @@ from temporalio.common import RetryPolicy
 from temporalio.exceptions import ActivityError, ApplicationError
 
 with workflow.unsafe.imports_passed_through():
-    from . import temporal_session_identity  # noqa: F401 -- preload pure Session addressing
+    from . import (
+        temporal_context_read_state,  # noqa: F401 -- preload original pure read gates
+        temporal_session_identity,  # noqa: F401 -- preload pure Session addressing
+    )
     from .temporal_bindings import ROLES as _binding_roles  # noqa: F401
     from .temporal_completion_state import ACTIVITY as COMPLETION_ACTIVITY
+    from .temporal_context_read_protocol import owns_activity as owns_context_read
     from .temporal_limits_state import ACTIVITY as LIMITS_ACTIVITY
     from .temporal_managed_context import ACTIVITY as MANAGED_CONTEXT_ACTIVITY
     from .temporal_memory import ACTIVITY as MEMORY_ACTIVITY
@@ -205,7 +209,9 @@ class TemporalRunWorkflow:
                     start_to_close_timeout=timeout,
                     schedule_to_close_timeout=total_timeout,
                     retry_policy=RetryPolicy(
-                        maximum_attempts=3
+                        maximum_attempts=1
+                        if owns_context_read(self.state.manifest, action)
+                        else 3
                         if action["kind"] in {"agent_limits", "agent_completion"}
                         or (
                             action["kind"] == "managed_session"
@@ -344,6 +350,19 @@ class TemporalRunWorkflow:
                 non_retryable=True,
             ) from None
 
+    @workflow.update(name="context_execution_ended")
+    async def context_execution_ended(self, proof: dict) -> dict:
+        try:
+            result = self.state.context_execution_ended(proof)
+            self.wake_revision += 1
+            return result
+        except Exception as exc:
+            raise ApplicationError(
+                "Context execution end rejected",
+                type=getattr(exc, "code", "validation_error"),
+                non_retryable=True,
+            ) from None
+
     @workflow.query(name="view")
     def view(self, request: dict) -> dict:
         try:
@@ -369,6 +388,8 @@ class TemporalRunWorkflow:
                 return detached(list(getattr(self.state, "completion_stages", {}).values()))
             if kind == "context_stages":
                 return detached(list(getattr(self.state, "managed_context_stages", {}).values()))
+            if kind == "context_read_stages":
+                return detached(list(getattr(self.state, "context_read_stages", {}).values()))
             if kind == "context_artifacts":
                 from .temporal_managed_context import artifact_records
 

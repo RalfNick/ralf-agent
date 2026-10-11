@@ -13,6 +13,7 @@ from temporalio.exceptions import (
 )
 
 with workflow.unsafe.imports_passed_through():
+    from . import temporal_context_read_protocol, temporal_context_read_state  # noqa: F401
     from .orchestration_types import ChildCall
     from .temporal_parent_session import ROOT_READ_ACTIVITY
     from .temporal_parent_state import (

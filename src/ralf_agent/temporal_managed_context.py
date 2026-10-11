@@ -148,6 +148,10 @@ async def admit_dispatch(request, guard):
 
 
 def admit_history(state, payload):
+    from .temporal_context_read_state import admit, owns
+
+    if owns(state, payload.get("action_id")):
+        return admit(state, payload)
     if (
         state.manifest["kernel"] != "temporal-3"
         and state.manifest.get("managed_context", {}).get("dispatch_admission") != "history-1"
@@ -509,6 +513,9 @@ def next_stage(state):
                 }
             )
         request["summary_response"] = detached(stage.get("summary_response", {}))
+    from .temporal_context_read_state import envelope as read_envelope
+
+    request = read_envelope(state, action, request, phase)
     state._emit(
         "context_stage_intent_recorded",
         {"action_id": action["id"], "key": key, "phase": phase, "request_digest": digest(request)},

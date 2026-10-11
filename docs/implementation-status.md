@@ -1,4 +1,21 @@
-# Implementation status — 0.1.0.dev67
+# Implementation status — 0.1.0.dev68
+
+Dev68 adds opt-in [Temporal Context read lifetime](temporal-context-read-lifetime.md):
+ordinary Context and managed plan/read/verify/finalize handlers, tracked threads
+and original end acknowledgements remain owned through timeout/cancellation.
+Original Native History requires response and actual end evidence before model
+progression or Session release; Parent/Coordinator reuse that quiescence.
+Default-off releases and native save-v1 remain unchanged; explicit new reads use
+binding protocol2 and old dev67 refuses them before I/O. Actual service cases
+cover seven compositions, real Redis/PostgreSQL, mixed automatic memory/RAG/
+summary/artifacts and independent Worker exit/restart. Final source3940 passed/306 configured skips (498.96s), installed241 contracts
+and39 actual services (303.78s),231 identical modules and core-only paths pass.
+Three independently reproduced admission/redispatch races are fixed RED→GREEN.
+[Acceptance](../architecture/reviews/2026-10-11-temporal-context-read-lifetime.md)
+records the actual old/new compatibility and lifecycle boundaries; this subset
+does not complete H3, M1 or R01–R26.
+Temporal Profile assembly, environment roles, cross-authority leases, live quality
+and external adoption remain open.
 
 Dev67 explicitly registers [Temporal Session trees](temporal-session-trees.md): original
 Graph/Team/Plan/DAG/nested Parent root reads and aggregate saves, stable private member
@@ -160,7 +177,7 @@ dev37 adds root conversation declarations through JSON/TOML Profile components a
 The [current remaining-work checklist](remaining-work.md) maps each layer to delivered
 subsets, missing capabilities and outstanding acceptance, with H1–H5 priorities.
 
-2026-10-11. Current baseline: dev63, based on committed dev62 / cb370f9. This is the M1 core preview. Full M1 acceptance, enterprise architecture and a production-ready v0.1 release have not been completed. Public interfaces remain experimental. Static Graph Workflow, managed Tool/MCP nodes, bounded parallel execution and explicit async component lifecycle are available. dev14 adds real Redis/PostgreSQL/Qdrant data adapters, bounded plan/execute/verify/replan and local child-Run teams. dev15 adds dynamic DAG/plan patches, nested local workflows, MQ/A2A handoff and an independently History-owned Temporal subset. dev16 adds native async A2A controls, shared PostgreSQL Inbox/Outbox and a packaged local HTTP service with tracked shutdown. dev17 adds History-owned distributed Graph/Team/Dynamic/nesting, fixed RAG snapshots with shared PG/Qdrant ports, per-Run execution policy/timers and an installed Temporal starter; business evaluation remains not_run without model configuration. dev18 adds replaceable UTF-8 parsing/chunking and atomic memory/SQLite/PostgreSQL ingestion receipts plus a user-document starter. dev19 adds explicit float HTTP embeddings, replaceable RRF/rerank and authority-validated parallel Hybrid retrieval with additive assembly and an offline user-document starter. dev20 adds opt-in pure context measurement/complete-group selection/excerpts, actual Harness-request measurement and scoped memory/SQLite artifacts with a seventeenth offline starter. dev21 adds opt-in sourced memory consolidation, managed model summaries, pure custom Temporal context and a bounded real DeepSeek trial. dev22 adds stateless native Responses/JSON/SSE, typed Python tools and an offline-first compatibility suite. dev47 adds explicit semantic/recall/Plan/Team combinations through existing authorities; see [H3 guide](h3-intelligent-combinations.md). Default native local-4/request/Manifest identities and original flat parents remain compatible; new nested/DAG definitions require dev15. Evidence is recorded in [implementation progress](implementation-progress.md).
+2026-10-11. Current implementation: dev68, based on committed dev67 / 0917d72. This is the M1 core preview. Full M1 acceptance, enterprise architecture and a production-ready v0.1 release have not been completed. Public interfaces remain experimental. Static Graph Workflow, managed Tool/MCP nodes, bounded parallel execution and explicit async component lifecycle are available. dev14 adds real Redis/PostgreSQL/Qdrant data adapters, bounded plan/execute/verify/replan and local child-Run teams. dev15 adds dynamic DAG/plan patches, nested local workflows, MQ/A2A handoff and an independently History-owned Temporal subset. dev16 adds native async A2A controls, shared PostgreSQL Inbox/Outbox and a packaged local HTTP service with tracked shutdown. dev17 adds History-owned distributed Graph/Team/Dynamic/nesting, fixed RAG snapshots with shared PG/Qdrant ports, per-Run execution policy/timers and an installed Temporal starter; business evaluation remains not_run without model configuration. dev18 adds replaceable UTF-8 parsing/chunking and atomic memory/SQLite/PostgreSQL ingestion receipts plus a user-document starter. dev19 adds explicit float HTTP embeddings, replaceable RRF/rerank and authority-validated parallel Hybrid retrieval with additive assembly and an offline user-document starter. dev20 adds opt-in pure context measurement/complete-group selection/excerpts, actual Harness-request measurement and scoped memory/SQLite artifacts with a seventeenth offline starter. dev21 adds opt-in sourced memory consolidation, managed model summaries, pure custom Temporal context and a bounded real DeepSeek trial. dev22 adds stateless native Responses/JSON/SSE, typed Python tools and an offline-first compatibility suite. dev47 adds explicit semantic/recall/Plan/Team combinations through existing authorities; see [H3 guide](h3-intelligent-combinations.md). Default native local-4/request/Manifest identities and original flat parents remain compatible; new nested/DAG definitions require dev15. Evidence is recorded in [implementation progress](implementation-progress.md).
 
 | Capability | Delivered in this increment | Boundary / next work |
 | --- | --- | --- |

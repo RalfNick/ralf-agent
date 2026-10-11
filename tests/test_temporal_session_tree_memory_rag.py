@@ -27,7 +27,9 @@ pytestmark = pytest.mark.skipif(
 
 
 @pytest.mark.parametrize("kind", ["parallel", "dynamic-dag", "nested"])
-def test_actual_tree_bound_memory_and_rag_finish_before_root_save(tmp_path, kind):
+def test_actual_tree_bound_memory_and_rag_finish_before_root_save(
+    tmp_path, kind, context_reads=False
+):
     async def run():
         from temporalio.client import Client
 
@@ -53,6 +55,7 @@ def test_actual_tree_bound_memory_and_rag_finish_before_root_save(tmp_path, kind
             enable_sessions=True,
             session_writes=True,
             session_topology=CompositeSessionTopology(),
+            **({"context_reads": True} if context_reads else {}),
         )
         engine = TemporalEngine(
             client,
@@ -84,6 +87,11 @@ def test_actual_tree_bound_memory_and_rag_finish_before_root_save(tmp_path, kind
                         )
                         stages = await engine.memory_stages(run_id)
                         if stages:
+                            if context_reads:
+                                reads = await engine.context_read_stages(run_id)
+                                assert reads and all(
+                                    read["status"] == "completed" for read in reads
+                                )
                             members += len(stages)
                             assert all(value["status"] == "completed" for value in stages)
                             contexts = [
@@ -115,6 +123,8 @@ def test_actual_tree_bound_memory_and_rag_finish_before_root_save(tmp_path, kind
                     record = facts.recall(scope, namespace, RecallQuery())
                     assert record.items, namespace
         finally:
+            if context_reads:
+                await execution.close_context_execution()
             await execution.close_session_execution()
             await host.aclose()
             await engine.aclose()

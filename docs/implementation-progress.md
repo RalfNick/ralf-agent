@@ -511,3 +511,21 @@ Add opt-in Session coordination History, actual Namespace UUID identities, fixed
 沿 R01/H1 公共纯 Harness 的 prepare/propose，提供宿主默认／每 Agent inherit/ref；固定实际方法、编译器 super 闭包及原 Scope。实际模型请求与原响应/提案证据由原 Run History 一次采纳；不改变审批、Schema、limits、完成规则和记忆责任。Temporal 九类绑定已接通，外置 Session/环境角色、完整 Profile/服务治理和真实质量仍待交付。见[指南](temporal-decision-policy.md)和[验收](../architecture/reviews/2026-10-11-temporal-decision-policy.md)。
 
 最终dev63：全量3563 passed/198 skipped（485.75s，95622 exit0）；冻结源码实际16/125.73s、最终安装实际16/126.11s及195契约。214模块、core-only与62→63→62原审批／回执／一次工具兼容通过。独立审查2项P2由2RED→195GREEN闭环，无待办Minor。自有Service75051正常exit0且stopped。未调用真实模型／重验远端数据库；仅本地提交，完整R01–R26继续active。
+
+## dev68 Temporal Context 实际读取生命周期
+
+沿 R01/R02/R14/R19 和既有唯一执行权威，显式 ContextExecutionOwner/Port 托管许可等待、
+实际读取 Task／桥接线程及准确结束 ACK；原 Native History 保存许可、响应和结束，
+原 Parent/Coordinator 使用同一静默门禁。五类只读 phase 覆盖原生／顺序／图／Team／
+Plan／DAG／嵌套；数据／客户端借用与异步创建循环保持。默认 False、旧 native save-v1
+和旧发布保持，新 binding2 由旧67在任何 Activity 前拒绝。
+
+最终源码3940 passed/306 configured skips（498.96s）；安装241契约/22.69s与实际服务
+39/303.78s、源码实际39/291.05s；231模块在源码/wheel/sdist/core/完整安装一致。真实
+Redis/PG、原 Histories replay、独立 Worker kill+wait/restart、67↔68原审批／Turn／
+准确回执兼容通过。单次 fresh-context review 的3项重要问题由14RED→114GREEN闭环，
+无待办 Minor。原生兼容初始 fixture 硬停 Worker 时观察 Activity 默认60s，而断言15/30s
+不足；原历史之后确认为 succeeded/quiescent 与 Coordinator idle，无重复效果。最终
+fixture 采用明确2s Activity deadline、正常 Worker 关闭与原双完成门禁，已通过。
+完整 H1/H2/H3/M1、R01–R26 和真实质量继续开放；不做远端推送。
+详见[验收](../architecture/reviews/2026-10-11-temporal-context-read-lifetime.md)。

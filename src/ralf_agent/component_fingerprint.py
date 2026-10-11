@@ -66,8 +66,13 @@ def _super_capture(cls, target, seen, depth):
             and index + 2 < len(instructions)
             and instructions[index - 1].opname == "LOAD_GLOBAL"
             and instructions[index - 1].argval == "super"
-            and instructions[index + 1].opname == "LOAD_FAST"
-            and instructions[index + 1].arg == 0
+            and instructions[index + 1].opname in {"LOAD_FAST", "LOAD_DEREF"}
+            and target.__code__.co_argcount > 0
+            and instructions[index + 1].argval == target.__code__.co_varnames[0]
+            and (
+                instructions[index + 1].opname == "LOAD_FAST"
+                or instructions[index + 1].argval in target.__code__.co_cellvars
+            )
             and instructions[index + 2].opname == "LOAD_SUPER_ATTR"
             and not instructions[index + 2].arg & 2
         ):

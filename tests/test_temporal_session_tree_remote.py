@@ -32,7 +32,7 @@ pytestmark = pytest.mark.skipif(
 )
 
 
-async def scenario(root, private, scope, kind, managed, rooted=True):
+async def scenario(root, private, scope, kind, managed, rooted=True, *, context_reads=False):
     from temporalio.client import Client
 
     for backend in (root, private):
@@ -67,6 +67,7 @@ async def scenario(root, private, scope, kind, managed, rooted=True):
         else None,
         context_builder=ManagedContextPipeline() if managed else None,
         session_topology=CompositeSessionTopology(),
+        **({"context_reads": True} if context_reads else {}),
     )
     client = await Client.connect(os.environ["RALF_TEST_TEMPORAL_ADDRESS"])
     queue = "tree-remote-" + uuid.uuid4().hex
@@ -106,6 +107,12 @@ async def scenario(root, private, scope, kind, managed, rooted=True):
                     assert (await root.read(scope, entry.ref.key.storage_key))[0] == 0
                 child_id = proof.workflow["children"][0]["run_id"]
                 stages = await engine.session_stages(child_id)
+                if context_reads:
+                    reads = await engine.context_read_stages(child_id)
+                    assert reads and all(item["status"] == "completed" for item in reads)
+                    assert all(
+                        item["response_observed"] and item["execution_end_proof"] for item in reads
+                    )
                 address = stages[0]["intent"]["address"]
                 assert address.startswith('ralf-session-v1:["private-b","ralf-temporal-member-v1:')
                 addresses.append(address)
@@ -119,6 +126,8 @@ async def scenario(root, private, scope, kind, managed, rooted=True):
             assert addresses[0] == addresses[1]
             assert len(provider.calls) == 2
     finally:
+        if context_reads:
+            await execution.close_context_execution()
         await execution.close_session_execution()
         await host.aclose()
         await engine.aclose()

@@ -349,6 +349,10 @@ class TemporalEngine:
         """Read this Run's original History evidence; no Activity or child traversal."""
         return await self._view(run_id, "context_stages")
 
+    async def context_read_stages(self, run_id):
+        """Pure original read admission/response/end evidence, without data I/O."""
+        return await self._view(run_id, "context_read_stages")
+
     async def context_artifacts(self, run_id):
         """Read artifact dispatch/receipt proofs without accessing storage."""
         return await self._view(run_id, "context_artifacts")
@@ -510,6 +514,9 @@ def _workflow_runner():
             "httpx",
             "jsonschema",
             "ralf_agent.temporal_bindings",
+            "ralf_agent.temporal_context",
+            "ralf_agent.temporal_context_read_protocol",
+            "ralf_agent.temporal_context_read_state",
             "ralf_agent.temporal_memory_state",
             "ralf_agent.temporal_facts_state",
             "ralf_agent.temporal_knowledge_state",

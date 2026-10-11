@@ -70,6 +70,11 @@ class SessionReadRegistration:
             if callable(getattr(self._original_source, "inspect_session_identity", None))
             else None
         )
+        self.dataset_bridge_fixed = (
+            _FixedPorts({"dataset-bridge": (self.backend, ["inspect_session_identity"], True)})
+            if isinstance(self.backend, ThreadedMemoryAdapter)
+            else None
+        )
         from .temporal_state import detached
 
         roots = [self.backend]
@@ -229,6 +234,17 @@ async def verify_dataset(runtime, request):
     expected = runtime.manifest["session_save_protocol"]["dataset_ids"][digest(original.physical)]
     if original.dataset_fixed is None:
         raise DefinitionMismatch("Original dataset inspection port is unavailable")
-    value = await original.dataset_fixed.call("dataset", "inspect_session_identity")
+    if "context_read_protocol" in runtime.manifest and isinstance(
+        original.backend, ThreadedMemoryAdapter
+    ):
+        # The pinned source is synchronous, but this explicitly threaded bridge
+        # owns the real metadata handler on the same tracker as its page reads.
+        original.dataset_fixed.check()
+        value = await original.dataset_bridge_fixed.call(
+            "dataset-bridge", "inspect_session_identity"
+        )
+        original.dataset_fixed.check()
+    else:
+        value = await original.dataset_fixed.call("dataset", "inspect_session_identity")
     if type(value) is not str or digest(["ralf-session-dataset-v1", value]) != expected:
         raise DefinitionMismatch("Original Session dataset metadata changed")

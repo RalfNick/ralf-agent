@@ -353,6 +353,7 @@ def capabilities(manifest):
         r["configuration"] for r in manifest.get("binding_catalog", {}).get("records", {}).values()
     ]
     return {
+        "context_read_lifetime": "context_read_protocol" in manifest,
         "per_agent_bindings": manifest["kernel"] == "temporal-3",
         "automatic_memory": any("managed_memory" in c for c in configurations),
         "automatic_context_compression": any("managed_context" in c for c in configurations),
