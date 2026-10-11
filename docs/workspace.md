@@ -2,7 +2,7 @@
 
 Dev75沿 R13/H4 增加 `WorkspacePort`、`FileSystemWorkspace`、
 `InMemoryWorkspace` 和 `WorkspaceToolSource`。这是文件数据与工具接入能力；
-每 Agent 的 `workspace` 绑定角色、写入、Skills、Sandbox 和 Coding Runner 仍待交付。
+dev76 的每 Agent `workspace` 只读绑定复用原工具授权；写入、Skills、Sandbox 和 Coding Runner 仍待交付。
 `Scope.workspace` 是宿主范围字段，不是物理目录，也不是认证系统。
 
 ## 默认声明：沿原 Workflow 执行
@@ -134,3 +134,69 @@ close 在仍有读取时拒绝并保留 root FD，退出后可重试。文件 I/
 Runner 仍在[剩余能力清单](remaining-work.md)中，不以此子集标为完整 R13/H4。
 
 延后Minor：Unicode C1控制字符路径仍可接受；完整Unicode category Cc策略待后续。目前限额先检查字符数，再有界编码／分段，拒绝过大值时不会先复制整个输入；这不等于整个解释器RSS配额。
+
+## 每Agent只读Workspace绑定（dev76）
+
+`WorkspaceBindingResource(registry, names=...)`借用已注册的单一Workspace Source，固定原工具的完整manifest、root、Source版本和额度。资源本身不读取文件、不创建或关闭客户端。SDK替换WorkspacePort仍通过原WorkspaceToolSource完成。以下示例只组装声明，不调用模型：
+
+```python
+import asyncio
+from ralf_agent import (
+    AgentBindingDescriptor,
+    AgentDefinition,
+    AgentSpec,
+    BindingCatalog,
+    BindingSelection,
+    InMemoryWorkspace,
+    Scope,
+    ToolPolicy,
+    ToolRegistry,
+    WorkspaceBindingResource,
+    WorkspaceToolSource,
+    register_tool_source,
+)
+
+
+async def binding_example():
+    port = InMemoryWorkspace({"note": "业务说明"}, version="binding-demo-v1")
+    source = WorkspaceToolSource(port, version="1")
+    registry = ToolRegistry()
+    try:
+        await register_tool_source(
+            registry, source, policies={"workspace_read_text": ToolPolicy("1", effect="read_only")}
+        )
+        resource = WorkspaceBindingResource(registry, names=["workspace_read_text"])
+        catalog = BindingCatalog(scope=Scope())
+        catalog.register("workspace", "project-files", "1", resource)
+        definition = AgentDefinition(
+            AgentSpec("reader", "Read the permitted note", tools=("workspace_read_text",)),
+            AgentBindingDescriptor(workspace=BindingSelection.ref("project-files", "1")),
+        )
+        print(definition.bindings.workspace.to_dict())
+    finally:
+        await source.aclose()
+        port.close()
+
+
+asyncio.run(binding_example())
+```
+
+向已有Profile的`binding_components`添加以下声明即可复用同一工具Registry。Local同步／异步和Temporal装配均支持；原`tools/workspace-read`默认文件源仍按async装配，资源不重复分配根目录：
+
+```json
+{
+  "role": "workspace",
+  "component_id": "project-files",
+  "version": "1",
+  "component": {
+    "adapter": "registered-tools",
+    "config": {"names": ["workspace_read_text"]}
+  }
+}
+```
+
+`ref`只从原AgentSpec和tool_set交集中保留资源列出的Workspace工具，至少须匹配一个；其他根工具被排除，业务工具保留。`disabled`移除Workspace工具并保留业务工具。`inherit`保持原授权和发布记录。它们不会新增工具、改名或把同名工具重映射到另一根；多根应用先注册明确前缀，再分别绑定各Source的名称。一个资源至多256个不重复普通工具名，每名128字符／512 UTF8字节，拒绝ASCII控制字符和DEL；这些限额不会额外限制无关业务工具。
+
+Local原生／顺序／图／Team／动态／嵌套实际成员沿原descriptor路径使用绑定。Temporal需要宿主catalog注册Workspace资源以启用protocol1，包含disabled-only选择；缺协议、越Scope、原Source/root/额度或工具manifest不匹配在接受或派发前拒绝。显式选择使用Local kernel11；继承默认不改变旧发布。已接受工具结果仍从原Action/History恢复，源内容后续变化不触发重复读取。
+
+没有subroot selector、每路径ACL或写入能力。业务Python工具仍是可信宿主代码，Workspace选择不隔离其任意文件访问，不构成Sandbox。生命周期仍由原工具装配排空Source再关闭port，绑定资源不拥有任何一个。安装和冻结验收证据见[本批证据](../architecture/reviews/2026-10-11-workspace-bindings.md)。

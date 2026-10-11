@@ -20,6 +20,7 @@ SELECTABLE_ROLES = frozenset(
         "verifier",
         "limits",
         "stage_policy",
+        "workspace",
     }
 )
 
@@ -27,6 +28,12 @@ SELECTABLE_ROLES = frozenset(
 def component_identity(role, component):
     from .engine import LocalEngine
 
+    if role == "workspace":
+        from .binding_workspace import WorkspaceBindingResource
+
+        if type(component) is not WorkspaceBindingResource:
+            raise ValidationError("Workspace bindings require an original registered-tool resource")
+        return component.identity
     if role == "session":
         from .binding_sessions import SessionBindingResource, session_identity
 

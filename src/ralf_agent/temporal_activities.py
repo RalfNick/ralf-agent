@@ -528,6 +528,8 @@ class TemporalRuntime:
             result.update(kernel="temporal-3", binding_protocol=1, dispatch_admission="history-1")
             if catalog is not None:
                 result["binding_catalog"] = catalog
+                if any(record["role"] == "workspace" for record in catalog["records"].values()):
+                    result["workspace_binding_protocol"] = 1
             if memory is not None:
                 result["managed_memory"] = memory
         if self._session_topology_pin is not None:

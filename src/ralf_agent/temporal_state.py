@@ -139,6 +139,17 @@ def validate_manifest(manifest):
     from .temporal_decision_state import validate_protocol as validate_decision_protocol
 
     validate_decision_protocol(manifest)
+    if "workspace_binding_protocol" in manifest:
+        if (
+            type(manifest["workspace_binding_protocol"]) is not int
+            or manifest["workspace_binding_protocol"] != 1
+        ):
+            raise DefinitionMismatch("Unsupported Temporal Workspace binding protocol")
+        from .binding_workspace import _record
+
+        for record in manifest.get("binding_catalog", {}).get("records", {}).values():
+            if record["role"] == "workspace":
+                _record(record["identity"])
     for key in ("tools", "providers", "harness", "context_builder", "tool_executor", "policy"):
         if not isinstance(manifest.get(key), dict):
             raise ValidationError(f"Temporal runtime release requires {key}")

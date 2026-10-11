@@ -2,6 +2,7 @@
 
 from pathlib import Path
 
+from .binding_workspace import WorkspaceBindingResource, _names
 from .errors import ValidationError
 from .filesystem_workspace import FileSystemWorkspace, _root_text
 from .tool_sources import ToolPolicy, register_tool_source
@@ -94,3 +95,15 @@ async def build(config, context):
 
 def register_workspace_tools(registry):
     registry.register_async("tools", "workspace-read", build, validator=validate)
+    registry.register("workspace", "registered-tools", binding, validator=validate_binding)
+
+
+def validate_binding(config):
+    if type(config) is not dict or set(config) != {"names"}:
+        raise ValidationError("Workspace binding declaration requires existing tool names")
+    _names(config["names"])
+
+
+def binding(config, context):
+    validate_binding(config)
+    return WorkspaceBindingResource(context.tools, names=config["names"])

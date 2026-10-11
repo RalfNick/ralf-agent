@@ -21,6 +21,7 @@ ROLES = frozenset(
         "verifier",
         "decision_policy",
         "session",
+        "workspace",
     }
 )
 
@@ -68,6 +69,11 @@ def validate_descriptor(manifest, descriptor, scope=None):
             continue
         if role not in ROLES or (choice.selector and role not in {"facts", "knowledge", "session"}):
             raise ValidationError("Unsupported Temporal binding role or resource selector")
+        if role == "workspace" and (
+            type(manifest.get("workspace_binding_protocol")) is not int
+            or manifest["workspace_binding_protocol"] != 1
+        ):
+            raise DefinitionMismatch("Workspace selection requires its original Temporal protocol")
         if choice.mode == "ref":
             record = records.get(key(role, choice))
             if record is None or record["role"] != role:
@@ -287,6 +293,20 @@ def effective_step(step, manifest, descriptor):
         result["tools"] = names
     elif choices.tool_set.mode == "disabled":
         result["tools"] = []
+    if choices.workspace.mode != "inherit":
+        from .binding_workspace import select_workspace_tools
+
+        resource = None
+        if choices.workspace.mode == "ref":
+            resource = manifest["binding_catalog"]["records"][key("workspace", choices.workspace)][
+                "identity"
+            ]
+        names = result["tools"]
+        try:
+            registrations = {name: manifest["tools"][name] for name in names}
+        except KeyError:
+            raise DefinitionMismatch("Original Workspace tool registrations unavailable") from None
+        result["tools"] = list(select_workspace_tools(names, registrations, resource))
     return result
 
 

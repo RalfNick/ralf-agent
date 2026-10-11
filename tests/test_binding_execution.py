@@ -307,7 +307,7 @@ def test_identity_drift_after_response_preserves_received_evidence(tmp_path):
 def test_unsupported_reference_fails_before_any_run_or_model(tmp_path, role):
     catalog = bound_catalog()
     with engine(tmp_path / (role + ".sqlite"), catalog) as runtime:
-        with pytest.raises(ValidationError):
+        with pytest.raises(DefinitionMismatch if role == "workspace" else ValidationError):
             runtime.submit(definition(**{role: choice("unsupported")}), "q", command_id="s")
         assert runtime.store.conn.execute("SELECT count(*) FROM runs").fetchone()[0] == 0
 

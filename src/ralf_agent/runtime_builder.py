@@ -212,6 +212,7 @@ _BINDING_FACTORY_KINDS = {
     "verifier": "verifier",
     "limits": "limits",
     "stage_policy": "stage_policy",
+    "workspace": "workspace",
 }
 
 
@@ -516,6 +517,7 @@ class ComponentRegistry:
             | {
                 "provider",
                 "tool_set",
+                "workspace",
                 "artifact_store",
                 "reference_selector",
                 "embedding_provider",

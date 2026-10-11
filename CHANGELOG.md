@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.1.0.dev76 — Per-Agent Workspace bindings
+
+- Add borrowed WorkspaceBindingResource, per-Agent read-only root/tool selection and workspace/registered-tools declarations for Local and Temporal. Business grants remain; no implicit tool expansion or same-name root remapping.
+- Final source4501 passed/345 configured skips; core59/installed160 contracts, source/installed6 actual Temporal cases each, actual75↔76 recovery and old Worker opt-in refusal pass.259 product modules match; owned services stopped. One Important JSON identity mismatch is fixed, one live drift error-category Minor deferred. Writes, subroot selectors, Skills and Sandbox stay open.
+
 ## 0.1.0.dev75 — Read-only Workspace
 
 - Add replaceable bounded WorkspacePort and POSIX/Memory defaults with pinned resource identities.

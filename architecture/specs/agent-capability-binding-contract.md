@@ -5,6 +5,8 @@
 约束后续代码/适配器与兼容测试。现有AgentSpec及Harness API保持不变。
 已交付与拒绝矩阵见[绑定使用教程](../../docs/agent-bindings.md)：Local原生Agent/顺序流程/图/Team/Dynamic/嵌套成员支持provider、decision_policy、context、facts、knowledge、tool_set；Session增加独立后端与允许的namespace选择，详见[H1c教程](../../docs/session-bindings.md)。Facts/Knowledge增加允许的namespace只读视图与来源校验，详见[H1d教程](../../docs/data-bindings.md)。稳定声明路径与父子发布已固定；模型Planner仍固定宿主槽位。其他资源selector、Temporal绑定、环境角色和H2耐久Turn/SessionAdmission仍待实施。
 
+当前 dev76 另交付 Local／Temporal 的十一类绑定子集，其中 Workspace 借用原单一只读 Source，纯工具交集、固定身份和协议准入见[Workspace 指南](../../docs/workspace.md)与[验收记录](../reviews/2026-10-11-workspace-bindings.md)。下面的 dev25–dev30 叙述保留历史范围；其余环境绑定和完整目标仍开放。
+
 ## 1. 声明与解析对象
 
 新增BindingSelection为显式三选一：

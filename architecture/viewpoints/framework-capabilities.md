@@ -1,5 +1,7 @@
 # RALF 通用框架能力与扩展验收
 
+当前dev76沿R01/R13接通第十一类只读Workspace绑定：Local／Temporal六类实际Agent使用原注册工具、固定源和权限交集。最终源码4501／345配置跳过、核心59／扩展160安装、源码及安装各六项真实服务、旧75双向恢复与Activity前拒绝、259模块一致通过；1项Important修复，1项错误分类Minor延后，自有服务停止。[本批证据](../reviews/2026-10-11-workspace-bindings.md)区分只读选择、后续写入／Skills／Sandbox／Runner，完整R01–R26仍开放。
+
 dev72 补 R12 固定命令 JSON CLI 工具和受管理 async 装配，保留原审批／效果／实际停止边界；[本批验收](../reviews/2026-10-11-cli-tools.md)记录已通过的子集与三项延后缺口。Workspace/Skills/Sandbox 和外部 DelegatedRunner 继续作为独立能力。
 
 dev70 提供多版本 Temporal Host；dev71 增加普通启动参数的纯预检及同一 Host 纠正重试，复用原执行权威。复杂 SDK 对象与极端数值仍有边界，完整 R04 与 R01–R26 未完成；见[dev71 记录](../reviews/2026-10-11-temporal-startup-preflight.md)。

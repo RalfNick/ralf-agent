@@ -1,15 +1,14 @@
 # RALF AgentHarness 目标架构
 
-当前 dev65：Temporal 九类绑定支持原生及高级组合；session 增加 stateless 原生／顺序的有界读子集。
-History Sessions 已交付，外置持久会话写／路由、环境角色、H4/H5 与真实质量仍待验收。
+当前dev76：Local／Temporal每Agent只读Workspace成为第十一类绑定；已有外置Session读写、会话树、自动记忆／上下文与Profile Host。最终源码4501／345配置跳过、核心59／扩展160安装、源码及安装各六项实际服务与旧75双向恢复通过；1项Important修复，1项错误分类Minor延后，自有服务已停止。Workspace写入、其他环境角色、H4/H5和真实质量仍开放。
 后文早期记录为历史范围；最新支持与拒绝见[实现清单](../../docs/implementation-status.md)及文末增量。
 
 
 
 Dev46 已增加[Temporal 自动记忆与五类 Agent 绑定](../../docs/temporal-memory-bindings.md)：显式 temporal-3、原声明子树、History 选择响应／CAS／核验与父子证据恢复；旧发布保持。其他 Temporal 绑定角色／资源 selector、共享 Session、语义质量与完整 H1/H3 仍待验收。
 
-版本：1.10；日期：2026-10-11；维护者：RALF maintainers。
-状态：根据用户认可的理想架构形成的目标设计；当前实现基线为0.1.0.dev65（基于已提交 dev64/1b02e72）；dev43 的历史入口基线为（H1a–H1f、Local stateless H2a、同库原生／顺序 H2b1／复合 Session H2b2／授权根 namespace H2b3／远程原生顺序 H2b4a／复合根 H2b4b、Temporal 原生入口 H2c1／高级编排入口 H2c2）。
+版本：1.11；日期：2026-10-11；维护者：RALF maintainers。
+状态：根据用户认可的理想架构形成的目标设计；当前实现为0.1.0.dev76（本批基于dev75/93c32b8）；dev43 的历史入口基线为（H1a–H1f、Local stateless H2a、同库原生／顺序 H2b1／复合 Session H2b2／授权根 namespace H2b3／远程原生顺序 H2b4a／复合根 H2b4b、Temporal 原生入口 H2c1／高级编排入口 H2c2）。
 读者：框架维护者、Agent应用开发者、适配器作者与企业部署团队。
 除明确标为 H1a–H1f、dev31 Local stateless H2a 、dev32 同库原生／顺序 Session H2b1 与 dev33 Temporal 原生／顺序入口 H2c1 、dev34 高级编排入口 H2c2 与 dev35 同库复合会话 H2b2、dev36 授权根 namespace H2b3 与 dev38 远程原生／顺序 H2b4a 与 dev39 远程复合根 H2b4b 的子集外，本文中的接口和示例仍为目标设计。AgentHarness 当前固定声明并复用 Local 权威，dev40–42 已实现原生／顺序 Local 的规则记忆、受管理历史摘要和模型选择记忆；dev43 增加版本化 Local 推荐组合、确定性引用压缩和产物投影；dev44 已接通 Local 高级编排与 Temporal 自动历史压缩／大结果卸载，分别保留原 Run 节点投影与 History 阶段证据。dev46 已接通 Temporal 自动记忆与五类绑定；dev47 增加显式语义知识、相关候选排序及 Plan／Team 推荐组合，语义引用质量及完整 H3 仍待验收。
 [绑定使用教程](../../docs/agent-bindings.md)与 [Local Agent API](../../docs/agent-api.md)记录实际支持与拒绝；dev32 同库原生／顺序 Session/Turn 子集已交付；dev33 Temporal 原生／顺序入口已交付；dev34 已注册高级入口已交付；dev35同库复合会话与dev36授权根namespace已交付；dev38–39 远程原生／顺序及复合根会话已交付；dev46 已交付 Temporal 五类绑定子集；其余角色／共享 Session 与完整 H2 尚未交付。
@@ -497,3 +496,7 @@ Toolkit仅替换固定传输，MCPToolSource、PolicyGate和Local／History权�
 ## dev75 只读Workspace（子集验收通过）
 
 沿原工具接入可替换WorkspacePort／POSIX文件／内存默认实现，有界路径与可信Scope、实际线程／FD拥有和原结果恢复。[指南](../../docs/workspace.md)／[子集验收](../reviews/2026-10-11-workspace-read.md)通过；Agent.workspace角色、写入租约、Skills／Sandbox／Runner和完整H4仍开放。
+
+## dev76候选：每Agent只读Workspace
+
+借用原注册工具并固定完整Source／root／版本／额度，ref只收紧已授予工具，disabled移除Workspace工具，保留业务工具。Local原状态推进与Temporal原History共享纯选择，不增加环境客户端或第三执行权威。继承默认发布不增加记录；显式Temporal选择需要宿主注册Workspace资源并发布protocol1。[指南](../../docs/workspace.md)及[验收](../reviews/2026-10-11-workspace-bindings.md)保留后续写入／路径selector／Skills／Sandbox边界。

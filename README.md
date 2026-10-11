@@ -1,6 +1,6 @@
 # Ralf-Agent
 
-当前工作区 **0.1.0.dev74** 提供显式语义知识库、相关事实召回和 Plan／Team 默认组合，
+当前工作区 **0.1.0.dev76** 提供显式语义知识库、相关事实召回和 Plan／Team 默认组合，
 复用原执行、审批和恢复协议。见[H3 使用与扩展指南](docs/h3-intelligent-combinations.md)。
 dev48 增加[显式 HTTP 语义重排](docs/http-reranking.md)，保留原知识来源及旧默认配置。
 dev49 增加[Query transform 与语义 Facts 召回](docs/query-and-semantic-recall.md)，支持显式语义记忆组合及保留语义顺序的上下文。候选窗口外事实和真实质量仍待完善。
@@ -20,7 +20,7 @@ dev69 的[Temporal Profile 配置装配](docs/temporal-profiles.md)复用十类�
 dev72 增加[固定命令 CLI 工具](docs/cli-tools.md)、异步声明工厂与 cli starter；当前正在完成最终验收。
 
 dev71 增加 Temporal Host 基础启动预检：无效参数在 RPC 与启动状态固定前拒绝，纠正后可重试；保留 SDK 合法零值。复杂 SDK 对象仍委托 SDK，极端数值尚有边界限制。[dev71 验收](architecture/reviews/2026-10-11-temporal-startup-preflight.md)本批门槛已通过，完整框架目标仍开放。
-Local 与 Temporal 十类每 Agent 绑定、自动上下文与来源化记忆已接通；完整 H3、
+Local 与 Temporal 十一类每 Agent 绑定、自动上下文与来源化记忆已接通；完整 H3、
 真实模型质量、H4 执行环境和 H5 企业治理仍待验收。当前适合开发者试点。
 
 以下版本演进说明保留其发布时的边界；当前支持范围以[能力清单](docs/implementation-status.md)为准。
@@ -346,3 +346,5 @@ Dev73提供[固定目标HTTP JSON工具](docs/http-tools.md)，完善[CLI](docs/
 Dev74增加[MCP HTTP JSON／POST SSE](docs/mcp-http.md)，接入原ToolSource与async声明；[子集验收](architecture/reviews/2026-10-11-mcp-http.md)通过，持久Session／GET恢复／OAuth仍待实现。
 
 Dev75增加[只读Workspace Port与文件／内存默认实现](docs/workspace.md)，沿原工具与async装配接入；[子集验收](architecture/reviews/2026-10-11-workspace-read.md)通过。环境绑定与Sandbox仍开放。
+
+Dev76候选接通[每Agent只读Workspace绑定](docs/workspace.md)：复用原工具授权和资源，不增加执行权威；[安装与最终验收](architecture/reviews/2026-10-11-workspace-bindings.md)仍在执行，写入、Skills和Sandbox仍开放。

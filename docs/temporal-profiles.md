@@ -106,8 +106,8 @@ Catalog 必须显式使用 `kind="temporal-profiles"`、`schema_version=1`、
 支持的组件包括 tools、session_store、memory_store、context_assembler、harness、effect_journal、
 tool_executor、recall_policy、recall_planner、knowledge、team_strategies、planners、
 plan_verifiers、verifier、limits、stage_policy；`memory_store` 接到 Facts，
-`context_assembler` 接到纯 ContextBuilder。十类 `binding_components` 使用原 BindingCatalog，
-包括 Provider、决策、上下文、Session、Facts、Knowledge、工具集合、Verifier、Limits、Stage。
+`context_assembler` 接到纯 ContextBuilder。十一类 `binding_components` 使用原 BindingCatalog，
+包括 Provider、决策、上下文、Session、Facts、Knowledge、工具集合、Verifier、Limits、Stage、只读 Workspace。Workspace 复用已注册 tools，声明方式与 protocol1 opt-in 见[Workspace 指南](workspace.md)。
 使用原 AgentBindingDescriptor／BindingSelection 和 namespace allowlist 选择。
 
 使用 `ComponentRegistry.register/register_async` 注册自己的工厂。工厂的

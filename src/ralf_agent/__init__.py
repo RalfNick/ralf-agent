@@ -27,6 +27,7 @@ from .binding_data import FactsBindingResource, KnowledgeBindingResource
 from .binding_definitions import AgentDefinition, BoundDefinition
 from .binding_sessions import SessionBindingResource
 from .binding_types import AgentBindingDescriptor, BindingSelection
+from .binding_workspace import WorkspaceBindingResource
 from .business_evaluation import evaluate_business, load_business_cases
 from .chunking import CharacterChunker, Chunker, ParagraphChunker
 from .cli_tools import CLIToolSource
@@ -320,7 +321,7 @@ from .workflow import (
     WorkflowSelection,
 )
 
-__version__ = "0.1.0.dev75"
+__version__ = "0.1.0.dev76"
 from .filesystem_workspace import FileSystemWorkspace
 from .workspace import InMemoryWorkspace, WorkspaceError, WorkspacePort
 from .workspace_tools import WorkspaceToolSource
@@ -694,3 +695,4 @@ __all__ += ["ContextExecutionOwner", "ContextExecutionPort", "ContextExecutionRe
 __all__ += ["WorkspacePort", "WorkspaceError", "InMemoryWorkspace", "FileSystemWorkspace"]
 
 __all__ += ["WorkspaceToolSource"]
+__all__ += ["WorkspaceBindingResource"]

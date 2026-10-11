@@ -88,6 +88,21 @@ class AgentBindingResolver:
         tools = tuple(values["tool_set"])
         if not set(tools).issubset(step["tools"]):
             raise ValidationError("A bound tool set cannot expand AgentSpec tools")
+        if descriptor.workspace.mode != "inherit":
+            from .binding_workspace import select_workspace_tools
+
+            workspace = None
+            if descriptor.workspace.mode == "ref":
+                if e.binding_catalog is None:
+                    raise DefinitionMismatch("Workspace selection requires a host BindingCatalog")
+                workspace, records["workspace"] = e.binding_catalog.resolve(
+                    "workspace", descriptor.workspace, e.scope
+                )
+            else:
+                records["workspace"] = {"mode": "disabled"}
+            tools = select_workspace_tools(
+                tools, e.tools.manifests(tools), None if workspace is None else workspace.identity
+            )
         if values["provider"] is None:
             raise DefinitionMismatch("The selected model provider is unavailable")
         return StepComponents(
@@ -216,6 +231,8 @@ class AgentBindingResolver:
             for entry in entries.values()
         ):
             manifest["kernel"] = "local-bindings-10"
+        if any(entry["descriptor"]["workspace"]["mode"] != "inherit" for entry in entries.values()):
+            manifest["kernel"] = "local-bindings-11"
         return manifest
 
 
