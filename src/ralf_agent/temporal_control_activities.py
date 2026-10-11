@@ -122,6 +122,11 @@ def registered_parent_activities(runtime, client):
 
     @activity.defn(name=CONTEXT_ACTIVITY)
     async def context(value: dict) -> dict:
-        return await runtime.prepare_context(value)
+        from .temporal_session_activities import validate_tree_activity
+
+        await validate_tree_activity(client, value, workflow_id=activity.info().workflow_id)
+        result = await runtime.prepare_context(value)
+        await validate_tree_activity(client, value, workflow_id=activity.info().workflow_id)
+        return result
 
     return [child_control, selection, context]

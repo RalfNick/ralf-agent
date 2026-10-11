@@ -115,6 +115,7 @@ def validate_bindings(request, manifest, scope=None):
         validate_descriptor(manifest, descriptor, scope)
     if selected_session_data(request, manifest) and (
         request["definition"]["kind"] not in {"agent", "sequence"}
+        and "session_tree_protocol" not in manifest
         or (
             "session_save_protocol" not in manifest
             and any(k in request for k in ("session_history", "session_turn", "session_observer"))

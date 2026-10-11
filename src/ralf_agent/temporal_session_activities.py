@@ -16,6 +16,28 @@ async def namespace_id(client):
     return value
 
 
+async def validate_tree_activity(client, request, *, workflow_id):
+    """Bind portable lineage to this actual Activity and namespace before I/O."""
+    lineage = request.get("session_lineage")
+    if lineage is None:
+        return
+    from .temporal_session_tree import validate_lineage
+
+    if client is None:
+        raise DefinitionMismatch("Session tree requires its original Temporal client")
+    accepted = validate_lineage(
+        {**request["session_declaration"], "session_lineage": lineage},
+        lineage["root_binding"]["manifest"],
+        request["scope"],
+    )
+    if (
+        workflow_id != request["run_id"]
+        or accepted["run_id"] != workflow_id
+        or await namespace_id(client) != lineage["namespace_id"]
+    ):
+        raise DefinitionMismatch("Session tree Activity changed actual Run or namespace")
+
+
 def registered_session_activities(runtime, client):
     from temporalio import activity
 

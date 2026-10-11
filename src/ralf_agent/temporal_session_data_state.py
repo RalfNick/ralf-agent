@@ -50,11 +50,50 @@ def validate_protocol(manifest):
         canonical(value)
 
 
-def expected_read(manifest, request):
+def expected_read(manifest, request, *, proposed_address=None):
     value = manifest.get("session_data")
     if value is None:
         return None
     query = RecallQuery(**value["query"])
+    if request.get("session_source") == "root":
+        from .session_types import SessionRef
+        from .temporal_session_tree import validate_lineage
+
+        if "session_tree_protocol" not in manifest:
+            raise DefinitionMismatch("Root Session read requires its original tree protocol")
+        accepted = validate_lineage(
+            {**request["session_declaration"], "session_lineage": request["session_lineage"]},
+            request["session_lineage"]["root_binding"]["manifest"],
+            request["scope"],
+        )
+        address = SessionRef.from_dict(accepted["root_ref"]).key.storage_key
+        if (
+            accepted["parent_run_id"] is not None
+            or accepted["run_id"] != request["run_id"]
+            or request["session_data_node"] != "root"
+            or request["address"] != address
+            or proposed_address is not None
+            and proposed_address != address
+            or request["query"] != asdict(query)
+            or digest({k: v for k, v in manifest.items() if k != "orchestration"})
+            != digest(
+                {
+                    k: v
+                    for k, v in request["session_lineage"]["root_binding"]["manifest"].items()
+                    if k != "orchestration"
+                }
+            )
+        ):
+            raise DefinitionMismatch("Root read changed original resource or ownership")
+        return {
+            "version": 1,
+            "scope": request["scope"],
+            "run_id": request["run_id"],
+            "node": "root",
+            "registration_digest": digest(value),
+            "address": address,
+            "query": asdict(query),
+        }
     query = replace(query, max_chars=min(query.max_chars, request["step"]["max_context_chars"]))
     address = session_storage_key(
         value["namespace"], private_address(request["run_id"], request["session_data_node"])
@@ -63,6 +102,50 @@ def expected_read(manifest, request):
         from .session_types import SessionRef
 
         address = SessionRef.from_dict(request["session_turn"]["session_ref"]).key.storage_key
+    if request.get("session_lineage", {}).get("links"):
+        from .session_types import SessionRef
+        from .temporal_bindings import effective_manifest
+        from .temporal_session_topology import CompositeSessionTopology, seal_member_address
+        from .temporal_session_tree import member_projection, validate_root_snapshot
+
+        full = request["session_lineage"]["root_binding"]["manifest"]
+        declaration = {
+            **request["session_declaration"],
+            "session_lineage": request["session_lineage"],
+            **(
+                {"session_root_snapshot": request["session_root_snapshot"]}
+                if "session_root_snapshot" in request
+                else {}
+            ),
+        }
+        accepted = member_projection(
+            declaration, full, request["scope"], request["session_data_node"]
+        )
+        validate_root_snapshot(declaration, full, request["scope"])
+        if accepted["run_id"] != request["run_id"] or digest(
+            {
+                k: v
+                for k, v in effective_manifest(full, accepted["bindings"]).items()
+                if k != "orchestration"
+            }
+        ) != digest({k: v for k, v in manifest.items() if k != "orchestration"}):
+            raise DefinitionMismatch("Member read changed original selected resource or Run")
+        address = CompositeSessionTopology().member_address(
+            SessionRef.from_dict(accepted["root_ref"]),
+            accepted["path"],
+            accepted["definition_digest"],
+            namespace=value["namespace"],
+        )
+        if proposed_address is not None:
+            address = seal_member_address(
+                SessionRef.from_dict(accepted["root_ref"]),
+                accepted["path"],
+                accepted["definition_digest"],
+                proposed_address,
+                namespace=value["namespace"],
+            )
+    elif proposed_address is not None and proposed_address != address:
+        raise DefinitionMismatch("Session proposal changed its original address")
     return {
         "version": 1,
         "scope": request["scope"],
@@ -75,7 +158,26 @@ def expected_read(manifest, request):
 
 
 def validate_snapshot(snapshot, manifest, request):
-    expected = expected_read(manifest, request)
+    cached = request.get("session_private_snapshot")
+    if cached is not None:
+        if (
+            not request.get("session_lineage", {}).get("links")
+            or type(cached) is not dict
+            or set(cached) != {"session_data", "session_data_references"}
+        ):
+            raise DefinitionMismatch("Invalid original private Session snapshot")
+        validate_snapshot(
+            cached, manifest, {k: v for k, v in request.items() if k != "session_private_snapshot"}
+        )
+        if any(snapshot.get(k) != v for k, v in cached.items()):
+            raise DefinitionMismatch("Member context replaced its original private snapshot")
+    proposed = (
+        snapshot.get("session_data", {}).get("address")
+        if request.get("session_lineage", {}).get("links")
+        and type(snapshot.get("session_data")) is dict
+        else None
+    )
+    expected = expected_read(manifest, request, proposed_address=proposed)
     if expected is None:
         if "session_data" in snapshot or "session_data_references" in snapshot:
             raise DefinitionMismatch("Unexpected Session data evidence")

@@ -6,6 +6,7 @@ import re
 from .errors import DefinitionMismatch, ValidationError
 from .session_receipts import validate_inspection
 from .temporal_session_data_state import validate_snapshot
+from .temporal_session_tree import execution_fields
 from .types import Scope, canonical, digest
 
 ACTIVITY = "ralf.temporal.session-save.v1"
@@ -27,6 +28,9 @@ def bounded_inspection(value, scope, address, message_id, max_message_chars):
 
 
 def validate_protocol(manifest):
+    from .temporal_session_tree_protocol import validate_protocol as validate_tree_protocol
+
+    validate_tree_protocol(manifest)
     if "session_save_protocol" not in manifest:
         return
     policy = manifest["session_save_protocol"]
@@ -35,7 +39,7 @@ def validate_protocol(manifest):
         or set(policy)
         != {"version", "write_credits", "max_message_chars", "dataset_ids", "dataset_ports"}
         or type(policy["version"]) is not int
-        or policy["version"] != 1
+        or policy["version"] not in {1, 2}
         or type(policy["write_credits"]) is not int
         or policy["write_credits"] != 1
         or type(policy["max_message_chars"]) is not int
@@ -74,11 +78,7 @@ def prepare(state, result):
         "run_id": state.run_id,
         "step": state.step,
         "session_data_node": state.node,
-        **(
-            {k: detached(state.request[k]) for k in ("session_turn", "session_data_binding")}
-            if "session_data_binding" in state.request
-            else {}
-        ),
+        **execution_fields(state.request),
     }
     validate_snapshot(state.context_snapshot, state.step_manifest, context_request)
     source = state.context_snapshot["session_data"]
@@ -139,6 +139,10 @@ def next_stage(state):
     phase = stage["phase"]
     if phase is None:
         return None
+    if stage.get("source_kind") == "parent-aggregate" and phase == "session-write":
+        from .temporal_parent_session import release_allowance
+
+        release_allowance(state)
     if state.state in TERMINAL and phase == "session-write":
         stage.update(phase=None, status="closed")
         state.pending_session = None
@@ -174,14 +178,26 @@ def next_stage(state):
         "action_id": action["id"],
         "phase": phase,
         "intent": detached(stage["intent"]),
-        "step": state.step,
-        "session_data_node": stage["node"],
-        "step_bindings": detached(stage["step_bindings"]),
         **(
-            {k: detached(state.request[k]) for k in ("session_turn", "session_data_binding")}
-            if "session_data_binding" in state.request
-            else {}
+            {
+                k: detached(stage["read_request"][k])
+                for k in (
+                    "session_source",
+                    "session_data_node",
+                    "session_lineage",
+                    "session_declaration",
+                    "query",
+                    "address",
+                )
+            }
+            if stage.get("source_kind") == "parent-aggregate"
+            else {
+                "step": state.step,
+                "session_data_node": stage["node"],
+                "step_bindings": detached(stage["step_bindings"]),
+            }
         ),
+        **execution_fields(state.request),
     }
     if phase == "adopt":
         request["received_inspection"] = detached(stage["received_inspection"])

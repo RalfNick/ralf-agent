@@ -148,6 +148,7 @@ class TemporalRuntime:
         session_store=None,
         session_query=None,
         session_writes=False,
+        session_topology=None,
     ):
         if type(enable_sessions) is not bool:
             raise ValidationError("enable_sessions requires an explicit boolean")
@@ -155,6 +156,14 @@ class TemporalRuntime:
         if type(session_writes) is not bool:
             raise ValidationError("Session writes require an explicit boolean")
         self.session_writes = session_writes
+        from .temporal_session_topology import SessionTopologyRegistration
+
+        if session_topology is not None and (not enable_sessions or not session_writes):
+            raise ValidationError("Session topology requires original Session admission and writes")
+        self.session_topology = self._session_topology_owner = session_topology
+        self._session_topology_pin = (
+            SessionTopologyRegistration(session_topology) if session_topology is not None else None
+        )
         from .temporal_session_execution import SessionExecutionOwner
 
         self.session_execution = SessionExecutionOwner() if session_writes else None
@@ -163,7 +172,14 @@ class TemporalRuntime:
         self._session_execution_owner = self.session_execution
         self._session_execution_ports = (
             _FixedPorts(
-                {"execution": (self.session_execution, ["append", "wait", "aclose"], False)}
+                {
+                    "execution": (
+                        self.session_execution,
+                        ["append", "wait", "aclose", "_own"]
+                        + (["read"] if session_topology is not None else []),
+                        False,
+                    )
+                }
             )
             if session_writes
             else None
@@ -483,6 +499,10 @@ class TemporalRuntime:
                 result["binding_catalog"] = catalog
             if memory is not None:
                 result["managed_memory"] = memory
+        if self._session_topology_pin is not None:
+            from .temporal_session_tree_protocol import propose_manifest
+
+            result = propose_manifest(result, self._session_topology_pin)
         return result
 
     @property
@@ -510,6 +530,10 @@ class TemporalRuntime:
             return self.manifest
         if self.session_store is not self._session_owner:
             raise DefinitionMismatch("Temporal Session source owner changed")
+        if self.session_topology is not self._session_topology_owner:
+            raise DefinitionMismatch("Temporal Session topology owner changed")
+        if self._session_topology_pin is not None:
+            self._session_topology_pin.check()
         if self.session_execution is not self._session_execution_owner:
             raise DefinitionMismatch("Temporal Session execution owner changed")
         if self._session_execution_ports is not None:
@@ -815,6 +839,55 @@ class TemporalRuntime:
                 failure.update(model_evidence_version=2, received_response=received)
             return failure
 
+    async def prepare_session_root(self, request, *, dispatch_guard=None, on_end=None):
+        """Read the original Parent root; its History alone adopts the snapshot."""
+        handler_started = False
+        try:
+            self.validate_release(request["runtime_manifest"])
+            if self._session_topology_pin is None or request.get("session_source") != "root":
+                raise DefinitionMismatch("Root read requires its fixed original tree registration")
+            from .temporal_managed_context import admit_dispatch
+            from .temporal_session_data import load
+            from .temporal_session_data_state import expected_read
+
+            expected_read(request["runtime_manifest"], request)
+            from .session_types import SessionRef
+
+            address = self._session_topology_pin.root_address(
+                SessionRef.from_dict(request["session_lineage"]["root_turn"]["session_ref"])
+            )
+            if address != request["address"]:
+                raise DefinitionMismatch("Root proposal changed its original accepted address")
+            await admit_dispatch(request, dispatch_guard)
+            from .temporal_session_data import selected_registration
+
+            original = selected_registration(self, request)
+
+            async def read_body():
+                nonlocal handler_started
+                handler_started = True
+                return await load(self, request)
+
+            result = {
+                "ok": True,
+                **await self.session_execution.read(
+                    original,
+                    read_body,
+                    proof={k: request[k] for k in ("scope", "action_id", "release_digest")}
+                    | {"request_digest": digest(request)},
+                    on_end=on_end,
+                ),
+            }
+            self.validate_release(request["runtime_manifest"])
+            return result
+        except Exception as exc:
+            return {
+                "ok": False,
+                "code": _code(exc, "session_root_read_failed"),
+                "handler_not_started": not handler_started
+                and request.get("action_id") not in self.session_execution._entries,
+            }
+
     async def prepare_context(self, request):
         from .temporal_bindings import selected_runtime
 
@@ -1062,8 +1135,13 @@ def registered_activities(runtime, client=None):
         raise ValidationError("Temporal workers require the optional temporal dependency") from exc
     runtime.validate_release()
     from .temporal_managed_context import ADMISSION_UPDATE
+    from .temporal_session_activities import validate_tree_activity
+
+    async def tree_guard(request):
+        await validate_tree_activity(client, request, workflow_id=activity.info().workflow_id)
 
     async def dispatch_guard(request):
+        await tree_guard(request)
         if client is None:
             raise ValidationError("Managed worker requires its original Temporal client")
         return await client.get_workflow_handle(request["run_id"]).execute_update(
@@ -1080,6 +1158,7 @@ def registered_activities(runtime, client=None):
 
     @activity.defn(name=MODEL_ACTIVITY)
     async def model(request: dict) -> dict:
+        await tree_guard(request)
         return await runtime.complete_model(request, dispatch_guard=dispatch_guard)
 
     @activity.defn(name=TOOL_ACTIVITY)
@@ -1098,6 +1177,7 @@ def registered_activities(runtime, client=None):
 
     @activity.defn(name=ACTIVITY)
     async def managed_context(request: dict) -> dict:
+        await tree_guard(request)
         return await runtime.manage_context(request, dispatch_guard=dispatch_guard)
 
     from .temporal_memory import ACTIVITY as MEMORY_ACTIVITY
@@ -1110,6 +1190,8 @@ def registered_activities(runtime, client=None):
 
     @activity.defn(name=SESSION_SAVE_ACTIVITY)
     async def managed_session(request: dict) -> dict:
+        await tree_guard(request)
+
         async def ended(proof):
             if client is None:
                 raise ValidationError("Original Session execution proof requires its client")
@@ -1118,6 +1200,25 @@ def registered_activities(runtime, client=None):
             )
 
         return await runtime.manage_session(request, dispatch_guard=dispatch_guard, on_end=ended)
+
+    from .temporal_parent_session import ROOT_READ_ACTIVITY
+
+    @activity.defn(name=ROOT_READ_ACTIVITY)
+    async def session_root_read(request: dict) -> dict:
+        await tree_guard(request)
+
+        async def ended(proof):
+            if client is None:
+                raise ValidationError("Original root reader end requires its client")
+            await client.get_workflow_handle(request["run_id"]).execute_update(
+                "session_execution_ended", proof, id="ralf-session-end:" + proof["action_id"]
+            )
+
+        result = await runtime.prepare_session_root(
+            request, dispatch_guard=dispatch_guard, on_end=ended
+        )
+        await tree_guard(request)
+        return result
 
     from .temporal_limits_state import ACTIVITY as LIMITS_ACTIVITY
 
@@ -1141,4 +1242,5 @@ def registered_activities(runtime, client=None):
         managed_session,
         agent_limits,
         agent_completion,
+        session_root_read,
     ]

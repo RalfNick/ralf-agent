@@ -134,6 +134,43 @@ def context_evidence(request):
     if "session_history" not in request:
         return {}
     history = request["session_history"]
+    if (
+        request.get("session_lineage", {}).get("links")
+        and request.get("session_root_snapshot") is not None
+    ):
+        from .session_types import SessionRef
+        from .temporal_session_tree import validate_root_snapshot
+
+        lineage = request["session_lineage"]
+        ref = SessionRef.from_dict(lineage["root_turn"]["session_ref"])
+        declaration = request.get("session_declaration", request)
+        validate_root_snapshot(
+            {
+                **declaration,
+                "session_lineage": lineage,
+                "session_root_snapshot": request["session_root_snapshot"],
+            },
+            lineage["root_binding"]["manifest"],
+            {"workspace": ref.key.workspace, "principal": ref.key.principal},
+        )
+        source = request["session_root_snapshot"]["session_data"]
+        return {
+            "session_references": []
+            if not source["page"]["items"]
+            else [
+                {
+                    "key": "session:root-data:" + digest([source["scope"], source["address"]]),
+                    "version": source["revision"],
+                    "session": detached(source["page"]["items"]),
+                    "source_digest": digest(source),
+                }
+            ],
+            "session_projection": {
+                "history_digest": digest(history),
+                "root_snapshot_digest": digest(request["session_root_snapshot"]),
+                "lineage_digest": digest(lineage),
+            },
+        }
     if "session_data_binding" in request:
         return {
             "session_references": [],
@@ -345,6 +382,18 @@ class TemporalSessionState:
                         "dataset_id": self.data_source["dataset_id"],
                         "resource_id": self.key.resource_id,
                     }
+                if "session_tree_protocol" in self.binding["manifest"] and run_request[
+                    "definition"
+                ]["kind"] in {
+                    "graph",
+                    "team",
+                    "dynamic",
+                }:
+                    from .temporal_session_tree import root_lineage
+
+                    run_request["session_lineage"] = root_lineage(
+                        run_request, run_id, self.namespace_id, self.binding, self.scope
+                    )
                 turn = TurnAdmission(
                     turn_id,
                     seq,

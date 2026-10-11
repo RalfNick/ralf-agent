@@ -253,6 +253,11 @@ from .teams import RouterTeam, SequentialTeam, SupervisorTeam
 from .temporal import TemporalEngine, build_temporal_worker, replay_temporal_history
 from .temporal_activities import TemporalRuntime
 from .temporal_journal import PostgresEffectJournal
+from .temporal_session_topology import (
+    CompositeSessionTopology,
+    NativeSessionTopology,
+    SessionTopology,
+)
 from .tiktoken_tokenization import TiktokenTokenizer
 from .tokenization import TextTokenizer, TokenChunker, TokenizerMessageCounter, UTF8ByteTokenizer
 from .tool_schema import infer_tool_schema
@@ -303,7 +308,7 @@ from .workflow import (
     WorkflowSelection,
 )
 
-__version__ = "0.1.0.dev66"
+__version__ = "0.1.0.dev67"
 __all__ = [
     "EventCursor",
     "EventEnvelope",
@@ -498,6 +503,9 @@ __all__ += [
     "SyncTaskControls",
     "TaskControlBridge",
     "TemporalRuntime",
+    "SessionTopology",
+    "NativeSessionTopology",
+    "CompositeSessionTopology",
     "TemporalExecutionPolicy",
     "evaluate_business",
     "load_business_cases",

@@ -163,7 +163,35 @@ async def load(runtime, request):
     from .temporal_state import detached
 
     manifest = runtime.manifest
+    cached = request.get("session_private_snapshot")
+    if cached is not None:
+        if not request.get("session_lineage", {}).get("links"):
+            raise DefinitionMismatch("Private snapshot requires its original admitted member")
+        validate_snapshot(cached, manifest, request)
+        await verify_dataset(runtime, request)
+        runtime.validate_release(request["runtime_manifest"])
+        selected_registration(runtime, request).check()
+        return detached(cached)
     expected = expected_read(manifest, request)
+    if request.get("session_lineage", {}).get("links"):
+        from .session_types import SessionRef
+        from .temporal_session_tree import member_projection
+
+        accepted = member_projection(
+            {**request["session_declaration"], "session_lineage": request["session_lineage"]},
+            request["session_lineage"]["root_binding"]["manifest"],
+            request["scope"],
+            request["session_data_node"],
+        )
+        if runtime._session_topology_pin is None:
+            raise DefinitionMismatch("Member read lost its fixed topology proposal port")
+        address = runtime._session_topology_pin.member_address(
+            SessionRef.from_dict(accepted["root_ref"]),
+            accepted["path"],
+            accepted["definition_digest"],
+            namespace=manifest["session_data"]["namespace"],
+        )
+        expected = expected_read(manifest, request, proposed_address=address)
     original = selected_registration(runtime, request)
     await verify_dataset(runtime, request)
     original.check()

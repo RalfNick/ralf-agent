@@ -9,6 +9,14 @@ def selected_source(request, manifest):
     from .binding_paths import agent_paths
     from .temporal_bindings import effective_manifest, selected_session_data
 
+    if manifest.get("session_tree_protocol") is not None and request["definition"]["kind"] in {
+        "graph",
+        "team",
+        "dynamic",
+    }:
+        from .temporal_session_tree import root_source
+
+        return root_source(manifest)
     sources = selected_session_data(request, manifest)
     if not sources:
         return None
@@ -62,8 +70,30 @@ def selected_namespace(source, provided):
 def validate_turn(request, manifest, scope=None):
     from .session_types import SessionRef
 
-    if not any(k in request for k in ("session_turn", "session_history", "session_observer")):
+    if not any(
+        k in request
+        for k in ("session_turn", "session_history", "session_observer", "session_lineage")
+    ):
         return
+    if "session_lineage" in request:
+        from .temporal_session_tree import validate_lineage, validate_root_snapshot
+
+        if "session_tree_protocol" not in manifest:
+            raise DefinitionMismatch("Member lineage requires its original tree protocol")
+        original = request["session_lineage"]["root_turn"]
+        ref = SessionRef.from_dict(original["session_ref"])
+        checked_scope = scope or {"workspace": ref.key.workspace, "principal": ref.key.principal}
+        accepted = validate_lineage(request, manifest, checked_scope)
+        if accepted["parent_run_id"] is not None:
+            if (
+                request.get("session_observer") != {"coordinator_id": original["coordinator_id"]}
+                or "session_turn" in request
+            ):
+                raise DefinitionMismatch("Member observer changed original root ownership")
+            validate_root_snapshot(request, manifest, checked_scope)
+            return
+        if request.get("session_turn") != original or "session_observer" in request:
+            raise DefinitionMismatch("Root lineage lost its original coordinator Turn")
     source = selected_source(request, manifest)
     if source is None:
         return

@@ -32,16 +32,6 @@ class SessionExecutionOwner:
     async def append(
         self, source, scope, address, message, *, expected_revision, message_id, proof, on_end=None
     ):
-        if self._closed or len(self._entries) >= self.max_calls:
-            raise MemoryBackendError("Session execution owner is closed or at capacity")
-        key = proof["action_id"]
-        if key in self._entries:
-            raise MemoryBackendError("Original Session handler is already owned")
-        loop = asyncio.get_running_loop()
-        import json
-
-        proof = json.loads(canonical(proof))
-
         async def invoke(role):
             return await source.fixed.call(
                 role,
@@ -53,17 +43,46 @@ class SessionExecutionOwner:
                 message_id=message_id,
             )
 
-        if isinstance(source.backend, ThreadedMemoryAdapter):
+        return await self._own(
+            lambda: invoke(
+                "session-source" if isinstance(source.backend, ThreadedMemoryAdapter) else "session"
+            ),
+            threaded=isinstance(source.backend, ThreadedMemoryAdapter),
+            proof=proof,
+            on_end=on_end,
+        )
+
+    async def read(self, source, operation, *, proof, on_end=None):
+        """Own the whole bounded read, including delegated metadata and page I/O."""
+        return await self._own(
+            operation,
+            threaded=isinstance(source.backend, ThreadedMemoryAdapter),
+            proof=proof,
+            on_end=on_end,
+        )
+
+    async def _own(self, invoke, *, threaded, proof, on_end):
+        if self._closed or len(self._entries) >= self.max_calls:
+            raise MemoryBackendError("Session execution owner is closed or at capacity")
+        key = proof["action_id"]
+        if key in self._entries:
+            raise MemoryBackendError("Original Session handler is already owned")
+        loop = asyncio.get_running_loop()
+        import json
+
+        proof = json.loads(canonical(proof))
+
+        if threaded:
             if self._executor is None:
                 self._executor = concurrent.futures.ThreadPoolExecutor(
                     max_workers=self.max_calls, thread_name_prefix="ralf-session"
                 )
             # Keep the actual concurrent Future, even if every asyncio task is cancelled.
-            future = self._executor.submit(lambda: asyncio.run(invoke("session-source")))
+            future = self._executor.submit(lambda: asyncio.run(invoke()))
             waiter = asyncio.wrap_future(future)
             waiter.add_done_callback(lambda done: None if done.cancelled() else done.exception())
         else:
-            future = waiter = asyncio.create_task(invoke("session"))
+            future = waiter = asyncio.create_task(invoke())
         entry = {"future": future, "proof": proof, "on_end": on_end, "notification": None}
         self._entries[key] = entry
 

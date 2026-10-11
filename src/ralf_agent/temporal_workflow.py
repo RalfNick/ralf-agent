@@ -51,6 +51,13 @@ class TemporalRunWorkflow:
         self._check_session_parent(info)
 
     def _check_session_parent(self, info):
+        links = self.state.request.get("session_lineage", {}).get("links", [])
+        if links and (info.parent is None or info.parent.workflow_id != links[-1]["parent_run_id"]):
+            raise ApplicationError(
+                "Session member is not owned by its original direct parent",
+                type="definition_mismatch",
+                non_retryable=True,
+            )
         turn = self.state.request.get("session_turn")
         if turn is not None and (
             info.parent is None or info.parent.workflow_id != turn["coordinator_id"]

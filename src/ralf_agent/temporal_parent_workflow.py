@@ -14,6 +14,7 @@ from temporalio.exceptions import (
 
 with workflow.unsafe.imports_passed_through():
     from .orchestration_types import ChildCall
+    from .temporal_parent_session import ROOT_READ_ACTIVITY
     from .temporal_parent_state import (
         CONTROL_ACTIVITY,
         PARENT_WORKFLOW_NAME,
@@ -21,6 +22,7 @@ with workflow.unsafe.imports_passed_through():
         TemporalParentState,
         ValidationError,
     )
+    from .temporal_session_save_state import ACTIVITY as SESSION_SAVE_ACTIVITY
     from .temporal_state import TERMINAL, WORKFLOW_NAME, detached
     from .temporal_workflow import TemporalRunWorkflow
 
@@ -121,6 +123,36 @@ class TemporalParentWorkflow(TemporalRunWorkflow):
                                 self.state.state, self.state.error = "failed", {"code": exc.code}
                             self.state._emit("child_evidence_refused")
                     changed |= before != self.state.revision
+            operation = self.state.next_session_operation()
+            if operation is not None:
+                action, request = operation
+                try:
+                    response = await workflow.execute_activity(
+                        ROOT_READ_ACTIVITY
+                        if action["kind"] == "session_root_read"
+                        else SESSION_SAVE_ACTIVITY,
+                        request,
+                        start_to_close_timeout=timeout,
+                        schedule_to_close_timeout=timeout * 2 + timedelta(seconds=5),
+                        retry_policy=RetryPolicy(
+                            maximum_attempts=1
+                            if action["phase"] in {"session-write", "session-root-read"}
+                            else 3
+                        ),
+                        activity_id=action["id"],
+                    )
+                except ActivityError:
+                    response = {
+                        "ok": False,
+                        "code": "activity_outcome_unknown",
+                        "dispatched": action["phase"] == "session-write",
+                        "execution_stopped": False,
+                    }
+                if action["kind"] == "session_root_read":
+                    self.state.accept_session_root(action["id"], response)
+                else:
+                    self.state.accept_session(action["id"], response)
+                continue
             if self.state.state not in TERMINAL:
                 try:
                     calls = self.state.next_calls()

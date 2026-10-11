@@ -1,7 +1,8 @@
 # Temporal 原生／顺序持久会话
 
-状态：dev66 原生／顺序子集已验收。范围是原生 Agent 和顺序 Workflow；完整
-[外置 Session 契约](../architecture/specs/temporal-session-data-contract.md)仍包含未交付的复合根／成员地址。
+状态：dev66 原生／顺序子集已验收。本指南描述默认 save-v1 的原生 Agent 和顺序 Workflow。
+dev67 显式 tree-v1／save-v2 的高级根／成员地址见[会话树指南](temporal-session-trees.md)及其独立验收；
+[完整外置 Session 契约](../architecture/specs/temporal-session-data-contract.md)仍保留租约／迁移等后续门槛。
 
 `TemporalRuntime(session_writes=True)` 显式启用原 History 管理的保存协议。
 默认关闭，既有 dev65 只读资源和 History Conversation 保持原行为。

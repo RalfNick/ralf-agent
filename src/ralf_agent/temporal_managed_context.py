@@ -159,6 +159,7 @@ def admit_history(state, payload):
         "select",
         "memory-write",
         "session-write",
+        "session-root-read",
     }:
         raise ValidationError("Unsupported managed external dispatch admission")
     state.authorize(payload["scope"])
@@ -167,6 +168,12 @@ def admit_history(state, payload):
     action = next(
         (a for a in getattr(state, "actions", []) if a["id"] == payload["action_id"]), None
     )
+    if payload.get("phase") == "session-root-read" and (
+        "session_tree_protocol" not in state.manifest
+        or action is None
+        or action["kind"] != "session_root_read"
+    ):
+        raise DefinitionMismatch("Root read admission requires its original Parent Action")
     proof = {
         "run_id": state.run_id,
         "action_id": payload["action_id"],
@@ -461,10 +468,7 @@ def next_stage(state):
     }
     if "session_data" in state.step_manifest:
         request["session_data_node"] = state.node
-    if "session_data_binding" in state.request:
-        request.update(
-            {k: detached(state.request[k]) for k in ("session_turn", "session_data_binding")}
-        )
+    request.update(state.session_context_fields())
     if "facts_context" in state.step_manifest:
         request["session_id"] = state.request.get("session_id") or state.run_id
     if state.step_manifest["managed_context"].get("dispatch_admission") == "history-1":
@@ -527,6 +531,7 @@ def _after_artifacts(state, stage):
 
 
 def accept_stage(state, action_id, response):
+
     response = detached(response)
     action = next(a for a in state.actions if a["id"] == action_id)
     stage, phase = state.managed_context_stages[action["stage_key"]], action["phase"]
@@ -579,16 +584,12 @@ def accept_stage(state, action_id, response):
                 "run_id": state.run_id,
                 "session_data_node": state.node,
                 "step": state.step,
-                **(
-                    {
-                        k: detached(state.request[k])
-                        for k in ("session_turn", "session_data_binding")
-                    }
-                    if "session_data_binding" in state.request
-                    else {}
-                ),
+                **state.session_context_fields(),
             },
         )
+        from .temporal_session_tree_reads import adopt
+
+        adopt(state, response)
         stage["prepared"] = response
         _after_artifacts(state, stage)
     elif phase in {"read", "verify"}:
@@ -653,14 +654,7 @@ def accept_stage(state, action_id, response):
                 "run_id": state.run_id,
                 "session_data_node": state.node,
                 "step": state.step,
-                **(
-                    {
-                        k: detached(state.request[k])
-                        for k in ("session_turn", "session_data_binding")
-                    }
-                    if "session_data_binding" in state.request
-                    else {}
-                ),
+                **state.session_context_fields(),
             },
         )
         stage["status"], stage["snapshot"] = "completed", response

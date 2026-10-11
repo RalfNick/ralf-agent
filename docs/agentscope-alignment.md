@@ -86,3 +86,12 @@ Dev63接通原生及高级Temporal纯DecisionPolicy，形成九类每Agent绑定
 
 
 dev65 增加 Temporal Session 有界读依赖，仍缺外置会话写和跨 Turn 路由；不能据此宣称完整第十类绑定或 AgentScope 整体对齐。
+
+
+Dev67 adds original Temporal Parent root/private Session trees with source-once data,
+explicit replaceable topology, fixed per-member resources and actual-handler end evidence.
+This narrows the distributed persistence gap for Graph/Team/Plan/DAG/nesting; it does not
+establish AgentScope parity. Remaining configuration, environment/Runner, lifetime and
+enterprise governance, live-quality and external-adoption gates remain in
+[the capability list](remaining-work.md). Final delivery evidence is separate from
+scripted provider tests in [dev67 acceptance](../architecture/reviews/2026-10-11-temporal-session-trees.md).

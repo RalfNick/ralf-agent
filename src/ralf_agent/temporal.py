@@ -285,6 +285,9 @@ class TemporalEngine:
         from .temporal_bindings import validate_bindings
 
         validate_bindings(request, self._release, asdict(self.scope))
+        from .temporal_session_tree import require_tree_admission
+
+        require_tree_admission(request, self._release)
         sdk = _sdk()
         try:
             from .temporal_parent_state import PARENT_WORKFLOW_NAME
@@ -511,6 +514,15 @@ def _workflow_runner():
             "ralf_agent.temporal_facts_state",
             "ralf_agent.temporal_knowledge_state",
             "ralf_agent.temporal_session_state",
+            "ralf_agent.session_types",
+            "ralf_agent.temporal_session_data_state",
+            "ralf_agent.temporal_session_tree",
+            "ralf_agent.temporal_session_tree_reads",
+            "ralf_agent.temporal_session_tree_protocol",
+            "ralf_agent.temporal_session_topology",
+            "ralf_agent.temporal_session_identity",
+            "ralf_agent.temporal_parent_session",
+            "ralf_agent.temporal_managed_context",
             "ralf_agent.temporal_limits_state",
             "ralf_agent.temporal_completion_state",
             "ralf_agent.temporal_decision_state",

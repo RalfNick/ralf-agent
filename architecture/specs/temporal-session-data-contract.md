@@ -55,6 +55,26 @@ Redis/PG CAS 只防止数据冲突；跨独立权威会话租约仍需单独设�
 idle rebind 只能在原 Session 地址内更新定义/绑定版本。移动物理资源属于显式迁移协议，
 不能借 rebind 自动搬迁历史，也不能创建第二个占用持有者。
 
+### 会话树的地址与候选协议
+
+dev67 开发中的纯拓扑按原 SessionKey、binding_revision、结构化路径和实际 Agent 声明摘要
+生成私有逻辑 ID，再由获准的成员 namespace 编码。路径 atom 不使用字符串 `/` 拼接作为身份。
+Graph 使用原 node ID；Team 使用原 member 和稳定 call ID；动态编排使用原采纳的 node ID 与
+获准 member；嵌套保留全部祖先路径；顺序成员追加原 step index。默认 Team 的 call ID 稳定，
+自定义策略若改变 call ID，会明确创建另一私有延续地址，不能承诺自动继承旧调用的私有历史。
+idle rebind 保留根 Conversation，但绑定版本变化使成员私有代际分开；需要延续旧代际时应使用
+明确迁移协议，不能隐式复用。
+
+可替换拓扑是固定的同步提案端口，不授予成员资格或执行权。当前封装保留原 lineage ID／namespace，
+自定义实现可以追加有界路由后缀；原方法、配置和代码身份在注册后固定。原 History 仍必须核验
+原根绑定、Namespace、Scope、实际父子 Run、获准声明与动态计划，读取后保存原快照。
+完整树证据按 UTF-8 序列化字节限制为 1 MiB。
+
+候选协议显式使用 save-v2 和 tree-v1，旧 save-v1 不增加字段。旧 Worker 必须在 I/O 前拒绝
+新版本。开发中的 dev67 Runtime 已显式注册高级树链路，并接通原 Parent／成员 Activity 和 SDK
+调度；当前包仍为已提交 dev66。实际旧新 Worker、完整绑定／默认组合／数据库、安装与
+故障窗口仍须按本契约六组门槛验收，不能把集成子集测试作为最终交付。
+
 ## 3. 读快照与上下文
 
 原 Context Activity 从固定数据端口有界读取。原 History 在模型派发前采纳并保存 read snapshot：
@@ -125,3 +145,12 @@ ThreadedMemoryAdapter 只用于明确线程安全的同步后端，真实线程�
 ## dev65 实际依赖范围
 
 仅交付固定资源／有界读／原 History 证据采纳，见[实际指南](../../docs/temporal-session-data-reads.md)。读地址是原 stateless Run/node 私有地址，尚非本规格的持久 SessionKey／跨 Turn 路径；没有外置自动保存。当前 native/sequence 允许此读子集，显式 SessionTurn 与选中来源的高级组合接受前拒绝。完整写／根保存／物理会话租约与上列六组验收保持目标，不被此增量替换。
+
+
+## dev67 会话树落实范围
+
+显式纯 SessionTopology、原 Parent 根读取与聚合保存、稳定成员私有数据、跨 Turn 与原 History
+恢复见[指南](../../docs/temporal-session-trees.md)及[验收](../reviews/2026-10-11-temporal-session-trees.md)。
+根／成员源分别固定，原快照只读一次；原处理器结束证据和精确消息采纳仍为独立事实。
+默认 save-v1 及旧 History 保持；新 tree-v1/save-v2 由旧 Worker 在 I/O 前拒绝。
+本实现不提供跨权威租约、FIFO、数据迁移或完整配置链路，不关闭上列全目标验收。

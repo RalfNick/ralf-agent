@@ -282,6 +282,7 @@ class TemporalRunState:
         self.active_evidence_ack = None
         self.deferred_acks = []
         self.context_snapshot = None
+        self.session_private_snapshots = {}
         self.context_signature = None
         self.memory_stages, self.pending_completion, self.memory_recovery = {}, None, []
         self.session_stages, self.pending_session, self.session_recovery = {}, None, []
@@ -528,7 +529,7 @@ class TemporalRunState:
             ),
             **(
                 {"context_stages": detached(list(self.managed_context_stages.values()))}
-                if "managed_context" in self.manifest
+                if "managed_context" in self.manifest or self.managed_context_stages
                 else {}
             ),
             "workflow": {
@@ -664,6 +665,7 @@ class TemporalRunState:
             or self.step_manifest.get("knowledge_context") is not None
             or self.step_manifest.get("context_registration") is not None
             or bool(self.request.get("session_history"))
+            or self.request.get("session_root_snapshot") is not None
         ):
             signature = self.context_cache_signature()
             if signature != self.context_signature:
@@ -682,14 +684,7 @@ class TemporalRunState:
                     "scope": self.scope,
                     "run_id": self.run_id,
                     "step": detached(self.step),
-                    **(
-                        {
-                            k: detached(self.request[k])
-                            for k in ("session_turn", "session_data_binding")
-                        }
-                        if "session_data_binding" in self.request
-                        else {}
-                    ),
+                    **self.session_context_fields(),
                     **(
                         {"session_data_node": self.node}
                         if "session_data" in self.step_manifest
@@ -732,10 +727,7 @@ class TemporalRunState:
             request["session_data_node"] = self.node
         if "session_history" in self.request:
             request["session_history"] = detached(self.request["session_history"])
-        if "session_data_binding" in self.request:
-            request.update(
-                {k: detached(self.request[k]) for k in ("session_turn", "session_data_binding")}
-            )
+        request.update(self.session_context_fields())
         if self.manifest.get("session_protocol") == 1:
             request["scope"] = self.scope
         if self.manifest["kernel"] == "temporal-3":
@@ -746,6 +738,7 @@ class TemporalRunState:
             or self.step_manifest.get("knowledge_context") is not None
             or self.step_manifest.get("context_registration") is not None
             or bool(self.request.get("session_history"))
+            or self.request.get("session_root_snapshot") is not None
         ):
             request.update(context=detached(self.context_snapshot), scope=self.scope)
         if (
@@ -762,6 +755,11 @@ class TemporalRunState:
             )
             action["dispatch_request_digest"] = digest(request)
         return action, request
+
+    def session_context_fields(self):
+        from .temporal_session_tree_reads import request_fields
+
+        return request_fields(self)
 
     def accept_context(self, action_id, response):
         action = next(a for a in self.actions if a["id"] == action_id)
@@ -792,13 +790,12 @@ class TemporalRunState:
                 "run_id": self.run_id,
                 "session_data_node": self.node,
                 "step": self.step,
-                **(
-                    {k: detached(self.request[k]) for k in ("session_turn", "session_data_binding")}
-                    if "session_data_binding" in self.request
-                    else {}
-                ),
+                **self.session_context_fields(),
             },
         )
+        from .temporal_session_tree_reads import adopt
+
+        adopt(self, response)
         self.context_snapshot = detached(response)
         self.context_signature = self.context_cache_signature()
         action["status"], action["response"] = "completed", detached(response)
@@ -1028,12 +1025,19 @@ class TemporalRunState:
             set(proof) != {"scope", "action_id", "request_digest", "release_digest"}
             or proof["release_digest"] != self.release_digest
             or action is None
-            or action["kind"] != "managed_session"
-            or action["phase"] != "session-write"
+            or (action["kind"], action.get("phase"))
+            not in {
+                ("managed_session", "session-write"),
+                ("session_root_read", "session-root-read"),
+            }
             or proof["request_digest"] != action["request_digest"]
             or not action.get("dispatch_grant", {}).get("allowed")
         ):
             raise DefinitionMismatch("Session execution end lost original admitted identity")
+        if action["kind"] == "session_root_read":
+            from .temporal_parent_session import end_read
+
+            return end_read(self, action, proof)
         stage = self.session_stages[action["stage_key"]]
         if "execution_end_proof" in action:
             return {"action_id": action["id"], "execution_stopped": True}

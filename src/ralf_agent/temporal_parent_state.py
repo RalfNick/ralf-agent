@@ -84,10 +84,16 @@ class TemporalParentState(TemporalRunState):
         self.results = {}
         self.selections = 0
         self.memory_recovery_revision = 0
+        self.actions, self.reservations = [], {}
+        self.active_action, self.remote_uncertain = None, False
+        self.session_stages, self.pending_session, self.session_recovery = {}, None, []
         payload = {"kind": "submit", "scope": self.scope, "request": self.request}
         self.command_digests[command_id] = digest(payload)
         self.receipts[command_id] = self._receipt(command_id, "submit", {"state_revision": 0})
         self._emit("run_submitted", {"release_digest": self.release_digest}, bump=False)
+        from .temporal_parent_session import initialize
+
+        initialize(self)
         if self.kind == "graph":
             graph = GraphWorkflowSpec.from_dict(self.definition)
             if any(node.agent is None for node in graph.nodes):
@@ -96,10 +102,52 @@ class TemporalParentState(TemporalRunState):
 
     @property
     def quiescent(self):
+        return (
+            self.children_quiescent
+            and self.active_action is None
+            and not self.remote_uncertain
+            and all(r["status"] == "settled" for r in self.reservations.values())
+            and all(
+                s["status"] in {"completed", "failed", "closed", "closed_no_record"}
+                for s in self.session_stages.values()
+            )
+        )
+
+    @property
+    def children_quiescent(self):
         return all(call.get("settled", False) for call in self.children)
+
+    def next_session_operation(self):
+        from .temporal_parent_session import next_operation
+
+        return next_operation(self)
+
+    def accept_session_root(self, action_id, response):
+        from .temporal_parent_session import accept_read
+
+        accept_read(self, action_id, response)
+
+    def _complete_parent(self, result):
+        from .temporal_parent_session import prepare_result
+
+        if not prepare_result(self, result):
+            self._complete_node(result)
+
+    def _complete_node(self, result):
+        from .temporal_parent_session import release_allowance
+
+        release_allowance(self)
+        self.state, self.result = "succeeded", detached(result)
+        self._emit("run_succeeded")
+
+    def retry_blocked(self):
+        from .temporal_session_save_state import request_recovery
+
+        request_recovery(self)
 
     @property
     def budget(self):
+        own = TemporalRunState.budget.fget(self)
         held = sum(call["cap"] for call in self.children if not call.get("settled", False))
         unknown = sum(
             call["cap"]
@@ -109,10 +157,15 @@ class TemporalParentState(TemporalRunState):
         spent = sum(call.get("spent", 0) for call in self.children if call.get("settled", False))
         return {
             "allowance": self.request["budget"],
-            "reserved": held - unknown,
-            "unknown": unknown,
-            "spent": spent,
-            "remaining": self.request["budget"] - held - spent,
+            "reserved": held - unknown + own["reserved"],
+            "unknown": unknown + own["unknown"],
+            "spent": spent + own["spent"],
+            "remaining": self.request["budget"]
+            - held
+            - spent
+            - own["reserved"]
+            - own["unknown"]
+            - own["spent"],
             "reservations": detached(
                 [
                     {
@@ -125,6 +178,7 @@ class TemporalParentState(TemporalRunState):
                     }
                     for c in self.children
                 ]
+                + own["reservations"]
             ),
         }
 
@@ -146,7 +200,7 @@ class TemporalParentState(TemporalRunState):
             "result": detached(self.result),
             "error": detached(self.error),
             "pending": detached(pending),
-            "actions": [],
+            "actions": detached(self.actions),
             "consistency": "authoritative",
         }
 
@@ -162,10 +216,12 @@ class TemporalParentState(TemporalRunState):
                 "stage": self.stage,
                 "quiescent": self.quiescent,
                 "remote_stop_confirmed": self.quiescent,
-                "unknown_remote_execution": any(
-                    c.get("uncertain", False) for c in self.children if not c.get("settled")
-                ),
+                "unknown_remote_execution": self.remote_uncertain
+                or any(c.get("uncertain", False) for c in self.children if not c.get("settled")),
                 "reconciliation_pending": any(
+                    s["status"] == "outcome_unknown" for s in self.session_stages.values()
+                )
+                or any(
                     c.get("observed_flow", {}).get("reconciliation_pending", False)
                     for c in self.children
                     if not c.get("settled")
@@ -217,6 +273,9 @@ class TemporalParentState(TemporalRunState):
         if kind == "drive":
             if self.manifest["kernel"] == "temporal-3":
                 self.memory_recovery_revision += 1
+            from .temporal_session_save_state import request_recovery
+
+            request_recovery(self)
             return {"state_revision": self.revision}
         if kind == "cancel":
             if self.state in {"succeeded", "failed"}:
@@ -259,10 +318,9 @@ class TemporalParentState(TemporalRunState):
             if self.selections > self.policy.max_children + 1:
                 raise ValidationError("Team selection limit exceeded")
             if selection.done:
-                if not self.quiescent:
+                if not self.children_quiescent:
                     raise ValidationError("Children still hold execution capacity")
-                self.state, self.result = "succeeded", detached(selection.result)
-                self._emit("run_succeeded")
+                self._complete_parent(selection.result)
                 return
             for call in selection.calls:
                 if call["member"] not in self.definition["members"]:
@@ -280,7 +338,10 @@ class TemporalParentState(TemporalRunState):
             from .dag_planning import PlanningConclusion
 
             conclusion = PlanningConclusion(**value)
-            self.state, self.result = "succeeded", conclusion.to_dict()
+            if "session_tree_protocol" in self.manifest:
+                self._complete_parent(conclusion.to_dict())
+            else:
+                self.state, self.result = "succeeded", conclusion.to_dict()
             self._emit("planning_conclusion_adopted")
             return
         else:
@@ -337,6 +398,22 @@ class TemporalParentState(TemporalRunState):
         from .temporal_bindings import project_child
 
         request = project_child(self.request, call.member, request)
+        if "session_lineage" in self.request:
+            from .temporal_session_tree import project_lineage
+
+            request["session_lineage"] = project_lineage(
+                self.request,
+                self.run_id,
+                call.member,
+                call.id,
+                request,
+                proposal=self.dag["proposal"]
+                if self.kind == "dynamic" and call.member != "@planner"
+                else None,
+                planning_revision=self.planning_revision,
+            )
+            if self.root_session_snapshot is not None:
+                request["session_root_snapshot"] = detached(self.root_session_snapshot)
         entry = {
             "id": identity,
             "call_id": call.id,
@@ -363,7 +440,12 @@ class TemporalParentState(TemporalRunState):
         return detached(entry)
 
     def next_calls(self):
-        if self.state in TERMINAL:
+        if (
+            self.state in TERMINAL
+            or not self.root_context_ready
+            or self.pending_session is not None
+            or self.root_aggregate is not None
+        ):
             return []
         pending = [call for call in self.children if not call.get("settled", False)]
         slots = self.max_concurrency - len(pending)
@@ -399,8 +481,7 @@ class TemporalParentState(TemporalRunState):
                     )
                 ):
                     if self.kind == "graph":
-                        self.state, self.result = "succeeded", result
-                        self._emit("run_succeeded")
+                        self._complete_parent(result)
                     else:
                         self.stage = "verify"
                         self.dag["result"] = result
@@ -640,7 +721,6 @@ class TemporalParentState(TemporalRunState):
         elif verification.status == "failed":
             self.state, self.error = "failed", {"code": "verification_failed"}
         else:
-            if not self.quiescent:
+            if not self.children_quiescent:
                 raise ValidationError("Children still hold execution capacity")
-            self.state, self.result = "succeeded", detached(verification.result)
-            self._emit("run_succeeded")
+            self._complete_parent(verification.result)

@@ -1,7 +1,7 @@
 # 持续能力开发与验收队列
 
 用户授权：2026-10-10 持续执行直到能力完成；只本地提交，不推送远端。
-当前 dev64 默认精确 Session 回执批次（基线9a1b067/dev63）；实际提交 SHA 以 Git 为准。此队列落实既有架构，不新增执行权威。
+dev67 的 Temporal 会话树已通过本批本地验收；实际本地提交 SHA 以 Git 为准，未发布远端。此队列落实既有架构，不新增执行权威。
 权威范围：[剩余清单](remaining-work.md) R01–R26、[Harness 架构](../architecture/viewpoints/harness-runtime.md) H1–H5。
 历史设计中明确后置的高级 Realtime/TTS、公共插件市场和运行中热迁移保持单独路线图；按需适配器不以数量定义完成。
 
@@ -44,6 +44,27 @@ Scanner是显式宿主枚举，含expired不自动扩张Agent权限；recall是�
 
 缺少服务只阻断相应真实验收，不停止其他能力实现；版本适配不能靠原型或接口声明标完成。
 PostgreSQL官方16.15源码已验证并在任务目录临时编译；本轮真实PG门槛已通过并停止实例，下一批可复用已构建binary。Temporal／Qdrant等缺失服务仍分别验收。
+
+## dev67 开发中的会话树
+
+实施计划：[Temporal 会话树](superpowers/plans/2026-10-11-temporal-session-trees.md)。
+显式 `session_topology` 注册现已接通 Runtime、原 Parent 根读取／聚合保存 Activity、
+原成员私有读写与 SDK 调度；默认不注册时保留 save-v1，显式注册发布 tree-v1／save-v2。
+拓扑只提案地址，Scope、实际 namespace UUID、原绑定／声明路径、直接父 Workflow、
+选中数据源和根占用仍由原执行权威校验。自定义提案可扩展路由后缀，不能移除原成员代际或改写根。
+根快照单次采纳后仅投影给后代，不改变原请求，也不重复引用外置 Conversation 的 History。
+原 Parent 预留根写额度，并在独立聚合证据、精确回执采纳及实际处理器结束后提交成功。
+
+当前相关回归 **237 passed**（11.10s）。实际本机 Temporal／SQLite 的 Graph、Team、规则 DAG、
+嵌套编排 × 普通／managed 上下文，两轮根／私有保存及全部后代 History replay **8 项通过**。
+独立 Worker 根读取后强制退出的恢复测试 **1 项通过**：模型1次、两个不同地址各写1次、读取2次；
+其余根聚合／成员提交／回执采纳窗口正在运行，未完成的测试不计入验收。
+实际恢复发现并修复了 sandbox 内外 SessionRef 类型身份不一致；按 Agent 选源的兼容回归也已修复。
+基础增量的旧全量3745／226跳过发生在这些集成之前，不能作为当前完整回归结果。
+
+Task2–4 尚未验收：仍需完整绑定／混合源／规划默认组合、远端数据库和真实处理器关闭证据，
+以及安装、默认旧新 History 兼容、最终审查和全量回归。包仍为已提交 dev66；未发布或提交 dev67，
+也未进行真实模型质量或外部采用验收。完整 R01–R26 与 H1/H2/H3/M1 保持开放。
 
 ## 运行资源交接
 
@@ -141,3 +162,15 @@ Temporal H1f 复用可替换纯 LimitsPolicy，原 Run History 逐节点采纳�
 原计划任务1／2已分别验收25和65项；原History保存协议、真实Handler独立拥有、数据集／Namespace身份、根地址和source-once完成。唯一独立review4项P2及自己的派发前超时fence由RED→GREEN闭环，最终全量3686 passed/226 configured skips（519.28s），安装150契约／25真实服务，源码真实65、freshcore及实际65↔66兼容通过。最终制品／服务关闭／本地提交证据见[验收](../architecture/reviews/2026-10-11-temporal-session-data-writes.md)。未调用真实模型，不推送远端，完整R01–R26继续active。
 
 下一批沿同一完整外置Session规格实现Graph／Team／动态DAG／嵌套的原成员稳定地址与原Parent根保存，先明确来源分类／单次保存和父子静默门禁，复用既有写意图／CAS／回执／采纳。随后补Profile推荐装配、其他绑定与治理／质量门槛；不把本批局部验收替代完整H1/H2/H3/M1。
+
+
+## dev67 Temporal 根／成员会话树与下一批
+
+本批基线 ae9854e/dev66。显式纯拓扑、原 Parent 聚合保存、稳定私有成员源、
+source-once Context／RAG／记忆、真实处理器结束通知接通。唯一独立审查的根读超时 P1
+已 RED→GREEN 修复；代码注释一项 Minor 留作后续修订。最终源码3801/267（508.59s）、安装198契约／实际41（455.60s）、core-only与226模块一致，
+不可用此前 foundation3745/226 代替本批最终产品证据，见[验收记录](../architecture/reviews/2026-10-11-temporal-session-trees.md)。
+下一批先完善原生／私有 Context 读者治理，再补 Temporal 推荐配置／starter与其余绑定，随后输入续接／期限、
+环境／Runner、长期容量／迁移及真实质量。完整 R01–R26 继续 active；只本地提交，不推送。
+
+最终冻结产品全量7679 exit0；安装全服务57843 exit0。旧新默认、21 starters、typed Session、Local审批与Temporal默认/native-v1 History兼容通过；旧66 Worker新协议无业务Activity即拒绝。实际源码41/469.59s在主P1修复后、最后重复拒绝分支前，最终安装41重新覆盖全部服务形状。唯一审查的读者P1以2状态+1真实线程+1重复读者RED→GREEN闭环；一项候选注释Minor待修。PostgreSQL65460、Temporal92718均exit0，PGstopped=0，测试Worker全部结束。仅本地提交；完整R01–R26目标active。

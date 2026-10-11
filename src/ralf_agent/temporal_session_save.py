@@ -18,7 +18,7 @@ async def execute(runtime, request, *, dispatch_guard=None, on_end=None):
         if "session_save_protocol" not in runtime.manifest:
             raise DefinitionMismatch("Original Session writes are not registered")
         intent = request["intent"]
-        expected = expected_read(runtime.manifest, request)
+        expected = expected_read(runtime.manifest, request, proposed_address=intent["address"])
         if (
             intent["version"] != 1
             or type(intent["version"]) is not int
