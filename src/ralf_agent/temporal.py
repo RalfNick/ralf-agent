@@ -102,13 +102,10 @@ class TemporalEngine:
         text(task_queue, "Temporal task queue")
         if scope is not None and not isinstance(scope, Scope):
             raise ValidationError("TemporalEngine requires a trusted Scope")
+        from .temporal_startup_options import validate_seconds
+
         for value in (activity_timeout, drive_timeout):
-            if (
-                isinstance(value, bool)
-                or not isinstance(value, (int, float))
-                or not 0 < value <= 86400
-            ):
-                raise ValidationError("Temporal timeouts must be positive seconds up to 86400")
+            validate_seconds(value)
         configured_namespace = getattr(client, "namespace", None)
         if (
             namespace is not None

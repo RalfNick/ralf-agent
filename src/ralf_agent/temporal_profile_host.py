@@ -124,14 +124,12 @@ class TemporalProfileHost:
             or len(queue_prefix.encode("utf-8")) > 128
         ):
             raise ValidationError("Host queue prefix requires1 to128 UTF-8 bytes")
-        for options in (engine_options, worker_options):
-            if options is not None and type(options) is not dict:
-                raise ValidationError("Host options must be explicit dictionaries")
-        engine_options, worker_options = dict(engine_options or {}), dict(worker_options or {})
-        if set(engine_options) & {"scope", "release", "client", "task_queue", "namespace"}:
-            raise ValidationError("Host Engines retain original Scope, Client and release")
-        if set(worker_options) & {"task_queue", "runtime", "activity_owner", "client"}:
-            raise ValidationError("Host Workers retain their original assemblies")
+        from .temporal_startup_options import validate_engine_options, validate_worker_options
+
+        engine_options = validate_engine_options(engine_options)
+        worker_options = validate_worker_options(
+            worker_options, releases=[assembly.release for assembly in self._assemblies]
+        )
         sdk = _sdk()
         self._client, self._route = client, self._client_route(client)
 

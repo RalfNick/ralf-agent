@@ -70,8 +70,15 @@ finally:
 ```
 
 Host 在构造前固定整个 Catalog，最多32个版本；所有工厂声明在第一次 I/O 前校验。
-`engine_options/worker_options` 是显式 SDK 启动选项；未知字段／错误 timeout 目前可能先进行
-namespace 查询再拒绝，不能把工厂声明的纯预检范围扩展成所有 SDK 选项的无 I/O 保证。
+dev71 的 `engine_options` 只接受 activity_timeout／drive_timeout，使用原 Engine 的
+(0,86400] 秒规则；Host 只接受原生 int/float，拒绝 bool、非有限值与惰性数值子类。
+`worker_options` 字段按已安装 SDK 的明确签名检查；client/task_queue/runtime/activity_owner/
+workflows/activities 由 Host 固定。基础容量整数、bool 开关、有限 rate/ratio（Worker rate 为正，队列 rate 和 poll ratio 可为零）、nullable 字符串 identity、非负
+原生 timedelta、tuner/slot 冲突与缓存/工作流 slots/polls 的约束，在服务 I/O 前校验。
+显式 build_id 必须匹配全部版本；多版本通常保留原默认，不设置共用 build_id。
+拒绝不会固定 Client 或启动 Task，纠正后可重试。极端整数宽度或非正规浮点 rate 仍可能由 SDK 构造拒绝。只复制选项字典，复杂 SDK 对象借用；
+其语义仍由 SDK 构造校验，可能在 namespace 查询后失败，不承诺任意插件对象的无 I/O 验证。
+[本批记录](../architecture/reviews/2026-10-11-temporal-startup-preflight.md)区分实际验收与剩余边界。
 外部 Catalog 默认或注册变化不会改变已构造 Host。新 `runtime()` 选择当前默认，
 已经取得的 Facade 仍使用原版本。`select_default` 只选择已声明且已启动的版本。
 队列由 namespace UUID、可信 Scope、解析后的原 Release 与显式前缀确定；

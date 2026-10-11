@@ -1,5 +1,7 @@
 # Implementation progress — 2026-10-05 M1 local runtime
 
+Dev71（基线 ef711f4/dev70）沿 R04/H1/H5 加入 Temporal Host 普通启动参数纯预检，3 项独立审查问题已由 8 项 RED→136 相关 GREEN 修复。最终源码4114 pass／329配置跳过、安装136契约／7必需服务、实际旧70兼容与242模块一致已通过，自有服务已停止；本地提交随后执行，完整能力目标未验收。[本批记录](../architecture/reviews/2026-10-11-temporal-startup-preflight.md)。
+
 Dev69（基线 ddb6dbb/dev68）：[Temporal Profile 装配](temporal-profiles.md)复用工厂与原 History，提供十类声明绑定、远程 Session UUID 初始化、实际 Worker／处理器／资源排空和安装包离线模块。完整 R04/H1/H3/H5 仍开放；[最终验收](../architecture/reviews/2026-10-11-temporal-profile-assembly.md)：源码4021 passed/320配置跳过；源码及安装包实际服务各53项通过，235模块一致，旧68兼容通过；5项review问题已修复，服务已停止，仅交付本批子集。
 
 

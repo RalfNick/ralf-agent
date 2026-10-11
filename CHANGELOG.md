@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.0.dev71 — Temporal basic startup preflight
+
+- Reuse original Engine timeout contract and validate ordinary Host options before namespace RPCs or startup state.
+- Check installed SDK field names, primitive/cross-field Worker constraints and every hosted release build identity.
+- Retain complex SDK objects as borrowed/delegated; defaults and original execution protocols remain unchanged.
+- Three Important review fixes pass RED→GREEN; source4114 pass/329 configured skips, installed136 contracts and7 required service cases, actual70↔71 compatibility pass. Extreme numeric SDK boundaries remain deferred.
+
 ## 0.1.0.dev70 — Temporal multiversion Profile Host
 
 - Snapshot and preflight up to32 registered Profiles before construction, retaining one owned-resource ledger and original version queues.
