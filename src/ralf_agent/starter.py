@@ -6,6 +6,7 @@ from tempfile import TemporaryDirectory
 
 from .a2a_starter import A2A_FILES
 from .async_starter import ASYNC_FILES
+from .cli_starter import CLI_FILES
 from .context_starter import context_files
 from .conversation_starter import SESSIONS_FILES
 from .dag_starter import DAG_FILES, NESTED_FILES
@@ -838,6 +839,7 @@ def create_starter(destination, *, template="oncall") -> StarterProject:
         "model",
         "graph",
         "mcp",
+        "cli",
         "parallel",
         "async",
         "plan",
@@ -855,7 +857,7 @@ def create_starter(destination, *, template="oncall") -> StarterProject:
         "sessions",
     ):
         raise ValidationError(
-            "Starter template must be oncall, rag, config, model, graph, mcp, parallel, async, plan, team, dag, nested, a2a, temporal, ingest, hybrid, context, memory, model-check, observable or sessions"
+            "Starter template must be oncall, rag, config, model, graph, mcp, cli, parallel, async, plan, team, dag, nested, a2a, temporal, ingest, hybrid, context, memory, model-check, observable or sessions"
         )
     files = {
         "oncall": _FILES,
@@ -864,6 +866,7 @@ def create_starter(destination, *, template="oncall") -> StarterProject:
         "model": _MODEL_FILES,
         "graph": _GRAPH_FILES,
         "mcp": MCP_FILES,
+        "cli": CLI_FILES,
         "parallel": _PARALLEL_FILES,
         "async": ASYNC_FILES,
         "plan": PLAN_FILES,
@@ -906,7 +909,7 @@ def create_starter(destination, *, template="oncall") -> StarterProject:
         str(directory),
         "session_app" if template == "sessions" else "agent_app",
         None
-        if template in {"temporal", "model-check", "sessions"}
+        if template in {"temporal", "model-check", "sessions", "cli"}
         else (
             "agent_app.runtime:create_runtime"
             if template == "async"

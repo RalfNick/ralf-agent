@@ -1,6 +1,6 @@
 # Ralf-Agent
 
-当前工作区 **0.1.0.dev71** 提供显式语义知识库、相关事实召回和 Plan／Team 默认组合，
+当前工作区 **0.1.0.dev72** 提供显式语义知识库、相关事实召回和 Plan／Team 默认组合，
 复用原执行、审批和恢复协议。见[H3 使用与扩展指南](docs/h3-intelligent-combinations.md)。
 dev48 增加[显式 HTTP 语义重排](docs/http-reranking.md)，保留原知识来源及旧默认配置。
 dev49 增加[Query transform 与语义 Facts 召回](docs/query-and-semantic-recall.md)，支持显式语义记忆组合及保留语义顺序的上下文。候选窗口外事实和真实质量仍待完善。
@@ -16,6 +16,8 @@ dev63 增加 [Temporal DecisionPolicy](docs/temporal-decision-policy.md)：宿�
 dev62 增加 [Temporal 完成验证](docs/temporal-completion-verification.md)：原节点工具回执、纯规则采纳、有界重试及完成前记忆门禁。
 dev65 提供 [Temporal 固定 Session 有界读](docs/temporal-session-data-reads.md)。dev66 已交付 [原生／顺序的外置保存和持久 Turn](docs/temporal-session-data-writes.md)；dev67 已接通[高级根／成员会话树](docs/temporal-session-trees.md)，dev68 增加[真实 Context 读取生命周期](docs/temporal-context-read-lifetime.md)。
 dev69 的[Temporal Profile 配置装配](docs/temporal-profiles.md)复用十类绑定与原 History；dev70 增加多版本 Host、原 Run／Session 路由、共享资源排空和声明 PostgreSQL EffectJournal。[本批验收](architecture/reviews/2026-10-11-temporal-profile-host.md)已通过本记录门槛；完整 R01–R26/H1–H5/M1 保持开放。
+
+dev72 增加[固定命令 CLI 工具](docs/cli-tools.md)、异步声明工厂与 cli starter；当前正在完成最终验收。
 
 dev71 增加 Temporal Host 基础启动预检：无效参数在 RPC 与启动状态固定前拒绝，纠正后可重试；保留 SDK 合法零值。复杂 SDK 对象仍委托 SDK，极端数值尚有边界限制。[dev71 验收](architecture/reviews/2026-10-11-temporal-startup-preflight.md)本批门槛已通过，完整框架目标仍开放。
 Local 与 Temporal 十类每 Agent 绑定、自动上下文与来源化记忆已接通；完整 H3、

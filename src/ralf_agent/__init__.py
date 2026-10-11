@@ -29,6 +29,7 @@ from .binding_sessions import SessionBindingResource
 from .binding_types import AgentBindingDescriptor, BindingSelection
 from .business_evaluation import evaluate_business, load_business_cases
 from .chunking import CharacterChunker, Chunker, ParagraphChunker
+from .cli_tools import CLIToolSource
 from .completion import (
     CompletionRequest,
     CompletionVerdict,
@@ -317,7 +318,7 @@ from .workflow import (
     WorkflowSelection,
 )
 
-__version__ = "0.1.0.dev71"
+__version__ = "0.1.0.dev72"
 __all__ = [
     "EventCursor",
     "EventEnvelope",
@@ -336,6 +337,7 @@ __all__ = [
     "MCPToolSource",
     "MCPTransport",
     "MCPStdioTransport",
+    "CLIToolSource",
     "ToolDescriptor",
     "ToolPolicy",
     "ToolSource",

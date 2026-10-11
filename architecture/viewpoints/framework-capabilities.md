@@ -1,5 +1,7 @@
 # RALF 通用框架能力与扩展验收
 
+dev72 补 R12 固定命令 JSON CLI 工具和受管理 async 装配，保留原审批／效果／实际停止边界；[本批验收](../reviews/2026-10-11-cli-tools.md)记录已通过的子集与三项延后缺口。Workspace/Skills/Sandbox 和外部 DelegatedRunner 继续作为独立能力。
+
 dev70 提供多版本 Temporal Host；dev71 增加普通启动参数的纯预检及同一 Host 纠正重试，复用原执行权威。复杂 SDK 对象与极端数值仍有边界，完整 R04 与 R01–R26 未完成；见[dev71 记录](../reviews/2026-10-11-temporal-startup-preflight.md)。
 
 dev67 的[Temporal 会话树](../../docs/temporal-session-trees.md)已覆盖高级根／成员保存。
@@ -10,7 +12,7 @@ dev68 增加[Context 实际读取生命周期](../../docs/temporal-context-read-
 
 Dev46 已增加[Temporal 自动记忆与五类 Agent 绑定](../../docs/temporal-memory-bindings.md)：显式 temporal-3、原声明子树、History 选择响应／CAS／核验与父子证据恢复；旧发布保持。其他 Temporal 绑定角色／资源 selector、共享 Session、语义质量与完整 H1/H3 仍待验收。
 
-文档版本：1.7；日期：2026-10-11（Asia/Shanghai）。
+文档版本：1.8；日期：2026-10-11（Asia/Shanghai）。
 作者：RALF 项目维护者与架构协作。
 读者：框架维护者、应用开发者、适配器贡献者。
 状态：目标架构与交付要求。下表保留 dev9 设计基线；dev10–dev13 已交付静态图、MCP/Tool、本地并行和异步装配。dev14 增加有界规划/子 Run 团队及真实 Redis/PG/Qdrant；dev15 已增加DAG/嵌套、本地与真实Redis消息交接、A2A0.3轮询子集及独立Temporal Agent/sequence后端，dev16 已增加异步 A2A 控制、共享 PG Inbox／Outbox 和单机服务模板；dev17 通过显式扩展发布交付 Temporal Graph/Team/Dynamic/嵌套与注册 RAG、每任务执行策略和业务评测入口；dev18 已交付独立 Parser／Chunker 和原子知识摄取回执；dev19 增加显式 HTTP Embedding 和可组合 Hybrid／融合重排；企业治理、实时流和真实模型质量仍需验收。其他后端能力不默认为可用。当前范围见[实现清单](../../docs/implementation-status.md)、[编排指南](../../docs/orchestration.md)和[数据指南](../../docs/remote-data.md)。其余目标不构成已支持声明。
@@ -88,7 +90,7 @@ flowchart TB
 | 动态规划 | 目标 Planner → PlanProposal → PlanRevision | 受限 ModelPlanner；离线 RulePlanner 验证链路 | 业务 Planner、Verifier、重规划策略 | 未交付；现有 RecallPlanner 只选择记忆查询 |
 | 多 Agent | 目标 AgentCaller／TeamStrategy | Sequential、Router、Supervisor／Workers | 团队策略、远程 A2A、模型选择、子任务拆分 | 未交付；不同 AgentSpec 不等于协作协议 |
 | 工具定义与注册 | ToolSpec／ToolRegistry | 简化 Python 声明、Schema 推导、查询／发现 | 显式 Schema、业务工具、工具包 | 注册及 Schema 已交付；便利入口和常用工具包待补 |
-| 工具执行 | ToolExecutor＋DispatchEnvelope | PythonToolExecutor；受控 HTTP／CLI／MCP 接入 | 外部执行器、回执查询、SandboxBackend | 可信 Python 已交付；HTTP／CLI／MCP、沙箱未交付 |
+| 工具执行 | ToolExecutor＋DispatchEnvelope | PythonToolExecutor；受控 HTTP／CLI／MCP 接入 | 外部执行器、回执查询、SandboxBackend | 可信 Python、MCP stdio 和固定命令 JSON CLI 子集已交付；MCP HTTP、通用 HTTP、外部 Runner、沙箱未交付 |
 | 上下文 | ContextBuilder；目标 TokenCounter／ContextPolicy | 预算装配、完整工具组裁剪、引用、大结果卸载 | tokenizer、摘要、上下文注入策略 | 字符预算与快照已交付；Token、摘要和卸载待补 |
 | 短期记忆 | SessionStore／AsyncSessionStore；分页召回 | SQLite、内存 Session，去重／CAS／分页 | Redis、PostgreSQL、外部会话服务 | 本地实现已交付；外部适配器未交付 |
 | 长期记忆 | LongTermMemoryStore／异步及召回端口 | SQLite 显式事实；可选提炼、冲突确认 | PostgreSQL／Redis Facts、外部记忆系统 | 本地事实／TTL／CAS 已交付；自动提炼未交付 |

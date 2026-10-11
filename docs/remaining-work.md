@@ -1,9 +1,9 @@
-# dev71 剩余能力与架构验收清单
+# dev72 剩余能力与架构验收清单
 
 dev66 原生／顺序持久 Turn 保持兼容；dev67 接通[Temporal 会话树](temporal-session-trees.md)，
 包括高级根保存、稳定成员私有地址和跨 Turn 召回。dev69 增加显式 Temporal Profile 工厂与实际 Worker 生命周期；完整配置／路由、租约和 R01–R26 继续开放。
 
-版本：45；日期：2026-10-11；维护者：RALF maintainers。当前增量基线：ef711f4/dev70；dev70 多版本 Host 子集通过冻结源码／安装／旧69兼容和服务停止门槛，见本批记录。
+版本：46；日期：2026-10-11；维护者：RALF maintainers。当前增量基线：d260724/dev71；dev71 启动参数预检子集通过冻结源码／安装／旧69兼容和服务停止门槛，见本批记录。
 读者：框架维护者、应用开发者及适配器贡献者。基线：da55f97 的 dev30，
 以及已提交1cad308的dev31–36与已提交1f27300的dev37配置／首用及已提交e6a6de7的dev38远程原生／顺序及已提交9fcbb84的dev39复合根会话与已提交7898b78的dev40自动规则记忆及已提交0d17976的dev41受管理上下文及已提交ec9b5f5的dev42模型选择记忆阶段及已提交e413ddc的dev44高级／Temporal数据上下文和已提交5528670的dev45 Local高级自动记忆，以及已提交 adbc328 的 dev46 Temporal自动记忆与五类Agent绑定。
 
@@ -80,7 +80,7 @@ PG Knowledge/Inbox/Outbox、Qdrant、HTTP Embedding、Hybrid/RRF／基础重排�
 
 | ID／层 | 当前已交付基础 | 尚未完成的具体能力 | 阶段／状态 |
 | --- | --- | --- | --- |
-| R12 工具接入／工具包 | typed Python/Schema/默认参数、ToolRegistry、async ToolSource、MCP stdio、A2A ToolSource、授权／审批／核验 | MCP HTTP/持续 Session/OAuth；固定 executable/argv 的 CLI Runner；通用受控 HTTP 工具适配；搜索／文件／浏览器工具包与发现；有状态工具租约和停止证据 | H4：子集已交付 |
+| R12 工具接入／工具包 | typed Python/Schema/默认参数、ToolRegistry、async ToolSource、MCP stdio、A2A ToolSource、固定命令 JSON CLI ToolSource/async 声明/实际进程停止、授权／审批／核验 | MCP HTTP/持续 Session/OAuth；外部 CLI/Coding DelegatedRunner；通用受控 HTTP 工具适配；搜索／文件／浏览器工具包与发现；有状态工具租约和停止证据 | H4：子集已交付 |
 | R13 Workspace/Skills/Sandbox/Runner | 可信 Python、MCP 受管理进程生命周期；Runner 目标契约 | Workspace／文件权限／资源租约；Skills 生命周期／能力注册／来源；容器／远端 Sandbox 文件、网络、进程和资源隔离；Coding Runner、Codex 首个适配及各外部 Runner 验收。普通子进程不是安全沙箱 | H4：目标能力未交付 |
 | R14 上下文 | ContextBuilder/Counter/Budgeter/Summarizer、完整工具组／近期召回／摘录、实际快照；显式独立模型摘要；Temporal 纯自定义 Context；Local 原生／顺序及高级编排受管理规则／模型摘要与引用摘录／产物投影；Temporal History 受管理摘要／Knowledge 摘录／产物阶段；最新完成反馈及其后工具证据原子保留 | dev54 可替换 TextTokenizer／字节默认／可选 tiktoken／canonical 输出预留已交付；模型协议完整计量、实际模型词表与长上下文验收；Session／RAG 语义压缩和质量；覆盖／来源失效策略和辅助失败恢复；不同模型长上下文事实保留实测。UTF-8 token 估算不是精确用量 | H3：确定性与显式路径已交付 |
 | R15 短期／长期记忆 | memory/SQLite/Redis/PG 的 sync/async、CAS/去重/TTL/分页/来源；opt-in MemoryPipeline 规则／模型字段选择；原生／顺序及高级实际 Agent 的受管理规则／模型字段选择阶段、原节点／子 Run 证据恢复与 JSON／TOML 默认工厂；Temporal History 自动规则／模型选择、准确CAS核验与根子证据恢复；dev47 有界候选词项相关排序；dev49 有界原生候选语义排序／任务查询与有序上下文组合；dev56 memory/SQLite/Redis、dev57 PostgreSQL 全库扫描、可替换 CAS Catalog、分阶段索引／激活与权威召回；dev58 Temporal有界Facts绑定／namespace／纯planner／原Context采纳 | PostgreSQL/Qdrant等远端联合索引组合验收；自动增量／修复／删除传播；自由合成；语义冲突／修订／撤回／遗忘／可信度策略和多事实原子采纳；最终 Session append 大历史效率；导出／迁移／保留；真实记忆利用。追加来源观察不是自主信念修订 | H3／H5：存储和显式提炼已交付 |
@@ -485,3 +485,7 @@ R04/H1/H5 沿原 Assembly、SDK History/Registry/Coordinator 增加显式 Catalo
 ## dev71 启动选项纯预检（本批验收通过）
 
 R04/H5 在原 Host 入口补齐字段／普通数值／基础 Worker 参数与全部 build_id 的无 I/O 校验，纠正后允许重试。共享 timeout 规则保持直接 Engine 默认与旧发布，真实 SDK 验证cache=0/slot=1与重启回执。复杂插件对象仍借用并交给 SDK，未由纯预检保证其语义。最终审查／冻结全量／安装／兼容门槛见[验收](../architecture/reviews/2026-10-11-temporal-startup-preflight.md)，最终源码4114 pass／329配置跳过、安装136契约／7必需服务、旧70双向兼容与242模块一致已通过；3项Important修复、极端数值Minor延后。完整 R01–R26继续active。
+
+## dev72 CLI 工具子集
+
+沿 R12/H4 复用原工具与执行协议，新增固定命令 JSON stdin/stdout、实际进程／线程停止、async 声明工厂和 cli starter。最终4159项源码回归、安装契约、真实Temporal＋PG及旧71兼容通过，服务已停止；异常cwd预检、空argv参数和完整read/plan示例继续开放；[记录](../architecture/reviews/2026-10-11-cli-tools.md)。普通进程不是 Sandbox；MCP HTTP、其余环境绑定、外部 Runner 和主 CLI async 工厂继续开放。

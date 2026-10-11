@@ -490,6 +490,9 @@ class ComponentRegistry:
         from .temporal_journal_factories import register_effect_journal
 
         register_effect_journal(self)
+        from .cli_tool_factories import register_cli_tools
+
+        register_cli_tools(self)
 
     def register(self, kind, name, factory, *, validator=None):
         self._register(kind, name, factory, validator, asynchronous=False)

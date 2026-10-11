@@ -481,3 +481,7 @@ UUID 提交准确证明。配置装配、自动监督与完整 H1/H2/H3 另验�
 ## dev71 Temporal 启动参数预检
 
 沿原 Host 启动生命周期，在 namespace RPC、Client 和启动 Task 固定前校验普通参数；原 Engine 超时契约、实际 SDK 字段、基础标量和全部版本 build_id 统一拒绝。拒绝后可在原 Host 纠正重试，合法零值不改变 SDK 行为。复杂对象、插件和极端数值仍委托 SDK 构造；此增量不新增执行权威或全局容量。见[验收记录](../reviews/2026-10-11-temporal-startup-preflight.md)。
+
+## dev72 CLI 工具子集
+
+沿原 Toolkit/ToolSource 增加固定命令 JSON 工具、受管理进程／线程与 async owned 装配。PolicyGate、Action 和效果恢复仍由原 Engine/History 管理；普通进程不替代 Workspace/Sandbox 或 DelegatedRunner。详见[指南](../../docs/cli-tools.md)及[验收记录](../reviews/2026-10-11-cli-tools.md)。

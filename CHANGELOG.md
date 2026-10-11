@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.0.dev72 — Fixed-command CLI tools
+
+- Add bounded JSON CLI ToolSource with fixed host argv/environment and real process/thread ownership.
+- Reuse original approval/effect-key/unknown-write contracts; async Local/Temporal tools factory and installed cli starter.
+- Process management is trusted POSIX execution; one Important Unicode result validation fix passes RED→GREEN.
+- Final source4159 pass/331 configured skips; core45 and installed154 contracts, required source/installed2 services and actual71↔72 compatibility pass. CLI path/empty-argument/read-plan demonstration minors remain deferred.
+
 ## 0.1.0.dev71 — Temporal basic startup preflight
 
 - Reuse original Engine timeout contract and validate ordinary Host options before namespace RPCs or startup state.
