@@ -25,6 +25,7 @@ from .temporal_knowledge_state import validate_protocol as validate_knowledge_pr
 from .temporal_knowledge_state import validate_snapshot as validate_knowledge_snapshot
 from .temporal_session_data_state import validate_protocol as validate_session_data_protocol
 from .temporal_session_data_state import validate_snapshot as validate_session_snapshot
+from .temporal_session_save_state import validate_protocol as validate_session_save_protocol
 from .temporal_session_state import validate_history as validate_session_history
 from .temporal_session_state import validate_protocol as validate_session_protocol
 from .tools import ToolSpec
@@ -121,6 +122,7 @@ def validate_manifest(manifest):
     validate_knowledge_protocol(manifest)
     validate_session_protocol(manifest)
     validate_session_data_protocol(manifest)
+    validate_session_save_protocol(manifest)
     from .temporal_limits_state import validate_protocol as validate_limits_protocol
 
     validate_limits_protocol(manifest)
@@ -282,6 +284,7 @@ class TemporalRunState:
         self.context_snapshot = None
         self.context_signature = None
         self.memory_stages, self.pending_completion, self.memory_recovery = {}, None, []
+        self.session_stages, self.pending_session, self.session_recovery = {}, None, []
         self.managed_context_stages = {}
         self.context_artifact_dispatches = {}
         self.context_artifact_receipts = {}
@@ -519,6 +522,11 @@ class TemporalRunState:
                 else {}
             ),
             **(
+                {"session_stages": detached(list(self.session_stages.values()))}
+                if "session_save_protocol" in self.manifest
+                else {}
+            ),
+            **(
                 {"context_stages": detached(list(self.managed_context_stages.values()))}
                 if "managed_context" in self.manifest
                 else {}
@@ -591,6 +599,12 @@ class TemporalRunState:
     def next_operation(self):
         if self.active_action is not None:
             return None
+        if self.pending_session is not None or self.session_recovery:
+            from .temporal_session_save_state import next_stage as next_session
+
+            operation = next_session(self)
+            if operation is not None:
+                return operation
         if self.manifest["kernel"] == "temporal-3" and (
             self.pending_completion is not None or self.memory_recovery
         ):
@@ -600,6 +614,10 @@ class TemporalRunState:
             if operation is not None:
                 return operation
         if self.state in TERMINAL:
+            return None
+        if str(self.node) in self.session_stages:
+            # An accepted completion already owns this node. A held save may
+            # only resume through its original recovery phases, never a model.
             return None
         from .temporal_completion_state import next_stage as next_completion
 
@@ -665,6 +683,14 @@ class TemporalRunState:
                     "run_id": self.run_id,
                     "step": detached(self.step),
                     **(
+                        {
+                            k: detached(self.request[k])
+                            for k in ("session_turn", "session_data_binding")
+                        }
+                        if "session_data_binding" in self.request
+                        else {}
+                    ),
+                    **(
                         {"session_data_node": self.node}
                         if "session_data" in self.step_manifest
                         else {}
@@ -706,6 +732,10 @@ class TemporalRunState:
             request["session_data_node"] = self.node
         if "session_history" in self.request:
             request["session_history"] = detached(self.request["session_history"])
+        if "session_data_binding" in self.request:
+            request.update(
+                {k: detached(self.request[k]) for k in ("session_turn", "session_data_binding")}
+            )
         if self.manifest.get("session_protocol") == 1:
             request["scope"] = self.scope
         if self.manifest["kernel"] == "temporal-3":
@@ -762,6 +792,11 @@ class TemporalRunState:
                 "run_id": self.run_id,
                 "session_data_node": self.node,
                 "step": self.step,
+                **(
+                    {k: detached(self.request[k]) for k in ("session_turn", "session_data_binding")}
+                    if "session_data_binding" in self.request
+                    else {}
+                ),
             },
         )
         self.context_snapshot = detached(response)
@@ -961,6 +996,12 @@ class TemporalRunState:
         accept_stage(self, action_id, response)
 
     def complete_node(self, result):
+        from .temporal_session_save_state import prepare as prepare_session
+
+        if not prepare_session(self, result):
+            self._complete_node(result)
+
+    def _complete_node(self, result):
         self._emit("node_completed", {"node": self.node, "result_digest": digest(result)})
         if self.node + 1 < len(self.request["definition"]["steps"]):
             self.node += 1
@@ -974,6 +1015,49 @@ class TemporalRunState:
         from .temporal_memory_state import accept_stage
 
         accept_stage(self, action_id, response)
+
+    def accept_session(self, action_id, response):
+        from .temporal_session_save_state import accept_stage
+
+        accept_stage(self, action_id, response)
+
+    def session_execution_ended(self, proof):
+        self.authorize(proof.get("scope"))
+        action = next((a for a in self.actions if a["id"] == proof.get("action_id")), None)
+        if (
+            set(proof) != {"scope", "action_id", "request_digest", "release_digest"}
+            or proof["release_digest"] != self.release_digest
+            or action is None
+            or action["kind"] != "managed_session"
+            or action["phase"] != "session-write"
+            or proof["request_digest"] != action["request_digest"]
+            or not action.get("dispatch_grant", {}).get("allowed")
+        ):
+            raise DefinitionMismatch("Session execution end lost original admitted identity")
+        stage = self.session_stages[action["stage_key"]]
+        if "execution_end_proof" in action:
+            return {"action_id": action["id"], "execution_stopped": True}
+        if stage.get("write_action") != action["id"]:
+            if action["status"] != "completed_no_record":
+                raise DefinitionMismatch("Session execution end targets another original attempt")
+            # A settled, definitively unwritten attempt still owns its actual
+            # end notification. ACK it without stopping a newer writer.
+            action["execution_end_proof"] = detached(proof)
+            self._emit("session_execution_ended", {"action_id": action["id"]})
+            return {"action_id": action["id"], "execution_stopped": True}
+        if "execution_end_proof" not in action:
+            action["execution_end_proof"] = detached(proof)
+            stage["execution_stopped"] = True
+            if stage.get("owns_remote_uncertainty"):
+                self.remote_uncertain = stage["prior_remote_uncertain"] or any(
+                    "write_action" in s
+                    and s["status"] == "outcome_unknown"
+                    and not s["execution_stopped"]
+                    for s in self.session_stages.values()
+                )
+                stage["owns_remote_uncertainty"] = False
+            self._emit("session_execution_ended", {"action_id": action["id"]})
+        return {"action_id": action["id"], "execution_stopped": True}
 
     def _reject_model(self, action, code):
         action.update(status="rejected", decision_error={"code": code})
@@ -1033,6 +1117,9 @@ class TemporalRunState:
             from .temporal_memory_state import request_recovery
 
             request_recovery(self)
+            from .temporal_session_save_state import request_recovery as session_recovery
+
+            session_recovery(self)
         if self.state in TERMINAL:
             return
         for action in self.actions:

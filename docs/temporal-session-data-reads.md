@@ -3,6 +3,9 @@
 状态：dev65 固定有界读子集。本批是[完整外置 Session 契约](../architecture/specs/temporal-session-data-contract.md)
 的固定资源/读取前置；尚未开放外置持久 Session、自动结果保存或高级成员跨 Turn 地址。
 
+dev66 已交付[显式原生／顺序保存与持久 Turn](temporal-session-data-writes.md)。本页描述
+未启用 `session_writes` 的既有只读协议；高级成员路径仍未交付。
+
 原生 Agent/顺序 Workflow 的 Worker 可显式提供 `session_store` 或在 BindingCatalog 登记
 `role=session`，通过 inherit/ref/disabled 选择来源和宿主允许的 namespace。数据读取进入原
 Context Activity；原 Run History 保存有界读结果与来源证据，普通/managed Context 都保持。

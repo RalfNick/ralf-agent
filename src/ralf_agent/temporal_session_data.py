@@ -65,6 +65,11 @@ class SessionReadRegistration:
                 True,
             )
         self.fixed = _FixedPorts(ports)
+        self.dataset_fixed = (
+            _FixedPorts({"dataset": (self._original_source, ["inspect_session_identity"], True)})
+            if callable(getattr(self._original_source, "inspect_session_identity", None))
+            else None
+        )
         from .temporal_state import detached
 
         roots = [self.backend]
@@ -116,6 +121,25 @@ class SessionReadRegistration:
         self.check()
         return detached(self._identity)
 
+    @property
+    def dataset_id(self):
+        import re
+
+        from .types import digest
+
+        value = getattr(self._original_source, "session_dataset_id", None)
+        if type(value) is not str or re.fullmatch("[a-f0-9]{32}", value) is None:
+            raise ValidationError(
+                "Initialize an actual Session dataset UUID before enabling writes"
+            )
+        return digest(["ralf-session-dataset-v1", value])
+
+    @property
+    def dataset_port(self):
+        if self.dataset_fixed is None:
+            raise ValidationError("Session writes require original dataset identity inspection")
+        return self.dataset_fixed.identity
+
 
 def registration(source, query):
     return SessionReadRegistration(source, query).identity
@@ -141,12 +165,14 @@ async def load(runtime, request):
     manifest = runtime.manifest
     expected = expected_read(manifest, request)
     original = selected_registration(runtime, request)
+    await verify_dataset(runtime, request)
     original.check()
     query = RecallQuery(**expected["query"])
     page = await original.fixed.call(
         "session", "read_page", Scope(**request["scope"]), expected["address"], query
     )
     runtime.validate_release(request["runtime_manifest"])
+    await verify_dataset(runtime, request)
     original.check()
     if not isinstance(page, RecallPage):
         from .temporal_activities import _close_lazy
@@ -163,3 +189,18 @@ async def load(runtime, request):
     result = {"session_data": evidence, "session_data_references": references(evidence)}
     validate_snapshot(result, manifest, request)
     return detached(result)
+
+
+async def verify_dataset(runtime, request):
+    """Read actual metadata without initialization, repair or conversation rereads."""
+    if not runtime.session_writes or runtime.session_store is None:
+        return
+    original = selected_registration(runtime, request)
+    from .types import digest
+
+    expected = runtime.manifest["session_save_protocol"]["dataset_ids"][digest(original.physical)]
+    if original.dataset_fixed is None:
+        raise DefinitionMismatch("Original dataset inspection port is unavailable")
+    value = await original.dataset_fixed.call("dataset", "inspect_session_identity")
+    if type(value) is not str or digest(["ralf-session-dataset-v1", value]) != expected:
+        raise DefinitionMismatch("Original Session dataset metadata changed")

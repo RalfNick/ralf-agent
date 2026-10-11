@@ -56,15 +56,20 @@ def expected_read(manifest, request):
         return None
     query = RecallQuery(**value["query"])
     query = replace(query, max_chars=min(query.max_chars, request["step"]["max_context_chars"]))
+    address = session_storage_key(
+        value["namespace"], private_address(request["run_id"], request["session_data_node"])
+    )
+    if request.get("session_turn") is not None:
+        from .session_types import SessionRef
+
+        address = SessionRef.from_dict(request["session_turn"]["session_ref"]).key.storage_key
     return {
         "version": 1,
         "scope": request["scope"],
         "run_id": request["run_id"],
         "node": request["session_data_node"],
         "registration_digest": digest(value),
-        "address": session_storage_key(
-            value["namespace"], private_address(request["run_id"], request["session_data_node"])
-        ),
+        "address": address,
         "query": asdict(query),
     }
 

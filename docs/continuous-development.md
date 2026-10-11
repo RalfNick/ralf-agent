@@ -134,3 +134,10 @@ Temporal H1f 复用可替换纯 LimitsPolicy，原 Run History 逐节点采纳�
 ### dev65 最终结果
 
 最终全量3642 passed/204 skipped（620.69s，44944 exit0）；安装140契约及独立相关39项（有重叠）、真实安装服务7及最终源码/安装各4个Temporal窗口、217模块一致、freshcore/文档例子及实际64↔65默认/审批/History兼容通过。Ruff/格式/空白通过；三项自有服务全部关闭。只本地提交，无真实模型或完整H1/H2/H3/M1质量宣称。后续按完整外置Session写/持久路由继续，不关闭R01–R26目标。
+
+
+## dev66 原生／顺序外置会话与下一批
+
+原计划任务1／2已分别验收25和65项；原History保存协议、真实Handler独立拥有、数据集／Namespace身份、根地址和source-once完成。唯一独立review4项P2及自己的派发前超时fence由RED→GREEN闭环，最终全量3686 passed/226 configured skips（519.28s），安装150契约／25真实服务，源码真实65、freshcore及实际65↔66兼容通过。最终制品／服务关闭／本地提交证据见[验收](../architecture/reviews/2026-10-11-temporal-session-data-writes.md)。未调用真实模型，不推送远端，完整R01–R26继续active。
+
+下一批沿同一完整外置Session规格实现Graph／Team／动态DAG／嵌套的原成员稳定地址与原Parent根保存，先明确来源分类／单次保存和父子静默门禁，复用既有写意图／CAS／回执／采纳。随后补Profile推荐装配、其他绑定与治理／质量门槛；不把本批局部验收替代完整H1/H2/H3/M1。

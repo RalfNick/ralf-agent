@@ -8,12 +8,20 @@ Redis memory is independent from the execution journal's authority.
 import asyncio
 import json
 import math
+import re
 import secrets
 import time
+import uuid
 from dataclasses import asdict
 from urllib.parse import urlsplit
 
-from .errors import BudgetExceeded, IdempotencyConflict, MemoryBackendError, ValidationError
+from .errors import (
+    BudgetExceeded,
+    IdempotencyConflict,
+    MemoryBackendError,
+    RalfError,
+    ValidationError,
+)
 from .memory import _session_cursor, _validate_expires_at
 from .ports import is_async_callable
 from .recall import (
@@ -232,6 +240,41 @@ class RedisMemory:
     @property
     def backend_id(self):
         return self._backend_id
+
+    @property
+    def session_dataset_id(self):
+        return getattr(self, "_session_dataset_id", None)
+
+    async def inspect_session_identity(self):
+        if self._closed:
+            raise MemoryBackendError("Redis adapter is closed")
+        try:
+            value = await self._client.get(self._prefix + ":session-resource-v1")
+            return value.decode("ascii") if isinstance(value, bytes) else value
+        except Exception:
+            raise MemoryBackendError("Redis Session identity inspection failed") from None
+
+    async def initialize_session_identity(self):
+        """Explicitly initialize the actual data namespace's durable Session UUID."""
+        if self._closed:
+            raise MemoryBackendError("Redis adapter is closed")
+        try:
+            value = await self._client.eval(
+                "if not redis.call('GET',KEYS[1]) then "
+                "redis.call('SET',KEYS[1],ARGV[1]) end return redis.call('GET',KEYS[1])",
+                1,
+                self._prefix + ":session-resource-v1",
+                uuid.uuid4().hex,
+            )
+            value = value.decode("ascii") if isinstance(value, bytes) else value
+            if type(value) is not str or re.fullmatch("[a-f0-9]{32}", value) is None:
+                raise ValidationError("Redis Session dataset UUID is invalid")
+            self._session_dataset_id = value
+            return value
+        except RalfError:
+            raise
+        except Exception:
+            raise MemoryBackendError("Redis Session identity initialization failed") from None
 
     @classmethod
     async def connect(cls, url, *, backend_id, prefix="ralf", timeout=10):  # noqa: ASYNC109 -- public connection setting

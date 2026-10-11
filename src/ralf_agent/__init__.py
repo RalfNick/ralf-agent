@@ -303,7 +303,7 @@ from .workflow import (
     WorkflowSelection,
 )
 
-__version__ = "0.1.0.dev65"
+__version__ = "0.1.0.dev66"
 __all__ = [
     "EventCursor",
     "EventEnvelope",

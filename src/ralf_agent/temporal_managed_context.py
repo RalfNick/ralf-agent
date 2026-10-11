@@ -152,7 +152,14 @@ def admit_history(state, payload):
         state.manifest["kernel"] != "temporal-3"
         and state.manifest.get("managed_context", {}).get("dispatch_admission") != "history-1"
         and state.manifest.get("dispatch_admission") != "history-1"
-    ) or payload.get("phase") not in {"model", "write", "summary", "select", "memory-write"}:
+    ) or payload.get("phase") not in {
+        "model",
+        "write",
+        "summary",
+        "select",
+        "memory-write",
+        "session-write",
+    }:
         raise ValidationError("Unsupported managed external dispatch admission")
     state.authorize(payload["scope"])
     if payload.get("release_digest") != state.release_digest:
@@ -373,6 +380,11 @@ async def execute(runtime, request, *, dispatch_guard=None):
                     else {}
                 ),
                 **(
+                    {"session_projection": detached(request["session_projection"])}
+                    if "session_projection" in request
+                    else {}
+                ),
+                **(
                     {
                         k: detached(request[k])
                         for k in ("facts", "knowledge_references", "facts_recall")
@@ -449,6 +461,10 @@ def next_stage(state):
     }
     if "session_data" in state.step_manifest:
         request["session_data_node"] = state.node
+    if "session_data_binding" in state.request:
+        request.update(
+            {k: detached(state.request[k]) for k in ("session_turn", "session_data_binding")}
+        )
     if "facts_context" in state.step_manifest:
         request["session_id"] = state.request.get("session_id") or state.run_id
     if state.step_manifest["managed_context"].get("dispatch_admission") == "history-1":
@@ -479,6 +495,8 @@ def next_stage(state):
             )
         if "session_references" in prepared:
             request["session_references"] = detached(prepared["session_references"])
+        if "session_projection" in prepared:
+            request["session_projection"] = detached(prepared["session_projection"])
         if "facts" in prepared:
             request.update(
                 {
@@ -561,6 +579,14 @@ def accept_stage(state, action_id, response):
                 "run_id": state.run_id,
                 "session_data_node": state.node,
                 "step": state.step,
+                **(
+                    {
+                        k: detached(state.request[k])
+                        for k in ("session_turn", "session_data_binding")
+                    }
+                    if "session_data_binding" in state.request
+                    else {}
+                ),
             },
         )
         stage["prepared"] = response
@@ -627,6 +653,14 @@ def accept_stage(state, action_id, response):
                 "run_id": state.run_id,
                 "session_data_node": state.node,
                 "step": state.step,
+                **(
+                    {
+                        k: detached(state.request[k])
+                        for k in ("session_turn", "session_data_binding")
+                    }
+                    if "session_data_binding" in state.request
+                    else {}
+                ),
             },
         )
         stage["status"], stage["snapshot"] = "completed", response

@@ -250,6 +250,13 @@ class ThreadedMemoryAdapter:
 
 
 class InMemoryMemory:
+    @property
+    def session_dataset_id(self):
+        return self._session_instance_id
+
+    def inspect_session_identity(self):
+        return self.session_dataset_id
+
     fact_scan_version = 1
     fact_inspection_version = 1
     session_receipt_version = 1
@@ -465,6 +472,7 @@ class SQLiteMemory:
         )
         self.store.conn.executescript("""
             CREATE TABLE IF NOT EXISTS memory_sessions (workspace TEXT, principal TEXT, session TEXT, data TEXT NOT NULL, PRIMARY KEY(workspace,principal,session));
+            CREATE TABLE IF NOT EXISTS memory_session_resource (singleton INTEGER PRIMARY KEY CHECK(singleton=1), dataset_id TEXT NOT NULL);
             CREATE TABLE IF NOT EXISTS memory_facts (workspace TEXT, principal TEXT, namespace TEXT, key TEXT, value TEXT NOT NULL, version INTEGER NOT NULL, expires_at REAL, PRIMARY KEY(workspace,principal,namespace,key));
             CREATE INDEX IF NOT EXISTS memory_facts_recall_scope ON memory_facts(workspace,principal,namespace);
             CREATE TABLE IF NOT EXISTS memory_fact_generations (workspace TEXT, principal TEXT, namespace TEXT, generation INTEGER NOT NULL, PRIMARY KEY(workspace,principal,namespace));
@@ -510,6 +518,27 @@ class SQLiteMemory:
                 UPDATE memory_session_index_state SET generation=generation+1,dirty=1 WHERE workspace=OLD.workspace AND principal=OLD.principal AND session=OLD.session;
             END;
         """)
+
+        with self.store.transaction():
+            self.store.conn.execute(
+                "INSERT OR IGNORE INTO memory_session_resource VALUES (1,?)", (uuid.uuid4().hex,)
+            )
+            self._session_dataset_id = self.store.conn.execute(
+                "SELECT dataset_id FROM memory_session_resource WHERE singleton=1"
+            ).fetchone()[0]
+
+    @property
+    def session_dataset_id(self):
+        with self.store.transaction():
+            row = self.store.conn.execute(
+                "SELECT dataset_id FROM memory_session_resource WHERE singleton=1"
+            ).fetchone()
+        if row is None or row[0] != self._session_dataset_id:
+            raise DefinitionMismatch("SQLite Session dataset changed")
+        return self._session_dataset_id
+
+    def inspect_session_identity(self):
+        return self.session_dataset_id
 
     def _records(self, scope, session_id):
         _require_text(session_id, "Session ID")

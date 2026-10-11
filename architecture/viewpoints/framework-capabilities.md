@@ -1,5 +1,8 @@
 # RALF 通用框架能力与扩展验收
 
+dev66 增加[Temporal 原生／顺序外置保存与持久 Turn](../../docs/temporal-session-data-writes.md)，
+原生／顺序子集已验收。高级根／成员保存、配置／迁移、真实质量及完整 R01–R26 保持未验收。
+
 
 Dev46 已增加[Temporal 自动记忆与五类 Agent 绑定](../../docs/temporal-memory-bindings.md)：显式 temporal-3、原声明子树、History 选择响应／CAS／核验与父子证据恢复；旧发布保持。其他 Temporal 绑定角色／资源 selector、共享 Session、语义质量与完整 H1/H3 仍待验收。
 

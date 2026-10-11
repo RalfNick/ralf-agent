@@ -334,6 +334,10 @@ class TemporalEngine:
         """Pure History evidence; no backend reads or implicit recovery."""
         return await self._view(run_id, "memory_stages")
 
+    async def session_stages(self, run_id):
+        """Pure original Session save evidence, without data I/O or recovery."""
+        return await self._view(run_id, "session_stages")
+
     async def completion_stages(self, run_id):
         """Observe original completion intents/verdicts; never invoke the verifier."""
         return await self._view(run_id, "completion_stages")

@@ -233,6 +233,62 @@ class PostgresMemory(_PostgresAdapter):
 
     session_receipt_version = 1
 
+    @property
+    def session_dataset_id(self):
+        return getattr(self, "_session_dataset_id", None)
+
+    async def inspect_session_identity(self):
+        from psycopg import sql
+        from psycopg.rows import tuple_row
+
+        if not self._table_schemas:
+            raise MemoryBackendError("Initialize PostgreSQL Session tables first")
+        schema = self._table_schemas["ralf_memory_sessions"]
+        async with self._transaction():
+            async with self.connection.cursor(row_factory=tuple_row) as cursor:
+                await cursor.execute(
+                    sql.SQL("SELECT dataset_id FROM {} WHERE singleton=1").format(
+                        sql.Identifier(schema, "ralf_memory_session_resource")
+                    )
+                )
+                row = await cursor.fetchone()
+                return row[0] if row else None
+
+    async def initialize_session_identity(self):
+        """Initialize a durable UUID in the resolved Session schema, explicitly."""
+        import uuid
+
+        from psycopg import sql
+        from psycopg.rows import tuple_row
+
+        if not self._table_schemas:
+            raise MemoryBackendError("Initialize PostgreSQL Session tables first")
+        schema = self._table_schemas["ralf_memory_sessions"]
+        if self._table_schemas["ralf_memory_messages"] != schema:
+            raise ValidationError("Persistent Session tables must share one physical schema")
+        table = sql.Identifier(schema, "ralf_memory_session_resource")
+        async with self._transaction(("session-resource", schema)):
+            async with self.connection.cursor(row_factory=tuple_row) as cursor:
+                await cursor.execute(
+                    sql.SQL(
+                        "CREATE TABLE IF NOT EXISTS {} (singleton INTEGER PRIMARY KEY "
+                        "CHECK(singleton=1), dataset_id TEXT NOT NULL)"
+                    ).format(table)
+                )
+                await cursor.execute(
+                    sql.SQL("INSERT INTO {} VALUES (1,%s) ON CONFLICT DO NOTHING").format(table),
+                    (uuid.uuid4().hex,),
+                )
+                await cursor.execute(
+                    sql.SQL("SELECT dataset_id FROM {} WHERE singleton=1").format(table)
+                )
+                row = await cursor.fetchone()
+                value = row[0] if row else None
+                if type(value) is not str or re.fullmatch("[a-f0-9]{32}", value) is None:
+                    raise ValidationError("PostgreSQL Session dataset UUID is invalid")
+                self._session_dataset_id = value
+                return value
+
     async def inspect_message(self, scope, session_id, message_id):
         from .session_receipts import validate_inspection
 

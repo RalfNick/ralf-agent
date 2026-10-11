@@ -13,11 +13,13 @@ from temporalio.common import RetryPolicy
 from temporalio.exceptions import ActivityError, ApplicationError
 
 with workflow.unsafe.imports_passed_through():
+    from . import temporal_session_identity  # noqa: F401 -- preload pure Session addressing
     from .temporal_bindings import ROLES as _binding_roles  # noqa: F401
     from .temporal_completion_state import ACTIVITY as COMPLETION_ACTIVITY
     from .temporal_limits_state import ACTIVITY as LIMITS_ACTIVITY
     from .temporal_managed_context import ACTIVITY as MANAGED_CONTEXT_ACTIVITY
     from .temporal_memory import ACTIVITY as MEMORY_ACTIVITY
+    from .temporal_session_save_state import ACTIVITY as SESSION_SAVE_ACTIVITY
     from .temporal_state import (
         ACK_ACTIVITY,
         CONTEXT_ACTIVITY,
@@ -183,6 +185,8 @@ class TemporalRunWorkflow:
                     if action["kind"] == "agent_limits"
                     else MEMORY_ACTIVITY
                     if action["kind"] == "managed_memory"
+                    else SESSION_SAVE_ACTIVITY
+                    if action["kind"] == "managed_session"
                     else MANAGED_CONTEXT_ACTIVITY
                     if action["kind"] == "managed_context"
                     else CONTEXT_ACTIVITY
@@ -196,6 +200,10 @@ class TemporalRunWorkflow:
                     retry_policy=RetryPolicy(
                         maximum_attempts=3
                         if action["kind"] in {"agent_limits", "agent_completion"}
+                        or (
+                            action["kind"] == "managed_session"
+                            and action["phase"] != "session-write"
+                        )
                         or (
                             action["kind"] == "managed_context"
                             and action["phase"] not in {"write", "summary"}
@@ -218,11 +226,14 @@ class TemporalRunWorkflow:
                         "managed_memory",
                         "agent_limits",
                         "agent_completion",
+                        "managed_session",
                     }
                     else action["attempts"][0]["id"],
                 )
                 if action["kind"] == "agent_completion":
                     self.state.accept_completion(action["id"], response)
+                elif action["kind"] == "managed_session":
+                    self.state.accept_session(action["id"], response)
                 elif action["kind"] == "agent_limits":
                     self.state.accept_limits(action["id"], response)
                 elif action["kind"] == "managed_memory":
@@ -238,7 +249,17 @@ class TemporalRunWorkflow:
             except ActivityError:
                 # A server timeout is not evidence that a Python thread or
                 # downstream request stopped. Preserve the dispatched identity.
-                if action["kind"] == "agent_completion":
+                if action["kind"] == "managed_session":
+                    self.state.accept_session(
+                        action["id"],
+                        {
+                            "ok": False,
+                            "code": "activity_outcome_unknown",
+                            "dispatched": action["phase"] == "session-write",
+                            "execution_stopped": False,
+                        },
+                    )
+                elif action["kind"] == "agent_completion":
                     self.state.accept_completion(
                         action["id"], {"ok": False, "code": "validation_error"}
                     )
@@ -302,6 +323,20 @@ class TemporalRunWorkflow:
                 non_retryable=True,
             ) from None
 
+    @workflow.update(name="session_execution_ended")
+    async def session_execution_ended(self, proof: dict) -> dict:
+        try:
+            result = self.state.session_execution_ended(proof)
+            self.state.retry_blocked()
+            self.wake_revision += 1
+            return result
+        except Exception as exc:
+            raise ApplicationError(
+                "Session execution end rejected",
+                type=getattr(exc, "code", "validation_error"),
+                non_retryable=True,
+            ) from None
+
     @workflow.query(name="view")
     def view(self, request: dict) -> dict:
         try:
@@ -321,6 +356,8 @@ class TemporalRunWorkflow:
                 return self.state.diagnostics()
             if kind == "memory_stages":
                 return detached(list(getattr(self.state, "memory_stages", {}).values()))
+            if kind == "session_stages":
+                return detached(list(getattr(self.state, "session_stages", {}).values()))
             if kind == "completion_stages":
                 return detached(list(getattr(self.state, "completion_stages", {}).values()))
             if kind == "context_stages":

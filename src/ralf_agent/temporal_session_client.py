@@ -36,7 +36,15 @@ class TemporalSessionClient:
             self.engine.scope.principal,
         ):
             raise AuthorizationDenied("Session belongs to another trusted Scope")
-        if ref.key.resource_id != resource_id(self.namespace_id) or ref.coordination_ref != digest(
+        from .temporal_session_identity import data_resource_id
+
+        possible = {resource_id(self.namespace_id)} | {
+            data_resource_id(self.namespace_id, {"dataset_id": value})
+            for value in self.engine.release.get("session_save_protocol", {})
+            .get("dataset_ids", {})
+            .values()
+        }
+        if ref.key.resource_id not in possible or ref.coordination_ref != digest(
             ["temporal-session-coordination-v1", ref.key.resource_id, asdict(self.engine.scope)]
         ):
             raise DefinitionMismatch("Session belongs to another actual namespace resource")
@@ -90,13 +98,17 @@ class TemporalSessionClient:
         return receipt
 
     async def open(self, definition, session_id, *, command_id, namespace=None):
+        binding = detached(self.binding(definition))
+        from .temporal_session_identity import data_resource_id, selected_namespace, selected_source
+
+        source = selected_source(binding["request"], binding["manifest"])
+        namespace = selected_namespace(source, namespace)
         key = SessionKey(
             **asdict(self.engine.scope),
-            resource_id=resource_id(self.namespace_id),
+            resource_id=data_resource_id(self.namespace_id, source),
             namespace=namespace,
             session_id=session_id,
         )
-        binding = detached(self.binding(definition))
         payload = detached(
             {
                 "kind": "open",

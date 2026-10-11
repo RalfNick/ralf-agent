@@ -2,6 +2,9 @@
 
 日期：2026-10-11。状态：**目标规格，尚未交付完整链路**。
 
+dev66 已验收原生／顺序的外置保存和持久 Turn，见[指南](../../docs/temporal-session-data-writes.md)。
+高级根／成员地址、最终 Parent 保存、全配置／旧新版本等完整六组门槛继续开放。
+
 本契约落实 R01/R02/R14 与 H1/H2/H3，依赖[能力绑定](agent-capability-binding-contract.md)、
 [入口与 Session](agent-facade-session-contract.md)、[Run/Action](run-command-contract.md)。
 它规定下一阶段实现必须遵守的边界，不新增公共 SDK 配置字段。

@@ -12,6 +12,7 @@ from temporalio.exceptions import (
 )
 
 with workflow.unsafe.imports_passed_through():
+    from . import temporal_session_identity  # noqa: F401 -- preload pure Session addressing
     from .temporal_parent_state import PARENT_WORKFLOW_NAME
     from .temporal_session_state import (
         SESSION_ACTIVITY,

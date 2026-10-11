@@ -115,11 +115,18 @@ def validate_bindings(request, manifest, scope=None):
         validate_descriptor(manifest, descriptor, scope)
     if selected_session_data(request, manifest) and (
         request["definition"]["kind"] not in {"agent", "sequence"}
-        or any(k in request for k in ("session_history", "session_turn", "session_observer"))
+        or (
+            "session_save_protocol" not in manifest
+            and any(k in request for k in ("session_history", "session_turn", "session_observer"))
+        )
     ):
         raise ValidationError(
             "Temporal external Session writes/member addresses are not implemented"
         )
+    if "session_save_protocol" in manifest:
+        from .temporal_session_identity import validate_turn
+
+        validate_turn(request, manifest, scope)
     memory = manifest.get("managed_memory")
     if memory is not None and scope is not None and memory["policy"]["scope"] != scope:
         raise AuthorizationDenied("Temporal memory belongs to another Scope")
@@ -358,6 +365,7 @@ def capabilities(manifest):
         "completion_verification": manifest.get("completion_protocol") == 1,
         "custom_harness": manifest.get("decision_protocol") == 1,
         "session_data_reads": manifest.get("session_data_protocol") == 1,
+        "session_data_writes": "session_save_protocol" in manifest,
         "external_session_store": False,
     }
 

@@ -147,10 +147,27 @@ class TemporalRuntime:
         verifier=None,
         session_store=None,
         session_query=None,
+        session_writes=False,
     ):
         if type(enable_sessions) is not bool:
             raise ValidationError("enable_sessions requires an explicit boolean")
         self.enable_sessions = enable_sessions
+        if type(session_writes) is not bool:
+            raise ValidationError("Session writes require an explicit boolean")
+        self.session_writes = session_writes
+        from .temporal_session_execution import SessionExecutionOwner
+
+        self.session_execution = SessionExecutionOwner() if session_writes else None
+        from .fact_index_ports import _FixedPorts
+
+        self._session_execution_owner = self.session_execution
+        self._session_execution_ports = (
+            _FixedPorts(
+                {"execution": (self.session_execution, ["append", "wait", "aclose"], False)}
+            )
+            if session_writes
+            else None
+        )
         from .recall import RecallQuery
         from .temporal_session_data import SessionReadRegistration
 
@@ -197,6 +214,8 @@ class TemporalRuntime:
         )
         if not self._session_read_pins and session_query is not None:
             raise ValidationError("An explicit Session query requires a registered source")
+        if session_writes and not self._session_read_pins:
+            raise ValidationError("Session writes require an original registered source")
         from .temporal_facts import pins, recall_registration
 
         self.facts, self.recall_policy, self.recall_planner = facts, recall_policy, recall_planner
@@ -379,6 +398,18 @@ class TemporalRuntime:
             from .temporal_session_data import registration as session_registration
 
             result["session_data_protocol"] = 1
+            if self.session_writes:
+                result["session_save_protocol"] = {
+                    "version": 1,
+                    "write_credits": 1,
+                    "max_message_chars": 65536,
+                    "dataset_ids": {
+                        digest(pin.physical): pin.dataset_id for pin in self._session_read_pins
+                    },
+                    "dataset_ports": {
+                        digest(pin.physical): pin.dataset_port for pin in self._session_read_pins
+                    },
+                }
             if self.session_store is not None:
                 result["session_data"] = session_registration(
                     self.session_store, self.session_query
@@ -479,6 +510,12 @@ class TemporalRuntime:
             return self.manifest
         if self.session_store is not self._session_owner:
             raise DefinitionMismatch("Temporal Session source owner changed")
+        if self.session_execution is not self._session_execution_owner:
+            raise DefinitionMismatch("Temporal Session execution owner changed")
+        if self._session_execution_ports is not None:
+            self._session_execution_ports.check()
+            if self.session_execution._closed:
+                raise DefinitionMismatch("Temporal Session execution owner closed")
         for pin in self._session_read_pins:
             pin.check()
         from .temporal_decision import check_pin as check_decision_pin
@@ -608,6 +645,9 @@ class TemporalRuntime:
             from .temporal_session_state import validate_context_evidence, validate_history
 
             validate_history(request, request["runtime_manifest"], request.get("scope"))
+            from .temporal_session_data import verify_dataset
+
+            await verify_dataset(self, request)
             if "context" in request:
                 validate_context_evidence(request["context"], request)
                 from .temporal_session_data_state import (
@@ -861,6 +901,25 @@ class TemporalRuntime:
 
         return await execute(self, request, dispatch_guard=dispatch_guard)
 
+    async def manage_session(self, request, *, dispatch_guard=None, on_end=None):
+        from .temporal_bindings import selected_runtime
+        from .temporal_session_save import execute
+
+        return await execute(
+            selected_runtime(self, request), request, dispatch_guard=dispatch_guard, on_end=on_end
+        )
+
+    async def wait_session_executions(self, *, wait_timeout=30):
+        return (
+            True
+            if self.session_execution is None
+            else await self.session_execution.wait(wait_timeout=wait_timeout)
+        )
+
+    async def close_session_execution(self, *, wait_timeout=30):
+        if self.session_execution is not None:
+            await self.session_execution.aclose(wait_timeout=wait_timeout)
+
     async def manage_memory(self, request, *, dispatch_guard=None):
         from .temporal_bindings import selected_runtime
         from .temporal_memory import execute
@@ -1047,6 +1106,19 @@ def registered_activities(runtime, client=None):
     async def managed_memory(request: dict) -> dict:
         return await runtime.manage_memory(request, dispatch_guard=dispatch_guard)
 
+    from .temporal_session_save_state import ACTIVITY as SESSION_SAVE_ACTIVITY
+
+    @activity.defn(name=SESSION_SAVE_ACTIVITY)
+    async def managed_session(request: dict) -> dict:
+        async def ended(proof):
+            if client is None:
+                raise ValidationError("Original Session execution proof requires its client")
+            await client.get_workflow_handle(request["run_id"]).execute_update(
+                "session_execution_ended", proof, id="ralf-session-end:" + proof["action_id"]
+            )
+
+        return await runtime.manage_session(request, dispatch_guard=dispatch_guard, on_end=ended)
+
     from .temporal_limits_state import ACTIVITY as LIMITS_ACTIVITY
 
     @activity.defn(name=LIMITS_ACTIVITY)
@@ -1066,6 +1138,7 @@ def registered_activities(runtime, client=None):
         evidence,
         managed_context,
         managed_memory,
+        managed_session,
         agent_limits,
         agent_completion,
     ]

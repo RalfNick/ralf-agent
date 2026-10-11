@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.0.dev66 — Native persistent Temporal Session saves
+
+- Add explicit original History save intents, admitted CAS writes, exact received receipts and separate adoption/completion gates.
+- Keep real handler completion distinct from receipt existence; retain unknown credits and Session occupancy through observer cancellation, Worker loss and notification failure.
+- Add actual dataset UUID and namespace Session identity, native/sequence root recall, same-source sequence and idle no-migration rules, plus protected History projection without duplicate context injection.
+- Real Redis/PostgreSQL identity inspection is explicit and fixed; resources remain borrowed. Advanced root/member saves, full configuration, cross-authority leases and complete H1/H2/H3/M1 remain open.
+- Verified full regression, installed/core-only, real Worker/database recovery and old/new compatibility; no live model quality claim.
+
 ## 0.1.0.dev65 — Temporal fixed Session data reads
 
 - Add opt-in host/per-Agent scoped Session read registrations, bounded original Context evidence and managed Context forwarding for stateless native/sequence Runs.

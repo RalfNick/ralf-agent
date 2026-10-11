@@ -134,6 +134,14 @@ def context_evidence(request):
     if "session_history" not in request:
         return {}
     history = request["session_history"]
+    if "session_data_binding" in request:
+        return {
+            "session_references": [],
+            "session_projection": {
+                "history_digest": digest(history),
+                "binding_digest": digest(request["session_data_binding"]),
+            },
+        }
     return {
         "session_references": []
         if not history
@@ -150,7 +158,7 @@ def context_evidence(request):
 
 def validate_context_evidence(snapshot, request):
     expected = context_evidence(request)
-    if expected and snapshot.get("session_references") != expected["session_references"]:
+    if any(snapshot.get(k) != v for k, v in expected.items()):
         raise DefinitionMismatch("Session context changed original Conversation evidence")
 
 
@@ -173,7 +181,11 @@ def validate_binding(binding, scope):
     from .temporal_bindings import selected_session_data
 
     if selected_session_data(binding["request"], manifest):
-        raise ValidationError("Temporal external Session completion writes are not implemented")
+        if "session_save_protocol" not in manifest:
+            raise ValidationError("Temporal external Session completion writes are not implemented")
+        from .temporal_session_identity import selected_source
+
+        selected_source(binding["request"], manifest)
     if any(
         k in binding["request"] for k in ("session_turn", "session_history", "session_observer")
     ):
@@ -193,19 +205,22 @@ class TemporalSessionState:
         self.scope = accepted["scope"]
         Scope(**self.scope)
         self.namespace_id = accepted["namespace_id"]
+        self.binding = {
+            k: accepted[k] for k in ("request", "manifest", "task_queue", "activity_timeout")
+        }
+        validate_binding(self.binding, self.scope)
+        from .temporal_session_identity import data_resource_id, selected_namespace, selected_source
+
+        self.data_source = selected_source(self.binding["request"], self.binding["manifest"])
         self.key = SessionKey(
             **self.scope,
-            resource_id=resource_id(self.namespace_id),
-            namespace=accepted["session_namespace"],
+            resource_id=data_resource_id(self.namespace_id, self.data_source),
+            namespace=selected_namespace(self.data_source, accepted["session_namespace"]),
             session_id=accepted["session_id"],
         )
         self.coordination_ref = digest(
             ["temporal-session-coordination-v1", self.key.resource_id, self.scope]
         )
-        self.binding = {
-            k: accepted[k] for k in ("request", "manifest", "task_queue", "activity_timeout")
-        }
-        validate_binding(self.binding, self.scope)
         self.binding_revision = 1
         self.receipts, self.identities, self.records = {}, {}, []
         self.history, self.active, self.error = [], None, None
@@ -282,6 +297,21 @@ class TemporalSessionState:
                 else:
                     binding = request["binding"]
                     validate_binding(binding, self.scope)
+                    from .temporal_session_identity import data_resource_id, selected_source
+
+                    source = selected_source(binding["request"], binding["manifest"])
+                    if (
+                        data_resource_id(self.namespace_id, source) != self.key.resource_id
+                        or (source is not None and source["namespace"] != self.key.namespace)
+                        or (
+                            source is not None
+                            and self.data_source is not None
+                            and source["physical"] != self.data_source["physical"]
+                        )
+                    ):
+                        raise DefinitionMismatch(
+                            "Idle rebind cannot migrate the actual Session dataset"
+                        )
                     self.binding, self.binding_revision = (
                         detached(binding),
                         self.binding_revision + 1,
@@ -309,6 +339,12 @@ class TemporalSessionState:
                         "coordinator_id": workflow_id(self.key),
                     },
                 }
+                if self.data_source is not None:
+                    run_request["session_data_binding"] = {
+                        "namespace_id": self.namespace_id,
+                        "dataset_id": self.data_source["dataset_id"],
+                        "resource_id": self.key.resource_id,
+                    }
                 turn = TurnAdmission(
                     turn_id,
                     seq,
