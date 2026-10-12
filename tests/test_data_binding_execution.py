@@ -162,6 +162,7 @@ def test_scoped_data_alone_does_not_require_session_admission_and_capabilities_s
         assert capabilities["resource_selector_roles"] == {
             "facts": ["namespace"],
             "knowledge": ["namespace"],
+            "artifacts": ["namespace"],
         }
         handle = runtime.submit(definitions("native"), "pool", command_id="s")
         assert "session_resources" not in runtime.store.run(handle.run_id)
