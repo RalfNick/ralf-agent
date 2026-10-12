@@ -1,5 +1,7 @@
 # 推荐 Local Harness 组合
 
+Dev82 候选：新增纯 SkillSelector／LexicalSkillSelector 和借用 SkillDirectoryRetriever，以原 KnowledgeContext 自动提供被动目录元数据；JSON 默认与可选 SKILL.md 声明、原每 Agent Knowledge 绑定可组合。源码相关153项及真实Temporal8项已通过；安装／完整回归／旧81兼容／最终审查仍待完成。正文仍走原授权 skill_get，不增加工具权限或执行权威。完整R01–R26、语义选择、插件激活、Sandbox／Runner及真实质量仍开放。见[本批记录](../architecture/reviews/2026-10-12-skill-discovery-context.md)。
+
 Dev81 子集已验收：原生写真实生命周期及显式可替换 ToolExecutionPort／tracked owner，原 Temporal History 分别保存独占调用身份、实际结束与效果回执；容量拒绝／RPC失败／观察者取消的通知保持受管理重试。最终源码5021 passed／378配置跳过（758.54s），核心67／SDK232安装、真实源码8／安装8、旧80双向恢复／22模板／旧Worker执行前拒绝及278模块一致通过。三项Important经3项RED→GREEN统一修复，无新延期Minor；原自有服务停止并实际等待退出。完整R01–R26、Sandbox／Runner与质量目标仍开放。 见[本批记录](../architecture/reviews/2026-10-12-native-write-lifetime.md)。
 
 dev47 另增加显式 `semantic-knowledge`、`memory-recall`、`plan-and-execute`、`team`，

@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.0.dev82 — Passive Skill directory discovery (candidate)
+
+- Add replaceable pure SkillSelector/LexicalSkillSelector and borrowed SkillDirectoryRetriever through native KnowledgeContext and original execution authority.
+- Add explicit JSON/default and optional SKILL.md directory declarations; metadata never loads bodies or grants tools. Per-Agent native Knowledge bindings remain reusable.
+- Source153 contracts and8 actual Temporal cases pass. Final frozen/install/old81/review gates remain pending; complete R01–R26, semantic selection, plugin activation, Sandbox/Runner and model quality stay open.
+
+
 ## 0.1.0.dev81 — Actual Tool execution lifetime
 
 - Add an explicit replaceable ToolExecutionPort and bounded tracked owner; defaults remain unchanged.

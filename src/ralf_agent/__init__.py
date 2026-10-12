@@ -322,7 +322,7 @@ from .workflow import (
     WorkflowSelection,
 )
 
-__version__ = "0.1.0.dev81"
+__version__ = "0.1.0.dev82"
 from .filesystem_skill_documents import FileSkillDocumentCatalog
 from .filesystem_skills import FileSystemSkillCatalog
 from .filesystem_workspace import FileSystemWorkspace

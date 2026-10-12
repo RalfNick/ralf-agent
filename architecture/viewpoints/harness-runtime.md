@@ -1,5 +1,7 @@
 # RALF AgentHarness 目标架构
 
+Dev82 候选：新增纯 SkillSelector／LexicalSkillSelector 和借用 SkillDirectoryRetriever，以原 KnowledgeContext 自动提供被动目录元数据；JSON 默认与可选 SKILL.md 声明、原每 Agent Knowledge 绑定可组合。源码相关153项及真实Temporal8项已通过；安装／完整回归／旧81兼容／最终审查仍待完成。正文仍走原授权 skill_get，不增加工具权限或执行权威。完整R01–R26、语义选择、插件激活、Sandbox／Runner及真实质量仍开放。见[本批记录](../reviews/2026-10-12-skill-discovery-context.md)。
+
 Dev81 子集已验收：原生写真实生命周期及显式可替换 ToolExecutionPort／tracked owner，原 Temporal History 分别保存独占调用身份、实际结束与效果回执；容量拒绝／RPC失败／观察者取消的通知保持受管理重试。最终源码5021 passed／378配置跳过（758.54s），核心67／SDK232安装、真实源码8／安装8、旧80双向恢复／22模板／旧Worker执行前拒绝及278模块一致通过。三项Important经3项RED→GREEN统一修复，无新延期Minor；原自有服务停止并实际等待退出。完整R01–R26、Sandbox／Runner与质量目标仍开放。 见[本批记录](../reviews/2026-10-12-native-write-lifetime.md)。
 
 Dev80：纯可替换 Skill 文档解析、可选有界 YAML、固定 SKILL.md 文件目录及 skills-markdown 默认声明子集已验收。最终源码4954 passed／370配置跳过（713.55s），无YAML核心35／SDK359安装、真实源码6／安装6、旧79双向恢复／22模板／272模块一致通过。三项Important经14项RED→GREEN修复，两项Minor延期；原自有服务停止并等待。selector／异步加载／自动Context／Sandbox及完整R01–R26仍开放。见[本批记录](../reviews/2026-10-12-skill-documents.md)。

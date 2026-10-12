@@ -1,4 +1,6 @@
-# dev81 剩余能力与架构验收清单
+# dev82 剩余能力与架构验收清单
+
+Dev82 候选：新增纯 SkillSelector／LexicalSkillSelector 和借用 SkillDirectoryRetriever，以原 KnowledgeContext 自动提供被动目录元数据；JSON 默认与可选 SKILL.md 声明、原每 Agent Knowledge 绑定可组合。源码相关153项及真实Temporal8项已通过；安装／完整回归／旧81兼容／最终审查仍待完成。正文仍走原授权 skill_get，不增加工具权限或执行权威。完整R01–R26、语义选择、插件激活、Sandbox／Runner及真实质量仍开放。见[本批记录](../architecture/reviews/2026-10-12-skill-discovery-context.md)。
 
 Dev81 子集已验收：原生写真实生命周期及显式可替换 ToolExecutionPort／tracked owner，原 Temporal History 分别保存独占调用身份、实际结束与效果回执；容量拒绝／RPC失败／观察者取消的通知保持受管理重试。最终源码5021 passed／378配置跳过（758.54s），核心67／SDK232安装、真实源码8／安装8、旧80双向恢复／22模板／旧Worker执行前拒绝及278模块一致通过。三项Important经3项RED→GREEN统一修复，无新延期Minor；原自有服务停止并实际等待退出。完整R01–R26、Sandbox／Runner与质量目标仍开放。 见[本批记录](../architecture/reviews/2026-10-12-native-write-lifetime.md)。
 
@@ -7,7 +9,7 @@ Dev80：纯可替换 Skill 文档解析、可选有界 YAML、固定 SKILL.md �
 dev66 原生／顺序持久 Turn 保持兼容；dev67 接通[Temporal 会话树](temporal-session-trees.md)，
 包括高级根保存、稳定成员私有地址和跨 Turn 召回。dev69 增加显式 Temporal Profile 工厂与实际 Worker 生命周期；完整配置／路由、租约和 R01–R26 继续开放。
 
-版本：56；日期：2026-10-12；维护者：RALF maintainers。当前增量基线：dev81；dev72 CLI工具子集通过冻结源码／安装／旧71兼容和服务停止门槛，见本批记录。
+版本：57；日期：2026-10-12；维护者：RALF maintainers。当前增量基线：dev82；dev72 CLI工具子集通过冻结源码／安装／旧71兼容和服务停止门槛，见本批记录。
 读者：框架维护者、应用开发者及适配器贡献者。基线：da55f97 的 dev30，
 以及已提交1cad308的dev31–36与已提交1f27300的dev37配置／首用及已提交e6a6de7的dev38远程原生／顺序及已提交9fcbb84的dev39复合根会话与已提交7898b78的dev40自动规则记忆及已提交0d17976的dev41受管理上下文及已提交ec9b5f5的dev42模型选择记忆阶段及已提交e413ddc的dev44高级／Temporal数据上下文和已提交5528670的dev45 Local高级自动记忆，以及已提交 adbc328 的 dev46 Temporal自动记忆与五类Agent绑定。
 
@@ -85,7 +87,7 @@ PG Knowledge/Inbox/Outbox、Qdrant、HTTP Embedding、Hybrid/RRF／基础重排�
 | ID／层 | 当前已交付基础 | 尚未完成的具体能力 | 阶段／状态 |
 | --- | --- | --- | --- |
 | R12 工具接入／工具包 | typed Python/Schema/默认参数、ToolRegistry、async ToolSource、MCP stdio／HTTP JSON／POST SSE、A2A ToolSource、固定命令 JSON CLI ToolSource/async 声明/实际进程停止；固定POST HTTP ToolSource与CLI完整示例、授权／审批／核验 | MCP持续 Session/GET恢复/OAuth；外部 CLI/Coding DelegatedRunner；HTTP GET/参数映射／凭据引用与工具组合；搜索／文件／浏览器工具包与发现；有状态工具租约和停止证据 | H4：子集已交付 |
-| R13 Workspace/Skills/Sandbox/Runner | 可信 Python、MCP 受管理进程生命周期；Runner 目标契约；Workspace Port／文件／内存默认和受管理读工具；dev77 WritePort／CAS／稳定回执／单根租约和原受管理写工具子集已验收；dev78 Skills Catalog／Memory／固定File和原读工具；dev79每Agent Skills固定ref/disabled原授权交集子集已验收；dev80标准文档解析／固定File声明子集已验收 | Workspace append/delete/mkdir／subroot selector／文件权限／跨主机租约；dev81真实Temporal原生阻塞写取消／关闭／租约与显式结束协议子集已验收；只读绑定dev76子集已验收；Skills目录／Memory／固定File／原工具dev78子集已验收；专用skills角色dev79子集已验收；selector／标准解析／异步加载／自动阶段／插件激活；容器／远端 Sandbox 文件、网络、进程和资源隔离；Coding Runner、Codex 首个适配及各外部 Runner 验收。普通子进程不是安全沙箱 | H4：读写子集已交付，其余目标未交付 |
+| R13 Workspace/Skills/Sandbox/Runner | 可信 Python、MCP 受管理进程生命周期；Runner 目标契约；Workspace Port／文件／内存默认和受管理读工具；dev77 WritePort／CAS／稳定回执／单根租约和原受管理写工具子集已验收；dev78 Skills Catalog／Memory／固定File和原读工具；dev79每Agent Skills固定ref/disabled原授权交集子集已验收；dev80标准文档解析／固定File声明子集已验收；dev82被动目录选择／原Knowledge自动Context候选 | Workspace append/delete/mkdir／subroot selector／文件权限／跨主机租约；dev81真实Temporal原生阻塞写取消／关闭／租约与显式结束协议子集已验收；只读绑定dev76子集已验收；Skills目录／Memory／固定File／原工具dev78子集已验收；专用skills角色dev79子集已验收；标准解析／异步声明已有子集；语义selector／自动正文阶段／插件激活；容器／远端 Sandbox 文件、网络、进程和资源隔离；Coding Runner、Codex 首个适配及各外部 Runner 验收。普通子进程不是安全沙箱 | H4：读写子集已交付，其余目标未交付 |
 | R14 上下文 | ContextBuilder/Counter/Budgeter/Summarizer、完整工具组／近期召回／摘录、实际快照；显式独立模型摘要；Temporal 纯自定义 Context；Local 原生／顺序及高级编排受管理规则／模型摘要与引用摘录／产物投影；Temporal History 受管理摘要／Knowledge 摘录／产物阶段；最新完成反馈及其后工具证据原子保留 | dev54 可替换 TextTokenizer／字节默认／可选 tiktoken／canonical 输出预留已交付；模型协议完整计量、实际模型词表与长上下文验收；Session／RAG 语义压缩和质量；覆盖／来源失效策略和辅助失败恢复；不同模型长上下文事实保留实测。UTF-8 token 估算不是精确用量 | H3：确定性与显式路径已交付 |
 | R15 短期／长期记忆 | memory/SQLite/Redis/PG 的 sync/async、CAS/去重/TTL/分页/来源；opt-in MemoryPipeline 规则／模型字段选择；原生／顺序及高级实际 Agent 的受管理规则／模型字段选择阶段、原节点／子 Run 证据恢复与 JSON／TOML 默认工厂；Temporal History 自动规则／模型选择、准确CAS核验与根子证据恢复；dev47 有界候选词项相关排序；dev49 有界原生候选语义排序／任务查询与有序上下文组合；dev56 memory/SQLite/Redis、dev57 PostgreSQL 全库扫描、可替换 CAS Catalog、分阶段索引／激活与权威召回；dev58 Temporal有界Facts绑定／namespace／纯planner／原Context采纳 | PostgreSQL/Qdrant等远端联合索引组合验收；自动增量／修复／删除传播；自由合成；语义冲突／修订／撤回／遗忘／可信度策略和多事实原子采纳；最终 Session append 大历史效率；导出／迁移／保留；真实记忆利用。追加来源观察不是自主信念修订 | H3／H5：存储和显式提炼已交付 |
 | R16 摄取／知识生命周期 | text/Markdown Parser；dev51 HTML／dev52 DOCX 正文／dev53 可选文本 PDF Parser 与摄取模板；字符／段落与 dev54 可替换 token Chunker；memory/SQLite/PG 原子文档／块／词项／回执 | PDF OCR／布局与兼容语料、其他 Office、网页／业务连接器及游标／增量；语义分块及模型词表兼容；来源目录／ACL；后台索引、修复、删除传播和版本重建。knowledge_committed 不代表向量就绪 | H3／H5：基础已交付 |
