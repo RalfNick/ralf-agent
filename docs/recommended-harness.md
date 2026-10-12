@@ -1,6 +1,6 @@
 # 推荐 Local Harness 组合
 
-Dev81 待最终验收：显式可替换 ToolExecutionPort／tracked 默认 owner，原 Temporal History 分别保存工具意图、实际结束与效果回执；取消观察不释放真实线程，Assembly 先排空执行及结束通知再关闭资源。源码八个真实 Temporal／PostgreSQL 场景已通过，包含六种默认编排及 Agent／Graph 回执接收故障后的冷恢复。默认发布保持兼容；新协议使用 binding_protocol3，需要新 Worker。全量、安装、旧80兼容与独立审查尚待最终验收，完整 R01–R26 不标为完成。 见[本批记录](../architecture/reviews/2026-10-12-native-write-lifetime.md)。
+Dev81 子集已验收：原生写真实生命周期及显式可替换 ToolExecutionPort／tracked owner，原 Temporal History 分别保存独占调用身份、实际结束与效果回执；容量拒绝／RPC失败／观察者取消的通知保持受管理重试。最终源码5021 passed／378配置跳过（758.54s），核心67／SDK232安装、真实源码8／安装8、旧80双向恢复／22模板／旧Worker执行前拒绝及278模块一致通过。三项Important经3项RED→GREEN统一修复，无新延期Minor；原自有服务停止并实际等待退出。完整R01–R26、Sandbox／Runner与质量目标仍开放。 见[本批记录](../architecture/reviews/2026-10-12-native-write-lifetime.md)。
 
 dev47 另增加显式 `semantic-knowledge`、`memory-recall`、`plan-and-execute`、`team`，
 以及保持原 Spec／绑定路径的 `recommended_harness`。

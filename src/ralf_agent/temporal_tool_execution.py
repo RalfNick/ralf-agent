@@ -13,6 +13,17 @@ from .types import canonical, digest
 METHODS = ("execute", "wait", "aclose")
 
 
+def notification_identity():
+    from .temporal_context_execution import ContextExecutionOwner
+
+    return {
+        "max_calls": 256,
+        "implementation": {
+            name: executable_digest(getattr(ContextExecutionOwner, name)) for name in METHODS
+        },
+    }
+
+
 def ordinary(value):
     count, size = 0, 0
 
@@ -63,7 +74,7 @@ def validate_protocol(manifest):
         or type(manifest.get("binding_protocol")) is not int
         or manifest["binding_protocol"] != 3
         or type(value) is not dict
-        or set(value) != {"version", "owner", "implementation"}
+        or set(value) != {"version", "owner", "implementation", "notifications"}
         or type(value["version"]) is not int
         or value["version"] != 1
         or type(value["owner"]) is not dict
@@ -76,6 +87,8 @@ def validate_protocol(manifest):
         ordinary(value)
         for item in value["implementation"].values():
             sha(item)
+        if value["notifications"] != notification_identity():
+            raise ValidationError("Tool notifications lost their fixed mechanical owner")
     except (ValidationError, ValueError, TypeError):
         raise DefinitionMismatch("Tool execution lost its fixed bounded owner identity") from None
 
@@ -100,6 +113,7 @@ class ToolExecutionRegistration:
             "implementation": {
                 name: executable_digest(getattr(self.owner, name)) for name in METHODS
             },
+            "notifications": notification_identity(),
         }
         validate_protocol(
             {"kernel": "temporal-3", "binding_protocol": 3, "tool_execution_protocol": value}

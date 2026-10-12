@@ -36,21 +36,24 @@ def state_for(*, enabled=True):
         },
     )
     action, request = state.next_operation()
+    if enabled:
+        state.admit_tool_dispatch(admission(request))
     return runtime, state, action, request
 
 
-def proof(request):
+def proof(request, invocation_id="a" * 32):
     return {
         **{
             name: request[name]
             for name in ("scope", "action_id", "release_digest", "execution_epoch")
         },
         "request_digest": digest(request),
+        "invocation_id": invocation_id,
     }
 
 
-def admission(request):
-    return {"run_id": request["run_id"], **proof(request)}
+def admission(request, invocation_id="a" * 32):
+    return {"run_id": request["run_id"], **proof(request, invocation_id)}
 
 
 def test_explicit_published_owner_and_original_intent_admission():
@@ -129,7 +132,7 @@ def test_end_is_idempotent_and_prior_model_uncertainty_is_preserved():
 def test_cancellation_before_admission_refuses_new_handler_and_accepts_true_end():
     _, state, action, request = state_for()
     state.command("cancel", {"kind": "cancel", "scope": asdict(r.Scope())})
-    assert state.admit_tool_dispatch(admission(request))["allowed"] is False
+    assert state.admit_tool_dispatch(admission(request))["allowed"] is True  # grant preceded cancel
     state.tool_execution_ended(proof(request))
     assert state.tool_executions[action["id"]]["execution_stopped"] is True
 

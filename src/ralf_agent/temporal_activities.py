@@ -185,6 +185,9 @@ class TemporalRuntime:
             ToolExecutionRegistration(tool_execution) if tool_execution is not None else None
         )
         self._tool_execution_closing = False
+        self._tool_notifications = (
+            ContextExecutionOwner(max_calls=256) if tool_execution is not None else None
+        )
         if type(enable_sessions) is not bool:
             raise ValidationError("enable_sessions requires an explicit boolean")
         self.enable_sessions = enable_sessions

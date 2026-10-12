@@ -36,20 +36,24 @@ def callbacks(client, request, info):
         name: fixed[name] for name in ("scope", "action_id", "release_digest", "execution_epoch")
     } | {"request_digest": digest(fixed)}
 
-    async def guard(value):
+    async def guard(value, *, invocation_id):
         if value != fixed:
             raise DefinitionMismatch("Tool changed original complete Activity request")
         await check()
         result = await handle.execute_update(
             ADMISSION_UPDATE,
-            expected | {"run_id": workflow_id},
+            expected | {"run_id": workflow_id, "invocation_id": invocation_id},
             id="ralf-tool-dispatch:" + fixed["action_id"] + ":" + uuid.uuid4().hex,
         )
         await check()
         return result
 
     async def ended(value):
-        if value != expected:
+        if (
+            type(value) is not dict
+            or set(value) != set(expected) | {"invocation_id"}
+            or any(value[name] != item for name, item in expected.items())
+        ):
             raise DefinitionMismatch("Tool end lost original complete Activity identity")
         await check()
         result = await handle.execute_update(

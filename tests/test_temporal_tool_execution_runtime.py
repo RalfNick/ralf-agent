@@ -8,7 +8,15 @@ import ralf_agent as r
 from ralf_agent.errors import RalfError
 from ralf_agent.temporal_tool_execution import ToolExecutionRegistration
 
-from .test_temporal_tool_execution import admission, proof, state_for
+from .test_temporal_tool_execution import admission, proof
+from .test_temporal_tool_execution import state_for as claimed_state_for
+
+
+def state_for():
+    runtime, state, action, request = claimed_state_for()
+    state.tool_executions[action["id"]].pop("invocation_id", None)
+    state.tool_executions[action["id"]].pop("grant_allowed", None)
+    return runtime, state, action, request
 
 
 @pytest.mark.parametrize("kind", ["tuple", "dict-subclass", "nan", "depth", "values"])
@@ -42,9 +50,9 @@ def test_owner_configuration_drift_refuses_before_tool_or_end_notification():
     runtime.tool_execution._version = "changed"
     callbacks = []
 
-    async def guard(value):
+    async def guard(value, *, invocation_id):
         callbacks.append("guard")
-        return state.admit_tool_dispatch(admission(value))
+        return state.admit_tool_dispatch(admission(value, invocation_id))
 
     async def ended(value):
         callbacks.append("end")
@@ -62,8 +70,8 @@ def test_cancel_before_real_admission_has_original_end_without_business_dispatch
     state.command("cancel", {"kind": "cancel", "scope": state.scope})
     ends = []
 
-    async def guard(value):
-        return state.admit_tool_dispatch(admission(value))
+    async def guard(value, *, invocation_id):
+        return state.admit_tool_dispatch(admission(value, invocation_id))
 
     async def ended(value):
         ends.append(value)
@@ -73,7 +81,7 @@ def test_cancel_before_real_admission_has_original_end_without_business_dispatch
         response = await runtime.execute_tool(request, dispatch_guard=guard, on_end=ended)
         assert response["ok"] is False and response["dispatched"] is False
         assert await runtime.wait_context_executions(wait_timeout=2)
-        assert ends == [proof(request)]
+        assert [dict(value, invocation_id="a" * 32) for value in ends] == [proof(request)]
         state.accept_tool(request["action_id"], response)
         assert state.quiescent is True and state.state == "cancelled"
         await runtime.close_context_execution()
@@ -87,8 +95,8 @@ def test_true_operation_has_one_fixed_end_and_duplicate_refuses_without_dispatch
     runtime, state, _, request = state_for()
     ends = []
 
-    async def guard(value):
-        return state.admit_tool_dispatch(admission(value))
+    async def guard(value, *, invocation_id):
+        return state.admit_tool_dispatch(admission(value, invocation_id))
 
     async def ended(value):
         ends.append(value)
@@ -100,7 +108,7 @@ def test_true_operation_has_one_fixed_end_and_duplicate_refuses_without_dispatch
         assert await runtime.wait_context_executions(wait_timeout=2)
         second = await runtime.execute_tool(request, dispatch_guard=guard, on_end=ended)
         assert second["ok"] is False and second["dispatched"] is False
-        assert ends[0] == proof(request)
+        assert dict(ends[0], invocation_id="a" * 32) == proof(request)
         await runtime.close_context_execution()
         await runtime.tool_execution.aclose()
 
@@ -161,6 +169,8 @@ def test_callback_pins_original_handle_and_refuses_namespace_drift():
                 "action_id": request["action_id"],
                 "release_digest": request["release_digest"],
                 "allowed": True,
+                "invocation_id": value["invocation_id"],
+                "claimed": True,
             }
 
     class Client:
@@ -182,11 +192,11 @@ def test_callback_pins_original_handle_and_refuses_namespace_drift():
     )
 
     async def run():
-        assert (await guard(request))["allowed"] is True
+        assert (await guard(request, invocation_id="a" * 32))["allowed"] is True
         await ended(proof(request))
         client.namespace = "foreign"
         with pytest.raises(RalfError):
-            await guard(request)
+            await guard(request, invocation_id="a" * 32)
         with pytest.raises(RalfError):
             await ended(proof(request))
 

@@ -29,6 +29,13 @@ manifest and execution behavior. Explicit publication requires new Workers:
 `temporal-3`, `binding_protocol=3`, `tool_execution_protocol.version=1`. Existing
 Context read protocol1 can compose with it.
 
+Original History holds one exclusive invocation claim per Tool intent. Repeated
+observation of that claim returns its original grant; a different invocation
+cannot execute or acknowledge its end. A fixed, bounded notification owner
+retains up to 256 pending invocations, including genuine no-start rejections,
+before admission. Failed end RPCs and cancelled observers remain retriable at
+close. These are mechanical tasks; original History remains the authority.
+
 `ToolExecutionPort` exposes fixed ordinary JSON `identity` and asynchronous
 `execute(operation, *, proof, on_end=None)`, `wait(*, wait_timeout=30)` and
 `aclose(*, wait_timeout=30)`. `ToolExecutionOwner(version="1", max_calls=8)` is
@@ -36,6 +43,9 @@ the basic implementation. A custom port must own the actual operation and all
 delegated threads until completion, then retain/retry the original end callback
 until acknowledged. It must not execute a duplicate original call. Identity and
 the implementations are fixed at publication and checked during execution.
+Port results must be completed values: execute returns a response dictionary,
+wait returns an exact boolean and aclose returns None. Lazy results are rejected
+and disposed; malformed closure cannot release owned resources.
 
 Direct `TemporalRuntime(tool_execution=owner, ...)` injection borrows the owner.
 Runtime closure waits for it but does not close a shared port. The tracked Profile

@@ -43,6 +43,14 @@ def record(state, payload, *, admission=False):
     }
     if admission:
         expected["run_id"] = state.run_id
+    invocation = payload.get("invocation_id")
+    if (
+        type(invocation) is not str
+        or len(invocation) != 32
+        or any(char not in "0123456789abcdef" for char in invocation)
+    ):
+        raise DefinitionMismatch("Tool execution requires a fixed original invocation")
+    expected["invocation_id"] = invocation
     if payload != expected:
         raise DefinitionMismatch("Tool execution proof differs from original complete intent")
     return value, next(a for a in state.actions if a["id"] == action_id)
@@ -50,18 +58,34 @@ def record(state, payload, *, admission=False):
 
 def admit(state, payload):
     value, action = record(state, payload, admission=True)
+    invocation = payload["invocation_id"]
+    claim = value.get("invocation_id")
+    if claim is not None:
+        return {
+            "run_id": state.run_id,
+            "action_id": action["id"],
+            "release_digest": state.release_digest,
+            "invocation_id": invocation,
+            "claimed": claim == invocation,
+            "allowed": claim == invocation
+            and value["grant_allowed"]
+            and not value["execution_stopped"],
+        }
     allowed = (
         not value["execution_stopped"]
         and state.state not in {"succeeded", "failed", "cancelled"}
         and state.active_action == action["id"]
         and action["status"] == "executing"
     )
+    value.update(invocation_id=invocation, grant_allowed=allowed)
     state._emit("tool_dispatch_admitted", {"action_id": action["id"], "allowed": allowed})
     return {
         "run_id": state.run_id,
         "action_id": action["id"],
         "release_digest": state.release_digest,
         "allowed": allowed,
+        "invocation_id": invocation,
+        "claimed": True,
     }
 
 
@@ -97,6 +121,8 @@ def unknown(state, action_id):
 
 def ended(state, payload):
     value, action = record(state, payload)
+    if value.get("invocation_id") != payload["invocation_id"]:
+        raise DefinitionMismatch("Tool end differs from its original exclusive invocation")
     if not value["execution_stopped"]:
         value["execution_stopped"] = True
         value["end_proof"] = copy.deepcopy(payload)
