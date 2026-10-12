@@ -34,6 +34,22 @@ cost; missing usage remains null. `--max-cost-usd` fails closed before model
 requests because input/billing cannot be guaranteed bounded by this preview.
 Execution credits do not represent dollars. Choose a call budget explicitly.
 
+Live SDK Providers must declare `max_output_tokens` and `timeout` matching
+EvaluationLimits before evidence allocation or dispatch; missing/mismatched
+bounds return `not_run` with `provider_bounds_unverified`. Identity declarations
+are a trusted adapter contract, not an enforceable supplier billing guarantee.
+The restart check only drives terminal Runs. Unfinished/unknown Runs are observed
+without dispatch and score `recovery: false`; evaluation does not retry a failed
+request merely to measure recovery or change the original task outcome.
+
+Completed reports include `summary`, with per-task repeated pass rates, attempted
+rows, call counts, all-repeats-passed and mixed-outcome task counts, and metric
+numerators/denominators. Failed and unattempted repeats remain in the denominator.
+These descriptive counts do not treat repetitions as independent task samples.
+For example, `--offline --repeats 3 --max-calls 48` checks all eight fixtures three
+times while retaining `model_quality: null`; live repeats require explicit model
+configuration and their own call budget.
+
 Reports include dataset identity, per-case metrics, latency, calls, usage, estimated
 cost, durable replay and restart checks. Raw prompts, responses and business
 records stay in the private evidence directory; reports omit them. Files are

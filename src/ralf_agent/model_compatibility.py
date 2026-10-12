@@ -6,7 +6,7 @@ from contextlib import aclosing
 from dataclasses import asdict
 
 from .errors import BudgetExceeded, ProviderError, ValidationError
-from .model_protocol import ModelCapabilities, ModelStreamEvent
+from .model_protocol import ModelCapabilities, ModelStreamEvent, json_object
 from .planning_evaluation import (
     EvaluationLimits,
     _AuditedProvider,
@@ -45,7 +45,7 @@ def _public_identity(provider):
             safe[name] = value
     for name in ("max_output_tokens", "timeout"):
         value = identity.get(name)
-        if type(value) in (int, float) and math.isfinite(value) and value > 0:
+        if (type(value) is int or type(value) is float and math.isfinite(value)) and value > 0:
             safe[name] = value
     for name in ("stream", "json_mode"):
         if type(identity.get(name)) is bool:
@@ -55,7 +55,9 @@ def _public_identity(provider):
         options = {
             name: value
             for name in ("temperature", "top_p", "seed")
-            if type(value := generation.get(name)) in (int, float) and math.isfinite(value)
+            if type(value := generation.get(name)) is int
+            or type(value) is float
+            and math.isfinite(value)
         }
         if options:
             safe["generation"] = options
@@ -281,6 +283,16 @@ async def evaluate_model_compatibility(
                 )
                 snapshot = await engine.drive(handle.run_id)
                 checks = {"runtime": snapshot.state == "succeeded"}
+                if case != "stream_close":
+                    try:
+                        output = (
+                            json_object(snapshot.result)
+                            if isinstance(snapshot.result, str)
+                            else snapshot.result
+                        )
+                        checks["output"] = canonical(output) == canonical({"ok": True})
+                    except (ValueError, ValidationError):
+                        checks["output"] = False
                 if case == "tool":
                     tools = [a for a in snapshot.actions if a.get("kind") == "tool"]
                     checks["tool_receipt"] = (

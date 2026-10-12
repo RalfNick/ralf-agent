@@ -1,6 +1,6 @@
 # H3 语义知识、相关召回与 Plan／Team 组合
 
-dev47 增加四个显式 Profile，以及 `recommended_harness` 起步定义，复用已有
+dev47 增加显式 Profile，以及 `recommended_harness` 起步定义；dev49 增加 `semantic-memory`，复用已有
 AgentHarness／Runtime、模型、工具、子 Run、审批和恢复协议。没有新增执行权威。
 旧 `local-basic`／`local-knowledge`／`managed-memory` 的版本 `1` 声明及
 ManagedDataContext 实现身份保持兼容。
@@ -12,11 +12,15 @@ dev48 可在语义 Profile 中显式配置[HTTP 重排](http-reranking.md)，沿
 | --- | --- | --- |
 | `semantic-knowledge` | SQLite 知识与向量索引、显式 HTTP Embedding、lexical/vector 并行召回、RRF、来源回读、相关上下文 | Embedding 服务、知识导入与索引、真实生成模型、答案及引用验证 |
 | `memory-recall` | 有界 Facts／Session 召回、词项相关排序、自动上下文与产物投影、来源化结果观察写入 | 对齐 Agent namespace、业务字段 allowlist、事实正确性和保留策略 |
-| `plan-and-execute` | 相关上下文、规则规划起步、显式可选 ModelPlanner、Schema 完成验证 | 业务成员、工具、真实规划模型与 PlanVerifier |
+| `semantic-memory` | 显式 HTTP Embedding、有界原始 Facts 候选语义排序、TaskRecallPlanner、保序上下文及来源观察写入 | 对齐 namespace、Embedding／生成模型、业务字段与真实记忆质量；全库索引须显式替换 memory_store |
+| `plan-and-execute` | 相关上下文、规则规划起步、显式可选 ModelPlanner、Schema 完成验证；显式 version="2" 的默认规则 DAG 串接成员结果 | 业务成员、工具、真实规划模型与 PlanVerifier |
 | `team` | 相关上下文、固定 Supervisor 汇总起步、独立受管理成员 | 成员能力、工具、业务汇总和验证 |
 
 所有 Profile 的生成 Provider 默认 `offline-echo`，只验证接线。语义 Profile **没有默认
-语义模型、Hash 降级或自动下载**；必须声明兼容 Embedding，使用 `abuild`。构造不发送请求，
+语义模型、Hash 降级或自动下载**；保留内置语义角色时必须声明兼容 HTTP Embedding，使用 `abuild`。
+显式 `version="2"` 允许完整替换 `knowledge` 或 `memory_store` 声明，替换后由所选适配器负责其配置，不要求无关的顶层 embedding。
+离线／词法替换只验证替换协议，不能按 Profile 名称认定语义能力。版本 `1` 的声明与校验保持。
+构造不发送请求，
 显式索引与检索才调用选定服务。执行额度不能保证真实模型或 Embedding 的费用上限。
 
 ## 开箱运行与自定义编排
@@ -27,11 +31,13 @@ from ralf_agent import Runtime, RuntimeBuilder, recommended_harness, recommended
 
 
 async def main():
-    profile = recommended_profile("team")
+    profile = recommended_profile("plan-and-execute", version="2")
     instance = await RuntimeBuilder().abuild(profile, "runs.sqlite")
     async with Runtime(instance, owned=True) as runtime:
         run = await runtime.submit(
-            recommended_harness("team"), "Analyze this task", command_id="one"
+            recommended_harness("plan-and-execute", version="2"),
+            {"task": "Analyze this task and write an answer"},
+            command_id="one",
         )
         print(await run.wait())
 
@@ -39,7 +45,11 @@ async def main():
 asyncio.run(main())
 ```
 
-`recommended_harness("plan-and-execute")` 默认 researcher／writer，使用原 RulePlanner；
+这是可运行的离线装配例子，offline-echo 只回显数据；真实业务需替换 Provider、工具和验证器。
+`recommended_harness("plan-and-execute")` 的版本 `1` 默认 researcher／writer，使用原 flat RulePlanner；
+显式 `version="2"` 且未传 `planner`／`plan_mode` 时选择既有规则 DAG：首成员收到任务，后续成员直接收到前一成员结果。
+writer 不会额外收到原任务；若需要原任务，researcher 的结果应显式保留它，或自定义 Planner／ValueRef 输入映射。
+显式提供任何 `planner` 或 `plan_mode` 时按原 Spec 处理，版本 `2` 不覆盖调用方选择。
 `recommended_harness("team")` 默认 researcher／reviewer／synthesizer，使用原
 SupervisorTeam。researcher／reviewer 按当前受限并发额度执行，再由 synthesizer 汇总。
 默认指令不提供搜索、代码执行或工具，工具与授权仍由宿主配置。
@@ -47,7 +57,7 @@ SupervisorTeam。researcher／reviewer 按当前受限并发额度执行，再�
 传 `members={"lookup": AgentSpec(...), "answer": AgentSpec(...)}` 可替换成员，也支持原
 Workflow／Graph／Team／Dynamic 嵌套定义。Team 默认把最后一个注册成员选为 supervisor；
 可传 `strategy="sequential"` 或完整 `strategy_config`。规则 Plan 默认按注册顺序调用全部成员；
-flat Plan 的后续输入由原 Planner 提案决定，不隐式把先前步骤输出连接到下一步。需要依赖输出时
+版本 `1` 的 flat Plan 后续输入由原 Planner 提案决定，不隐式把先前步骤输出连接到下一步。需要依赖输出时
 使用 `plan_mode="dag"` 或自定义 Planner／ValueRef。
 
 `planner="model"` 配合 plan-and-execute Profile 中注册的 ModelPlanner，模型通过受管理的
@@ -102,6 +112,76 @@ async def answer():
 `components` 按完整组件声明覆盖，可替换为 Redis／PostgreSQL Facts、PG／Qdrant Hybrid 或自定义端口；
 每个远程组合仍需各自验证，不能据此保证任意数据库组合兼容。
 
+## 完整角色替换与工厂注入（版本 2）
+
+下面以应用注册的 SQLite 词法适配器完整替换语义知识角色，实际导入并运行一次 Agent。
+它无需 Embedding 服务，只证明声明→工厂→知识来源→运行→owned 关闭链路；不证明语义检索或答案质量。
+工厂签名与资源账本沿用[装配协议](runtime-assembly.md)，自管客户端可被工厂捕获并按 borrowed 生命周期管理。
+
+```python
+import asyncio
+from tempfile import TemporaryDirectory
+
+from ralf_agent import (
+    AgentSpec,
+    ComponentRegistry,
+    Document,
+    KnowledgeContext,
+    LexicalRetriever,
+    Runtime,
+    RuntimeBuilder,
+    SQLiteKnowledgeStore,
+    recommended_profile,
+)
+
+
+def application_knowledge(config, context):
+    store = context.own(SQLiteKnowledgeStore(context.path(config["path"])))
+    return KnowledgeContext(LexicalRetriever(store), namespace=config["namespace"])
+
+
+async def main():
+    registry = ComponentRegistry()
+    registry.register("knowledge", "application-lexical-v1", application_knowledge)
+    profile = recommended_profile(
+        "semantic-knowledge",
+        version="2",
+        components={
+            "knowledge": {
+                "adapter": "application-lexical-v1",
+                "config": {"path": "manuals.sqlite", "namespace": "manuals"},
+            },
+            "recall_planner": {"adapter": "task-text"},
+        },
+    )
+    with TemporaryDirectory() as directory:
+        builder = RuntimeBuilder(registry, base_dir=directory)
+        instance = await builder.abuild(profile, directory + "/runs.sqlite")
+        async with Runtime(instance, owned=True) as runtime:
+            instance.knowledge.retriever.store.put(
+                instance.scope,
+                "manuals",
+                Document("guide", "Inventory stock is seven units."),
+                expected_version=0,
+            )
+            run = await runtime.submit(
+                AgentSpec("assistant", "Answer using supplied evidence"),
+                "What is the inventory stock?",
+                command_id="stock-one",
+            )
+            print(await run.wait())
+
+
+asyncio.run(main())
+```
+
+版本 `2` 提供 `recall_planner` 时移除预置 `recall_policy`；反向替换 `recall_policy` 时移除预置 planner。
+调用方同时声明两者仍非法，不能静默丢弃一项。替换是完整声明覆盖，需在新 Profile 版本中保存实际适配器身份。
+同理，`recommended_profile("semantic-memory", version="2", components={"memory_store": ...})`
+可选完整 `indexed-recall-async` 或应用注册的记忆端口；所需 Embedding／索引配置写在该角色声明内。
+`indexed-recall-async` 的独立 `embedding_provider`／`vector_index`／`fact_index_catalog` 工厂与显式 rebuild
+见[全库索引](fact-indexing.md)。Hash 是显式离线词项基线，替换为它不会获得真实语义质量。
+
 ## 相关事实召回和上下文扩展
 
 `ReferenceSelector.select(task, references) -> list[int]` 是同步纯策略，声明 JSON identity。
@@ -143,10 +223,21 @@ memory-recall 默认写 namespace 为 `agent_name="assistant"`，读取仍遵循
 请对齐实际 Agent 名称，或使用宿主允许的 FactsView／每成员 stage_policy；不会自动跨 namespace 搜索。
 默认 allowlist 保存整个 `result` 的来源观察，业务应替换 fields，只保留所需字段。
 
-## 验证范围
+替换 `memory_store` 只改变召回资源，不自动修改 `stage_policy` 的观察写目标；默认写目标仍来自执行库。
+需要向自定义后端提炼时，完整覆盖 `stage_policy`，在 `sourced-memory.config.memory` 声明该后端，
+并显式设置 `namespace`／`fields`。异步目标使用 `sourced-memory-async` 和 `abuild`。
+相同客户端可由宿主工厂共享，但 owned／borrowed 归属仍需按原资源账本声明。
+
+## 历史证据与当前开放范围
 
 测试覆盖 HTTP 协议与确定性同义词向量、真实 SQLite 索引／来源失效、有限上下文下相关 Facts、
 默认及自定义／嵌套 Plan／Team、模型 Planner 夹具、审批／重复命令／重启、八个 OS 退出恢复窗口。
-Temporal 仅新增纯 Activity／History 集成测试，复用原 temporal-2；本轮未运行真实 Temporal 服务、
+dev47 当时仅新增 Temporal 纯 Activity／History 集成测试，复用原 temporal-2；该批未运行真实 Temporal 服务、
 远程数据库或真实生成／Embedding 模型。Local Profile 不直接替代 Temporal Worker 装配。
-自由记忆合成、全库语义召回、语义重排、自动索引治理、业务 oracle 和答案／引用质量仍待验收。
+后续 dev48 已交付显式 HTTP 重排适配；dev56／57 已交付 memory／SQLite／Redis／PostgreSQL 全库扫描、
+显式索引构建／激活与原事实来源核验的召回子集；查询分页仍限全库排序 top256 窗口，不等于全库枚举。
+dev58 已接通 Temporal Facts／namespace 的原 Context 采纳，dev69 以后另有显式 Temporal Profile 装配，
+Local Profile 仍不直接替代 Worker。相应证据见[HTTP 重排](http-reranking.md)、[全库索引](fact-indexing.md)
+及[剩余矩阵](remaining-work.md)。这些交付不能证明真实语义召回、重排或最终答案质量。
+自由记忆合成／修订／遗忘、索引自动增量／修复／删除传播／治理、业务 oracle、最终配置重复质量和
+答案／引用验收仍开放。版本 `2` 的本轮最终回归／安装／兼容证据尚待完整验收，不在此填写通过数量。

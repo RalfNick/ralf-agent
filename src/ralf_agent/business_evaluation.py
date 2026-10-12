@@ -317,11 +317,14 @@ async def evaluate_business(
         report["reason"] = "hard_currency_bound_unavailable"
         return report
     report["provider"] = _safe_identity(provider)
-    offline = offline or any(
-        token in report["provider"].get("kind", "").lower()
-        for token in ("fixture", "scripted", "offline", "test")
-    )
+    offline = offline or report["provider"]["offline_fixture"]
     report["offline"] = offline
+    if not offline and (
+        report["provider"].get("max_output_tokens") != limits.max_output_tokens
+        or report["provider"].get("timeout") != limits.timeout_seconds
+    ):
+        report["reason"] = "provider_bounds_unverified"
+        return report
     prices = _prices(prices)
     selections = [
         {"case_id": case["id"], "repeat": repeat}
@@ -446,9 +449,18 @@ async def evaluate_business(
                     recovered_handle = recovered.submit(
                         spec, case["task"], command_id="evaluate:first", budget=16
                     )
-                    recovered_snapshot = await recovered.drive(handle.run_id)
+                    # Driving an unfinished Run can dispatch another model
+                    # attempt. Recovery measurement must not retry a failed or
+                    # unknown request and change the evaluated outcome.
+                    terminal = snapshot.state in {"succeeded", "failed", "cancelled"}
+                    recovered_snapshot = (
+                        await recovered.drive(handle.run_id)
+                        if terminal
+                        else recovered.status(handle.run_id)
+                    )
                     recovered_ok = (
-                        recovered_handle == handle
+                        terminal
+                        and recovered_handle == handle
                         and recovered_snapshot == snapshot
                         and len(audited.attempts) == before_recovery
                     )
@@ -512,6 +524,9 @@ async def evaluate_business(
         report["model_quality"] = (
             None if offline else {"task_success_rate": report["passed"] / report["total"]}
         )
+        from .evaluation_summary import summarize_evaluation
+
+        report["summary"] = summarize_evaluation(report["cases"])
         return report
     finally:
         if owned is not None:

@@ -24,6 +24,7 @@ from jsonschema.exceptions import ValidationError as SchemaValidationError
 
 from .errors import BudgetExceeded, ValidationError
 from .evaluation_cases import CASES_SCHEMA, frozen_cases_document
+from .evaluation_summary import summarize_evaluation
 from .types import ModelResponse, canonical, digest
 
 
@@ -132,10 +133,8 @@ def _source_matches(binding, expected, by_id):
     elif source != expected["source"]:
         return False
     return all(
-        canonical(binding.get(name, True if name == "required" else None))
-        == canonical(expected[name])
-        for name in ("required", "default")
-        if name in expected
+        canonical(binding.get(name, default)) == canonical(expected.get(name, default))
+        for name, default in (("required", True), ("default", None))
     )
 
 
@@ -160,6 +159,12 @@ def _argument_schema(binding, schema):
             return True
         if binding.get("kind") == "object":
             fields = _fields(binding)
+            known, value = _static_binding(binding)
+            if known:
+                # Whole-object constraints (not/anyOf/dependentRequired etc.)
+                # cannot be checked by validating each property independently.
+                Draft202012Validator(schema).validate(value)
+                return True
             if not isinstance(schema, dict):
                 return schema is True
             if schema.get("type", "object") != "object":
@@ -181,6 +186,23 @@ def _argument_schema(binding, schema):
         return binding.get("kind") == "ref" and schema is not False
     except (SchemaValidationError, TypeError):
         return False
+
+
+def _static_binding(binding):
+    """Resolve only literal/object expressions; never invent referenced outputs."""
+    if not isinstance(binding, dict):
+        return False, None
+    if binding.get("kind") == "literal":
+        return True, binding.get("value")
+    if binding.get("kind") == "object" and isinstance(binding.get("fields"), dict):
+        value = {}
+        for name, field in binding["fields"].items():
+            known, item = _static_binding(field)
+            if not known:
+                return False, None
+            value[name] = item
+        return True, value
+    return False, None
 
 
 def _ancestors(nodes):
@@ -387,22 +409,34 @@ def _cost(usage, prices):
 def _safe_identity(provider):
     identity = copy.deepcopy(provider.identity)
     canonical(identity)
-    safe = {
-        name: identity[name]
-        for name in (
-            "kind",
-            "version",
-            "model",
-            "max_output_tokens",
-            "timeout",
-            "generation",
-            "stream",
-            "token_parameter",
-            "json_mode",
-            "api_version",
-        )
-        if name in identity
-    }
+    safe = {}
+    # Classification must survive omitted/truncated public display fields.
+    kind = identity.get("kind")
+    safe["offline_fixture"] = isinstance(kind, str) and any(
+        token in kind.lower() for token in ("scripted", "fixture", "offline", "test")
+    )
+    for name in ("kind", "version", "model", "token_parameter", "api_version"):
+        value = identity.get(name)
+        if isinstance(value, str) and len(value) <= 128:
+            safe[name] = value
+    for name in ("max_output_tokens", "timeout"):
+        value = identity.get(name)
+        if (type(value) is int or type(value) is float and math.isfinite(value)) and value > 0:
+            safe[name] = value
+    for name in ("stream", "json_mode"):
+        if type(identity.get(name)) is bool:
+            safe[name] = identity[name]
+    generation = identity.get("generation")
+    if isinstance(generation, dict):
+        options = {
+            name: value
+            for name in ("temperature", "top_p", "seed")
+            if type(value := generation.get(name)) is int
+            or type(value) is float
+            and math.isfinite(value)
+        }
+        if options:
+            safe["generation"] = options
     # Credentials, URLs and arbitrary adapter-specific fields stay in the local
     # runtime. A digest still distinguishes all full configuration identities.
     safe["configuration_sha256"] = digest(identity)
@@ -519,9 +553,13 @@ class _AuditedProvider:
         }
 
     def validate_request(self, messages, tools):
+        from .ports import _complete_sync_none, is_sync_callable
+
         validate = getattr(self.provider, "validate_request", None)
-        if callable(validate):
-            validate(messages, tools)
+        if validate is not None:
+            if not is_sync_callable(validate):
+                raise ValidationError("Provider validation must be completed synchronously")
+            _complete_sync_none(validate(messages, tools), "Provider validation")
 
     async def complete(self, messages, tools):
         if len(self.attempts) >= self.limits.max_calls:
@@ -601,12 +639,7 @@ async def evaluate_planning(
         for repeat in range(limits.repeats)
     ]
     identity = None if provider is None else _safe_identity(provider)
-    fixture = offline or (
-        identity is not None
-        and any(
-            token in identity.get("kind", "").lower() for token in ("scripted", "fixture", "test")
-        )
-    )
+    fixture = offline or (identity is not None and identity["offline_fixture"])
     report = {
         "scope": "offline-planning-fixture" if fixture else "model-planning-quality",
         "status": "not_run",
@@ -765,6 +798,7 @@ async def evaluate_planning(
             }
         report["cost_usd"] = _cost(report["usage"], prices)
         report["evidence_retained"] = evidence_dir is not None
+        report["summary"] = summarize_evaluation(report["cases"])
         return report
     finally:
         if owned_temp:

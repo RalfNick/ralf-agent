@@ -4,7 +4,7 @@ Dev82 子集已验收：纯可替换 SkillSelector／LexicalSkillSelector、Skil
 
 Dev81 子集已验收：原生写真实生命周期及显式可替换 ToolExecutionPort／tracked owner，原 Temporal History 分别保存独占调用身份、实际结束与效果回执；容量拒绝／RPC失败／观察者取消的通知保持受管理重试。最终源码5021 passed／378配置跳过（758.54s），核心67／SDK232安装、真实源码8／安装8、旧80双向恢复／22模板／旧Worker执行前拒绝及278模块一致通过。三项Important经3项RED→GREEN统一修复，无新延期Minor；原自有服务停止并实际等待退出。完整R01–R26、Sandbox／Runner与质量目标仍开放。 见[本批记录](../architecture/reviews/2026-10-12-native-write-lifetime.md)。
 
-dev47 另增加显式 `semantic-knowledge`、`memory-recall`、`plan-and-execute`、`team`，
+dev47 另增加显式 `semantic-knowledge`、`memory-recall`、`plan-and-execute`、`team`，dev49 增加 `semantic-memory`，
 以及保持原 Spec／绑定路径的 `recommended_harness`。
 见[语义检索、相关召回与编排组合](h3-intelligent-combinations.md)。原三个版本 `1` 组合保持兼容。
 
@@ -43,6 +43,17 @@ asyncio.run(main())
 `recommended_profile(..., components={...}, binding_components=[...], name="my-app", version="1")`
 传入已有组件声明。覆盖以完整组件声明为单位；同名版本不能偷偷替换已接受的配置。
 JSON／TOML 使用普通 Profile 的 `context_assembler.adapter = "managed-data"`，不增加另一种配置语言。
+
+显式 `version="2"` 接续版本化替换：提供 `recall_planner` 时移除预置 `recall_policy`，反向替换同理；
+调用方同时提供两者仍拒绝。`semantic-knowledge` 完整替换 `knowledge`、`semantic-memory` 完整替换
+`memory_store` 后，不要求无关的顶层 Embedding；所选角色负责自己的配置和来源／生命周期契约。
+保留内置语义角色仍要求显式 HTTP Embedding，不自动降级 Hash。版本 `1` 保留原声明与校验。
+应用可通过 `registry.register(role, adapter, factory)` 注入自管端口，`RuntimeBuilder(registry)` 采用其声明；
+同步工厂 `(config, context)` 用 `context.own` 接管自建 close 资源，异步工厂用 `register_async`／`own_async`／`abuild`。
+完整可运行的自定义词法替换和版本 `2` Plan 例子见[H3 组合](h3-intelligent-combinations.md)。
+显式 `recommended_harness("plan-and-execute", version="2")` 在未指定 planner／plan_mode 时使用既有规则 DAG，
+后成员直接消费前成员结果；原任务若仍需要应放在前成员结果或显式输入映射中。显式选项及旧版本行为保留。
+本轮版本 `2` 最终组合验收仍待完成，离线／词法例子不证明语义或业务质量。
 
 Managed Memory 默认写 namespace 为 `agent_name="assistant"`；若按 Agent 名称召回应显式对齐读取 namespace，其他目标传 `agent_name="support"`。高级成员继承共同写 namespace，不会自动按成员命名切换；可用每成员 stage_policy 绑定选择不同后端与 namespace。
 默认保存整个最终结果，是显式选择该组合后的基础观察记录；业务使用应替换 `stage_policy` 的
@@ -85,4 +96,7 @@ SDK 注入的 ArtifactStore 是 **borrowed**，调用方负责关闭；Profile �
 该能力 opt-in 开启语义 Schema **10**；dev42 及以前代码拒绝该库。高级 Local 编排首次准入启用 Schema **11**，dev43 拒绝该库。普通默认仍为原 Schema，
 旧 Schema 1–9 可读取／恢复；退回旧代码需保留旧库或做显式迁移，不可编辑版本号绕过检查。
 高级自动记忆首次准入启用 Schema **12**，dev44 拒绝；原生／顺序记忆仍按已有 Schema7/9，组合数据上下文启用 Schema10。显式终态根 resume 可恢复原已结束子 Run 的记忆证据，不重新派发写入。
-当前无自动 GC、S3／对象存储适配、后台保留任务或统一 Artifact 能力选择角色。
+上述 Schema10–12 是原批次兼容边界，后续显式角色启用各自版本门槛。
+dev84 已交付第十四类独立 `artifacts` 绑定的 Local／Temporal 子集，可独立于 Context 策略选取
+宿主允许的存储／namespace 或 disabled；dev83 仍拒绝该新角色，旧发布不自动升级，见[Artifact 绑定](artifact-bindings.md)。
+自动 GC、S3／对象存储、binary 传输、后台保留／全局磁盘治理仍开放，独立绑定不等于完整 R18/H3。

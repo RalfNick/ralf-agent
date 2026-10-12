@@ -15,6 +15,9 @@ def recommended_harness(
     Rule planning and fixed supervisor order work offline. Explicit model
     planning needs a registered planner and a real configured model. Defaults
     provide instructions, not tools, autonomous research or business verification.
+    Plan version 2 defaults to a DAG evidence chain: the first member receives
+    the task and each later member receives the preceding member's result.
+    Explicit planner or plan_mode options retain the original Spec defaults.
     Nested members and binding paths retain the original Spec contracts.
     """
     if kind not in {"plan-and-execute", "team"}:
@@ -49,6 +52,8 @@ def recommended_harness(
             configured.setdefault("strategy_config", {"supervisor": next(reversed(members))})
         spec = TeamSpec
     else:
+        if version == "2" and not {"planner", "plan_mode"}.intersection(configured):
+            configured["plan_mode"] = "dag"
         spec = DynamicWorkflowSpec
     try:
         definition = spec(

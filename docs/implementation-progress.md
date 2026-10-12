@@ -1,5 +1,7 @@
 # Implementation progress — 2026-10-05 M1 local runtime
 
+Dev85 已验收子集：显式版本2推荐Plan默认使用原DAG结果依赖；完整资源声明替换无需多余Embedding配置，召回替换移除继承的互斥默认。版本1默认保持。业务／规划报告增加重复任务摘要，规划oracle与Provider前置校验、业务未完成Run恢复观察、模型兼容最终输出检查已修复。最终源码5520／447配置跳过、核心安装171、292产品模块一致和旧84原Plan回执兼容通过；独立review的1Important／1Minor均修复。整批验证以[本批记录](../architecture/reviews/2026-10-12-default-chains-evaluation.md)为准；离线回归不构成真实模型质量或完整H3/M1验收。后续段落按各dev批次保留历史证据。
+
 Dev84 Artifact独立绑定子集已验收：memory／SQLite／POSIX JSON默认、custom sync/async、ref/disabled/inherit及宿主namespace选择沿原managed Context和Local／Temporal权威实现。Context与物理存储独立；纯预测完整校验并固定原方法，弱缓存和弱pins不保留历史Context。显式artifact_bindings=True支持无需多余存储的Temporal disabled-only。
 
 最终源码5431 passed／447配置跳过（678.60s），核心104／SDK242安装、真实源码51／安装51（均零跳过）、旧83双向兼容／22原模板／旧Worker零Activity拒绝及291模块一致通过。九类Important经一轮34项有效失败复现统一修复；本任务Temporal PID12900／session19994实际退出0并已等待，用户Docker平台保留。完整R01–R26、远端／binary／GC／cache／治理与真实质量继续开放。 [本批验收](../architecture/reviews/2026-10-12-artifact-bindings.md)。

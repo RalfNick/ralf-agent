@@ -135,6 +135,12 @@ stream_close. Defaults allow five cases and six model attempts; the echo tool is
 read-only and checks exact arguments and its durable result. Native capabilities
 that disable tools/streams are recorded as unsupported, not silently enabled.
 
+Completed text, structured, tool and stream probes also check the requested final
+output `{"ok":true}` separately from runtime success and tool receipts. JSON text
+and equivalent object output are accepted; false, numeric 1, extra fields or
+duplicate JSON keys fail the output check. The intentional stream_close probe
+continues to measure early consumer cleanup rather than a final answer.
+
 Each scenario runs through managed LocalEngine authority with bounded decisions
 and credits. Private SQLite evidence is mode0600; use a fresh directory for every
 probe. Public reports contain receipt IDs, checks and known/unknown token usage,

@@ -44,6 +44,18 @@ and managed Actions, including rejected proposals. Report paths are checked befo
 calls. Keep private evidence access controlled; do not publish it as a redacted
 benchmark report.
 
+Completed reports additionally include `summary`: per-task repeated pass rates,
+attempted rows, call counts, all-repeats-passed and mixed-outcome task counts,
+and dimension numerators/denominators. Missing dimensions and unattempted repeats
+remain failures. These are descriptive measurements; repeats of the same task
+are not independent task samples or evidence of statistical superiority.
+Offline identities (including `kind="offline"`) keep `model_quality: null`.
+The oracle checks required evidence references and fully static object bindings
+against the complete input Schema. Unknown member outputs still need execution
+and business validation; a passing proposal cannot prove those runtime values.
+Provider preflight must complete synchronously with `None`; lazy/async validation
+is rejected before model dispatch rather than silently ignored.
+
 The current increment supplies the runner, frozen cases, protocol fixtures and
 offline validation. No real-model quality result is asserted without an actual
 configured run. See [dynamic DAG](dynamic-dag.md) and [implementation status](implementation-status.md).

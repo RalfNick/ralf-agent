@@ -25,6 +25,8 @@ def recommended_profile(
     The offline echo verifies wiring; it is not a reasoning model. Managed
     memory writes allowlisted final results to agent_name's fact namespace.
     Customize the admission fields before using this preset for a real app.
+    Version 2 replaces inherited recall policy/planner alternatives and lets
+    complete semantic resource declarations supply their own configuration.
     """
     if kind not in {
         "local-basic",
@@ -53,7 +55,12 @@ def recommended_profile(
     }:
         defaults["context_assembler"] = {"adapter": "relevant-data"}
     if kind in {"semantic-knowledge", "semantic-memory"}:
-        if (
+        semantic_replaced = (
+            version == "2"
+            and isinstance(components, dict)
+            and ("memory_store" if kind == "semantic-memory" else "knowledge") in components
+        )
+        if not semantic_replaced and (
             not isinstance(embedding, dict)
             or set(embedding) != {"type", "config"}
             or embedding["type"] != "openai"
@@ -63,7 +70,9 @@ def recommended_profile(
             raise ValidationError(
                 "Semantic combination requires explicit HTTP embedding model/dimensions"
             )
-        if not isinstance(knowledge_namespace, str) or not knowledge_namespace.strip():
+        if not semantic_replaced and (
+            not isinstance(knowledge_namespace, str) or not knowledge_namespace.strip()
+        ):
             raise ValidationError("Knowledge namespace must be non-empty text")
         if kind == "semantic-memory":
             defaults["context_assembler"]["config"] = {"selector": {"adapter": "ordered"}}
@@ -115,6 +124,11 @@ def recommended_profile(
     if components is not None:
         if not isinstance(components, dict):
             raise ValidationError("Recommended components must be explicit declarations")
+        if version == "2":
+            if "recall_planner" in components and "recall_policy" not in components:
+                defaults.pop("recall_policy", None)
+            elif "recall_policy" in components and "recall_planner" not in components:
+                defaults.pop("recall_planner", None)
         defaults.update(copy.deepcopy(components))
     return RuntimeProfile(
         "ralf." + kind if name is None else name,
