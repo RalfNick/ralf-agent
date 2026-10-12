@@ -1,5 +1,7 @@
 # Implementation progress — 2026-10-05 M1 local runtime
 
+Dev77：可替换Workspace CAS写入、Memory／POSIX默认、稳定效果键／单根租约与原Source／Local／Temporal恢复子集已验收。最终源码4615 passed／351配置跳过（700.98s），核心安装100／SDK214、真实源码及安装各6项、旧76双向恢复／新协议拒绝／22模板／264模块一致通过；独立审查三项Important经RED→GREEN修复，自有服务已停止并等待。实际Temporal阻塞原生写的取消／关闭／租约窗口为延期证据项，完整R01–R26继续开放。见[验收记录](../architecture/reviews/2026-10-12-workspace-writes.md)。
+
 Dev76：每Agent只读Workspace绑定、原工具授权交集与Profile资源复用交付。最终源码4501／345配置跳过，核心59／扩展160安装、真实源码及安装各6项、旧75双向恢复／22模板／259模块一致通过；实际旧Worker在Activity前拒绝新绑定，自有服务停止并等待退出。1项Important经RED→GREEN修复，1项live drift错误分类Minor延后。完整能力仍开放，见[验收记录](../architecture/reviews/2026-10-11-workspace-bindings.md)。
 
 Dev75：只读Workspace Port／文件和内存默认、受管理工具及async声明交付。最终源码4431／339配置跳过，核心安装127／扩展191、真实源码及安装各2项、旧74双向恢复／22原模板／258模块一致通过。8项Important经一轮RED→GREEN闭环，自有服务停止并等待退出；1项C1路径Minor延后。[验收](../architecture/reviews/2026-10-11-workspace-read.md)记录全部边界，完整目标仍开放。

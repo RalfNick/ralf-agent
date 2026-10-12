@@ -94,7 +94,11 @@ async def build(config, context):
 
 
 def register_workspace_tools(registry):
+    from .workspace_write_factories import build as write_build
+    from .workspace_write_factories import validate as write_validate
+
     registry.register_async("tools", "workspace-read", build, validator=validate)
+    registry.register_async("tools", "workspace-read-write", write_build, validator=write_validate)
     registry.register("workspace", "registered-tools", binding, validator=validate_binding)
 
 

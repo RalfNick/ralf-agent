@@ -1,4 +1,6 @@
-# Implementation status — 0.1.0.dev76
+# Implementation status — 0.1.0.dev77
+
+Dev77：可替换Workspace CAS写入、Memory／POSIX默认、稳定效果键／单根租约与原Source／Local／Temporal恢复子集已验收。最终源码4615 passed／351配置跳过（700.98s），核心安装100／SDK214、真实源码及安装各6项、旧76双向恢复／新协议拒绝／22模板／264模块一致通过；独立审查三项Important经RED→GREEN修复，自有服务已停止并等待。实际Temporal阻塞原生写的取消／关闭／租约窗口为延期证据项，完整R01–R26继续开放。见[验收记录](../architecture/reviews/2026-10-12-workspace-writes.md)。
 
 Dev76 adds per-Agent read-only Workspace bindings in Local and Temporal, fixed original registered-tool intersection and Profile factories. Final source4501 passed/345 configured skips (709.82s), core59/installed160 contracts and required source/installed6 actual Temporal compositions each pass; groups overlap. Actual75↔76 Local/CLI/defaultTemporal/native Session recovery,22 original templates,259 identical product modules and three installed guide examples pass. One Important typed-JSON identity finding is fixed RED→GREEN; invalid live drift error classification remains a deferred Minor. Actual installed75 Worker refuses the new Workspace opt-in before any Activity/model/tool I/O; all owned services and Workers are stopped and waited. Writes, subroot selectors, Skills, Sandbox, Runner and full R01–R26 remain open. [Final evidence](../architecture/reviews/2026-10-11-workspace-bindings.md).
 

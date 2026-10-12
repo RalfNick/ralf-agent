@@ -233,6 +233,13 @@ class AgentBindingResolver:
             manifest["kernel"] = "local-bindings-10"
         if any(entry["descriptor"]["workspace"]["mode"] != "inherit" for entry in entries.values()):
             manifest["kernel"] = "local-bindings-11"
+            from .binding_workspace import has_writable_workspace
+
+            if any(
+                has_writable_workspace(entry["manifest"].get("tools", {}))
+                for entry in entries.values()
+            ):
+                manifest["kernel"] = "local-bindings-12"
         return manifest
 
 

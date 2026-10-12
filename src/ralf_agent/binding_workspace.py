@@ -65,7 +65,8 @@ def _workspace_source(record):
         source is None
         or set(source)
         != {"kind", "version", "behavior_version", "workspace", "max_entries", "max_bytes"}
-        or source["version"] != "1"
+        or type(source["version"]) is not str
+        or source["version"] not in {"1", "2"}
         or type(source["behavior_version"]) is not str
         or not source["behavior_version"].strip()
         or type(source["workspace"]) is not dict
@@ -74,15 +75,38 @@ def _workspace_source(record):
         or not 1 <= source["max_entries"] <= 1000
         or type(source["max_bytes"]) is not int
         or not 1 <= source["max_bytes"] <= 16777216
+        or type(descriptor) is not dict
+        or type(descriptor.get("name")) is not str
+    ):
+        raise ValidationError("Workspace binding requires original native Workspace registrations")
+    name = descriptor["name"]
+    if name == "workspace_write_text":
+        if (
+            source["version"] != "2"
+            or record.get("effect") != "idempotent_write"
+            or config.get("effect_key_argument") != "effect_key"
+        ):
+            raise ValidationError("Workspace writes require their native stable effect-key policy")
+    elif (
+        name not in {"workspace_stat", "workspace_list", "workspace_read_text"}
         or record.get("effect") != "read_only"
         or config.get("effect_key_argument") is not None
-        or type(descriptor) is not dict
-        or descriptor.get("name") not in {"workspace_stat", "workspace_list", "workspace_read_text"}
     ):
-        raise ValidationError(
-            "Workspace binding requires original read-only Workspace registrations"
-        )
+        raise ValidationError("Workspace read registrations require original read-only policies")
     return source
+
+
+def has_writable_workspace(manifests):
+    """Pure opt-in protocol detection; full native identities validate separately."""
+    if type(manifests) is not dict or any(
+        type(record) is not dict for record in manifests.values()
+    ):
+        raise ValidationError("Workspace protocol requires original tool manifest objects")
+    return any(
+        source is not None and source.get("version") == "2"
+        for record in manifests.values()
+        if (source := _source(record)) is not None
+    )
 
 
 def _resource(manifests):

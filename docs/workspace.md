@@ -1,5 +1,7 @@
 # 可替换的只读 Workspace
 
+dev77候选的[受管理CAS写入](workspace-writes.md)是显式Source2增量；本页Source1只读默认与dev75/76历史边界保持。
+
 Dev75沿 R13/H4 增加 `WorkspacePort`、`FileSystemWorkspace`、
 `InMemoryWorkspace` 和 `WorkspaceToolSource`。这是文件数据与工具接入能力；
 dev76 的每 Agent `workspace` 只读绑定复用原工具授权；写入、Skills、Sandbox 和 Coding Runner 仍待交付。

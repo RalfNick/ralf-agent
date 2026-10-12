@@ -321,10 +321,13 @@ from .workflow import (
     WorkflowSelection,
 )
 
-__version__ = "0.1.0.dev76"
+__version__ = "0.1.0.dev77"
 from .filesystem_workspace import FileSystemWorkspace
+from .filesystem_workspace_writes import FileSystemWritableWorkspace
 from .workspace import InMemoryWorkspace, WorkspaceError, WorkspacePort
 from .workspace_tools import WorkspaceToolSource
+from .workspace_write_tools import WritableWorkspaceToolSource
+from .workspace_writes import InMemoryWritableWorkspace, WritableWorkspacePort
 
 __all__ = [
     "EventCursor",
@@ -693,6 +696,9 @@ __all__ += ["ContextExecutionOwner", "ContextExecutionPort", "ContextExecutionRe
 
 
 __all__ += ["WorkspacePort", "WorkspaceError", "InMemoryWorkspace", "FileSystemWorkspace"]
+__all__ += ["WritableWorkspacePort", "InMemoryWritableWorkspace"]
+__all__ += ["FileSystemWritableWorkspace"]
+__all__ += ["WritableWorkspaceToolSource"]
 
 __all__ += ["WorkspaceToolSource"]
 __all__ += ["WorkspaceBindingResource"]

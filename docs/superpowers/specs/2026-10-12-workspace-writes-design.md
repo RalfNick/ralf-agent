@@ -1,0 +1,57 @@
+# Managed Workspace Writes Design
+
+Base0501054/dev76. Architectural increment under continuous user authorization: inline implementation, one final fresh read-only review, local commits only, no push. Keep dev76 until actual Local/Temporal write and recovery gates pass.
+
+## Intent and alternatives
+
+R13/H4 needs editable business files before Coding/Runner. Add a replaceable write port, Memory/POSIX defaults and an original managed ToolSource. A bare overwrite is insufficient for lost responses and CAS. A new general execution backend would duplicate Engine/History. Select a scoped downstream effect journal with a single writable-root owner: it records file evidence, never advances a Run or owns approvals.
+
+Read-only WorkspacePort, FileSystemWorkspace, original sources, default manifests and22 starters remain unchanged. Writable capabilities are opt-in. This is a trusted host adapter, not isolation from arbitrary Python, an external malicious writer or a Sandbox.
+
+## Port, requests and receipts
+
+`WritableWorkspacePort(WorkspacePort)` adds synchronous `write_text(scope,path,text,*,expected_version,effect_key)->dict` and `query_write(scope,effect_key)->dict|None`. `expected_version=None` means create only; a plain lowercase SHA256 string means replace exactly the version returned by the original text read. No append/delete/mkdir, wildcard overwrite or implicit parent creation. Existing parent directories must be permitted ordinary directories.
+
+`InMemoryWritableWorkspace(files=None,*,version,scopes=DEFAULT_SCOPES,max_bytes=1048576,capacity=1024)` is a replaceable process-bound default. `FileSystemWritableWorkspace(root,*,version,scopes=DEFAULT_SCOPES,max_bytes=1048576,capacity=1024)` adds durable effect receipts and an exclusive root write lease. Original read APIs retain their semantics. Limits: max_bytes plain int1..16777216; capacity plain int1..100000; effect_key plain nonblank UTF8 at most256bytes. Text is ordinary UTF8, bounded by max_bytes, no NUL. Paths use original relative/path/protected-directory rules. Invalid input is rejected before mutation.
+
+Shared pure helpers in workspace_writes.py: `write_request(scope,path,text,expected_version,effect_key,*,max_bytes)->tuple[dict,bytes]` returns detached canonical request and UTF8 bytes; `write_receipt(scope,effect_key,request,file_version)->dict` builds the exact receipt; `validate_write_receipt(value,scope,effect_key,request)->dict` validates and detaches an observed receipt. These helpers perform no I/O or permission grant.
+
+Receipt exact fields: `kind="workspace-write-receipt"`, `version="1"`, `scope` (original workspace/principal), `effect_key`, `request_digest`, `path`, `sha256`, `bytes`, `file_version`. Digest covers canonical `{scope,path,text,expected_version}`; file_version is the actual resulting read version. Same scoped key/same request returns detached original receipt even if the file subsequently changes; same scoped key/different request raises IdempotencyConflict before mutation. Queries return a verified original receipt or None, not a newly inferred receipt from equal bytes. A saved receipt confirms the historical write, not the current file contents.
+
+Memory stores are process-bound, explicitly not durable or cross-process leases. Their random per-instance dataset UUID is stable after writes and prevents accidental identity reuse for independently mutable roots; re-creating a Memory store cannot recover an old mutable root. File revisions advance monotonically even for repeated content, preventing ABA CAS; directory snapshots include actual file revisions. Constructor input and results are detached. All valid operations and receipt capacity checks are atomic under its original root lock. Existing Memory limits4096files/64MiB total data remain enforced before mutation.
+
+## POSIX durability and ownership
+
+The existing root must exist and remain pinned through original FD-relative nofollow checks. Opt-in initialization may create protected `.ralf/workspace-writes` metadata (`writer.lock` and `journal.sqlite`), with no symlink/hardlink/device aliases. A pinned single-link lock FD is acquired before SQLite/WAL opening; validate live addresses before use, and hold it until all real handlers exit and close succeeds. A second writer, including another process/lexical alias, is refused. Read-only ports may coexist.
+
+The dataset UUID/schema1 and original metadata/lock/database file identities are durable and fixed in resource identity, alongside original root/scopes/limits. Reopen requires the original metadata identity; root or metadata movement is a mismatch. SQLite uses DELETE rollback journaling with synchronous=EXTRA configured and verified on every fresh/reopened connection under the exclusive root owner; no live WAL checkpoint is needed. EXTRA synchronizes journal deletion at commit. Process-exit tests do not simulate hardware power loss. It stores scoped request identity, prepared intent, temporary file proof and confirmed receipt. It is downstream effect evidence, not an ExecutionStore.
+
+Before replacement: validate expected original version, bound capacity, create a unique same-device nofollow temporary regular file, preserve existing ordinary rwx bits (new files0600; privileged bits/ownership/ACL not preserved), write/fsync text, persist its device/inode/content proof and original target identity, then atomically rename and fsync the parent. Validate ancestors and target, then persist the exact receipt. Persisted intent precedes the external rename. Keep all SQL/file resources owned during actual synchronous work.
+
+Crash recovery is conservative: if current target matches the persisted temporary device/inode/content proof, verify and confirm the original write without rewriting. If original target and temporary proof are still intact, the same idempotent write may finish the single prepared replacement after revalidating CAS. Otherwise preserve unknown evidence, refuse blind overwrite and return no query receipt. An unresolved prepared write holds its native target address against different effect keys using parent device/inode and filesystem target lookup, including case/Unicode/parent aliases. If the pending target is absent, conservatively hold new writes in its physical parent until original recovery; this can delay unrelated creates. Independently configured overlapping roots require host exclusion. An unresolved prepared write holds its target against different effect keys; only the same idempotent request may finish it. A new request may confirm an already-applied predecessor proof, but cannot implicitly execute the predecessor. Equal text alone is insufficient. Confirmed receipts survive later file changes; no automatic receipt eviction/GC. External mutation races are detected where possible but are not a transaction with arbitrary host writers.
+
+`close()` is idempotent after successful close. Active actual reads/writes/query handlers prevent release. Close failure retains lease or leaves the object unable to execute before release. Partial initialization cleans only owned FDs/clients and leaves user files unchanged. No lock release merely because an asyncio observer was cancelled.
+
+## Original ToolSource, bindings and configuration
+
+`WritableWorkspaceToolSource(workspace,*,version,max_entries=100,max_bytes=1048576)` extends original managed read descriptors with `workspace_write_text` (path,text,expected_version,effect_key). Source identity remains kind workspace-tool-source, version string2. Its write descriptor uses a flat object Schema; original registration reserves effect_key and inserts InvocationContext.effect_key. Default write policy is idempotent_write, explicit effect_key_argument="effect_key", approval required and original budget. Reject readonly/missing-key/forged write policies. A managed reconciler calls query_write and validates request/Scope; query never rewrites the user file. Original Source and thread ownership drain before port/lease close.
+
+Extend WorkspaceBindingResource pure validation for supported Source2 registrations: read descriptors retain readonly policies; write descriptor requires the pinned native idempotent policy and reserved key. Resource ref still intersects original grants; disabled removes all native read/write Workspace tools, preserving business grants. Source1 identities/default behavior stay byte-identical. Explicit Source2 selection uses Local local-bindings-12. Temporal requires workspace_binding_protocol2 when any native Source2 is published; Source1 catalog-only releases remain protocol1. Unknown protocols and old76 Workers refuse before I/O. Pure History accepts protocols1/2 and uses original grant intersection; no new runtime authority.
+
+Default async `tools/workspace-read-write` factory uses existing BuildContext Scope/ownership, original FileSystemWritableWorkspace and Source/Registry. Config uses workspace-read root/version/scopes/max_entries/max_bytes/prefix/cost, plus capacity; write approval cannot be disabled through this default. Validate all ordinary config before opening roots/DB. `workspace/registered-tools` reuses the resulting registry. JSON/TOML and Local/Temporal async assembly share it. No dependencies or starter changes.
+
+## Acceptance
+
+Port TDD covers valid create/CAS, detached receipts/identity, changed-file receipt reuse, conflicting keys, capacity before mutation, denied Scope/path/type/limits and active-close behavior. POSIX covers real two-process lease contention, lexical/root/metadata aliases, nofollow protected paths, partial initialization, real handler drain and durable reopen.
+
+Real child processes exit at intent-before-rename, rename-before-receipt and receipt-before-return windows. Recovery returns original effect evidence without duplicate file replacement; tampered target/temporary proof stays unknown. No configured skip replaces these tests.
+
+Actual Local native/sequence/graph/team/dynamic/nested write approval/restart, duplicate controls, stable keys and excluded roots use original actions. Required actual Temporal compositions/Worker restart/History replay and cancellation/true-thread lease windows prove the original authorities. Shared ordinary Profile JSON/TOML assembly allocates one writer and drains it once. Source2 ref/disabled cannot widen permissions.
+
+One final read-only review; one unified Important RED→GREEN pass and full regression; fresh core/SDK wheel, exact source/wheel/sdist/install hashes and documentation, actual76↔77 Local/CLI/defaultTemporal/native recovery,22 unchanged templates and actual old Worker new opt-in rejection. Stop and wait every owned process/service; local commit/formal task completion, then archive only this plan workspace. No real model/Sandbox/complete R01–R26 claim.
+
+## Remaining boundaries
+
+Workspace delete/append/mkdir, per-path selectors/ACL, remote/distributed leases, multiwriter transactions, GC, Skills/Sandbox/Coding Runner and enterprise authentication remain separate capabilities. Current readonly C1/error-classification minors are not silently folded into this increment. The complete capability goal remains active.
+
+Post-review acceptance boundary: the actual native blocked-writer cancellation/close/second-owner window is deferred as a Minor evidence gap. Six actual composition cases and offline native cancellation do not establish that missing service window; complete planned cancellation acceptance remains open.

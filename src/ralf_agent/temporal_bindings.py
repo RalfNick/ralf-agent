@@ -71,7 +71,7 @@ def validate_descriptor(manifest, descriptor, scope=None):
             raise ValidationError("Unsupported Temporal binding role or resource selector")
         if role == "workspace" and (
             type(manifest.get("workspace_binding_protocol")) is not int
-            or manifest["workspace_binding_protocol"] != 1
+            or manifest["workspace_binding_protocol"] not in {1, 2}
         ):
             raise DefinitionMismatch("Workspace selection requires its original Temporal protocol")
         if choice.mode == "ref":

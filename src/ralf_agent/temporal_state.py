@@ -140,12 +140,17 @@ def validate_manifest(manifest):
 
     validate_decision_protocol(manifest)
     if "workspace_binding_protocol" in manifest:
-        if (
-            type(manifest["workspace_binding_protocol"]) is not int
-            or manifest["workspace_binding_protocol"] != 1
-        ):
+        if type(manifest["workspace_binding_protocol"]) is not int or manifest[
+            "workspace_binding_protocol"
+        ] not in {1, 2}:
             raise DefinitionMismatch("Unsupported Temporal Workspace binding protocol")
-        from .binding_workspace import _record
+        from .binding_workspace import _record, has_writable_workspace
+
+        writable = has_writable_workspace(manifest.get("tools", {}))
+        if writable != (manifest["workspace_binding_protocol"] == 2):
+            raise DefinitionMismatch(
+                "Workspace protocol differs from native published capabilities"
+            )
 
         for record in manifest.get("binding_catalog", {}).get("records", {}).values():
             if record["role"] == "workspace":

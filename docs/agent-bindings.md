@@ -74,11 +74,11 @@ anthropic-messages、gemini-content、openai-responses。服务、账号和任�
 | verifier | 未配置时仅强制 Schema 校验；已配置时继承宿主验证器 | 纯同步 CompletionVerifier，固定身份与回执证据 | 关闭额外规则，Schema 仍强制 |
 | limits | 原 Spec 与宿主强制上限 | 纯同步策略，与宿主／Spec 取最小值 | 只关闭额外 Agent 策略，宿主限制仍生效 |
 | stage_policy | 默认关闭或宿主自动记忆规则 | 宿主注册的 ManagedMemoryPolicy | 关闭自动记忆阶段 |
-| workspace | 原宿主工具授权，不激活新阶段 | 借用已注册单一只读 Workspace Source；与原工具授权取交集 | 只排除 Workspace 工具，业务工具保留 |
+| workspace | 原宿主工具授权，不激活新阶段 | 借用已注册单一 Workspace Source；Source2含显式CAS写入；与原工具授权取交集 | 只排除 Workspace 工具，业务工具保留 |
 | artifacts/sandbox/skills | 原宿主行为；不激活新阶段 | 拒绝 | 拒绝 |
 
 工具子集不能增加 AgentSpec 未声明的工具；HostPolicy、审批、效果分类和执行器始终由宿主控制。
-只读 Workspace 绑定见[Workspace 指南](workspace.md)。绑定不分配第二个文件根，不支持 selector／写入／Sandbox 隔离。
+Workspace 绑定见[Workspace 指南](workspace.md)。绑定不分配第二个文件根，Source2写入见[写入指南](workspace-writes.md)；不支持 selector／Sandbox 隔离。
 目录绑定不授予企业资源权限。facts 使用当前 Agent 名称作为既有 namespace；knowledge
 使用构造器固定的 namespace。Session、Facts 和 Knowledge Resource 的 namespace selector 受宿主 allowlist 约束；数据范围配置见[H1d 教程](data-bindings.md)。原始数据组件 ref 和其他角色仍拒绝 selector，不能跨 Scope。
 原 Session 后端继承时沿用当前 Session 保护，不代表已经实现 H2 的规范 SessionKey/Turn 队列。

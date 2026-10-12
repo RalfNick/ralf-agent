@@ -532,6 +532,15 @@ class TemporalRuntime:
                     result["workspace_binding_protocol"] = 1
             if memory is not None:
                 result["managed_memory"] = memory
+        from .binding_workspace import has_writable_workspace
+
+        if has_writable_workspace(result["tools"]):
+            result.update(
+                kernel="temporal-3",
+                binding_protocol=1,
+                dispatch_admission="history-1",
+                workspace_binding_protocol=2,
+            )
         if self._session_topology_pin is not None:
             from .temporal_session_tree_protocol import propose_manifest
 

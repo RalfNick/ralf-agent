@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.1.0.dev77 — Managed Workspace writes
+
+- Add replaceable writable Workspace ports, Memory/POSIX defaults, CAS, stable downstream effect receipts and actual-owner leases. Native Source2 and per-Agent selections reuse original approvals, effects and Local/Temporal authority.
+- Independent review fixes preserve native filesystem aliases, DELETE+EXTRA durable commit barriers and ordinary file permissions. Related214, installed core100/SDK214 and source/installed six actual Temporal/PostgreSQL cases pass; final source4615/351 configured skips, actual old76 compatibility and service shutdown/wait gates pass. Actual native cancellation/close lease window is a deferred evidence gap. No Sandbox or complete-framework claim.
+
 ## 0.1.0.dev76 — Per-Agent Workspace bindings
 
 - Add borrowed WorkspaceBindingResource, per-Agent read-only root/tool selection and workspace/registered-tools declarations for Local and Temporal. Business grants remain; no implicit tool expansion or same-name root remapping.

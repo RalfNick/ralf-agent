@@ -1,5 +1,7 @@
 # RALF 通用框架能力与扩展验收
 
+当前dev77沿R01/R13交付受管理Workspace CAS写入、原生别名占用、DELETE＋EXTRA和普通权限保持。最终源码4615／351配置跳过，核心100／SDK214安装、实际六项、旧76兼容及自有服务停止通过。[本批证据](../reviews/2026-10-12-workspace-writes.md)保留实际原生取消窗口延期及完整能力目标。
+
 当前dev76沿R01/R13接通第十一类只读Workspace绑定：Local／Temporal六类实际Agent使用原注册工具、固定源和权限交集。最终源码4501／345配置跳过、核心59／扩展160安装、源码及安装各六项真实服务、旧75双向恢复与Activity前拒绝、259模块一致通过；1项Important修复，1项错误分类Minor延后，自有服务停止。[本批证据](../reviews/2026-10-11-workspace-bindings.md)区分只读选择、后续写入／Skills／Sandbox／Runner，完整R01–R26仍开放。
 
 dev72 补 R12 固定命令 JSON CLI 工具和受管理 async 装配，保留原审批／效果／实际停止边界；[本批验收](../reviews/2026-10-11-cli-tools.md)记录已通过的子集与三项延后缺口。Workspace/Skills/Sandbox 和外部 DelegatedRunner 继续作为独立能力。
