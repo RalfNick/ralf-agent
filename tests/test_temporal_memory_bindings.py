@@ -133,7 +133,7 @@ def test_original_parent_projects_each_declared_binding_subtree(kind):
 
 
 @pytest.mark.parametrize("role", ["session", "sandbox"])
-def test_unavailable_or_unsupported_temporal_binding_refused_before_run(role):
+def test_unavailable_temporal_binding_refused_before_run(role):
     runtime, _, _, _ = setup()
     descriptor = AgentBindingDescriptor(**{role: BindingSelection.ref("missing", "1")})
     from ralf_agent.temporal_bindings import normalize_request
@@ -141,8 +141,8 @@ def test_unavailable_or_unsupported_temporal_binding_refused_before_run(role):
     request = normalize_request(
         submission_request(AgentDefinition(AgentSpec("a", "answer"), descriptor), "task")
     )
-    # Session reads are now supported, but this version was never registered.
-    with pytest.raises(DefinitionMismatch if role == "session" else ValidationError):
+    # Session and Sandbox are selectable; the missing version/protocol still refuses before dispatch.
+    with pytest.raises(DefinitionMismatch):
         validate_request(request, runtime.manifest)
 
 

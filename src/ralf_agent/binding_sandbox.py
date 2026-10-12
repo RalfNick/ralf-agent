@@ -115,7 +115,7 @@ def _native(record):
         or type(source["max_calls"]) is not int
         or not 1 <= source["max_calls"] <= 16
         or type(source["implementation"]) is not dict
-        or set(source["implementation"]) != {"call_tool", "_execute", "aclose"}
+        or set(source["implementation"]) != {"call_tool", "_execute", "_observe_failure", "aclose"}
         or type(descriptor) is not dict
         or descriptor.get("name") != "sandbox_run"
         or record.get("effect") != "read_only"

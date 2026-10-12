@@ -228,6 +228,8 @@ def test_omitted_command_timeout_uses_host_configured_default():
 def test_custom_port_unfinished_or_mismatched_result_is_rejected_and_keeps_stop_ownership(lazy):
     class BadProvider(Provider):
         async def run(self, scope, request, *, invocation_id):
+            self.live = True
+
             async def pending():
                 return None
 
@@ -249,6 +251,18 @@ def test_custom_port_unfinished_or_mismatched_result_is_rejected_and_keeps_stop_
             else:
                 self.identity = {**self.identity, "version": "replaced"}
             return value
+
+        async def observe(self, scope, invocation_id):
+            return r.SandboxObservation(
+                invocation_id,
+                "a" * 64,
+                "running" if self.live else "stopped",
+                None if self.live else 0,
+            )
+
+        async def stop(self, scope, invocation_id):
+            self.live = False
+            return await self.observe(scope, invocation_id)
 
     async def run():
         provider = BadProvider()

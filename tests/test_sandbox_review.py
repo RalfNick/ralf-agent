@@ -32,6 +32,14 @@ def test_unresolved_native_responsibility_blocks_original_ambient_end(result):
             self.live = False
             return await self.observe(scope, invocation_id)
 
+        async def observe(self, scope, invocation_id):
+            return r.SandboxObservation(
+                invocation_id,
+                "a" * 64,
+                "running" if self.live else "stopped",
+                None if self.live else 0,
+            )
+
     async def run():
         port = Invalid()
         source = r.SandboxToolSource(port, version="1")
@@ -264,3 +272,86 @@ def test_source_rejects_parallel_foreign_live_loop_and_allows_ended_loop_close()
         thread.join(5)
         assert not thread.is_alive()
         asyncio.run(source.aclose(wait_timeout=1))
+
+
+def test_failed_but_proven_stopped_native_call_allows_original_owner_drain():
+    class Cleaned(Provider):
+        async def run(self, scope, request, *, invocation_id):
+            raise r.SandboxError("Native cleanup finished after malformed control response")
+
+        async def observe(self, scope, invocation_id):
+            return r.SandboxObservation(invocation_id, None, "not_found")
+
+        async def stop(self, scope, invocation_id):
+            raise AssertionError("Native absence already proven; no stop needed")
+
+    async def run():
+        source = r.SandboxToolSource(Cleaned(), version="1")
+        owner = r.ToolExecutionOwner(version="original")
+        ended = []
+
+        async def operation():
+            return await source.call_tool(
+                (await source.list_tools())[0], {"argv": ["/bin/echo"]}, context()
+            )
+
+        proof = {
+            "scope": {"workspace": "default", "principal": "local-owner"},
+            "action_id": "cleaned",
+            "release_digest": "a" * 64,
+            "request_digest": "b" * 64,
+            "execution_epoch": "epoch",
+        }
+        try:
+            with pytest.raises(r.SandboxError):
+                await owner.execute(
+                    operation, proof=proof, on_end=lambda value: ended.append(value)
+                )
+            assert await owner.wait(wait_timeout=0.02), (
+                "Completed native cleanup must not leave a synthetic bridge blocking Runtime shutdown"
+            )
+            assert len(ended) == 1 and source._calls == {}
+        finally:
+            # Old implementation needs explicit source stop. Avoid masking the RED
+            # with a second error from the deliberately forbidden stop method.
+            for call in source._calls.values():
+                source._finish_bridge(call)
+            source._calls.clear()
+            await source.aclose(wait_timeout=1)
+            await owner.aclose(wait_timeout=1)
+
+    asyncio.run(run())
+
+
+def test_nested_owner_no_start_does_not_prove_sandbox_handler_never_started():
+    from ralf_agent.temporal_context_execution import ContextExecutionRejected
+
+    class Nested(Provider):
+        async def run(self, scope, request, *, invocation_id):
+            self.live = True
+            raise ContextExecutionRejected(handler_not_started=True)
+
+        async def observe(self, scope, invocation_id):
+            return r.SandboxObservation(
+                invocation_id,
+                "a" * 64,
+                "running" if self.live else "stopped",
+                None if self.live else 0,
+            )
+
+        async def stop(self, scope, invocation_id):
+            self.live = False
+            return await self.observe(scope, invocation_id)
+
+    async def run():
+        source = r.SandboxToolSource(Nested(), version="1")
+        try:
+            with pytest.raises(ContextExecutionRejected):
+                await source.call_tool(
+                    (await source.list_tools())[0], {"argv": ["/bin/echo"]}, context()
+                )
+            assert source._calls and source._threads.has_active
+        finally:
+            await source.aclose(wait_timeout=1)
+
+    asyncio.run(run())

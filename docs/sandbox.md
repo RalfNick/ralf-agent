@@ -99,7 +99,9 @@ Run 的已采纳结果和审批继续存于原执行权威。
 自定义 Provider 实现固定普通 JSON identity 与原生异步
 run／observe／stop／aclose；返回原 `SandboxResult`／`SandboxObservation` DTO。
 Source 拒绝惰性返回值、错误调用身份、输出超限和运行期间配置变更。
-未知启动或无效结果仍保留原执行 Owner 的责任，直到取得停止证据；只有
+未知启动或无效结果仍保留原执行 Owner 的责任，直到取得停止证据。失败后
+有界查询同一原调用，确认停止／不存在才释放占用；原异常和业务未知回执保留。
+内部其他Owner的未启动拒绝不能当作Source自身未进入handler的证明。只有
 可信端口的 `SandboxExecutionRejected(handler_not_started=True)` 才能撤销责任。
 同一 Source 拒绝同时跨两个活跃事件循环调用；原循环结束后可恢复关闭。
 

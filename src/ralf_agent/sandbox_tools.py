@@ -90,7 +90,8 @@ class SandboxToolSource:
             "max_output_bytes": max_output_bytes,
             "max_calls": max_calls,
             "implementation": {
-                n: executable_digest(getattr(self, n)) for n in ("call_tool", "_execute", "aclose")
+                n: executable_digest(getattr(self, n))
+                for n in ("call_tool", "_execute", "_observe_failure", "aclose")
             },
         }
         self._identity = canonical(self._source)
@@ -106,6 +107,7 @@ class SandboxToolSource:
                 "list_tools",
                 "_finish_bridge",
                 "_claim_loop",
+                "_observe_failure",
             )
         }
         self._allowances = (
@@ -196,9 +198,39 @@ class SandboxToolSource:
             self._finish_bridge(call)
             self._calls.pop(call["id"], None)
             return SandboxResult.to_dict(result)
+        except Exception:
+            if call["id"] in self._calls:
+                await self._observe_failure(call)
+            raise
         finally:
             current_thread_group.reset(group)
             current_thread_tracker.reset(tracker)
+
+    async def _observe_failure(self, call):
+        try:
+            self._check(closing=True)
+            observation = await asyncio.wait_for(
+                self._provider.observe(call["scope"], call["id"]), min(5, self._timeout)
+            )
+            if inspect.iscoroutine(observation) or inspect.isgenerator(observation):
+                observation.close()
+            if inspect.isasyncgen(observation):
+                await observation.aclose()
+            if type(observation) is not SandboxObservation:
+                return
+            SandboxObservation.__post_init__(observation)
+            self._check(closing=True)
+            if observation.invocation_id != call["id"] or observation.state not in {
+                "stopped",
+                "not_found",
+            }:
+                return
+            self._finish_bridge(call, ambient_only=True)
+            await call["tracker"].drain(call["group"])
+            self._finish_bridge(call)
+            self._calls.pop(call["id"], None)
+        except Exception:
+            pass  # Preserve the original error and unknown native ownership.
 
     def _claim_loop(self):
         loop = asyncio.get_running_loop()
@@ -246,6 +278,7 @@ class SandboxToolSource:
             "group": group,
             "token": self._threads._register("bridge:" + identifier),
             "stopped": False,
+            "entered": False,
             "ambient_token": tracker._register(group) if tracker is not self._threads else None,
         }
         self._threads._begin(call["token"])
@@ -261,12 +294,13 @@ class SandboxToolSource:
         }
 
         async def invoke():
+            call["entered"] = True
             return await self._execute(call, request)
 
         try:
             return await self._owner.execute(invoke, proof=proof)
         except ContextExecutionRejected as exc:
-            if exc.handler_not_started:
+            if exc.handler_not_started and not call["entered"]:
                 self._finish_bridge(call)
                 self._calls.pop(identifier, None)
             raise
