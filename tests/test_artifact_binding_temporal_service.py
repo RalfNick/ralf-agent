@@ -100,9 +100,10 @@ def test_actual_artifact_member_targets_approval_restart_replay(tmp_path, kind, 
                         assert done.state == "waiting_approval" and not observed, done
                     else:
                         assert current == handle
-                        for _ in range(8):
+                        deadline = asyncio.get_running_loop().time() + 30
+                        while True:
                             done = await engine.drive(handle.run_id, wait_seconds=20)
-                            if done.state != "waiting_approval":
+                            if done.state in {"succeeded", "failed", "cancelled"}:
                                 break
                             for item in done.pending:
                                 target = item.get("run_id", handle.run_id)
@@ -121,6 +122,12 @@ def test_actual_artifact_member_targets_approval_restart_replay(tmp_path, kind, 
                                     )
                                     == receipt
                                 )
+                            assert asyncio.get_running_loop().time() < deadline, (
+                                "Parent approval observation did not converge",
+                                done,
+                                await engine.diagnostics(handle.run_id),
+                            )
+                            await asyncio.sleep(0.05)
                         assert done.state == "succeeded", done
                         runs = [handle.run_id]
                         verified = []
