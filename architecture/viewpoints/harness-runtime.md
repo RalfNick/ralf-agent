@@ -1,22 +1,10 @@
 # RALF AgentHarness 目标架构
 
-产品版本为dev84，最终验收中；独立Artifact binding已实现。第十四个角色artifacts使用借用原存储
-视图及纯managed Context预测／派生，分别选择Context策略和物理target／namespace，
-支持Local／Temporal六类Agent的ref／disabled／inherit。原Engine／History继续拥有
-写意图、核验、取消／结束证据与结果采纳；弱Context缓存只用于装配，不保存Run状态。
-memory／SQLite／POSIX file和custom sync/async保持默认、替换与owned/borrowed边界。
-Local显式选择使用local-bindings-15，Temporal only joint binding5/artifacts1承认
-并报告Artifact role/namespace selector；legacy发布保持原能力。
-候选恢复仅允许joint5/artifacts ref中未获原History allowed grant的未知read/verify，
-在原耐久phase/artifact内最多重建一次；原子fence旧Action，late grant拒绝，已授予
-读和旧1–4不重试。writer ACK丢失后内容verified／结果succeeded可仍保留
-unknown_remote_execution／nonquiescent；内容核验与本地PID wait都不替代原History
-handler-end proof。真实SQLite/file独立Worker崩溃窗口已通过，最终安装复验仍pending。
-本批统一Temporal／恢复／旧83兼容155项通过（237.48s），含实际SQLite/file六组合、
-独立进程崩溃／真实async取消／旧83 Worker零Activity拒绝及22原模板。唯一最终
-review／冻结全量／fresh安装／制品门槛仍待验收。
-完整R01–R26、H1/H3与真实质量仍开放；dev83 M1实际TemporalSandboxCI、
-M2缺失ServerVersion typed error继续延期。见[首用指南](../../docs/artifact-bindings.md)。
+Dev84 第十四类artifacts绑定子集已验收，沿原managed Context／Local／Temporal权威和真实执行所有权；支持独立Context策略与物理target／namespace、ref/disabled/inherit、默认memory／SQLite／POSIX及custom sync/async替换和owned/borrowed装配。显式disabled-only不要求额外存储；继承及legacy发布保持。
+
+最终源码5431 passed／447配置跳过（678.60s），核心104／SDK242安装、真实源码51／安装51（均零跳过）、旧83双向兼容／22原模板／旧Worker零Activity拒绝及291模块一致通过。九类Important经一轮34项有效失败复现统一修复；本任务Temporal PID12900／session19994实际退出0并已等待，用户Docker平台保留。完整R01–R26、远端／binary／GC／cache／治理与真实质量继续开放。 见[本批验收](../reviews/2026-10-12-artifact-bindings.md)与[指南](../../docs/artifact-bindings.md)。
+
+内容核验不等于handler-end证明，已派发未知写可nonquiescent；joint5/ref未获grant读最多耐久fence重建一次。完整H1/H3、企业治理及AgentScope全面parity未验收。dev83 M1/M2仍分别延期。
 
 Dev83 已验收受限原生 SandboxProvider／Docker 默认、原 ToolSource、显式异步声明和每 Agent sandbox ref/disabled 授权交集。Local／Temporal 六类审批重启、已采纳恢复、原生冷接管及真实停止通过。最终源码5280 passed／418配置跳过（763.57s (0:12:43)），核心182／SDK149安装、真实源码32／安装32、旧82双向恢复／22模板／旧Worker零Activity拒绝及287模块一致通过。六项Important统一修复，M1／M2两项Minor延期；自有Temporal实际退出并等待。完整R01–R26、远程沙箱、持久工作区、Artifact传输、外部Runner和真实质量继续开放。见[原生沙箱指南](../../docs/sandbox.md)。
 

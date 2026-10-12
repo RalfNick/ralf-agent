@@ -1,4 +1,4 @@
-# dev84 Artifact bindings — acceptance in progress
+# dev84 Artifact bindings — accepted subset
 
 Baseline:30e1746 / dev83. Local commits only; no push and no paid model calls.
 Spec: [Artifact bindings](../../docs/superpowers/specs/2026-10-12-artifact-bindings-design.md).
@@ -27,7 +27,7 @@ routing, approval restart, lost write ACK verification and History replay eviden
 - Documentation:5 original standalone code blocks and4 default-store variants pass;
   these are offline assembly examples, not live model quality.
 - Full frozen suite, fresh installed core/SDK/services, package provenance, sole fresh
-  review and actual owned service exit are pending. Product is dev84 candidate.
+  review and actual owned service exit were pending at this checkpoint; see final acceptance below.
 
 ## Recovery limits
 
@@ -88,7 +88,7 @@ Initial31 real failing cases across review reproductions, plus3 added alias/seal
 cases, are corrected. Original lazy coordinator and genuine custom predictor refusal were
 already passing and are not claimed as new RED. Final focused272 passed31.24s;
 actual disabled-only Temporal1 passed4.52s. Source full/fresh install/provenance and
-actual owned-service exit remain pending; final evidence will replace this candidate gate.
+actual owned-service exit were pending at this checkpoint; final evidence appears below.
 
 All Declined rulings stand with explicit costs: content is not writer-end proof;
 trusted Python ports owe truthful internals, without adversarial isolation guarantees;
@@ -97,3 +97,11 @@ opaque/native fingerprint expansion remains a separate compatibility boundary;
 remote/binary/GC/cache/cross-host governance/quality/full R01–R26 and AgentScope parity
 remain separate targets; executor final gates are not inferred; dev83 M1/M2 remain
 deferred. These decisions do not weaken concrete original-reference/receiver guards.
+
+## Final acceptance
+
+最终源码5431 passed／447配置跳过（678.60s），核心104／SDK242安装、真实源码51／安装51（均零跳过）、旧83双向兼容／22原模板／旧Worker零Activity拒绝及291模块一致通过。九类Important经一轮34项有效失败复现统一修复；本任务Temporal PID12900／session19994实际退出0并已等待，用户Docker平台保留。完整R01–R26、远端／binary／GC／cache／治理与真实质量继续开放。
+
+Five standalone docs blocks andfour store variants pass both source and isolated installedSDK. Core-only104 andSDK242 contracts, coreold83three andSDKold83ten compatibility cases pass; both immutable old83 environments remain byte-identical to their287-module snapshots. No paid models; offline business8/8 and planning3/3 report model_quality=null. First full attempt had the stale selector assertion and one unexplained20s fixture timeout; only the assertion was changed, isolatedData/Receipt28 pass and final complete run passes without increasing timeout. Build and full were never concurrent; installed actual tests used separate scopes/queues. Final docs-only rebuild and exact payload/CI/link provenance are checked separately below.
+
+Final docs-only wheel/sdist rebuild and fresh core/SDK reinstalls preserve all291 frozen product hashes. Sdist811 docs/tests/examples/evals/config payloads match exact checkout bytes;201 independently parsed CI pytest file arguments resolve,11 changed Markdown documents have475 valid local links. This rebuild happened after the full run ended, without repeating unchanged business execution.

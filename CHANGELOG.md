@@ -5,7 +5,7 @@
 - Add borrowed ArtifactBindingResource and async views with pinned physical identity, host namespace allowlists and actual sync-handler ownership; reuse memory/SQLite/POSIX JSON stores and custom sync/async ports.
 - Add independent per-Agent artifacts ref/disabled/inherit and scoped-store Profile declarations. Preserve original Context summary/projection settings and inherited release identities.
 - Publish explicit Local bindings15 and joint Temporal binding5/artifacts1 through original authorities. Original History permits one fenced retry only for an Artifact read/verify that was never granted dispatch; content verification never replaces writer-end proof.
-- Focused Local gates187/186 and integrated Temporal/recovery/old83 gate155 pass. Final review, frozen full-suite, fresh installed packages and service closure remain pending; full R01–R26 is open.
+- Final source5431/447 configured skips, installed core104/SDK242, actual source51/installed51, old83 bidirectional/22 starters/pre-Activity refusal and291-module provenance pass. Nine Important findings are fixed; owned service stopped and waited. Full R01–R26 stays open.
 
 ## 0.1.0.dev83 — Native Sandbox preview
 

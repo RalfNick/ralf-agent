@@ -1,25 +1,10 @@
 # Implementation status — 0.1.0.dev84
 
-Dev84 候选实现正在验收：独立 `artifacts` 角色复用原 ArtifactStore 和 managed Context，
-支持 Local／Temporal 六类 Agent 的 ref／disabled／inherit、宿主 namespace allowlist、
-memory／SQLite／POSIX file 默认和 custom sync／async 工厂。Context 独立选择后纯派生，
-存储视图 borrowed；原 Engine／History 仍拥有意图、核验与结果采纳。
-Local Task1 187 项和 Task2 186 项重点回归通过；Temporal 纯合约98项（16.86s）及
-六组合×SQLite/file实际12项（149.05s）通过，包括审批重启、写后ACK丢失读回、
-已接受结果、History replay和受管理Context读。各组不是最终全量或互不重叠总数。
-产品版本为dev84；统一Temporal／恢复／旧83兼容155项通过（237.48s），含独立进程
-崩溃、真实async取消、旧83 Worker零Activity拒绝和22原模板。唯一最终review、
-冻结源码／全量／fresh core/SDK安装／制品与文档一致性仍待最终验收。
-候选 Local 使用 local-bindings-15；Temporal 仅 joint binding5/artifacts1 发布承认并
-advertise Artifact role/namespace selector，legacy发布保持原能力。
-恢复规则新增候选边界：仅新joint5/artifacts ref的read/verify在原History从未授予allowed
-且activity_outcome_unknown时，按原耐久phase/artifact最多重建一次；先原子fence旧Action，
-late grant拒绝。已授予读取不重试、旧1–4不变，真实SQLite/file独立Worker崩溃已通过，最终安装复验仍pending。
-写后ACK丢失即使内容verified／结果succeeded，仍可unknown_remote_execution／nonquiescent；
-内容核验不替代handler-end证据，本地PID wait不构成History end ACK。
-dev83 M1实际TemporalSandboxCI、M2缺失ServerVersion的typed error继续延期。
-完整R01–R26每项仍有未完成范围，不宣称H1/H3/M1完成或AgentScope全面parity。
-见[首用指南](artifact-bindings.md)及[离线示例](artifact-binding-examples.md)。
+Dev84 Artifact独立绑定子集已验收：memory／SQLite／POSIX JSON默认、custom sync/async、ref/disabled/inherit及宿主namespace选择沿原managed Context和Local／Temporal权威实现。Context与物理存储独立；纯预测完整校验并固定原方法，弱缓存和弱pins不保留历史Context。显式artifact_bindings=True支持无需多余存储的Temporal disabled-only。
+
+最终源码5431 passed／447配置跳过（678.60s），核心104／SDK242安装、真实源码51／安装51（均零跳过）、旧83双向兼容／22原模板／旧Worker零Activity拒绝及291模块一致通过。九类Important经一轮34项有效失败复现统一修复；本任务Temporal PID12900／session19994实际退出0并已等待，用户Docker平台保留。完整R01–R26、远端／binary／GC／cache／治理与真实质量继续开放。 [本批验收](../architecture/reviews/2026-10-12-artifact-bindings.md)。
+
+内容verified／结果succeeded不替代原写者结束证明；写ACK丢失时unknown_remote_execution／nonquiescent可保留。仅joint5/ref未获History grant的read/verify有耐久一次fence后重建；已授予与旧1–4不重试。dev83 M1实际TemporalSandboxCI、M2缺失ServerVersion typed error仍延期。见[指南](artifact-bindings.md)与[例子](artifact-binding-examples.md)。
 
 Dev83 已验收受限原生 SandboxProvider／Docker 默认、原 ToolSource、显式异步声明和每 Agent sandbox ref/disabled 授权交集。Local／Temporal 六类审批重启、已采纳恢复、原生冷接管及真实停止通过。最终源码5280 passed／418配置跳过（763.57s (0:12:43)），核心182／SDK149安装、真实源码32／安装32、旧82双向恢复／22模板／旧Worker零Activity拒绝及287模块一致通过。六项Important统一修复，M1／M2两项Minor延期；自有Temporal实际退出并等待。完整R01–R26、远程沙箱、持久工作区、Artifact传输、外部Runner和真实质量继续开放。见[原生沙箱指南](sandbox.md)。
 

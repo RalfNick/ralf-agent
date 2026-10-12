@@ -1,33 +1,8 @@
-# dev84 验收中：剩余能力与架构验收清单
+# dev84 已验收子集：剩余能力与架构验收清单
 
-Dev84 候选已实现独立 Artifact role、managed Context纯派生和Local／Temporal六类
-Agent的ref／disabled／inherit及宿主namespace选择；产品版本为0.1.0.dev84。
-Local重点回归和Temporal纯合约／实际SQLite-file六组合、审批重启／写后ACK丢失／
-accepted-result／replay／Context读已通过本批子集；统一155项（237.48s）包含
-独立进程崩溃／真实async取消／实际旧83 Worker零Activity拒绝和22原模板。唯一最终
-review、冻结源码／全量／fresh安装／制品一致性待验收，
-不能据此关闭R01或R18。dev83 Minor M1实际TemporalSandboxCI、M2缺失ServerVersion
-typed error继续延期。R01–R26全部保留各自尚未完成范围，不换算百分比或宣称全面parity。
-新增恢复规则仅限joint5/artifacts ref中未获原History allowed grant的未知read/verify，
-按耐久phase/artifact一次重建并fence旧Action；真实SQLite/file独立Worker崩溃已通过，最终安装复验仍pending。已授予读不重试。
-writer ACK丢失内容verified／结果succeeded不等于远端handler结束，unknown_remote_execution／
-nonquiescent仍需原History end proof；本地PID wait不能替代该证据。
-首用、默认及替换配置见[Artifact指南](artifact-bindings.md)与[离线例子](artifact-binding-examples.md)。
+最终源码5431 passed／447配置跳过（678.60s），核心104／SDK242安装、真实源码51／安装51（均零跳过）、旧83双向兼容／22原模板／旧Worker零Activity拒绝及291模块一致通过。九类Important经一轮34项有效失败复现统一修复；本任务Temporal PID12900／session19994实际退出0并已等待，用户Docker平台保留。完整R01–R26、远端／binary／GC／cache／治理与真实质量继续开放。
 
-Dev83 已验收受限原生 SandboxProvider／Docker 默认、原 ToolSource、显式异步声明和每 Agent sandbox ref/disabled 授权交集。Local／Temporal 六类审批重启、已采纳恢复、原生冷接管及真实停止通过。最终源码5280 passed／418配置跳过（763.57s (0:12:43)），核心182／SDK149安装、真实源码32／安装32、旧82双向恢复／22模板／旧Worker零Activity拒绝及287模块一致通过。六项Important统一修复，M1／M2两项Minor延期；自有Temporal实际退出并等待。完整R01–R26、远程沙箱、持久工作区、Artifact传输、外部Runner和真实质量继续开放。见[原生沙箱指南](sandbox.md)。
-
-Dev82 子集已验收：纯可替换 SkillSelector／LexicalSkillSelector、SkillDirectoryRetriever、JSON／可选 SKILL.md 声明，通过原 KnowledgeContext 自动提供被动目录；正文仍走原授权 skill_get，不增加工具权限或执行权威。最终源码5089 passed／386配置跳过（845.08s (0:14:05)），核心155／SDK271安装、真实源码8／安装8、旧81双向恢复／22模板／旧Worker业务I/O前拒绝及281模块一致通过。三项Important经10项有效失败复现统一修复，无新增延期Minor；自有Temporal实际退出并等待。完整R01–R26、语义选择、插件激活、Sandbox／Runner及真实质量仍开放。见[本批记录](../architecture/reviews/2026-10-12-skill-discovery-context.md)。
-
-Dev81 子集已验收：原生写真实生命周期及显式可替换 ToolExecutionPort／tracked owner，原 Temporal History 分别保存独占调用身份、实际结束与效果回执；容量拒绝／RPC失败／观察者取消的通知保持受管理重试。最终源码5021 passed／378配置跳过（758.54s），核心67／SDK232安装、真实源码8／安装8、旧80双向恢复／22模板／旧Worker执行前拒绝及278模块一致通过。三项Important经3项RED→GREEN统一修复，无新延期Minor；原自有服务停止并实际等待退出。完整R01–R26、Sandbox／Runner与质量目标仍开放。 见[本批记录](../architecture/reviews/2026-10-12-native-write-lifetime.md)。
-
-Dev80：纯可替换 Skill 文档解析、可选有界 YAML、固定 SKILL.md 文件目录及 skills-markdown 默认声明子集已验收。最终源码4954 passed／370配置跳过（713.55s），无YAML核心35／SDK359安装、真实源码6／安装6、旧79双向恢复／22模板／272模块一致通过。三项Important经14项RED→GREEN修复，两项Minor延期；原自有服务停止并等待。selector／异步加载／自动Context／Sandbox及完整R01–R26仍开放。见[本批记录](../architecture/reviews/2026-10-12-skill-documents.md)。
-
-dev66 原生／顺序持久 Turn 保持兼容；dev67 接通[Temporal 会话树](temporal-session-trees.md)，
-包括高级根保存、稳定成员私有地址和跨 Turn 召回。dev69 增加显式 Temporal Profile 工厂与实际 Worker 生命周期；完整配置／路由、租约和 R01–R26 继续开放。
-
-版本：58；日期：2026-10-12；维护者：RALF maintainers。当前已验收基线：dev83；dev84 Artifact候选尚待最终验收；dev72 CLI工具子集通过冻结源码／安装／旧71兼容和服务停止门槛，见本批记录。
-读者：框架维护者、应用开发者及适配器贡献者。基线：da55f97 的 dev30，
-以及已提交1cad308的dev31–36与已提交1f27300的dev37配置／首用及已提交e6a6de7的dev38远程原生／顺序及已提交9fcbb84的dev39复合根会话与已提交7898b78的dev40自动规则记忆及已提交0d17976的dev41受管理上下文及已提交ec9b5f5的dev42模型选择记忆阶段及已提交e413ddc的dev44高级／Temporal数据上下文和已提交5528670的dev45 Local高级自动记忆，以及已提交 adbc328 的 dev46 Temporal自动记忆与五类Agent绑定。
+独立artifacts默认／替换／配置及恢复子集已验收，但R01/R18/H1/H3完整范围仍开放；原写者真实end证明不可由内容核验或PID wait替代。dev83 M1/M2继续延期。见[本批验收](../architecture/reviews/2026-10-12-artifact-bindings.md)。
 
 ## 1. 结论与判定方式
 
@@ -86,7 +61,7 @@ PG Knowledge/Inbox/Outbox、Qdrant、HTTP Embedding、Hybrid/RRF／基础重排�
 
 | ID／层 | 当前已交付基础 | 尚未完成的具体能力 | 阶段／状态 |
 | --- | --- | --- | --- |
-| R01 每 Agent 绑定 | dev83 Local／Temporal原生、顺序、Graph、Team、Dynamic及嵌套支持十三类版本化角色provider/context/knowledge/tool_set/stage_policy/facts/limits/verifier/decision_policy/session/workspace/skills/sandbox；固定成员路径、父子发布和Profile；Session树与Facts／Knowledge宿主namespace；Workspace／Skills／Sandbox选择只收紧原授权。dev84候选实现第十四类artifacts及纯Context派生、ref/disabled/inherit、host namespace选择，六组合SQLite/file已有子集证据 | dev84 Artifact最终review／冻结全量／安装／制品验收（独立进程崩溃／真实async取消／旧83 Worker零Activity拒绝已通过）；dev83拒绝独立artifacts，dev84候选支持，legacy Temporal不advertise新角色；其余资源身份／selector／作用域视图与完整配置；Workspace append/delete/mkdir／subroot／权限／远端租约；其他受管理阶段、Runner及完整隔离治理 | H1：已有子集交付；dev84 Artifact候选待最终验收 |
+| R01 每 Agent 绑定 | dev83 Local／Temporal原生、顺序、Graph、Team、Dynamic及嵌套支持十三类版本化角色provider/context/knowledge/tool_set/stage_policy/facts/limits/verifier/decision_policy/session/workspace/skills/sandbox；固定成员路径、父子发布和Profile；Session树与Facts／Knowledge宿主namespace；Workspace／Skills／Sandbox选择只收紧原授权。dev84实现第十四类artifacts及纯Context派生、ref/disabled/inherit、host namespace选择，六组合SQLite/file已有子集证据 | 其余Artifact角色selector和组合契约；dev83拒绝独立artifacts，dev84支持，legacy Temporal不advertise新角色；其余资源身份／selector／作用域视图与完整配置；Workspace append/delete/mkdir／subroot／权限／远端租约；其他受管理阶段、Runner及完整隔离治理 | H1：已有子集交付；dev84 Artifact子集已验收 |
 | R02 Agent／Session 入口 | H2a Local stateless Agent/Runtime/AgentRun、RunRef/WaitResult；独立任务托管、纯观察等待、原根流程控制路由、owned/borrowed 关闭与 CloseIncomplete 重试、显式重连；保留旧 RunHandle DTO；H2b1 同库原生／顺序及 H2b2 图／团队／动态／嵌套及 H2b3 授权根 namespace、H2b4a 远程原生／顺序及 H2b4b 复合根保存意图／准确回执／终态只查询恢复、异步 Profile 配置，SessionKey／路由／Turn／busy／CAS rebind；H2c1 Temporal 原生／顺序共同入口、异步重连、固定 RPC 组件与客户端 detach；H2c2 已注册 Graph／Team／Dynamic／嵌套入口与实际子 Run 控制；H2c3 Temporal History Session／原 Namespace UUID／耐久 Turn／busy／启动意图／空闲 CAS，普通与 managed Conversation 及原后代静默证据；dev66 原生／顺序外置Root保存及 dev67 图／Team／Plan／DAG／嵌套根保存、稳定成员地址、原根／私有数据只读取一次、数据集身份与跨Turn召回 | 跨权威会话租约、输入续接／业务 deadline、Temporal 推荐配置／其他绑定角色、移交与耐久 FIFO | H2a／H2b1／H2b2／H2b3／H2b4a／H2b4b／H2c1／H2c2／H2c3：子集已交付；完整 H2 未交付 |
 | R03 Harness 与公共规则 | 纯 Harness/NativeHarness、ToolExecutor、共享决策／证据规则、Workflow Compiler/Interpreter、固定声明的 AgentHarness 组合入口；Local 原生／顺序及高级实际 Agent、Temporal 的规则／模型选择记忆、历史摘要和数据上下文，独立来源／提案／意图／回执与 Run 额度 | 其余广义 Harness 受管理阶段及默认组合；逐步提取 RuntimeKernel 纯规则；Prepare/Verify/Memory 等阶段的身份、证据、取消和恢复协议。保持 Local/Temporal 各自唯一执行权威 | H1–H3：部分抽象已实现 |
 | R04 配置与装配 | Local 版本 Profile/Catalog、JSON/TOML、工厂、sync/async 装配与历史路由；dev69 显式 Temporal Profile／十类绑定工厂、实际 Worker 排空与离线起步模块；dev70 多版本 Host、原队列 Run/Session 路由、共享资源全局排空与声明 PostgreSQL EffectJournal；dev71 普通启动参数纯预检与纠正重试 | 复杂 SDK 对象语义的构造校验；配置迁移、剩余环境角色、完整绑定／推荐组合配置；CLI/ProfiledEngine 异步工厂路由；插件显式安装／激活／兼容检查；配置／组件迁移、旧代码归档、部署版本管理；配置来源／监听按需分期 | H1／H5：子集已交付 |
@@ -96,7 +71,7 @@ PG Knowledge/Inbox/Outbox、Qdrant、HTTP Embedding、Hybrid/RRF／基础重排�
 | R08 静态 Workflow | 顺序、串行／有界并行 Graph、条件／映射、Agent/Transform/Tool 节点及嵌套 | 通用受管理异步自定义节点；HumanInput/Retrieve/Planner/Verifier 节点族；受限循环；first-success/quorum/reducer 合并和类型化工作流状态。复用审批、预算与恢复 | G1/G2／H5：子集已交付 |
 | R09 流式 Workflow | 模型完整 SSE 收集、耐久 Run 事件游标 | 逐记录 StreamChannel/Source/Operator/Sink、背压、关闭／失败传播、检查点／重放和 Sink 效果身份。事件订阅和模型 delta 展示均不等于节点数据流 | G5：未交付 |
 | R10 动态规划／验证 | Rule/Model Planner、Plan/Revision、动态 DAG/CAS 修订、受限 execute/verify/replan；CompleteVerifier 取最后结果；Local Agent 纯 CompletionVerifier 与持久回执／有界重试 | 受管理 async/model Verifier、计划级业务 oracle／停止条件；needs_input/send_input 续接；完整重复规划、依赖、参数、拒绝与停止实测。Schema 合法不等于业务计划正确 | H2／H3／A4：子集已交付，质量未验收 |
-| R11 多 Agent | Sequential/Router/Supervisor、子Run、隔离Session、递归预算／取消和恢复；dev83 Local／Temporal六类实际Agent的十三角色成员绑定和节点回执完成验证；dev84候选新增独立artifacts成员存储／namespace | dev84 Artifact最终验收；其他角色／selector／受管理阶段；类型化交接／受控共享状态／reducer；按需Debate/Critic；跨权威关联、停止和未知远端效果；全局容量及团队质量验收。普通消息不能作为成功回执 | H1／H4／H5：基础团队已交付，完整范围未完成 |
+| R11 多 Agent | Sequential/Router/Supervisor、子Run、隔离Session、递归预算／取消和恢复；dev83 Local／Temporal六类实际Agent的十三角色成员绑定和节点回执完成验证；dev84新增独立artifacts成员存储／namespace | dev84 Artifact子集已验收；其他角色／selector／受管理阶段；类型化交接／受控共享状态／reducer；按需Debate/Critic；跨权威关联、停止和未知远端效果；全局容量及团队质量验收。普通消息不能作为成功回执 | H1／H4／H5：基础团队已交付，完整范围未完成 |
 
 ### 工具、上下文、记忆与知识
 
@@ -108,7 +83,7 @@ PG Knowledge/Inbox/Outbox、Qdrant、HTTP Embedding、Hybrid/RRF／基础重排�
 | R15 短期／长期记忆 | memory/SQLite/Redis/PG 的 sync/async、CAS/去重/TTL/分页/来源；opt-in MemoryPipeline 规则／模型字段选择；原生／顺序及高级实际 Agent 的受管理规则／模型字段选择阶段、原节点／子 Run 证据恢复与 JSON／TOML 默认工厂；Temporal History 自动规则／模型选择、准确CAS核验与根子证据恢复；dev47 有界候选词项相关排序；dev49 有界原生候选语义排序／任务查询与有序上下文组合；dev56 memory/SQLite/Redis、dev57 PostgreSQL 全库扫描、可替换 CAS Catalog、分阶段索引／激活与权威召回；dev58 Temporal有界Facts绑定／namespace／纯planner／原Context采纳 | PostgreSQL/Qdrant等远端联合索引组合验收；自动增量／修复／删除传播；自由合成；语义冲突／修订／撤回／遗忘／可信度策略和多事实原子采纳；最终 Session append 大历史效率；导出／迁移／保留；真实记忆利用。追加来源观察不是自主信念修订 | H3／H5：存储和显式提炼已交付 |
 | R16 摄取／知识生命周期 | text/Markdown Parser；dev51 HTML／dev52 DOCX 正文／dev53 可选文本 PDF Parser 与摄取模板；字符／段落与 dev54 可替换 token Chunker；memory/SQLite/PG 原子文档／块／词项／回执 | PDF OCR／布局与兼容语料、其他 Office、网页／业务连接器及游标／增量；语义分块及模型词表兼容；来源目录／ACL；后台索引、修复、删除传播和版本重建。knowledge_committed 不代表向量就绪 | H3／H5：基础已交付 |
 | R17 检索／Embedding／向量／重排 | HTTP Embedding、Hash 基线、本地 cosine/Qdrant、词法／向量／Hybrid、RRF/保序/词项重排、来源回读、dev47 显式 HTTP 语义组合、dev48 HTTP 语义重排适配；dev49 替换式查询改写及默认字面 aliases；dev50 显式模型改写适配 | 可选本地语义模型；自动查询策略；pgvector 参考适配及其他库逐项验收；索引发布／修复／迁移；端到端召回、答案和引用质量。Hash/TokenOverlap 不证明语义质量 | H3／G4：显式语义组合已交付，质量未闭环 |
-| R18 Artifact／缓存 | Scope隔离memory/SQLite／POSIX文件JSON产物、摘要／TTL／读取限额／事务容量；Local六组合与Temporal managed Context自动卸载、预览、独立意图／回执。dev84候选独立target／namespace及disabled选择，Context策略独立、custom sync/async与声明owned／注入borrowed | dev84独立Artifact最终review／全量安装与制品门槛（恢复／取消／旧83兼容155项已通过）；S3等远端Artifact、binary传输、引用保留／孤儿GC／全局磁盘限额及恢复依赖；CacheStore/Policy的键、版本和失效。默认关闭缓存合法；语义答案缓存后置 | H3／H5：JSON产物子集已交付，dev84候选待验收，缓存未交付 |
+| R18 Artifact／缓存 | Scope隔离memory/SQLite／POSIX文件JSON产物、摘要／TTL／读取限额／事务容量；Local六组合与Temporal managed Context自动卸载、预览、独立意图／回执。dev84独立target／namespace及disabled选择，Context策略独立、custom sync/async与声明owned／注入borrowed | 独立Artifact本批子集已验收；其余目标；S3等远端Artifact、binary传输、引用保留／孤儿GC／全局磁盘限额及恢复依赖；CacheStore/Policy的键、版本和失效。默认关闭缓存合法；语义答案缓存后置 | H3／H5：JSON产物子集已交付，dev84绑定子集已验收，缓存未交付 |
 
 ### 执行、通信、服务与验收
 

@@ -2,8 +2,7 @@
 
 Dev84 implements independent `artifacts` bindings in Local and Temporal.
 Dev83 can use an Artifact store through a whole managed Context, but rejects this
-independent role. The examples below require dev84; final review, package and release
-acceptance are pending.
+independent role. The examples below require the accepted dev84 subset.
 This subset does not complete R01/R18, H1/H3 or the Harness roadmap.
 
 Use this binding when Agents share summary/context policy but store large tool results
@@ -226,7 +225,8 @@ SQLite/file routing, plus Temporal pure contracts and twelve actual SQLite/file 
 cases with approval restart, lost write ACK/read-back, accepted-result recovery and History
 replay. The integrated 155-test gate also passes independent process crashes, actual
 async/cancellation cases and old83 two-way compatibility, including all22 starters.
-The sole final review and full-suite/fresh-install/frozen-package gates remain pending.
+The sole review findings are fixed; full/fresh-install/frozen-package gates pass.
+See the [acceptance record](../architecture/reviews/2026-10-12-artifact-bindings.md).
 
 Worker-crash recovery has a narrow rule: only a new joint-protocol release
 with `artifacts=ref` may rebuild a managed Artifact `read` or `verify` whose outcome is
@@ -235,7 +235,7 @@ dispatch grant. The original durable phase/artifact allows this rebuild once. Hi
 atomically fences the old Action before rebuilding; a late grant for it is denied.
 Reads that already received a grant are not retried. Legacy protocols 1–4 keep their
 original behavior. Unit contracts and actual SQLite/file Worker-crash recovery pass;
-the final installed-service gate remains pending.
+the final installed-service gate also passes.
 
 A lost writer ACK may later be verified from the immutable content and allow a successful
 result, while `unknown_remote_execution` still makes the Run nonquiescent. Content

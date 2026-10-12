@@ -1,7 +1,7 @@
 # Artifact binding examples
 
 These examples require dev84, described in the
-[Artifact binding guide](artifact-bindings.md); final release acceptance is pending.
+[Artifact binding guide](artifact-bindings.md); the scoped binding subset is accepted.
 Each Python block is standalone. Agent/Profile examples use an offline Provider;
 the store-port examples need no model. The Temporal block needs the package's
 `temporal` extra dependencies. Profile assembly here does not start a Temporal Service,
