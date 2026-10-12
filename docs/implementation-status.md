@@ -1,4 +1,6 @@
-# Implementation status — 0.1.0.dev89
+# Implementation status — 0.1.0.dev90
+
+Dev90 思考模型适配子集已验收：新增显式 DeepSeekThinkingProvider／deepseek-thinking，复用原 ModelContinuation／完整历史及 Local／Temporal 执行权威，接通 SDK／Profile／四类评测 CLI。保留非思考默认和原 Run；最终源码6519 passed／593配置依赖跳过（993.63s），独立核心安装266 passed／零跳过，实际源码Temporal4／安装Temporal12通过；308产品模块一致，旧89四类原Run和默认字节兼容。唯一审查2个P2已修复；自有服务退出0并等待。真实模型质量、完整 R05／H3／M1／R01–R26及独立采用继续开放。见[接入指南](deepseek-thinking.md)及[本批记录](../architecture/reviews/2026-10-13-deepseek-thinking.md)。
 
 dev89跨Session原生模型历史子集已验收：最终源码6317 passed／589配置跳过（746.39s），独立核心安装243 passed／零跳过，独立安装真实Temporal76及Local/Redis/PostgreSQL50项通过。显式session/frame、每Agent继承/ref/禁用、同步/异步Profile和通用无SQL publication端口已接通；原根成功、准确CAS回执、失败候选排除及真实处理器责任保持。唯一审查4个P2及1个Minor已修复并复核；旧88四类原Run/默认字节兼容、Schema13及实际旧Worker零Activity拒绝通过。外置128轮使用明确128MiB私有服务，原50MiB服务104个已接受Turn后终止的证据保留，Continue-As-New/长期治理不据此完成。完整H3/M1/R01–R26、真实模型质量、独立采用和对等比较继续开放。见[使用指南](model-history.md)与[本批验收](../architecture/reviews/2026-10-13-session-model-history.md)。
 

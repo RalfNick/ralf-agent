@@ -71,7 +71,10 @@ def _arguments(argv):
         description="Evaluate proposed DAG semantics through a managed ModelDAGPlanner child. No worker actions are executed."
     )
     mode = parser.add_mutually_exclusive_group()
-    mode.add_argument("--provider", choices=["openai", "anthropic", "gemini", "gemini-functions"])
+    mode.add_argument(
+        "--provider",
+        choices=["openai", "anthropic", "gemini", "gemini-functions", "deepseek-thinking"],
+    )
     mode.add_argument(
         "--fixture", help="Explicit offline response fixture JSON; never reported as model quality"
     )
@@ -93,6 +96,7 @@ def _arguments(argv):
     parser.add_argument("--max-calls", type=int, default=20)
     parser.add_argument("--max-output-tokens", type=int, default=2048)
     parser.add_argument("--timeout", type=float, default=60, help="Seconds per request")
+    parser.add_argument("--reasoning-effort", choices=["low", "high", "max"])
     parser.add_argument("--repeats", type=int, default=1)
     parser.add_argument(
         "--max-cost-usd",
@@ -109,11 +113,18 @@ def _arguments(argv):
     return parser.parse_args(argv)
 
 
+def _validate_reasoning_effort(args):
+    if args.reasoning_effort is not None and args.provider != "deepseek-thinking":
+        raise ValidationError("Reasoning effort requires explicit deepseek-thinking selection")
+
+
 def _http_provider(args, limits):
+    from .deepseek_thinking import DeepSeekThinkingProvider
     from .gemini_functions import GeminiFunctionProvider
     from .model_native import AnthropicProvider, GeminiProvider
     from .providers import OpenAIChatProvider
 
+    _validate_reasoning_effort(args)
     model = os.environ.get(args.model_env) if args.model_env else args.model
     if not model:
         return None, "model_not_configured"
@@ -122,6 +133,7 @@ def _http_provider(args, limits):
         "anthropic": "ANTHROPIC_API_KEY",
         "gemini": "GEMINI_API_KEY",
         "gemini-functions": "GEMINI_API_KEY",
+        "deepseek-thinking": "DEEPSEEK_API_KEY",
     }[args.provider]
     key = os.environ.get(args.key_env or default_key)
     if not key:
@@ -136,16 +148,20 @@ def _http_provider(args, limits):
     }
     if base_url:
         options["base_url"] = base_url
+    if args.reasoning_effort is not None:
+        options["reasoning_effort"] = args.reasoning_effort
     cls = {
         "openai": OpenAIChatProvider,
         "anthropic": AnthropicProvider,
         "gemini": GeminiProvider,
         "gemini-functions": GeminiFunctionProvider,
+        "deepseek-thinking": DeepSeekThinkingProvider,
     }[args.provider]
     return cls(model, **options), None
 
 
 async def _run(args):
+    _validate_reasoning_effort(args)
     limits = EvaluationLimits(
         max_cases=args.max_cases,
         max_calls=args.max_calls,
@@ -175,7 +191,7 @@ async def _run(args):
         prices=prices,
         evidence_dir=args.evidence_dir,
         offline=bool(args.fixture),
-        model_continuation=args.provider == "gemini-functions",
+        model_continuation=args.provider in {"gemini-functions", "deepseek-thinking"},
     )
     if reason:
         report["reason"] = reason

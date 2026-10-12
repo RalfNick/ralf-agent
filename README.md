@@ -148,7 +148,7 @@ python -m agent_app --input hello
 
 编辑 runtime.toml 的默认版本即可影响新任务；保留旧配置和适配器实现，旧任务会解析原版本。模板使用离线回显 Provider；配置与工厂扩展见 [运行装配教程](docs/runtime-assembly.md)。
 
-真实模型有独立可编辑入口：`ralf init my-model-agent --template model`。先在 runtime.toml 替换模型占位、选择协议与凭据环境变量，再运行应用。三种原生/兼容协议的参数、流式和明确限制见 [模型接入指南](docs/model-adapters.md)。Gemini 当前不支持工具，DeepSeek preset 固定关闭思考模式；本地协议测试不证明线上型号兼容或模型质量。
+真实模型有独立可编辑入口：`ralf init my-model-agent --template model`。先在 runtime.toml 替换模型占位、选择协议与凭据环境变量，再运行应用。协议、参数、流式和支持边界见[模型接入指南](docs/model-adapters.md)。Gemini 文本模式保持原行为，函数工具使用显式 `gemini-functions`；DeepSeek 非思考 preset 保持，思考工具循环使用[deepseek-thinking](docs/deepseek-thinking.md)。原生模式需显式启用续接，完整历史按需要配置；本地协议测试不证明线上型号兼容或模型质量。
 
 MCP 与无模型业务图也有独立入口：`ralf init my-mcp-agent --template mcp`。工具源、明确的效果策略、幂等键注入和进程管理见 [受管理工具指南](docs/managed-tools.md)。
 

@@ -9,13 +9,14 @@ dev9 提供三个 HTTP 协议与 DeepSeek 非思考模式适配器，全部复�
 | OpenAIChatProvider / chat-completions | 支持 | 支持 | 支持 | OPENAI_API_KEY | Chat Completions 兼容协议；不支持需保留 opaque reasoning 状态的工具循环 |
 | OpenAIResponsesProvider / openai-responses | 支持 | 支持 | 支持 | OPENAI_API_KEY | 原生 text/functions、JSON-object／显式严格 Schema；拒绝需保留推理状态、媒体、服务端工具和非空 annotations |
 | DeepSeekChatProvider / deepseek-chat | 支持 | 支持 | 支持 | DEEPSEEK_API_KEY | 固定 thinking.type=disabled 和 max_tokens；不支持思考模式工具续接或 seed |
+| DeepSeekThinkingProvider / deepseek-thinking | 支持 | 支持 | 支持 | DEEPSEEK_API_KEY | 显式思考续接；完整 reasoning 和原工具参数，需开启 model_continuation；线上型号与质量未验收 |
 | AnthropicProvider / anthropic-messages | 支持 | 支持 | 支持 | ANTHROPIC_API_KEY | Messages 原生转换；不支持 thinking、server tools、多模态 |
 | GeminiProvider / gemini-content | 支持 | 不支持 | 支持 | GEMINI_API_KEY | Developer API 原生文本；工具声明/历史在发送前拒绝，签名工具状态未交付 |
 | GeminiFunctionProvider / gemini-functions | 支持 | 支持 | 支持 | GEMINI_API_KEY | 显式模型续接；完整原生函数／签名 Part，不支持媒体、服务端工具或增量参数协议 |
 
 国内外满足 Chat Completions 契约的服务可用 base_url 接入；这不是所有服务/型号的兼容保证。原生 Anthropic 按 [Messages](https://platform.claude.com/docs/en/api/messages/create) 和 [Streaming](https://platform.claude.com/docs/en/build-with-claude/streaming) 转换 system、tool_use/tool_result 及结束/用量。旧 Gemini 文本适配器拒绝工具；新函数适配器通过[公共续接证据](model-continuation.md)保存签名与原始参数，需显式开启 Local／Temporal 续接模式。
 
-DeepSeek 当前 [Chat API](https://api-docs.deepseek.com/api/create-chat-completion/) 默认思考模式启用；专用 adapter 显式关闭，避免丢弃续接状态。它不会选择模型或悄悄切模式。Chat 响应含 reasoning_content 且有工具时拒绝采纳。若服务返回不支持的块、截断、拒绝、非法参数或不一致的结束原因，Provider 返回错误。
+DeepSeek 当前 [Chat API](https://api-docs.deepseek.com/api/create-chat-completion/) 默认思考模式启用；`deepseek-chat` 显式关闭，含 reasoning_content 且有工具时拒绝采纳。`deepseek-thinking` 显式开启并保存所有原 assistant 续接，包含最终回答；参数和历史要求见[思考模型指南](deepseek-thinking.md)。适配器不选择型号或悄悄切模式。若服务返回不支持的块、截断、拒绝、非法参数或不一致的结束原因，Provider 返回错误。
 
 ## 配置与首次使用
 

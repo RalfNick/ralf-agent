@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.0.dev90 — DeepSeek thinking continuation preview
+
+- Add explicit `DeepSeekThinkingProvider`/`deepseek-thinking` text, native tools and complete SSE. Preserve original reasoning, nullable protocol fields and argument strings through original continuation/history contracts.
+- Register replaceable SDK/Profile providers and model/planning/RAG/Plan/Team CLI selection with strict effort options; reject missing native continuation opt-in before Local/Temporal resource construction.
+- Exercise original Local receipt/adoption and Session final-history recovery, managed members and actual Temporal Worker loss/History replay. Retain default non-thinking behavior and prior Run identities.
+- Protocol fixtures do not establish live model quality. Complete R05/H3/M1/R01–R26, deployment governance and independent adoption remain open; final validation is recorded separately.
+
 ## 0.1.0.dev89 — Complete native Session history preview
 
 - Add explicit `CompleteModelHistory(scope="session")`, pure frame methods and per-Agent history selection/configuration while retaining old defaults and run-mode identities.

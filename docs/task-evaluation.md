@@ -2,7 +2,7 @@
 
 dev86 提供可安装的 SDK 和 CLI，复用版本 2 推荐 Runtime、原摄取、检索和受管理 Agent。
 此处评测完整任务执行；原 `ralf-evaluate-planning` 仍只评估规划提案。
-Gemini 原生函数选 `--provider gemini-functions`，SDK 显式传 `model_continuation=True`。
+Gemini 原生函数选 `--provider gemini-functions`，DeepSeek 思考选 `--provider deepseek-thinking`；SDK 显式传 `model_continuation=True`。
 旧 `gemini` 保留文本模式；续接接入及协议边界见[模型续接](model-continuation.md)。
 离线样例用于运行协议回归，真实质量与框架对等比较需要单独的实际证据。
 Plan 默认使用原规则 DAG，Team 使用固定 Supervisor；自主模型规划、计划修订和

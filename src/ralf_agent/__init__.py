@@ -53,6 +53,7 @@ from .context_summaries import ContextSummarizer, ContextSummary, ExcerptContext
 from .coordinator import FileCoordinator, InProcessCoordinator
 from .dag_planning import DAGNode, DAGProposal, ModelDAGPlanner, PlanningConclusion, RuleDAGPlanner
 from .data_context import ManagedDataContext
+from .deepseek_thinking import DeepSeekThinkingProvider
 from .document_parsing import DocumentParser, TextDocumentParser
 from .docx_parsing import DocxDocumentParser
 from .embedding_http import OpenAIEmbeddingProvider
@@ -340,7 +341,7 @@ from .workflow import (
     WorkflowSelection,
 )
 
-__version__ = "0.1.0.dev89"
+__version__ = "0.1.0.dev90"
 from .binding_artifacts import ArtifactBindingResource, ArtifactView
 from .binding_sandbox import SandboxBindingResource
 from .docker_sandbox import DockerSandbox
@@ -465,6 +466,7 @@ __all__ = [
     "validate_model_history_frame",
     "read_native_history",
     "DeepSeekChatProvider",
+    "DeepSeekThinkingProvider",
     "ModelResponse",
     "ModelRequest",
     "NativeHarness",

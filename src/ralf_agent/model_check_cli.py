@@ -4,7 +4,8 @@ import argparse
 import asyncio
 import json
 
-from .errors import RalfError
+from .deepseek_thinking import DeepSeekThinkingProvider
+from .errors import RalfError, ValidationError
 from .gemini_functions import GeminiFunctionProvider
 from .model_compatibility import CASES, evaluate_model_compatibility
 from .model_native import AnthropicProvider, GeminiProvider
@@ -47,6 +48,7 @@ def main(argv=None):
         "chat-completions": (OpenAIChatProvider, "OPENAI_API_KEY"),
         "openai-responses": (OpenAIResponsesProvider, "OPENAI_API_KEY"),
         "deepseek-chat": (DeepSeekChatProvider, "DEEPSEEK_API_KEY"),
+        "deepseek-thinking": (DeepSeekThinkingProvider, "DEEPSEEK_API_KEY"),
         "anthropic-messages": (AnthropicProvider, "ANTHROPIC_API_KEY"),
         "gemini-content": (GeminiProvider, "GEMINI_API_KEY"),
         "gemini-functions": (GeminiFunctionProvider, "GEMINI_API_KEY"),
@@ -59,8 +61,13 @@ def main(argv=None):
     parser.add_argument("--max-calls", type=int, default=6)
     parser.add_argument("--max-output-tokens", type=int, default=1024)
     parser.add_argument("--timeout", type=float, default=30)
+    parser.add_argument("--reasoning-effort", choices=["low", "high", "max"])
     args = parser.parse_args(argv)
     try:
+        if args.reasoning_effort is not None and (
+            args.adapter != "deepseek-thinking" or args.offline
+        ):
+            raise ValidationError("Reasoning effort requires explicit deepseek-thinking selection")
         limits = EvaluationLimits(
             max_cases=5,
             max_calls=args.max_calls,
@@ -81,6 +88,8 @@ def main(argv=None):
                 config["api_key_env"] = args.api_key_env
             if args.base_url:
                 config["base_url"] = args.base_url
+            if args.reasoning_effort is not None:
+                config["reasoning_effort"] = args.reasoning_effort
             provider = _model(config, cls, key_env)
         report = asyncio.run(
             evaluate_model_compatibility(
@@ -89,7 +98,7 @@ def main(argv=None):
                 limits=limits,
                 evidence_dir=args.evidence_dir,
                 offline=args.offline,
-                model_continuation=args.adapter == "gemini-functions",
+                model_continuation=args.adapter in {"gemini-functions", "deepseek-thinking"},
             )
         )
     except RalfError as exc:

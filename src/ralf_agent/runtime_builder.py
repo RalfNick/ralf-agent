@@ -9,6 +9,7 @@ from pathlib import Path
 from types import MappingProxyType
 
 from .context import ContextAssembler
+from .deepseek_thinking import DeepSeekThinkingProvider
 from .engine import LocalEngine
 from .errors import RalfError, ValidationError
 from .executors import PythonToolExecutor
@@ -109,6 +110,9 @@ def _model_options(config, provider_type, key_env):
         allowed.update({"output_schema", "schema_name", "reasoning_effort"})
     if provider_type is AnthropicProvider:
         allowed.add("api_version")
+    if provider_type is DeepSeekThinkingProvider:
+        allowed.discard("temperature")
+        allowed.update({"reasoning_effort", "json_mode"})
     _fields(config, allowed)
     if not isinstance(config.get("model"), str) or not config["model"].strip():
         raise ValidationError("Model adapter requires model")
@@ -245,6 +249,24 @@ def validate_session_history_declarations(profile, *, source_available=False):
         raise ValidationError("Session model history requires an available Session source")
 
 
+def validate_continuation_declarations(profile, *, enabled):
+    """Validate explicit native continuation adapters before constructing resources."""
+    if not enabled and any(
+        declaration["adapter"] in {"gemini-functions", "deepseek-thinking"}
+        for declaration in [
+            *profile.providers.values(),
+            *(
+                item["component"]
+                for item in profile.binding_components or []
+                if item["role"] == "provider"
+            ),
+        ]
+    ):
+        raise ValidationError(
+            "Native continuation providers require explicit model_continuation configuration"
+        )
+
+
 class ComponentRegistry:
     def __init__(self):
         self._factories = {}
@@ -259,6 +281,7 @@ class ComponentRegistry:
         for name, provider_type, key_env in [
             ("openai-responses", OpenAIResponsesProvider, "OPENAI_API_KEY"),
             ("deepseek-chat", DeepSeekChatProvider, "DEEPSEEK_API_KEY"),
+            ("deepseek-thinking", DeepSeekThinkingProvider, "DEEPSEEK_API_KEY"),
             ("anthropic-messages", AnthropicProvider, "ANTHROPIC_API_KEY"),
             ("gemini-content", GeminiProvider, "GEMINI_API_KEY"),
             ("gemini-functions", GeminiFunctionProvider, "GEMINI_API_KEY"),
@@ -714,20 +737,9 @@ class RuntimeBuilder:
             profile,
             source_available=_synchronous(getattr(self.store_factory, "create_memory", None)),
         )
-        if "model_continuation" not in profile.components and any(
-            declaration["adapter"] == "gemini-functions"
-            for declaration in [
-                *profile.providers.values(),
-                *(
-                    item["component"]
-                    for item in profile.binding_components or []
-                    if item["role"] == "provider"
-                ),
-            ]
-        ):
-            raise ValidationError(
-                "Gemini functions require explicit model_continuation configuration"
-            )
+        validate_continuation_declarations(
+            profile, enabled="model_continuation" in profile.components
+        )
         scope = Scope() if scope is None else scope
         if not isinstance(scope, Scope):
             raise ValidationError("Runtime scope must be supplied by a trusted host")

@@ -13,6 +13,7 @@ from .runtime_builder import (
     ComponentRegistry,
     RuntimeBuildError,
     _completed,
+    validate_continuation_declarations,
 )
 from .runtime_config import component_declaration
 from .runtime_lifecycle import BuildContext
@@ -132,6 +133,9 @@ class TemporalRuntimeBuilder:
         from .query_factories import preflight_query_providers
 
         preflight_query_providers(profile)
+        validate_continuation_declarations(
+            profile, enabled=profile.execution.get("model_continuation", False)
+        )
         prepared_providers = {
             name: self.registry.prepare("provider", value)
             for name, value in profile.providers.items()

@@ -72,9 +72,11 @@ dev88 已验收范围为一次 Agent 执行。跨Session模式已完成dev89子�
 import asyncio
 from ralf_agent import AgentSpec, Runtime, RuntimeBuilder, RuntimeProfile
 
+
 async def main():
     profile = RuntimeProfile(
-        "conversation", "1",
+        "conversation",
+        "1",
         {"default": {"adapter": "offline-echo"}},
         {
             "model_continuation": {"adapter": "native"},
@@ -83,11 +85,15 @@ async def main():
     )
     engine = await RuntimeBuilder().abuild(profile, "conversation.sqlite")
     async with Runtime(engine, owned=True) as runtime:
-        session = await runtime.create_agent(AgentSpec("assistant", "Answer the request")).open_session(
-            "chat", command_id="open-chat",
+        session = await runtime.create_agent(
+            AgentSpec("assistant", "Answer the request")
+        ).open_session(
+            "chat",
+            command_id="open-chat",
         )
         handle = await session.submit("Remember this task", command_id="turn-1")
         print((await handle.wait(wait_timeout=10)).snapshot.result)
+
 
 asyncio.run(main())
 ```
