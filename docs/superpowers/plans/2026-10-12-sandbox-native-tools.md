@@ -30,9 +30,9 @@
 **Files:** create src/ralf_agent/sandbox.py; modify __init__.py; create tests/test_sandbox.py.
 **Interfaces:** SandboxProvider Protocol, SandboxRequest(argv,timeout=30), SandboxObservation(invocation_id,native_id,state,exit_code=None), SandboxResult(invocation_id,native_id,exit_code,stdout,stderr,truncated,timed_out,observation), typed Sandbox errors and pure source result validation.
 
-- [ ] Readspec/brief; write public API/normal frozen roundtrip/source equality/scopedidentity and rawtypes/copy/lazy/UTF8/finite/allbounds tests BEFORE code.
-- [ ] Run .venv/bin/python -m pytest tests/test_sandbox.py -q -W error; Expected missingAPI trueRED. Implement narrow raw ordinary validation, no providerI/O/importDocker onconstruction.
-- [ ] Run focused contracts with original Tool DTO/source tests; ExpectedallGREEN/no extra imports. RecordTDD/rulings and localcommit.
+- [x] Readspec/brief; write public API/normal frozen roundtrip/source equality/scopedidentity and rawtypes/copy/lazy/UTF8/finite/allbounds tests BEFORE code.
+- [x] Run .venv/bin/python -m pytest tests/test_sandbox.py -q -W error; Expected missingAPI trueRED. Implement narrow raw ordinary validation, no providerI/O/importDocker onconstruction.
+- [x] Run focused contracts with original Tool DTO/source tests; ExpectedallGREEN/no extra imports. RecordTDD/rulings and localcommit.
 
 ### Task 2: Actual restricted Docker provider
 

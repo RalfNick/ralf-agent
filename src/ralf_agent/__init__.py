@@ -327,6 +327,16 @@ from .filesystem_skill_documents import FileSkillDocumentCatalog
 from .filesystem_skills import FileSystemSkillCatalog
 from .filesystem_workspace import FileSystemWorkspace
 from .filesystem_workspace_writes import FileSystemWritableWorkspace
+from .sandbox import (
+    SandboxError,
+    SandboxIsolationViolation,
+    SandboxObservation,
+    SandboxProvider,
+    SandboxRequest,
+    SandboxResult,
+    SandboxUnavailable,
+    validate_sandbox_result,
+)
 from .skill_documents import ParsedSkillDocument, SkillDocumentParser, YamlSkillDocumentParser
 from .skill_retrieval import SkillDirectoryRetriever
 from .skill_selection import LexicalSkillSelector, SkillSelector
@@ -339,6 +349,14 @@ from .workspace_write_tools import WritableWorkspaceToolSource
 from .workspace_writes import InMemoryWritableWorkspace, WritableWorkspacePort
 
 __all__ = [
+    "SandboxError",
+    "SandboxIsolationViolation",
+    "SandboxObservation",
+    "SandboxProvider",
+    "SandboxRequest",
+    "SandboxResult",
+    "SandboxUnavailable",
+    "validate_sandbox_result",
     "SkillDirectoryRetriever",
     "LexicalSkillSelector",
     "SkillSelector",

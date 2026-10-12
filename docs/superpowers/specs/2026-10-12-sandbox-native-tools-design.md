@@ -121,3 +121,5 @@ Primary protocol references consulted2026-10-12:
 [Docker run](https://docs.docker.com/reference/cli/docker/container/run/),
 [container execution](https://docs.docker.com/engine/containers/run/),
 [Engine API1.52](https://docs.docker.com/reference/api/engine/version/v1.52/).
+
+DTO wire refinement beforeimplementation: exit codes are exact signed32-bit integers (custom providers may report signal values); each wire decoder rejects extra/missing fields, argv serializes as ordinarylist. Completed-result validator rechecks originalraw fields/observation and configuredtotaloutput UTF8bound≤16MiB without copyhooks. InvocationID grammarASCII letters/digits/underscore/dot/colon/hyphen.
