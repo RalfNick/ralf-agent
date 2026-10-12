@@ -39,11 +39,11 @@
 **Files:** create src/ralf_agent/skill_retrieval_factories.py; modify runtime_builder.py originalregistration; create tests/test_skill_retrieval_configuration.py, test_skill_retrieval_execution.py, test_skill_retrieval_temporal_service.py; docs/skill-discovery.md.
 **Interfaces:** knowledge/skills-directory-file and knowledge/skills-directory-markdown; borrowedretriever/nativeKnowledgeContext, ownedcatalogoriginalBuildContext; originalperAgentknowledge selectsresource.
 
-- [ ] Tests purepreflight noallocation, JSONdefault/noYAML, optionalmarkdown/scoped names/defaultselector/config limits/asyncowncleanup BEFOREfactoryimplementation.
-- [ ] Implement narrowexplicit originalcatalog factories withoutduplicateparserownership; names/namespace/limits validation before rootallocation; adapterwrapper originalKnowledgeContext.
-- [ ] SixLocaldefinitions modelreceivesdirectory beforefirstdecision thenoriginalauthorizedskill_get, no additionalpermissions; Agent/Graphrestart originalSnapshot/approval/selectioncount, sourcefailureandcancel.
-- [ ] StartownTemporal onlyafterpreflight; actualsix + managedContextread identity/lease/cancel/Workerrestart/History; source/instructionsread onlyoriginalauthorized tool. Installedfinaleight/sixrequiredcases zeroSKIP.
-- [ ] Run originalskills/binding/knowledge/context/assemblyfocusedregression, recordformalTask2; localcommit.
+- [x] Tests purepreflight noallocation, JSONdefault/noYAML, optionalmarkdown/scoped names/defaultselector/config limits/asyncowncleanup BEFOREfactoryimplementation.
+- [x] Implement narrowexplicit originalcatalog factories withoutduplicateparserownership; names/namespace/limits validation before rootallocation; adapterwrapper originalKnowledgeContext.
+- [x] SixLocaldefinitions modelreceivesdirectory beforefirstdecision thenoriginalauthorizedskill_get, no additionalpermissions; Agent/Graphrestart originalSnapshot/approval/selectioncount, sourcefailureandcancel.
+- [x] StartownTemporal onlyafterpreflight; actualsix + managedContextread identity/lease/cancel/Workerrestart/History; source/instructionsread onlyoriginalauthorized tool. Installedfinaleight/sixrequiredcases zeroSKIP.
+- [x] Run originalskills/binding/knowledge/context/assemblyfocusedregression, recordformalTask2; localcommit.
 
 ### Task 3: Frozen verified capability delivery
 
