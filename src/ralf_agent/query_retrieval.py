@@ -19,6 +19,7 @@ from .retrieval import (
     _validate_result,
 )
 from .retrieval_pipeline import HybridRetriever, _body, _component, _invoke, _lazy
+from .skill_retrieval import SkillDirectoryRetriever
 from .task_controls import _binding
 from .tools import _callable_identity
 from .types import canonical, digest
@@ -41,6 +42,9 @@ def _native_resources(retriever):
         ancestors = (*ancestors, id(obj))
         if isinstance(obj, LexicalRetriever):
             add(path + ".store", obj.store, ("lexical", "get_chunk"))
+        elif isinstance(obj, SkillDirectoryRetriever):
+            add(path + ".catalog", obj.catalog, ("list", "get"))
+            add(path + ".selector", obj.selector, ("select",))
         elif isinstance(obj, VectorRetriever):
             add(path + ".store", obj.store, ("get", "get_chunk", "chunks"))
             add(path + ".index", obj.index, ("search", "upsert", "delete_document"))

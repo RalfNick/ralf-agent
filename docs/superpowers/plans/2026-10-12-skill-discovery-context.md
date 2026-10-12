@@ -29,10 +29,10 @@
 **Files:** create src/ralf_agent/skill_selection.py, skill_retrieval.py; modify __init__.py and query_retrieval.py nativecomposition; create tests/test_skill_selection.py, test_skill_retrieval.py.
 **Interfaces:** SkillSelector/LexicalSkillSelector(version="1"), SkillDirectoryRetriever(catalog, *,version,names=None,selector=None,max_entries=1000) originalretrieve/validate → RetrievalResult/RetrievedChunk; original KnowledgeContext handlesreferences/limits.
 
-- [ ] Read spec and taskbrief; write publicAPI/normalEnglishChinese/empty/no-match/limit/name/scope/paging/digest/metadata/identity/sourcevalidation tests beforecode.
-- [ ] Run focusedtrueRED missingAPI beforeimplementation. Implement deterministicboundedselector andfixedborrowedcatalog read; ordinary revalidate beforecopy, no catalogget/bodyI/O. Fix exactnative metadata/rules, usedchars andoriginalsourcequery.
-- [ ] Add maliciouslazy/disallowed/duplicate selection/methoddrift/foreignscope/unboundedpage/forge/getnevercalled andactualblockedthread/close cases; watchneededfailbeforefix.
-- [ ] Run .venv/bin/python -m pytest tests/test_skill_selection.py tests/test_skill_retrieval.py tests/test_skills.py tests/test_skill_tools.py tests/test_query_retrieval.py tests/test_temporal_knowledge_bindings.py -q -W error; formalrecordandlocalcommit.
+- [x] Read spec and taskbrief; write publicAPI/normalEnglishChinese/empty/no-match/limit/name/scope/paging/digest/metadata/identity/sourcevalidation tests beforecode.
+- [x] Run focusedtrueRED missingAPI beforeimplementation. Implement deterministicboundedselector andfixedborrowedcatalog read; ordinary revalidate beforecopy, no catalogget/bodyI/O. Fix exactnative metadata/rules, usedchars andoriginalsourcequery.
+- [x] Add maliciouslazy/disallowed/duplicate selection/methoddrift/foreignscope/unboundedpage/forge/getnevercalled andactualblockedthread/close cases; watchneededfailbeforefix.
+- [x] Run .venv/bin/python -m pytest tests/test_skill_selection.py tests/test_skill_retrieval.py tests/test_skills.py tests/test_skill_tools.py tests/test_query_retrieval.py tests/test_temporal_knowledge_bindings.py -q -W error; formalrecordandlocalcommit.
 
 ### Task 2: Default declarations and original execution chains
 
