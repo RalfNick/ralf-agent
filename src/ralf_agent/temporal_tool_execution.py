@@ -72,7 +72,8 @@ def validate_protocol(manifest):
     if (
         manifest.get("kernel") != "temporal-3"
         or type(manifest.get("binding_protocol")) is not int
-        or manifest["binding_protocol"] != 3
+        or manifest["binding_protocol"] not in (3, 4)
+        or (manifest["binding_protocol"] == 4 and manifest.get("sandbox_binding_protocol") != 1)
         or type(value) is not dict
         or set(value) != {"version", "owner", "implementation", "notifications"}
         or type(value["version"]) is not int
@@ -141,6 +142,14 @@ def publish(manifest, registration):
     from .temporal_state import validate_manifest
 
     result = validate_manifest(ordinary_manifest(manifest))
+    return validate_manifest(propose(result, registration))
+
+
+def propose(manifest, registration):
+    """Pure original metadata assembly; caller validates the complete joint release."""
+    result = ordinary_manifest(manifest)
+    if not isinstance(registration, ToolExecutionRegistration):
+        raise ValidationError("Tool execution requires an original fixed registration")
     if enabled(result):
         raise DefinitionMismatch("Tool execution requires its original baseline proposal")
     result.update(
@@ -149,7 +158,7 @@ def publish(manifest, registration):
         dispatch_admission="history-1",
         tool_execution_protocol=registration.identity,
     )
-    return validate_manifest(result)
+    return result
 
 
 def ordinary_manifest(manifest):

@@ -214,6 +214,7 @@ _BINDING_FACTORY_KINDS = {
     "stage_policy": "stage_policy",
     "workspace": "workspace",
     "skills": "skills",
+    "sandbox": "sandbox",
 }
 
 
@@ -532,6 +533,7 @@ class ComponentRegistry:
                 "tool_set",
                 "workspace",
                 "skills",
+                "sandbox",
                 "artifact_store",
                 "reference_selector",
                 "embedding_provider",

@@ -106,7 +106,7 @@ def validate_manifest(manifest):
         raise DefinitionMismatch("Unsupported Temporal runtime release")
     if manifest["kernel"] == "temporal-3":
         if (
-            manifest.get("binding_protocol") not in (1, 2, 3)
+            manifest.get("binding_protocol") not in (1, 2, 3, 4)
             or manifest.get("dispatch_admission") != "history-1"
         ):
             raise DefinitionMismatch("Unsupported Temporal binding/memory protocol")
@@ -128,6 +128,9 @@ def validate_manifest(manifest):
     from .temporal_tool_execution import validate_protocol as validate_tool_execution
 
     validate_tool_execution(manifest)
+    from .binding_sandbox import validate_sandbox_protocol
+
+    validate_sandbox_protocol(manifest)
     validate_facts_protocol(manifest)
     validate_knowledge_protocol(manifest)
     validate_session_protocol(manifest)

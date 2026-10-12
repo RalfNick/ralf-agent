@@ -100,3 +100,19 @@ async def build(config, context):
 
 def register_sandbox_tools(registry):
     registry.register_async("tools", "sandbox-docker", build, validator=validate)
+    registry.register("sandbox", "registered-tools", binding, validator=validate_binding)
+
+
+def validate_binding(config):
+    from .binding_workspace import _names
+
+    if type(config) is not dict or set(config) != {"names"}:
+        raise ValidationError("Sandbox binding declaration requires existing tool names")
+    _names(config["names"])
+
+
+def binding(config, context):
+    from .binding_sandbox import SandboxBindingResource
+
+    validate_binding(config)
+    return SandboxBindingResource(context.tools, names=config["names"])

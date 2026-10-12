@@ -118,6 +118,21 @@ class AgentBindingResolver:
             tools = select_skill_tools(
                 tools, e.tools.manifests(tools), None if skills is None else skills.identity
             )
+        if descriptor.sandbox.mode != "inherit":
+            from .binding_sandbox import select_sandbox_tools
+
+            sandbox = None
+            if descriptor.sandbox.mode == "ref":
+                if e.binding_catalog is None:
+                    raise DefinitionMismatch("Sandbox selection requires a host BindingCatalog")
+                sandbox, records["sandbox"] = e.binding_catalog.resolve(
+                    "sandbox", descriptor.sandbox, e.scope
+                )
+            else:
+                records["sandbox"] = {"mode": "disabled"}
+            tools = select_sandbox_tools(
+                tools, e.tools.manifests(tools), None if sandbox is None else sandbox.identity
+            )
         if values["provider"] is None:
             raise DefinitionMismatch("The selected model provider is unavailable")
         return StepComponents(
@@ -257,6 +272,8 @@ class AgentBindingResolver:
                 manifest["kernel"] = "local-bindings-12"
         if any(entry["descriptor"]["skills"]["mode"] != "inherit" for entry in entries.values()):
             manifest["kernel"] = "local-bindings-13"
+        if any(entry["descriptor"]["sandbox"]["mode"] != "inherit" for entry in entries.values()):
+            manifest["kernel"] = "local-bindings-14"
         return manifest
 
 

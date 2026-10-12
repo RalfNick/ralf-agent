@@ -22,12 +22,20 @@ SELECTABLE_ROLES = frozenset(
         "stage_policy",
         "workspace",
         "skills",
+        "sandbox",
     }
 )
 
 
 def component_identity(role, component):
     from .engine import LocalEngine
+
+    if role == "sandbox":
+        from .binding_sandbox import SandboxBindingResource
+
+        if type(component) is not SandboxBindingResource:
+            raise ValidationError("Sandbox bindings require an original registered-tool resource")
+        return component.identity
 
     if role == "skills":
         from .binding_skills import SkillBindingResource

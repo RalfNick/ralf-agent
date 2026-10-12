@@ -60,10 +60,10 @@
 **Files:** create src/ralf_agent/binding_sandbox.py; modify binding_catalog/runtime/manifests, temporal_bindings/activities/state and originalbindingfactories; tests/test_sandbox_bindings.py, test_sandbox_binding_execution.py, test_sandbox_binding_temporal_service.py.
 **Interfaces:** SandboxBindingResource borrows original native Source/ToolRegistry; select_sandbox_tools puregrants intersection, protocol1 explicitadmission.
 
-- [ ] BEFOREwiring proveold82 pure admission rejects chosen newrole/protocol marker; write ref/disabled/grantintersection/drift/unsupportedselectors/validnativehandler tests and sixLocal/sixTemporal fixtures. Expectedmissingrole trueRED.
-- [ ] Implement pure selection + fixed native source registration, original effective records/root/member paths/borrowed lifecycle. Preserve defaults and original terminal/approval/effect evidence.
-- [ ] ActualsixLocal/sixTemporal+approval/restart/replay/cancel/stop/quiescence, original acceptedresult recovery withoutrerunningcommand; cold native handler/orphan observations controlledactualcases.
-- [ ] Complete focusedbinding/assembly/regression and true actual containerend/cleanup, zeroSKIP/localcommit. State precisely any unsupportedwarm/cold combination.
+- [x] BEFOREwiring proveold82 pure admission rejects chosen newrole/protocol marker; write ref/disabled/grantintersection/drift/unsupportedselectors/validnativehandler tests and sixLocal/sixTemporal fixtures. Expectedmissingrole trueRED.
+- [x] Implement pure selection + fixed native source registration, original effective records/root/member paths/borrowed lifecycle. Preserve defaults and original terminal/approval/effect evidence.
+- [x] ActualsixLocal/sixTemporal+approval/restart/replay/cancel/stop/quiescence, original acceptedresult recovery withoutrerunningcommand; cold native handler/orphan observations controlledactualcases.
+- [x] Complete focusedbinding/assembly/regression and true actual containerend/cleanup, zeroSKIP/localcommit. State precisely any unsupportedwarm/cold combination.
 
 ### Task 5: Fixed capability delivery and sole review
 

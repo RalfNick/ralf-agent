@@ -1,0 +1,137 @@
+"""Required real Workers use original read Actions, approvals and History recovery."""
+
+import asyncio
+import os
+import uuid
+
+import pytest
+
+import ralf_agent as r
+from ralf_agent.temporal import replay_temporal_history
+
+from .test_sandbox_binding_execution import Reader, definition
+
+pytestmark = pytest.mark.skipif(
+    not os.getenv("RALF_TEST_TEMPORAL_ADDRESS") or not os.getenv("RALF_TEST_DOCKER_IMAGE"),
+    reason="requires actual owned Temporal and Docker services",
+)
+
+
+@pytest.mark.parametrize("kind", ["agent", "sequence", "graph", "team", "dynamic", "nested"])
+def test_actual_sandbox_members_approval_worker_restart_and_history(tmp_path, kind):
+    observed = []
+
+    class Tracked(r.DockerSandbox):
+        async def run(self, scope, request, *, invocation_id):
+            value = await super().run(scope, request, invocation_id=invocation_id)
+            observed.append(value.stdout.strip())
+            return value
+
+    async def run():
+        from temporalio.client import Client
+
+        client = await Client.connect(os.environ["RALF_TEST_TEMPORAL_ADDRESS"])
+        queue = "sandbox-native-" + uuid.uuid4().hex
+        scope = r.Scope("sandbox-tests", queue)
+        factories = r.ComponentRegistry()
+        factories.register("provider", "reader", lambda c, ctx: Reader())
+
+        async def tools(config, context):
+            registry = r.ToolRegistry()
+            for name in ("alpha", "beta"):
+                port = context.own_async(
+                    Tracked(
+                        os.environ["RALF_TEST_DOCKER_SOCKET"],
+                        os.environ["RALF_TEST_DOCKER_IMAGE"],
+                        version=name,
+                        scopes=[context.scope],
+                    )
+                )
+                await port.aopen()
+                source = context.own_async(r.SandboxToolSource(port, version="1"))
+                await r.register_tool_source(
+                    registry,
+                    source,
+                    prefix=name + "_",
+                    policies={
+                        "sandbox_run": r.ToolPolicy("1", effect="read_only", requires_approval=True)
+                    },
+                )
+            registry.register(
+                r.ToolSpec("business", "Business", {"type": "object"}), lambda a, c: "business"
+            )
+            return registry
+
+        factories.register_async("tools", "catalogs", tools)
+        profile = r.TemporalProfile(
+            "catalogs",
+            "1",
+            {"default": {"adapter": "reader"}},
+            {"tools": {"adapter": "catalogs"}},
+            binding_components=[
+                {
+                    "role": "sandbox",
+                    "component_id": name,
+                    "version": "1",
+                    "component": {
+                        "adapter": "registered-tools",
+                        "config": {"names": [name + "_sandbox_run"]},
+                    },
+                }
+                for name in ("alpha", "beta")
+            ],
+        )
+        first, saved = None, None
+        for stage in range(3):
+            assembly = await r.TemporalRuntimeBuilder(factories).abuild(profile, scope=scope)
+            try:
+                await assembly.start_worker(client, task_queue=queue)
+                engine = assembly.create_engine(client, task_queue=queue, activity_timeout=15)
+                handle = await engine.submit(definition(kind), "read", command_id="same", budget=64)
+                if stage == 0:
+                    first = handle
+                    waiting = await engine.drive(handle.run_id, wait_seconds=20)
+                    assert waiting.state == "waiting_approval" and observed == [], waiting
+                else:
+                    assert handle == first
+                    deadline = asyncio.get_running_loop().time() + 60
+                    approved = set()
+                    while asyncio.get_running_loop().time() < deadline:
+                        done = await engine.drive(handle.run_id, wait_seconds=20)
+                        if done.state != "waiting_approval":
+                            break
+                        for pending in done.pending:
+                            target = pending.get("run_id", handle.run_id)
+                            key = target, pending["action_id"]
+                            if key in approved:
+                                continue
+                            receipt = await engine.approve(
+                                target,
+                                pending["action_id"],
+                                pending["digest"],
+                                command_id="approve-" + pending["action_id"],
+                            )
+                            assert (
+                                await engine.approve(
+                                    target,
+                                    pending["action_id"],
+                                    pending["digest"],
+                                    command_id="approve-" + pending["action_id"],
+                                )
+                                == receipt
+                            )
+                            approved.add(key)
+                        await asyncio.sleep(0.05)
+                    assert done.state == "succeeded", done
+                    if stage == 1:
+                        saved = done.result
+                    else:
+                        assert done.result == saved
+                    await replay_temporal_history(
+                        await client.get_workflow_handle(handle.run_id).fetch_history()
+                    )
+            finally:
+                await assembly.aclose(wait_timeout=30)
+        assert sorted(observed) == (["alpha"] if kind == "agent" else ["alpha", "beta"])
+
+    asyncio.run(run())

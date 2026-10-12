@@ -136,3 +136,13 @@ pids_limit,max_calls,max_output_bytes,scratch_bytes,control_timeout,max_timeout,
 requires_approval(defaulttrue),cost(default1). Unknown fields rejected in pureprepare;
 limits/policy/ToolSpec validated before any native client. Owned provider registered before
 aopen, then owned borrowed-provider source, so original reverse cleanup closes source first.
+
+Per-Agent admission refinement BEFORE wiring: old82 installed validate_manifest rejects
+Temporal binding_protocol4 and validate_descriptor rejects noninherit sandbox role (actual
+pure check2026-10-12). Publish sandbox_binding_protocol1 with binding_protocol4 whenever
+native Sandbox tools or sandbox catalog entries exist, including inherit. This recognized
+binding admission fails old Workers before model/tool I/O; a new unknown field alone is
+insufficient. Preserve exact old1/2/3 releases; Context/Tool owner validators permit4 only
+with original sandbox_protocol1 proof. Native Source default automatic original ToolExecutionOwner
+is mandatory for sandbox Temporal registration so globalcancel/quiescence stays History truth.
+Local explicitrole uses local-bindings-14; inherited ordinarylegacy definitions unchanged.

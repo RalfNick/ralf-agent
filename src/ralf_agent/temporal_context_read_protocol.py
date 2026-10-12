@@ -36,8 +36,9 @@ def validate_protocol(manifest):
     if (
         manifest.get("kernel") != "temporal-3"
         or type(manifest.get("binding_protocol")) is not int
-        or manifest["binding_protocol"] not in (2, 3)
-        or (manifest["binding_protocol"] == 3 and "tool_execution_protocol" not in manifest)
+        or manifest["binding_protocol"] not in (2, 3, 4)
+        or (manifest["binding_protocol"] in (3, 4) and "tool_execution_protocol" not in manifest)
+        or (manifest["binding_protocol"] == 4 and manifest.get("sandbox_binding_protocol") != 1)
         or type(registration) is not dict
         or set(registration) != {"version", "phases", "owner", "implementation"}
         or type(registration["version"]) is not int
@@ -121,6 +122,14 @@ def publish(manifest, registration):
     if not isinstance(registration, ContextExecutionRegistration):
         raise ValidationError("Context reads require an original fixed execution registration")
     result = validate_manifest(copy.deepcopy(manifest))
+    return propose(result, registration)
+
+
+def propose(manifest, registration):
+    """Pure original metadata assembly; caller validates the complete joint release."""
+    if not isinstance(registration, ContextExecutionRegistration):
+        raise ValidationError("Context reads require an original fixed execution registration")
+    result = copy.deepcopy(manifest)
     if enabled(result) or result.get("binding_protocol", 1) != 1:
         raise DefinitionMismatch("Context execution requires its original baseline proposal")
     result.update(

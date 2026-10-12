@@ -23,6 +23,7 @@ ROLES = frozenset(
         "session",
         "workspace",
         "skills",
+        "sandbox",
     }
 )
 
@@ -75,6 +76,11 @@ def validate_descriptor(manifest, descriptor, scope=None):
             or manifest["skills_binding_protocol"] != 1
         ):
             raise DefinitionMismatch("Skills selection requires its original Temporal protocol")
+        if role == "sandbox" and (
+            type(manifest.get("sandbox_binding_protocol")) is not int
+            or manifest["sandbox_binding_protocol"] != 1
+        ):
+            raise DefinitionMismatch("Sandbox selection requires its original Temporal protocol")
         if role == "workspace" and (
             type(manifest.get("workspace_binding_protocol")) is not int
             or manifest["workspace_binding_protocol"] not in {1, 2}
@@ -327,6 +333,20 @@ def effective_step(step, manifest, descriptor):
         except KeyError:
             raise DefinitionMismatch("Original Skills tool registrations unavailable") from None
         result["tools"] = list(select_skill_tools(names, registrations, resource))
+    if choices.sandbox.mode != "inherit":
+        from .binding_sandbox import select_sandbox_tools
+
+        resource = None
+        if choices.sandbox.mode == "ref":
+            resource = manifest["binding_catalog"]["records"][key("sandbox", choices.sandbox)][
+                "identity"
+            ]
+        names = result["tools"]
+        try:
+            registrations = {name: manifest["tools"][name] for name in names}
+        except KeyError:
+            raise DefinitionMismatch("Original Sandbox tool registrations unavailable") from None
+        result["tools"] = list(select_sandbox_tools(names, registrations, resource))
     return result
 
 

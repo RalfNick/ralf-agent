@@ -93,5 +93,23 @@ Source 拒绝惰性返回值、错误调用身份、输出超限和运行期间�
 用于这一 read_only Source 的 Provider 必须由可信宿主明确声明无网络、无宿主
 挂载、无持久文件；声明不能证明任意 Python 实现的隔离强度。
 
-当前批次尚在实现每 Agent Sandbox 绑定及完整 Local／Temporal 组合验收。
+## 每 Agent 能力绑定
+
+`SandboxBindingResource(registry, names=["isolated_sandbox_run"])` 借用已经注册的
+原生 Source 工具；通过 `BindingCatalog.register("sandbox", "isolated", "1", resource)`
+装入宿主目录，Agent 使用 `AgentBindingDescriptor(sandbox=BindingSelection.ref("isolated", "1"))`。
+`disabled()` 只移除原生 Sandbox 工具，`inherit()` 保留已有 grants。
+选择与原 tool_set、Workspace、Skills 独立相交，不能新增 AgentSpec 未授予的工具。
+资源选择不执行命令、不拥有或关闭 Provider；不支持模型选择镜像、挂载或 Scope。
+
+Profile `binding_components` 使用 role `sandbox`、adapter `registered-tools` 和
+config `{"names": ["isolated_sandbox_run"]}`，Local／Temporal 共用声明。
+Local 显式绑定发布 local-bindings-14；Temporal 有原生 Sandbox 工具时发布
+sandbox_binding_protocol 1／binding_protocol 4，自动使用原 ToolExecutionOwner，
+旧 Worker 必须在业务 I/O 前拒绝新发布，旧协议维持原身份。
+
+六种原编排的 Local／Temporal 真实审批、重启与已采纳结果恢复均已通过。
+Temporal 单 Agent 额外验证取消后真实线程与 History 停止证据；Local 单 Agent
+验证 Coordinator 保留至真实结束。原生运行进程崩溃后恢复查询同一容器。
+完整批次发布仍需固定安装、旧版兼容、全量回归与最终独立审查。
 共享持久工作区、远程沙箱、Artifact 传输和外部 Coding Runner 属于后续能力。

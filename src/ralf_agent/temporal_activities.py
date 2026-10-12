@@ -178,7 +178,13 @@ class TemporalRuntime:
             ContextExecutionRegistration(self.context_execution) if context_reads else None
         )
         self._context_read_closing = False
+        from .binding_sandbox import has_sandbox_tools
         from .temporal_tool_execution import ToolExecutionRegistration
+
+        if tool_execution is None and has_sandbox_tools(tools.manifests(tuple(tools._tools))):
+            from .tool_execution import ToolExecutionOwner
+
+            tool_execution = ToolExecutionOwner(version="sandbox-default-1", max_calls=16)
 
         self.tool_execution = self._tool_execution_owner = tool_execution
         self._tool_execution_pin = (
@@ -558,10 +564,16 @@ class TemporalRuntime:
             from .temporal_session_tree_protocol import propose_manifest
 
             result = propose_manifest(result, self._session_topology_pin)
-        if self.context_reads:
-            from .temporal_context_read_protocol import publish
+        from .binding_sandbox import has_sandbox_tools
 
-            result = publish(result, self._context_execution_pin)
+        sandbox_enabled = has_sandbox_tools(result["tools"]) or any(
+            record["role"] == "sandbox"
+            for record in result.get("binding_catalog", {}).get("records", {}).values()
+        )
+        if self.context_reads:
+            from .temporal_context_read_protocol import propose, publish
+
+            result = (propose if sandbox_enabled else publish)(result, self._context_execution_pin)
             bridges = {
                 digest(pin.physical): pin.dataset_bridge_fixed.identity
                 for pin in self._session_read_pins
@@ -570,9 +582,21 @@ class TemporalRuntime:
             if bridges:
                 result["context_read_metadata_bridges"] = bridges
         if self._tool_execution_pin is not None:
+            from .temporal_tool_execution import propose as propose_tool_execution
             from .temporal_tool_execution import publish as publish_tool_execution
 
-            result = publish_tool_execution(result, self._tool_execution_pin)
+            result = (propose_tool_execution if sandbox_enabled else publish_tool_execution)(
+                result, self._tool_execution_pin
+            )
+
+        if sandbox_enabled:
+            result.update(
+                kernel="temporal-3",
+                binding_protocol=4,
+                dispatch_admission="history-1",
+                sandbox_binding_protocol=1,
+            )
+            validate_manifest(result)
         return result
 
     @property
