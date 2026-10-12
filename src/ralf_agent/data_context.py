@@ -210,3 +210,13 @@ class ManagedDataContext(ManagedContextPipeline):
         messages, manifest = super().finish(projected, summary)
         manifest.update(artifact_projection=artifacts, reference_compression=coverage)
         return messages, manifest
+
+    def artifact_binding_identity(self, resource_metadata):
+        from .artifact_binding_context import predict
+
+        return predict(self, resource_metadata)
+
+    def bind_artifacts(self, view):
+        from .artifact_binding_context import realize
+
+        return realize(self, view)

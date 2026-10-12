@@ -22,6 +22,7 @@ Original Engine/Action/History owns writes, receipts, validation and result adop
 ArtifactBindingResource borrows one original store; constructor accepts backend,
 namespaces(default context-results),default_namespace(default context-results), and required
 nonblank ordinary UTF-8 version≤256 bytes.
+Optional sync_mode is thread(default) or coordinator, fixed in resource identity.
 The backend supplies ordinary bounded fixed identity including its actual backend_id
 and completed put/get methods in one sync/async mode. Pin original receiver and code,
 physical identity, allowlist and version. Constructor/selection never perform I/O.
@@ -35,8 +36,11 @@ Catalog Scope supplies identity. No model-provided backend ID, URI, credentials 
 ArtifactView is a borrowed async port for existing managed Context put/get. It preserves
 physical backend_id/Scope/namespace in ArtifactReference and does not rewrite references
 into a new authority. Before/after I/O it checks original resource, receiver/methods,
-Scope, selected namespace and exact raw reference. Sync delegation uses original tracked
-memory_call ownership; async uses the original completed async contract. Invalid/lazy/
+Scope, selected namespace and exact raw reference. Sync delegation uses original ThreadExecutionTracker ownership by default; all existing
+Artifact defaults are thread-safe. Explicit sync_mode=coordinator supports a thread-affine
+custom store on the caller thread; it can block that loop and is never secretly threaded.
+Async uses the original completed memory_call contract. Resource.wait_for_calls drains
+its fallback actual tracker for standalone callers; borrowed backend is not closed. Invalid/lazy/
 wrong reference, lost identity and unbounded values fail before adoption. put references
 must match the independently predicted reference; original managed stage performs the
 read-back. The view does not close/delete or expand permissions on the original store.

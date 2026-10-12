@@ -40,7 +40,7 @@ borrowed ArtifactView asyncput/get; pure artifact_binding_identity+bind_artifact
   any I/O, write bounded/raw/lazy/Scope/namespace/identity/method-drift and borrowed
   lifecycle tests BEFORE code. Expected missing public API RED.
 - [ ] Implement ordinary resource identity/pins, class-bound raw reference validation,
-  sync/async memory_call delegation and post-await target check. Preserve raw physical
+  sync tracked/coordinator and async memory_call delegation and post-await target check. Preserve raw physical
   references. Shared target remains usable; no backend close/delete grants.
 - [ ] Write pure prediction/realization equality, unchanged inherit, preserved summary/
   reference excerpts, disabled no-offload/no fake receipts and custom port tests RED.

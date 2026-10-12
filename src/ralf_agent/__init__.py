@@ -323,6 +323,7 @@ from .workflow import (
 )
 
 __version__ = "0.1.0.dev83"
+from .binding_artifacts import ArtifactBindingResource, ArtifactView
 from .binding_sandbox import SandboxBindingResource
 from .docker_sandbox import DockerSandbox
 from .filesystem_skill_documents import FileSkillDocumentCatalog
@@ -356,6 +357,8 @@ __all__ = [
     "DockerSandbox",
     "SandboxToolSource",
     "SandboxBindingResource",
+    "ArtifactBindingResource",
+    "ArtifactView",
     "SandboxError",
     "SandboxExecutionRejected",
     "SandboxIsolationViolation",
