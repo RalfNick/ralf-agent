@@ -24,12 +24,18 @@ SELECTABLE_ROLES = frozenset(
         "skills",
         "sandbox",
         "artifacts",
+        "model_history",
     }
 )
 
 
 def component_identity(role, component):
     from .engine import LocalEngine
+
+    if role == "model_history":
+        from .model_history import model_history_registration
+
+        return model_history_registration(component)
 
     if role == "artifacts":
         from .binding_artifacts import ArtifactBindingResource
@@ -122,6 +128,7 @@ class BindingCatalog:
         if not isinstance(scope, Scope):
             raise ValidationError("Binding catalog requires trusted Scope")
         self._scope, self._entries = scope, {}
+        self._model_history_pins = {}
 
     @property
     def scope(self):
@@ -138,9 +145,13 @@ class BindingCatalog:
         key = role, component_id, version
         if key in self._entries:
             original, record = self._entries[key]
+            if role == "model_history":
+                check_model_history_binding(original, self._model_history_pins[key])
             if original is not component or digest(record["identity"]) != digest(identity):
                 raise DefinitionMismatch("Registered binding version cannot be replaced")
             return
+        if role == "model_history":
+            self._model_history_pins[key] = pin_model_history_binding(component)
         self._entries[key] = (
             component,
             {
@@ -155,6 +166,7 @@ class BindingCatalog:
 
     def unregister(self, role, component_id, version):
         self._entries.pop((role, component_id, version), None)
+        self._model_history_pins.pop((role, component_id, version), None)
 
     def resolve(self, role, selection, scope):
         if not isinstance(role, str) or role not in SELECTABLE_ROLES:
@@ -169,6 +181,11 @@ class BindingCatalog:
         if entry is None:
             raise DefinitionMismatch("Original binding component is unavailable")
         component, record = entry
+        if role == "model_history":
+            check_model_history_binding(
+                component,
+                self._model_history_pins[(role, selection.component_id, selection.version)],
+            )
         if digest(component_identity(role, component)) != digest(record["identity"]):
             raise DefinitionMismatch("Registered binding component identity changed")
         if role == "artifacts":
@@ -194,3 +211,31 @@ class BindingCatalog:
             return view, {**copy.deepcopy(record), "resource": view.resource}
         canonical(record)
         return component, copy.deepcopy(record)
+
+
+def pin_model_history_binding(policy):
+    """Keep the original pure methods as well as their persistent registration."""
+    from .binding_artifacts import _method_binding
+    from .model_history import model_history_registration
+
+    registration = model_history_registration(policy)
+    return (
+        policy,
+        registration,
+        {name: _method_binding(getattr(policy, name)) for name in registration["implementation"]},
+    )
+
+
+def check_model_history_binding(policy, pin):
+    from .binding_artifacts import _method_matches
+    from .model_history import model_history_registration
+
+    original, registration, methods = pin
+    if policy is not original or any(
+        not _method_matches(getattr(policy, name, None), binding)
+        for name, binding in methods.items()
+    ):
+        raise DefinitionMismatch("Original model history policy or method changed")
+    if model_history_registration(policy) != registration:
+        raise DefinitionMismatch("Original model history registration changed")
+    return copy.deepcopy(registration)

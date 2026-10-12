@@ -173,7 +173,11 @@ class TemporalRuntime:
             if model_history is None
             else {
                 name: _binding(getattr(model_history, name, None))
-                for name in ("assemble", "validate")
+                for name in (
+                    ("assemble", "validate", "assemble_frame", "validate_frame")
+                    if model_history.identity.get("scope") == "session"
+                    else ("assemble", "validate")
+                )
             }
         )
         if model_history is not None:
@@ -195,6 +199,11 @@ class TemporalRuntime:
             raise ValidationError("Context reads require an explicit boolean")
         if context_execution is not None and not context_reads:
             raise ValidationError("Context execution owner requires enabled read ownership")
+        context_reads = context_reads or (
+            model_history is not None
+            and model_history.identity.get("scope") == "session"
+            and session_store is not None
+        )
         self.context_reads = context_reads
         self.context_execution = (
             ContextExecutionOwner()
@@ -691,10 +700,35 @@ class TemporalRuntime:
         if self.model_history is not None:
             from .model_history import model_history_registration
 
+            session_mode = self.model_history.identity.get("scope") == "session"
+            if session_mode and self.session_store is None and not self.enable_sessions:
+                raise ValidationError(
+                    "Session model history requires a registered Session source or Session History"
+                )
             result.update(
-                binding_protocol=7,
-                model_history_protocol=1,
+                binding_protocol=8 if session_mode else 7,
+                model_history_protocol=2 if session_mode else 1,
                 model_history=model_history_registration(self.model_history),
+            )
+        native = [
+            r
+            for r in result.get("binding_catalog", {}).get("records", {}).values()
+            if r.get("role") == "model_history"
+        ]
+        if native:
+            if not self.model_continuation:
+                raise ValidationError("Model history bindings require model_continuation=True")
+            session_mode = result.get("model_history", {}).get("identity", {}).get(
+                "scope"
+            ) == "session" or any(
+                r["identity"]["identity"].get("scope") == "session" for r in native
+            )
+            if session_mode and self.session_store is None and not self.enable_sessions:
+                raise ValidationError("Session model history requires a Session source or History")
+            result.update(
+                kernel="temporal-3",
+                binding_protocol=8 if session_mode else 7,
+                model_history_protocol=2 if session_mode else 1,
             )
         return result
 
@@ -900,6 +934,11 @@ class TemporalRuntime:
             from .temporal_session_state import validate_context_evidence, validate_history
 
             validate_history(request, request["runtime_manifest"], request.get("scope"))
+            if self._manifest.get("model_history_protocol") == 2:
+                from .temporal_session_model_history import before_model, validate_request_frame
+
+                validate_request_frame(request)
+                before_model(request)
             from .temporal_session_data import verify_dataset
 
             await verify_dataset(self, request)
@@ -910,6 +949,9 @@ class TemporalRuntime:
                 )
 
                 validate_session_snapshot(request["context"], self._manifest, request)
+                from .temporal_session_model_history import validate_native_snapshot
+
+                validate_native_snapshot(request["context"], self._manifest, request)
             step = AgentSpec(**request["step"])
             provider = self.providers[step.provider]
             complete = provider.complete
@@ -951,7 +993,11 @@ class TemporalRuntime:
                 from .temporal_context import assemble_history
 
                 messages, context_identity = assemble_history(
-                    self, detached(request["messages"]), [], step.max_context_chars
+                    self,
+                    detached(request["messages"]),
+                    [],
+                    step.max_context_chars,
+                    frame=request.get("model_history_frame"),
                 )
             if (
                 not isinstance(messages, list)
@@ -973,7 +1019,9 @@ class TemporalRuntime:
             if self.model_history is not None:
                 from .temporal_context import protect_history
 
-                protect_history(self, request["messages"], frozen.messages)
+                protect_history(
+                    self, request.get("model_history_frame", request["messages"]), frozen.messages
+                )
             prepared_evidence = (
                 detached({"messages": frozen.messages, "tools": frozen.tools})
                 if self._manifest.get("decision_protocol") == 1 or self.model_continuation
@@ -1271,11 +1319,24 @@ class TemporalRuntime:
                 and "session_history" not in request
             ):
                 raise ValidationError("No registered custom or knowledge context")
+            if self._manifest.get("model_history_protocol") == 2:
+                from .temporal_session_model_history import validate_request_frame
+
+                validate_request_frame(request)
             scope, step = Scope(**request["scope"]), AgentSpec(**request["step"])
             references = (
                 []
                 if self.knowledge is None
-                else await self.knowledge.references(scope, request["messages"][1]["content"])
+                else await self.knowledge.references(
+                    scope,
+                    (
+                        request.get("current_task")
+                        if isinstance(request.get("current_task"), str)
+                        else canonical(request["current_task"])
+                        if "current_task" in request
+                        else request["messages"][1]["content"]
+                    ),
+                )
             )
             self.validate_release(request["runtime_manifest"])
             if (
@@ -1302,6 +1363,9 @@ class TemporalRuntime:
             from .temporal_session_data import load as load_session
 
             evidence.update(await load_session(self, request))
+            from .temporal_session_model_history import load_native
+
+            evidence.update(await load_native(self, request))
             from .temporal_context import assemble_history
 
             messages, identity = assemble_history(
@@ -1311,6 +1375,7 @@ class TemporalRuntime:
                 + evidence.get("session_references", [])
                 + evidence.get("session_data_references", []),
                 step.max_context_chars,
+                frame=request.get("model_history_frame"),
             )
             from .temporal_context import validate_context, validate_prepared
 

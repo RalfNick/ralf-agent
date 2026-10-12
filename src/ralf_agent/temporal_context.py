@@ -86,6 +86,22 @@ def protect_history(runtime, history, messages):
 
     runtime.validate_release()
     policy = runtime.model_history
+    if runtime.manifest.get("model_history_protocol") == 2:
+        from .session_model_history import validate_model_history_frame
+
+        _completed_none(
+            policy.validate_frame(detached(history), detached(messages)),
+            "Model history frame validation",
+        )
+        validate_model_history_frame(
+            history,
+            messages,
+            allow_tool_result_projection=runtime.manifest["model_history"]["identity"].get(
+                "allow_tool_result_projection", False
+            ),
+        )
+        runtime.validate_release()
+        return
     _completed_none(
         policy.validate(detached(history), detached(messages)), "Model history validation"
     )
@@ -99,7 +115,7 @@ def protect_history(runtime, history, messages):
     runtime.validate_release()
 
 
-def assemble_history(runtime, history, references, max_chars):
+def assemble_history(runtime, history, references, max_chars, *, frame=None):
     """Select references without discarding the accepted native interaction."""
     from .temporal_activities import _close_lazy
     from .temporal_state import detached
@@ -107,10 +123,47 @@ def assemble_history(runtime, history, references, max_chars):
     if runtime.model_history is None:
         return assemble_context(runtime.context, history, references, max_chars)
     from .model_history import validate_reference_evidence
+    from .session_model_history import validate_native_reference_evidence
 
     # Validate original structured evidence before any replaceable policy can
     # stringify native continuation into a seemingly ordinary reference excerpt.
     validate_reference_evidence(references)
+    validate_native_reference_evidence(references)
+    if runtime.manifest.get("model_history_protocol") == 2:
+        selected = detached(frame)
+        projections = []
+        from .data_context import ManagedDataContext
+
+        if isinstance(runtime.context, ManagedDataContext) and runtime.manifest["model_history"][
+            "identity"
+        ].get("allow_tool_result_projection", False):
+            offset = 1
+            for turn in selected["turns"]:
+                turn["history"], records = runtime.context.project_history(turn["history"])
+                projections.extend(
+                    {**record, "message_index": offset + record["message_index"] - 1}
+                    for record in records
+                )
+                offset += len(turn["history"]) - 1
+            selected["history"], records = runtime.context.project_history(selected["history"])
+            projections.extend(
+                {**record, "message_index": offset + record["message_index"] - 1}
+                for record in records
+            )
+        value = runtime.model_history.assemble_frame(
+            selected, detached(references), max_chars, context=runtime.context
+        )
+        if type(value) not in {tuple, list} or len(value) != 2:
+            _close_lazy(value)
+            raise ValidationError(
+                "Model history frame must return a completed messages/manifest pair"
+            )
+        validate_context(value[0], value[1], max_chars)
+        protect_history(runtime, frame, value[0])
+        identity = detached(value[1])
+        if projections:
+            identity["artifact_projection"] = detached(projections)
+        return detached(value[0]), identity
     source = detached(history)
     projected = source
     projection = []

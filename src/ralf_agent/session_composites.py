@@ -20,6 +20,10 @@ def composite_turn_busy(engine, root, hosting):
         if run["id"] in seen or len(seen) >= 4096 or depth > 16:
             raise DefinitionMismatch("Composite Turn ownership exceeds bounded traversal")
         seen.add(run["id"])
+        if "native_model_history" in run:
+            from .local_native_history_save import native_saves_settled
+
+            busy |= not native_saves_settled(run)
         busy |= (
             run["state"] not in TERMINAL
             or engine._operation_active(run["id"])
@@ -44,6 +48,12 @@ def composite_turn_busy(engine, root, hosting):
                 and not (run["state"] in TERMINAL and node.get("state") in TERMINAL)
             ):
                 busy = True
+        for node_id, state in run.get("workflow", {}).get("nodes", {}).items():
+            if "native_model_history" in state.get("execution", {}):
+                from .local_native_history_publication import frame_owner
+                from .local_native_history_save import native_saves_settled
+
+                busy |= not native_saves_settled(frame_owner(run, node_id, state))
         calls = run.get("orchestration", {}).get("children", [])
         if not isinstance(calls, list):
             raise DefinitionMismatch("Composite child intents must be persisted records")

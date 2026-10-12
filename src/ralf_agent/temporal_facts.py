@@ -86,7 +86,13 @@ def _query(runtime, request):
             scope,
             step["name"],
             request.get("session_id") or request["run_id"],
-            request["messages"][1]["content"],
+            (
+                request.get("current_task")
+                if isinstance(request.get("current_task"), str)
+                else canonical(request["current_task"])
+                if "current_task" in request
+                else request["messages"][1]["content"]
+            ),
         )
         if not isinstance(policy, MemoryRecallPolicy):
             from .temporal_activities import _close_lazy

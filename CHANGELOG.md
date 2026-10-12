@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.0.dev89 — Complete native Session history preview
+
+- Add explicit `CompleteModelHistory(scope="session")`, pure frame methods and per-Agent history selection/configuration while retaining old defaults and run-mode identities.
+- Preserve successful complete native episodes across Local and Temporal Agent, sequence, graph, Team, Plan/DAG and nested Turns. Keep current tasks, reference recall and each member's model owner separate.
+- Reuse original Session CAS/receipts and root-success publication; verify unknown writes without repeating adopted model/tool work. Support replaceable data backends and a connection-free `NativeHistoryPublicationStore`.
+- Reject lazy publication, unpublished native references and full streams before success. Retain actual handler ownership and atomically reject parent episode capacity overflow.
+- Final acceptance is recorded separately. Temporal service History limits, Continue-As-New, live model quality, external adoption and complete R01–R26 remain open.
+
 ## 0.1.0.dev88 — Complete adopted model history preview
 
 - Add pure, replaceable `ModelHistoryPolicy` and explicit `CompleteModelHistory` configuration for Local and Temporal joint 7.

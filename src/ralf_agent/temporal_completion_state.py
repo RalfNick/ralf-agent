@@ -180,10 +180,17 @@ def accept_stage(state, action_id, response):
             state._emit("run_failed", state.error)
         elif verdict["status"] == "retry":
             result = source["completion"]["output"]
-            if state.manifest.get("model_history_protocol") == 1:
-                state.messages.append(
-                    {"role": "user", "content": "Completion verification: " + verdict["feedback"]}
-                )
+            if state.step_manifest.get("model_history_protocol") in (1, 2):
+                message = {
+                    "role": "user",
+                    "content": "Completion verification: " + verdict["feedback"],
+                }
+                if state.step_manifest.get("model_history_protocol") == 2:
+                    action["native_history_message"] = {
+                        "order": len(state.messages),
+                        "message": detached(message),
+                    }
+                state.messages.append(message)
                 return
             state.messages.extend(
                 [

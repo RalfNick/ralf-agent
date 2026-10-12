@@ -106,7 +106,10 @@ def model_history_registration(policy):
     identity = _detached(identity)
     _boolean(identity.get("allow_tool_result_projection", False))
     methods = {}
-    for name in ("assemble", "validate"):
+    names = ("assemble", "validate")
+    if identity.get("scope") == "session":
+        names += ("assemble_frame", "validate_frame")
+    for name in names:
         method = getattr(policy, name, None)
         if not is_sync_callable(method):
             _reject_lazy(method)
@@ -206,18 +209,44 @@ def validate_model_history(history, messages, *, allow_tool_result_projection=Fa
 class CompleteModelHistory:
     """Keep all adopted native messages; fit only optional reference evidence."""
 
-    def __init__(self, *, allow_tool_result_projection=False):
+    def __init__(self, *, scope="run", allow_tool_result_projection=False):
         _boolean(allow_tool_result_projection)
+        if scope not in ("run", "session"):
+            raise ValidationError("Model history scope must be run or session")
+        self._scope = scope
         self._allow_tool_result_projection = allow_tool_result_projection
 
     @property
     def identity(self):
         _boolean(self._allow_tool_result_projection)
+        if self._scope not in ("run", "session"):
+            raise ValidationError("Model history scope must be run or session")
+        if self._scope == "session":
+            return {
+                "kind": "complete-model-history",
+                "version": "2",
+                "scope": "session",
+                "allow_tool_result_projection": self._allow_tool_result_projection,
+            }
         return {
             "kind": "complete-model-history",
             "version": "1",
             "allow_tool_result_projection": self._allow_tool_result_projection,
         }
+
+    def assemble_frame(self, frame, references, max_chars, *, context):
+        from .session_model_history import assemble_complete_frame
+
+        return assemble_complete_frame(self, frame, references, max_chars, context=context)
+
+    def validate_frame(self, frame, messages):
+        from .session_model_history import validate_model_history_frame
+
+        validate_model_history_frame(
+            frame,
+            messages,
+            allow_tool_result_projection=self.identity["allow_tool_result_projection"],
+        )
 
     def validate(self, history, messages):
         validate_model_history(

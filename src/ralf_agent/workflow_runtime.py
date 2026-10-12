@@ -216,6 +216,7 @@ class StaticWorkflowRuntime:
                     [],
                     step["max_context_chars"],
                     context=engine._components(run, index).context,
+                    components=engine._components(run, index),
                 )
         if selection.done:
             from .remote_composite_saves import save_result

@@ -98,7 +98,7 @@ def verify_completion(engine, run_id, result):
                 raise ValidationError("Completion verification was already committed")
             target["completion_verification"] = copy.deepcopy(record)
             if verdict.status == "retry":
-                if engine._step_manifest(current).get("model_history_protocol") != 1:
+                if engine._step_manifest(current).get("model_history_protocol") not in {1, 2}:
                     current["messages"].append(
                         {
                             "role": "assistant",
@@ -108,6 +108,9 @@ def verify_completion(engine, run_id, result):
                 current["messages"].append(
                     {"role": "user", "content": "Completion verification: " + verdict.feedback}
                 )
+                from .local_session_model_history import record_native_message
+
+                record_native_message(engine, current, target)
             engine._commit(
                 current,
                 "completion_verified",

@@ -127,12 +127,12 @@ def validate_continuation_protocol(manifest):
     from .model_continuation import provider_continuation_identity
 
     fields = {"model_continuation_protocol", "provider_continuations", "continuation_tool_defaults"}
-    if manifest.get("binding_protocol") not in (6, 7) and not fields & set(manifest):
+    if manifest.get("binding_protocol") not in (6, 7, 8) and not fields & set(manifest):
         return
     if (
         manifest.get("kernel") != "temporal-3"
         or type(manifest.get("binding_protocol")) is not int
-        or manifest["binding_protocol"] not in (6, 7)
+        or manifest["binding_protocol"] not in (6, 7, 8)
         or type(manifest.get("model_continuation_protocol")) is not int
         or manifest["model_continuation_protocol"] != 1
         or manifest.get("dispatch_admission") != "history-1"
@@ -364,35 +364,80 @@ def accept_adoption(state, action_id, response):
 
 def validate_model_history_protocol(manifest):
     fields = {"model_history_protocol", "model_history"}
-    if manifest.get("binding_protocol") != 7 and not fields & set(manifest):
+    records = [
+        r
+        for r in manifest.get("binding_catalog", {}).get("records", {}).values()
+        if r.get("role") == "model_history"
+    ]
+    if (
+        manifest.get("binding_protocol") not in (7, 8)
+        and not fields & set(manifest)
+        and not records
+    ):
         return
-    registration = manifest.get("model_history")
     if (
         manifest.get("kernel") != "temporal-3"
         or type(manifest.get("binding_protocol")) is not int
-        or manifest["binding_protocol"] != 7
+        or manifest["binding_protocol"] not in (7, 8)
         or type(manifest.get("model_history_protocol")) is not int
-        or manifest["model_history_protocol"] != 1
+        or manifest["model_history_protocol"] not in (1, 2)
+        or (manifest["model_history_protocol"] == 2) != (manifest["binding_protocol"] == 8)
         or type(manifest.get("model_continuation_protocol")) is not int
         or manifest["model_continuation_protocol"] != 1
-        or type(registration) is not dict
-        or set(registration) != {"identity", "implementation"}
-        or type(registration.get("identity")) is not dict
-        or not registration["identity"]
-        or type(registration["identity"].get("allow_tool_result_projection", False)) is not bool
-        or type(registration.get("implementation")) is not dict
-        or set(registration["implementation"]) != {"assemble", "validate"}
-        or any(
-            type(v) is not str or len(v) != 64 or any(c not in "0123456789abcdef" for c in v)
-            for v in registration["implementation"].values()
-        )
-        or len(canonical(registration).encode("utf-8")) > 65536
     ):
         raise DefinitionMismatch("Unsupported original complete model history protocol")
+    registrations = ([manifest["model_history"]] if "model_history" in manifest else []) + [
+        r.get("configuration", {}).get("model_history") for r in records
+    ]
+    if not registrations:
+        raise DefinitionMismatch("Model history lacks its originally registered policy")
+    session_mode = False
+    for registration in registrations:
+        native = (
+            type(registration) is dict
+            and registration.get("identity", {}).get("scope") == "session"
+        )
+        session_mode |= native
+        if (
+            type(registration) is not dict
+            or set(registration) != {"identity", "implementation"}
+            or type(registration.get("identity")) is not dict
+            or not registration["identity"]
+            or type(registration["identity"].get("allow_tool_result_projection", False)) is not bool
+            or type(registration.get("implementation")) is not dict
+            or set(registration["implementation"])
+            != (
+                {"assemble", "validate", "assemble_frame", "validate_frame"}
+                if native
+                else {"assemble", "validate"}
+            )
+            or any(
+                type(v) is not str or len(v) != 64 or any(c not in "0123456789abcdef" for c in v)
+                for v in registration["implementation"].values()
+            )
+            or len(canonical(registration).encode("utf-8")) > 65536
+        ):
+            raise DefinitionMismatch("Unsupported original complete model history registration")
+    if session_mode != (manifest["model_history_protocol"] == 2):
+        raise DefinitionMismatch(
+            "Original history marker differs from its selected registered policy"
+        )
 
 
 def protect_prepared_history(state, action, messages):
-    if state.manifest.get("model_history_protocol") != 1:
+    if state.step_manifest.get("model_history_protocol") == 2:
+        from .session_model_history import validate_model_history_frame
+
+        original = action.get("dispatch_request", {}).get("model_history_frame")
+        validate_model_history_frame(
+            original,
+            messages,
+            allow_tool_result_projection=state.step_manifest["model_history"]["identity"].get(
+                "allow_tool_result_projection", False
+            ),
+        )
+        return
+    if state.step_manifest.get("model_history_protocol") != 1:
         return
     from .model_history import validate_model_history
 
@@ -408,7 +453,7 @@ def protect_prepared_history(state, action, messages):
 
 def model_history_proposal(state, response):
     """Verify pre-default accepted calls before constructing native assistant history."""
-    if state.manifest.get("model_history_protocol") != 1:
+    if state.step_manifest.get("model_history_protocol") not in (1, 2):
         return None
     from .harness import DecisionProposal
     from .types import ToolCall

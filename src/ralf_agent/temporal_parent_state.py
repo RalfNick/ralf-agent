@@ -130,6 +130,8 @@ class TemporalParentState(TemporalRunState):
     def _complete_parent(self, result):
         from .temporal_parent_session import prepare_result
 
+        if not self._native_capacity():
+            return
         if not prepare_result(self, result):
             self._complete_node(result)
 
@@ -137,8 +139,23 @@ class TemporalParentState(TemporalRunState):
         from .temporal_parent_session import release_allowance
 
         release_allowance(self)
+        if not self._native_capacity():
+            return
         self.state, self.result = "succeeded", detached(result)
         self._emit("run_succeeded")
+
+    def _native_capacity(self):
+        from .temporal_parent_session import release_allowance
+        from .temporal_session_model_history import parent_capacity
+
+        try:
+            parent_capacity(self)
+            return True
+        except ValidationError as exc:
+            release_allowance(self)
+            self.state, self.error = "failed", {"code": exc.code}
+            self._emit("run_failed", self.error)
+            return False
 
     def retry_blocked(self):
         from .temporal_session_save_state import request_recovery
@@ -205,11 +222,18 @@ class TemporalParentState(TemporalRunState):
         }
 
     def diagnostics(self):
+        from .temporal_session_model_history import bundle
+
         return {
             "snapshot": self.snapshot(),
             "manifest": detached(self.manifest),
             "release_digest": self.release_digest,
             "budget": self.budget,
+            **(
+                {"native_history_bundle": bundle(self)}
+                if self.manifest.get("model_history_protocol") == 2
+                else {}
+            ),
             "workflow": {
                 "backend": "temporal-parent",
                 "kind": self.kind,
@@ -565,8 +589,13 @@ class TemporalParentState(TemporalRunState):
                         "reconciliation_pending",
                     )
                 }
+            native = {}
+            if self.manifest.get("model_history_protocol") == 2:
+                from .temporal_session_model_history import observed_bundle
+
+                native["native_history_bundle"] = observed_bundle(value)
             fingerprint = digest(
-                {"snapshot": snapshot, "budget": budget, "workflow": evidence_flow}
+                {"snapshot": snapshot, "budget": budget, "workflow": evidence_flow, **native}
             )
             if revision == call.get("observed_revision", -1) and fingerprint != call.get(
                 "observation_digest"
@@ -593,6 +622,7 @@ class TemporalParentState(TemporalRunState):
                     )
                     normalized = validate_output(snapshot["result"], declared.output_schema)
             call.update(
+                **native,
                 snapshot=detached(snapshot),
                 observed_flow=detached(flow),
                 observed_revision=revision,

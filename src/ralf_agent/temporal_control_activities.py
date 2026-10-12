@@ -81,7 +81,14 @@ async def control(runtime, client, value):
         await engine._guard("submit", call["command_id"], call["run_id"], call["request"])
         result = {"run_id": call["run_id"], "registered": True}
     elif mode == "observe":
-        result = {**asdict(await engine.diagnostics(call["run_id"])), "scope": value["scope"]}
+        result = {
+            **(
+                await engine._view(call["run_id"], "diagnostics")
+                if value["runtime_manifest"].get("model_history_protocol") == 2
+                else asdict(await engine.diagnostics(call["run_id"]))
+            ),
+            "scope": value["scope"],
+        }
     elif mode == "recover" and value["runtime_manifest"]["kernel"] == "temporal-3":
         await engine.drive(call["run_id"], wait_seconds=0)
         result = {"run_id": call["run_id"], "recovery_requested": True}

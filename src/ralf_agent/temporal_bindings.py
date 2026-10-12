@@ -25,6 +25,7 @@ ROLES = frozenset(
         "skills",
         "sandbox",
         "artifacts",
+        "model_history",
     }
 )
 
@@ -66,7 +67,7 @@ def step_descriptor(request, node):
 def validate_descriptor(manifest, descriptor, scope=None):
     descriptor = AgentBindingDescriptor.from_dict(descriptor)
     records = manifest.get("binding_catalog", {}).get("records", {})
-    for role in BINDING_ROLES:
+    for role in (*BINDING_ROLES, "model_history"):
         choice = getattr(descriptor, role)
         if choice.mode == "inherit":
             continue
@@ -255,6 +256,13 @@ def catalog_registration(runtime):
             from .temporal_completion import registration as completion_registration
 
             extra["completion_verifier"] = completion_registration(component)
+        elif role == "model_history":
+            from .model_history import model_history_registration
+
+            extra["model_history"] = model_history_registration(component)
+            extra["model_history_protocol"] = (
+                2 if component.identity.get("scope") == "session" else 1
+            )
         elif role == "decision_policy":
             from .temporal_decision import registration as decision_registration
 
@@ -269,6 +277,13 @@ def catalog_registration(runtime):
 def effective_manifest(manifest, descriptor):
     choices = validate_descriptor(manifest, descriptor)
     result = detached(manifest)
+    if manifest.get("binding_protocol") == 8:
+        if "model_history" in result:
+            result["model_history_protocol"] = (
+                2 if result["model_history"]["identity"].get("scope") == "session" else 1
+            )
+        else:
+            result.pop("model_history_protocol", None)
     for role in (
         "context",
         "knowledge",
@@ -277,6 +292,7 @@ def effective_manifest(manifest, descriptor):
         "verifier",
         "decision_policy",
         "session",
+        "model_history",
     ):
         selection = getattr(choices, role)
         if selection.mode == "inherit":
@@ -289,6 +305,7 @@ def effective_manifest(manifest, descriptor):
             "verifier": ("completion_verifier",),
             "decision_policy": ("harness", "decision_registration"),
             "session": ("session_data",),
+            "model_history": ("model_history", "model_history_protocol"),
         }[role]
         for field in fields:
             result.pop(field, None)
@@ -390,6 +407,7 @@ def selected_runtime(runtime, request):
         ("verifier", "verifier"),
         ("decision_policy", "harness"),
         ("session", "session_store"),
+        ("model_history", "model_history"),
     ):
         selection = getattr(choices, role)
         if selection.mode == "ref":
@@ -399,6 +417,22 @@ def selected_runtime(runtime, request):
             setattr(view, attr, component)
         elif selection.mode == "disabled":
             setattr(view, attr, None)
+    if choices.model_history.mode != "inherit":
+        from .model_history import model_history_registration
+        from .task_controls import _binding
+
+        view._model_history_pin = view.model_history
+        view._model_history_registration = (
+            None if view.model_history is None else model_history_registration(view.model_history)
+        )
+        view._model_history_methods = (
+            {}
+            if view.model_history is None
+            else {
+                name: _binding(getattr(view.model_history, name))
+                for name in view._model_history_registration["implementation"]
+            }
+        )
     if choices.artifacts.mode != "inherit":
         from .binding_runtime import AgentBindingResolver
 
@@ -414,6 +448,14 @@ def selected_runtime(runtime, request):
 
 
 def project_child(parent_request, member, request):
+    if "session_native_history" in parent_request:
+        native = detached(parent_request["session_native_history"])
+        native["path"] += [
+            parent_request["definition"]["kind"],
+            "nodes" if parent_request["definition"]["kind"] == "graph" else "members",
+            member,
+        ]
+        request = {**request, "session_native_history": native}
     if "session_history" in parent_request:
         request = {**request, "session_history": detached(parent_request["session_history"])}
         source = parent_request.get("session_turn", parent_request.get("session_observer"))

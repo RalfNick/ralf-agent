@@ -24,6 +24,7 @@ class StepComponents:
     verifier: object | None
     limits: object | None
     stage_policy: object | None = None
+    model_history: object | None = None
 
 
 def step_path(definition, index, plan=None):
@@ -44,6 +45,10 @@ def descriptor_for(definition, index, plan=None):
 class AgentBindingResolver:
     def __init__(self, engine):
         self.engine = engine
+        from .binding_catalog import pin_model_history_binding
+
+        history = getattr(engine, "model_history", None)
+        self._model_history_pin = None if history is None else pin_model_history_binding(history)
         self._artifact_contexts = weakref.WeakValueDictionary()
         self._artifact_ports = {}
         origins = [getattr(engine, "context", None)]
@@ -148,6 +153,9 @@ class AgentBindingResolver:
             "knowledge": e.knowledge,
             "tool_set": tuple(step["tools"]),
         }
+        history = self.model_history()
+        if "model_history" in selections:
+            values["model_history"] = history
         # Inherited legacy bindings retain their exact resolved release records.
         if descriptor.verifier.mode != "inherit" or e.verifier is not None:
             values["verifier"] = e.verifier
@@ -228,6 +236,8 @@ class AgentBindingResolver:
             )
         if values["provider"] is None:
             raise DefinitionMismatch("The selected model provider is unavailable")
+        history = values.get("model_history", history)
+        self._validate_model_history_source(history, values["session"])
         return StepComponents(
             values["provider"],
             values["decision_policy"],
@@ -239,7 +249,34 @@ class AgentBindingResolver:
             values.get("verifier"),
             values.get("limits"),
             values.get("stage_policy"),
+            history,
         ), records
+
+    def model_history(self):
+        from .binding_catalog import check_model_history_binding
+
+        history = getattr(self.engine, "model_history", None)
+        if self._model_history_pin is None:
+            if history is not None:
+                raise DefinitionMismatch("The host model history policy changed")
+        else:
+            check_model_history_binding(history, self._model_history_pin)
+        return history
+
+    def _validate_model_history_source(self, policy, sessions):
+        if policy is None:
+            return
+        if not getattr(self.engine, "model_continuation", False):
+            raise ValidationError("Model history requires explicit host model continuation")
+        if policy.identity.get("scope", "run") == "session":
+            from .native_session_history import _native_page_source
+
+            try:
+                _native_page_source(sessions)
+            except ValidationError as exc:
+                raise ValidationError(
+                    "Session model history requires an original bounded page source"
+                ) from exc
 
     def components(self, run, index=None):
         index = run["node"] if index is None else index
@@ -247,6 +284,8 @@ class AgentBindingResolver:
         if "binding_definition" in run["definition"]:
             return self.resolve(step, descriptor_for(run["definition"], index, run.get("plan")))[0]
         e = self.engine
+        history = self.model_history()
+        self._validate_model_history_source(history, e.sessions)
         return StepComponents(
             e.providers[step["provider"]],
             e.harness,
@@ -258,6 +297,7 @@ class AgentBindingResolver:
             e.verifier,
             None,
             e.stage_policy,
+            history,
         )
 
     def base_step(self, run, index=None):

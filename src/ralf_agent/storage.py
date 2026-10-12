@@ -12,6 +12,7 @@ from .types import CommandReceipt, RunEvent, canonical, credits, digest
 
 
 class SQLiteStore:
+    native_history_version = 1
     session_admission_version = 5
     managed_stage_version = 1
     context_stage_version = 1
@@ -61,6 +62,7 @@ class SQLiteStore:
                     "10",
                     "11",
                     "12",
+                    "13",
                 }:
                     raise ValidationError("Unsupported execution database Schema")
             except (sqlite3.DatabaseError, ValidationError) as exc:
@@ -90,7 +92,21 @@ class SQLiteStore:
             CREATE INDEX IF NOT EXISTS reservation_run ON reservations(run_id);
         """)
         row = self.conn.execute("SELECT value FROM metadata WHERE key='schema_version'").fetchone()
-        if row and row[0] not in {"1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12"}:
+        if row and row[0] not in {
+            "1",
+            "2",
+            "3",
+            "4",
+            "5",
+            "6",
+            "7",
+            "8",
+            "9",
+            "10",
+            "11",
+            "12",
+            "13",
+        }:
             self.close()
             raise ValidationError("Unsupported execution database Schema")
         self.conn.execute("INSERT OR IGNORE INTO metadata VALUES ('schema_version','1')")
@@ -100,6 +116,47 @@ class SQLiteStore:
         if self._transaction_failed:
             raise ValidationError("Execution database rollback failed; close and reopen the Store")
         return self._conn
+
+    def prepare_native_history(self):
+        """Activate native publication facts within the original acceptance transaction."""
+        if self.readonly or not self.conn.in_transaction:
+            raise ValidationError("Native history requires its execution transaction")
+        self.create_session_admission()._prepare(13)
+        self.conn.execute(
+            "CREATE TABLE IF NOT EXISTS native_history_publications (workspace TEXT NOT NULL, principal TEXT NOT NULL, stream TEXT NOT NULL, seq INTEGER NOT NULL, message_id TEXT NOT NULL, data TEXT NOT NULL, PRIMARY KEY(workspace,principal,stream,seq), UNIQUE(workspace,principal,stream,message_id))"
+        )
+
+    def native_history_publications(self, scope, stream):
+        row = self.conn.execute("SELECT value FROM metadata WHERE key='schema_version'").fetchone()
+        if row[0] != "13":
+            return []
+        rows = self.conn.execute(
+            "SELECT data FROM native_history_publications WHERE workspace=? AND principal=? AND stream=? ORDER BY seq LIMIT 129",
+            (scope.workspace, scope.principal, stream),
+        ).fetchall()
+        if len(rows) > 128:
+            raise ValidationError("Native history publication capacity exceeded")
+        return [json.loads(row[0]) for row in rows]
+
+    def publish_native_history(self, scope, stream, message_id, evidence):
+        if self.readonly or not self.conn.in_transaction:
+            raise ValidationError("Native publication requires its original success transaction")
+        encoded = canonical(evidence)
+        previous = self.conn.execute(
+            "SELECT data FROM native_history_publications WHERE workspace=? AND principal=? AND stream=? AND message_id=?",
+            (scope.workspace, scope.principal, stream, message_id),
+        ).fetchone()
+        if previous is not None:
+            if previous[0] != encoded:
+                raise IdempotencyConflict("Native publication identity conflict")
+            return
+        records = self.native_history_publications(scope, stream)
+        if len(records) >= 128:
+            raise ValidationError("Native history publication capacity exceeded")
+        self.conn.execute(
+            "INSERT INTO native_history_publications VALUES (?,?,?,?,?,?)",
+            (scope.workspace, scope.principal, stream, len(records) + 1, message_id, encoded),
+        )
 
     def prepare_managed_stages(self):
         """Optional semantic activation, atomically with first stage Run admission."""
@@ -318,7 +375,7 @@ class SQLiteStore:
         version = self.conn.execute(
             "SELECT value FROM metadata WHERE key='schema_version'"
         ).fetchone()[0]
-        if version in {"2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12"}:
+        if version in {"2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13"}:
             owner = self.create_session_admission().route_owner(scope, resource)
             if owner is not None:
                 return owner

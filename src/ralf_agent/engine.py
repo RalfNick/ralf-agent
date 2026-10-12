@@ -131,7 +131,10 @@ class LocalEngine:
         from .task_controls import _binding
 
         self._model_history_bindings = (
-            {name: _binding(getattr(model_history, name)) for name in ("assemble", "validate")}
+            {
+                name: _binding(getattr(model_history, name))
+                for name in self._model_history_registration["implementation"]
+            }
             if model_history is not None
             else {}
         )
@@ -488,13 +491,22 @@ class LocalEngine:
         return self._bindings.effective_step(run, index)
 
     @staticmethod
+    def _current_task(run):
+        from .local_session_model_history import current_native_task
+
+        task = current_native_task(run)
+        if task is not None:
+            return task
+        return run["messages"][1]["content"]
+
+    @staticmethod
     def _step_manifest(run, index=None):
         from .binding_manifests import step_manifest
 
         return step_manifest(run["manifest"], run["node"] if index is None else index)
 
     def _manifest(self, steps, *, components=None):
-        history_registration = self._history_registration()
+        history_registration = self._history_registration(components)
         sessions = self.sessions if components is None else components.sessions
         memory = self.memory if components is None else components.memory
         context = self.context if components is None else components.context
@@ -522,7 +534,10 @@ class LocalEngine:
             if step["output_schema"] is not None:
                 Draft202012Validator.check_schema(step["output_schema"])
         manifest = {
-            "kernel": "local-6"
+            "kernel": "local-7"
+            if history_registration is not None
+            and history_registration["identity"].get("scope") == "session"
+            else "local-6"
             if history_registration is not None
             else "local-5"
             if self.model_continuation
@@ -541,8 +556,16 @@ class LocalEngine:
             manifest["model_continuation_protocol"] = 1
             manifest["provider_continuations"] = continuations
         if history_registration is not None:
-            manifest["model_history_protocol"] = 1
+            manifest["model_history_protocol"] = (
+                2 if history_registration["identity"].get("scope") == "session" else 1
+            )
             manifest["model_history"] = history_registration
+            if manifest["model_history_protocol"] == 2 and sessions is None:
+                raise ValidationError("Session model history requires a Session source")
+            if manifest["model_history_protocol"] == 2:
+                from .local_session_model_history import native_source_identity
+
+                manifest["native_session_source"] = native_source_identity(self, sessions)
         if self.recall_policy is not None:
             manifest["memory_recall"] = self._component_identity(
                 self.recall_policy, (), True, "Recall policy"
@@ -578,9 +601,12 @@ class LocalEngine:
             manifest["managed_context"] = context_stage
         return manifest
 
-    def _history_registration(self):
+    def _history_registration(self, components=None):
         from .model_history import model_history_registration
 
+        if components is not None:
+            policy = components.model_history
+            return None if policy is None else model_history_registration(policy)
         if self.model_history is not self._model_history_pin:
             raise DefinitionMismatch("The executing model history policy changed")
         if self.model_history is None:
@@ -599,11 +625,29 @@ class LocalEngine:
             raise DefinitionMismatch("The model history policy differs from its fixed identity")
         return registration
 
-    def _validate_model_history(self, history, messages):
+    def _validate_model_history(self, history, messages, *, components=None, frame=None):
         from .model_history import validate_model_history
 
-        registration = self._history_registration()
+        registration = self._history_registration(components)
         if registration is None:
+            return
+        policy = self.model_history if components is None else components.model_history
+        if registration["identity"].get("scope") == "session" and frame is not None:
+            from .session_model_history import validate_model_history_frame
+
+            validate_model_history_frame(
+                frame,
+                messages,
+                allow_tool_result_projection=registration["identity"].get(
+                    "allow_tool_result_projection", False
+                ),
+            )
+            self._component_result(
+                policy.validate_frame(copy.deepcopy(frame), copy.deepcopy(messages)),
+                type(None),
+                "ModelHistoryPolicy.validate_frame",
+            )
+            self._history_registration(components)
             return
         validate_model_history(
             history,
@@ -613,40 +657,51 @@ class LocalEngine:
             ),
         )
         self._component_result(
-            self.model_history.validate(copy.deepcopy(history), copy.deepcopy(messages)),
+            policy.validate(copy.deepcopy(history), copy.deepcopy(messages)),
             type(None),
             "ModelHistoryPolicy.validate",
         )
-        self._history_registration()
+        self._history_registration(components)
 
-    def _assemble_context(self, history, references, max_chars, *, context=None):
+    def _assemble_context(
+        self, history, references, max_chars, *, context=None, components=None, frame=None
+    ):
         context = self.context if context is None else context
-        registration = self._history_registration()
+        registration = self._history_registration(components)
+        policy = self.model_history if components is None else components.model_history
         try:
             if registration is None:
                 value = context.assemble(history, references, max_chars)
             else:
                 from .data_context import ManagedDataContext
                 from .model_history import validate_reference_evidence
+                from .session_model_history import validate_native_reference_evidence
 
                 validate_reference_evidence(references)
+                validate_native_reference_evidence(references)
                 projected, refs = copy.deepcopy(history), copy.deepcopy(references)
                 artifacts, coverage = [], []
                 if isinstance(context, ManagedDataContext):
                     if registration["identity"].get("allow_tool_result_projection", False):
                         projected, artifacts = context.project_history(projected)
                     refs, coverage = context.project_references(refs)
-                value = self.model_history.assemble(projected, refs, max_chars, context=context)
+                if registration["identity"].get("scope") == "session" and frame is not None:
+                    projected_frame = {**copy.deepcopy(frame), "history": projected}
+                    value = policy.assemble_frame(projected_frame, refs, max_chars, context=context)
+                else:
+                    value = policy.assemble(projected, refs, max_chars, context=context)
             value = self._component_result(value, (tuple, list), "Context assembly")
             if len(value) != 2:
                 raise ValidationError("Context assembler must return a messages/manifest pair")
             messages, manifest = value
             if registration is not None:
-                self._validate_model_history(history, messages)
+                self._validate_model_history(history, messages, components=components, frame=frame)
                 manifest = {
                     **manifest,
                     "model_history": copy.deepcopy(registration),
-                    "model_history_protocol": 1,
+                    "model_history_protocol": (
+                        2 if registration["identity"].get("scope") == "session" else 1
+                    ),
                 }
                 if isinstance(context, ManagedDataContext):
                     manifest.update(artifact_projection=artifacts, reference_compression=coverage)
@@ -753,6 +808,7 @@ class LocalEngine:
                         step_manifest(manifest, 0),
                     )["max_context_chars"],
                     context=components.context,
+                    components=components,
                 )
             else:
                 self._assemble_context(
@@ -782,6 +838,9 @@ class LocalEngine:
         from .managed_context import admit_context
 
         admit_context(self, manifest, definition["kind"], _parent_call)
+        from .local_session_model_history import activate_native_history
+
+        activate_native_history(self, manifest)
         data = {
             "id": run_id,
             "revision": 0,
@@ -1005,6 +1064,10 @@ class LocalEngine:
         validate_inherited_limits(manifest, source)
 
     def _commit(self, run, kind, data=None):
+        if kind == "run_succeeded":
+            from .local_session_model_history import publish_native_history
+
+            publish_native_history(self, run)
         self.store.save_run(run)
         self.store.emit(run["id"], kind, data)
 
@@ -1076,6 +1139,11 @@ class LocalEngine:
             raise CoordinatorBusy("The previous Action is still running; wait for its result")
         run = self._authorized(run_id)
         if run["state"] in TERMINAL:
+            if "native_model_history" in run or run.get("workflow") or run.get("orchestration"):
+                from .local_session_model_history import recover_native_tree
+
+                await self._guarded(run_id, recover_native_tree(self, run_id))
+                run = self._authorized(run_id)
             if "context_preparations" in run or "context_preparation_markers" in run:
                 from .context_preparation import recover_terminal_context
 
@@ -1142,6 +1210,13 @@ class LocalEngine:
                     with self.store.transaction():
                         run["state"] = "cancelled"
                         self._commit(run, "run_cancelled")
+                    from .local_session_model_history import (
+                        _uses_session_history,
+                        recover_native_tree,
+                    )
+
+                    if _uses_session_history(run["manifest"]):
+                        await self._guarded(run_id, recover_native_tree(self, run_id))
                     break
                 if is_graph(run):
                     if not await self._guarded(run_id, self._workflow.prepare(run_id)):
@@ -1250,6 +1325,13 @@ class LocalEngine:
 
         if not verify_completion(self, run_id, result):
             return
+        from .local_session_model_history import freeze_native_history
+
+        freeze_native_history(self, run_id)
+        from .local_native_history_save import ensure_native_history_saved
+
+        if not await ensure_native_history_saved(self, run_id):
+            return False
         sessions = self._components(run).sessions
         from .remote_session_saves import save_remote_result
 
@@ -1331,7 +1413,14 @@ class LocalEngine:
         except Exception as exc:
             raise ValidationError("Harness failed to prepare a model request") from exc
         self._check_release(self._authorized(run["id"]))
-        self._validate_model_history(run["messages"], request.messages)
+        from .local_session_model_history import native_history_frame
+
+        self._validate_model_history(
+            run["messages"],
+            request.messages,
+            components=components,
+            frame=native_history_frame(self, run),
+        )
         if digest(
             self._component_identity(harness, ("prepare", "propose"), True, "Harness")
         ) != digest(self._step_manifest(run)["harness"]):
@@ -1481,7 +1570,7 @@ class LocalEngine:
                         for call in proposal.tool_calls
                     ]
                     validate_call_ids([item["call_id"] for item in proposals])
-                    if self.model_history is not None:
+                    if self._step_manifest(run).get("model_history_protocol") in {1, 2}:
                         history_proposals = [
                             {
                                 "tool": call.name,
@@ -1523,7 +1612,7 @@ class LocalEngine:
                 action["memory_stage"] = {"schema_version": 1, "required": True}
             if not closed:
                 run["actions"].extend(proposals)
-                if proposals or self.model_history is not None:
+                if proposals or self._step_manifest(run).get("model_history_protocol") in {1, 2}:
                     message = assistant_message(
                         encoded["output"],
                         history_proposals if history_proposals is not None else proposals,
@@ -1531,12 +1620,15 @@ class LocalEngine:
                         continuation=continuation,
                     )
                     if (
-                        self.model_history is not None
+                        self._step_manifest(run).get("model_history_protocol") in {1, 2}
                         and encoded["output"] is not None
                         and not isinstance(encoded["output"], str)
                     ):
                         message["content"] = canonical(encoded["output"])
                     run["messages"].append(message)
+                    from .local_session_model_history import record_native_message
+
+                    record_native_message(self, run, action)
             self._commit(
                 run,
                 "decision_adopted",
@@ -1667,9 +1759,7 @@ class LocalEngine:
             from .recall import MemoryRecallPolicy, RecallQuery
 
             proposed = self._component_result(
-                planner.plan(
-                    self.scope, step["name"], run["session_id"], run["messages"][1]["content"]
-                ),
+                planner.plan(self.scope, step["name"], run["session_id"], self._current_task(run)),
                 MemoryRecallPolicy,
                 "Recall planner",
             )
@@ -1724,7 +1814,7 @@ class LocalEngine:
         knowledge_refs = []
         if knowledge is not None:
             knowledge_refs = await memory_call(
-                knowledge.references, self.scope, run["messages"][1]["content"]
+                knowledge.references, self.scope, self._current_task(run)
             )
             if not isinstance(knowledge_refs, list) or any(
                 not isinstance(item, dict) for item in knowledge_refs
@@ -1836,6 +1926,7 @@ class LocalEngine:
             if prepared is None:
                 return True
             messages, context_manifest, knowledge_refs, facts = prepared
+            run = self._authorized(run_id)
             request, manifest = self._prepare_model_request(run, step, messages, context_manifest)
             messages, descriptions = request.messages, request.tools
             action = {
@@ -2068,6 +2159,9 @@ class LocalEngine:
         run["messages"].append(
             {"role": "tool", "tool_call_id": action["call_id"], "content": canonical(result)}
         )
+        from .local_session_model_history import record_native_message
+
+        record_native_message(self, run, action)
         return True
 
     @staticmethod

@@ -44,6 +44,9 @@ def validate_protocol(manifest):
 
 
 def validate_history(request, manifest, scope=None):
+    from .temporal_session_model_history import validate_native_request
+
+    validate_native_request(request, manifest)
     if not any(k in request for k in ("session_history", "session_turn", "session_observer")):
         return
     if manifest.get("session_protocol") != 1:
@@ -129,10 +132,31 @@ def quiet(proof):
     )
 
 
+def legacy_history_selected(request, manifest):
+    from .binding_paths import agent_paths
+    from .binding_types import AgentBindingDescriptor
+    from .temporal_bindings import effective_manifest
+
+    return any(
+        effective_manifest(
+            manifest,
+            request.get("agent_bindings", {}).get(path, AgentBindingDescriptor().to_dict()),
+        ).get("model_history_protocol")
+        != 2
+        for path in agent_paths(request["definition"])
+    )
+
+
+def manifest_native(request):
+    return "model_history_frame" in request
+
+
 def context_evidence(request):
     """Conversation is evidence beside Knowledge/Facts, not the current task."""
     if "session_history" not in request:
         return {}
+    if manifest_native(request):
+        return {"session_references": []}
     history = request["session_history"]
     if (
         request.get("session_lineage", {}).get("links")
@@ -261,6 +285,7 @@ class TemporalSessionState:
         self.binding_revision = 1
         self.receipts, self.identities, self.records = {}, {}, []
         self.history, self.active, self.error = [], None, None
+        self.native_history = {}
         self.started_runs = set()
         self.command(
             {
@@ -376,6 +401,20 @@ class TemporalSessionState:
                         "coordinator_id": workflow_id(self.key),
                     },
                 }
+                if self.binding["manifest"].get("model_history_protocol") == 2:
+                    from .temporal_session_model_history import publication
+
+                    native = {
+                        "version": 1,
+                        "session_ref": self.ref.to_dict(),
+                        "turn_id": turn_id,
+                        "turn_seq": seq,
+                        "root_run_id": run_id,
+                        "path": [],
+                        "published": detached(self.native_history),
+                    }
+                    native["publication_digest"] = publication(native)
+                    run_request["session_native_history"] = native
                 if self.data_source is not None:
                     run_request["session_data_binding"] = {
                         "namespace_id": self.namespace_id,
@@ -485,7 +524,15 @@ class TemporalSessionState:
         if len(seen) != len(descendants) + 1:
             raise DefinitionMismatch("Session contains unrelated descendant evidence")
         snapshot = proof["snapshot"]
-        if snapshot["state"] == "succeeded":
+        native_mode = turn["manifest"].get("model_history_protocol") == 2
+        native_candidate = None
+        if snapshot["state"] == "succeeded" and native_mode:
+            from .temporal_session_model_history import publish
+
+            native_candidate = publish(self, [proof, *descendants])
+        if snapshot["state"] == "succeeded" and (
+            not native_mode or legacy_history_selected(turn["request"], turn["manifest"])
+        ):
 
             def text(value):
                 return value if isinstance(value, str) else canonical(value)
@@ -501,6 +548,8 @@ class TemporalSessionState:
             while len(history) > 128 or len(canonical(history)) > HISTORY_CHARS:
                 history = history[2:]
             self.history = history
+        if native_candidate is not None:
+            self.native_history = native_candidate
         self.active, self.error = None, None
         return True
 

@@ -217,7 +217,32 @@ _BINDING_FACTORY_KINDS = {
     "skills": "skills",
     "sandbox": "sandbox",
     "artifacts": "artifacts",
+    "model_history": "model_history",
 }
+
+
+def model_history_declarations(profile):
+    return (
+        [profile.components["model_history"]] if "model_history" in profile.components else []
+    ) + [
+        value["component"]
+        for value in profile.binding_components or []
+        if value["role"] == "model_history"
+    ]
+
+
+def validate_session_history_declarations(profile, *, source_available=False):
+    """Reject an explicit session scope before creating execution or data stores."""
+    if any(
+        declaration["config"].get("scope", "run") == "session"
+        for declaration in model_history_declarations(profile)
+    ) and not (
+        source_available
+        or "session_store" in profile.components
+        or "conversation_resource" in profile.components
+        or any(value["role"] == "session" for value in profile.binding_components or [])
+    ):
+        raise ValidationError("Session model history requires an available Session source")
 
 
 class ComponentRegistry:
@@ -282,7 +307,7 @@ class ComponentRegistry:
         from .model_history import CompleteModelHistory
 
         def complete_history(config):
-            _fields(config, {"allow_tool_result_projection"})
+            _fields(config, {"scope", "allow_tool_result_projection"})
             return CompleteModelHistory(**config)
 
         self.register(
@@ -680,10 +705,15 @@ class RuntimeBuilder:
         from .query_factories import preflight_query_providers
 
         preflight_query_providers(profile)
-        if "model_history" in profile.components and "model_continuation" not in profile.components:
+        histories = model_history_declarations(profile)
+        if histories and "model_continuation" not in profile.components:
             raise ValidationError(
                 "Model history requires explicit model_continuation configuration"
             )
+        validate_session_history_declarations(
+            profile,
+            source_available=_synchronous(getattr(self.store_factory, "create_memory", None)),
+        )
         if "model_continuation" not in profile.components and any(
             declaration["adapter"] == "gemini-functions"
             for declaration in [

@@ -220,11 +220,24 @@ async def execute(runtime, request, *, dispatch_guard=None):
             from .temporal_session_state import validate_history
 
             validate_history(request, request["runtime_manifest"], request.get("scope"))
+            if runtime.manifest.get("model_history_protocol") == 2:
+                from .temporal_session_model_history import validate_request_frame
+
+                validate_request_frame(request)
             scope = Scope(**request["scope"])
             references = (
                 []
                 if runtime.knowledge is None
-                else await runtime.knowledge.references(scope, request["messages"][1]["content"])
+                else await runtime.knowledge.references(
+                    scope,
+                    (
+                        request.get("current_task")
+                        if isinstance(request.get("current_task"), str)
+                        else canonical(request["current_task"])
+                        if "current_task" in request
+                        else request["messages"][1]["content"]
+                    ),
+                )
             )
             _check(runtime, request, context)
             if (
@@ -255,6 +268,9 @@ async def execute(runtime, request, *, dispatch_guard=None):
             from .temporal_session_data import load as load_session
 
             evidence.update(await load_session(runtime, request))
+            from .temporal_session_model_history import load_native
+
+            evidence.update(await load_native(runtime, request))
             references = (
                 evidence["references"]
                 + evidence.get("session_references", [])
@@ -264,7 +280,9 @@ async def execute(runtime, request, *, dispatch_guard=None):
             if runtime.model_history is not None:
                 from .temporal_context import assemble_history
 
-                messages, identity = assemble_history(runtime, history, references, limit)
+                messages, identity = assemble_history(
+                    runtime, history, references, limit, frame=request.get("model_history_frame")
+                )
                 plan = None
             else:
                 messages, identity = context.assemble(
@@ -395,6 +413,11 @@ async def execute(runtime, request, *, dispatch_guard=None):
                 "messages": detached(messages),
                 "references": detached(request["references"]),
                 **(
+                    {"native_history_snapshot": detached(request["native_history_snapshot"])}
+                    if "native_history_snapshot" in request
+                    else {}
+                ),
+                **(
                     {k: detached(request[k]) for k in ("session_data", "session_data_references")}
                     if "session_data" in request
                     else {}
@@ -511,6 +534,8 @@ def next_stage(state):
     else:
         prepared = stage["prepared"]
         request.update({k: detached(prepared[k]) for k in ("plan", "fallback", "references")})
+        if "native_history_snapshot" in prepared:
+            request["native_history_snapshot"] = detached(prepared["native_history_snapshot"])
         if "session_data" in prepared:
             request.update(
                 {k: detached(prepared[k]) for k in ("session_data", "session_data_references")}
@@ -595,7 +620,7 @@ def accept_stage(state, action_id, response):
         phase in {"read", "verify"}
         and response.get("ok") is False
         and response.get("code") == "activity_outcome_unknown"
-        and state.manifest.get("binding_protocol") in (5, 6, 7)
+        and state.manifest.get("binding_protocol") in (5, 6, 7, 8)
         and state.step_manifest["managed_context"]["policy"].get("artifact_binding", {}).get("mode")
         == "ref"
         and action_id in getattr(state, "context_read_stages", {})
@@ -636,6 +661,22 @@ def accept_stage(state, action_id, response):
         from .temporal_session_tree_reads import adopt
 
         adopt(state, response)
+        from .temporal_session_model_history import validate_native_snapshot
+
+        validate_native_snapshot(
+            response,
+            state.step_manifest,
+            {
+                **state.request,
+                "scope": state.scope,
+                "messages": state.messages,
+                **state.session_context_fields(),
+            },
+        )
+        if "native_history_snapshot" in response:
+            state.native_history_snapshots.setdefault(
+                str(state.node), detached(response["native_history_snapshot"])
+            )
         stage["prepared"] = response
         _after_artifacts(state, stage)
     elif phase in {"read", "verify"}:
@@ -675,6 +716,7 @@ def accept_stage(state, action_id, response):
                     "facts_recall",
                     "session_data",
                     "session_data_references",
+                    "native_history_snapshot",
                 )
             )
             or not isinstance(response.get("messages"), list)
@@ -689,7 +731,7 @@ def accept_stage(state, action_id, response):
         validate_knowledge_snapshot(response, state.step_manifest, state.scope)
         from .temporal_session_state import validate_context_evidence
 
-        validate_context_evidence(response, state.request)
+        validate_context_evidence(response, {**state.request, **state.session_context_fields()})
         from .temporal_session_data_state import validate_snapshot as validate_session_snapshot
 
         validate_session_snapshot(
@@ -703,7 +745,18 @@ def accept_stage(state, action_id, response):
                 **state.session_context_fields(),
             },
         )
-        if state.manifest.get("model_history_protocol") == 1:
+        if state.step_manifest.get("model_history_protocol") == 2:
+            from .session_model_history import validate_model_history_frame
+            from .temporal_session_model_history import frame
+
+            validate_model_history_frame(
+                frame(state),
+                response["messages"],
+                allow_tool_result_projection=state.step_manifest["model_history"]["identity"].get(
+                    "allow_tool_result_projection", False
+                ),
+            )
+        elif state.step_manifest.get("model_history_protocol") == 1:
             from .model_history import validate_model_history
 
             validate_model_history(
@@ -714,6 +767,18 @@ def accept_stage(state, action_id, response):
                 ),
             )
         stage["status"], stage["snapshot"] = "completed", response
+        from .temporal_session_model_history import validate_native_snapshot
+
+        validate_native_snapshot(
+            response,
+            state.step_manifest,
+            {
+                **state.request,
+                "scope": state.scope,
+                "messages": state.messages,
+                **state.session_context_fields(),
+            },
+        )
         state.context_snapshot = response
         state.context_signature = state.context_cache_signature()
         state._emit(

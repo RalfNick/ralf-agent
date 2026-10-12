@@ -1,5 +1,7 @@
 # 每Agent能力绑定契约 — 目标v1.7
 
+dev89跨Session原生历史子集已验收，增加 `model_history` 可选角色：默认十四角色 Descriptor v1 原字节保持，只有显式 model_history 选择才使用 Descriptor v2；inherit/ref/disabled 经原 Catalog 固定真实策略、方法和原 Release。此角色不提供数据写入权威，原 Local/Temporal 管理读取、准确保存回执和根成功发布。纯 frame 方法保护过去轮次与当前任务；数据后端沿原 Session 角色和宿主 namespace 选择，不增加第二套存储配置。实现与最终交付状态见[本批规格](../../docs/superpowers/specs/2026-10-13-session-model-history-design.md)。
+
 当前 dev83 子集接通原生 Sandbox 工具 ref/disabled，Local／Temporal 六类成员共十三类角色。原授权交集、借用生命周期和协议准入见[指南](../../docs/sandbox.md)与[验收](../reviews/2026-10-12-sandbox-native-tools.md)。artifacts独立绑定、其余selector／自动阶段及完整H1/H4仍开放；下文历史阶段叙述保留原范围。
 
 日期：2026-10-08；状态：完整目标契约；dev25交付H1a，dev26交付Local H1b、dev27交付Session H1c、dev28交付Facts/Knowledge范围H1d、dev29交付Local纯完成verifier H1e、dev30交付Local limits H1f子集，完整H1/H2尚未实现。

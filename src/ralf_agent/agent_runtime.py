@@ -326,6 +326,12 @@ class Runtime:
                 {"ref": owner.to_dict(), **item}
                 for item in pending_remote_saves(self._local, self._local._authorized(owner.run_id))
             )
+            from .local_session_model_history import pending_native_saves
+
+            pending.extend(
+                {"ref": owner.to_dict(), **item}
+                for item in pending_native_saves(self._local._authorized(owner.run_id))
+            )
             for stage in self._local.memory_stages(owner.run_id):
                 if stage["status"] in {"proposing", "prepared", "outcome_unknown"}:
                     pending.append(

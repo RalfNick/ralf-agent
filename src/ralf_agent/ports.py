@@ -36,6 +36,25 @@ class ManagedStageStore(Protocol):
     def managed_stage_reservation(self, run_id: str, reservation_id: str) -> dict | None: ...
 
 
+class NativeHistoryPublicationStore(Protocol):
+    """Optional native Turn facts under the original execution transactions.
+
+    All three methods are synchronous. Prepare and publish complete with None;
+    reads return detached finite JSON records, in publication order, at most128.
+    Prepare is atomic with acceptance. Publish and its exact readback are atomic
+    with root success and must roll back when the original transaction fails.
+    No SQL connection, schema reflection, or independent authority is required.
+    """
+
+    native_history_version: int
+
+    def prepare_native_history(self) -> None: ...
+    def native_history_publications(self, scope: Scope, stream: str) -> list[dict]: ...
+    def publish_native_history(
+        self, scope: Scope, stream: str, message_id: str, evidence: dict
+    ) -> None: ...
+
+
 class FactInspection(Protocol):
     """Optional exact scoped point lookup, including stored expiry metadata."""
 

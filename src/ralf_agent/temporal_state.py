@@ -26,6 +26,7 @@ from .temporal_knowledge_state import validate_protocol as validate_knowledge_pr
 from .temporal_knowledge_state import validate_snapshot as validate_knowledge_snapshot
 from .temporal_session_data_state import validate_protocol as validate_session_data_protocol
 from .temporal_session_data_state import validate_snapshot as validate_session_snapshot
+from .temporal_session_model_history import freeze as freeze_native_history
 from .temporal_session_save_state import validate_protocol as validate_session_save_protocol
 from .temporal_session_state import validate_history as validate_session_history
 from .temporal_session_state import validate_protocol as validate_session_protocol
@@ -109,7 +110,7 @@ def validate_manifest(manifest):
     if manifest["kernel"] == "temporal-3":
         if (
             type(manifest.get("binding_protocol")) is not int
-            or manifest.get("binding_protocol") not in (1, 2, 3, 4, 5, 6, 7)
+            or manifest.get("binding_protocol") not in (1, 2, 3, 4, 5, 6, 7, 8)
             or manifest.get("dispatch_admission") != "history-1"
         ):
             raise DefinitionMismatch("Unsupported Temporal binding/memory protocol")
@@ -332,6 +333,9 @@ class TemporalRunState:
         self.limits_stages = {}
         self.completion_stages, self.pending_verification = {}, None
         self.completion_task = detached(request["input"])
+        self.current_task = detached(request["input"])
+        self.native_history_episodes = []
+        self.native_history_snapshots = {}
         self.messages = self._turn_messages(self.step, request["input"])
         self.receipts, self.command_digests, self.event_log = {}, {}, []
         self.reservations, self.pending_acks = {}, []
@@ -570,6 +574,11 @@ class TemporalRunState:
             "release_digest": self.release_digest,
             "budget": self.budget,
             **(
+                {"native_history_episodes": detached(self.native_history_episodes)}
+                if self.manifest.get("model_history_protocol") == 2
+                else {}
+            ),
+            **(
                 {"completion_stages": detached(list(self.completion_stages.values()))}
                 if self.manifest.get("completion_protocol") == 1
                 else {}
@@ -752,6 +761,7 @@ class TemporalRunState:
             or self.step_manifest.get("knowledge_context") is not None
             or self.step_manifest.get("context_registration") is not None
             or bool(self.request.get("session_history"))
+            or self.step_manifest.get("model_history_protocol") == 2
             or self.request.get("session_root_snapshot") is not None
         ):
             signature = self.context_cache_signature()
@@ -834,6 +844,7 @@ class TemporalRunState:
             or self.step_manifest.get("knowledge_context") is not None
             or self.step_manifest.get("context_registration") is not None
             or bool(self.request.get("session_history"))
+            or self.step_manifest.get("model_history_protocol") == 2
             or self.request.get("session_root_snapshot") is not None
         ):
             request.update(context=detached(self.context_snapshot), scope=self.scope)
@@ -855,9 +866,10 @@ class TemporalRunState:
         return action, request
 
     def session_context_fields(self):
+        from .temporal_session_model_history import request_fields as native_fields
         from .temporal_session_tree_reads import request_fields
 
-        return request_fields(self)
+        return {**request_fields(self), **native_fields(self)}
 
     def accept_context(self, action_id, response):
         from .temporal_context_read_state import observe, owns
@@ -890,7 +902,7 @@ class TemporalRunState:
         validate_knowledge_snapshot(response, self.step_manifest, self.scope)
         from .temporal_session_state import validate_context_evidence
 
-        validate_context_evidence(response, self.request)
+        validate_context_evidence(response, {**self.request, **self.session_context_fields()})
         validate_session_snapshot(
             response,
             self.step_manifest,
@@ -905,7 +917,18 @@ class TemporalRunState:
         from .temporal_session_tree_reads import adopt
 
         adopt(self, response)
-        if self.manifest.get("model_history_protocol") == 1:
+        if self.step_manifest.get("model_history_protocol") == 2:
+            from .session_model_history import validate_model_history_frame
+            from .temporal_session_model_history import frame
+
+            validate_model_history_frame(
+                frame(self),
+                response["messages"],
+                allow_tool_result_projection=self.step_manifest["model_history"]["identity"].get(
+                    "allow_tool_result_projection", False
+                ),
+            )
+        elif self.step_manifest.get("model_history_protocol") == 1:
             from .model_history import validate_model_history
 
             validate_model_history(
@@ -914,6 +937,22 @@ class TemporalRunState:
                 allow_tool_result_projection=self.step_manifest["model_history"]["identity"].get(
                     "allow_tool_result_projection", False
                 ),
+            )
+        from .temporal_session_model_history import validate_native_snapshot
+
+        validate_native_snapshot(
+            response,
+            self.step_manifest,
+            {
+                **self.request,
+                "scope": self.scope,
+                "messages": self.messages,
+                **self.session_context_fields(),
+            },
+        )
+        if "native_history_snapshot" in response:
+            self.native_history_snapshots.setdefault(
+                str(self.node), detached(response["native_history_snapshot"])
             )
         self.context_snapshot = detached(response)
         self.context_signature = self.context_cache_signature()
@@ -1135,6 +1174,11 @@ class TemporalRunState:
                     and not isinstance(response["output"], str)
                 ):
                     message["content"] = canonical(response["output"])
+                if self.step_manifest.get("model_history_protocol") == 2:
+                    action["native_history_message"] = {
+                        "order": len(self.messages),
+                        "message": detached(message),
+                    }
                 self.messages.append(message)
                 self._emit(
                     "decision_adopted",
@@ -1142,7 +1186,7 @@ class TemporalRunState:
                 )
             else:
                 result = final_output(response["output"], self.step["output_schema"])
-                if self.manifest.get("model_history_protocol") == 1:
+                if self.step_manifest.get("model_history_protocol") in (1, 2):
                     from .model_continuation import assistant_message
 
                     message = assistant_message(
@@ -1155,6 +1199,11 @@ class TemporalRunState:
                     # The original received/proposed DTO keeps its JSON value type.
                     if response["output"] is not None and not isinstance(response["output"], str):
                         message["content"] = canonical(response["output"])
+                    if self.step_manifest.get("model_history_protocol") == 2:
+                        action["native_history_message"] = {
+                            "order": len(self.messages),
+                            "message": detached(message),
+                        }
                     self.messages.append(message)
                     self._emit("decision_adopted", {"action_id": action_id, "proposed_actions": []})
                 from .temporal_completion_state import prepare as prepare_completion
@@ -1180,20 +1229,34 @@ class TemporalRunState:
         accept_stage(self, action_id, response)
 
     def complete_node(self, result):
+        if not self._freeze_native_history():
+            return
         from .temporal_session_save_state import prepare as prepare_session
 
         if not prepare_session(self, result):
             self._complete_node(result)
 
     def _complete_node(self, result):
+        if not self._freeze_native_history():
+            return
         self._emit("node_completed", {"node": self.node, "result_digest": digest(result)})
         if self.node + 1 < len(self.request["definition"]["steps"]):
             self.node += 1
             self.completion_task = detached(result)
+            self.current_task = detached(result)
             self.decisions, self.messages = 0, self._turn_messages(self.step, result)
         else:
             self.state, self.result = "succeeded", detached(result)
             self._emit("run_succeeded", {"result_digest": digest(result)})
+
+    def _freeze_native_history(self):
+        try:
+            freeze_native_history(self)
+            return True
+        except (DefinitionMismatch, ValidationError) as exc:
+            self.state, self.error = "failed", {"code": exc.code}
+            self._emit("run_failed", self.error)
+            return False
 
     def accept_memory(self, action_id, response):
         from .temporal_memory_state import accept_stage
@@ -1299,9 +1362,17 @@ class TemporalRunState:
         )
         if self.state not in TERMINAL:
             self.state, self.error = "running", None
-            self.messages.append(
-                {"role": "tool", "tool_call_id": action["call_id"], "content": canonical(result)}
-            )
+            message = {
+                "role": "tool",
+                "tool_call_id": action["call_id"],
+                "content": canonical(result),
+            }
+            if self.step_manifest.get("model_history_protocol") == 2:
+                action["native_history_message"] = {
+                    "order": len(self.messages),
+                    "message": detached(message),
+                }
+            self.messages.append(message)
 
     def retry_blocked(self):
         self.pending_acks.extend(self.deferred_acks)

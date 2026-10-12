@@ -18,7 +18,29 @@ async def execute(runtime, request, *, dispatch_guard=None, on_end=None):
         if "session_save_protocol" not in runtime.manifest:
             raise DefinitionMismatch("Original Session writes are not registered")
         intent = request["intent"]
-        expected = expected_read(runtime.manifest, request, proposed_address=intent["address"])
+        native = intent["message"].get("kind") == "ralf-native-model-turn"
+        if native:
+            from .session_model_history import (
+                native_history_address,
+                validate_native_history_envelope,
+            )
+            from .temporal_session_data_state import session_storage_key
+
+            if runtime.manifest.get("model_history_protocol") != 2:
+                raise DefinitionMismatch("Native write requires its original selected frame policy")
+            envelope = validate_native_history_envelope(intent["message"])
+            expected = {
+                "address": session_storage_key(
+                    runtime.manifest["session_data"]["namespace"],
+                    native_history_address(envelope["stream"]),
+                ),
+                "registration_digest": digest(runtime.manifest["session_data"]),
+            }
+        else:
+            expected = expected_read(runtime.manifest, request, proposed_address=intent["address"])
+        max_chars = (
+            999_998 if native else runtime.manifest["session_save_protocol"]["max_message_chars"]
+        )
         if (
             intent["version"] != 1
             or type(intent["version"]) is not int
@@ -31,8 +53,7 @@ async def execute(runtime, request, *, dispatch_guard=None, on_end=None):
             or intent["expected_revision"] < 0
             or not intent["message_id"].startswith("ralf-session-message-v1:")
             or type(intent["message"]) is not dict
-            or len(canonical(intent["message"]))
-            > runtime.manifest["session_save_protocol"]["max_message_chars"]
+            or len(canonical(intent["message"])) > max_chars
         ):
             raise DefinitionMismatch("Session write lost original fixed source/address")
         original = selected_registration(runtime, request)
@@ -85,7 +106,7 @@ async def execute(runtime, request, *, dispatch_guard=None, on_end=None):
                 scope,
                 intent["address"],
                 intent["message_id"],
-                runtime.manifest["session_save_protocol"]["max_message_chars"],
+                max_chars,
             )
             return {"ok": True, "inspection": value, "dispatched": False}
         if phase == "adopt":

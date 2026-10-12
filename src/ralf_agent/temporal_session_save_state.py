@@ -92,7 +92,19 @@ def prepare(state, result):
         "task": detached(state.completion_task),
         "content": detached(result),
     }
-    if len(canonical(message)) > state.manifest["session_save_protocol"]["max_message_chars"]:
+    native = state.step_manifest.get("model_history_protocol") == 2
+    if native:
+        from .temporal_session_model_history import path
+
+        message = next(
+            e
+            for e in state.native_history_episodes
+            if e["source"]["node"] == canonical(path(state.request, state.node))
+        )
+        source = state.context_snapshot["native_history_snapshot"]
+    if len(canonical(message)) > (
+        999_998 if native else state.manifest["session_save_protocol"]["max_message_chars"]
+    ):
         state.state, state.error = "failed", {"code": "session_message_capacity"}
         state._emit("run_failed", state.error)
         return True
@@ -252,7 +264,11 @@ def accept_stage(state, action_id, response):
                 Scope(**intent["scope"]),
                 intent["address"],
                 intent["message_id"],
-                state.manifest["session_save_protocol"]["max_message_chars"],
+                (
+                    999_998
+                    if stage["intent"]["message"].get("kind") == "ralf-native-model-turn"
+                    else state.manifest["session_save_protocol"]["max_message_chars"]
+                ),
             )
         except (ValidationError, KeyError, TypeError):
             response = {"ok": False, "code": "session_inspection_invalid", "dispatched": False}

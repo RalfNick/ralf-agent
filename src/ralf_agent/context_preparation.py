@@ -334,8 +334,12 @@ async def recover_terminal_context(engine, run_id):
 
 async def prepare_context(engine, run_id, step, context):
     from .context_artifacts import prepare
+    from .local_session_model_history import native_history_frame, prepare_native_history
 
-    history_registration = engine._history_registration()
+    await prepare_native_history(engine, run_id)
+    run = engine._authorized(run_id)
+    components = engine._components(run)
+    history_registration = engine._history_registration(components)
     project = history_registration is None or history_registration["identity"].get(
         "allow_tool_result_projection", False
     )
@@ -365,7 +369,12 @@ async def prepare_context(engine, run_id, step, context):
         plan = engine._component_result(plan, (dict, type(None)), "Context preparation")
         if plan is None:
             messages, manifest = engine._assemble_context(
-                run["messages"], refs, step["max_context_chars"], context=context
+                run["messages"],
+                refs,
+                step["max_context_chars"],
+                context=context,
+                components=components,
+                frame=native_history_frame(engine, run),
             )
             temporary = {"references": bundle}
             projection = _projection(temporary, messages, manifest)

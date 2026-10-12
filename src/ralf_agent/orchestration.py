@@ -184,6 +184,9 @@ class OrchestrationRuntime:
         from .managed_context import admit_context
 
         admit_context(engine, manifest, definition["kind"], parent_call)
+        from .local_session_model_history import activate_native_history
+
+        activate_native_history(engine, manifest)
         from .session_resources import admit_sessions
 
         session_claim_data = admit_sessions(engine, manifest, [session])

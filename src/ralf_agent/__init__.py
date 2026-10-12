@@ -142,6 +142,7 @@ from .model_native import AnthropicProvider, GeminiProvider
 from .model_protocol import ModelCapabilities, ModelStreamEvent, StreamingModelProvider
 from .model_query import ModelQueryTransform
 from .model_responses import OpenAIResponsesProvider
+from .native_session_history import read_native_history
 from .orchestration_evaluation import (
     OfflineOrchestrationProvider,
     evaluate_orchestration,
@@ -184,6 +185,7 @@ from .ports import (
     EffectJournal,
     ExecutionEngine,
     ExecutionStore,
+    NativeHistoryPublicationStore,
     RuntimeDiagnostics,
 )
 from .postgres import PostgresKnowledgeStore, PostgresMemory
@@ -260,6 +262,12 @@ from .semantic_memory import SemanticMemoryStore
 from .semantic_recall import TaskRecallPlanner
 from .semantic_selection import OrderedReferenceSelector
 from .service_lifecycle import LocalA2AService
+from .session_model_history import (
+    native_history_address,
+    native_history_envelope,
+    validate_model_history_frame,
+    validate_native_history_envelope,
+)
 from .session_ports import SessionAdmissionStore
 from .session_types import SessionKey, SessionRef, SessionSnapshot, TurnAdmission
 from .storage import SQLiteStore
@@ -332,7 +340,7 @@ from .workflow import (
     WorkflowSelection,
 )
 
-__version__ = "0.1.0.dev88"
+__version__ = "0.1.0.dev89"
 from .binding_artifacts import ArtifactBindingResource, ArtifactView
 from .binding_sandbox import SandboxBindingResource
 from .docker_sandbox import DockerSandbox
@@ -429,6 +437,7 @@ __all__ = [
     "ContextBuilder",
     "CoordinatorLease",
     "ExecutionStore",
+    "NativeHistoryPublicationStore",
     "DecisionProposal",
     "DispatchEnvelope",
     "EffectObservation",
@@ -450,6 +459,11 @@ __all__ = [
     "ModelContinuation",
     "ModelHistoryPolicy",
     "CompleteModelHistory",
+    "native_history_address",
+    "native_history_envelope",
+    "validate_native_history_envelope",
+    "validate_model_history_frame",
+    "read_native_history",
     "DeepSeekChatProvider",
     "ModelResponse",
     "ModelRequest",

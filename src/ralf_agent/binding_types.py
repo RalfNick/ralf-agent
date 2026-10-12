@@ -22,6 +22,7 @@ BINDING_ROLES = (
     "stage_policy",
     "limits",
 )
+MODEL_HISTORY_ROLE = "model_history"
 REQUIRED_ROLES = frozenset({"provider", "decision_policy", "context"})
 
 
@@ -100,10 +101,15 @@ class AgentBindingDescriptor:
     _json: str
 
     def __init__(self, **selections):
-        if set(selections) - set(BINDING_ROLES):
+        roles = (
+            (*BINDING_ROLES, MODEL_HISTORY_ROLE)
+            if MODEL_HISTORY_ROLE in selections
+            else BINDING_ROLES
+        )
+        if set(selections) - set(roles):
             raise ValidationError("Unknown Agent binding role")
         normalized = {}
-        for role in BINDING_ROLES:
+        for role in roles:
             selection = selections.get(role, BindingSelection.inherit())
             if isinstance(selection, dict):
                 selection = BindingSelection.from_dict(selection)
@@ -112,9 +118,12 @@ class AgentBindingDescriptor:
             if role in REQUIRED_ROLES and selection.mode == "disabled":
                 raise ValidationError(f"Required binding cannot be disabled: {role}")
             normalized[role] = selection.to_dict()
-        object.__setattr__(self, "_json", canonical({"schema_version": 1, **normalized}))
+        version = 2 if MODEL_HISTORY_ROLE in selections else 1
+        object.__setattr__(self, "_json", canonical({"schema_version": version, **normalized}))
 
     def __getattr__(self, name):
+        if name == MODEL_HISTORY_ROLE:
+            return BindingSelection.from_dict(json.loads(self._json).get(name, {"mode": "inherit"}))
         if name in BINDING_ROLES:
             return BindingSelection.from_dict(json.loads(self._json)[name])
         raise AttributeError(name)
@@ -127,8 +136,13 @@ class AgentBindingDescriptor:
         if (
             not isinstance(value, dict)
             or type(value.get("schema_version")) is not int
-            or value["schema_version"] != 1
-            or set(value) - {"schema_version", *BINDING_ROLES}
+            or value["schema_version"] not in {1, 2}
         ):
-            raise ValidationError("Binding descriptor requires schema_version=1 and known roles")
+            raise ValidationError("Binding descriptor requires schema_version=1 or 2")
+        version = value["schema_version"]
+        roles = (*BINDING_ROLES, MODEL_HISTORY_ROLE) if version == 2 else BINDING_ROLES
+        if set(value) - {"schema_version", *roles} or (
+            version == 2 and MODEL_HISTORY_ROLE not in value
+        ):
+            raise ValidationError("Binding descriptor fields differ from its schema version")
         return cls(**{k: v for k, v in value.items() if k != "schema_version"})

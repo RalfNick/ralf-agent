@@ -146,7 +146,9 @@ class LocalSessionAuthority:
             binding["conversation"] = conversation
         if remote is not None:
             binding["remote_session"] = remote
-        return key, binding
+        # Session publications are JSON. Detach once so a live tuple in a
+        # planner's AgentSpec compares with the same persisted list on submit.
+        return key, json.loads(canonical(binding))
 
     def _remote_extension(self, *, composite=False):
         version = getattr(self.engine.store, "session_admission_version", 1)
@@ -259,6 +261,11 @@ class LocalSessionAuthority:
         run_id = state["active_run"]
         if run_id is not None:
             run = self.engine._authorized(run_id)
+            if "native_model_history" in run:
+                from .local_native_history_save import native_saves_settled
+
+                if not native_saves_settled(run):
+                    return self._run_ref(run_id)
             from .session_composites import KINDS, composite_turn_busy
 
             if run["definition"]["kind"] in KINDS and composite_turn_busy(

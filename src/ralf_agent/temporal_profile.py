@@ -82,8 +82,14 @@ class TemporalProfile:
             for name in sorted(EXECUTION_FLAGS)
             if name not in {"artifact_bindings", "model_continuation"} or execution.get(name, False)
         }
-        if "model_history" in original.components and not flags.get("model_continuation", False):
+        from .runtime_builder import (
+            model_history_declarations,
+            validate_session_history_declarations,
+        )
+
+        if model_history_declarations(original) and not flags.get("model_continuation", False):
             raise ValidationError("Temporal model history requires explicit model continuation")
+        validate_session_history_declarations(original, source_available=flags["enable_sessions"])
         session_declared = "session_store" in original.components or any(
             item["role"] == "session" for item in original.binding_components or []
         )
