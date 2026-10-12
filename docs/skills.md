@@ -139,3 +139,7 @@ asyncio.run(load_reference())
 [本批验收](../architecture/reviews/2026-10-12-skills-catalog.md)区分运行实现和未完成门槛。
 
 每 Agent 目录选择／禁用见[Skills绑定](skills-bindings.md)；dev79绑定子集已验收，普通目录工具不自动开启该角色。
+
+## 自动目录发现
+
+显式组合 SkillDirectoryRetriever 与原 KnowledgeContext，可在模型决策前提供已授权的名称／描述引用。默认词项选择器可替换，配置有 JSON／可选 SKILL.md 目录适配器；正文读取仍使用原 SkillToolSource 授权工具。见[目录发现与配置](skill-discovery.md)。

@@ -1,6 +1,6 @@
 """Borrowed immutable Skill metadata through the original Retriever protocol."""
 
-from dataclasses import asdict
+import math
 
 from .component_fingerprint import executable_digest
 from .errors import DefinitionMismatch, ValidationError
@@ -10,7 +10,7 @@ from .skill_selection import LexicalSkillSelector, fixed_identity, selection_inp
 from .skills import _bound, _metadata, _name, _plain, _sha, _text, validate_skill_list
 from .task_controls import _binding
 from .tools import ThreadExecutionTracker, current_thread_group, current_thread_tracker
-from .types import canonical, digest
+from .types import Scope, canonical, digest
 
 
 class SkillDirectoryRetriever:
@@ -105,10 +105,32 @@ class SkillDirectoryRetriever:
             self._check()
             if (
                 type(page) is not dict
+                or set(page)
+                != {"kind", "version", "scope", "catalog_digest", "skills", "total", "next_offset"}
+                or type(page["kind"]) is not str
+                or page["kind"] != "skill-list"
+                or type(page["version"]) is not str
+                or page["version"] != "1"
+                or type(page["catalog_digest"]) is not str
+                or page["catalog_digest"] != catalog_digest
+                or type(page["scope"]) is not dict
+                or set(page["scope"]) != {"workspace", "principal"}
+                or any(
+                    type(page["scope"][key]) is not str or page["scope"][key] != getattr(scope, key)
+                    for key in ("workspace", "principal")
+                )
                 or type(page.get("skills")) is not list
                 or len(page["skills"]) > self.max_entries
                 or type(page.get("total")) is not int
                 or not 0 <= page["total"] <= self.max_entries
+                or len(page["skills"]) != max(0, min(self.max_entries, page["total"] - offset))
+                or (page["next_offset"] is not None and type(page["next_offset"]) is not int)
+                or page["next_offset"]
+                != (
+                    offset + len(page["skills"])
+                    if offset + len(page["skills"]) < page["total"]
+                    else None
+                )
             ):
                 raise ValidationError("Skill directory exceeded its complete metadata allowance")
             for item in page["skills"]:
@@ -165,15 +187,20 @@ class SkillDirectoryRetriever:
 
     async def retrieve(self, scope, namespace, query):
         _scope(scope, namespace)
-        if type(query) is not RetrievalQuery or not 1 <= query.limit <= 100:
+        if (
+            type(query) is not RetrievalQuery
+            or type(query.limit) is not int
+            or not 1 <= query.limit <= 256
+        ):
             raise ValidationError("Skill discovery requires a bounded original RetrievalQuery")
         entries = await self._entries(scope)
-        entries = selection_input(query.text, entries, query.limit)
-        selected = self.selector.select(query.text, _plain(entries), limit=query.limit)
+        selected_limit = min(query.limit, 100)
+        entries = selection_input(query.text, entries, selected_limit)
+        selected = self.selector.select(query.text, _plain(entries), limit=selected_limit)
         self._check()
         if (
             type(selected) is not list
-            or len(selected) > query.limit
+            or len(selected) > selected_limit
             or any(type(name) is not str for name in selected)
             or len(set(selected)) != len(selected)
             or not set(selected) <= {item["name"] for item in entries}
@@ -190,21 +217,17 @@ class SkillDirectoryRetriever:
 
     async def validate(self, scope, namespace, items):
         _scope(scope, namespace)
-        if type(items) not in (list, tuple) or len(items) > 100:
+        if type(items) not in (list, tuple) or len(items) > 256:
             raise ValidationError("Skill validation requires bounded original chunks")
         entries = {item["name"]: item for item in await self._entries(scope)}
         seen = set()
         for item in items:
-            current = asdict(item) if type(item) in (Chunk, RetrievedChunk) else None
+            current = self._snapshot(item)
             expected = (
-                asdict(self._chunk(scope, namespace, entries[item.document_id]))
+                self._snapshot(self._chunk(scope, namespace, entries[item.document_id]))
                 if current is not None and item.document_id in entries
                 else None
             )
-            if current is not None:
-                current.pop("score", None)
-            if expected is not None:
-                expected.pop("score", None)
             if (
                 current is None
                 or item.document_id not in entries
@@ -215,3 +238,65 @@ class SkillDirectoryRetriever:
                     "Skill reference differs from its original scoped metadata"
                 )
             seen.add(item.chunk_id)
+
+    @staticmethod
+    def _snapshot(item):
+        """Check raw native fields before any metadata view or copying hook."""
+        if type(item) not in (Chunk, RetrievedChunk):
+            raise DefinitionMismatch("Skill reference requires an original native chunk")
+        fields = {
+            name: object.__getattribute__(item, name)
+            for name in (
+                "document_id",
+                "chunk_id",
+                "version",
+                "text",
+                "source_uri",
+                "metadata",
+                "expires_at",
+                "scope",
+                "namespace",
+            )
+        }
+        limits = {
+            "document_id": 64,
+            "chunk_id": 64,
+            "text": 4162,
+            "source_uri": 135,
+            "namespace": 128,
+        }
+        for name, maximum in limits.items():
+            _text(fields[name], "Skill reference " + name, maximum)
+        if (
+            type(fields["version"]) is not int
+            or fields["version"] != 1
+            or fields["expires_at"] is not None
+        ):
+            raise DefinitionMismatch("Skill reference version or expiry changed")
+        scope = fields["scope"]
+        if type(scope) is not Scope or any(
+            type(object.__getattribute__(scope, key)) is not str
+            for key in ("workspace", "principal")
+        ):
+            raise DefinitionMismatch("Skill reference requires original ordinary Scope")
+        metadata = fields["metadata"]
+        limits = {
+            "reference_kind": 32,
+            "name": 64,
+            "description": 4096,
+            "skill_version": 256,
+            "catalog_digest": 64,
+            "metadata_digest": 64,
+            "permissions": 16,
+        }
+        if type(metadata) is not dict or set(metadata) != set(limits):
+            raise DefinitionMismatch("Skill reference requires original ordinary metadata")
+        for name, maximum in limits.items():
+            _text(metadata[name], "Skill metadata " + name, maximum)
+        if type(item) is RetrievedChunk:
+            score = object.__getattribute__(item, "score")
+            if type(score) not in (int, float) or (
+                type(score) is float and not math.isfinite(score)
+            ):
+                raise ValidationError("Skill reference score must be ordinary finite numeric data")
+        return fields

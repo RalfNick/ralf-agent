@@ -40,7 +40,7 @@ jobs:
       - name: Installed passive Skill directory contracts outside checkout
         working-directory: ${{ runner.temp }}
         run: |
-          python -m pytest -q -W error -p no:cacheprovider -c /dev/null "$RUNNER_TEMP/session-contracts/tests/test_skill_selection.py" "$RUNNER_TEMP/session-contracts/tests/test_skill_retrieval.py" "$RUNNER_TEMP/session-contracts/tests/test_skill_retrieval_configuration.py" "$RUNNER_TEMP/session-contracts/tests/test_skill_retrieval_execution.py"
+          python -m pytest -q -W error -p no:cacheprovider -c /dev/null "$RUNNER_TEMP/session-contracts/tests/test_skill_selection.py" "$RUNNER_TEMP/session-contracts/tests/test_skill_retrieval.py" "$RUNNER_TEMP/session-contracts/tests/test_skill_retrieval_configuration.py" "$RUNNER_TEMP/session-contracts/tests/test_skill_retrieval_execution.py" "$RUNNER_TEMP/session-contracts/tests/test_skill_retrieval_review.py"
       - name: Installed wheel smoke test outside checkout
         working-directory: ${{ runner.temp }}
         run: |

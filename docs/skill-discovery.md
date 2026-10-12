@@ -5,6 +5,9 @@ the original Retriever and KnowledgeContext interfaces. The default
 `LexicalSkillSelector` selects metadata by deterministic name/description matches,
 including Chinese character bigrams. This is a basic matching implementation;
 custom selectors can replace it through a pure synchronous `SkillSelector` port.
+Native query-transform candidate requests up to256 are accepted; each selector
+call receives at most100 candidates, and original transformed unions remain
+source-validated. The declaration selection limit stays1–100.
 
 ```python
 import asyncio

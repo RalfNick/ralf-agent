@@ -23,6 +23,7 @@
 | RecallPlanner | `recall_planner=`，默认 None | identity、同步纯 plan 返回 MemoryRecallPolicy；与 recall_policy 互斥，原 Action 恢复不重新规划 |
 | FactReferenceValidator | 记忆后端可选 validate_facts | 返回 None 或抛拒绝；校验当前 Scope/namespace/key/version/TTL；缺失时全量 Legacy 校验 |
 | KnowledgeContextPort／KnowledgeRetriever | `knowledge=`，默认 None | identity、limit/max_chars、async references/validate；结构化端口不要求继承 KnowledgeContext，固定来源与配置，调用后复核 |
+| SkillSelector | SkillDirectoryRetriever(selector=...)，默认 LexicalSkillSelector | 普通固定 identity、纯同步 select→有界唯一已允许名称；不访问模型／正文，不授予权限；原 KnowledgeContext 配置与每 Agent Knowledge 绑定可复用 |
 | KnowledgeStore／EmbeddingProvider／VectorIndex | 注入 Retriever | 权威知识 CAS/TTL 与索引分离；模型身份、维度、来源过滤和显式重新索引 |
 | ContextBuilder | `context_assembler=` | identity 与确定性 assemble；返回实际消息和 JSON Manifest |
 | ExecutionStore v1 | 第一个构造参数 | 原子命令／事务、Run CAS、事件、预算、活跃 Session 和未知效果查询；不另建调度器 |

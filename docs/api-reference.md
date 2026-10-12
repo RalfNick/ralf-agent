@@ -174,6 +174,8 @@ handler 接收 JSON 参数和 InvocationContext。Context 提供 scope、run_id�
 | `RetrievalQuery(text, limit=5, max_chars=8000)` | 限制检索返回；RetrievalResult 含来源、版本、分数和 mode |
 | `KnowledgeContext(retriever, namespace="default", limit=5, max_chars=8000)` | async references/validate；注入 knowledge=；来源按 Scope/版本/TTL 校验 |
 | `KnowledgeContextPort` | 可直接实现 identity/limit/max_chars/async references/validate，无需继承默认 Facade |
+| `SkillSelector`／`LexicalSkillSelector(version="1")` | 固定普通 JSON identity、纯同步 select(query, entries, *, limit)→普通唯一名称列表；默认词项／中文 bigram，有界1–100，无模型调用 |
+| `SkillDirectoryRetriever(catalog, *, version, names=None, selector=None, max_entries=1000)` | 借用原 SkillCatalogPort，原 async retrieve/validate 与 Knowledge DTO；被动元数据／Scope／names／来源固定，不读取正文或注册工具；见[目录发现](skill-discovery.md) |
 | `LexicalRetriever(store)` | 默认中英文词法检索，无远程模型调用 |
 | `EmbeddingProvider`／`VectorIndex` | 显式注入 async embed 与 scoped 索引；索引不保存知识正文 |
 | `VectorRetriever(store, index, embedding)` | 显式 index_document 后检索；回读有效权威来源 |

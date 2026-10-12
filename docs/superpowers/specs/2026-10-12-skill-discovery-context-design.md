@@ -41,3 +41,7 @@ Local六类与Temporal六类实际目录发现→模型选择原skill_get→原�
 原KnowledgeRegistration扩展native资源遍历识别SkillDirectoryRetriever及catalog.list/get，保持原knowledge_protocol1和发布的原有效协议。既有scope/source验证、Contextread实际结束和恢复无需新marker；旧81若使用同一通用纯History可以理解同样的引用协议，实际旧Worker的固定runtime因新adapter发布／实现身份不匹配在I/O前拒绝；不要求旧纯state拒绝合法原KnowledgeContextProtocol。默认旧Manifest保持。实际兼容门槛使用真实旧81 Worker+固定默认runtime、新发布request和零模型／工具实际I/O事实，以原validate_release为边界。
 
 实际读取线程细化：memory_call本身同步执行，本阶段不使用它隐式委派。SkillDirectoryRetriever沿原SkillToolSource使用ThreadExecutionTracker.run，并优先沿当前ContextExecutionOwner/current_thread_group登记真实读；直接调用有独立机械tracker保留底层线程。FileCatalog原_workspace._operation保持FD／真实活动关闭守卫，Context通知等待真实线程结束。自定义同步目录必须具备原SkillToolSource所需的线程安全契约。
+
+## Native candidate compatibility refinement before unified review fixes
+
+Original RetrievalQuery wrappers can request up to256 candidates and validate unions up to256; directory accepts that native bound and uses min(query.limit,100) for each pure SkillSelector call. The selector public maximum remains100 and declarations limit remains1–100. Exact page envelope/scalars/Scope/metadata are checked before any recursive detachment; raw native DTO fields must be ordinary and bounded before any copy, including raw metadata backing storage. Original DTO/protocol and QueryTransformRetriever defaults remain unchanged.
