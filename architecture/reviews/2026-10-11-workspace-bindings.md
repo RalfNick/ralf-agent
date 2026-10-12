@@ -33,3 +33,5 @@ Important 修复：10 项 true RED（0.91s）覆盖五种边界×True/1、1/1.0�
 额外真实旧 Worker 门槛已补：实际安装 dev75 的原 TemporalWorkflow 收到 dev76 Workspace opt-in，在 init／History 绑定校验拒绝；History 记录 WorkflowTaskFailed，无任何 ActivityTaskScheduled，模型／工具审计文件均不存在。原错误是 `Unsupported Temporal binding role or resource selector`。这意味着不兼容队列必须由宿主正确路由，不能期待旧 Worker 自动迁移。探针首次仅异常文案断言错误，保留失败并确认清理；新临时数据库纠正后 actual exit0，Worker 和自有17278服务均停止并等待退出。先前独立审查的旧 Worker 未实测限制由此补上；没有第二次审查或产品修复。
 
 最终冻结全量：session89503 actual exit0，4501 passed／345配置依赖跳过（709.82s）；这些跳过不能代替远端完整矩阵或真实模型质量。全部259产品源码与制品／两种安装一致；原代码在完整回归期间未再修改。Ruff956文件／格式／CI YAML／Git空白、依赖校验和安装指南通过。正式Task3和本地提交记录随后追加；不推送远端。
+
+本地实现提交 `3801bf50007a0e814cfa568fcb594a124190f47b`：32路径；正式Task3 session16955 actual exit0：160 passed（15.84s），记录93c32b8→3801bf5；三个正式Task完成，完整R01–R26仍进行中。仅本地提交，未推送。

@@ -54,4 +54,4 @@
 
 - [x] Sync capability subset and build/install freshcore/SDK; actual installed tests/services and actual75↔76 Local/CLI/defaultTemporal/native recovery;22templates exact; older worker explicit-role refusal beforeI/O. Expected all required actual gates pass, no model/parity/Sandbox claims.
 - [x] One fresh readonly whole-batch review; regrade and ledger every decline/ruling BEFORE one Important RED→GREEN pass; Minor deferred only. Expected fullreport, all Important covered/no secondreview.
-- [ ] Freeze products/runfullsource/build/install/hashdocs/actualservice/compatibility; stop and wait original owned services, localcommit/formalTask3, archive/deleteonlyownSDD. Expected fullgoal remainsactive/no push.
+- [x] Freeze products/runfullsource/build/install/hashdocs/actualservice/compatibility; stop and wait original owned services, localcommit/formalTask3, archive/deleteonlyownSDD. Expected fullgoal remainsactive/no push.
