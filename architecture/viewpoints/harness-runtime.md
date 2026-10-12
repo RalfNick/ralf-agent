@@ -1,5 +1,23 @@
 # RALF AgentHarness 目标架构
 
+产品版本为dev84，最终验收中；独立Artifact binding已实现。第十四个角色artifacts使用借用原存储
+视图及纯managed Context预测／派生，分别选择Context策略和物理target／namespace，
+支持Local／Temporal六类Agent的ref／disabled／inherit。原Engine／History继续拥有
+写意图、核验、取消／结束证据与结果采纳；弱Context缓存只用于装配，不保存Run状态。
+memory／SQLite／POSIX file和custom sync/async保持默认、替换与owned/borrowed边界。
+Local显式选择使用local-bindings-15，Temporal only joint binding5/artifacts1承认
+并报告Artifact role/namespace selector；legacy发布保持原能力。
+候选恢复仅允许joint5/artifacts ref中未获原History allowed grant的未知read/verify，
+在原耐久phase/artifact内最多重建一次；原子fence旧Action，late grant拒绝，已授予
+读和旧1–4不重试。writer ACK丢失后内容verified／结果succeeded可仍保留
+unknown_remote_execution／nonquiescent；内容核验与本地PID wait都不替代原History
+handler-end proof。真实SQLite/file独立Worker崩溃窗口已通过，最终安装复验仍pending。
+本批统一Temporal／恢复／旧83兼容155项通过（237.48s），含实际SQLite/file六组合、
+独立进程崩溃／真实async取消／旧83 Worker零Activity拒绝及22原模板。唯一最终
+review／冻结全量／fresh安装／制品门槛仍待验收。
+完整R01–R26、H1/H3与真实质量仍开放；dev83 M1实际TemporalSandboxCI、
+M2缺失ServerVersion typed error继续延期。见[首用指南](../../docs/artifact-bindings.md)。
+
 Dev83 已验收受限原生 SandboxProvider／Docker 默认、原 ToolSource、显式异步声明和每 Agent sandbox ref/disabled 授权交集。Local／Temporal 六类审批重启、已采纳恢复、原生冷接管及真实停止通过。最终源码5280 passed／418配置跳过（763.57s (0:12:43)），核心182／SDK149安装、真实源码32／安装32、旧82双向恢复／22模板／旧Worker零Activity拒绝及287模块一致通过。六项Important统一修复，M1／M2两项Minor延期；自有Temporal实际退出并等待。完整R01–R26、远程沙箱、持久工作区、Artifact传输、外部Runner和真实质量继续开放。见[原生沙箱指南](../../docs/sandbox.md)。
 
 Dev82 子集已验收：纯可替换 SkillSelector／LexicalSkillSelector、SkillDirectoryRetriever、JSON／可选 SKILL.md 声明，通过原 KnowledgeContext 自动提供被动目录；正文仍走原授权 skill_get，不增加工具权限或执行权威。最终源码5089 passed／386配置跳过（845.08s (0:14:05)），核心155／SDK271安装、真实源码8／安装8、旧81双向恢复／22模板／旧Worker业务I/O前拒绝及281模块一致通过。三项Important经10项有效失败复现统一修复，无新增延期Minor；自有Temporal实际退出并等待。完整R01–R26、语义选择、插件激活、Sandbox／Runner及真实质量仍开放。见[本批记录](../reviews/2026-10-12-skill-discovery-context.md)。
@@ -318,14 +336,15 @@ SDK直接运行不依赖Service，身份与Scope不从用户提示词取得。
 
 ## 11. 当前基线与迁移
 
-| 能力 | dev37 历史基线（当前见 dev46 清单） | 后续目标 |
+| 能力 | dev37 历史基线及注明版本的增量（当前见本文开头和实现清单） | 后续目标 |
 | --- | --- | --- |
 | DecisionPolicy | Harness/NativeHarness已实现 | 保留导入与行为，文档补充狭义定位 |
 | 执行与恢复 | Local/Temporal明确子集、共享采纳规则 | 从Engine逐步抽纯规则与受管理阶段，共同conformance |
 | 组件装配 | H1a与Local H1b六类绑定，覆盖原生/顺序/图/Team/Dynamic/嵌套、固定父子Release及Profile v2 | 补Temporal绑定、其他规范资源身份/环境角色；Local Session H1c已交付，不把Local H1b当完整H1 |
 | 上下文/记忆/RAG | 多个端口/适配器与可选链路已有实现 | 组合为推荐受管理管线，补自动阶段与作用域路由 |
 | Agent/Session应用API | H2a Local stateless Agent/Runtime、AgentRun/RunRef/WaitResult、托管／观察／可重试关闭；H2b1 原生／顺序及 H2b2 同库复合 Session/Turn、busy、固定绑定与 CAS rebind；H2c1 Temporal 原生／顺序共同入口与固定 RPC 派发／detach | H2c2 已接通已注册高级入口；补远程会话、续接、Temporal 绑定与完整共同验收；旧RunHandle DTO保留 |
-| Workspace/Skill/Sandbox | Workspace读写与Skill目录已交付子集；dev83受限Docker／原工具／Sandbox角色候选已通过真实编排恢复 | 最终发布验收进行中；远端、持久共享工作区、Artifact传输及完整H4仍未交付 |
+| Workspace/Skill/Sandbox | Workspace读写、Skill目录与dev83受限Docker／原工具／Sandbox角色子集已验收 | 远端、持久共享工作区、Artifact传输及完整H4仍未交付 |
+| Artifact绑定（dev84候选） | 第十四类独立角色，借用physical target／namespace，纯managed Context派生；Local／Temporal六组合SQLite/file恢复子集通过 | 独立进程崩溃／真实async取消／旧83 Worker拒绝／最终review／全量安装与制品待验收；remote／binary／GC／cache另交付 |
 | 实时事件 | 持久事实订阅已有，Agent delta尚未统一 | 独立展示协议，不改变采纳语义 |
 | 企业Service | 有限HTTP/A2A与交接 | 身份、容量、运维、迁移/保留和恢复控制面后续验收 |
 

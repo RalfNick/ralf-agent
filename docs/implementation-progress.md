@@ -1,5 +1,24 @@
 # Implementation progress — 2026-10-05 M1 local runtime
 
+Dev84 验收中（2026-10-12）：独立 Artifact binding 沿原端口、managed Context和
+Local／Temporal执行权威实现；产品版本为0.1.0.dev84。Local资源／纯Context已本地
+提交8cebd0b，Local六组合／声明装配已本地提交9f33cc4，重点回归分别187／186通过。
+Temporal joint binding5/artifacts1 工作树纯合约98项（16.86s）与实际
+六组合×SQLite/file12项（149.05s）通过：审批重启、写后ACK丢失读回核验、
+已接受结果恢复、History replay与Context读取均有本批证据。这些是重点子集，
+不替代最终冻结源码、全量或安装包验收。独立进程崩溃／真实async取消和实际旧83 Worker零Activity拒绝已通过；
+统一Temporal／恢复／旧版本门槛155项通过（237.48s）。唯一最终review和
+fresh core/SDK／冻结全量／制品一致性仍待最终验收。
+真实Worker在原History grant前崩溃的读取暴露永久failed窗口；候选修复仅允许
+joint5/artifacts ref的未知read/verify按原耐久phase/artifact重建一次，先原子fence
+旧Action并拒绝late grant。已allowed读和legacy1–4不重试；真实SQLite/file独立Worker崩溃已通过，最终安装复验仍pending。
+写ACK丢失内容verified／结果succeeded不关闭unknown_remote_execution或nonquiescent，
+handler真实结束仍需原History证据，本地PID wait不能冒充end ACK。
+memory／SQLite／POSIX file及custom sync/async、借用／owned生命周期、Context
+独立选择与纯预测限制见[指南](artifact-bindings.md)和[离线例子](artifact-binding-examples.md)。
+dev83 Minor M1实际TemporalSandboxCI、M2缺失ServerVersion typed error继续延期；
+R01–R26每项剩余范围和真实质量继续开放，无全面AgentScope parity或发布完成宣称。
+
 Dev83 已验收受限原生 SandboxProvider／Docker 默认、原 ToolSource、显式异步声明和每 Agent sandbox ref/disabled 授权交集。Local／Temporal 六类审批重启、已采纳恢复、原生冷接管及真实停止通过。最终源码5280 passed／418配置跳过（763.57s (0:12:43)），核心182／SDK149安装、真实源码32／安装32、旧82双向恢复／22模板／旧Worker零Activity拒绝及287模块一致通过。六项Important统一修复，M1／M2两项Minor延期；自有Temporal实际退出并等待。完整R01–R26、远程沙箱、持久工作区、Artifact传输、外部Runner和真实质量继续开放。见[原生沙箱指南](sandbox.md)。
 
 Dev82 子集已验收：纯可替换 SkillSelector／LexicalSkillSelector、SkillDirectoryRetriever、JSON／可选 SKILL.md 声明，通过原 KnowledgeContext 自动提供被动目录；正文仍走原授权 skill_get，不增加工具权限或执行权威。最终源码5089 passed／386配置跳过（845.08s (0:14:05)），核心155／SDK271安装、真实源码8／安装8、旧81双向恢复／22模板／旧Worker业务I/O前拒绝及281模块一致通过。三项Important经10项有效失败复现统一修复，无新增延期Minor；自有Temporal实际退出并等待。完整R01–R26、语义选择、插件激活、Sandbox／Runner及真实质量仍开放。见[本批记录](../architecture/reviews/2026-10-12-skill-discovery-context.md)。

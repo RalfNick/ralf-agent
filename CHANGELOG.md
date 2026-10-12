@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.0.dev84 — Scoped Artifact bindings preview
+
+- Add borrowed ArtifactBindingResource and async views with pinned physical identity, host namespace allowlists and actual sync-handler ownership; reuse memory/SQLite/POSIX JSON stores and custom sync/async ports.
+- Add independent per-Agent artifacts ref/disabled/inherit and scoped-store Profile declarations. Preserve original Context summary/projection settings and inherited release identities.
+- Publish explicit Local bindings15 and joint Temporal binding5/artifacts1 through original authorities. Original History permits one fenced retry only for an Artifact read/verify that was never granted dispatch; content verification never replaces writer-end proof.
+- Focused Local gates187/186 and integrated Temporal/recovery/old83 gate155 pass. Final review, frozen full-suite, fresh installed packages and service closure remain pending; full R01–R26 is open.
+
 ## 0.1.0.dev83 — Native Sandbox preview
 
 - Add replaceable SandboxProvider, bounded DTOs and explicit preinstalled Docker native default.

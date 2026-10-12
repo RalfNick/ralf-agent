@@ -1,5 +1,22 @@
 # RALF 通用框架能力与扩展验收
 
+当前产品为dev84，最终验收中。dev84在原ArtifactStore／managed Context上增加第十四个
+独立可选角色artifacts，Local／Temporal六类Agent支持ref／disabled／inherit和
+宿主namespace allowlist，纯Context派生保留原汇总／模型／投影策略。
+默认memory／SQLite／POSIX file及custom sync/async可替换，SDK borrowed与工厂owned
+沿原生命周期；Local使用local-bindings-15，Temporal只有joint binding5/artifacts1
+发布承认并报告Artifact role/namespace selector，legacy发布保持原能力。
+joint5/artifacts ref的未知read/verify仅在原History未授予allowed时允许耐久一次重建，
+先fence旧Action并拒绝late grant；已获grant或legacy1–4不重试，真实SQLite/file独立Worker崩溃已通过，最终安装复验仍pending。
+writer ACK丢失读回成功只证明内容，verified／succeeded可仍unknown_remote_execution／
+nonquiescent；真实handler-end需原History证据，本地PID wait不能替代。
+本批统一Temporal／恢复／旧83兼容155项通过（237.48s），含实际SQLite/file
+六组合、独立进程崩溃／真实async取消／旧83 Worker零Activity拒绝及22原模板。
+最终review／冻结全量／fresh安装／制品门槛尚待验收。
+远端、binary／GC／cache／全局磁盘治理与完整R01/R18/H1/H3保持目标状态；
+dev83 M1实际TemporalSandboxCI、M2缺失ServerVersion typed error继续延期。
+见[用户指南](../../docs/artifact-bindings.md)及[可运行例子](../../docs/artifact-binding-examples.md)。
+
 Dev83 已验收受限原生 SandboxProvider／Docker 默认、原 ToolSource、显式异步声明和每 Agent sandbox ref/disabled 授权交集。Local／Temporal 六类审批重启、已采纳恢复、原生冷接管及真实停止通过。最终源码5280 passed／418配置跳过（763.57s (0:12:43)），核心182／SDK149安装、真实源码32／安装32、旧82双向恢复／22模板／旧Worker零Activity拒绝及287模块一致通过。六项Important统一修复，M1／M2两项Minor延期；自有Temporal实际退出并等待。完整R01–R26、远程沙箱、持久工作区、Artifact传输、外部Runner和真实质量继续开放。见[原生沙箱指南](../../docs/sandbox.md)。
 
 Dev80：纯可替换 Skill 文档解析、可选有界 YAML、固定 SKILL.md 文件目录及 skills-markdown 默认声明子集已验收。最终源码4954 passed／370配置跳过（713.55s），无YAML核心35／SDK359安装、真实源码6／安装6、旧79双向恢复／22模板／272模块一致通过。三项Important经14项RED→GREEN修复，两项Minor延期；原自有服务停止并等待。selector／异步加载／自动Context／Sandbox及完整R01–R26仍开放。见[本批记录](../reviews/2026-10-12-skill-documents.md)。
@@ -92,7 +109,7 @@ flowchart TB
 
 ## 3. 默认实现与替换矩阵
 
-下表的“默认目标”是完整通用 SDK 的要求；此表为 dev9 设计时基线，后续发行状态以实现清单为准。“可选适配”列列出建设范围，不表示这些组合已经支持。不同职责可使用同一数据库，但接口和权威仍然分开。
+下表的“默认目标”是完整通用 SDK 的要求；此表为 dev9 历史设计基线，不能据其缺口判断当前 SDK。当前 ArtifactStore/AsyncArtifactStore、memory/SQLite/file JSON 默认和受管理卸载已经交付；dev84独立绑定候选状态见本文开头及[当前实现清单](../../docs/implementation-status.md)。“可选适配”列列出建设范围，不表示这些组合已经支持。不同职责可使用同一数据库，但接口和权威仍然分开。
 
 | 层／能力 | 公共边界 | 默认目标 | 可选适配／自定义 | dev9 证据与缺口 |
 | --- | --- | --- | --- | --- |
