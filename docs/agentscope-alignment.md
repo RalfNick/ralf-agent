@@ -22,7 +22,7 @@ dev44 extends managed compression/offload to Local graph/Team/dynamic/nested Age
 | Order | Deliverable | Status / gate |
 | --- | --- | --- |
 | A1 | Models and typed-tool foundations: native Responses, inference/keyword bridge, reusable managed compatibility scenarios | dev22; subset and evidence in [guide](sdk-model-tools.md) |
-| A2 | Unified middleware/events/input continuation, useful default tools and container Sandbox/Workspace | dev23 delivers opt-in middleware and durable-event observation; input continuation/default tools/container Sandbox remain pending |
+| A2 | Unified middleware/events/input continuation, useful default tools and container Sandbox/Workspace | dev23 delivers opt-in middleware and durable-event observation; dev83 delivers a restricted local Docker Sandbox subset; input continuation, broader default tools and other environments remain pending |
 | A3 | Managed automatic context compaction, remote artifacts and semantic memory/RAG defaults | pending; source/Scope/budget/TTL plus fact retention and answer/citation quality |
 | A4 | Freeze complete final-config real business/planning/RAG/recall tasks, repeat with domestic/international models | pending; explicit credentials/call/output/time bounds and retained reports |
 | B1 | Agent Service/streaming API, TUI/Web UI, sessions and resource library | pending; installed application path and external developer acceptance |

@@ -70,6 +70,6 @@
 **Files:** version/CI/API/guides/remaining/status/progress/harness/CHANGELOG + architecture/reviews/2026-10-12-sandbox-native-tools.md.
 **Interfaces:** restrictedSandbox default and thirteen-role subset evidence, honestR13/H4/R01–R26boundary.
 
-- [ ] Solefreshstrongestreadonlywholebatchreview; ALLfindings/ALLDeclinedregradebeforeONEunifiedImportanttrueRED→GREENpass; Minorledger/no secondreview.
-- [ ] Fixedsource full suite with permissions for localHTTP/Redis fixture; NEVERconcurrentbuild againstsharedbuild/bdist. Installed core/SDK/actualDocker+Temporal zeroSKIP, frozenmodule/wheel/sdist/fixture hashes, old82two-waydefaults/22templates andactualnewprofilepreIOrefusal.
-- [ ] Guides/config/API/CIargv/docs/payload accurate; onlyownedtestcontainer/service cleanup, actualstop/wait. Localclosurecommit and archiveONLYownSDD with exhaustiverulings/costs/minors. No push or globalcompletionclaim.
+- [x] Solefreshstrongestreadonlywholebatchreview; ALLfindings/ALLDeclinedregradebeforeONEunifiedImportanttrueRED→GREENpass; Minorledger/no secondreview.
+- [x] Fixedsource full suite with permissions for localHTTP/Redis fixture; NEVERconcurrentbuild againstsharedbuild/bdist. Installed core/SDK/actualDocker+Temporal zeroSKIP, frozenmodule/wheel/sdist/fixture hashes, old82two-waydefaults/22templates andactualnewprofilepreIOrefusal.
+- [x] Guides/config/API/CIargv/docs/payload accurate; onlyownedtestcontainer/service cleanup, actualstop/wait. Localclosurecommit and archiveONLYownSDD with exhaustiverulings/costs/minors. No push or globalcompletionclaim.

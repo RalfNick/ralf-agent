@@ -1,10 +1,10 @@
 # Changelog
 
-## 0.1.0.dev83 — Native Sandbox preview candidate
+## 0.1.0.dev83 — Native Sandbox preview
 
 - Add replaceable SandboxProvider, bounded DTOs and explicit preinstalled Docker native default.
 - Reuse original ToolSource, async owned assembly, per-Agent sandbox binding and recognized Temporal protocol4/1.
-- Actual Local/Temporal six compositions, native stop/cancel, lost create/start receipt and cold process recovery pass. Final independent review, full-suite, fixed installation and old82 compatibility gates remain pending; complete R01–R26 stays open.
+- Actual Local/Temporal six compositions, native stop/cancel, lost create/start receipt and cold process recovery pass. Final source 5280 passed/418 configured skips; core182/SDK149, actual source32/installed32, old82 bidirectional/22 starters/pre-Activity refusal and287 module provenance pass. Six Important fixed, two Minor deferred; owned service stopped and waited. Complete R01–R26 remains open.
 
 ## 0.1.0.dev82 — Passive Skill directory discovery
 

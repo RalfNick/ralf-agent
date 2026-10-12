@@ -1,6 +1,6 @@
 # 每Agent能力绑定契约 — 目标v1.7
 
-当前 dev79 子集增加 Skills 的原生目录工具 ref/disabled，Local／Temporal 六类成员共十二类角色；原授权交集、借用生命周期和版本准入见[指南](../../docs/skills-bindings.md)与[验收](../reviews/2026-10-12-skills-bindings.md)。artifacts／sandbox 与selector／自动阶段及完整H1/H4仍开放；下文历史阶段叙述保留原范围。
+当前 dev83 子集接通原生 Sandbox 工具 ref/disabled，Local／Temporal 六类成员共十三类角色。原授权交集、借用生命周期和协议准入见[指南](../../docs/sandbox.md)与[验收](../reviews/2026-10-12-sandbox-native-tools.md)。artifacts独立绑定、其余selector／自动阶段及完整H1/H4仍开放；下文历史阶段叙述保留原范围。
 
 日期：2026-10-08；状态：完整目标契约；dev25交付H1a，dev26交付Local H1b、dev27交付Session H1c、dev28交付Facts/Knowledge范围H1d、dev29交付Local纯完成verifier H1e、dev30交付Local limits H1f子集，完整H1/H2尚未实现。
 本文落实[AgentHarness设计](../viewpoints/harness-runtime.md)的H1，

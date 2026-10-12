@@ -1,4 +1,4 @@
-# Dev83 原生 Sandbox 候选验收
+# Dev83 原生 Sandbox 子集验收
 
 本批沿 R13/H4 实现可替换 SandboxProvider、原生有界 DTO、显式本地 Docker
 默认、原 SandboxToolSource、异步声明和每 Agent sandbox 绑定。原 Engine／
@@ -16,9 +16,9 @@ Temporal History 保持唯一执行权威；原生 FD 租约仅控制一个容�
 - Task4 相关 164 项契约回归通过；合并真实组 29 项全部通过，新增 created 场景
   单独通过。重复组不相加当作独立覆盖率。
 
-当前为候选，最终独立审查、全量回归、固定 core／SDK 安装、安装后真实服务、
-旧82双向兼容与 Worker 拒绝、22 模板、源码／wheel／sdist 一致门槛尚待完成。
-本文件随后按实际结果更新，不据接口或跳过测试宣布能力完成。
+最终源码5280 passed／418配置跳过（763.57s (0:12:43)），核心182／SDK149安装、真实源码32／安装32、旧82双向恢复／22模板／旧Worker零Activity拒绝及287模块一致通过。六项Important统一修复，M1／M2两项Minor延期；自有Temporal实际退出并等待。
+主回归的配置跳过不代表真实服务验收；本批所需32个真实场景在源码和安装后分别零跳过通过。
+仅本地提交，无远端推送、发布或真实模型调用。
 
 默认限制 Linux Docker、local Unix socket、不可变本地镜像、非 root、无网络、
 只读 root、无宿主挂载、临时 tmpfs 和有限内存／CPU／PID／并发／输出。
@@ -40,7 +40,7 @@ Temporal History 保持唯一执行权威；原生 FD 租约仅控制一个容�
 逐项重定级；六项 Important 统一修复，没有启动第二次审查。有效失败复现包括
 十二项接口／线程／固定身份回归和一项真实容器误停止；另补拒绝、控制接收者
 漂移及并行跨循环回归。修复后相关230项通过（6.61s），真实源码31项通过
-（61.55s，零跳过）。这些阶段证据仍需后续完整发布门槛。
+（61.55s，零跳过）。后续门槛按下列最终结果闭环。
 
 | 发现 | 结论与修复 |
 | --- | --- |
@@ -81,3 +81,30 @@ Temporal History 保持唯一执行权威；原生 FD 租约仅控制一个容�
 旧82Worker的新协议拒绝发生在Workflow构造阶段：History记录
 WorkflowTaskFailed，没有可查询RALF状态，且任何Activity／模型／工具都未派发。
 需要兼容Worker接管或操作员处理，不能把此拒绝伪报为终态failed Run。
+
+
+## 最终发布与关闭门槛
+
+最终源码5280 passed／418配置跳过（763.57s (0:12:43)），核心182／SDK149安装、真实源码32／安装32、旧82双向恢复／22模板／旧Worker零Activity拒绝及287模块一致通过。六项Important统一修复，M1／M2两项Minor延期；自有Temporal实际退出并等待。
+
+- 固定实现50df1db；构建后两套新环境分别无SDK核心和Temporal／Skills可选依赖，
+  均从checkout外运行；安装模块／wheel／sdist／冻结源码287模块及metadata一致。
+- 全量、Ruff、格式、Git空白、API／本地链接、CI参数和包内文档负载分别验证；
+  收尾文档随后重建制品验证，不在全量测试的wheel构建窗口并行构建。
+- 旧82双向Local／CLI／Temporal默认和持久Session恢复、22starter字节一致；
+  新Sandbox4/1被实际旧Worker在Workflow构造阶段拒绝，零任何Activity／模型／工具。
+- 唯一最终审查之后只有一轮统一Important修复；补充I1已清理异常的有界原调用
+  查询和I2内部Owner拒绝的实际进入标记，保留未知状态，未改变原业务未知回执。
+- 默认指南原代码从最终安装core执行，显式填写socket／镜像；原审批与真实停止通过。
+- 原自有Temporal服务句柄2973和最终补验4365均实际退出0并等待，stopped标记验证；
+  所有测试容器与私有HTTP代理清理，用户Docker平台及基础测试镜像保留；
+  私有FD租约文件按设计保留，长期GC仍开放。
+
+全量成绩不能证明模型质量、企业可用、完整R01–R26或AgentScope对等采用；
+离线业务8／规划3／示例3通过，model_quality保持null。本批仅验收上述受限子集。
+
+完整回归还暴露两处历史“不支持sandbox”的旧断言；按已交付角色改为未注册／
+缺失协议的DefinitionMismatch拒绝，并保留零Run／派发约束。另有原Workspace
+的三种非法Temporal工具元数据触发新扫描器裸异常，均经有效RED→GREEN补齐
+普通映射前置检查；该共同准入修复属于本批统一回归收口，M1／M2延期项未修改。
+此前中止或失败的全量执行均未记作最终成绩，最终采用修复后5280／418结果。

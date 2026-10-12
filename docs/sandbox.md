@@ -134,5 +134,6 @@ sandbox_binding_protocol 1／binding_protocol 4，自动使用原 ToolExecutionO
 六种原编排的 Local／Temporal 真实审批、重启与已采纳结果恢复均已通过。
 Temporal 单 Agent 额外验证取消后真实线程与 History 停止证据；Local 单 Agent
 验证 Coordinator 保留至真实结束。原生运行进程崩溃后恢复查询同一容器。
-完整批次发布仍需固定安装、旧版兼容、全量回归与最终独立审查。
+本批固定安装、旧版兼容、全量回归与唯一最终独立审查已通过；
+详细成绩和延期问题见[验收记录](../architecture/reviews/2026-10-12-sandbox-native-tools.md)。
 共享持久工作区、远程沙箱、Artifact 传输和外部 Coding Runner 属于后续能力。

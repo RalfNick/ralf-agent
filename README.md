@@ -1,7 +1,8 @@
 # Ralf-Agent
 
-Dev83 候选增加[原生 Sandbox](docs/sandbox.md)：可替换端口、显式本地 Docker 默认、
-原工具审批和每 Agent 授权交集；六类 Local／Temporal 真实恢复通过，最终发布验收进行中。
+Dev83 已验收[原生 Sandbox](docs/sandbox.md)：可替换端口、显式本地 Docker 默认、
+原工具审批和每 Agent 授权交集；六类 Local／Temporal 真实恢复、安装和旧82兼容通过。
+完整能力继续建设，见[本批验收](architecture/reviews/2026-10-12-sandbox-native-tools.md)。
 
 dev79 增加[每 Agent Skills选择](docs/skills-bindings.md)：原生目录工具的固定选择与禁用、审批及恢复；安装包、真实Temporal和旧78兼容通过。完整能力继续建设。
 
@@ -9,7 +10,7 @@ dev78 增加[可替换Skills目录与受管理加载](docs/skills.md)：Memory�
 
 dev77 增加[受管理Workspace写入](docs/workspace-writes.md)：可替换Memory／File、CAS、审批和恢复；安装包、真实Temporal／PG及旧76兼容通过。完整框架能力继续建设。
 
-当前工作区 **0.1.0.dev77** 提供显式语义知识库、相关事实召回和 Plan／Team 默认组合，
+当前工作区 **0.1.0.dev83** 提供显式语义知识库、相关事实召回和 Plan／Team 默认组合，
 复用原执行、审批和恢复协议。见[H3 使用与扩展指南](docs/h3-intelligent-combinations.md)。
 dev48 增加[显式 HTTP 语义重排](docs/http-reranking.md)，保留原知识来源及旧默认配置。
 dev49 增加[Query transform 与语义 Facts 召回](docs/query-and-semantic-recall.md)，支持显式语义记忆组合及保留语义顺序的上下文。候选窗口外事实和真实质量仍待完善。
@@ -26,7 +27,7 @@ dev62 增加 [Temporal 完成验证](docs/temporal-completion-verification.md)�
 dev65 提供 [Temporal 固定 Session 有界读](docs/temporal-session-data-reads.md)。dev66 已交付 [原生／顺序的外置保存和持久 Turn](docs/temporal-session-data-writes.md)；dev67 已接通[高级根／成员会话树](docs/temporal-session-trees.md)，dev68 增加[真实 Context 读取生命周期](docs/temporal-context-read-lifetime.md)。
 dev69 的[Temporal Profile 配置装配](docs/temporal-profiles.md)复用十类绑定与原 History；dev70 增加多版本 Host、原 Run／Session 路由、共享资源排空和声明 PostgreSQL EffectJournal。[本批验收](architecture/reviews/2026-10-11-temporal-profile-host.md)已通过本记录门槛；完整 R01–R26/H1–H5/M1 保持开放。
 
-dev72 增加[固定命令 CLI 工具](docs/cli-tools.md)、异步声明工厂与 cli starter；当前正在完成最终验收。
+dev72 增加[固定命令 CLI 工具](docs/cli-tools.md)、异步声明工厂与 cli starter；本批验收已通过，完整工具与环境能力继续建设。
 
 dev71 增加 Temporal Host 基础启动预检：无效参数在 RPC 与启动状态固定前拒绝，纠正后可重试；保留 SDK 合法零值。复杂 SDK 对象仍委托 SDK，极端数值尚有边界限制。[dev71 验收](architecture/reviews/2026-10-11-temporal-startup-preflight.md)本批门槛已通过，完整框架目标仍开放。
 Local 与 Temporal 十一类每 Agent 绑定、自动上下文与来源化记忆已接通；完整 H3、
@@ -356,4 +357,4 @@ Dev74增加[MCP HTTP JSON／POST SSE](docs/mcp-http.md)，接入原ToolSource与
 
 Dev75增加[只读Workspace Port与文件／内存默认实现](docs/workspace.md)，沿原工具与async装配接入；[子集验收](architecture/reviews/2026-10-11-workspace-read.md)通过。环境绑定与Sandbox仍开放。
 
-Dev76候选接通[每Agent只读Workspace绑定](docs/workspace.md)：复用原工具授权和资源，不增加执行权威；[安装与最终验收](architecture/reviews/2026-10-11-workspace-bindings.md)仍在执行，写入、Skills和Sandbox仍开放。
+Dev76子集已验收接通[每Agent只读Workspace绑定](docs/workspace.md)：复用原工具授权和资源，不增加执行权威；[安装与最终验收](architecture/reviews/2026-10-11-workspace-bindings.md)已通过；后续写入、Skills和本地Sandbox子集按各批验收记录交付，完整环境能力仍开放。
