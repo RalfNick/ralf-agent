@@ -45,8 +45,46 @@ class AgentBindingResolver:
     def __init__(self, engine):
         self.engine = engine
         self._artifact_contexts = weakref.WeakValueDictionary()
+        self._artifact_ports = {}
+        origins = [getattr(engine, "context", None)]
+        catalog = getattr(engine, "binding_catalog", None)
+        if catalog is not None:
+            origins.extend(
+                c for (role, _, _), (c, _) in catalog._entries.items() if role == "context"
+            )
+        for origin in origins:
+            if origin is not None:
+                self._pin_artifact_ports(origin)
+
+    def _pin_artifact_ports(self, origin):
+        from .binding_artifacts import _method_binding, _method_matches, _weak_binding
+        from .ports import is_sync_callable
+
+        names = ("artifact_binding_identity", "bind_artifacts")
+        entry = self._artifact_ports.get(id(origin))
+        if entry is not None:
+            if entry[0]() is not origin or any(
+                not _method_matches(getattr(origin, name, None), pin)
+                for name, pin in entry[1].items()
+            ):
+                raise DefinitionMismatch("Original Artifact Context binding port changed")
+            return
+        if any(not is_sync_callable(getattr(origin, name, None)) for name in names):
+            return
+        identifier = id(origin)
+
+        def discard(reference):
+            current = self._artifact_ports.get(identifier)
+            if current is not None and current[0] is reference:
+                del self._artifact_ports[identifier]
+
+        self._artifact_ports[identifier] = (
+            weakref.ref(origin, discard),
+            {name: _weak_binding(_method_binding(getattr(origin, name))) for name in names},
+        )
 
     def _artifact_context(self, origin, target):
+        from .artifact_binding_context import validate_prediction
         from .binding_catalog import component_identity
         from .managed_context import ManagedContextPipeline
         from .ports import is_sync_callable
@@ -60,11 +98,15 @@ class AgentBindingResolver:
                 "Explicit Artifact selection requires a pure Context binding port"
             )
         metadata = None if target is None else target.identity
+        self._pin_artifact_ports(origin)
+        original_identity = component_identity("context", origin)
         expected = _completed(
-            origin.artifact_binding_identity(metadata), "Artifact Context prediction"
+            origin.artifact_binding_identity(copy.deepcopy(metadata)), "Artifact Context prediction"
         )
+        self._pin_artifact_ports(origin)
         if type(expected) is not dict or len(canonical(expected).encode("utf-8")) > 1048576:
             raise ValidationError("Artifact Context prediction requires a bounded JSON identity")
+        validate_prediction(original_identity, metadata, expected)
         key = (
             id(origin),
             id(None if target is None else target._target),
@@ -74,6 +116,7 @@ class AgentBindingResolver:
         selected = self._artifact_contexts.get(key)
         if selected is None:
             selected = _completed(origin.bind_artifacts(target), "Artifact Context realization")
+            self._pin_artifact_ports(origin)
         if not isinstance(selected, ManagedContextPipeline):
             raise ValidationError("Artifact binding requires a completed managed Context")
         if component_identity("context", selected) != expected:

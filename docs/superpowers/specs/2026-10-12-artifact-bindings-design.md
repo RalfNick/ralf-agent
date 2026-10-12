@@ -105,6 +105,28 @@ The retry is durable and bounded, does not repeat tools or writes, and never app
 an admitted handler or legacy protocols1–4. An uncertain dispatched writer remains
 nonquiescent even after content is verified: content receipts do not prove actual end.
 
+## Final review contract clarifications
+
+Read validation preserves an immutable original reference snapshot separately from the
+reference delegated to a backend. Optional max_bytes must be an ordinary positive
+integer within one MiB and cannot be bypassed by a custom backend. All delegation modes
+reject lazy returns and close rejected coroutine/generator objects without executing them.
+Original backend, method receiver, implementation and callable-object entry pins use
+object identity rather than customizable equality. Local pins both pure binding ports
+before their first accepted use and checks them before/after each invocation/cache reuse.
+Custom predictions require the complete artifact_binding origin/resource/mode proof and
+must preserve the documented actual policy fields; matching incorrect values is insufficient.
+Temporal additionally verifies implementation registration against the predicted methods.
+An unused Context with overridden managed hooks but inherited default binding ports is
+incompatible: omit its templates, while explicit selection refuses before Run acceptance.
+Genuine custom predictor failures are not silently swallowed.
+
+An explicit TemporalRuntime artifact_bindings=True (TemporalProfile execution flag) can
+publish joint5/artifacts1 disabled-only templates with an empty original BindingCatalog,
+without an unnecessary Artifact target. The flag defaultsFalse. Resource registrations
+still opt in automatically; unchanged inherited legacy releases do not gain this field.
+The opt-in uses original History and changes no ownership/effect recovery rule.
+
 ## Configuration and lifecycle
 
 Add artifacts/scoped-store binding declaration containing version,namespaces,

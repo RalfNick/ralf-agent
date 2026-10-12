@@ -244,6 +244,7 @@ class LocalEngine:
             ):
                 raise ValidationError("Context assembler requires identity and assemble")
             canonical(self.context.identity)
+            self._bindings._pin_artifact_ports(self.context)
         except BaseException:
             _invoke_sync_none(self.coordinator.release, "Coordinator.release")
             raise

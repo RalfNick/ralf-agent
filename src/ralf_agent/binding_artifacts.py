@@ -2,6 +2,7 @@
 
 import inspect
 import json
+import weakref
 
 from .artifacts import ArtifactReference
 from .component_fingerprint import executable_digest
@@ -9,9 +10,70 @@ from .errors import AuthorizationDenied, DefinitionMismatch, ValidationError
 from .memory import _validate_expires_at, memory_call
 from .ports import is_async_callable, is_sync_callable
 from .skills import _plain, _text
-from .task_controls import _binding
 from .tools import ThreadExecutionTracker, current_thread_group, current_thread_tracker
 from .types import Scope, canonical, digest
+
+
+def _method_binding(method):
+    """Pin original receivers, implementations and wrapper entries by identity."""
+    layers, seen = [], set()
+    while callable(method):
+        if id(method) in seen:
+            raise ValidationError("Artifact method wrapper cycle")
+        seen.add(id(method))
+        implementation = getattr(method, "__func__", method)
+        entry = None if inspect.isroutine(implementation) else type(implementation).__call__
+        layers.append(
+            (
+                getattr(method, "__self__", None),
+                implementation,
+                getattr(implementation, "__code__", None),
+                entry,
+                getattr(entry, "__code__", None),
+            )
+        )
+        wrapped = getattr(method, "__wrapped__", None)
+        if wrapped is None:
+            return tuple(layers)
+        method = wrapped
+    raise ValidationError("Artifact operation has no callable target")
+
+
+def _same_binding(current, original):
+    if type(original) is tuple:
+        return (
+            type(current) is tuple
+            and len(current) == len(original)
+            and all(_same_binding(a, b) for a, b in zip(current, original, strict=True))
+        )
+    if isinstance(original, weakref.ReferenceType):
+        return original() is not None and current is original()
+    return current is original
+
+
+def _weak_binding(binding):
+    """Keep Local assembly pins without retaining retired Context objects."""
+    if type(binding) is tuple:
+        return tuple(_weak_binding(value) for value in binding)
+    try:
+        return weakref.ref(binding)
+    except TypeError:
+        return binding
+
+
+def _method_matches(method, pin):
+    try:
+        return _same_binding(_method_binding(method), pin)
+    except ValidationError:
+        return False
+
+
+def _completed(value):
+    if inspect.isawaitable(value) or inspect.isgenerator(value) or inspect.isasyncgen(value):
+        if inspect.iscoroutine(value) or inspect.isgenerator(value):
+            value.close()
+        raise ValidationError("Artifact methods require completed values")
+    return value
 
 
 def _scope(scope):
@@ -83,7 +145,7 @@ class ArtifactBindingResource:
             )
         self._backend, self._asynchronous = backend, asynchronous
         self._backend_identity = canonical(_identity(backend))
-        self._methods = {name: _binding(getattr(backend, name)) for name in ("put", "get")}
+        self._methods = {name: _method_binding(getattr(backend, name)) for name in ("put", "get")}
         self._namespaces, self._default, self._sync_mode = (
             tuple(namespaces),
             default_namespace,
@@ -108,12 +170,17 @@ class ArtifactBindingResource:
 
     def check(self):
         if (
-            (self._backend, self._namespaces, self._default, self._sync_mode, self._asynchronous)
-            != self._original
+            self._backend is not self._original[0]
+            or self._namespaces is not self._original[1]
+            or type(self._default) is not str
+            or self._default != self._original[2]
+            or type(self._sync_mode) is not str
+            or self._sync_mode != self._original[3]
+            or self._asynchronous is not self._original[4]
             or canonical(self._description) != self._pin
             or canonical(_identity(self._backend)) != self._backend_identity
             or any(
-                _binding(getattr(self._backend, name, None)) != original
+                not _method_matches(getattr(self._backend, name, None), original)
                 for name, original in self._methods.items()
             )
         ):
@@ -164,15 +231,19 @@ class ArtifactView:
         )
         self._original = (resource, self._scope_json, namespace, self._identity)
         self._methods = {
-            name: _binding(getattr(self, name)) for name in ("put", "get", "_check", "_call")
+            name: _method_binding(getattr(self, name)) for name in ("put", "get", "_check", "_call")
         }
 
     def _verify(self):
         if (
             self._target is not self._original[0]
+            or any(
+                type(value) is not str
+                for value in (self._scope_json, self._namespace, self._identity)
+            )
             or (self._scope_json, self._namespace, self._identity) != self._original[1:]
             or any(
-                _binding(getattr(self, name, None)) != original
+                not _method_matches(getattr(self, name, None), original)
                 for name, original in self._methods.items()
             )
         ):
@@ -199,7 +270,7 @@ class ArtifactView:
             value["namespace"] != self.namespace
             or value["target"] != self._target.identity
             or any(
-                _binding(getattr(self, name, None)) != original
+                not _method_matches(getattr(self, name, None), original)
                 for name, original in self._methods.items()
             )
         ):
@@ -223,14 +294,7 @@ class ArtifactView:
             result = await memory_call(method, *args, **kwargs)
         else:
             result = method(*args, **kwargs)
-            if (
-                inspect.isawaitable(result)
-                or inspect.isgenerator(result)
-                or inspect.isasyncgen(result)
-            ):
-                if inspect.iscoroutine(result) or inspect.isgenerator(result):
-                    result.close()
-                raise ValidationError("Synchronous Artifact methods require completed values")
+        result = _completed(result)
         target.check()
         return result
 
@@ -262,17 +326,24 @@ class ArtifactView:
     async def get(self, scope, reference, *, max_bytes=None):
         ArtifactView._verify(self)
         reference = _reference(reference)
+        if max_bytes is not None and (type(max_bytes) is not int or not 1 <= max_bytes <= 1048576):
+            raise ValidationError("Artifact read limit must be a positive integer within one MiB")
+        if max_bytes is not None and reference.byte_length > max_bytes:
+            raise ValidationError("Artifact reference exceeds the requested read limit")
+        original = ArtifactReference.to_dict(reference)
         self._check(scope, reference.namespace)
         if reference.backend_id != self.backend_id or (
             reference.workspace,
             reference.principal,
         ) != (scope.workspace, scope.principal):
             raise AuthorizationDenied("Artifact reference is outside the selected resource")
-        value = _plain(await self._call("get", scope, reference, max_bytes=max_bytes))
-        self._check(scope, reference.namespace)
+        delegated = ArtifactReference.from_dict(original)
+        value = _plain(await self._call("get", scope, delegated, max_bytes=max_bytes))
+        self._check(scope, original["namespace"])
         if (
-            digest(value) != reference.content_digest
-            or len(canonical(value).encode("utf-8")) != reference.byte_length
+            ArtifactReference.to_dict(_reference(delegated)) != original
+            or digest(value) != original["content_digest"]
+            or len(canonical(value).encode("utf-8")) != original["byte_length"]
         ):
             raise DefinitionMismatch("Artifact value differs from its original reference")
         return value

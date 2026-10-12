@@ -150,12 +150,18 @@ class TemporalRuntime:
         session_writes=False,
         session_topology=None,
         context_reads=False,
+        artifact_bindings=False,
         context_execution=None,
         tool_execution=None,
         runtime_profile=None,
     ):
         from .types import runtime_profile_identity
 
+        if type(artifact_bindings) is not bool:
+            raise ValidationError("Artifact binding opt-in requires an ordinary boolean")
+        if artifact_bindings and binding_catalog is None:
+            raise ValidationError("Artifact binding opt-in requires a trusted BindingCatalog")
+        self.artifact_bindings = self._artifact_bindings_pin = artifact_bindings
         self.runtime_profile = (
             None if runtime_profile is None else runtime_profile_identity(runtime_profile)
         )
@@ -416,9 +422,11 @@ class TemporalRuntime:
             if getattr(self.context, "validate_request", None) is None
             else _binding(self.context.validate_request),
         )
+        from .binding_artifacts import _method_binding
+
         self._artifact_binding_methods = (
             [
-                (context, name, _binding(getattr(context, name)))
+                (context, name, _method_binding(getattr(context, name)))
                 for context in [self.context]
                 + [
                     component
@@ -428,7 +436,8 @@ class TemporalRuntime:
                 for name in ("artifact_binding_identity", "bind_artifacts")
                 if callable(getattr(context, name, None))
             ]
-            if any(role == "artifacts" for role, _, _ in self._catalog_objects)
+            if self.artifact_bindings
+            or any(role == "artifacts" for role, _, _ in self._catalog_objects)
             else []
         )
         if policy is None:
@@ -585,7 +594,7 @@ class TemporalRuntime:
             record["role"] == "sandbox"
             for record in result.get("binding_catalog", {}).get("records", {}).values()
         )
-        artifact_enabled = any(
+        artifact_enabled = self.artifact_bindings or any(
             record["role"] == "artifacts"
             for record in result.get("binding_catalog", {}).get("records", {}).values()
         )
@@ -651,6 +660,7 @@ class TemporalRuntime:
         return {**self.manifest, "orchestration": detached(self._orchestration)}
 
     def validate_release(self, expected=None):
+        from .binding_artifacts import _method_matches
         from .task_controls import _binding
         from .temporal_components import orchestration_identity
 
@@ -662,8 +672,8 @@ class TemporalRuntime:
                 if self.context.identity != self._manifest["context_builder"]:
                     raise DefinitionMismatch("Selected Artifact Context changed")
             return self.manifest
-        if any(
-            _binding(getattr(context, name, None)) != method
+        if self.artifact_bindings is not self._artifact_bindings_pin or any(
+            not _method_matches(getattr(context, name, None), method)
             for context, name, method in self._artifact_binding_methods
         ):
             raise DefinitionMismatch("Original Artifact Context binding port changed")

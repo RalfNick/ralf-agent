@@ -19,7 +19,13 @@ LOCAL_COMPONENTS = frozenset(
     }
 )
 EXECUTION_FLAGS = frozenset(
-    {"enable_sessions", "session_writes", "composite_sessions", "context_reads"}
+    {
+        "enable_sessions",
+        "session_writes",
+        "composite_sessions",
+        "context_reads",
+        "artifact_bindings",
+    }
 )
 MAX_DECLARATION_BYTES = 1_000_000
 
@@ -69,7 +75,11 @@ class TemporalProfile:
             or any(type(value) is not bool for value in execution.values())
         ):
             raise ValidationError("Temporal execution options require declared boolean flags")
-        flags = {name: execution.get(name, False) for name in sorted(EXECUTION_FLAGS)}
+        flags = {
+            name: execution.get(name, False)
+            for name in sorted(EXECUTION_FLAGS)
+            if name != "artifact_bindings" or execution.get(name, False)
+        }
         session_declared = "session_store" in original.components or any(
             item["role"] == "session" for item in original.binding_components or []
         )

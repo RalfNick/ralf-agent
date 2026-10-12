@@ -167,3 +167,71 @@ def test_actual_artifact_member_targets_approval_restart_replay(tmp_path, kind, 
         assert len(observed) == len(puts) == (1 if kind == "agent" else 2)
 
     asyncio.run(asyncio.wait_for(run(), timeout=180))
+
+
+def test_actual_explicit_disabled_only_without_unused_artifact_resource(tmp_path):
+    queue = "artifact-disabled-" + uuid.uuid4().hex
+    scope = r.Scope("artifact-tests", queue)
+
+    class NoIO(r.InMemoryArtifactStore):
+        def put(self, *args, **kwargs):
+            raise AssertionError("Disabled offload must not write its original store")
+
+        def get(self, *args, **kwargs):
+            raise AssertionError("Disabled offload must not read its original store")
+
+    async def run():
+        from temporalio.client import Client
+
+        client = await Client.connect(os.environ["RALF_TEST_TEMPORAL_ADDRESS"])
+        original = NoIO(backend_id="disabled-origin")
+        tools = r.ToolRegistry()
+        calls = []
+
+        def lookup(args, context):
+            calls.append(context.run_id)
+            return "EVIDENCE" * 1600
+
+        tools.register(
+            r.ToolSpec("lookup", "Read", {"type": "object"}, effect="read_only", cost=0),
+            lookup,
+        )
+        runtime = TemporalRuntime(
+            providers={"default": Reader()},
+            tools=tools,
+            context_builder=r.ManagedDataContext(
+                original, scope=scope, tool_result_chars=1024, preview_chars=64
+            ),
+            binding_catalog=r.BindingCatalog(scope=scope),
+            artifact_bindings=True,
+            context_reads=True,
+        )
+        engine = TemporalEngine(
+            client,
+            task_queue=queue,
+            release=runtime.manifest,
+            scope=scope,
+            activity_timeout=5,
+            drive_timeout=30,
+        )
+        spec = r.AgentDefinition(
+            r.AgentSpec("disabled", "Read", tools=["lookup"], max_context_chars=40000),
+            r.AgentBindingDescriptor(artifacts=r.BindingSelection.disabled()),
+        )
+        try:
+            async with build_temporal_worker(client, task_queue=queue, runtime=runtime):
+                handle = await engine.submit(spec, "read", command_id="s", budget=32)
+                done = await engine.drive(handle.run_id)
+                assert done.state == "succeeded", done
+                assert calls == [handle.run_id] and not original._records
+                assert await engine.context_artifacts(handle.run_id) == []
+                assert (await engine.diagnostics(handle.run_id)).workflow["quiescent"]
+                await replay_temporal_history(
+                    await client.get_workflow_handle(handle.run_id).fetch_history()
+                )
+        finally:
+            await runtime.close_context_execution()
+            await engine.aclose()
+            original.close()
+
+    asyncio.run(asyncio.wait_for(run(), 90))

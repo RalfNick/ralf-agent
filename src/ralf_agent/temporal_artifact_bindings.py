@@ -1,9 +1,10 @@
 """Fixed pure Context templates; original History alone selects and adopts them."""
 
+import copy
 from types import SimpleNamespace
 
+from .artifact_binding_context import binding_supported, validate_prediction
 from .errors import DefinitionMismatch, ValidationError
-from .ports import is_sync_callable
 from .types import canonical, digest
 
 
@@ -31,7 +32,7 @@ def registration(runtime, catalog):
         if runtime.binding_catalog is not None
         else []
     )
-    if not resources:
+    if not resources and not runtime.artifact_bindings:
         return None
     origins = [(origin_key("inherit"), runtime.context)] + [
         (origin_key("ref", cid, version), component)
@@ -40,10 +41,7 @@ def registration(runtime, catalog):
     ]
     entries = {}
     for identifier, origin in origins:
-        if any(
-            not is_sync_callable(getattr(origin, name, None))
-            for name in ("artifact_binding_identity", "bind_artifacts")
-        ):
+        if not binding_supported(origin):
             continue
         targets = [(selection_key(None, None), None)]
         for resource_id, resource in resources:
@@ -57,9 +55,12 @@ def registration(runtime, catalog):
         choices = {}
         for choice, target in targets:
             metadata = None if target is None else target.identity
-            expected = _completed(origin.artifact_binding_identity(metadata), "Artifact prediction")
+            expected = _completed(
+                origin.artifact_binding_identity(copy.deepcopy(metadata)), "Artifact prediction"
+            )
             if type(expected) is not dict:
                 raise ValidationError("Artifact prediction requires ordinary Context identity")
+            validate_prediction(origin.identity, metadata, expected)
             selected = _completed(origin.bind_artifacts(target), "Artifact Context")
             from .managed_context import ManagedContextPipeline
 
@@ -96,8 +97,7 @@ def validate_protocol(manifest):
         return
     value = manifest.get("artifact_contexts")
     if (
-        not enabled
-        or manifest.get("kernel") != "temporal-3"
+        manifest.get("kernel") != "temporal-3"
         or type(manifest.get("binding_protocol")) is not int
         or manifest["binding_protocol"] != 5
         or type(manifest.get("artifacts_binding_protocol")) is not int
@@ -192,6 +192,18 @@ def validate_protocol(manifest):
                 or config["managed_context"].get("dispatch_admission") != "history-1"
             ):
                 raise DefinitionMismatch("Artifact Context lost its original policy and provider")
+            policy = validate_prediction(original[0], choice["resource"], config["context_builder"])
+            implementation = policy.get("implementation")
+            if (
+                type(implementation) is not dict
+                or "validate_request" not in implementation
+                or set(config["context_registration"])
+                != {"identity", "implementation_digest", "request_validator"}
+                or config["context_registration"]["implementation_digest"] != digest(implementation)
+                or config["context_registration"]["request_validator"]
+                != implementation["validate_request"]
+            ):
+                raise DefinitionMismatch("Artifact Context implementation registration differs")
 
 
 def effective(manifest, choices, origin):

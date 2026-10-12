@@ -67,3 +67,33 @@ Dev83 M1: actual Temporal Sandbox CI omission. Dev83 M2: missing ServerVersion c
 raise an untyped error. Both remain separately deferred; this batch does not claim
 to fix them. New review findings and any Declined list will be regraded together
 before one unified Important RED→GREEN pass. No second review.
+
+## Sole independent review and unified fix pass
+
+One fresh read-only gpt-6-astra/high review of30e1746..005e9de found7 Important
+and2 new Minor. Both new Minor were regradedImportant: a custom read cannot ignore
+caller max_bytes, and lazy-return rejection must close returned coroutines/generators.
+All9 findings and all7 Declined behaviors were regraded before one fix pass; no re-review.
+Original backend/receiver/callable and sealed namespace/Scope guards now reject custom
+equality substitutions. Reads keep immutable original metadata, independently check the
+delegated reference and enforce limits before I/O. Local weak original-port pins guard
+assembly/first use/cache reuse without retaining retired Contexts; pure prediction
+arguments are detached and full source/target/mode/preserved-policy proof is required.
+Temporal registration fingerprints and coordinated policy copies are checked; known
+incompatible inherited default ports are omitted without hiding genuine predictor errors.
+Explicit artifact_bindings=True supports disabled-only SDK/Profile publication with an
+empty scoped Catalog; defaultFalse is omitted from old Profile identity.
+
+Initial31 real failing cases across review reproductions, plus3 added alias/sealed-guard
+cases, are corrected. Original lazy coordinator and genuine custom predictor refusal were
+already passing and are not claimed as new RED. Final focused272 passed31.24s;
+actual disabled-only Temporal1 passed4.52s. Source full/fresh install/provenance and
+actual owned-service exit remain pending; final evidence will replace this candidate gate.
+
+All Declined rulings stand with explicit costs: content is not writer-end proof;
+trusted Python ports owe truthful internals, without adversarial isolation guarantees;
+standalone borrowed calls require draining the resource tracker before caller close;
+opaque/native fingerprint expansion remains a separate compatibility boundary;
+remote/binary/GC/cache/cross-host governance/quality/full R01–R26 and AgentScope parity
+remain separate targets; executor final gates are not inferred; dev83 M1/M2 remain
+deferred. These decisions do not weaken concrete original-reference/receiver guards.

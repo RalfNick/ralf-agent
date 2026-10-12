@@ -57,6 +57,77 @@ def _target(origin, description):
     return description
 
 
+def binding_supported(origin):
+    """Classify inherited default ports without executing a custom predictor."""
+    from .ports import is_sync_callable
+
+    if any(
+        not is_sync_callable(getattr(origin, name, None))
+        for name in ("artifact_binding_identity", "bind_artifacts")
+    ):
+        return False
+    if isinstance(origin, ManagedDataContext) and any(
+        getattr(getattr(origin, name), "__func__", None) is getattr(ManagedDataContext, name)
+        for name in ("artifact_binding_identity", "bind_artifacts")
+    ):
+        return all(
+            getattr(getattr(origin, name), "__func__", None) is getattr(ManagedDataContext, name)
+            for name in (*_HOOKS, *_DATA_HOOKS)
+        )
+    return True
+
+
+def validate_prediction(origin, resource, policy):
+    """Validate real binding semantics, not merely agreement of redundant claims."""
+    origin, resource, policy = _plain(origin), _plain(resource), _plain(policy)
+    if (
+        type(origin) is not dict
+        or type(policy) is not dict
+        or len(canonical(policy).encode("utf-8")) > 1048576
+        or policy.get("artifact_binding")
+        != {
+            "version": 1,
+            "mode": "disabled" if resource is None else "ref",
+            "origin": origin,
+            "resource": resource,
+        }
+    ):
+        raise DefinitionMismatch("Artifact prediction lacks its original binding proof")
+    changed = {
+        "implementation",
+        "projection_implementation",
+        "artifact_implementation",
+        "artifact_binding",
+    }
+    if resource is None:
+        removed = {
+            "artifacts",
+            "scope",
+            "namespace",
+            "tool_result_chars",
+            "preview_chars",
+            "projection_implementation",
+            "artifact_implementation",
+        }
+        if policy.get("kind") != "managed-context-pipeline" or any(k in policy for k in removed):
+            raise DefinitionMismatch("Disabled Artifact policy still declares offload")
+        changed |= removed | {"kind"}
+    else:
+        if (
+            type(resource) is not dict
+            or resource.get("kind") != "artifact-binding-view"
+            or policy.get("kind") != "managed-data-context"
+            or policy.get("artifacts") != resource
+            or policy.get("namespace") != resource.get("namespace")
+            or policy.get("scope") != resource.get("scope")
+        ):
+            raise DefinitionMismatch("Artifact policy differs from the approved target")
+        changed |= {"artifacts", "namespace", "kind"}
+    if any(policy.get(key) != value for key, value in origin.items() if key not in changed):
+        raise DefinitionMismatch("Artifact binding changed the original Context policy")
+    return policy
+
+
 def predict(origin, description):
     origin.check()
     for name in (*_HOOKS, *_DATA_HOOKS):

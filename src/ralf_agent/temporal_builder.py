@@ -207,6 +207,8 @@ class TemporalRuntimeBuilder:
                 options["journal"] = options.pop("effect_journal")
             execution = profile.execution
             composite = execution.pop("composite_sessions")
+            if execution.get("artifact_bindings") and "binding_catalog" not in options:
+                options["binding_catalog"] = BindingCatalog(scope=scope)
             if execution["session_writes"]:
                 from .binding_sessions import SessionBindingResource
 

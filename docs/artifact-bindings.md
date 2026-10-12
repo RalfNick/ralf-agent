@@ -191,6 +191,25 @@ The complete Artifact template registration is capped at one MiB. Actual realiza
 must match before dispatch. A subclass overriding managed projection/summary hooks must
 implement its own two binding ports; inheriting the default ports is insufficient.
 
+## Explicit Temporal disabled-only support
+
+When no independent Artifact target is needed, pass `artifact_bindings=True` with an
+empty trusted `BindingCatalog` to `TemporalRuntime`. A `TemporalProfile` uses
+`execution={"artifact_bindings": True}`; the builder creates its empty scoped Catalog
+without allocating an unused store. Configure a compatible managed Context, then use
+`artifacts=BindingSelection.disabled()`. Joint5/artifacts1 publishes only the fixed
+disabled choices. The flag defaultsFalse and is omitted from legacy Profile identity;
+registration of a real Artifact resource still opts in automatically.
+
+Pure binding ports receive detached target metadata. The runtime validates the exact
+origin/target/mode proof and preserved policy, pins original receivers/implementations
+before invocation and cache reuse, and rejects a custom port that ignores the choice.
+An unused Context with custom managed hooks but inherited default binding ports remains
+registered without Artifact templates; explicit selection refuses before accepting a Run.
+A genuine custom predictor failure is surfaced rather than silently treated as unsupported.
+The view checks `max_bytes` before delegation and closes rejected lazy coroutine/generator
+returns without executing them. Backend custom equality cannot replace original resources.
+
 ## Protocol and acceptance boundary
 
 Explicit Local selection uses `local-bindings-15`. Temporal Artifact registration uses
