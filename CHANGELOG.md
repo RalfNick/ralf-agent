@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.0.dev80 — Standard Skill documents
+
+- Add replaceable pure SkillDocumentParser/ParsedSkillDocument, optional bounded safe YAML and frozen explicit SKILL.md File catalog.
+- Add async tools/skills-markdown declarations through original Source1, Skills binding and Local/Temporal authority; original JSON/default profiles remain compatible.
+- Final source4954 passed/370 configured skips; fresh core35 withoutYAML/SDK359, source/installed6 real Temporal, actual79 compatibility/22 templates and272 identical modules pass. Three Important fixes pass14 RED→GREEN; two Minor items remain deferred. Owned service stopped and waited; automatic Context, Sandbox and full capabilities remain open.
+
 ## 0.1.0.dev79 — Per-Agent Skills bindings
 
 - Add original per-Agent Skills ref/disabled binding, borrowed registered-tools resources, Local/Temporal fixed grants and explicit protocol admission.

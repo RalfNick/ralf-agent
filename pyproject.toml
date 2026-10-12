@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "ralf-agent"
-version = "0.1.0.dev79"
+version = "0.1.0.dev80"
 description = "Reliable agent tasks with durable approvals and recovery"
 readme = "README.md"
 requires-python = ">=3.11"
@@ -12,6 +12,7 @@ license = "Apache-2.0"
 dependencies = ["httpx>=0.27,<1", "jsonschema>=4.23,<5"]
 
 [project.optional-dependencies]
+skills = ["PyYAML>=6,<7"]
 pdf = ["pypdf>=6.20,<7"]
 tokenizer = ["tiktoken>=0.14,<0.15"]
 redis = ["redis>=5,<9"]

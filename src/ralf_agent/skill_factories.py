@@ -67,7 +67,11 @@ async def build(config, context):
 
 
 def register_skill_tools(registry):
+    from .skill_document_factories import build as document_build
+    from .skill_document_factories import validate as document_validate
+
     registry.register_async("tools", "skills-file", build, validator=validate)
+    registry.register_async("tools", "skills-markdown", document_build, validator=document_validate)
     registry.register("skills", "registered-tools", binding, validator=validate_binding)
 
 

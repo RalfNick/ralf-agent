@@ -1,6 +1,6 @@
 # Skills：可替换目录和受管理加载
 
-当前 dev78 提供同步 `SkillCatalogPort`、不可变 Memory／固定版本的 File 默认，
+dev78 提供同步 `SkillCatalogPort`、不可变 Memory／固定版本的 File 默认，
 以及原工具层的 `skill_list`／`skill_get`。安装、独立审查修复及冻结验收通过，见[证据](../architecture/reviews/2026-10-12-skills-catalog.md)。
 技能正文是参考数据；实际工具授权、审批和执行仍由原 Engine／History 管理。
 
@@ -70,8 +70,8 @@ with TemporaryDirectory() as directory:
 ```
 
 清单最多1MiB，正文遵循原 Workspace 的相对路径、禁止保护目录、nofollow 和单链接要求。
-这份默认不解析完整 YAML frontmatter；接入标准 SKILL.md 加载器可先生成 `SkillSpec`，
-再注入 Memory 目录，或实现自己的 CatalogPort。异步加载器有待单独定义契约。
+JSON 默认保留原行为；可选标准 YAML frontmatter 使用新的
+[Skill 文档目录与可替换解析器](skill-documents.md)。异步加载器有待单独定义契约。
 
 ## 注入原工具层
 
@@ -118,7 +118,7 @@ asyncio.run(load_reference())
 
 业务 Agent 在 `AgentSpec.tools` 选择已注册名称；不同成员可用既有 `tool_set` 绑定选择独立目录。
 加载是原 read-only Action，工具结果、审批和恢复沿原协议持久化；不会隐藏在纯 Harness／Context。
-技能文本提到的命令、网络、文件或其他工具仍需宿主分别授权。当前专用 `Agent.skills` 角色仍拒绝显式选择。
+技能文本提到的命令、网络、文件或其他工具仍需宿主分别授权。专用 `Agent.skills` ref/disabled 已在 dev79 接通，见[绑定指南](skills-bindings.md)。
 
 ## 声明与替换
 

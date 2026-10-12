@@ -18,7 +18,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python }}
-      - run: python -m pip install -e '.[dev,pdf,tokenizer]'
+      - run: python -m pip install -e '.[dev,pdf,tokenizer,skills]'
       - run: python -m ruff check .
       - run: python -m ruff format --check .
       - run: python -m pytest -q
@@ -33,6 +33,10 @@ jobs:
           mkdir -p "$RUNNER_TEMP/session-contracts"
           cp -R "$GITHUB_WORKSPACE/tests" "$RUNNER_TEMP/session-contracts/tests"
           python -m pytest -q -W error -p no:cacheprovider -c /dev/null "$RUNNER_TEMP/session-contracts/tests/test_default_session_receipts.py" "$RUNNER_TEMP/session-contracts/tests/test_default_session_runtime.py" "$RUNNER_TEMP/session-contracts/tests/test_default_session_process.py" "$RUNNER_TEMP/session-contracts/tests/test_temporal_session_data.py" "$RUNNER_TEMP/session-contracts/tests/test_temporal_context_execution.py" "$RUNNER_TEMP/session-contracts/tests/test_temporal_context_read_protocol.py" "$RUNNER_TEMP/session-contracts/tests/test_temporal_context_read_state.py" "$RUNNER_TEMP/session-contracts/tests/test_skills.py" "$RUNNER_TEMP/session-contracts/tests/test_filesystem_skills.py" "$RUNNER_TEMP/session-contracts/tests/test_skill_tools.py" "$RUNNER_TEMP/session-contracts/tests/test_skill_configuration.py" "$RUNNER_TEMP/session-contracts/tests/test_skill_execution.py" "$RUNNER_TEMP/session-contracts/tests/test_skill_review.py" "$RUNNER_TEMP/session-contracts/tests/test_skill_bindings.py" "$RUNNER_TEMP/session-contracts/tests/test_skill_binding_configuration.py" "$RUNNER_TEMP/session-contracts/tests/test_skill_binding_execution.py" "$RUNNER_TEMP/session-contracts/tests/test_skill_binding_review.py"
+      - name: Installed Skill document contracts outside checkout
+        working-directory: ${{ runner.temp }}
+        run: |
+          python -m pytest -q -W error -p no:cacheprovider -c /dev/null "$RUNNER_TEMP/session-contracts/tests/test_skill_documents.py" "$RUNNER_TEMP/session-contracts/tests/test_filesystem_skill_documents.py" "$RUNNER_TEMP/session-contracts/tests/test_skill_document_configuration.py" "$RUNNER_TEMP/session-contracts/tests/test_skill_document_execution.py" "$RUNNER_TEMP/session-contracts/tests/test_skill_document_review.py"
       - name: Installed wheel smoke test outside checkout
         working-directory: ${{ runner.temp }}
         run: |
@@ -141,7 +145,7 @@ jobs:
         with:
           python-version: '3.12'
       - run: sudo apt-get update && sudo apt-get install -y redis-server
-      - run: python -m pip install -e '.[dev,remote,server,temporal]'
+      - run: python -m pip install -e '.[dev,remote,server,temporal,skills]'
       - run: timeout 30 bash -c 'until curl --fail --silent http://127.0.0.1:6333/healthz; do sleep 1; done'
       - run: >-
           python -m pytest -q -W error
@@ -166,7 +170,7 @@ jobs:
       - name: Temporal Profile factories, owned shutdown and recovery
         run: python -m pytest -q -W error tests/test_temporal_assembly_review.py tests/test_temporal_profiles.py tests/test_temporal_runtime_profile.py tests/test_temporal_assembly.py tests/test_temporal_assembly_lifetime.py tests/test_temporal_assembly_cleanup.py tests/test_temporal_worker_wrapping.py tests/test_temporal_profile_example.py tests/test_temporal_profile_service.py tests/test_temporal_profile_remote.py tests/test_temporal_profile_close_service.py
       - name: Temporal multiversion Host and original queues
-        run: python -m pytest -q -W error tests/test_temporal_catalog_assembly.py tests/test_temporal_catalog_lifetime.py tests/test_temporal_profile_host.py tests/test_temporal_host_lifetime.py tests/test_temporal_host_routing.py tests/test_temporal_host_sessions.py tests/test_temporal_journal_configuration.py tests/test_temporal_catalog_example.py tests/test_temporal_profile_host_service.py tests/test_temporal_host_close_service.py tests/test_temporal_host_review.py tests/test_temporal_startup_options.py tests/test_temporal_host_preflight.py tests/test_temporal_host_preflight_service.py tests/test_cli_temporal_service.py tests/test_http_temporal_service.py tests/test_mcp_http_temporal_service.py tests/test_workspace_temporal_service.py tests/test_workspace_binding_temporal.py tests/test_workspace_binding_review.py tests/test_workspace_binding_temporal_service.py tests/test_workspace_write_execution.py tests/test_workspace_write_temporal_service.py tests/test_skill_execution.py tests/test_skill_temporal_service.py tests/test_skill_binding_temporal.py tests/test_skill_binding_temporal_service.py
+        run: python -m pytest -q -W error tests/test_temporal_catalog_assembly.py tests/test_temporal_catalog_lifetime.py tests/test_temporal_profile_host.py tests/test_temporal_host_lifetime.py tests/test_temporal_host_routing.py tests/test_temporal_host_sessions.py tests/test_temporal_journal_configuration.py tests/test_temporal_catalog_example.py tests/test_temporal_profile_host_service.py tests/test_temporal_host_close_service.py tests/test_temporal_host_review.py tests/test_temporal_startup_options.py tests/test_temporal_host_preflight.py tests/test_temporal_host_preflight_service.py tests/test_cli_temporal_service.py tests/test_http_temporal_service.py tests/test_mcp_http_temporal_service.py tests/test_workspace_temporal_service.py tests/test_workspace_binding_temporal.py tests/test_workspace_binding_review.py tests/test_workspace_binding_temporal_service.py tests/test_workspace_write_execution.py tests/test_workspace_write_temporal_service.py tests/test_skill_execution.py tests/test_skill_temporal_service.py tests/test_skill_binding_temporal.py tests/test_skill_binding_temporal_service.py tests/test_skill_document_temporal_service.py
       - name: Stop task-owned Temporal Service
         if: always()
         run: |

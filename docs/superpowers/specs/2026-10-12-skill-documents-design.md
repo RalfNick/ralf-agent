@@ -37,3 +37,5 @@ Declared JSON/TOML default/explicitScope and borrowed custom parser; partialclea
 ## Remaining
 
 Recursive discovery, asynchronous/remote loaders, associated resource views/selectors, automatic index/context activation, plugin installation, Sandbox/Runner and real quality are separate. This is bounded standard YAML/document adaptation, not complete AgentSkills ecosystem support or wholeH4.
+
+Expanded YAML alias graphs also fit4096 visited values and65536 aggregate UTF8 scalar bytes before ordinary JSON copying. Source event/alias/depth checks remain separate.
