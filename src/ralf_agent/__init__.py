@@ -321,9 +321,12 @@ from .workflow import (
     WorkflowSelection,
 )
 
-__version__ = "0.1.0.dev77"
+__version__ = "0.1.0.dev78"
+from .filesystem_skills import FileSystemSkillCatalog
 from .filesystem_workspace import FileSystemWorkspace
 from .filesystem_workspace_writes import FileSystemWritableWorkspace
+from .skill_tools import SkillToolSource
+from .skills import InMemorySkillCatalog, SkillCatalogPort, SkillError, SkillSpec
 from .workspace import InMemoryWorkspace, WorkspaceError, WorkspacePort
 from .workspace_tools import WorkspaceToolSource
 from .workspace_write_tools import WritableWorkspaceToolSource
@@ -702,3 +705,9 @@ __all__ += ["WritableWorkspaceToolSource"]
 
 __all__ += ["WorkspaceToolSource"]
 __all__ += ["WorkspaceBindingResource"]
+
+__all__ += ["SkillSpec", "SkillError", "SkillCatalogPort", "InMemorySkillCatalog"]
+
+__all__ += ["FileSystemSkillCatalog"]
+
+__all__ += ["SkillToolSource"]

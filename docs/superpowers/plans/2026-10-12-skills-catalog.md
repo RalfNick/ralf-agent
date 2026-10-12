@@ -29,30 +29,30 @@
 **Files:** create src/ralf_agent/skills.py; modify src/ralf_agent/__init__.py; tests/test_skills.py.
 **Interfaces:** consumes Scope/ordinary validation from original Workspace. Produces exact public SkillError/SkillSpec/SkillCatalogPort/InMemorySkillCatalog signatures, skill_metadata/validate_skill_list/validate_skill_get helpers and list/get snapshots defined by Spec.
 
-- [ ] Write failing tests for metadata/digest/order/pagination/detachment, changed content identity, strict slugs/version/UTF8/Scope/numeric/aggregate bounds and close. `test_public_memory_skill_catalog_and_scope` asserts list/get exact Scope, sha256 and original instructions; denied Scope raises AuthorizationDenied.
-- [ ] Run `.venv/bin/python -m pytest tests/test_skills.py -q -W error`; Expected missing public API failure.
-- [ ] Implement immutable specs, pure metadata/snapshot validators and locked Memory default; no File/source/model I/O.
-- [ ] Run new suite plus original tests/test_workspace.py tests/test_workspace_writes.py; Expected all pass. Formal task completion only after command/actual exit read. Batch commit after final gates.
+- [x] Write failing tests for metadata/digest/order/pagination/detachment, changed content identity, strict slugs/version/UTF8/Scope/numeric/aggregate bounds and close. `test_public_memory_skill_catalog_and_scope` asserts list/get exact Scope, sha256 and original instructions; denied Scope raises AuthorizationDenied.
+- [x] Run `.venv/bin/python -m pytest tests/test_skills.py -q -W error`; Expected missing public API failure.
+- [x] Implement immutable specs, pure metadata/snapshot validators and locked Memory default; no File/source/model I/O.
+- [x] Run new suite plus original tests/test_workspace.py tests/test_workspace_writes.py; Expected all pass. Formal task completion only after command/actual exit read. Batch commit after final gates.
 
 ### Task 2: Frozen filesystem catalog
 
 **Files:** create src/ralf_agent/filesystem_skills.py; tests/test_filesystem_skills.py; modify exports.
 **Interfaces:** consumes SkillSpec/snapshots/Memory limits; produces FileSystemSkillCatalog exact constructor, stable full identity, original revision checks and owned close.
 
-- [ ] Write failing File tests: JSON manifest/default Markdown, same name/body drift, root/metadata/path aliases and missing files, denied Scope, typed limits/duplicate names/malformed metadata, constructor cleanup and actual blocked handler close.
-- [ ] Run `.venv/bin/python -m pytest tests/test_filesystem_skills.py -q -W error`; Expected missing File API.
-- [ ] Implement with original FileSystemWorkspace; fixed original root/manifest/file revisions and outer actual-operation ownership, no recursive loader or hidden refresh.
-- [ ] Run new + tests/test_skills.py tests/test_filesystem_workspace.py tests/test_workspace_review.py; Expected all pass; formal completion and final-batch commit.
+- [x] Write failing File tests: JSON manifest/default Markdown, same name/body drift, root/metadata/path aliases and missing files, denied Scope, typed limits/duplicate names/malformed metadata, constructor cleanup and actual blocked handler close.
+- [x] Run `.venv/bin/python -m pytest tests/test_filesystem_skills.py -q -W error`; Expected missing File API.
+- [x] Implement with original FileSystemWorkspace; fixed original root/manifest/file revisions and outer actual-operation ownership, no recursive loader or hidden refresh.
+- [x] Run new + tests/test_skills.py tests/test_filesystem_workspace.py tests/test_workspace_review.py; Expected all pass; formal completion and final-batch commit.
 
 ### Task 3: Managed tools, default configuration and authority proofs
 
 **Files:** create src/ralf_agent/skill_tools.py, src/ralf_agent/skill_factories.py, tests/test_skill_tools.py, tests/test_skill_configuration.py, tests/test_skill_execution.py, tests/test_skill_temporal_service.py; locate original factory-registration file before editing; exports.
 **Interfaces:** consumes list/get strict snapshots/catalog identity and actual File close. Produces SkillToolSource constructor, skill_list/get descriptors, original owned factory tools/skills-file and six original composition proofs; dedicated skills binding stays rejected.
 
-- [ ] Write failing tests for Source identity/descriptors/results, lazy/forged custom port responses, read-only policies, borrowed close and real thread cancellation; invalid pure declarations before open and partial cleanup; JSON/TOML and SDK replacement.
-- [ ] Run new offline suites; Expected missing Source/factory or unsupported adapter. Implement native Source using original tracker and exact result validation; config values from Spec, no new execution state.
-- [ ] Write and pass six Local compositions with member tool-set selection, protected tool names in instruction text denied, original saved read recovery. Write actual six Temporal restart/History cases and run against owned local Service with no skips; wait actual test exit before claiming proof.
-- [ ] Run all new offline + original workspace/tool/thread contracts. Only after actual six pass bump dev78. Formal task command/exit and final-batch commit.
+- [x] Write failing tests for Source identity/descriptors/results, lazy/forged custom port responses, read-only policies, borrowed close and real thread cancellation; invalid pure declarations before open and partial cleanup; JSON/TOML and SDK replacement.
+- [x] Run new offline suites; Expected missing Source/factory or unsupported adapter. Implement native Source using original tracker and exact result validation; config values from Spec, no new execution state.
+- [x] Write and pass six Local compositions with member tool-set selection, protected tool names in instruction text denied, original saved read recovery. Write actual six Temporal restart/History cases and run against owned local Service with no skips; wait actual test exit before claiming proof.
+- [x] Run all new offline + original workspace/tool/thread contracts. Only after actual six pass bump dev78. Formal task command/exit and final-batch commit.
 
 ### Task 4: Documentation and frozen acceptance
 

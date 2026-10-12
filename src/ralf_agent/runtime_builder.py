@@ -503,6 +503,9 @@ class ComponentRegistry:
         from .workspace_factories import register_workspace_tools
 
         register_workspace_tools(self)
+        from .skill_factories import register_skill_tools
+
+        register_skill_tools(self)
 
     def register(self, kind, name, factory, *, validator=None):
         self._register(kind, name, factory, validator, asynchronous=False)

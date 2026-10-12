@@ -1,5 +1,7 @@
 # Ralf-Agent
 
+dev78 增加[可替换Skills目录与受管理加载](docs/skills.md)：Memory／File默认、固定内容、显式Scope和原审批恢复；安装包、真实Temporal及旧77兼容通过。完整能力继续建设。
+
 dev77 增加[受管理Workspace写入](docs/workspace-writes.md)：可替换Memory／File、CAS、审批和恢复；安装包、真实Temporal／PG及旧76兼容通过。完整框架能力继续建设。
 
 当前工作区 **0.1.0.dev77** 提供显式语义知识库、相关事实召回和 Plan／Team 默认组合，

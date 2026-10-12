@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.1.0.dev78 — Managed Skills catalogs
+
+- Add immutable scoped SkillSpec/CatalogPort, Memory and fixed JSON/Markdown File defaults, original managed readonly tools and skills-file async declarations.
+- Four Important snapshot/config/capacity fixes pass22 RED→GREEN regressions; core142/SDK204 installed, actual7 Temporal, old77 compatibility, final source4757/357 configured skips and owned service stop/wait pass. Instruction text grants no permissions; dedicated skills role, full YAML/async loaders and Sandbox remain separate.
+
 ## 0.1.0.dev77 — Managed Workspace writes
 
 - Add replaceable writable Workspace ports, Memory/POSIX defaults, CAS, stable downstream effect receipts and actual-owner leases. Native Source2 and per-Agent selections reuse original approvals, effects and Local/Temporal authority.
