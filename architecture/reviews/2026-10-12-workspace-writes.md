@@ -93,3 +93,5 @@ Final oldWorker31468 actualexit0/read: installed76 rejects frozen77 Source2 befo
 Final: fixed native alias pending-target ownership — test_published_pending_write_is_confirmed_before_native_alias_replacement and absent-target regressions RED→GREEN; final suite4615 passed/351 configured skips.
 Final: fixed rollback commit durability — test_every_native_journal_connection_uses_delete_extra fresh/reopened RED→GREEN; final suite4615/351.
 Final: fixed ordinary file permissions — test_replacing_text_preserves_existing_ordinary_permissions and actual crash recovery executable test RED→GREEN; final suite4615/351.
+
+本地实现提交4219ead83d353b079a148c3e25cbf57709c0ac92；正式Task4于提交后实际退出0：214 passed（13.09s），范围0501054→4219ead。四个Task已完成，目标R01–R26仍active；唯一延期Minor与全部判断／代价在上文，日志随本批SDD归档。没有push。

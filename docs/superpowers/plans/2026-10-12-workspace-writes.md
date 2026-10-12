@@ -60,4 +60,4 @@
 
 - [x] Sync capability subset; build/install fresh core/SDK, installed contracts/required service and actual76↔77 Local/CLI/defaultTemporal/native compatibility/22 unchanged templates/old Worker protocol2 refusal; Expected actual gates all pass, no model-quality/Sandbox claim.
 - [x] One fresh whole-batch read-only review; all severity/rulings BEFORE one unified Important RED→GREEN pass; minors deferred. Expected covering RED and GREEN/no secondreview.
-- [ ] Freeze fullsource/build/module hashes/docs/install/realservice/compat; stop and wait original owned processes; localcommit/formalTask4; archive only own SDD. Expected fullgoal remainsactive, no push.
+- [x] Freeze fullsource/build/module hashes/docs/install/realservice/compat; stop and wait original owned processes; localcommit/formalTask4; archive only own SDD. Expected fullgoal remainsactive, no push.
