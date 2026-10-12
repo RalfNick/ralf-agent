@@ -129,3 +129,10 @@ Default implementation refinement beforeproduct: synchronous httpx Unix control 
 Native dispatch ownership refinement beforeimplementation: default local Docker uses a fixed explicit POSIX lease_root (default task-independent temporary directory per host UID) with an owned secured directory. Nonblocking per-source/Scope/invocation FD flock is acquired before native query/create/start, held through actual stop and exact cleanup, then released. Live duplicates refuse; crashed holders release automatically and cold query may reconcile existing native state. Ordinary files require owner UID, mode0600, one hard link/no symlink; root realpath/device/inode fixed. Lockfiles are retained to avoid unlink/new-inode races; retention/GC remains explicit future governance. This is native resource ownership only, not a new RALF execution authority. Config/native release includes lease_root.
 
 Public default constructor exposes lease_root_path (absolute directory, not a lockfile), matching socket_path and fixed physical resource terminology. The actual lease_root helper returns its root identity; declarations forward this explicit field.
+
+Declaration refinement before factory implementation: tools/sandbox-docker requires version,
+socket_path,image; optional lease_root_path,api_version,scopes,memory_bytes,nano_cpus,
+pids_limit,max_calls,max_output_bytes,scratch_bytes,control_timeout,max_timeout,prefix,
+requires_approval(defaulttrue),cost(default1). Unknown fields rejected in pureprepare;
+limits/policy/ToolSpec validated before any native client. Owned provider registered before
+aopen, then owned borrowed-provider source, so original reverse cleanup closes source first.

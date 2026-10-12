@@ -50,10 +50,10 @@
 **Files:** create src/ralf_agent/sandbox_tools.py, sandbox_factories.py; modify runtime_builder.py; tests/test_sandbox_tools.py, test_sandbox_configuration.py; docs/sandbox.md.
 **Interfaces:** SandboxToolSource original native descriptor sandbox_run argv/timeout; tools/sandbox-docker ownedasync factory.
 
-- [ ] Write source arbitrarymalformed/lazyport fixedidentity/replacedmethod/preflightnoallocation/originalPolicy/readonlyprofile/ownedborrowedclose tests BEFOREcode; ExpectedmissingAPI trueRED.
-- [ ] Implement original register_tool_source composition with trusted Scope/invocation identity, original actual taskownership, completedSandboxResult boundary, defaultapprovaltrue/cost1/read_only ONLY restrictedprofile.
-- [ ] Factorypurepreflight/explicitdaemon+imageadmission, originalresourceledger rollback; no model resourcefields/hiddenpull. Customport default replacement example explicit and honest.
-- [ ] Run packageguide actualnoSDK/originalCLI/workspace/skills/toolsource regressions, localcommit.
+- [x] Write source arbitrarymalformed/lazyport fixedidentity/replacedmethod/preflightnoallocation/originalPolicy/readonlyprofile/ownedborrowedclose tests BEFOREcode; ExpectedmissingAPI trueRED.
+- [x] Implement original register_tool_source composition with trusted Scope/invocation identity, original actual taskownership, completedSandboxResult boundary, defaultapprovaltrue/cost1/read_only ONLY restrictedprofile.
+- [x] Factorypurepreflight/explicitdaemon+imageadmission, originalresourceledger rollback; no model resourcefields/hiddenpull. Customport default replacement example explicit and honest.
+- [x] Run packageguide actualnoSDK/originalCLI/workspace/skills/toolsource regressions, localcommit.
 
 ### Task 4: Per-Agent Sandbox binding and original recovery
 

@@ -513,6 +513,9 @@ class ComponentRegistry:
         from .skill_retrieval_factories import register_skill_discovery
 
         register_skill_discovery(self)
+        from .sandbox_factories import register_sandbox_tools
+
+        register_sandbox_tools(self)
 
     def register(self, kind, name, factory, *, validator=None):
         self._register(kind, name, factory, validator, asynchronous=False)
