@@ -136,12 +136,20 @@ def _native(record):
 
 
 def has_sandbox_tools(manifests):
+    if type(manifests) is not dict or any(
+        type(name) is not str or type(record) is not dict for name, record in manifests.items()
+    ):
+        raise ValidationError("Sandbox tool metadata requires ordinary tool mappings")
     return any(_source(record) is not None for record in manifests.values())
 
 
 def validate_sandbox_protocol(manifest):
+    if type(manifest) is not dict or type(manifest.get("binding_catalog", {})) is not dict:
+        raise ValidationError("Sandbox protocol requires ordinary manifest mappings")
     tools = manifest.get("tools", {})
     records = manifest.get("binding_catalog", {}).get("records", {})
+    if type(records) is not dict or any(type(record) is not dict for record in records.values()):
+        raise ValidationError("Sandbox binding metadata requires ordinary record mappings")
     enabled = has_sandbox_tools(tools) or any(r.get("role") == "sandbox" for r in records.values())
     if (
         not enabled
@@ -164,7 +172,7 @@ def validate_sandbox_protocol(manifest):
             _native(record)
     for record in records.values():
         if record.get("role") == "sandbox":
-            _record(record["identity"])
+            _record(record.get("identity"))
 
 
 def _resource(manifests):
