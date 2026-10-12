@@ -59,6 +59,6 @@
 **Files:** create docs/skills.md and architecture/reviews/2026-10-12-skills-catalog.md; update current capabilities/status/progress/remaining/harness/CHANGELOG/CI/version.
 **Interfaces:** consumes all prior actual/default/replacement proofs; produces honest catalog subset/replacement guide and frozen delivery evidence.
 
-- [ ] Run installed Memory/File/Source/config/six contracts, required actual service, old77↔78 default Local/CLI/Temporal/native compatibility and22 unchanged templates; runnable isolated installed examples and exact module/doc hashes.
-- [ ] One fresh read-only whole-batch review; all grades/declines/rulings before ONE Important RED→GREEN pass; Minor deferred, no re-review.
-- [ ] Freeze green full source, build/install/hash/doc checks; stop/wait every owned service; only local commit, formal Task4, closure record and own SDD archive. Expected full capability goal stays active, no implicit Agent.skills/YAML/Sandbox/quality completion claim.
+- [x] Run installed Memory/File/Source/config/six contracts, required actual service, old77↔78 default Local/CLI/Temporal/native compatibility and22 unchanged templates; runnable isolated installed examples and exact module/doc hashes.
+- [x] One fresh read-only whole-batch review; all grades/declines/rulings before ONE Important RED→GREEN pass; Minor deferred, no re-review.
+- [x] Freeze green full source, build/install/hash/doc checks; stop/wait every owned service; only local commit, formal Task4, closure record and own SDD archive. Expected full capability goal stays active, no implicit Agent.skills/YAML/Sandbox/quality completion claim.
