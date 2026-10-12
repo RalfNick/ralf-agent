@@ -1,13 +1,14 @@
 """Per-definition component views. No ambient current Agent and no execution state."""
 
 import copy
+import weakref
 from dataclasses import dataclass
 
 from .binding_catalog import SELECTABLE_ROLES
 from .binding_paths import agent_paths
 from .binding_types import AgentBindingDescriptor
 from .errors import DefinitionMismatch, ValidationError
-from .types import runtime_profile_identity
+from .types import canonical, runtime_profile_identity
 from .workflow_runtime import agent_step
 
 
@@ -43,6 +44,44 @@ def descriptor_for(definition, index, plan=None):
 class AgentBindingResolver:
     def __init__(self, engine):
         self.engine = engine
+        self._artifact_contexts = weakref.WeakValueDictionary()
+
+    def _artifact_context(self, origin, target):
+        from .binding_catalog import component_identity
+        from .managed_context import ManagedContextPipeline
+        from .ports import is_sync_callable
+        from .runtime_builder import _completed
+
+        if any(
+            not is_sync_callable(getattr(origin, name, None))
+            for name in ("artifact_binding_identity", "bind_artifacts")
+        ):
+            raise ValidationError(
+                "Explicit Artifact selection requires a pure Context binding port"
+            )
+        metadata = None if target is None else target.identity
+        expected = _completed(
+            origin.artifact_binding_identity(metadata), "Artifact Context prediction"
+        )
+        if type(expected) is not dict or len(canonical(expected).encode("utf-8")) > 1048576:
+            raise ValidationError("Artifact Context prediction requires a bounded JSON identity")
+        key = (
+            id(origin),
+            id(None if target is None else target._target),
+            canonical(metadata),
+            canonical(expected),
+        )
+        selected = self._artifact_contexts.get(key)
+        if selected is None:
+            selected = _completed(origin.bind_artifacts(target), "Artifact Context realization")
+        if not isinstance(selected, ManagedContextPipeline):
+            raise ValidationError("Artifact binding requires a completed managed Context")
+        if component_identity("context", selected) != expected:
+            raise DefinitionMismatch(
+                "Artifact Context realization differs from its fixed prediction"
+            )
+        self._artifact_contexts[key] = selected
+        return selected
 
     def resolve(self, step, descriptor):
         e = self.engine
@@ -85,6 +124,17 @@ class AgentBindingResolver:
                 records[role] = {"mode": "disabled"}
             else:
                 records[role] = {"mode": "inherit"}
+        if descriptor.artifacts.mode != "inherit":
+            target = None
+            if descriptor.artifacts.mode == "ref":
+                if e.binding_catalog is None:
+                    raise DefinitionMismatch("Artifact selection requires a host BindingCatalog")
+                target, records["artifacts"] = e.binding_catalog.resolve(
+                    "artifacts", descriptor.artifacts, e.scope
+                )
+            else:
+                records["artifacts"] = {"mode": "disabled"}
+            values["context"] = self._artifact_context(values["context"], target)
         tools = tuple(values["tool_set"])
         if not set(tools).issubset(step["tools"]):
             raise ValidationError("A bound tool set cannot expand AgentSpec tools")
@@ -274,6 +324,8 @@ class AgentBindingResolver:
             manifest["kernel"] = "local-bindings-13"
         if any(entry["descriptor"]["sandbox"]["mode"] != "inherit" for entry in entries.values()):
             manifest["kernel"] = "local-bindings-14"
+        if any(entry["descriptor"]["artifacts"]["mode"] != "inherit" for entry in entries.values()):
+            manifest["kernel"] = "local-bindings-15"
         return manifest
 
 
@@ -304,6 +356,7 @@ def binding_capabilities():
             "session": ["namespace"],
             "facts": ["namespace"],
             "knowledge": ["namespace"],
+            "artifacts": ["namespace"],
         },
         "session_resource_admission": True,
         "required_stage_kinds": ["model", "tool"],

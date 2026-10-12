@@ -23,12 +23,20 @@ SELECTABLE_ROLES = frozenset(
         "workspace",
         "skills",
         "sandbox",
+        "artifacts",
     }
 )
 
 
 def component_identity(role, component):
     from .engine import LocalEngine
+
+    if role == "artifacts":
+        from .binding_artifacts import ArtifactBindingResource
+
+        if type(component) is not ArtifactBindingResource:
+            raise ValidationError("Artifact bindings require an original scoped store resource")
+        return component.identity
 
     if role == "sandbox":
         from .binding_sandbox import SandboxBindingResource
@@ -155,7 +163,7 @@ class BindingCatalog:
             raise AuthorizationDenied("Binding catalog belongs to a different trusted Scope")
         if not isinstance(selection, BindingSelection) or selection.mode != "ref":
             raise ValidationError("Catalog resolution requires a reference binding")
-        if selection.selector and role not in {"session", "facts", "knowledge"}:
+        if selection.selector and role not in {"session", "facts", "knowledge", "artifacts"}:
             raise ValidationError("Resource selectors are not supported in Local H1a")
         entry = self._entries.get((role, selection.component_id, selection.version))
         if entry is None:
@@ -163,6 +171,9 @@ class BindingCatalog:
         component, record = entry
         if digest(component_identity(role, component)) != digest(record["identity"]):
             raise DefinitionMismatch("Registered binding component identity changed")
+        if role == "artifacts":
+            view = component.select(selection.selector, scope)
+            return view, {**copy.deepcopy(record), "resource": view.resource}
         if role in {"facts", "knowledge"}:
             from .binding_data import FactsBindingResource, KnowledgeBindingResource
 

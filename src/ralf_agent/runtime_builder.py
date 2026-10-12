@@ -215,6 +215,7 @@ _BINDING_FACTORY_KINDS = {
     "workspace": "workspace",
     "skills": "skills",
     "sandbox": "sandbox",
+    "artifacts": "artifacts",
 }
 
 
@@ -518,6 +519,10 @@ class ComponentRegistry:
 
         register_sandbox_tools(self)
 
+        from .artifact_binding_factories import register_artifact_bindings
+
+        register_artifact_bindings(self)
+
     def register(self, kind, name, factory, *, validator=None):
         self._register(kind, name, factory, validator, asynchronous=False)
 
@@ -535,6 +540,7 @@ class ComponentRegistry:
                 "skills",
                 "sandbox",
                 "artifact_store",
+                "artifacts",
                 "reference_selector",
                 "embedding_provider",
                 "vector_index",
@@ -559,6 +565,10 @@ class ComponentRegistry:
         self._factories[kind, name] = (factory, validator)
 
     def prepare(self, kind, declaration):
+        if (kind, declaration["adapter"]) == ("artifacts", "scoped-store"):
+            from .artifact_binding_factories import prepare_artifact_binding
+
+            return prepare_artifact_binding(self, declaration)
         if (kind, declaration["adapter"]) in {
             ("session_store", "session-resource"),
             ("conversation_resource", "session-resource"),
