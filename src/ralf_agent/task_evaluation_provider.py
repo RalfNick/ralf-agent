@@ -3,6 +3,7 @@
 import copy
 
 from .errors import DefinitionMismatch, ValidationError
+from .model_continuation import provider_continuation_identity
 from .planning_evaluation import _AuditedProvider
 from .ports import is_async_callable
 from .task_controls import _binding
@@ -18,16 +19,31 @@ class PinnedEvaluationProvider(_AuditedProvider):
         if not isinstance(self._identity, dict) or not self._identity:
             raise ValidationError("Evaluation Provider requires a finite identity")
         canonical(self._identity)
+        self._continuation_identity = provider_continuation_identity(provider)
         names = ["complete"] + (
             ["validate_request"] if hasattr(provider, "validate_request") else []
         )
         self._bindings = {name: _binding(getattr(provider, name)) for name in names}
         super().__init__(provider, limits)
 
+    @property
+    def identity(self):
+        # Let the original authority record a completed response before
+        # registration drift rejects its adoption.
+        value = super().identity
+        try:
+            self._check()
+        except (DefinitionMismatch, ValidationError):
+            # A finite changed identity permits read-only reconstruction, but
+            # cannot match the original release or admit another model call.
+            value = {**value, "registration_changed": True}
+        return value
+
     def _check(self):
         if (
             self.provider is not self._provider
             or self.provider.identity != self._identity
+            or provider_continuation_identity(self.provider) != self._continuation_identity
             or any(
                 _binding(getattr(self.provider, name, None)) != binding
                 for name, binding in self._bindings.items()
@@ -44,5 +60,4 @@ class PinnedEvaluationProvider(_AuditedProvider):
     async def complete(self, messages, tools):
         self._check()
         result = await super().complete(messages, tools)
-        self._check()
         return result

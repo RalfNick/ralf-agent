@@ -31,6 +31,7 @@ COMPONENT_KINDS = frozenset(
         "verifier",
         "limits",
         "stage_policy",
+        "model_continuation",
     }
 )
 

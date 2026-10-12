@@ -552,6 +552,12 @@ class _AuditedProvider:
             "limits": asdict(self.limits),
         }
 
+    @property
+    def continuation_identity(self):
+        from .model_continuation import provider_continuation_identity
+
+        return provider_continuation_identity(self.provider)
+
     def validate_request(self, messages, tools):
         from .ports import _complete_sync_none, is_sync_callable
 
@@ -607,7 +613,14 @@ class _ManagedEvaluationCaller:
 
 
 async def evaluate_planning(
-    provider=None, *, cases=None, limits=None, prices=None, evidence_dir=None, offline=False
+    provider=None,
+    *,
+    cases=None,
+    limits=None,
+    prices=None,
+    evidence_dir=None,
+    offline=False,
+    model_continuation=False,
 ):
     """Evaluate a frozen selection using one managed ModelDAGPlanner child each.
 
@@ -619,6 +632,9 @@ async def evaluate_planning(
     """
     from .dag_planning import ModelDAGPlanner
     from .engine import LocalEngine
+
+    if type(model_continuation) is not bool:
+        raise ValidationError("Model continuation enablement must be boolean")
     from .planning import PlanningRequest
     from .storage import SQLiteStore
     from .tools import ToolRegistry
@@ -717,7 +733,10 @@ async def evaluate_planning(
                 started = time.perf_counter()
                 path = _new_evidence_path(directory, case["id"], repeat)
                 with LocalEngine(
-                    SQLiteStore(path), providers={"default": audited}, tools=ToolRegistry()
+                    SQLiteStore(path),
+                    providers={"default": audited},
+                    tools=ToolRegistry(),
+                    **({"model_continuation": True} if model_continuation else {}),
                 ) as engine:
                     caller = _ManagedEvaluationCaller(engine, planner)
                     request = PlanningRequest(

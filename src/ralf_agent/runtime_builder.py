@@ -12,6 +12,7 @@ from .context import ContextAssembler
 from .engine import LocalEngine
 from .errors import RalfError, ValidationError
 from .executors import PythonToolExecutor
+from .gemini_functions import GeminiFunctionProvider
 from .harness import NativeHarness
 from .memory import InMemoryMemory, SQLiteMemory
 from .model_native import AnthropicProvider, GeminiProvider
@@ -97,7 +98,7 @@ def _model_options(config, provider_type, key_env):
         "stream",
         "capabilities",
     }
-    if provider_type in {OpenAIChatProvider, GeminiProvider}:
+    if provider_type in {OpenAIChatProvider, GeminiProvider, GeminiFunctionProvider}:
         allowed.add("seed")
     if provider_type is OpenAIChatProvider:
         allowed.add("token_parameter")
@@ -235,6 +236,7 @@ class ComponentRegistry:
             ("deepseek-chat", DeepSeekChatProvider, "DEEPSEEK_API_KEY"),
             ("anthropic-messages", AnthropicProvider, "ANTHROPIC_API_KEY"),
             ("gemini-content", GeminiProvider, "GEMINI_API_KEY"),
+            ("gemini-functions", GeminiFunctionProvider, "GEMINI_API_KEY"),
         ]:
             # Bind values now, rather than capture the loop's final adapter.
             self.register(
@@ -270,6 +272,12 @@ class ComponentRegistry:
         )
         self.register(
             "harness", "native", lambda c, ctx: NativeHarness(), validator=lambda c: _fields(c, {})
+        )
+        self.register(
+            "model_continuation",
+            "native",
+            lambda c, ctx: True,
+            validator=lambda c: _fields(c, {}),
         )
         from .agent_limits import FixedAgentLimits
         from .completion import SchemaCompletionVerifier, ToolReceiptVerifier
@@ -660,6 +668,20 @@ class RuntimeBuilder:
         from .query_factories import preflight_query_providers
 
         preflight_query_providers(profile)
+        if "model_continuation" not in profile.components and any(
+            declaration["adapter"] == "gemini-functions"
+            for declaration in [
+                *profile.providers.values(),
+                *(
+                    item["component"]
+                    for item in profile.binding_components or []
+                    if item["role"] == "provider"
+                ),
+            ]
+        ):
+            raise ValidationError(
+                "Gemini functions require explicit model_continuation configuration"
+            )
         scope = Scope() if scope is None else scope
         if not isinstance(scope, Scope):
             raise ValidationError("Runtime scope must be supplied by a trusted host")

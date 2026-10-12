@@ -341,7 +341,7 @@ class _OrchestrationProvider(PinnedEvaluationProvider):
         super().validate_request(messages, tools)
 
 
-def _assembly(case, provider, kind, directory):
+def _assembly(case, provider, kind, directory, *, model_continuation=False):
     """Factories capture trusted tools and borrow the caller's audited provider."""
     registry = ComponentRegistry()
     registry.register("provider", "evaluation-borrowed", lambda config, context: provider)
@@ -349,6 +349,8 @@ def _assembly(case, provider, kind, directory):
         "tools", "evaluation-inventory", lambda config, context: _tools(case["dataset"])
     )
     components = {"tools": {"adapter": "evaluation-inventory"}}
+    if model_continuation:
+        components["model_continuation"] = {"adapter": "native"}
     if kind == "plan-and-execute":
         components["planners"] = {"adapter": "dag-rule"}
     else:
@@ -539,6 +541,7 @@ async def evaluate_orchestration(
     evidence_dir=None,
     offline=False,
     prices=None,
+    model_continuation=False,
 ):
     """Measure real managed member results and receipts, without implicit I/O.
 
@@ -546,6 +549,8 @@ async def evaluate_orchestration(
     or unfinished runs are observed on reconnection, never resumed for scoring.
     Provider clients are borrowed; the evaluation owns and closes its runtimes.
     """
+    if type(model_continuation) is not bool:
+        raise ValidationError("Model continuation enablement must be boolean")
     if kind not in {"plan-and-execute", "team"} or type(offline) is not bool:
         raise ValidationError(
             "Evaluation requires a supported orchestration kind and boolean offline flag"
@@ -630,7 +635,9 @@ async def evaluate_orchestration(
                     continue
                 path = _new_evidence_path(directory, case["id"], repeat)
                 before, started = len(audited.attempts), time.perf_counter()
-                builder, profile, harness = _assembly(case, audited, kind, directory)
+                builder, profile, harness = _assembly(
+                    case, audited, kind, directory, model_continuation=model_continuation
+                )
                 row["runtime"] = {
                     "name": profile.name,
                     "version": profile.version,

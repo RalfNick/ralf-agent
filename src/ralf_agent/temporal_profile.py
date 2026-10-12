@@ -11,6 +11,7 @@ from .types import canonical, digest, runtime_profile_identity
 LOCAL_COMPONENTS = frozenset(
     {
         "coordinator",
+        "model_continuation",
         "conversation_resource",
         "workflow_compiler",
         "workflow_interpreter",
@@ -25,6 +26,7 @@ EXECUTION_FLAGS = frozenset(
         "composite_sessions",
         "context_reads",
         "artifact_bindings",
+        "model_continuation",
     }
 )
 MAX_DECLARATION_BYTES = 1_000_000
@@ -78,7 +80,7 @@ class TemporalProfile:
         flags = {
             name: execution.get(name, False)
             for name in sorted(EXECUTION_FLAGS)
-            if name != "artifact_bindings" or execution.get(name, False)
+            if name not in {"artifact_bindings", "model_continuation"} or execution.get(name, False)
         }
         session_declared = "session_store" in original.components or any(
             item["role"] == "session" for item in original.binding_components or []

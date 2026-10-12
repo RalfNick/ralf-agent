@@ -36,6 +36,7 @@ TERMINAL = frozenset({"succeeded", "failed", "cancelled"})
 KERNEL = "temporal-1"
 WORKFLOW_NAME = "ralf.temporal.run.v1"
 MODEL_ACTIVITY = "ralf.temporal.model.v1"
+MODEL_ADOPTION_ACTIVITY = "ralf.temporal.model-adoption.v1"
 TOOL_ACTIVITY = "ralf.temporal.tool.v1"
 RECONCILE_ACTIVITY = "ralf.temporal.reconcile.v1"
 ACK_ACTIVITY = "ralf.temporal.evidence.v1"
@@ -108,7 +109,7 @@ def validate_manifest(manifest):
     if manifest["kernel"] == "temporal-3":
         if (
             type(manifest.get("binding_protocol")) is not int
-            or manifest.get("binding_protocol") not in (1, 2, 3, 4, 5)
+            or manifest.get("binding_protocol") not in (1, 2, 3, 4, 5, 6)
             or manifest.get("dispatch_admission") != "history-1"
         ):
             raise DefinitionMismatch("Unsupported Temporal binding/memory protocol")
@@ -148,6 +149,9 @@ def validate_manifest(manifest):
     from .temporal_decision_state import validate_protocol as validate_decision_protocol
 
     validate_decision_protocol(manifest)
+    from .temporal_decision_state import validate_continuation_protocol
+
+    validate_continuation_protocol(manifest)
     if "workspace_binding_protocol" in manifest:
         if type(manifest["workspace_binding_protocol"]) is not int or manifest[
             "workspace_binding_protocol"
@@ -692,6 +696,12 @@ class TemporalRunState:
             # An accepted completion already owns this node. A held save may
             # only resume through its original recovery phases, never a model.
             return None
+        if self.manifest.get("model_continuation_protocol") == 1:
+            from .temporal_decision_state import next_adoption
+
+            operation = next_adoption(self)
+            if operation is not None:
+                return operation
         from .temporal_completion_state import next_stage as next_completion
 
         operation = next_completion(self)
@@ -831,6 +841,8 @@ class TemporalRunState:
                 scope=self.scope,
             )
             action["dispatch_request_digest"] = digest(request)
+        if self.manifest.get("model_continuation_protocol") == 1:
+            action["dispatch_request"] = detached(request)
         return action, request
 
     def session_context_fields(self):
@@ -958,6 +970,18 @@ class TemporalRunState:
         self._emit("run_failed", {"code": response.get("code", "activity_failed")})
 
     def accept_model(self, action_id, response):
+        if self.manifest.get("model_continuation_protocol") == 1:
+            from .temporal_decision_state import accept_receipt
+
+            return accept_receipt(self, action_id, response)
+        return self._accept_model_decision(action_id, response)
+
+    def accept_model_adoption(self, action_id, response):
+        from .temporal_decision_state import accept_adoption
+
+        return accept_adoption(self, action_id, response)
+
+    def _accept_model_decision(self, action_id, response, *, already_received=False):
         decision_required = self.manifest.get("decision_protocol") == 1
         received_v2 = response.get("model_evidence_version") == 2 or (
             decision_required and "received_response" in response
@@ -970,11 +994,13 @@ class TemporalRunState:
         if received_v2:
             received = detached(response["received_response"])
             action["received_response"] = received
-            self._settle(action, settlement_usage(received.get("usage")))
+            if not already_received:
+                self._settle(action, settlement_usage(received.get("usage")))
         else:
             self._settle(action, response.get("usage"))
         action["status"], action["response"] = "completed", detached(response)
-        self._emit("model_response_recorded", {"action_id": action_id})
+        if not already_received:
+            self._emit("model_response_recorded", {"action_id": action_id})
         if self.state in TERMINAL:
             self._emit("late_model_evidence", {"action_id": action_id})
             return
@@ -1012,6 +1038,9 @@ class TemporalRunState:
                         for call in proposal.tool_calls
                     ],
                 }
+            from .temporal_decision_state import continuation_adoption
+
+            continuation = continuation_adoption(self, response, received if received_v2 else None)
             calls = response["tool_calls"]
             proposals = []
             for i, call in enumerate(calls):
@@ -1054,24 +1083,15 @@ class TemporalRunState:
                 raise AgentLimitExceeded("Agent tool action limit exceeded")
             if proposals:
                 self.actions.extend(proposals)
+                from .model_continuation import assistant_message
+
                 self.messages.append(
-                    {
-                        "role": "assistant",
-                        "content": response["output"]
-                        if isinstance(response["output"], str)
-                        else None,
-                        "tool_calls": [
-                            {
-                                "id": a["call_id"],
-                                "type": "function",
-                                "function": {
-                                    "name": a["tool"],
-                                    "arguments": canonical(a["arguments"]),
-                                },
-                            }
-                            for a in proposals
-                        ],
-                    }
+                    assistant_message(
+                        response["output"],
+                        proposals,
+                        received=received if received_v2 else None,
+                        continuation=continuation,
+                    )
                 )
                 self._emit(
                     "decision_adopted",

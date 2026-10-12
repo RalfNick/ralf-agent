@@ -282,7 +282,7 @@ def _model_usage(attempts):
     }
 
 
-def _assembly(directory, case_id, repeat, provider, embedding):
+def _assembly(directory, case_id, repeat, provider, embedding, *, model_continuation=False):
     resources = {}
     registry = ComponentRegistry()
     registry.register("provider", "evaluation-borrowed", lambda config, context: provider)
@@ -309,7 +309,10 @@ def _assembly(directory, case_id, repeat, provider, embedding):
         "semantic-knowledge",
         version="2",
         provider={"adapter": "evaluation-borrowed"},
-        components={"knowledge": {"adapter": "evaluation-knowledge"}},
+        components={
+            "knowledge": {"adapter": "evaluation-knowledge"},
+            **({"model_continuation": {"adapter": "native"}} if model_continuation else {}),
+        },
     )
     return RuntimeBuilder(registry, base_dir=directory), profile, resources
 
@@ -363,6 +366,7 @@ async def evaluate_rag(
     offline=False,
     prices=None,
     max_embedding_calls=128,
+    model_continuation=False,
 ):
     """Run frozen RAG cases; default absence of a Provider never triggers I/O.
 
@@ -373,6 +377,8 @@ async def evaluate_rag(
     the original authority and never repeats ingestion, indexing or generation.
     """
     limits = EvaluationLimits() if limits is None else limits
+    if type(model_continuation) is not bool:
+        raise ValidationError("Model continuation enablement must be boolean")
     if not isinstance(limits, EvaluationLimits) or type(offline) is not bool:
         raise ValidationError("RAG evaluation requires limits and explicit offline mode")
     if type(max_embedding_calls) is not int or not 1 <= max_embedding_calls <= 100000:
@@ -492,7 +498,12 @@ async def evaluate_rag(
                     descriptor = os.open(sidecar, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o600)
                     os.close(descriptor)
                 builder, profile, resources = _assembly(
-                    directory, case["id"], repeat, audited, audited_embedding
+                    directory,
+                    case["id"],
+                    repeat,
+                    audited,
+                    audited_embedding,
+                    model_continuation=model_continuation,
                 )
                 spec = AgentSpec(
                     "rag-evaluation",

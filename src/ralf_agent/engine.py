@@ -25,6 +25,12 @@ from .errors import (
 from .executors import DispatchEnvelope, EffectObservation, PythonToolExecutor, ToolExecutor
 from .harness import DecisionProposal, Harness, ModelRequest, NativeHarness
 from .memory import _validate_expires_at, memory_call
+from .model_continuation import (
+    assistant_message,
+    decode_received_response,
+    provider_continuation_identity,
+    validate_continuation,
+)
 from .model_evidence import (
     settlement_usage,
     snapshot_model_response,
@@ -99,6 +105,7 @@ class LocalEngine:
         limits=None,
         conversation_resource=None,
         stage_policy=None,
+        model_continuation=False,
     ):
         # Python 3.12's Protocol isinstance check ignores proxy __getattr__.
         # Validate the declared public operations so delegating adapters work too.
@@ -109,6 +116,9 @@ class LocalEngine:
         ):
             raise ValidationError("Store must implement the version 1 ExecutionStore port")
         self._validate_policy(policy)
+        if type(model_continuation) is not bool:
+            raise ValidationError("model_continuation must be boolean")
+        self.model_continuation = model_continuation
         self.store = store
         self.conversation_resource = conversation_resource
         self.providers = dict(providers)
@@ -476,6 +486,7 @@ class LocalEngine:
         verifier = self.verifier if components is None else components.verifier
         names = sorted({name for step in steps for name in step["tools"]})
         providers = {}
+        continuations = {}
         for step in steps:
             provider = (
                 self.providers.get(step["provider"]) if components is None else components.provider
@@ -487,10 +498,14 @@ class LocalEngine:
             if not isinstance(getattr(provider, "identity", None), dict) or not provider.identity:
                 raise ValidationError("ModelProvider.identity must be a non-empty JSON object")
             providers[step["provider"]] = copy.deepcopy(provider.identity)
+            continuation = provider_continuation_identity(provider)
+            if continuation is not None and not self.model_continuation:
+                raise ValidationError("This Provider requires explicit model continuation")
+            continuations[step["provider"]] = continuation
             if step["output_schema"] is not None:
                 Draft202012Validator.check_schema(step["output_schema"])
         manifest = {
-            "kernel": "local-4",
+            "kernel": "local-5" if self.model_continuation else "local-4",
             "tools": self.tools.manifests(names),
             "providers": providers,
             "session_backend": sessions.backend_id if sessions is not None else None,
@@ -501,6 +516,9 @@ class LocalEngine:
                 self.tool_executor, ("execute", "reconcile"), False, "Executor"
             ),
         }
+        if self.model_continuation:
+            manifest["model_continuation_protocol"] = 1
+            manifest["provider_continuations"] = continuations
         if self.recall_policy is not None:
             manifest["memory_recall"] = self._component_identity(
                 self.recall_policy, (), True, "Recall policy"
@@ -1304,7 +1322,9 @@ class LocalEngine:
         action = next(item for item in run["actions"] if item["id"] == action_id)
         if action["status"] != "response_received":
             return True
-        encoded = copy.deepcopy(action["received_response"])
+        received = copy.deepcopy(action["received_response"])
+        encoded = copy.deepcopy(received)
+        continuation = None
         closed = run["state"] in TERMINAL or run["state"] == "cancelling"
         proposals = []
         if not closed:
@@ -1313,15 +1333,19 @@ class LocalEngine:
             harness = self._components(run, action["node"]).harness
             try:
                 validate_received_response(encoded)
-                response = ModelResponse(
-                    output=encoded["output"],
-                    tool_calls=tuple(ToolCall(**call) for call in encoded["tool_calls"]),
-                    usage=encoded["usage"],
-                )
+                response = decode_received_response(encoded)
                 proposed = self._component_result(
                     harness.propose(AgentSpec(**copy.deepcopy(step)), response),
                     DecisionProposal,
                     "Harness.propose",
+                )
+                continuation = validate_continuation(
+                    received,
+                    proposed,
+                    self._step_manifest(run)
+                    .get("provider_continuations", {})
+                    .get(step["provider"]),
+                    enabled=self.model_continuation,
                 )
                 validate_model_usage(encoded["usage"])
                 effective_calls = []
@@ -1365,6 +1389,8 @@ class LocalEngine:
                     ]
                     validate_call_ids([item["call_id"] for item in proposals])
                     encoded = {**asdict(proposal), "usage": encoded["usage"]}
+                    if continuation is not None:
+                        encoded["continuation"] = copy.deepcopy(continuation)
             except Exception as exc:
                 error = (
                     exc
@@ -1397,23 +1423,12 @@ class LocalEngine:
                 run["actions"].extend(proposals)
                 if proposals:
                     run["messages"].append(
-                        {
-                            "role": "assistant",
-                            "content": encoded["output"]
-                            if isinstance(encoded["output"], str)
-                            else None,
-                            "tool_calls": [
-                                {
-                                    "id": item["call_id"],
-                                    "type": "function",
-                                    "function": {
-                                        "name": item["tool"],
-                                        "arguments": canonical(item["arguments"]),
-                                    },
-                                }
-                                for item in proposals
-                            ],
-                        }
+                        assistant_message(
+                            encoded["output"],
+                            proposals,
+                            received=received,
+                            continuation=continuation,
+                        )
                     )
             self._commit(
                 run,

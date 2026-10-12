@@ -30,6 +30,7 @@ with workflow.unsafe.imports_passed_through():
         ACK_ACTIVITY,
         CONTEXT_ACTIVITY,
         MODEL_ACTIVITY,
+        MODEL_ADOPTION_ACTIVITY,
         RECONCILE_ACTIVITY,
         TOOL_ACTIVITY,
         WORKFLOW_NAME,
@@ -204,6 +205,8 @@ class TemporalRunWorkflow:
                     if action["kind"] == "managed_context"
                     else CONTEXT_ACTIVITY
                     if action["kind"] == "context"
+                    else MODEL_ADOPTION_ACTIVITY
+                    if action["kind"] == "model_adoption"
                     else MODEL_ACTIVITY
                     if action["kind"] == "model"
                     else TOOL_ACTIVITY,
@@ -214,7 +217,7 @@ class TemporalRunWorkflow:
                         maximum_attempts=1
                         if owns_context_read(self.state.manifest, action)
                         else 3
-                        if action["kind"] in {"agent_limits", "agent_completion"}
+                        if action["kind"] in {"agent_limits", "agent_completion", "model_adoption"}
                         or (
                             action["kind"] == "managed_session"
                             and action["phase"] != "session-write"
@@ -242,6 +245,7 @@ class TemporalRunWorkflow:
                         "agent_limits",
                         "agent_completion",
                         "managed_session",
+                        "model_adoption",
                     }
                     else action["attempts"][0]["id"],
                 )
@@ -257,6 +261,8 @@ class TemporalRunWorkflow:
                     self.state.accept_managed_context(action["id"], response)
                 elif action["kind"] == "context":
                     self.state.accept_context(action["id"], response)
+                elif action["kind"] == "model_adoption":
+                    self.state.accept_model_adoption(action["id"], response)
                 elif action["kind"] == "model":
                     self.state.accept_model(action["id"], response)
                 else:
@@ -302,6 +308,10 @@ class TemporalRunWorkflow:
                     )
                 elif action["kind"] == "context":
                     self.state.accept_context(action["id"], {"ok": False, "code": "context_failed"})
+                elif action["kind"] == "model_adoption":
+                    self.state.accept_model_adoption(
+                        action["id"], {"ok": False, "code": "activity_outcome_unknown"}
+                    )
                 else:
                     self.state.operation_unknown(action["id"], "activity_outcome_unknown")
 

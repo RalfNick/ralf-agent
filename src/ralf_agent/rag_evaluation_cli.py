@@ -95,6 +95,7 @@ async def run(args):
             offline=args.offline,
             prices=prices,
             max_embedding_calls=args.max_embedding_calls,
+            model_continuation=args.provider == "gemini-functions",
         )
         if reason:
             report["reason"] = reason

@@ -369,6 +369,8 @@ class AgentBindingResolver:
             manifest["kernel"] = "local-bindings-14"
         if any(entry["descriptor"]["artifacts"]["mode"] != "inherit" for entry in entries.values()):
             manifest["kernel"] = "local-bindings-15"
+        if self.engine.model_continuation:
+            manifest["model_continuation_protocol"] = 1
         return manifest
 
 

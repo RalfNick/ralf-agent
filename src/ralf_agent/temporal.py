@@ -557,5 +557,9 @@ def _workflow_runner():
             "ralf_agent.temporal_limits_state",
             "ralf_agent.temporal_completion_state",
             "ralf_agent.temporal_decision_state",
+            "ralf_agent.model_continuation",
+            "ralf_agent.harness",
+            "ralf_agent.types",
+            "ralf_agent.errors",
         )
     )

@@ -5,6 +5,7 @@ import asyncio
 import json
 
 from .errors import RalfError
+from .gemini_functions import GeminiFunctionProvider
 from .model_compatibility import CASES, evaluate_model_compatibility
 from .model_native import AnthropicProvider, GeminiProvider
 from .model_protocol import ModelStreamEvent
@@ -48,6 +49,7 @@ def main(argv=None):
         "deepseek-chat": (DeepSeekChatProvider, "DEEPSEEK_API_KEY"),
         "anthropic-messages": (AnthropicProvider, "ANTHROPIC_API_KEY"),
         "gemini-content": (GeminiProvider, "GEMINI_API_KEY"),
+        "gemini-functions": (GeminiFunctionProvider, "GEMINI_API_KEY"),
     }
     parser.add_argument("--adapter", choices=tuple(adapters), default="chat-completions")
     parser.add_argument("--api-key-env")
@@ -87,6 +89,7 @@ def main(argv=None):
                 limits=limits,
                 evidence_dir=args.evidence_dir,
                 offline=args.offline,
+                model_continuation=args.adapter == "gemini-functions",
             )
         )
     except RalfError as exc:

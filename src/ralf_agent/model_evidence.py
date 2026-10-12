@@ -46,6 +46,14 @@ def snapshot_model_response(response):
             _close_lazy(value)
             received[field] = fallback
             invalid.append(field)
+    from .model_continuation import ContinuedModelResponse
+
+    if isinstance(response, ContinuedModelResponse):
+        try:
+            received["continuation"] = response.continuation.to_dict()
+        except (AttributeError, TypeError, ValidationError):
+            received["continuation"] = None
+            invalid.append("continuation")
     if invalid:
         received["invalid_fields"] = invalid
     return received

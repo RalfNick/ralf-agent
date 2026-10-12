@@ -21,6 +21,7 @@ from .ports import is_async_callable, is_sync_callable
 from .temporal_state import (
     ACK_ACTIVITY,
     MODEL_ACTIVITY,
+    MODEL_ADOPTION_ACTIVITY,
     RECONCILE_ACTIVITY,
     TOOL_ACTIVITY,
     detached,
@@ -154,9 +155,13 @@ class TemporalRuntime:
         context_execution=None,
         tool_execution=None,
         runtime_profile=None,
+        model_continuation=False,
     ):
         from .types import runtime_profile_identity
 
+        if type(model_continuation) is not bool:
+            raise ValidationError("Model continuation opt-in requires an ordinary boolean")
+        self.model_continuation = self._model_continuation_pin = model_continuation
         if type(artifact_bindings) is not bool:
             raise ValidationError("Artifact binding opt-in requires an ordinary boolean")
         if artifact_bindings and binding_catalog is None:
@@ -335,6 +340,13 @@ class TemporalRuntime:
                 if role == "provider":
                     self.providers[provider_alias(BindingSelection.ref(cid, version))] = component
         self._provider_pins = dict(self.providers)
+        from .model_continuation import provider_continuation_identity
+
+        self._provider_continuation_pins = (
+            {n: provider_continuation_identity(p) for n, p in self.providers.items()}
+            if model_continuation
+            else None
+        )
         from .task_controls import _binding
 
         self._provider_method_pins = {n: _binding(p.complete) for n, p in self.providers.items()}
@@ -365,8 +377,10 @@ class TemporalRuntime:
             for (role, _, _), component in self._catalog_objects.items()
             if role == "decision_policy"
         ]
-        self._decision_enabled = not default_policy(self.harness) or any(
-            k[0] == "decision_policy" for k in self._catalog_objects
+        self._decision_enabled = (
+            self.model_continuation
+            or not default_policy(self.harness)
+            or any(k[0] == "decision_policy" for k in self._catalog_objects)
         )
         self.context = context_builder or ContextAssembler()
         self.executor = tool_executor or PythonToolExecutor(tools)
@@ -642,6 +656,20 @@ class TemporalRuntime:
                 artifact_contexts=artifacts,
             )
             validate_manifest(result)
+        if self.model_continuation:
+            from .model_continuation import provider_continuation_identity
+            from .temporal_decision_state import tool_defaults_registration
+
+            result.update(
+                kernel="temporal-3",
+                binding_protocol=6,
+                dispatch_admission="history-1",
+                model_continuation_protocol=1,
+                provider_continuations={
+                    n: provider_continuation_identity(p) for n, p in sorted(self.providers.items())
+                },
+                continuation_tool_defaults=tool_defaults_registration(self.tools),
+            )
         return result
 
     @property
@@ -664,6 +692,15 @@ class TemporalRuntime:
         from .task_controls import _binding
         from .temporal_components import orchestration_identity
 
+        if self.model_continuation is not self._model_continuation_pin:
+            raise DefinitionMismatch("Model continuation enablement changed")
+        if self.model_continuation:
+            from .model_continuation import provider_continuation_identity
+
+            if {
+                n: provider_continuation_identity(p) for n, p in self.providers.items()
+            } != self._provider_continuation_pins:
+                raise DefinitionMismatch("Pinned Provider continuation identity changed")
         host = getattr(self, "_selected_host", None)
         if host is not None:
             host.validate_release(expected)
@@ -893,7 +930,7 @@ class TemporalRuntime:
             frozen = ModelRequest(prepared.messages, prepared.tools)
             prepared_evidence = (
                 detached({"messages": frozen.messages, "tools": frozen.tools})
-                if self._manifest.get("decision_protocol") == 1
+                if self._manifest.get("decision_protocol") == 1 or self.model_continuation
                 else None
             )
             from .temporal_context import validate_prepared
@@ -940,6 +977,16 @@ class TemporalRuntime:
                 self.providers.get(step.provider) is not provider or provider.complete != complete
             ):
                 raise DefinitionMismatch("Executing business provider changed")
+            if self.model_continuation:
+                return {
+                    "ok": True,
+                    "model_receipt_version": 1,
+                    "model_evidence_version": 2,
+                    "received_response": received,
+                    "prepared_request": prepared_evidence,
+                    "decision_registration": detached(self._manifest["decision_registration"]),
+                    "request_digest": digest(request),
+                }
             proposal = self.harness.propose(step, response)
             if not isinstance(proposal, DecisionProposal):
                 _close_lazy(proposal)
@@ -949,6 +996,24 @@ class TemporalRuntime:
                 and type(proposal) is not DecisionProposal
             ):
                 raise ValidationError("Pure Harness.propose requires concrete DecisionProposal")
+            from .model_continuation import validate_continuation
+
+            continuation = validate_continuation(
+                received,
+                proposal,
+                self._manifest.get("provider_continuations", {}).get(step.provider),
+                enabled=self.model_continuation,
+            )
+            raw_proposal = (
+                detached(
+                    {
+                        "output": proposal.output,
+                        "tool_calls": [asdict(call) for call in proposal.tool_calls],
+                    }
+                )
+                if continuation is not None
+                else None
+            )
             calls = []
             for call in proposal.tool_calls:
                 if call.name not in step.tools:
@@ -984,6 +1049,7 @@ class TemporalRuntime:
                 "model_evidence_version": 2,
                 "received_response": received,
                 **selected_proposal,
+                **({"continuation_proposal": raw_proposal} if continuation is not None else {}),
                 **decision,
                 "usage": usage,
             }
@@ -992,6 +1058,93 @@ class TemporalRuntime:
             if received is not None:
                 failure.update(model_evidence_version=2, received_response=received)
             return failure
+
+    async def adopt_model(self, request: dict) -> dict:
+        """Pure decision processing of a receipt already persisted by original History."""
+        from .model_continuation import decode_received_response, validate_continuation
+        from .temporal_bindings import selected_runtime
+
+        if not getattr(self, "_selected_host", None):
+            return await selected_runtime(self, request).adopt_model(request)
+        receipt = request["model_receipt"]
+        received = receipt["received_response"]
+        base = {
+            "model_adoption_version": 1,
+            "model_action_id": request["model_action_id"],
+            "receipt_digest": digest(receipt),
+            "model_evidence_version": 2,
+            "received_response": detached(received),
+        }
+        try:
+            if not self.model_continuation:
+                raise DefinitionMismatch(
+                    "Pure model adoption requires the joint continuation release"
+                )
+            original = request["original_request"]
+            self.validate_release(original["runtime_manifest"])
+            if receipt.get("model_receipt_version") != 1 or receipt.get("request_digest") != digest(
+                original
+            ):
+                raise DefinitionMismatch("Model adoption lost its original dispatch request")
+            step = AgentSpec(**original["step"])
+            response = decode_received_response(received)
+            usage = validate_model_usage(received["usage"])
+            proposal = self.harness.propose(step, response)
+            if type(proposal) is not DecisionProposal:
+                _close_lazy(proposal)
+                raise ValidationError("Pure Harness.propose requires concrete DecisionProposal")
+            continuation = validate_continuation(
+                received,
+                proposal,
+                self._manifest.get("provider_continuations", {}).get(step.provider),
+                enabled=True,
+            )
+            raw_proposal = detached(
+                {
+                    "output": proposal.output,
+                    "tool_calls": [asdict(call) for call in proposal.tool_calls],
+                }
+            )
+            calls = []
+            for call in proposal.tool_calls:
+                if call.name not in step.tools:
+                    from .errors import AuthorizationDenied
+
+                    raise AuthorizationDenied("Model proposed undeclared tool")
+                calls.append(
+                    ToolCall(
+                        call.name,
+                        self.tools.get(call.name).resolve_arguments(call.arguments),
+                        call.call_id,
+                    )
+                )
+            proposal = validate_decision(
+                step,
+                DecisionProposal(proposal.output, tuple(calls)),
+                self.tools.manifests(step.tools),
+            )
+            self.validate_release(original["runtime_manifest"])
+            selected = {
+                "output": detached(proposal.output),
+                "tool_calls": [asdict(call) for call in proposal.tool_calls],
+            }
+            evidence = {}
+            if self._manifest.get("decision_protocol") == 1:
+                from .temporal_decision import evidence as decision_evidence
+
+                evidence["decision_evidence"] = decision_evidence(
+                    self, original, receipt["prepared_request"], received, selected
+                )
+            return {
+                "ok": True,
+                **base,
+                **selected,
+                **evidence,
+                "usage": usage,
+                **({"continuation_proposal": raw_proposal} if continuation is not None else {}),
+            }
+        except Exception as exc:
+            return {"ok": False, **base, "code": _code(exc, "validation_error")}
 
     async def prepare_session_root(self, request, *, dispatch_guard=None, on_end=None):
         """Read the original Parent root; its History alone adopts the snapshot."""
@@ -1361,6 +1514,11 @@ def registered_activities(runtime, client=None):
         await tree_guard(request)
         return await runtime.complete_model(request, dispatch_guard=dispatch_guard)
 
+    @activity.defn(name=MODEL_ADOPTION_ACTIVITY)
+    async def model_adoption(request: dict) -> dict:
+        await tree_guard(request["original_request"])
+        return await runtime.adopt_model(request)
+
     @activity.defn(name=TOOL_ACTIVITY)
     async def tool(request: dict) -> dict:
         if "tool_execution_protocol" in request["runtime_manifest"]:
@@ -1449,6 +1607,7 @@ def registered_activities(runtime, client=None):
 
     return [
         model,
+        *([model_adoption] if runtime.model_continuation else []),
         tool,
         reconcile,
         evidence,

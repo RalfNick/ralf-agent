@@ -63,6 +63,12 @@ class MiddlewareProvider:
     def capabilities(self):
         return getattr(self.provider, "capabilities", None)
 
+    @property
+    def continuation_identity(self):
+        from .model_continuation import provider_continuation_identity
+
+        return provider_continuation_identity(self.provider)
+
     def _verify(self):
         if canonical(self.identity) != self._pinned:
             raise DefinitionMismatch("Middleware Provider registration changed")

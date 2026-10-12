@@ -18,7 +18,7 @@ from .planning_evaluation_cli import _http_provider
 
 def _common_arguments(parser, *, max_cases):
     source = parser.add_mutually_exclusive_group()
-    source.add_argument("--provider", choices=["openai", "anthropic", "gemini"])
+    source.add_argument("--provider", choices=["openai", "anthropic", "gemini", "gemini-functions"])
     source.add_argument(
         "--offline", action="store_true", help="Offline regression, never model quality"
     )
@@ -108,6 +108,7 @@ async def run(args):
             evidence_dir=args.evidence_dir,
             offline=args.offline,
             prices=prices,
+            model_continuation=args.provider == "gemini-functions",
         )
         if reason:
             report["reason"] = reason

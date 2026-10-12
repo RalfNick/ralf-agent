@@ -71,7 +71,7 @@ def _arguments(argv):
         description="Evaluate proposed DAG semantics through a managed ModelDAGPlanner child. No worker actions are executed."
     )
     mode = parser.add_mutually_exclusive_group()
-    mode.add_argument("--provider", choices=["openai", "anthropic", "gemini"])
+    mode.add_argument("--provider", choices=["openai", "anthropic", "gemini", "gemini-functions"])
     mode.add_argument(
         "--fixture", help="Explicit offline response fixture JSON; never reported as model quality"
     )
@@ -110,6 +110,7 @@ def _arguments(argv):
 
 
 def _http_provider(args, limits):
+    from .gemini_functions import GeminiFunctionProvider
     from .model_native import AnthropicProvider, GeminiProvider
     from .providers import OpenAIChatProvider
 
@@ -120,6 +121,7 @@ def _http_provider(args, limits):
         "openai": "OPENAI_API_KEY",
         "anthropic": "ANTHROPIC_API_KEY",
         "gemini": "GEMINI_API_KEY",
+        "gemini-functions": "GEMINI_API_KEY",
     }[args.provider]
     key = os.environ.get(args.key_env or default_key)
     if not key:
@@ -134,9 +136,12 @@ def _http_provider(args, limits):
     }
     if base_url:
         options["base_url"] = base_url
-    cls = {"openai": OpenAIChatProvider, "anthropic": AnthropicProvider, "gemini": GeminiProvider}[
-        args.provider
-    ]
+    cls = {
+        "openai": OpenAIChatProvider,
+        "anthropic": AnthropicProvider,
+        "gemini": GeminiProvider,
+        "gemini-functions": GeminiFunctionProvider,
+    }[args.provider]
     return cls(model, **options), None
 
 
@@ -170,6 +175,7 @@ async def _run(args):
         prices=prices,
         evidence_dir=args.evidence_dir,
         offline=bool(args.fixture),
+        model_continuation=args.provider == "gemini-functions",
     )
     if reason:
         report["reason"] = reason

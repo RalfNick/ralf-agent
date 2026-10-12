@@ -274,9 +274,13 @@ async def evaluate_business(
     offline=False,
     prices=None,
     completion_verifier=None,
+    model_continuation=False,
 ):
     from .engine import LocalEngine
     from .storage import SQLiteStore
+
+    if type(model_continuation) is not bool:
+        raise ValidationError("Model continuation enablement must be boolean")
 
     limits = EvaluationLimits() if limits is None else limits
     if not isinstance(limits, EvaluationLimits):
@@ -365,6 +369,7 @@ async def evaluate_business(
                     providers={"default": audited},
                     tools=_tools(case, business),
                     verifier=completion_verifier,
+                    **({"model_continuation": True} if model_continuation else {}),
                 ) as engine:
                     handle = engine.submit(
                         spec, case["task"], command_id="evaluate:first", budget=16
@@ -445,6 +450,7 @@ async def evaluate_business(
                     providers={"default": audited},
                     tools=_tools(case, business),
                     verifier=completion_verifier,
+                    **({"model_continuation": True} if model_continuation else {}),
                 ) as recovered:
                     recovered_handle = recovered.submit(
                         spec, case["task"], command_id="evaluate:first", budget=16

@@ -89,6 +89,12 @@ class _ModeProvider:
             "mode": self.mode,
         }
 
+    @property
+    def continuation_identity(self):
+        from .model_continuation import provider_continuation_identity
+
+        return provider_continuation_identity(self.provider)
+
     def validate_request(self, messages, tools):
         callback = getattr(self.provider, "validate_request", None)
         if callback is not None:
@@ -158,7 +164,13 @@ def _tools():
 
 
 async def evaluate_model_compatibility(
-    provider=None, *, cases=CASES, limits=None, evidence_dir=None, offline=False
+    provider=None,
+    *,
+    cases=CASES,
+    limits=None,
+    evidence_dir=None,
+    offline=False,
+    model_continuation=False,
 ):
     """Explicit provider enables calls; None returns not_run without allocating files.
 
@@ -168,6 +180,9 @@ async def evaluate_model_compatibility(
     """
     from .engine import LocalEngine
     from .storage import SQLiteStore
+
+    if type(model_continuation) is not bool:
+        raise ValidationError("Model continuation enablement must be boolean")
 
     if (
         not isinstance(cases, (tuple, list))
@@ -274,6 +289,7 @@ async def evaluate_model_compatibility(
                 SQLiteStore(_new_evidence_path(directory, case, 0)),
                 providers={"default": audited},
                 tools=_tools(),
+                **({"model_continuation": True} if model_continuation else {}),
             ) as engine:
                 handle = engine.submit(
                     spec,

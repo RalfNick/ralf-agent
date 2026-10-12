@@ -1,4 +1,6 @@
-# Implementation status — 0.1.0.dev86
+# Implementation status — 0.1.0.dev87
+
+Dev87 模型续接与 Gemini 原生函数子集已验收：最终源码5882 passed／455配置跳过（818.09s），独立核心安装295；实际Temporal源码8新恢复＋17既有场景、安装25均通过，300产品模块一致；旧86默认与同一Run双向回执／完整快照兼容通过。Local原接收／采纳与Temporal joint6两阶段保持各自唯一执行权威，签名原参数与真实默认参数分离；SDK／Profile／中间件和RAG／Plan／Team显式接通。一次独立review的2Important及重新评级的名称范围问题经RED统一修复，自有服务已正常关闭并等待退出。真实Gemini质量、其他推理续接、完整H3／M1／R01–R26及外部采用保持开放。见[模型续接](model-continuation.md)与[本批验收](../architecture/reviews/2026-10-13-model-continuation.md)。
 
 Dev86 端到端任务评测子集已验收：源码5681 passed／447配置跳过（830.34s）、独立核心安装161；源码三次重复RAG24/24、Plan15/15、Team15/15及安装CLI／SDK例子、旧85默认／原Plan回执兼容与298模块一致通过。复用原执行权威，新增最终模型请求可见引用、实际成员／工具回执、独立Embedding计量和观察式恢复；2项Important／1项Minor经有效RED统一修复。离线／MockTransport不构成真实模型质量；完整H3／M1／R01–R26及外部采用保持开放。见[任务评测指南](task-evaluation.md)与[本批验收](../architecture/reviews/2026-10-13-task-evaluation-chains.md)。
 

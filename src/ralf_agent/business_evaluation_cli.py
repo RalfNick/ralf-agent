@@ -15,7 +15,7 @@ from .types import ModelResponse, ToolCall
 def arguments(argv):
     parser = argparse.ArgumentParser(description=__doc__)
     source = parser.add_mutually_exclusive_group()
-    source.add_argument("--provider", choices=["openai", "anthropic", "gemini"])
+    source.add_argument("--provider", choices=["openai", "anthropic", "gemini", "gemini-functions"])
     source.add_argument("--offline", action="store_true")
     model = parser.add_mutually_exclusive_group()
     model.add_argument("--model")
@@ -131,6 +131,7 @@ async def run(args):
             prices=prices,
             offline=args.offline,
             completion_verifier=verifier,
+            model_continuation=args.provider == "gemini-functions",
         )
         if reason:
             report["reason"] = reason

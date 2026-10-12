@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.0.dev87 — Native model continuation preview
+
+- Add explicit `GeminiFunctionProvider` and typed continuation evidence while preserving the original text Provider and three-field `ModelResponse`.
+- Preserve signed native parts and raw tool arguments across Local recovery and Temporal joint 6 receipt/adoption phases; reject owner or Harness drift before tool adoption.
+- Register SDK/Profile/CLI opt-ins and delegate continuation through observational middleware and audited RAG/Plan/Team chains.
+- Validate actual process/Worker loss, duplicate approvals, History replay, independent core installation and old dev86 compatibility. Fixture transport does not establish live Gemini model quality.
+
+
 ## 0.1.0.dev86 — End-to-end task evaluation preview
 
 - Add installed SDK/CLI RAG ingestion, hybrid retrieval, answer/citation scoring and frozen source cases. Score only original document text offered in the final model request, preserving chunk provenance through clipping.

@@ -11,8 +11,9 @@ dev9 提供三个 HTTP 协议与 DeepSeek 非思考模式适配器，全部复�
 | DeepSeekChatProvider / deepseek-chat | 支持 | 支持 | 支持 | DEEPSEEK_API_KEY | 固定 thinking.type=disabled 和 max_tokens；不支持思考模式工具续接或 seed |
 | AnthropicProvider / anthropic-messages | 支持 | 支持 | 支持 | ANTHROPIC_API_KEY | Messages 原生转换；不支持 thinking、server tools、多模态 |
 | GeminiProvider / gemini-content | 支持 | 不支持 | 支持 | GEMINI_API_KEY | Developer API 原生文本；工具声明/历史在发送前拒绝，签名工具状态未交付 |
+| GeminiFunctionProvider / gemini-functions | 支持 | 支持 | 支持 | GEMINI_API_KEY | 显式模型续接；完整原生函数／签名 Part，不支持媒体、服务端工具或增量参数协议 |
 
-国内外满足 Chat Completions 契约的服务可用 base_url 接入；这不是所有服务/型号的兼容保证。原生 Anthropic 按 [Messages](https://platform.claude.com/docs/en/api/messages/create) 和 [Streaming](https://platform.claude.com/docs/en/build-with-claude/streaming) 转换 system、tool_use/tool_result 及结束/用量。Gemini 的 [原生 API](https://ai.google.dev/api/generate-content) 区分文本与函数签名；当前通用消息无法保真往返签名，所以明确拒绝工具能力。
+国内外满足 Chat Completions 契约的服务可用 base_url 接入；这不是所有服务/型号的兼容保证。原生 Anthropic 按 [Messages](https://platform.claude.com/docs/en/api/messages/create) 和 [Streaming](https://platform.claude.com/docs/en/build-with-claude/streaming) 转换 system、tool_use/tool_result 及结束/用量。旧 Gemini 文本适配器拒绝工具；新函数适配器通过[公共续接证据](model-continuation.md)保存签名与原始参数，需显式开启 Local／Temporal 续接模式。
 
 DeepSeek 当前 [Chat API](https://api-docs.deepseek.com/api/create-chat-completion/) 默认思考模式启用；专用 adapter 显式关闭，避免丢弃续接状态。它不会选择模型或悄悄切模式。Chat 响应含 reasoning_content 且有工具时拒绝采纳。若服务返回不支持的块、截断、拒绝、非法参数或不一致的结束原因，Provider 返回错误。
 
@@ -84,4 +85,4 @@ text 是临时展示，response 是唯一完整结果。工具参数片段只在
 
 本地 HTTP/SSE fixture 验证三种协议的认证、地址、生成参数、文本/工具转换、用量、结束原因、碎片参数、错误脱敏及连接生命周期。Anthropic Agent 实测审批前不执行工具，批准后完成一次工具往返；默认 Chat identity 保留 dev8。DeepSeek 非思考 preset 的请求字段有本地证据。安装包的原任务恢复和独立模板另行验证，结果见 [实现进度](implementation-progress.md)。
 
-dev21 已保留小范围 DeepSeek 案例与用量；其他在线账户／地区／型号兼容及完整任务质量尚未验收。使用者可在自己的环境提交最小文本、工具往返、流式完成/取消四种用例，记录型号、地址、日期与非秘密配置；通过后只标记该组合。该流程不替代 [M1 真实任务集](m1-acceptance.md)。完整 Responses 推理续接、厂商 SDK、多模态、模型自动路由、Gemini 签名工具和持久流事件仍需后续交付。
+dev21 已保留小范围 DeepSeek 案例与用量；其他在线账户／地区／型号兼容及完整任务质量尚未验收。使用者可在自己的环境提交最小文本、工具往返、流式完成/取消四种用例，记录型号、地址、日期与非秘密配置；通过后只标记该组合。该流程不替代 [M1 真实任务集](m1-acceptance.md)。完整 Responses 推理续接、厂商 SDK、多模态、模型自动路由、更多 Gemini 原生块及真实型号验证和持久流事件仍需后续交付。
