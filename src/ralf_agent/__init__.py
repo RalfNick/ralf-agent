@@ -331,6 +331,7 @@ from .filesystem_workspace import FileSystemWorkspace
 from .filesystem_workspace_writes import FileSystemWritableWorkspace
 from .sandbox import (
     SandboxError,
+    SandboxExecutionRejected,
     SandboxIsolationViolation,
     SandboxObservation,
     SandboxProvider,
@@ -356,6 +357,7 @@ __all__ = [
     "SandboxToolSource",
     "SandboxBindingResource",
     "SandboxError",
+    "SandboxExecutionRejected",
     "SandboxIsolationViolation",
     "SandboxObservation",
     "SandboxProvider",

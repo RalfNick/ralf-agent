@@ -9,9 +9,16 @@ from jsonschema import Draft202012Validator
 from .component_fingerprint import executable_digest
 from .errors import CloseIncomplete, DefinitionMismatch, ValidationError
 from .ports import is_async_callable
-from .sandbox import SandboxObservation, SandboxRequest, SandboxResult, validate_sandbox_result
+from .sandbox import (
+    SandboxExecutionRejected,
+    SandboxObservation,
+    SandboxRequest,
+    SandboxResult,
+    validate_sandbox_result,
+)
 from .skills import _plain, _text
 from .task_controls import _binding
+from .temporal_context_execution import ContextExecutionRejected
 from .tool_execution import ToolExecutionOwner
 from .tool_sources import ToolDescriptor
 from .tools import ThreadExecutionTracker, current_thread_group, current_thread_tracker
@@ -50,6 +57,7 @@ class SandboxToolSource:
         self._owner = ToolExecutionOwner(version=version, max_calls=max_calls)
         self._stop_owner = ToolExecutionOwner(version=version, max_calls=max_calls)
         self._threads, self._calls, self._closing = ThreadExecutionTracker(), {}, False
+        self._loop = None
         self._descriptor = ToolDescriptor(
             "sandbox_run",
             "Run a bounded command in the host-approved ephemeral sandbox.",
@@ -96,6 +104,8 @@ class SandboxToolSource:
                 "aclose",
                 "_check",
                 "list_tools",
+                "_finish_bridge",
+                "_claim_loop",
             )
         }
         self._allowances = (
@@ -167,7 +177,13 @@ class SandboxToolSource:
         group = current_thread_group.set(call["group"])
         try:
             self._check(closing=True)
-            result = await self._provider.run(call["scope"], request, invocation_id=call["id"])
+            try:
+                result = await self._provider.run(call["scope"], request, invocation_id=call["id"])
+            except SandboxExecutionRejected as exc:
+                if exc.handler_not_started:
+                    self._finish_bridge(call)
+                    self._calls.pop(call["id"], None)
+                raise
             if inspect.iscoroutine(result) or inspect.isgenerator(result):
                 result.close()
             if inspect.isasyncgen(result):
@@ -175,15 +191,30 @@ class SandboxToolSource:
             self._check(closing=True)
             result = validate_sandbox_result(result, call["id"], max_output_bytes=self._output)
             call["stopped"] = True
+            self._finish_bridge(call, ambient_only=True)
             await call["tracker"].drain(call["group"])
-            self._threads._finish(call["token"])
+            self._finish_bridge(call)
             self._calls.pop(call["id"], None)
             return SandboxResult.to_dict(result)
         finally:
             current_thread_group.reset(group)
             current_thread_tracker.reset(tracker)
 
+    def _claim_loop(self):
+        loop = asyncio.get_running_loop()
+        if self._loop is not None and self._loop is not loop and self._loop.is_running():
+            raise ValidationError("Sandbox source belongs to another live event loop")
+        self._loop = loop
+
+    def _finish_bridge(self, call, *, ambient_only=False):
+        if call["ambient_token"] is not None:
+            call["tracker"]._finish(call["ambient_token"])
+            call["ambient_token"] = None
+        if not ambient_only:
+            self._threads._finish(call["token"])
+
     async def call_tool(self, descriptor, arguments, context):
+        self._claim_loop()
         self._check()
         self._context(context)
         if type(descriptor) is not ToolDescriptor or canonical(descriptor.to_dict()) != canonical(
@@ -215,8 +246,11 @@ class SandboxToolSource:
             "group": group,
             "token": self._threads._register("bridge:" + identifier),
             "stopped": False,
+            "ambient_token": tracker._register(group) if tracker is not self._threads else None,
         }
         self._threads._begin(call["token"])
+        if call["ambient_token"] is not None:
+            tracker._begin(call["ambient_token"])
         self._calls[identifier] = call
         proof = {
             "scope": {"workspace": context.scope.workspace, "principal": context.scope.principal},
@@ -229,7 +263,13 @@ class SandboxToolSource:
         async def invoke():
             return await self._execute(call, request)
 
-        return await self._owner.execute(invoke, proof=proof)
+        try:
+            return await self._owner.execute(invoke, proof=proof)
+        except ContextExecutionRejected as exc:
+            if exc.handler_not_started:
+                self._finish_bridge(call)
+                self._calls.pop(identifier, None)
+            raise
 
     async def wait_for_calls(self):
         await self._threads.drain()
@@ -249,8 +289,9 @@ class SandboxToolSource:
             }:
                 raise CloseIncomplete("Original Sandbox native stop is unresolved")
             self._check(closing=True)
+            self._finish_bridge(call, ambient_only=True)
             await call["tracker"].drain(call["group"])
-            self._threads._finish(call["token"])
+            self._finish_bridge(call)
             self._calls.pop(call["id"], None)
             return None
         finally:
@@ -271,6 +312,7 @@ class SandboxToolSource:
         return await self._stop_owner.execute(operation, proof=proof)
 
     async def aclose(self, *, wait_timeout=30):
+        self._claim_loop()
         if (
             type(wait_timeout) not in (int, float)
             or not math.isfinite(wait_timeout)

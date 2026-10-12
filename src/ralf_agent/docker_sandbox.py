@@ -19,6 +19,7 @@ from .docker_sandbox_transport import (
 )
 from .errors import AuthorizationDenied, CloseIncomplete, DefinitionMismatch, ValidationError
 from .sandbox import (
+    SandboxExecutionRejected,
     SandboxIsolationViolation,
     SandboxObservation,
     SandboxRequest,
@@ -83,6 +84,9 @@ class DockerSandbox:
         if type(control_timeout) not in (int, float) or not 0 < control_timeout <= 30:
             raise ValidationError("Docker control timeout requires finite seconds in (0,30]")
         self._scopes = _configuration(version, scopes)
+        self._scope_json = canonical(
+            [{"workspace": s.workspace, "principal": s.principal} for s in self._scopes]
+        )
         for scope in self._scopes:
             self._scope(scope)
         self._config = {
@@ -124,16 +128,24 @@ class DockerSandbox:
                 "_stop",
                 "_execute",
                 "_tracked",
+                "_check_scopes",
+                "_scope",
+                "_labels",
+                "_name",
             )
         }
         self._config["implementation"] = {
             **{name: executable_digest(getattr(self, name)) for name in self._hooks},
             "control_request": executable_digest(DockerControl.request),
+            "control_init": executable_digest(DockerControl.__init__),
             "control_json": executable_digest(DockerControl.json),
             "control_close": executable_digest(DockerControl.close),
             "decode_logs": executable_digest(decode_logs),
             "native_lease": executable_digest(NativeSandboxLease.__init__),
+            "native_lease_close": executable_digest(NativeSandboxLease.close),
         }
+        self._helper_pins = self._helpers()
+        self._control_bindings = None
         self._config_json = canonical(self._config)
         self._config_digest = digest(self._config)
 
@@ -143,8 +155,49 @@ class DockerSandbox:
             for name, original in self._hooks.items()
         ):
             raise DefinitionMismatch("Original Docker Sandbox control implementation changed")
+        try:
+            helpers = self._helpers()
+        except (AttributeError, ValidationError):
+            raise DefinitionMismatch("Original Docker Sandbox native helpers changed") from None
+        if helpers != self._helper_pins:
+            raise DefinitionMismatch("Original Docker Sandbox native helper implementation changed")
+        if self._control_bindings is not None and any(
+            _binding(getattr(self._control, name, None)) != original
+            for name, original in self._control_bindings.items()
+        ):
+            raise DefinitionMismatch("Original Docker control receiver changed")
+
+    @staticmethod
+    def _helpers():
+        return {
+            "control_factory": _binding(DockerControl),
+            **{
+                name: _binding(getattr(DockerControl, name))
+                for name in ("__init__", "request", "json", "close")
+            },
+            "decode_logs": _binding(decode_logs),
+            "lease_init": _binding(NativeSandboxLease.__init__),
+            "lease_close": _binding(NativeSandboxLease.close),
+        }
+
+    def _check_scopes(self):
+        if (
+            type(self._scopes) not in (tuple, list)
+            or not 1 <= len(self._scopes) <= 256
+            or any(
+                type(s) is not Scope or type(s.workspace) is not str or type(s.principal) is not str
+                for s in self._scopes
+            )
+        ):
+            raise DefinitionMismatch("Original Sandbox Scope allowlist changed")
+        if (
+            canonical([{"workspace": s.workspace, "principal": s.principal} for s in self._scopes])
+            != self._scope_json
+        ):
+            raise DefinitionMismatch("Original Sandbox Scope allowlist changed")
 
     def _scope(self, scope):
+        self._check_scopes()
         if (
             type(scope) is not Scope
             or type(scope.workspace) is not str
@@ -157,6 +210,7 @@ class DockerSandbox:
 
     def _check(self, *, closing=False):
         self._assert_methods()
+        self._check_scopes()
         if canonical(self._config) != self._config_json:
             raise DefinitionMismatch("Original Docker Sandbox configuration changed")
         if self._closing and not closing:
@@ -239,10 +293,14 @@ class DockerSandbox:
                 "image": image["Id"],
             }
             self._control, self._client = control, control.client
+            self._control_bindings = {
+                name: _binding(getattr(control, name)) for name in ("request", "json", "close")
+            }
             self._check()
         except BaseException:
             control.close()
             self._pin, self._control, self._client = None, None, None
+            self._control_bindings = None
             raise
 
     async def aopen(self):
@@ -285,7 +343,7 @@ class DockerSandbox:
             "Healthcheck": {"Test": ["NONE"]},
             "Labels": {
                 **self._labels(scope, identity),
-                "ralf.sandbox.request": digest(request.to_dict()),
+                "ralf.sandbox.request": digest(SandboxRequest.to_dict(request)),
             },
             "HostConfig": {
                 "NetworkMode": "none",
@@ -378,16 +436,21 @@ class DockerSandbox:
     def _execute(self, scope, identity, request, job):
         with self._lock:
             if job.get("withdrawn"):
-                raise SandboxUnavailable("Sandbox call was cancelled before native execution")
+                raise SandboxExecutionRejected(handler_not_started=True)
             job["started"] = True
         native, result, error = None, None, None
         lease = None
+        create_dispatched = False
         timed_out, truncated, stdout, stderr = False, False, "", ""
         try:
-            lease = NativeSandboxLease(self._pin["leases"], self._name(scope, identity))
+            try:
+                lease = NativeSandboxLease(self._pin["leases"], self._name(scope, identity))
+            except SandboxUnavailable:
+                raise SandboxExecutionRejected(handler_not_started=True) from None
             config = self._container_config(scope, identity, request)
             existing = self._inspect(scope, identity)
             if existing is None:
+                create_dispatched = True
                 try:
                     created = self._control.json(
                         "POST",
@@ -396,7 +459,7 @@ class DockerSandbox:
                         accepted=(201,),
                     )
                     native = native_identity(created.get("Id"))
-                except SandboxUnavailable:
+                except Exception:
                     existing = self._inspect(scope, identity)
                     if existing is None:
                         raise
@@ -449,9 +512,14 @@ class DockerSandbox:
         except BaseException as exc:
             error = exc
         finally:
-            if native is not None:
+            if native is not None or create_dispatched:
                 while True:
                     try:
+                        if native is None:
+                            existing = self._inspect(scope, identity)
+                            if existing is None:
+                                break
+                            native = existing["Id"]
                         observed = self._stop(scope, identity, native)
                         if observed.state in {"stopped", "created", "not_found"}:
                             if observed.state != "not_found":
@@ -476,11 +544,12 @@ class DockerSandbox:
         self._scope(scope)
         invocation(invocation_id)
         self._container_config(scope, invocation_id, request)
+        request = SandboxRequest.from_dict(SandboxRequest.to_dict(request))
         self._check()
         key = self._name(scope, invocation_id)
         with self._lock:
             if self._closing or key in self._jobs or len(self._jobs) >= self._config["max_calls"]:
-                raise SandboxUnavailable("Docker Sandbox is full, closed or owns this invocation")
+                raise SandboxExecutionRejected(handler_not_started=True)
             job = {"stop": threading.Event()}
             self._jobs[key] = job
         try:
@@ -511,3 +580,4 @@ class DockerSandbox:
             if self._control is not None:
                 self._control.close()
                 self._control, self._client = None, None
+                self._control_bindings = None

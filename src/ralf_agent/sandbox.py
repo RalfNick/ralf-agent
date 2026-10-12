@@ -19,6 +19,16 @@ class SandboxUnavailable(SandboxError):
     code = "sandbox_unavailable"
 
 
+class SandboxExecutionRejected(SandboxUnavailable):
+    """Trusted native owner distinguishes proven no-start from unknown dispatch."""
+
+    def __init__(self, *, handler_not_started):
+        if type(handler_not_started) is not bool:
+            raise ValidationError("Sandbox start refusal requires an exact boolean")
+        super().__init__("Sandbox execution was rejected by its native owner")
+        self.handler_not_started = handler_not_started
+
+
 class SandboxIsolationViolation(SandboxError):
     code = "sandbox_isolation_violation"
 

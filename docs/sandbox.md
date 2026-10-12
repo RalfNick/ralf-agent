@@ -99,6 +99,15 @@ Run 的已采纳结果和审批继续存于原执行权威。
 自定义 Provider 实现固定普通 JSON identity 与原生异步
 run／observe／stop／aclose；返回原 `SandboxResult`／`SandboxObservation` DTO。
 Source 拒绝惰性返回值、错误调用身份、输出超限和运行期间配置变更。
+未知启动或无效结果仍保留原执行 Owner 的责任，直到取得停止证据；只有
+可信端口的 `SandboxExecutionRejected(handler_not_started=True)` 才能撤销责任。
+同一 Source 拒绝同时跨两个活跃事件循环调用；原循环结束后可恢复关闭。
+
+原生 timeout 是当前调用或冷恢复观察的相对窗口，不包含控制器离线时间，
+不提供离线自动停止 watchdog。control_timeout 是 httpx 阶段和无进展超时，
+响应字节另有限额，并非整个 HTTP 请求的绝对时间上限；持续慢速响应仍可能
+占用线程，关闭会保留责任并返回 CloseIncomplete。容器清理后尚未被原 Action
+采纳的 read_only 结果可能重试，不承诺所有故障窗口永久恰好一次执行。
 用于这一 read_only Source 的 Provider 必须由可信宿主明确声明无网络、无宿主
 挂载、无持久文件；声明不能证明任意 Python 实现的隔离强度。
 
@@ -116,6 +125,9 @@ config `{"names": ["isolated_sandbox_run"]}`，Local／Temporal 共用声明。
 Local 显式绑定发布 local-bindings-14；Temporal 有原生 Sandbox 工具时发布
 sandbox_binding_protocol 1／binding_protocol 4，自动使用原 ToolExecutionOwner，
 旧 Worker 必须在业务 I/O 前拒绝新发布，旧协议维持原身份。
+旧82 Worker 会在 Workflow 构造阶段拒绝 binding_protocol 4，此时还没有
+可查询的 RALF Run 状态；History 记录 WorkflowTaskFailed，需要兼容 Worker
+接管或操作员处理，不能把这种拒绝当作已提交的 failed Run。
 
 六种原编排的 Local／Temporal 真实审批、重启与已采纳结果恢复均已通过。
 Temporal 单 Agent 额外验证取消后真实线程与 History 停止证据；Local 单 Agent

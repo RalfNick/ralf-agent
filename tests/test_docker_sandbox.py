@@ -264,7 +264,6 @@ def test_same_socket_proxy_replacement_cannot_adopt_other_daemon_evidence(monkey
 def test_open_refuses_missing_or_nondefault_seccomp_before_publishing_identity(
     monkeypatch, security
 ):
-    value = provider()
     from ralf_agent import docker_sandbox as native
 
     class Control:
@@ -281,6 +280,9 @@ def test_open_refuses_missing_or_nondefault_seccomp_before_publishing_identity(
                 }
             return {"Id": IMAGE, "Os": "linux", "Config": {}}
 
+        def request(self, *args, **kwargs):
+            raise AssertionError("seccomp admission must precede dispatch")
+
         def close(self):
             pass
 
@@ -288,6 +290,7 @@ def test_open_refuses_missing_or_nondefault_seccomp_before_publishing_identity(
         native, "socket_identity", lambda path: {"path": path, "device": 1, "inode": 1}
     )
     monkeypatch.setattr(native, "DockerControl", Control)
+    value = provider()
     with pytest.raises(RalfError):
         value._open()
     assert value._pin is None and value._control is None
@@ -317,7 +320,6 @@ def test_provider_implementation_is_part_of_fixed_profile_identity():
 
 
 def test_concurrent_explicit_open_owns_only_one_control_client(monkeypatch):
-    value = provider()
     from ralf_agent import docker_sandbox as native
 
     entered, release, clients = threading.Event(), threading.Event(), []
@@ -325,12 +327,12 @@ def test_concurrent_explicit_open_owns_only_one_control_client(monkeypatch):
     class Control:
         def __init__(self, *args):
             self.client, self.closed = object(), False
-            clients.append(self)
+            self.clients.append(self)
 
         def json(self, method, path, **kwargs):
             if path == "info":
-                entered.set()
-                assert release.wait(5)
+                self.entered.set()
+                assert self.release.wait(5)
                 return {
                     "ID": "original",
                     "ServerVersion": "29.0.1",
@@ -339,6 +341,9 @@ def test_concurrent_explicit_open_owns_only_one_control_client(monkeypatch):
                 }
             return {"Id": IMAGE, "Os": "linux", "Config": {}}
 
+        def request(self, *args, **kwargs):
+            raise AssertionError("no container dispatch during open")
+
         def close(self):
             self.closed = True
 
@@ -346,6 +351,8 @@ def test_concurrent_explicit_open_owns_only_one_control_client(monkeypatch):
         native, "socket_identity", lambda path: {"path": path, "device": 1, "inode": 1}
     )
     monkeypatch.setattr(native, "DockerControl", Control)
+    Control.entered, Control.release, Control.clients = entered, release, clients
+    value = provider()
 
     async def run():
         first = asyncio.create_task(value.aopen())
