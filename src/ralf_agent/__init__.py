@@ -323,6 +323,7 @@ from .workflow import (
 )
 
 __version__ = "0.1.0.dev82"
+from .docker_sandbox import DockerSandbox
 from .filesystem_skill_documents import FileSkillDocumentCatalog
 from .filesystem_skills import FileSystemSkillCatalog
 from .filesystem_workspace import FileSystemWorkspace
@@ -349,6 +350,7 @@ from .workspace_write_tools import WritableWorkspaceToolSource
 from .workspace_writes import InMemoryWritableWorkspace, WritableWorkspacePort
 
 __all__ = [
+    "DockerSandbox",
     "SandboxError",
     "SandboxIsolationViolation",
     "SandboxObservation",

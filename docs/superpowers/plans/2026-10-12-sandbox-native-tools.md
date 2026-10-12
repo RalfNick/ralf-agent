@@ -39,11 +39,11 @@
 **Files:** create src/ralf_agent/docker_sandbox.py, docker_sandbox_transport.py; tests/test_docker_sandbox.py, test_docker_sandbox_service.py.
 **Interfaces:** DockerSandbox async open/run/observe/stop/aclose, identity/fixedengineimage/provenance and original mechanical task/real-stop ownership.
 
-- [ ] Write pure validation/HTTPtransport invalidenvelope/nativeownership/copy/limits/ambiguousACK/closedcapacity/lazyclient tests BEFOREcode. Expected missingprovider trueRED.
-- [ ] Inspect officialAPI1.44 + actual1.52/Linux fields; implement narrow boundedUnixtransport/exactnativepath/strictnonTTYmultiplex, create/admit/start/wait/inspect/ownedkill/remove. NativeState.created never success.
-- [ ] ExplicitprepareONEtinytestimage only; freeze actual image SHA256 and execute own labelled containers. Product run neverpull.
-- [ ] Run actual readonly/nonroot/nohostmount/noegress/resource/timeout/output/actualstop+cleanup/Scope/identity/refusedimageVolumes cases; zeroSKIP. Inject acknowledgedlost create/start responses with actual query, no duplicatecontainers.
-- [ ] Prove observer cancel/zero-close retains actualcontainer/task and retriableclose drains realexit; recordprovider actualevidence/localcommit. Fakeport tests never called isolationproof.
+- [x] Write pure validation/HTTPtransport invalidenvelope/nativeownership/copy/limits/ambiguousACK/closedcapacity/lazyclient tests BEFOREcode. Expected missingprovider trueRED.
+- [x] Inspect officialAPI1.44 + actual1.52/Linux fields; implement narrow boundedUnixtransport/exactnativepath/strictnonTTYmultiplex, create/admit/start/wait/inspect/ownedkill/remove. NativeState.created never success.
+- [x] ExplicitprepareONEtinytestimage only; freeze actual image SHA256 and execute own labelled containers. Product run neverpull.
+- [x] Run actual readonly/nonroot/nohostmount/noegress/resource/timeout/output/actualstop+cleanup/Scope/identity/refusedimageVolumes cases; zeroSKIP. Inject acknowledgedlost create/start responses with actual query, no duplicatecontainers.
+- [x] Prove observer cancel/zero-close retains actualcontainer/task and retriableclose drains realexit; recordprovider actualevidence/localcommit. Fakeport tests never called isolationproof.
 
 ### Task 3: Original native ToolSource and declarations
 
