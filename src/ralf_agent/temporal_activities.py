@@ -416,6 +416,21 @@ class TemporalRuntime:
             if getattr(self.context, "validate_request", None) is None
             else _binding(self.context.validate_request),
         )
+        self._artifact_binding_methods = (
+            [
+                (context, name, _binding(getattr(context, name)))
+                for context in [self.context]
+                + [
+                    component
+                    for (role, _, _), component in self._catalog_objects.items()
+                    if role == "context"
+                ]
+                for name in ("artifact_binding_identity", "bind_artifacts")
+                if callable(getattr(context, name, None))
+            ]
+            if any(role == "artifacts" for role, _, _ in self._catalog_objects)
+            else []
+        )
         if policy is None:
             self.policy_identity = {"kind": "allow-all", "version": "1"}
         else:
@@ -570,10 +585,16 @@ class TemporalRuntime:
             record["role"] == "sandbox"
             for record in result.get("binding_catalog", {}).get("records", {}).values()
         )
+        artifact_enabled = any(
+            record["role"] == "artifacts"
+            for record in result.get("binding_catalog", {}).get("records", {}).values()
+        )
         if self.context_reads:
             from .temporal_context_read_protocol import propose, publish
 
-            result = (propose if sandbox_enabled else publish)(result, self._context_execution_pin)
+            result = (propose if sandbox_enabled or artifact_enabled else publish)(
+                result, self._context_execution_pin
+            )
             bridges = {
                 digest(pin.physical): pin.dataset_bridge_fixed.identity
                 for pin in self._session_read_pins
@@ -585,9 +606,11 @@ class TemporalRuntime:
             from .temporal_tool_execution import propose as propose_tool_execution
             from .temporal_tool_execution import publish as publish_tool_execution
 
-            result = (propose_tool_execution if sandbox_enabled else publish_tool_execution)(
-                result, self._tool_execution_pin
-            )
+            result = (
+                propose_tool_execution
+                if sandbox_enabled or artifact_enabled
+                else publish_tool_execution
+            )(result, self._tool_execution_pin)
 
         if sandbox_enabled:
             result.update(
@@ -595,6 +618,19 @@ class TemporalRuntime:
                 binding_protocol=4,
                 dispatch_admission="history-1",
                 sandbox_binding_protocol=1,
+            )
+            if not artifact_enabled:
+                validate_manifest(result)
+        from .temporal_artifact_bindings import registration as artifact_registration
+
+        artifacts = artifact_registration(self, catalog)
+        if artifacts is not None:
+            result.update(
+                kernel="temporal-3",
+                binding_protocol=5,
+                dispatch_admission="history-1",
+                artifacts_binding_protocol=1,
+                artifact_contexts=artifacts,
             )
             validate_manifest(result)
         return result
@@ -621,7 +657,16 @@ class TemporalRuntime:
         host = getattr(self, "_selected_host", None)
         if host is not None:
             host.validate_release(expected)
+            if self._manifest.get("artifacts_binding_protocol") == 1:
+                self.context.check()
+                if self.context.identity != self._manifest["context_builder"]:
+                    raise DefinitionMismatch("Selected Artifact Context changed")
             return self.manifest
+        if any(
+            _binding(getattr(context, name, None)) != method
+            for context, name, method in self._artifact_binding_methods
+        ):
+            raise DefinitionMismatch("Original Artifact Context binding port changed")
         from .temporal_context_read_runtime import owner as context_owner
 
         context_owner(self)

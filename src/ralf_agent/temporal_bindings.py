@@ -24,6 +24,7 @@ ROLES = frozenset(
         "workspace",
         "skills",
         "sandbox",
+        "artifacts",
     }
 )
 
@@ -69,8 +70,18 @@ def validate_descriptor(manifest, descriptor, scope=None):
         choice = getattr(descriptor, role)
         if choice.mode == "inherit":
             continue
-        if role not in ROLES or (choice.selector and role not in {"facts", "knowledge", "session"}):
+        if role not in ROLES or (
+            choice.selector and role not in {"facts", "knowledge", "session", "artifacts"}
+        ):
             raise ValidationError("Unsupported Temporal binding role or resource selector")
+        if role == "artifacts":
+            from .temporal_artifact_bindings import validate_protocol
+
+            validate_protocol(manifest)
+            if manifest.get("artifacts_binding_protocol") != 1:
+                raise DefinitionMismatch(
+                    "Artifact selection requires its original Temporal protocol"
+                )
         if role == "skills" and (
             type(manifest.get("skills_binding_protocol")) is not int
             or manifest["skills_binding_protocol"] != 1
@@ -91,6 +102,13 @@ def validate_descriptor(manifest, descriptor, scope=None):
             if record is None or record["role"] != role:
                 raise DefinitionMismatch("Original Temporal binding version unavailable")
             configuration = record["configuration"]
+            if role == "artifacts":
+                identity = record["identity"]
+                if set(choice.selector) - {"namespace"}:
+                    raise ValidationError("Artifact selector supports only namespace")
+                namespace = choice.selector.get("namespace", identity["default_namespace"])
+                if namespace not in identity["namespaces"]:
+                    raise AuthorizationDenied("Artifact namespace is not approved by the host")
             if role in {"facts", "knowledge", "session"}:
                 identity = (
                     configuration["facts_context"]["identity"]
@@ -131,6 +149,7 @@ def validate_bindings(request, manifest, scope=None):
         raise DefinitionMismatch("Per-Agent bindings require temporal-3")
     for descriptor in selections.values():
         validate_descriptor(manifest, descriptor, scope)
+        effective_manifest(manifest, descriptor)
     if selected_session_data(request, manifest) and (
         request["definition"]["kind"] not in {"agent", "sequence"}
         and "session_tree_protocol" not in manifest
@@ -288,6 +307,11 @@ def effective_manifest(manifest, descriptor):
                     "namespace", configuration["session_data"]["identity"]["default_namespace"]
                 )
             result.update(configuration)
+    from .temporal_artifact_bindings import effective
+
+    selected = effective(manifest, choices, result["context_builder"])
+    if selected is not None:
+        result.update(detached(selected))
     return result
 
 
@@ -375,6 +399,17 @@ def selected_runtime(runtime, request):
             setattr(view, attr, component)
         elif selection.mode == "disabled":
             setattr(view, attr, None)
+    if choices.artifacts.mode != "inherit":
+        from .binding_runtime import AgentBindingResolver
+
+        target = None
+        if choices.artifacts.mode == "ref":
+            target, _ = runtime.binding_catalog.resolve(
+                "artifacts", choices.artifacts, Scope(**request["scope"])
+            )
+        view.context = AgentBindingResolver(runtime)._artifact_context(view.context, target)
+        if view.context.identity != view._manifest["context_builder"]:
+            raise DefinitionMismatch("Actual Artifact Context differs from fixed History selection")
     return view
 
 

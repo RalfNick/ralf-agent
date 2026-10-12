@@ -74,6 +74,13 @@ realizes an equivalent pure view; effective_manifest computes matching finite id
 from registration metadata and the pure prediction port, without constructing clients or
 performing I/O. Custom prediction and realization must share the same metadata schema;
 a mismatch is DefinitionMismatch before any artifact operation.
+Temporal host publication precomputes the bounded pure prediction for each approved
+resource/namespace and disabled target for each compatible Context. History selects only
+these fixed JSON templates; it never imports or calls a custom Context predictor.
+Explicit incompatible Context fails before Run acceptance; an unused incompatible
+Context registration need not be silently converted. Target/provider/implementation
+registration is derived from the same prediction, and actual selected runtime equality
+is checked before dispatch. Publication pins the original two binding methods.
 
 ## Binding and version admission
 
@@ -91,6 +98,12 @@ with recognized binding_protocol5; verify old83 pure admission BEFORE wiring and
 old83 Worker pre-Activity refusal before delivery. Validators admit5 only with the joint
 Artifact protocol and original effective Context proof; preserve exact legacy1/2/3/4.
 Older Worker construction refusal has History evidence but no queryable RALF state.
+For protocol5 only, an Artifact read/verify Activity timeout before any allowed original
+History dispatch grant can recreate that read Action once per phase/artifact. Original
+History fences the old Action before admitting the replacement; late grants are denied.
+The retry is durable and bounded, does not repeat tools or writes, and never applies to
+an admitted handler or legacy protocols1–4. An uncertain dispatched writer remains
+nonquiescent even after content is verified: content receipts do not prove actual end.
 
 ## Configuration and lifecycle
 

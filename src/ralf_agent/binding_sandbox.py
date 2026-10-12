@@ -163,7 +163,7 @@ def validate_sandbox_protocol(manifest):
         or manifest["sandbox_binding_protocol"] != 1
         or manifest.get("kernel") != "temporal-3"
         or type(manifest.get("binding_protocol")) is not int
-        or manifest["binding_protocol"] != 4
+        or manifest["binding_protocol"] not in (4, 5)
         or "tool_execution_protocol" not in manifest
     ):
         raise DefinitionMismatch("Unsupported original Sandbox binding protocol")

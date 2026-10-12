@@ -573,6 +573,27 @@ def accept_stage(state, action_id, response):
     if phase == "write":
         # An observed receipt is still read-verified; a lost receipt never authorizes put again.
         return
+    if (
+        phase in {"read", "verify"}
+        and response.get("ok") is False
+        and response.get("code") == "activity_outcome_unknown"
+        and state.manifest.get("binding_protocol") == 5
+        and state.step_manifest["managed_context"]["policy"].get("artifact_binding", {}).get("mode")
+        == "ref"
+        and action_id in getattr(state, "context_read_stages", {})
+        and action.get("dispatch_grant", {}).get("allowed") is not True
+    ):
+        # Original History can prove this Action never obtained permission for I/O.
+        # observe() fences it atomically before the next, distinct read Action exists.
+        reference = stage["prepared"]["offloads"][stage["index"]]["reference"]
+        retry_key = phase + ":" + reference["artifact_id"]
+        retries = stage.setdefault("undispatched_artifact_read_retries", {})
+        if retries.get(retry_key, 0) == 0:
+            retries[retry_key] = 1
+            state._emit(
+                "context_artifact_read_recreated", {"action_id": action_id, "reference": reference}
+            )
+            return
     if not response.get("ok") and phase != "summary":
         stage["status"] = "failed"
         state.state, state.error = "failed", {"code": response.get("code", "context_failed")}

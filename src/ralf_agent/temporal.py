@@ -146,14 +146,26 @@ class TemporalEngine:
             + (["graph", "team", "dynamic"] if "orchestration" in self._release else [])
             if self._release["kernel"] == "temporal-3"
             else [],
-            "supported_binding_roles": sorted(ROLES)
+            "supported_binding_roles": sorted(
+                ROLES
+                if self._release.get("artifacts_binding_protocol") == 1
+                else ROLES - {"artifacts"}
+            )
             if self._release["kernel"] == "temporal-3"
             else [],
             "session_modes": ["history-conversation"]
             if self._release.get("session_protocol") == 1
             else [],
             "resource_selectors": self._release["kernel"] == "temporal-3",
-            "resource_selector_roles": {"facts": ["namespace"], "knowledge": ["namespace"]}
+            "resource_selector_roles": {
+                "facts": ["namespace"],
+                "knowledge": ["namespace"],
+                **(
+                    {"artifacts": ["namespace"]}
+                    if self._release.get("artifacts_binding_protocol") == 1
+                    else {}
+                ),
+            }
             if self._release["kernel"] == "temporal-3"
             else [],
             "required_stage_kinds": [],

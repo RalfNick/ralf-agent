@@ -1,6 +1,9 @@
 # Per-Agent Artifact Bindings Implementation Plan
 
-> Required execution: superpowers:executing-plans inline, no implementer agents.
+> Execution: superpowers:executing-plans. Inline until the user explicitly requested
+> parallel acceleration; independent recovery tests, compatibility probes and docs
+> now run concurrently with exclusive file ownership. Root integrates production changes.
+> No parallel package builds/full-suite or shared service teardown.
 > One fresh strongest read-only reviewer at the end; all findings/Declined regraded
 > before one Important RED→GREEN fix pass, Minor deferred. Continuous local-only work.
 

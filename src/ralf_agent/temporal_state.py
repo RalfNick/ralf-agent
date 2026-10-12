@@ -19,6 +19,7 @@ from .errors import (
 from .governance import TemporalExecutionPolicy
 from .harness import DecisionProposal
 from .model_evidence import settlement_usage, validate_model_usage, validate_received_response
+from .temporal_artifact_bindings import validate_protocol as validate_artifacts
 from .temporal_facts_state import validate_protocol as validate_facts_protocol
 from .temporal_facts_state import validate_snapshot as validate_facts_snapshot
 from .temporal_knowledge_state import validate_protocol as validate_knowledge_protocol
@@ -106,7 +107,8 @@ def validate_manifest(manifest):
         raise DefinitionMismatch("Unsupported Temporal runtime release")
     if manifest["kernel"] == "temporal-3":
         if (
-            manifest.get("binding_protocol") not in (1, 2, 3, 4)
+            type(manifest.get("binding_protocol")) is not int
+            or manifest.get("binding_protocol") not in (1, 2, 3, 4, 5)
             or manifest.get("dispatch_admission") != "history-1"
         ):
             raise DefinitionMismatch("Unsupported Temporal binding/memory protocol")
@@ -131,6 +133,7 @@ def validate_manifest(manifest):
     from .binding_sandbox import validate_sandbox_protocol
 
     validate_sandbox_protocol(manifest)
+    validate_artifacts(manifest)
     validate_facts_protocol(manifest)
     validate_knowledge_protocol(manifest)
     validate_session_protocol(manifest)
