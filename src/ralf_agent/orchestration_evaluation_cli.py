@@ -13,14 +13,25 @@ from .orchestration_evaluation import (
     load_orchestration_cases,
 )
 from .planning_evaluation import EvaluationLimits, _prices
-from .planning_evaluation_cli import _http_provider, _validate_reasoning_effort
+from .planning_evaluation_cli import (
+    _http_provider,
+    _reasoning_arguments,
+    _validate_reasoning_effort,
+)
 
 
 def _common_arguments(parser, *, max_cases):
     source = parser.add_mutually_exclusive_group()
     source.add_argument(
         "--provider",
-        choices=["openai", "anthropic", "gemini", "gemini-functions", "deepseek-thinking"],
+        choices=[
+            "openai",
+            "anthropic",
+            "gemini",
+            "gemini-functions",
+            "deepseek-thinking",
+            "openai-responses-reasoning",
+        ],
     )
     source.add_argument(
         "--offline", action="store_true", help="Offline regression, never model quality"
@@ -41,7 +52,7 @@ def _common_arguments(parser, *, max_cases):
     )
     parser.add_argument("--max-output-tokens", type=int, default=2048)
     parser.add_argument("--timeout", type=float, default=60, help="Seconds per adapter invocation")
-    parser.add_argument("--reasoning-effort", choices=["low", "high", "max"])
+    _reasoning_arguments(parser)
     parser.add_argument("--repeats", type=int, default=1)
     parser.add_argument(
         "--max-cost-usd",
@@ -113,7 +124,8 @@ async def run(args):
             evidence_dir=args.evidence_dir,
             offline=args.offline,
             prices=prices,
-            model_continuation=args.provider in {"gemini-functions", "deepseek-thinking"},
+            model_continuation=args.provider
+            in {"gemini-functions", "deepseek-thinking", "openai-responses-reasoning"},
         )
         if reason:
             report["reason"] = reason

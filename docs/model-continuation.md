@@ -2,7 +2,7 @@
 
 dev88 新增显式 [完整模型历史](model-history.md)，保护工具轮、最终响应和验证重试的原交互。
 原 dev87 续接模式仍保留旧行为；dev89 已提供显式跨 Session Turn 原生 transcript。
-dev90 增加 [DeepSeek 思考适配器](deepseek-thinking.md)，使用同一续接和完整历史契约。
+dev90 增加 [DeepSeek 思考适配器](deepseek-thinking.md)，dev91增加 [Responses 推理适配器](responses-reasoning.md)，使用同一续接和完整历史契约。
 
 `GeminiFunctionProvider` 是显式原生函数适配器，提供文本、客户端函数调用和完整 SSE。
 原 `GeminiProvider`／`gemini-content` 保持文本模式。工具执行、审批、预算和效果恢复由

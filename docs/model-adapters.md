@@ -9,6 +9,7 @@ dev9 提供三个 HTTP 协议与 DeepSeek 非思考模式适配器，全部复�
 | OpenAIChatProvider / chat-completions | 支持 | 支持 | 支持 | OPENAI_API_KEY | Chat Completions 兼容协议；不支持需保留 opaque reasoning 状态的工具循环 |
 | OpenAIResponsesProvider / openai-responses | 支持 | 支持 | 支持 | OPENAI_API_KEY | 原生 text/functions、JSON-object／显式严格 Schema；拒绝需保留推理状态、媒体、服务端工具和非空 annotations |
 | DeepSeekChatProvider / deepseek-chat | 支持 | 支持 | 支持 | DEEPSEEK_API_KEY | 固定 thinking.type=disabled 和 max_tokens；不支持思考模式工具续接或 seed |
+| OpenAIResponsesReasoningProvider / openai-responses-reasoning | 支持 | 支持 | 支持 | OPENAI_API_KEY | 显式原有序 reasoning/functions/phase 续接；需启用 model_continuation；线上型号及质量未验收 |
 | DeepSeekThinkingProvider / deepseek-thinking | 支持 | 支持 | 支持 | DEEPSEEK_API_KEY | 显式思考续接；完整 reasoning 和原工具参数，需开启 model_continuation；线上型号与质量未验收 |
 | AnthropicProvider / anthropic-messages | 支持 | 支持 | 支持 | ANTHROPIC_API_KEY | Messages 原生转换；不支持 thinking、server tools、多模态 |
 | GeminiProvider / gemini-content | 支持 | 不支持 | 支持 | GEMINI_API_KEY | Developer API 原生文本；工具声明/历史在发送前拒绝，签名工具状态未交付 |

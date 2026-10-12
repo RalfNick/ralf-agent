@@ -5,14 +5,20 @@ import asyncio
 import json
 
 from .deepseek_thinking import DeepSeekThinkingProvider
-from .errors import RalfError, ValidationError
+from .errors import RalfError
 from .gemini_functions import GeminiFunctionProvider
 from .model_compatibility import CASES, evaluate_model_compatibility
 from .model_native import AnthropicProvider, GeminiProvider
 from .model_protocol import ModelStreamEvent
 from .model_responses import OpenAIResponsesProvider
 from .planning_evaluation import EvaluationLimits
+from .planning_evaluation_cli import (
+    _reasoning_arguments,
+    _reasoning_options,
+    _validate_reasoning_effort,
+)
 from .providers import DeepSeekChatProvider, OpenAIChatProvider
+from .responses_reasoning import OpenAIResponsesReasoningProvider
 from .runtime_builder import _model
 from .types import ModelResponse, ToolCall
 
@@ -47,6 +53,7 @@ def main(argv=None):
     adapters = {
         "chat-completions": (OpenAIChatProvider, "OPENAI_API_KEY"),
         "openai-responses": (OpenAIResponsesProvider, "OPENAI_API_KEY"),
+        "openai-responses-reasoning": (OpenAIResponsesReasoningProvider, "OPENAI_API_KEY"),
         "deepseek-chat": (DeepSeekChatProvider, "DEEPSEEK_API_KEY"),
         "deepseek-thinking": (DeepSeekThinkingProvider, "DEEPSEEK_API_KEY"),
         "anthropic-messages": (AnthropicProvider, "ANTHROPIC_API_KEY"),
@@ -61,13 +68,10 @@ def main(argv=None):
     parser.add_argument("--max-calls", type=int, default=6)
     parser.add_argument("--max-output-tokens", type=int, default=1024)
     parser.add_argument("--timeout", type=float, default=30)
-    parser.add_argument("--reasoning-effort", choices=["low", "high", "max"])
+    _reasoning_arguments(parser)
     args = parser.parse_args(argv)
     try:
-        if args.reasoning_effort is not None and (
-            args.adapter != "deepseek-thinking" or args.offline
-        ):
-            raise ValidationError("Reasoning effort requires explicit deepseek-thinking selection")
+        _validate_reasoning_effort(args, provider=args.adapter)
         limits = EvaluationLimits(
             max_cases=5,
             max_calls=args.max_calls,
@@ -88,8 +92,7 @@ def main(argv=None):
                 config["api_key_env"] = args.api_key_env
             if args.base_url:
                 config["base_url"] = args.base_url
-            if args.reasoning_effort is not None:
-                config["reasoning_effort"] = args.reasoning_effort
+            config.update(_reasoning_options(args))
             provider = _model(config, cls, key_env)
         report = asyncio.run(
             evaluate_model_compatibility(
@@ -98,7 +101,8 @@ def main(argv=None):
                 limits=limits,
                 evidence_dir=args.evidence_dir,
                 offline=args.offline,
-                model_continuation=args.adapter in {"gemini-functions", "deepseek-thinking"},
+                model_continuation=args.adapter
+                in {"gemini-functions", "deepseek-thinking", "openai-responses-reasoning"},
             )
         )
     except RalfError as exc:

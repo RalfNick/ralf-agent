@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.0.dev91 — Responses reasoning continuation preview
+
+- Add explicit OpenAIResponsesReasoningProvider / openai-responses-reasoning, stateless native reasoning/function history, preserved assistant phase and original arguments.
+- Expose fixed effort/context/summary/mode options in SDK, Local/Temporal declarations, per-Agent bindings and all four evaluation consoles. Old Responses and other model defaults remain unchanged.
+- Continue using original receipt/adoption and complete-history authorities; unsupported or incomplete wire evidence cannot produce tool proposals.
+- Protocol, recovery, installed package and compatibility gates are recorded in the batch acceptance document. Live model/account quality, full R05/H3/M1/R01–R26 and independent adoption remain open.
+
 ## 0.1.0.dev90 — DeepSeek thinking continuation preview
 
 - Add explicit `DeepSeekThinkingProvider`/`deepseek-thinking` text, native tools and complete SSE. Preserve original reasoning, nullable protocol fields and argument strings through original continuation/history contracts.

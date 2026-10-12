@@ -224,6 +224,7 @@ from .reference_selection import OverlapReferenceSelector, ReferenceSelector
 from .relevant_context import RelevantDataContext
 from .rerank_http import HTTPReranker
 from .rerank_response import RerankResponse
+from .responses_reasoning import OpenAIResponsesReasoningProvider
 from .retrieval import (
     Chunk,
     Document,
@@ -341,7 +342,7 @@ from .workflow import (
     WorkflowSelection,
 )
 
-__version__ = "0.1.0.dev90"
+__version__ = "0.1.0.dev91"
 from .binding_artifacts import ArtifactBindingResource, ArtifactView
 from .binding_sandbox import SandboxBindingResource
 from .docker_sandbox import DockerSandbox
@@ -404,6 +405,7 @@ __all__ = [
     "evaluate_model_compatibility",
     "infer_tool_schema",
     "OpenAIResponsesProvider",
+    "OpenAIResponsesReasoningProvider",
     "MCPToolSource",
     "MCPTransport",
     "MCPHTTPTransport",

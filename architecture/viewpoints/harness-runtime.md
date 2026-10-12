@@ -1,5 +1,7 @@
 # RALF AgentHarness 目标架构
 
+Dev91 显式 Responses 推理续接子集已验收：保留原有序 output／密文／phase 和工具原参数，复用原 ModelContinuation／ModelHistory 与 Local／Temporal 执行权威，接通 SDK／Profile／四类评测 CLI。最终源码6792 passed／598配置依赖跳过（856.08s），独立核心安装494 passed／零跳过，实际源码Temporal5／安装Temporal17通过；311产品模块一致，旧90四类原Run及默认字节兼容。一次审查3个P2与1个CI Minor已修复，另5项公共边界回归通过；自有服务正常退出0并等待。原默认和历史发布不迁移；真实模型质量、完整R05／H3／M1／R01–R26及独立采用继续开放。见[使用指南](../../docs/responses-reasoning.md)及[本批验收](../reviews/2026-10-13-responses-reasoning.md)。
+
 Dev90 思考模型适配子集已验收：新增显式 DeepSeekThinkingProvider／deepseek-thinking，复用原 ModelContinuation／完整历史及 Local／Temporal 执行权威，接通 SDK／Profile／四类评测 CLI。保留非思考默认和原 Run；最终源码6519 passed／593配置依赖跳过（993.63s），独立核心安装266 passed／零跳过，实际源码Temporal4／安装Temporal12通过；308产品模块一致，旧89四类原Run和默认字节兼容。唯一审查2个P2已修复；自有服务退出0并等待。真实模型质量、完整 R05／H3／M1／R01–R26及独立采用继续开放。见[接入指南](../../docs/deepseek-thinking.md)及[本批记录](../reviews/2026-10-13-deepseek-thinking.md)。
 
 Dev86 端到端任务评测子集已验收：源码5681 passed／447配置跳过（830.34s）、独立核心安装161；源码三次重复RAG24/24、Plan15/15、Team15/15及安装CLI／SDK例子、旧85默认／原Plan回执兼容与298模块一致通过。复用原执行权威，新增最终模型请求可见引用、实际成员／工具回执、独立Embedding计量和观察式恢复；2项Important／1项Minor经有效RED统一修复。离线／MockTransport不构成真实模型质量；完整H3／M1／R01–R26及外部采用保持开放。见[任务评测指南](../../docs/task-evaluation.md)与[本批验收](../reviews/2026-10-13-task-evaluation-chains.md)。

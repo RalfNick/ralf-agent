@@ -95,7 +95,8 @@ async def run(args):
             offline=args.offline,
             prices=prices,
             max_embedding_calls=args.max_embedding_calls,
-            model_continuation=args.provider in {"gemini-functions", "deepseek-thinking"},
+            model_continuation=args.provider
+            in {"gemini-functions", "deepseek-thinking", "openai-responses-reasoning"},
         )
         if reason:
             report["reason"] = reason

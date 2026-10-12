@@ -1,5 +1,7 @@
 # RALF 通用框架能力与扩展验收
 
+Dev91 显式 Responses 推理续接子集已验收：保留原有序 output／密文／phase 和工具原参数，复用原 ModelContinuation／ModelHistory 与 Local／Temporal 执行权威，接通 SDK／Profile／四类评测 CLI。最终源码6792 passed／598配置依赖跳过（856.08s），独立核心安装494 passed／零跳过，实际源码Temporal5／安装Temporal17通过；311产品模块一致，旧90四类原Run及默认字节兼容。一次审查3个P2与1个CI Minor已修复，另5项公共边界回归通过；自有服务正常退出0并等待。原默认和历史发布不迁移；真实模型质量、完整R05／H3／M1／R01–R26及独立采用继续开放。见[使用指南](../../docs/responses-reasoning.md)及[本批验收](../reviews/2026-10-13-responses-reasoning.md)。
+
 Dev90 思考模型适配子集已验收：新增显式 DeepSeekThinkingProvider／deepseek-thinking，复用原 ModelContinuation／完整历史及 Local／Temporal 执行权威，接通 SDK／Profile／四类评测 CLI。保留非思考默认和原 Run；最终源码6519 passed／593配置依赖跳过（993.63s），独立核心安装266 passed／零跳过，实际源码Temporal4／安装Temporal12通过；308产品模块一致，旧89四类原Run和默认字节兼容。唯一审查2个P2已修复；自有服务退出0并等待。真实模型质量、完整 R05／H3／M1／R01–R26及独立采用继续开放。见[接入指南](../../docs/deepseek-thinking.md)及[本批记录](../reviews/2026-10-13-deepseek-thinking.md)。
 
 dev89跨Session原生模型历史子集已验收：最终源码6317 passed／589配置跳过（746.39s），独立核心安装243 passed／零跳过，独立安装真实Temporal76及Local/Redis/PostgreSQL50项通过。显式session/frame、每Agent继承/ref/禁用、同步/异步Profile和通用无SQL publication端口已接通；原根成功、准确CAS回执、失败候选排除及真实处理器责任保持。唯一审查4个P2及1个Minor已修复并复核；旧88四类原Run/默认字节兼容、Schema13及实际旧Worker零Activity拒绝通过。外置128轮使用明确128MiB私有服务，原50MiB服务104个已接受Turn后终止的证据保留，Continue-As-New/长期治理不据此完成。完整H3/M1/R01–R26、真实模型质量、独立采用和对等比较继续开放。见[使用指南](../../docs/model-history.md)与[本批验收](../reviews/2026-10-13-session-model-history.md)。
@@ -114,7 +116,7 @@ flowchart TB
 
 | 层／能力 | 公共边界 | 默认目标 | 可选适配／自定义 | dev9 证据与缺口 |
 | --- | --- | --- | --- | --- |
-| 模型 | ModelProvider；可选流式、预检及能力协议 | 文本／工具调用 Provider、生成参数、协议归一化 | 国内外原生协议、兼容协议、本地推理；Responses、多模态、路由分期 | Chat Completions、Anthropic 文本／客户端工具、Gemini 文本、DeepSeek 非思考 preset、完整 SSE 已交付；线上型号待验证 |
+| 模型 | ModelProvider；可选流式、预检、能力与原生续接协议 | 文本／工具 Provider、格式、生成参数和原生历史 | 国内外原生协议、兼容协议、本地推理、多模态、路由分期 | Chat/Anthropic/Gemini函数与DeepSeek思考、无状态Responses已交付；dev91原生Responses推理配置／恢复子集已验收，线上质量继续开放 |
 | Agent | AgentSpec＋Harness；目标增加受管理策略组合 | 通用模型／工具循环；Search／RAG 能力包 | 业务指令／工具／Schema、策略及 Coding Runner | 默认循环与纯 Harness 已交付；规划、Coding、Realtime 不是现成 Agent |
 | Workflow | 目标 WorkflowCompiler／Validator／Interpreter | 顺序 Pipeline、静态 Graph、类型化节点 | 自定义节点、条件、合并、受限循环、子流程 | 当前只有固定顺序 Agent 步骤 |
 | 动态规划 | 目标 Planner → PlanProposal → PlanRevision | 受限 ModelPlanner；离线 RulePlanner 验证链路 | 业务 Planner、Verifier、重规划策略 | 未交付；现有 RecallPlanner 只选择记忆查询 |

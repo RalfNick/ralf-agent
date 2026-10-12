@@ -23,6 +23,7 @@ from .ports import is_async_callable, validate_engine
 from .ports import is_sync_callable as _synchronous
 from .providers import DeepSeekChatProvider, OpenAIChatProvider
 from .recall import FixedRecallPlanner, MemoryRecallPolicy, RecallQuery
+from .responses_reasoning import OpenAIResponsesReasoningProvider
 from .retrieval import KnowledgeContext, LexicalRetriever, SQLiteKnowledgeStore
 from .runtime_config import COMPONENT_KINDS, RuntimeProfile
 from .runtime_lifecycle import BuildContext, RuntimeInstance
@@ -103,11 +104,19 @@ def _model_options(config, provider_type, key_env):
         allowed.add("seed")
     if provider_type is OpenAIChatProvider:
         allowed.add("token_parameter")
-    if provider_type in {OpenAIChatProvider, DeepSeekChatProvider, OpenAIResponsesProvider}:
+    if provider_type in {
+        OpenAIChatProvider,
+        DeepSeekChatProvider,
+        OpenAIResponsesProvider,
+        OpenAIResponsesReasoningProvider,
+    }:
         allowed.add("json_mode")
-    if provider_type is OpenAIResponsesProvider:
+    if provider_type in {OpenAIResponsesProvider, OpenAIResponsesReasoningProvider}:
         allowed.discard("stop")
         allowed.update({"output_schema", "schema_name", "reasoning_effort"})
+    if provider_type is OpenAIResponsesReasoningProvider:
+        allowed.difference_update({"temperature", "top_p"})
+        allowed.update({"reasoning_context", "reasoning_summary", "reasoning_mode"})
     if provider_type is AnthropicProvider:
         allowed.add("api_version")
     if provider_type is DeepSeekThinkingProvider:
@@ -252,7 +261,8 @@ def validate_session_history_declarations(profile, *, source_available=False):
 def validate_continuation_declarations(profile, *, enabled):
     """Validate explicit native continuation adapters before constructing resources."""
     if not enabled and any(
-        declaration["adapter"] in {"gemini-functions", "deepseek-thinking"}
+        declaration["adapter"]
+        in {"gemini-functions", "deepseek-thinking", "openai-responses-reasoning"}
         for declaration in [
             *profile.providers.values(),
             *(
@@ -280,6 +290,7 @@ class ComponentRegistry:
         self.register("provider", "chat-completions", _chat, validator=_chat_config)
         for name, provider_type, key_env in [
             ("openai-responses", OpenAIResponsesProvider, "OPENAI_API_KEY"),
+            ("openai-responses-reasoning", OpenAIResponsesReasoningProvider, "OPENAI_API_KEY"),
             ("deepseek-chat", DeepSeekChatProvider, "DEEPSEEK_API_KEY"),
             ("deepseek-thinking", DeepSeekThinkingProvider, "DEEPSEEK_API_KEY"),
             ("anthropic-messages", AnthropicProvider, "ANTHROPIC_API_KEY"),

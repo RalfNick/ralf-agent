@@ -73,7 +73,14 @@ def _arguments(argv):
     mode = parser.add_mutually_exclusive_group()
     mode.add_argument(
         "--provider",
-        choices=["openai", "anthropic", "gemini", "gemini-functions", "deepseek-thinking"],
+        choices=[
+            "openai",
+            "anthropic",
+            "gemini",
+            "gemini-functions",
+            "deepseek-thinking",
+            "openai-responses-reasoning",
+        ],
     )
     mode.add_argument(
         "--fixture", help="Explicit offline response fixture JSON; never reported as model quality"
@@ -96,7 +103,7 @@ def _arguments(argv):
     parser.add_argument("--max-calls", type=int, default=20)
     parser.add_argument("--max-output-tokens", type=int, default=2048)
     parser.add_argument("--timeout", type=float, default=60, help="Seconds per request")
-    parser.add_argument("--reasoning-effort", choices=["low", "high", "max"])
+    _reasoning_arguments(parser)
     parser.add_argument("--repeats", type=int, default=1)
     parser.add_argument(
         "--max-cost-usd",
@@ -113,9 +120,46 @@ def _arguments(argv):
     return parser.parse_args(argv)
 
 
-def _validate_reasoning_effort(args):
-    if args.reasoning_effort is not None and args.provider != "deepseek-thinking":
-        raise ValidationError("Reasoning effort requires explicit deepseek-thinking selection")
+def _reasoning_arguments(parser):
+    parser.add_argument(
+        "--reasoning-effort", choices=["none", "minimal", "low", "medium", "high", "xhigh", "max"]
+    )
+    parser.add_argument("--reasoning-context", choices=["auto", "current_turn", "all_turns"])
+    parser.add_argument("--reasoning-summary", choices=["auto", "concise", "detailed"])
+    parser.add_argument("--reasoning-mode", choices=["standard", "pro"])
+
+
+def _reasoning_options(args):
+    return {
+        "reasoning_" + name: value
+        for name in ("effort", "context", "summary", "mode")
+        if (value := getattr(args, "reasoning_" + name, None)) is not None
+    }
+
+
+def _validate_reasoning_effort(args, *, provider=None):
+    options = _reasoning_options(args)
+    if not options:
+        return
+    selected = getattr(args, "provider", None) if provider is None else provider
+    selection_error = (
+        "Reasoning effort requires explicit deepseek-thinking selection"
+        if set(options) == {"reasoning_effort"}
+        else "Reasoning options require explicit reasoning adapter selection"
+    )
+    if getattr(args, "offline", False) or getattr(args, "fixture", None):
+        raise ValidationError(selection_error)
+    if selected == "openai-responses-reasoning":
+        return
+    if selected == "deepseek-thinking":
+        if set(options) - {"reasoning_effort"} or options.get("reasoning_effort") not in {
+            "low",
+            "high",
+            "max",
+        }:
+            raise ValidationError("DeepSeek reasoning supports only low/high/max effort")
+        return
+    raise ValidationError(selection_error)
 
 
 def _http_provider(args, limits):
@@ -123,6 +167,7 @@ def _http_provider(args, limits):
     from .gemini_functions import GeminiFunctionProvider
     from .model_native import AnthropicProvider, GeminiProvider
     from .providers import OpenAIChatProvider
+    from .responses_reasoning import OpenAIResponsesReasoningProvider
 
     _validate_reasoning_effort(args)
     model = os.environ.get(args.model_env) if args.model_env else args.model
@@ -134,6 +179,7 @@ def _http_provider(args, limits):
         "gemini": "GEMINI_API_KEY",
         "gemini-functions": "GEMINI_API_KEY",
         "deepseek-thinking": "DEEPSEEK_API_KEY",
+        "openai-responses-reasoning": "OPENAI_API_KEY",
     }[args.provider]
     key = os.environ.get(args.key_env or default_key)
     if not key:
@@ -148,14 +194,14 @@ def _http_provider(args, limits):
     }
     if base_url:
         options["base_url"] = base_url
-    if args.reasoning_effort is not None:
-        options["reasoning_effort"] = args.reasoning_effort
+    options.update(_reasoning_options(args))
     cls = {
         "openai": OpenAIChatProvider,
         "anthropic": AnthropicProvider,
         "gemini": GeminiProvider,
         "gemini-functions": GeminiFunctionProvider,
         "deepseek-thinking": DeepSeekThinkingProvider,
+        "openai-responses-reasoning": OpenAIResponsesReasoningProvider,
     }[args.provider]
     return cls(model, **options), None
 
@@ -191,7 +237,8 @@ async def _run(args):
         prices=prices,
         evidence_dir=args.evidence_dir,
         offline=bool(args.fixture),
-        model_continuation=args.provider in {"gemini-functions", "deepseek-thinking"},
+        model_continuation=args.provider
+        in {"gemini-functions", "deepseek-thinking", "openai-responses-reasoning"},
     )
     if reason:
         report["reason"] = reason
