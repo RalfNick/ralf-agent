@@ -139,6 +139,11 @@ from .model_native import AnthropicProvider, GeminiProvider
 from .model_protocol import ModelCapabilities, ModelStreamEvent, StreamingModelProvider
 from .model_query import ModelQueryTransform
 from .model_responses import OpenAIResponsesProvider
+from .orchestration_evaluation import (
+    OfflineOrchestrationProvider,
+    evaluate_orchestration,
+    load_orchestration_cases,
+)
 from .orchestration_types import (
     AgentCaller,
     ChildCall,
@@ -189,6 +194,8 @@ from .query_transform import (
     IdentityQueryTransform,
     QueryTransform,
 )
+from .rag_evaluation import OfflineRAGProvider, evaluate_rag
+from .rag_evaluation_cases import RAG_OUTPUT_SCHEMA, load_rag_cases, score_rag_answer
 from .recall import (
     AsyncFactReferenceValidator,
     AsyncPaginatedSessionStore,
@@ -322,7 +329,7 @@ from .workflow import (
     WorkflowSelection,
 )
 
-__version__ = "0.1.0.dev85"
+__version__ = "0.1.0.dev86"
 from .binding_artifacts import ArtifactBindingResource, ArtifactView
 from .binding_sandbox import SandboxBindingResource
 from .docker_sandbox import DockerSandbox
@@ -754,3 +761,14 @@ __all__ += ["SkillBindingResource"]
 __all__ += ["ParsedSkillDocument", "SkillDocumentParser", "YamlSkillDocumentParser"]
 
 __all__ += ["ToolExecutionOwner", "ToolExecutionPort"]
+
+__all__ += [
+    "RAG_OUTPUT_SCHEMA",
+    "OfflineRAGProvider",
+    "evaluate_rag",
+    "load_rag_cases",
+    "score_rag_answer",
+    "OfflineOrchestrationProvider",
+    "evaluate_orchestration",
+    "load_orchestration_cases",
+]

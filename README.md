@@ -68,6 +68,8 @@ dev46 发布时范围（历史）：**0.1.0.dev46，M1 核心预览**。提供�
 
 dev14 增加真实 **Redis Session/Facts、PostgreSQL Memory/Knowledge 和 Qdrant VectorIndex**，通过[异步装配](docs/async-assembly.md)接入原有记忆／RAG 端口；提供默认规则 Planner、受管理 ModelPlanner、Verifier，以及 Sequential／Router／Supervisor 团队和独立 Plan／Team 模板。接入方式见[远程数据指南](docs/remote-data.md)与[规划及多 Agent 指南](docs/orchestration.md)。完整 M1 尚未验收，适合开发者试点；[实现清单](docs/implementation-status.md)记录支持边界。预览 API 尚未稳定。
 
+dev86 提供安装后可用的 [RAG 与 Plan／Team 完整任务评测](docs/task-evaluation.md)：实际摄取、检索、答案引用、原受管理成员与工具回执、重复评分和观察式恢复。默认离线仅验证运行协议，真实质量及外部采用仍需独立证据。
+
 dev15 增加[动态 DAG、计划补丁和嵌套编排](docs/dynamic-dag.md)、可替换的[MQ／A2A 交接层](docs/remote-handoff.md)，以及以 History 为执行权威的[Temporal 预览后端](docs/temporal-execution.md)。dev15 的 Temporal 子集仅支持原生 Agent／顺序 Workflow；dev17 已扩展，见下文。新增 20 个冻结任务的[规划质量评测入口](docs/planning-evaluation.md)，真实模型质量仍需实际配置与运行，离线分数不代表 AI 能力。
 
 ```bash

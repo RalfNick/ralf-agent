@@ -1,4 +1,6 @@
-# Implementation status — 0.1.0.dev85
+# Implementation status — 0.1.0.dev86
+
+Dev86 端到端任务评测子集已验收：源码5681 passed／447配置跳过（830.34s）、独立核心安装161；源码三次重复RAG24/24、Plan15/15、Team15/15及安装CLI／SDK例子、旧85默认／原Plan回执兼容与298模块一致通过。复用原执行权威，新增最终模型请求可见引用、实际成员／工具回执、独立Embedding计量和观察式恢复；2项Important／1项Minor经有效RED统一修复。离线／MockTransport不构成真实模型质量；完整H3／M1／R01–R26及外部采用保持开放。见[任务评测指南](task-evaluation.md)与[本批验收](../architecture/reviews/2026-10-13-task-evaluation-chains.md)。
 
 Dev85 已验收子集：显式版本2推荐Plan默认使用原DAG结果依赖；完整资源声明替换无需多余Embedding配置，召回替换移除继承的互斥默认。版本1默认保持。业务／规划报告增加重复任务摘要，规划oracle与Provider前置校验、业务未完成Run恢复观察、模型兼容最终输出检查已修复。最终源码5520／447配置跳过、核心安装171、292产品模块一致和旧84原Plan回执兼容通过；独立review的1Important／1Minor均修复。整批验证以[本批记录](../architecture/reviews/2026-10-12-default-chains-evaluation.md)为准；离线回归不构成真实模型质量或完整H3/M1验收。后续段落按各dev批次保留历史证据。
 

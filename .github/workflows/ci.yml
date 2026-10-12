@@ -33,6 +33,14 @@ jobs:
           mkdir -p "$RUNNER_TEMP/session-contracts"
           cp -R "$GITHUB_WORKSPACE/tests" "$RUNNER_TEMP/session-contracts/tests"
           python -m pytest -q -W error -p no:cacheprovider -c /dev/null "$RUNNER_TEMP/session-contracts/tests/test_default_session_receipts.py" "$RUNNER_TEMP/session-contracts/tests/test_default_session_runtime.py" "$RUNNER_TEMP/session-contracts/tests/test_default_session_process.py" "$RUNNER_TEMP/session-contracts/tests/test_temporal_session_data.py" "$RUNNER_TEMP/session-contracts/tests/test_temporal_context_execution.py" "$RUNNER_TEMP/session-contracts/tests/test_temporal_context_read_protocol.py" "$RUNNER_TEMP/session-contracts/tests/test_temporal_context_read_state.py" "$RUNNER_TEMP/session-contracts/tests/test_skills.py" "$RUNNER_TEMP/session-contracts/tests/test_filesystem_skills.py" "$RUNNER_TEMP/session-contracts/tests/test_skill_tools.py" "$RUNNER_TEMP/session-contracts/tests/test_skill_configuration.py" "$RUNNER_TEMP/session-contracts/tests/test_skill_execution.py" "$RUNNER_TEMP/session-contracts/tests/test_skill_review.py" "$RUNNER_TEMP/session-contracts/tests/test_tool_execution.py" "$RUNNER_TEMP/session-contracts/tests/test_temporal_tool_execution.py" "$RUNNER_TEMP/session-contracts/tests/test_temporal_tool_execution_configuration.py" "$RUNNER_TEMP/session-contracts/tests/test_temporal_tool_execution_runtime.py" "$RUNNER_TEMP/session-contracts/tests/test_temporal_tool_execution_review.py" "$RUNNER_TEMP/session-contracts/tests/test_skill_bindings.py" "$RUNNER_TEMP/session-contracts/tests/test_skill_binding_configuration.py" "$RUNNER_TEMP/session-contracts/tests/test_skill_binding_execution.py" "$RUNNER_TEMP/session-contracts/tests/test_skill_binding_review.py"
+      - name: Installed RAG and managed Plan Team task evaluation
+        working-directory: ${{ runner.temp }}
+        run: |
+          cp -R "$GITHUB_WORKSPACE/evals" "$RUNNER_TEMP/session-contracts/evals"
+          python -m pytest -q -W error -p no:cacheprovider -c /dev/null "$RUNNER_TEMP/session-contracts/tests/test_rag_evaluation.py" "$RUNNER_TEMP/session-contracts/tests/test_rag_evaluation_cases.py" "$RUNNER_TEMP/session-contracts/tests/test_orchestration_evaluation.py" "$RUNNER_TEMP/session-contracts/tests/test_task_evaluation_cli.py"
+          ralf-evaluate-rag --offline
+          ralf-evaluate-orchestration --offline --kind plan-and-execute
+          ralf-evaluate-orchestration --offline --kind team
       - name: Installed Skill document contracts outside checkout
         working-directory: ${{ runner.temp }}
         run: |

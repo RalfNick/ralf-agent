@@ -1,4 +1,6 @@
-# dev85 已验收子集：剩余能力与架构验收清单
+# dev86 已验收子集：剩余能力与架构验收清单
+
+Dev86 端到端任务评测子集已验收：源码5681 passed／447配置跳过（830.34s）、独立核心安装161；源码三次重复RAG24/24、Plan15/15、Team15/15及安装CLI／SDK例子、旧85默认／原Plan回执兼容与298模块一致通过。复用原执行权威，新增最终模型请求可见引用、实际成员／工具回执、独立Embedding计量和观察式恢复；2项Important／1项Minor经有效RED统一修复。离线／MockTransport不构成真实模型质量；完整H3／M1／R01–R26及外部采用保持开放。见[任务评测指南](task-evaluation.md)与[本批验收](../architecture/reviews/2026-10-13-task-evaluation-chains.md)。
 
 dev85 已验收：源码5520 passed／447配置跳过、核心安装171、旧84默认／Plan回执兼容和292模块一致通过。本批补齐版本 2 推荐 Plan 证据链与组件替换、重复评测摘要和评测边界修复；整批验收记录见[本批记录](../architecture/reviews/2026-10-12-default-chains-evaluation.md)。长期 R01–R26 目标及 H1–H5 门槛保持；旧版默认声明不迁移。下述 dev84 数字仅属于已验收历史基线。
 
@@ -69,7 +71,7 @@ PG Knowledge/Inbox/Outbox、Qdrant、HTTP Embedding、Hybrid/RRF／基础重排�
 | R04 配置与装配 | Local 版本 Profile/Catalog、JSON/TOML、工厂、sync/async 装配与历史路由；dev69 显式 Temporal Profile／十类绑定工厂、实际 Worker 排空与离线起步模块；dev70 多版本 Host、原队列 Run/Session 路由、共享资源全局排空与声明 PostgreSQL EffectJournal；dev71 普通启动参数纯预检与纠正重试；dev85版本2完整资源声明替换与互斥召回默认切换 | 复杂 SDK 对象语义的构造校验；配置迁移、剩余环境角色、完整绑定／推荐组合配置；CLI/ProfiledEngine 异步工厂路由；插件显式安装／激活／兼容检查；配置／组件迁移、旧代码归档、部署版本管理；配置来源／监听按需分期 | H1／H5：子集已交付 |
 | R05 模型适配 | Chat Completions、DeepSeek 非思考、Anthropic 文本／工具、Gemini 文本、stateless Responses/JSON/完整 SSE | Gemini 函数调用、Responses 续接及受限字段；能力／用量／错误／超时／重试一致性；路由/fallback/负载策略及效果不重复契约；国内外及本地模型真实兼容矩阵。兼容 URL 不证明每个模型支持同一能力 | A1／H5：协议子集已交付，线上验收未完成 |
 | R06 多模态／实时 | 当前 Provider 链路为文本 | 图片／音频／视频媒体类型、来源／访问／限额及逐适配器验收；Realtime/TTS/高级压缩后置，不作为当前 v1 目标业务链路先决条件 | 能力未交付；高级实时后置 |
-| R07 Agent 能力包 | 原生循环、可定制 AgentSpec、规划／团队／RAG starter、dev47 显式 semantic-knowledge／memory-recall／Plan／Team 默认组合；dev85显式版本2规则DAG结果串接 | 更完整 Search／业务 Plan／Team 与 Coding 能力包；默认 verifier／上下文／工具、替换示例、诊断及业务验收。Coding 依赖环境／Runner | H3／H4：组件有基础，完整默认组合未交付 |
+| R07 Agent 能力包 | 原生循环、可定制 AgentSpec、规划／团队／RAG starter、dev47 显式 semantic-knowledge／memory-recall／Plan／Team 默认组合；dev85显式版本2规则DAG结果串接；dev86安装后RAG与Plan／Team完整有限任务执行器 | 更完整 Search／业务 Plan／Team 与 Coding 能力包；默认 verifier／上下文／工具、替换示例、诊断及业务验收。Coding 依赖环境／Runner | H3／H4：组件有基础，完整默认组合未交付 |
 | R08 静态 Workflow | 顺序、串行／有界并行 Graph、条件／映射、Agent/Transform/Tool 节点及嵌套 | 通用受管理异步自定义节点；HumanInput/Retrieve/Planner/Verifier 节点族；受限循环；first-success/quorum/reducer 合并和类型化工作流状态。复用审批、预算与恢复 | G1/G2／H5：子集已交付 |
 | R09 流式 Workflow | 模型完整 SSE 收集、耐久 Run 事件游标 | 逐记录 StreamChannel/Source/Operator/Sink、背压、关闭／失败传播、检查点／重放和 Sink 效果身份。事件订阅和模型 delta 展示均不等于节点数据流 | G5：未交付 |
 | R10 动态规划／验证 | Rule/Model Planner、Plan/Revision、动态 DAG/CAS 修订、受限 execute/verify/replan；CompleteVerifier 取最后结果；Local Agent 纯 CompletionVerifier 与持久回执／有界重试 | 受管理 async/model Verifier、计划级业务 oracle／停止条件；needs_input/send_input 续接；完整重复规划、依赖、参数、拒绝与停止实测。Schema 合法不等于业务计划正确 | H2／H3／A4：子集已交付，质量未验收 |
@@ -98,7 +100,7 @@ PG Knowledge/Inbox/Outbox、Qdrant、HTTP Embedding、Hybrid/RRF／基础重排�
 | R23 Service／交互／作业 | packaged 本地 HTTP/A2A service、owned shutdown、remote CLI、二十二种 wheel starter | 统一 Agent Service/sessions/资源库、默认托管／共享池、TUI/Web 基础控制台；渠道／定时／后台／唤醒／索引；审批／核验／恢复管理。现有模板不是完整应用平台 | H5／B1/B2：有限服务已交付 |
 | R24 企业身份／运维 | 宿主 Scope、本地授权、版本固定和部分容量保护 | OIDC/企业 actor、资源 ACL/SourceCatalog、凭据代理、工作区配额；保留／迁移／备份／恢复、升级回滚、健康／HA/故障演练、自部署文档和控制面。Scope 字段不是认证体系 | H5／C2：企业目标未交付 |
 | R25 扩展验收／首用 | SDK/API/教程/恢复/发布/贡献文档、适配测试、wheel starter 和旧新兼容证据 | 外部作者可复用的按角色 AdapterContractSuite；完整声明→默认→替换→生命周期→错误→恢复示例；独立开发者换模型/库/工具/节点；性能／升级矩阵、稳定 API 弃用策略。公开 PyPI/Release／社区采用本轮未核验 | 横向验收：部分已交付 |
-| R26 真实质量／M1／比较 | 冻结 20 案例规划、八案例业务执行器；dev21 真实小试验；独立 response/receipt 窗口和 Worker 故障证据；dev85重复任务摘要与评测边界修复 | 完整最终配置重复业务／规划／记忆／RAG 引用任务；M1 20 类原型完整 fixture/评分器；成组窗口／Temporal 契约报告；独立首次采用；同模型/工具/服务的 AgentScope/LangGraph 实现与成绩 | A4／M1／D：验收未完成 |
+| R26 真实质量／M1／比较 | 冻结 20 案例规划、八案例业务执行器；dev21 真实小试验；独立 response/receipt 窗口和 Worker 故障证据；dev85重复任务摘要与评测边界修复；dev86八类RAG来源oracle及五类库存Plan／Team回执、实际可见引用评分与私有报告 | 完整最终配置重复业务／规划／记忆／RAG 引用任务；M1 20 类原型完整 fixture/评分器；成组窗口／Temporal 契约报告；独立首次采用；同模型/工具/服务的 AgentScope/LangGraph 实现与成绩 | A4／M1／D：验收未完成 |
 
 每层的完成条件都是：公共契约、最小默认、另一实现替换、配置／注入、身份／错误／
 生命周期、安装包场景和必要的真实证据。缺少必需能力应在准入前拒绝。

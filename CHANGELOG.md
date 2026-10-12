@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.1.0.dev86 — End-to-end task evaluation preview
+
+- Add installed SDK/CLI RAG ingestion, hybrid retrieval, answer/citation scoring and frozen source cases. Score only original document text offered in the final model request, preserving chunk provenance through clipping.
+- Add installed Plan/Team execution evaluation with managed members, actual lookup/calculation receipts, typed HTTP JSON evidence and terminal/unknown observation-only recovery.
+- Separate model and embedding accounting, private exclusive evidence, repeats and failure denominators. Provider and embedding clients remain borrowed; CLI-owned async components close on failures and cancellation.
+- Final source5681/447 configured skips (830.34s), core installation161, actual installed CLI/SDK, old85 defaults/receipt compatibility and298-module provenance pass. Two Important and one Minor findings fixed. Real model/service quality, framework comparison, external adoption and complete R01–R26 remain open.
+
+## 0.1.0.dev85 — Versioned evidence chains and repeats
+
+- Add explicit v2 recommended Plan DAG result chains and complete resource replacement without unused embedding settings; retain v1 defaults.
+- Add repeated-task summaries and strict proposal/model-output boundaries; unfinished business recovery observes without retry.
+- Accepted source5520/447 configured skips, core installation171, old84 receipt/default compatibility and292-module provenance. Offline scores do not close full H3/M1 or real quality.
+
 ## 0.1.0.dev84 — Scoped Artifact bindings preview
 
 - Add borrowed ArtifactBindingResource and async views with pinned physical identity, host namespace allowlists and actual sync-handler ownership; reuse memory/SQLite/POSIX JSON stores and custom sync/async ports.

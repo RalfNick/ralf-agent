@@ -1,5 +1,7 @@
 # Ordered framework alignment roadmap
 
+Dev86 端到端任务评测子集已验收：源码5681 passed／447配置跳过（830.34s）、独立核心安装161；源码三次重复RAG24/24、Plan15/15、Team15/15及安装CLI／SDK例子、旧85默认／原Plan回执兼容与298模块一致通过。复用原执行权威，新增最终模型请求可见引用、实际成员／工具回执、独立Embedding计量和观察式恢复；2项Important／1项Minor经有效RED统一修复。离线／MockTransport不构成真实模型质量；完整H3／M1／R01–R26及外部采用保持开放。见[任务评测指南](task-evaluation.md)与[本批验收](../architecture/reviews/2026-10-13-task-evaluation-chains.md)。
+
 Baseline: dev46 increment, 2026-10-10. The user approved this order after
 the capability checklist. Completion requires default behavior, extensibility,
 lifecycle/recovery, installed documentation and real evidence per component.
