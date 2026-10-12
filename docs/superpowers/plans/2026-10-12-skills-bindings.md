@@ -59,6 +59,6 @@
 **Files:** docs/skills.md (or separate skills-bindings.md if clearer), architecture/reviews/2026-10-12-skills-bindings.md, capability/status/progress/remaining/harness/CHANGELOG/CI/version.
 **Interfaces:** consumes all prior proof, produces honest per-Agent binding subset and usable installed guide.
 
-- [ ] Fresh installed core/SDK contracts and actual service, old78 default Local/CLI/Temporal/native two-way recovery,22 original starterbytes; exact source/wheel/sdist/install hashes and runnable guide/docs/CI paths.
-- [ ] One fresh strongest read-only whole-batch review; regrade all findings and Declined before ONE unified Important TDD fix pass. Minor deferred/no re-review.
-- [ ] Green final full suite, rebuilt final docs/package, owned services actual stop/wait, local main commit/formalTask4/closure commit, collect all rulings and archive only own SDD. Full R01–R26 remains ACTIVE.
+- [x] Fresh installed core/SDK contracts and actual service, old78 default Local/CLI/Temporal/native two-way recovery,22 original starterbytes; exact source/wheel/sdist/install hashes and runnable guide/docs/CI paths.
+- [x] One fresh strongest read-only whole-batch review; regrade all findings and Declined before ONE unified Important TDD fix pass. Minor deferred/no re-review.
+- [x] Green final full suite, rebuilt final docs/package, owned services actual stop/wait, local main commit/formalTask4/closure commit, collect all rulings and archive only own SDD. Full R01–R26 remains ACTIVE.
