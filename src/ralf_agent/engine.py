@@ -106,6 +106,7 @@ class LocalEngine:
         conversation_resource=None,
         stage_policy=None,
         model_continuation=False,
+        model_history=None,
     ):
         # Python 3.12's Protocol isinstance check ignores proxy __getattr__.
         # Validate the declared public operations so delegating adapters work too.
@@ -119,6 +120,21 @@ class LocalEngine:
         if type(model_continuation) is not bool:
             raise ValidationError("model_continuation must be boolean")
         self.model_continuation = model_continuation
+        if model_history is not None and not model_continuation:
+            raise ValidationError("Model history requires explicit model continuation")
+        from .model_history import model_history_registration
+
+        self.model_history = self._model_history_pin = model_history
+        self._model_history_registration = (
+            model_history_registration(model_history) if model_history is not None else None
+        )
+        from .task_controls import _binding
+
+        self._model_history_bindings = (
+            {name: _binding(getattr(model_history, name)) for name in ("assemble", "validate")}
+            if model_history is not None
+            else {}
+        )
         self.store = store
         self.conversation_resource = conversation_resource
         self.providers = dict(providers)
@@ -478,6 +494,7 @@ class LocalEngine:
         return step_manifest(run["manifest"], run["node"] if index is None else index)
 
     def _manifest(self, steps, *, components=None):
+        history_registration = self._history_registration()
         sessions = self.sessions if components is None else components.sessions
         memory = self.memory if components is None else components.memory
         context = self.context if components is None else components.context
@@ -505,7 +522,11 @@ class LocalEngine:
             if step["output_schema"] is not None:
                 Draft202012Validator.check_schema(step["output_schema"])
         manifest = {
-            "kernel": "local-5" if self.model_continuation else "local-4",
+            "kernel": "local-6"
+            if history_registration is not None
+            else "local-5"
+            if self.model_continuation
+            else "local-4",
             "tools": self.tools.manifests(names),
             "providers": providers,
             "session_backend": sessions.backend_id if sessions is not None else None,
@@ -519,6 +540,9 @@ class LocalEngine:
         if self.model_continuation:
             manifest["model_continuation_protocol"] = 1
             manifest["provider_continuations"] = continuations
+        if history_registration is not None:
+            manifest["model_history_protocol"] = 1
+            manifest["model_history"] = history_registration
         if self.recall_policy is not None:
             manifest["memory_recall"] = self._component_identity(
                 self.recall_policy, (), True, "Recall policy"
@@ -554,11 +578,78 @@ class LocalEngine:
             manifest["managed_context"] = context_stage
         return manifest
 
-    def _assemble_context(self, history, references, max_chars, *, context=None):
-        try:
-            messages, manifest = (self.context if context is None else context).assemble(
-                history, references, max_chars
+    def _history_registration(self):
+        from .model_history import model_history_registration
+
+        if self.model_history is not self._model_history_pin:
+            raise DefinitionMismatch("The executing model history policy changed")
+        if self.model_history is None:
+            return None
+        from .task_controls import _binding
+
+        registration = model_history_registration(self.model_history)
+        if (
+            registration != self._model_history_registration
+            or not self.model_continuation
+            or any(
+                _binding(getattr(self.model_history, name)) != binding
+                for name, binding in self._model_history_bindings.items()
             )
+        ):
+            raise DefinitionMismatch("The model history policy differs from its fixed identity")
+        return registration
+
+    def _validate_model_history(self, history, messages):
+        from .model_history import validate_model_history
+
+        registration = self._history_registration()
+        if registration is None:
+            return
+        validate_model_history(
+            history,
+            messages,
+            allow_tool_result_projection=registration["identity"].get(
+                "allow_tool_result_projection", False
+            ),
+        )
+        self._component_result(
+            self.model_history.validate(copy.deepcopy(history), copy.deepcopy(messages)),
+            type(None),
+            "ModelHistoryPolicy.validate",
+        )
+        self._history_registration()
+
+    def _assemble_context(self, history, references, max_chars, *, context=None):
+        context = self.context if context is None else context
+        registration = self._history_registration()
+        try:
+            if registration is None:
+                value = context.assemble(history, references, max_chars)
+            else:
+                from .data_context import ManagedDataContext
+                from .model_history import validate_reference_evidence
+
+                validate_reference_evidence(references)
+                projected, refs = copy.deepcopy(history), copy.deepcopy(references)
+                artifacts, coverage = [], []
+                if isinstance(context, ManagedDataContext):
+                    if registration["identity"].get("allow_tool_result_projection", False):
+                        projected, artifacts = context.project_history(projected)
+                    refs, coverage = context.project_references(refs)
+                value = self.model_history.assemble(projected, refs, max_chars, context=context)
+            value = self._component_result(value, (tuple, list), "Context assembly")
+            if len(value) != 2:
+                raise ValidationError("Context assembler must return a messages/manifest pair")
+            messages, manifest = value
+            if registration is not None:
+                self._validate_model_history(history, messages)
+                manifest = {
+                    **manifest,
+                    "model_history": copy.deepcopy(registration),
+                    "model_history_protocol": 1,
+                }
+                if isinstance(context, ManagedDataContext):
+                    manifest.update(artifact_projection=artifacts, reference_compression=coverage)
         except RalfError:
             raise
         except Exception as exc:
@@ -1240,6 +1331,7 @@ class LocalEngine:
         except Exception as exc:
             raise ValidationError("Harness failed to prepare a model request") from exc
         self._check_release(self._authorized(run["id"]))
+        self._validate_model_history(run["messages"], request.messages)
         if digest(
             self._component_identity(harness, ("prepare", "propose"), True, "Harness")
         ) != digest(self._step_manifest(run)["harness"]):
@@ -1327,6 +1419,7 @@ class LocalEngine:
         continuation = None
         closed = run["state"] in TERMINAL or run["state"] == "cancelling"
         proposals = []
+        history_proposals = None
         if not closed:
             self._check_release(run)
             step = self._agent_step(run, action["node"])
@@ -1388,6 +1481,15 @@ class LocalEngine:
                         for call in proposal.tool_calls
                     ]
                     validate_call_ids([item["call_id"] for item in proposals])
+                    if self.model_history is not None:
+                        history_proposals = [
+                            {
+                                "tool": call.name,
+                                "arguments": copy.deepcopy(call.arguments),
+                                "call_id": actual["call_id"],
+                            }
+                            for call, actual in zip(proposed.tool_calls, proposals, strict=True)
+                        ]
                     encoded = {**asdict(proposal), "usage": encoded["usage"]}
                     if continuation is not None:
                         encoded["continuation"] = copy.deepcopy(continuation)
@@ -1421,15 +1523,20 @@ class LocalEngine:
                 action["memory_stage"] = {"schema_version": 1, "required": True}
             if not closed:
                 run["actions"].extend(proposals)
-                if proposals:
-                    run["messages"].append(
-                        assistant_message(
-                            encoded["output"],
-                            proposals,
-                            received=received,
-                            continuation=continuation,
-                        )
+                if proposals or self.model_history is not None:
+                    message = assistant_message(
+                        encoded["output"],
+                        history_proposals if history_proposals is not None else proposals,
+                        received=received,
+                        continuation=continuation,
                     )
+                    if (
+                        self.model_history is not None
+                        and encoded["output"] is not None
+                        and not isinstance(encoded["output"], str)
+                    ):
+                        message["content"] = canonical(encoded["output"])
+                    run["messages"].append(message)
             self._commit(
                 run,
                 "decision_adopted",

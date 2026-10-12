@@ -109,7 +109,7 @@ def validate_manifest(manifest):
     if manifest["kernel"] == "temporal-3":
         if (
             type(manifest.get("binding_protocol")) is not int
-            or manifest.get("binding_protocol") not in (1, 2, 3, 4, 5, 6)
+            or manifest.get("binding_protocol") not in (1, 2, 3, 4, 5, 6, 7)
             or manifest.get("dispatch_admission") != "history-1"
         ):
             raise DefinitionMismatch("Unsupported Temporal binding/memory protocol")
@@ -152,6 +152,9 @@ def validate_manifest(manifest):
     from .temporal_decision_state import validate_continuation_protocol
 
     validate_continuation_protocol(manifest)
+    from .temporal_decision_state import validate_model_history_protocol
+
+    validate_model_history_protocol(manifest)
     if "workspace_binding_protocol" in manifest:
         if type(manifest["workspace_binding_protocol"]) is not int or manifest[
             "workspace_binding_protocol"
@@ -753,8 +756,14 @@ class TemporalRunState:
         ):
             signature = self.context_cache_signature()
             if signature != self.context_signature:
+                context_id = f"{self.run_id}:context:{self.node}:{self.decisions + 1}"
+                retry = getattr(self, "unadmitted_context_retries", {}).get(
+                    f"{self.node}:{self.decisions}:context", 0
+                )
+                if retry:
+                    context_id += f":retry:{retry}"
                 action = {
-                    "id": f"{self.run_id}:context:{self.node}:{self.decisions + 1}",
+                    "id": context_id,
                     "kind": "context",
                     "node": self.node,
                     "status": "executing",
@@ -861,6 +870,10 @@ class TemporalRunState:
         action = next(a for a in self.actions if a["id"] == action_id)
         self.active_action = None
         if not response.get("ok"):
+            from .temporal_context_read_state import recreate_unadmitted
+
+            if recreate_unadmitted(self, action, response):
+                return
             action["status"] = "failed"
             if self.state not in TERMINAL:
                 self.state, self.error = "failed", {"code": response.get("code", "context_failed")}
@@ -892,6 +905,16 @@ class TemporalRunState:
         from .temporal_session_tree_reads import adopt
 
         adopt(self, response)
+        if self.manifest.get("model_history_protocol") == 1:
+            from .model_history import validate_model_history
+
+            validate_model_history(
+                self.messages,
+                response["messages"],
+                allow_tool_result_projection=self.step_manifest["model_history"]["identity"].get(
+                    "allow_tool_result_projection", False
+                ),
+            )
         self.context_snapshot = detached(response)
         self.context_signature = self.context_cache_signature()
         action["status"], action["response"] = "completed", detached(response)
@@ -1041,6 +1064,9 @@ class TemporalRunState:
             from .temporal_decision_state import continuation_adoption
 
             continuation = continuation_adoption(self, response, received if received_v2 else None)
+            from .temporal_decision_state import model_history_proposal
+
+            history_proposal = model_history_proposal(self, response)
             calls = response["tool_calls"]
             proposals = []
             for i, call in enumerate(calls):
@@ -1085,20 +1111,52 @@ class TemporalRunState:
                 self.actions.extend(proposals)
                 from .model_continuation import assistant_message
 
-                self.messages.append(
-                    assistant_message(
-                        response["output"],
-                        proposals,
-                        received=received if received_v2 else None,
-                        continuation=continuation,
-                    )
+                native_proposals = proposals
+                if history_proposal is not None:
+                    native_proposals = [
+                        {
+                            "tool": raw["name"],
+                            "arguments": raw["arguments"],
+                            "call_id": actual["call_id"],
+                        }
+                        for raw, actual in zip(
+                            history_proposal["tool_calls"], proposals, strict=True
+                        )
+                    ]
+                message = assistant_message(
+                    response["output"],
+                    native_proposals,
+                    received=received if received_v2 else None,
+                    continuation=continuation,
                 )
+                if (
+                    history_proposal is not None
+                    and response["output"] is not None
+                    and not isinstance(response["output"], str)
+                ):
+                    message["content"] = canonical(response["output"])
+                self.messages.append(message)
                 self._emit(
                     "decision_adopted",
                     {"action_id": action_id, "proposed_actions": [a["id"] for a in proposals]},
                 )
             else:
                 result = final_output(response["output"], self.step["output_schema"])
+                if self.manifest.get("model_history_protocol") == 1:
+                    from .model_continuation import assistant_message
+
+                    message = assistant_message(
+                        response["output"],
+                        [],
+                        received=received if received_v2 else None,
+                        continuation=continuation,
+                    )
+                    # Preserve raw text/null; map finite non-text JSON to chat content.
+                    # The original received/proposed DTO keeps its JSON value type.
+                    if response["output"] is not None and not isinstance(response["output"], str):
+                        message["content"] = canonical(response["output"])
+                    self.messages.append(message)
+                    self._emit("decision_adopted", {"action_id": action_id, "proposed_actions": []})
                 from .temporal_completion_state import prepare as prepare_completion
 
                 if not prepare_completion(self, action, result):

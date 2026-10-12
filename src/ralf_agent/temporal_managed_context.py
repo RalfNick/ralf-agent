@@ -261,9 +261,17 @@ async def execute(runtime, request, *, dispatch_guard=None):
                 + evidence.get("session_data_references", [])
             )
             history, limit = request["messages"], request["step"]["max_context_chars"]
-            messages, identity = context.assemble(detached(history), detached(references), limit)
-            validate_context(messages, identity, limit)
-            plan = context.prepare(detached(history), detached(references), limit)
+            if runtime.model_history is not None:
+                from .temporal_context import assemble_history
+
+                messages, identity = assemble_history(runtime, history, references, limit)
+                plan = None
+            else:
+                messages, identity = context.assemble(
+                    detached(history), detached(references), limit
+                )
+                validate_context(messages, identity, limit)
+                plan = context.prepare(detached(history), detached(references), limit)
             return {
                 "ok": True,
                 "plan": detached(plan),
@@ -271,6 +279,12 @@ async def execute(runtime, request, *, dispatch_guard=None):
                 **evidence,
                 "offloads": context.offloads(history)
                 if isinstance(context, ManagedDataContext)
+                and (
+                    runtime.model_history is None
+                    or runtime.manifest["model_history"]["identity"].get(
+                        "allow_tool_result_projection", False
+                    )
+                )
                 else [],
                 "source_digest": digest(history),
             }
@@ -573,11 +587,15 @@ def accept_stage(state, action_id, response):
     if phase == "write":
         # An observed receipt is still read-verified; a lost receipt never authorizes put again.
         return
+    from .temporal_context_read_state import recreate_unadmitted
+
+    if phase == "plan" and recreate_unadmitted(state, action, response):
+        return
     if (
         phase in {"read", "verify"}
         and response.get("ok") is False
         and response.get("code") == "activity_outcome_unknown"
-        and state.manifest.get("binding_protocol") in (5, 6)
+        and state.manifest.get("binding_protocol") in (5, 6, 7)
         and state.step_manifest["managed_context"]["policy"].get("artifact_binding", {}).get("mode")
         == "ref"
         and action_id in getattr(state, "context_read_stages", {})
@@ -685,6 +703,16 @@ def accept_stage(state, action_id, response):
                 **state.session_context_fields(),
             },
         )
+        if state.manifest.get("model_history_protocol") == 1:
+            from .model_history import validate_model_history
+
+            validate_model_history(
+                state.messages,
+                response["messages"],
+                allow_tool_result_projection=state.step_manifest["model_history"]["identity"].get(
+                    "allow_tool_result_projection", False
+                ),
+            )
         stage["status"], stage["snapshot"] = "completed", response
         state.context_snapshot = response
         state.context_signature = state.context_cache_signature()

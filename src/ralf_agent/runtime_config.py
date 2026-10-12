@@ -32,6 +32,7 @@ COMPONENT_KINDS = frozenset(
         "limits",
         "stage_policy",
         "model_continuation",
+        "model_history",
     }
 )
 

@@ -76,3 +76,59 @@ def validate_prepared(builder, messages, max_chars):
     measurement = asdict(ContextMeasure(value.units, value.unit, value.estimated))
     validate_context(messages, {}, max_chars)
     return measurement
+
+
+def protect_history(runtime, history, messages):
+    """Pinned pure policy plus unconditional original-chain protection."""
+    from .model_history import validate_model_history
+    from .temporal_activities import _completed_none
+    from .temporal_state import detached
+
+    runtime.validate_release()
+    policy = runtime.model_history
+    _completed_none(
+        policy.validate(detached(history), detached(messages)), "Model history validation"
+    )
+    validate_model_history(
+        history,
+        messages,
+        allow_tool_result_projection=runtime.manifest["model_history"]["identity"].get(
+            "allow_tool_result_projection", False
+        ),
+    )
+    runtime.validate_release()
+
+
+def assemble_history(runtime, history, references, max_chars):
+    """Select references without discarding the accepted native interaction."""
+    from .temporal_activities import _close_lazy
+    from .temporal_state import detached
+
+    if runtime.model_history is None:
+        return assemble_context(runtime.context, history, references, max_chars)
+    from .model_history import validate_reference_evidence
+
+    # Validate original structured evidence before any replaceable policy can
+    # stringify native continuation into a seemingly ordinary reference excerpt.
+    validate_reference_evidence(references)
+    source = detached(history)
+    projected = source
+    projection = []
+    from .data_context import ManagedDataContext
+
+    if isinstance(runtime.context, ManagedDataContext) and runtime.manifest["model_history"][
+        "identity"
+    ].get("allow_tool_result_projection", False):
+        projected, projection = runtime.context.project_history(source)
+    value = runtime.model_history.assemble(
+        detached(projected), detached(references), max_chars, context=runtime.context
+    )
+    if type(value) not in {tuple, list} or len(value) != 2:
+        _close_lazy(value)
+        raise ValidationError("Model history must return a completed messages/manifest pair")
+    validate_context(value[0], value[1], max_chars)
+    protect_history(runtime, source, value[0])
+    identity = detached(value[1])
+    if projection:
+        identity["artifact_projection"] = detached(projection)
+    return detached(value[0]), identity

@@ -79,6 +79,7 @@ def valid_adoption(state, action, response):
             or len(canonical(messages)) > state.step["max_context_chars"]
         ):
             return False
+        protect_prepared_history(state, action, messages)
         tools = prepared["tools"]
         if type(tools) is not list:
             return False
@@ -118,7 +119,7 @@ def tool_defaults_registration(tools):
 
 
 def validate_continuation_protocol(manifest):
-    """Joint 6 extends original feature markers without implicitly enabling them."""
+    """Joint 6/7 retain original feature markers without implicitly enabling them."""
     from types import SimpleNamespace
 
     from jsonschema import Draft202012Validator
@@ -126,12 +127,12 @@ def validate_continuation_protocol(manifest):
     from .model_continuation import provider_continuation_identity
 
     fields = {"model_continuation_protocol", "provider_continuations", "continuation_tool_defaults"}
-    if manifest.get("binding_protocol") != 6 and not fields & set(manifest):
+    if manifest.get("binding_protocol") not in (6, 7) and not fields & set(manifest):
         return
     if (
         manifest.get("kernel") != "temporal-3"
         or type(manifest.get("binding_protocol")) is not int
-        or manifest["binding_protocol"] != 6
+        or manifest["binding_protocol"] not in (6, 7)
         or type(manifest.get("model_continuation_protocol")) is not int
         or manifest["model_continuation_protocol"] != 1
         or manifest.get("dispatch_admission") != "history-1"
@@ -236,6 +237,7 @@ def _prepared_receipt(state, action, receipt):
         or type(prepared["tools"]) is not list
     ):
         raise ValidationError("Model receipt lost its original prepared request")
+    protect_prepared_history(state, action, prepared["messages"])
     authorized = {
         canonical(
             {
@@ -358,3 +360,86 @@ def accept_adoption(state, action_id, response):
         state._reject_model(model, "validation_error")
         return
     state._accept_model_decision(model["id"], response, already_received=True)
+
+
+def validate_model_history_protocol(manifest):
+    fields = {"model_history_protocol", "model_history"}
+    if manifest.get("binding_protocol") != 7 and not fields & set(manifest):
+        return
+    registration = manifest.get("model_history")
+    if (
+        manifest.get("kernel") != "temporal-3"
+        or type(manifest.get("binding_protocol")) is not int
+        or manifest["binding_protocol"] != 7
+        or type(manifest.get("model_history_protocol")) is not int
+        or manifest["model_history_protocol"] != 1
+        or type(manifest.get("model_continuation_protocol")) is not int
+        or manifest["model_continuation_protocol"] != 1
+        or type(registration) is not dict
+        or set(registration) != {"identity", "implementation"}
+        or type(registration.get("identity")) is not dict
+        or not registration["identity"]
+        or type(registration["identity"].get("allow_tool_result_projection", False)) is not bool
+        or type(registration.get("implementation")) is not dict
+        or set(registration["implementation"]) != {"assemble", "validate"}
+        or any(
+            type(v) is not str or len(v) != 64 or any(c not in "0123456789abcdef" for c in v)
+            for v in registration["implementation"].values()
+        )
+        or len(canonical(registration).encode("utf-8")) > 65536
+    ):
+        raise DefinitionMismatch("Unsupported original complete model history protocol")
+
+
+def protect_prepared_history(state, action, messages):
+    if state.manifest.get("model_history_protocol") != 1:
+        return
+    from .model_history import validate_model_history
+
+    original = action.get("dispatch_request", {}).get("messages")
+    validate_model_history(
+        original,
+        messages,
+        allow_tool_result_projection=state.step_manifest["model_history"]["identity"].get(
+            "allow_tool_result_projection", False
+        ),
+    )
+
+
+def model_history_proposal(state, response):
+    """Verify pre-default accepted calls before constructing native assistant history."""
+    if state.manifest.get("model_history_protocol") != 1:
+        return None
+    from .harness import DecisionProposal
+    from .types import ToolCall
+
+    raw = response.get("history_proposal")
+    if (
+        type(raw) is not dict
+        or set(raw) != {"output", "tool_calls"}
+        or type(raw["tool_calls"]) is not list
+    ):
+        raise ValidationError("Complete history requires its original Harness proposal")
+    try:
+        DecisionProposal(raw["output"], tuple(ToolCall(**call) for call in raw["tool_calls"]))
+    except (TypeError, KeyError):
+        raise ValidationError("Complete history Harness proposal is malformed") from None
+    effective = [
+        {
+            **call,
+            "arguments": {
+                **state.manifest.get("continuation_tool_defaults", {})
+                .get(call["name"], {})
+                .get("defaults", {}),
+                **call["arguments"],
+            },
+        }
+        for call in raw["tool_calls"]
+    ]
+    if digest({"output": response["output"], "tool_calls": response["tool_calls"]}) != digest(
+        {"output": raw["output"], "tool_calls": effective}
+    ):
+        raise ValidationError("Complete history differs from original tool defaults")
+    if "continuation_proposal" in response and response["continuation_proposal"] != raw:
+        raise ValidationError("Complete history changed original continuation proposal")
+    return raw

@@ -537,6 +537,7 @@ def _workflow_runner():
             "jsonschema",
             "ralf_agent.temporal_bindings",
             "ralf_agent.temporal_context",
+            "ralf_agent.model_history",
             "ralf_agent.temporal_context_read_protocol",
             "ralf_agent.temporal_context_read_state",
             "ralf_agent.temporal_tool_execution",

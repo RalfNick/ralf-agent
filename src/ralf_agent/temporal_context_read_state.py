@@ -139,6 +139,18 @@ def observe(state, action_id, response, receiver):
     terminal = state.state in {"succeeded", "failed", "cancelled"}
     trial = copy.deepcopy(state)
     trial.state = "running"  # Validate late evidence by the same original receiver.
+    if (
+        state.manifest.get("model_history_protocol") == 1
+        and state.manifest.get("binding_protocol") == 7
+        and type(response) is dict
+        and response.get("ok") is False
+        and response.get("code") == "activity_outcome_unknown"
+        and record["phase"] in {"context", "plan"}
+        and action.get("dispatch_grant", {}).get("allowed") is not True
+    ):
+        # Fence the original Action before the receiver can recreate a safe read.
+        # A late Activity's admission must now be denied by this same History.
+        trial.context_read_stages[action_id]["fenced"] = True
     rejected, code = False, None
     try:
         if type(response) is not dict or type(response.get("ok")) is not bool:
@@ -181,3 +193,30 @@ def observe(state, action_id, response, receiver):
         record["fenced"] = True
     _finish(state, record, action)
     state._emit("context_read_response_observed", {"action_id": action_id})
+
+
+def recreate_unadmitted(state, action, response):
+    """One new read after original History proves/fences absent dispatch permission."""
+    record = getattr(state, "context_read_stages", {}).get(action["id"], {})
+    phase = record.get("phase")
+    if (
+        state.manifest.get("binding_protocol") != 7
+        or state.manifest.get("model_history_protocol") != 1
+        or state.state in {"succeeded", "failed", "cancelled"}
+        or response.get("ok") is not False
+        or response.get("code") != "activity_outcome_unknown"
+        or phase not in {"context", "plan"}
+        or record.get("fenced") is not True
+        or action.get("dispatch_grant", {}).get("allowed") is True
+    ):
+        return False
+    retries = getattr(state, "unadmitted_context_retries", {})
+    key = f"{state.node}:{state.decisions}:{phase}"
+    if retries.get(key, 0) >= 1:
+        return False
+    retries[key] = 1
+    state.unadmitted_context_retries = retries
+    action["status"] = "not_dispatched"
+    state.active_action = None
+    state._emit("context_read_recreated", {"action_id": action["id"], "phase": phase})
+    return True

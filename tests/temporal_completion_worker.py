@@ -169,16 +169,18 @@ def runtime(root, queue, kind, managed):
                 (root / "read-ready").write_text(request["run_id"])
                 await asyncio.Event().wait()
 
-        async def prepare_context(self, request):
+        async def prepare_context(self, request, *, dispatch_guard=None, on_end=None):
             if any(
                 isinstance(m.get("content"), str)
                 and m["content"].startswith("Completion verification:")
                 for m in request["messages"]
             ) and not any(m["role"] == "tool" for m in request["messages"]):
                 await self.gate(request, "retry")
-            return await super().prepare_context(request)
+            return await super().prepare_context(
+                request, dispatch_guard=dispatch_guard, on_end=on_end
+            )
 
-        async def manage_context(self, request, *, dispatch_guard=None):
+        async def manage_context(self, request, *, dispatch_guard=None, on_end=None):
             if (
                 request["phase"] == "plan"
                 and any(
@@ -189,7 +191,9 @@ def runtime(root, queue, kind, managed):
                 and not any(m["role"] == "tool" for m in request["messages"])
             ):
                 await self.gate(request, "retry")
-            return await super().manage_context(request, dispatch_guard=dispatch_guard)
+            return await super().manage_context(
+                request, dispatch_guard=dispatch_guard, on_end=on_end
+            )
 
         async def manage_memory(self, request, *, dispatch_guard=None):
             if request["phase"] == "plan":

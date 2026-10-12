@@ -82,6 +82,10 @@ jobs:
           python -m ralf_agent.temporal_profile_example --data-dir "$RUNNER_TEMP/temporal-profile-config"
           python -m pytest -q -W error -p no:cacheprovider -c /dev/null "$RUNNER_TEMP/session-contracts/tests/test_temporal_catalog_assembly.py" "$RUNNER_TEMP/session-contracts/tests/test_temporal_catalog_lifetime.py" "$RUNNER_TEMP/session-contracts/tests/test_temporal_profile_host.py" "$RUNNER_TEMP/session-contracts/tests/test_temporal_host_lifetime.py" "$RUNNER_TEMP/session-contracts/tests/test_temporal_host_routing.py" "$RUNNER_TEMP/session-contracts/tests/test_temporal_host_sessions.py" "$RUNNER_TEMP/session-contracts/tests/test_temporal_journal_configuration.py" "$RUNNER_TEMP/session-contracts/tests/test_temporal_catalog_example.py" "$RUNNER_TEMP/session-contracts/tests/test_temporal_host_review.py" "$RUNNER_TEMP/session-contracts/tests/test_temporal_startup_options.py" "$RUNNER_TEMP/session-contracts/tests/test_temporal_host_preflight.py" "$RUNNER_TEMP/session-contracts/tests/test_skills.py" "$RUNNER_TEMP/session-contracts/tests/test_filesystem_skills.py" "$RUNNER_TEMP/session-contracts/tests/test_skill_tools.py" "$RUNNER_TEMP/session-contracts/tests/test_skill_configuration.py" "$RUNNER_TEMP/session-contracts/tests/test_skill_execution.py" "$RUNNER_TEMP/session-contracts/tests/test_skill_review.py"
           python -m ralf_agent.temporal_catalog_example --data-dir "$RUNNER_TEMP/temporal-catalog-config"
+      - name: Installed complete model history contracts outside checkout
+        working-directory: ${{ runner.temp }}
+        run: |
+          python -m pytest -q -W error -p no:cacheprovider -c /dev/null "$RUNNER_TEMP/session-contracts/tests/test_model_history.py" "$RUNNER_TEMP/session-contracts/tests/test_local_model_history.py" "$RUNNER_TEMP/session-contracts/tests/test_model_history_assembly.py" "$RUNNER_TEMP/session-contracts/tests/test_model_history_process_recovery.py" "$RUNNER_TEMP/session-contracts/tests/test_temporal_model_history.py"
       - name: Installed fixed business tool contracts and CLI starter outside checkout
         working-directory: ${{ runner.temp }}
         run: |
@@ -214,6 +218,10 @@ jobs:
           mkdir -p "$RUNNER_TEMP/artifact-contracts"
           cp -R "$GITHUB_WORKSPACE/tests" "$RUNNER_TEMP/artifact-contracts/tests"
           python -m pytest -q -W error -p no:cacheprovider -c /dev/null "$RUNNER_TEMP/artifact-contracts/tests/test_artifact_binding_temporal.py" "$RUNNER_TEMP/artifact-contracts/tests/test_artifact_binding_temporal_review.py" "$RUNNER_TEMP/artifact-contracts/tests/test_artifact_binding_temporal_service.py" "$RUNNER_TEMP/artifact-contracts/tests/test_artifact_binding_lifetime_service.py"
+      - name: Installed complete final history and Worker recovery outside checkout
+        working-directory: ${{ runner.temp }}
+        run: |
+          python -m pytest -q -W error -p no:cacheprovider -c /dev/null "$RUNNER_TEMP/artifact-contracts/tests/test_temporal_model_history.py" "$RUNNER_TEMP/artifact-contracts/tests/test_temporal_model_history_service.py"
       - name: Stop task-owned Temporal Service
         if: always()
         run: |

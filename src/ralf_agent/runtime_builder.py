@@ -279,6 +279,18 @@ class ComponentRegistry:
             lambda c, ctx: True,
             validator=lambda c: _fields(c, {}),
         )
+        from .model_history import CompleteModelHistory
+
+        def complete_history(config):
+            _fields(config, {"allow_tool_result_projection"})
+            return CompleteModelHistory(**config)
+
+        self.register(
+            "model_history",
+            "complete",
+            lambda c, ctx: complete_history(c),
+            validator=lambda c: complete_history(c) and None,
+        )
         from .agent_limits import FixedAgentLimits
         from .completion import SchemaCompletionVerifier, ToolReceiptVerifier
 
@@ -668,6 +680,10 @@ class RuntimeBuilder:
         from .query_factories import preflight_query_providers
 
         preflight_query_providers(profile)
+        if "model_history" in profile.components and "model_continuation" not in profile.components:
+            raise ValidationError(
+                "Model history requires explicit model_continuation configuration"
+            )
         if "model_continuation" not in profile.components and any(
             declaration["adapter"] == "gemini-functions"
             for declaration in [

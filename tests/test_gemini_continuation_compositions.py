@@ -119,8 +119,9 @@ class HostProvider:
 
 @pytest.mark.parametrize("kind", ["graph", "team", "plan", "nested"])
 @pytest.mark.parametrize("approval", [False, True])
+@pytest.mark.parametrize("complete_history", [False, True])
 def test_signed_native_groups_and_ids_survive_composite_approval_and_reconstruction(
-    tmp_path, kind, approval
+    tmp_path, kind, approval, complete_history
 ):
     async def run():
         requests, effects, approved = [], [], {}
@@ -185,6 +186,11 @@ def test_signed_native_groups_and_ids_survive_composite_approval_and_reconstruct
                     tools=tools,
                     binding_catalog=catalog,
                     model_continuation=True,
+                    **(
+                        {"model_history": __import__("ralf_agent").CompleteModelHistory()}
+                        if complete_history
+                        else {}
+                    ),
                 )
 
             with open_engine() as engine:

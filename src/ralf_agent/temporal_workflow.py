@@ -11,6 +11,7 @@ from datetime import timedelta
 from temporalio import workflow
 from temporalio.common import RetryPolicy
 from temporalio.exceptions import ActivityError, ApplicationError
+from temporalio.exceptions import TimeoutError as ActivityTimeoutError
 
 with workflow.unsafe.imports_passed_through():
     from . import (
@@ -267,7 +268,14 @@ class TemporalRunWorkflow:
                     self.state.accept_model(action["id"], response)
                 else:
                     self.state.accept_tool(action["id"], response)
-            except ActivityError:
+            except ActivityError as exc:
+                complete_history_read = (
+                    self.state.manifest.get("binding_protocol") == 7
+                    and self.state.manifest.get("model_history_protocol") == 1
+                    and owns_context_read(self.state.manifest, action)
+                    and action.get("phase") in {"context", "plan"}
+                )
+                context_timeout = isinstance(exc.cause, ActivityTimeoutError)
                 # A server timeout is not evidence that a Python thread or
                 # downstream request stopped. Preserve the dispatched identity.
                 if action["kind"] == "managed_session":
@@ -301,13 +309,23 @@ class TemporalRunWorkflow:
                         action["id"],
                         {
                             "ok": False,
-                            "code": "activity_outcome_unknown",
+                            "code": "context_failed"
+                            if complete_history_read and not context_timeout
+                            else "activity_outcome_unknown",
                             "dispatched": action["phase"] in {"write", "summary"},
                             "execution_uncertain": action["phase"] == "write",
                         },
                     )
                 elif action["kind"] == "context":
-                    self.state.accept_context(action["id"], {"ok": False, "code": "context_failed"})
+                    self.state.accept_context(
+                        action["id"],
+                        {
+                            "ok": False,
+                            "code": "activity_outcome_unknown"
+                            if complete_history_read and context_timeout
+                            else "context_failed",
+                        },
+                    )
                 elif action["kind"] == "model_adoption":
                     self.state.accept_model_adoption(
                         action["id"], {"ok": False, "code": "activity_outcome_unknown"}

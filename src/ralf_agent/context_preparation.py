@@ -335,7 +335,11 @@ async def recover_terminal_context(engine, run_id):
 async def prepare_context(engine, run_id, step, context):
     from .context_artifacts import prepare
 
-    if not await prepare(engine, run_id, context):
+    history_registration = engine._history_registration()
+    project = history_registration is None or history_registration["identity"].get(
+        "allow_tool_result_projection", False
+    )
+    if project and not await prepare(engine, run_id, context):
         return None
     run = engine._authorized(run_id)
     validate_journal(engine, run)
@@ -355,7 +359,7 @@ async def prepare_context(engine, run_id, step, context):
         }
         plan = (
             context.prepare(run["messages"], refs, step["max_context_chars"])
-            if isinstance(context, ManagedContextPipeline)
+            if isinstance(context, ManagedContextPipeline) and history_registration is None
             else None
         )
         plan = engine._component_result(plan, (dict, type(None)), "Context preparation")

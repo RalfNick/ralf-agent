@@ -137,6 +137,7 @@ from .middleware_tools import MiddlewareToolExecutor
 from .model_compatibility import evaluate_model_compatibility
 from .model_context import FrozenContextSummarizer, ManagedModelSummarizer, ManagedSummary
 from .model_continuation import ContinuedModelResponse, ModelContinuation
+from .model_history import CompleteModelHistory, ModelHistoryPolicy
 from .model_native import AnthropicProvider, GeminiProvider
 from .model_protocol import ModelCapabilities, ModelStreamEvent, StreamingModelProvider
 from .model_query import ModelQueryTransform
@@ -331,7 +332,7 @@ from .workflow import (
     WorkflowSelection,
 )
 
-__version__ = "0.1.0.dev87"
+__version__ = "0.1.0.dev88"
 from .binding_artifacts import ArtifactBindingResource, ArtifactView
 from .binding_sandbox import SandboxBindingResource
 from .docker_sandbox import DockerSandbox
@@ -447,6 +448,8 @@ __all__ = [
     "GeminiFunctionProvider",
     "ContinuedModelResponse",
     "ModelContinuation",
+    "ModelHistoryPolicy",
+    "CompleteModelHistory",
     "DeepSeekChatProvider",
     "ModelResponse",
     "ModelRequest",

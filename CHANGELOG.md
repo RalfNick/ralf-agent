@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.0.dev88 — Complete adopted model history preview
+
+- Add pure, replaceable `ModelHistoryPolicy` and explicit `CompleteModelHistory` configuration for Local and Temporal joint 7.
+- Persist original final assistant/continuation once; verifier retries append feedback without rebuilding normalized model output.
+- Protect complete native history before dispatch, fail on budget exhaustion and require explicit tool-result projection permission. Retain artifact authority and reject opaque continuation in reference evidence.
+- Keep old default and dev87 continuation contracts. Cross Session transcripts, other reasoning adapters, live model quality and complete R01–R26 remain open.
+
 ## 0.1.0.dev87 — Native model continuation preview
 
 - Add explicit `GeminiFunctionProvider` and typed continuation evidence while preserving the original text Provider and three-field `ModelResponse`.

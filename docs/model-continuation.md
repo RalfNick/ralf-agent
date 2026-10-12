@@ -1,5 +1,8 @@
 # 模型续接与 Gemini 函数工具
 
+dev88 新增显式 [完整模型历史](model-history.md)，保护工具轮、最终响应和验证重试的原交互。
+原 dev87 续接模式仍保留旧行为；跨 Session Turn 原生 transcript 尚未交付。
+
 `GeminiFunctionProvider` 是显式原生函数适配器，提供文本、客户端函数调用和完整 SSE。
 原 `GeminiProvider`／`gemini-content` 保持文本模式。工具执行、审批、预算和效果恢复由
 原 Local／Temporal 引擎负责；Provider 不执行工具，也不自动重试 HTTP 请求。

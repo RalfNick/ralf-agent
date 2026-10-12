@@ -156,12 +156,30 @@ class TemporalRuntime:
         tool_execution=None,
         runtime_profile=None,
         model_continuation=False,
+        model_history=None,
     ):
         from .types import runtime_profile_identity
 
         if type(model_continuation) is not bool:
             raise ValidationError("Model continuation opt-in requires an ordinary boolean")
         self.model_continuation = self._model_continuation_pin = model_continuation
+        if model_history is not None and not model_continuation:
+            raise ValidationError("Complete model history requires model continuation enablement")
+        self.model_history = self._model_history_pin = model_history
+        from .task_controls import _binding
+
+        self._model_history_methods = (
+            None
+            if model_history is None
+            else {
+                name: _binding(getattr(model_history, name, None))
+                for name in ("assemble", "validate")
+            }
+        )
+        if model_history is not None:
+            from .model_history import model_history_registration
+
+            self._model_history_registration = model_history_registration(model_history)
         if type(artifact_bindings) is not bool:
             raise ValidationError("Artifact binding opt-in requires an ordinary boolean")
         if artifact_bindings and binding_catalog is None:
@@ -670,6 +688,14 @@ class TemporalRuntime:
                 },
                 continuation_tool_defaults=tool_defaults_registration(self.tools),
             )
+        if self.model_history is not None:
+            from .model_history import model_history_registration
+
+            result.update(
+                binding_protocol=7,
+                model_history_protocol=1,
+                model_history=model_history_registration(self.model_history),
+            )
         return result
 
     @property
@@ -692,6 +718,20 @@ class TemporalRuntime:
         from .task_controls import _binding
         from .temporal_components import orchestration_identity
 
+        if self.model_history is not self._model_history_pin:
+            raise DefinitionMismatch("Model history policy changed")
+        if self.model_history is not None:
+            from .model_history import model_history_registration
+
+            if (
+                any(
+                    _binding(getattr(self.model_history, name, None)) != method
+                    for name, method in self._model_history_methods.items()
+                )
+                or model_history_registration(self.model_history)
+                != self._model_history_registration
+            ):
+                raise DefinitionMismatch("Model history policy registration changed")
         if self.model_continuation is not self._model_continuation_pin:
             raise DefinitionMismatch("Model continuation enablement changed")
         if self.model_continuation:
@@ -908,8 +948,10 @@ class TemporalRuntime:
                     detached(evidence["context_identity"]),
                 )
             else:
-                messages, context_identity = self.context.assemble(
-                    detached(request["messages"]), [], step.max_context_chars
+                from .temporal_context import assemble_history
+
+                messages, context_identity = assemble_history(
+                    self, detached(request["messages"]), [], step.max_context_chars
                 )
             if (
                 not isinstance(messages, list)
@@ -928,6 +970,10 @@ class TemporalRuntime:
                     raise ValidationError("Pure Harness.prepare requires concrete ModelRequest")
                 validate_prepared_tools(prepared.tools, self.tools.descriptions(step.tools))
             frozen = ModelRequest(prepared.messages, prepared.tools)
+            if self.model_history is not None:
+                from .temporal_context import protect_history
+
+                protect_history(self, request["messages"], frozen.messages)
             prepared_evidence = (
                 detached({"messages": frozen.messages, "tools": frozen.tools})
                 if self._manifest.get("decision_protocol") == 1 or self.model_continuation
@@ -1142,6 +1188,7 @@ class TemporalRuntime:
                 **evidence,
                 "usage": usage,
                 **({"continuation_proposal": raw_proposal} if continuation is not None else {}),
+                **({"history_proposal": raw_proposal} if self.model_history is not None else {}),
             }
         except Exception as exc:
             return {"ok": False, **base, "code": _code(exc, "validation_error")}
@@ -1255,10 +1302,10 @@ class TemporalRuntime:
             from .temporal_session_data import load as load_session
 
             evidence.update(await load_session(self, request))
-            from .temporal_context import assemble_context
+            from .temporal_context import assemble_history
 
-            messages, identity = assemble_context(
-                self.context,
+            messages, identity = assemble_history(
+                self,
                 detached(request["messages"]),
                 evidence["references"]
                 + evidence.get("session_references", [])
