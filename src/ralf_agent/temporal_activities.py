@@ -151,6 +151,7 @@ class TemporalRuntime:
         session_topology=None,
         context_reads=False,
         context_execution=None,
+        tool_execution=None,
         runtime_profile=None,
     ):
         from .types import runtime_profile_identity
@@ -177,6 +178,13 @@ class TemporalRuntime:
             ContextExecutionRegistration(self.context_execution) if context_reads else None
         )
         self._context_read_closing = False
+        from .temporal_tool_execution import ToolExecutionRegistration
+
+        self.tool_execution = self._tool_execution_owner = tool_execution
+        self._tool_execution_pin = (
+            ToolExecutionRegistration(tool_execution) if tool_execution is not None else None
+        )
+        self._tool_execution_closing = False
         if type(enable_sessions) is not bool:
             raise ValidationError("enable_sessions requires an explicit boolean")
         self.enable_sessions = enable_sessions
@@ -558,6 +566,10 @@ class TemporalRuntime:
             }
             if bridges:
                 result["context_read_metadata_bridges"] = bridges
+        if self._tool_execution_pin is not None:
+            from .temporal_tool_execution import publish as publish_tool_execution
+
+            result = publish_tool_execution(result, self._tool_execution_pin)
         return result
 
     @property
@@ -1060,12 +1072,17 @@ class TemporalRuntime:
 
     async def wait_context_executions(self, *, wait_timeout=30):
         from .temporal_context_read_runtime import wait
+        from .temporal_tool_execution_runtime import wait as wait_tools
 
-        return await wait(self, wait_timeout=wait_timeout)
+        return await wait(self, wait_timeout=wait_timeout) and await wait_tools(
+            self, wait_timeout=wait_timeout
+        )
 
     async def close_context_execution(self, *, wait_timeout=30):
         from .temporal_context_read_runtime import close
+        from .temporal_tool_execution_runtime import close as close_tools
 
+        await close_tools(self, wait_timeout=wait_timeout)
         return await close(self, wait_timeout=wait_timeout)
 
     async def manage_session(self, request, *, dispatch_guard=None, on_end=None):
@@ -1124,7 +1141,14 @@ class TemporalRuntime:
         self.validate_release(request["runtime_manifest"])
         return envelope, tool
 
-    async def execute_tool(self, request: dict) -> dict:
+    async def execute_tool(self, request: dict, *, dispatch_guard=None, on_end=None) -> dict:
+        if "tool_execution_protocol" in self._manifest:
+            from .temporal_tool_execution_runtime import execute
+
+            return await execute(self, request, dispatch_guard=dispatch_guard, on_end=on_end)
+        return await self._execute_tool(request)
+
+    async def _execute_tool(self, request: dict) -> dict:
         dispatched = False
         try:
             envelope, tool = self._envelope(request)
@@ -1257,6 +1281,11 @@ def registered_activities(runtime, client=None):
 
     @activity.defn(name=TOOL_ACTIVITY)
     async def tool(request: dict) -> dict:
+        if "tool_execution_protocol" in request["runtime_manifest"]:
+            from .temporal_tool_execution_activities import callbacks
+
+            guard, ended = callbacks(client, request, activity.info())
+            return await runtime.execute_tool(request, dispatch_guard=guard, on_end=ended)
         return await runtime.execute_tool(request)
 
     @activity.defn(name=RECONCILE_ACTIVITY)

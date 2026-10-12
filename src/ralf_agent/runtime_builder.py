@@ -492,6 +492,9 @@ class ComponentRegistry:
         from .temporal_journal_factories import register_effect_journal
 
         register_effect_journal(self)
+        from .tool_execution_factories import register_tool_execution
+
+        register_tool_execution(self)
         from .cli_tool_factories import register_cli_tools
 
         register_cli_tools(self)
@@ -529,6 +532,7 @@ class ComponentRegistry:
                 "vector_index",
                 "fact_index_catalog",
                 "effect_journal",
+                "tool_execution",
             }
             or not isinstance(name, str)
             or not name.strip()

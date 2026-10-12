@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.0.dev81 — Actual Tool execution lifetime
+
+- Add an explicit replaceable ToolExecutionPort and bounded tracked owner; defaults remain unchanged.
+- Temporal original History separates actual execution end from effect receipt, gates further business dispatch, and retains cancellation terminal state.
+- Temporal-only Profile factories own cleanup; injected owners are borrowed. Worker and native workspace resources drain actual handlers and original end acknowledgements before close.
+- Verify six native write compositions and two injected receipt-loss/restart scenarios with real Temporal and PostgreSQL. Final acceptance is recorded separately.
+
 ## 0.1.0.dev80 — Standard Skill documents
 
 - Add replaceable pure SkillDocumentParser/ParsedSkillDocument, optional bounded safe YAML and frozen explicit SKILL.md File catalog.

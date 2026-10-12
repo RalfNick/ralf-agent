@@ -49,11 +49,15 @@ class TemporalProfile:
         binding_components=None,
         execution=None,
     ):
-        journal = None
-        if type(components) is dict and "effect_journal" in components:
-            journal = component_declaration(components["effect_journal"])
+        temporal_components = {}
+        if type(components) is dict:
+            temporal_components = {
+                key: component_declaration(value)
+                for key, value in components.items()
+                if key in {"effect_journal", "tool_execution"}
+            }
             components = {
-                key: value for key, value in components.items() if key != "effect_journal"
+                key: value for key, value in components.items() if key not in temporal_components
             }
         original = RuntimeProfile(name, version, providers, components, binding_components)
         if set(original.components) & LOCAL_COMPONENTS:
@@ -86,8 +90,7 @@ class TemporalProfile:
             "components": original.components,
             "execution": flags,
         }
-        if journal is not None:
-            payload["components"]["effect_journal"] = journal
+        payload["components"].update(temporal_components)
         if original.binding_components is not None:
             payload["binding_components"] = original.binding_components
         object.__setattr__(self, "name", name)

@@ -527,6 +527,8 @@ def _workflow_runner():
             "ralf_agent.temporal_context",
             "ralf_agent.temporal_context_read_protocol",
             "ralf_agent.temporal_context_read_state",
+            "ralf_agent.temporal_tool_execution",
+            "ralf_agent.temporal_tool_execution_state",
             "ralf_agent.temporal_memory_state",
             "ralf_agent.temporal_facts_state",
             "ralf_agent.temporal_knowledge_state",

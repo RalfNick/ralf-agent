@@ -34,3 +34,27 @@ History replay 必须通过。记录业务状态、quiescent、未知效果和�
 本批另外允许独立处理 dev80 两项文档 Minor：明确默认 YAML merge key 限制，并恢复历史 dev79 段落标题；它们不改解析行为。
 产品保持 dev80，所有必要实际场景通过后才升级 dev81。全量／全新安装／固定源码包及旧兼容门槛继续沿原流程验收。
 Sandbox／Runner／selector／自动目录阶段／治理／真实质量仍是后续能力，完整 R01–R26 保持 ACTIVE。
+
+追加两项明确的回执接收边界故障注入（Agent／Graph）：原始 PostgreSQL 意图真实保存，测试代理仅在原 Assembly 退出前拒绝 received，不伪造业务或效果；新 Worker 向原生 journal 查询真实文件回执并更新原 History。它不代表实际 PostgreSQL 服务崩溃验证。其余六类默认后端生命周期证据独立保留。
+
+## 发现缺口后的版本化工具结束协议（Task2 前置）
+
+真实故障注入证明：回执已采纳、预算unknown=0、state=cancelled，但原协议有意保留remote_uncertain，因为查询不证明旧handler停止。不得直接清除此标志。需要显式的原History工具实际结束证据。
+
+提供可替换 `ToolExecutionPort`（普通固定identity及async execute(operation, *, proof, on_end=None)/wait(*, wait_timeout=30)/aclose(*, wait_timeout=30)），默认 `ToolExecutionOwner(*, version, max_calls=8)`复用既有ContextExecutionOwner的真实async任务／委派线程／通知拥有，不增加业务状态机。max_calls为1..256，包含尚未结束或未获History确认的调用；资源owned/borrowed由原装配账本负责。
+
+TemporalRuntime增加显式tool_execution=None注入。Temporal Profile新增仅Temporal支持的 `tool_execution` 组件，adapter=tracked，config仅version（必填）和max_calls（默认8）；纯预检先于数据／文件／Worker分配。Local不接受此组件；默认未配置的Manifest／DTO／22模板保持原字节。
+
+启用时在原temporal-3 Manifest发布 `tool_execution_protocol`：精确version整数1、owner普通有界identity、execute/wait/aclose各方法固定实现摘要。整体至多64KiB，普通JSON最多4096值／深度16／标量UTF8总64KiB；不接受惰性方法或对象复制钩子。旧Worker必须在任何Activity/model/tool前拒绝新协议。
+
+原History在工具派发意图内保存原Action、请求摘要、执行epoch及结束状态。只给启用的原tool envelope增加原release_digest；原Scope/run/action/attempt/effect/operation/manifest均保留。执行前通过专用 `admit_tool_dispatch` Update复核原请求／当前取消状态；同一实际operation不执行两次。容量拒绝与取消在开始前发生时必须给准确未开始证据，不能留假活动记录。
+
+真实Owner保持业务operation及实际线程，观察者取消不销毁它们。实际全部退出后，向固定原Workflow/run_id/namespace及Scope提交专用 `tool_execution_ended` Update，proof精确scope/action_id/release_digest/request_digest/execution_epoch。History严格比对原意图，幂等采纳，拒绝错Scope/Action/摘要/epoch和无意图证明；RPC取消／丢失应重试查询/同一结束通知，禁止补造结束。借用Client或身份变化不能转向其他Workflow。
+
+效果回执与实际停止证据独立。查询可确认效果／结清预算，但不能独自清除执行未知；原Tool结束证明才清除它自己拥有的停止未知，保留模型／其他阶段的不确定性和未核验效果。新协议的quiescent及后续业务派发需要所有原Tool实际结束；取消保持终态，迟到回执或结束不能改为success。原ACK／reconcile在终态可继续，不创建新业务Action。原记录在History持久化，Worker重启不重算；新增诊断tool_executions只在启用发布出现。
+
+Assembly在停止Worker／关闭Source、Root、客户端前排空原ToolOwner及结束通知；零等待失败可重试且保持原租约。单独SDK调用未提供固定Client／结束回调不得启动该协议下的工具。此功能属于执行生命周期；不改变Source2效果语义，不提供Sandbox或任意外部Peer停止保证。
+
+追加验收：公共默认owner无SDK核心可用、自定义owner注入／恶意惰性／身份变化、纯History结束顺序／幂等／错证明／未知效果与实际结束分别门禁、实际Agent/Graph丢失回执并重启后原查询恢复停止确认，以及真实旧80Worker新marker执行前拒绝。保持原默认六类与旧80双向恢复验收。
+
+兼容门槛细化：旧80忽略未知Manifest扩展键，因此仅新增marker不足以拒绝。显式工具生命周期发布使用temporal-3／binding_protocol=3，并必须携带tool_execution_protocol1。新代码兼容原1/2（新marker缺席）；既有Context read marker在新3发布仍保持它自己version1，组合验证扩展到3；发布工具marker在原Context／数据发布之后，旧80在已知binding门槛拒绝，不能靠未知字段猜测。

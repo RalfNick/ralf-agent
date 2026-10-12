@@ -106,7 +106,7 @@ def validate_manifest(manifest):
         raise DefinitionMismatch("Unsupported Temporal runtime release")
     if manifest["kernel"] == "temporal-3":
         if (
-            manifest.get("binding_protocol") not in (1, 2)
+            manifest.get("binding_protocol") not in (1, 2, 3)
             or manifest.get("dispatch_admission") != "history-1"
         ):
             raise DefinitionMismatch("Unsupported Temporal binding/memory protocol")
@@ -125,6 +125,9 @@ def validate_manifest(manifest):
     from .temporal_context_read_protocol import validate_protocol as validate_context_reads
 
     validate_context_reads(manifest)
+    from .temporal_tool_execution import validate_protocol as validate_tool_execution
+
+    validate_tool_execution(manifest)
     validate_facts_protocol(manifest)
     validate_knowledge_protocol(manifest)
     validate_session_protocol(manifest)
@@ -331,6 +334,7 @@ class TemporalRunState:
         self.session_stages, self.pending_session, self.session_recovery = {}, None, []
         self.managed_context_stages = {}
         self.context_read_stages = {}
+        self.tool_executions = {}
         self.context_artifact_dispatches = {}
         self.context_artifact_receipts = {}
         from .temporal_managed_context import check_scope
@@ -518,6 +522,7 @@ class TemporalRunState:
         return (
             self.active_action is None
             and not self.remote_uncertain
+            and all(value["execution_stopped"] for value in self.tool_executions.values())
             and (
                 self.manifest["kernel"] != "temporal-3"
                 or self.budget["reserved"] == self.budget["unknown"] == 0
@@ -594,6 +599,11 @@ class TemporalRunState:
                 ),
                 "evidence_ack_pending": bool(self.pending_acks or self.active_evidence_ack),
                 "deferred_evidence_acks": len(self.deferred_acks),
+                **(
+                    {"tool_executions": detached(list(self.tool_executions.values()))}
+                    if "tool_execution_protocol" in self.manifest
+                    else {}
+                ),
             },
         }
 
@@ -644,6 +654,11 @@ class TemporalRunState:
             "tool_manifest": self.manifest["tools"][action["tool"]],
             "arguments": detached(action["arguments"]),
             "operation_digest": action["digest"],
+            **(
+                {"release_digest": self.release_digest}
+                if "tool_execution_protocol" in self.manifest
+                else {}
+            ),
         }
 
     def next_operation(self):
@@ -664,6 +679,8 @@ class TemporalRunState:
             if operation is not None:
                 return operation
         if self.state in TERMINAL:
+            return None
+        if any(not value["execution_stopped"] for value in self.tool_executions.values()):
             return None
         if str(self.node) in self.session_stages:
             # An accepted completion already owns this node. A held save may
@@ -697,7 +714,9 @@ class TemporalRunState:
                 return None
             if not self._reserve(action, manifest["cost"]):
                 return None
-            return action, self.envelope(action)
+            from .temporal_tool_execution_state import prepare
+
+            return action, prepare(self, action, self.envelope(action))
         if self.decisions >= self.step["max_decisions"]:
             self.state, self.error = "failed", {"code": "decision_limit"}
             self._emit("run_failed", self.error)
@@ -887,13 +906,30 @@ class TemporalRunState:
 
     def operation_unknown(self, action_id, code):
         action = next(a for a in self.actions if a["id"] == action_id)
+        from .temporal_tool_execution_state import unknown
+
+        unknown(self, action_id)
         action["status"], action["attempts"][0]["status"] = "outcome_unknown", "unknown"
         self.reservations[action["attempts"][0]["id"]]["status"] = "unknown"
         self.active_action, self.remote_uncertain = None, True
+        if action_id in self.tool_executions:
+            from .temporal_tool_execution_state import refresh
+
+            refresh(self)
         if self.state not in TERMINAL:
             self.state = "waiting_reconciliation" if action["kind"] == "tool" else "failed"
             self.error = {"code": code, "action_id": action_id}
         self._emit("action_outcome_unknown", {"action_id": action_id, "code": code})
+
+    def admit_tool_dispatch(self, payload):
+        from .temporal_tool_execution_state import admit
+
+        return admit(self, payload)
+
+    def tool_execution_ended(self, payload):
+        from .temporal_tool_execution_state import ended
+
+        return ended(self, payload)
 
     def accept_failure(self, action_id, response):
         if response.get("dispatched", True):
@@ -1165,7 +1201,11 @@ class TemporalRunState:
                 "source": response.get("source", "tool-handler"),
             }
         )
-        if not reconciled:
+        if "tool_execution_protocol" in self.manifest:
+            from .temporal_tool_execution_state import refresh
+
+            refresh(self)
+        elif not reconciled:
             # A real completed Activity proves its awaited handler returned. A
             # query/operator receipt alone never proves a lost handler stopped.
             self.remote_uncertain = any(a["status"] == "outcome_unknown" for a in self.actions)

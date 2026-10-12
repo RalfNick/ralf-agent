@@ -95,6 +95,7 @@ with TemporaryDirectory() as directory:
 `metadata.version` 若提供须为非空字符串，最多256字节；否则为 `1`。
 支持引号、YAML 块文本、Unicode 内容、UTF-8 BOM／CRLF，正文逐字保留。
 重复或非字符串键、非安全 tag、多 YAML 文档、别名循环和无效类型拒绝。
+默认格式明确拒绝 YAML merge key（`<<`）；请展开为普通元数据字段，或使用应用自定义解析器。
 
 默认最多100份／单文件1MiB，可设为最多1000份／16MiB；原文件总计64MiB，读取前检查剩余容量。
 frontmatter 最多64KiB，容器深度16、别名32、解析事件4096；别名展开在复制前限制为4096个值／64KiB标量 UTF-8 内容。

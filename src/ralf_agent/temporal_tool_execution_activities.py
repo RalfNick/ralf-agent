@@ -1,0 +1,62 @@
+"""Pinned original SDK Workflow callbacks for actual Tool execution lifetime."""
+
+import uuid
+
+from .errors import DefinitionMismatch
+from .temporal_state import detached
+from .temporal_tool_execution_state import ADMISSION_UPDATE, END_UPDATE
+from .types import digest
+
+
+def callbacks(client, request, info):
+    fixed = detached(request)
+    workflow_id, epoch, namespace = (
+        info.workflow_id,
+        info.workflow_run_id,
+        info.workflow_namespace,
+    )
+    handle = None
+    if client is not None and (
+        workflow_id == fixed.get("run_id")
+        and epoch == fixed.get("execution_epoch")
+        and namespace == client.namespace
+    ):
+        handle = client.get_workflow_handle(workflow_id, run_id=epoch)
+
+    async def check():
+        from .temporal_session_activities import validate_tree_activity
+
+        if handle is None or client.namespace != namespace:
+            raise DefinitionMismatch("Tool changed original Workflow epoch or namespace")
+        await validate_tree_activity(client, fixed, workflow_id=workflow_id)
+        if client.namespace != namespace:
+            raise DefinitionMismatch("Tool namespace changed during original validation")
+
+    expected = {
+        name: fixed[name] for name in ("scope", "action_id", "release_digest", "execution_epoch")
+    } | {"request_digest": digest(fixed)}
+
+    async def guard(value):
+        if value != fixed:
+            raise DefinitionMismatch("Tool changed original complete Activity request")
+        await check()
+        result = await handle.execute_update(
+            ADMISSION_UPDATE,
+            expected | {"run_id": workflow_id},
+            id="ralf-tool-dispatch:" + fixed["action_id"] + ":" + uuid.uuid4().hex,
+        )
+        await check()
+        return result
+
+    async def ended(value):
+        if value != expected:
+            raise DefinitionMismatch("Tool end lost original complete Activity identity")
+        await check()
+        result = await handle.execute_update(
+            END_UPDATE, detached(value), id="ralf-tool-ended:" + digest(value)
+        )
+        await check()
+        if result != {"action_id": fixed["action_id"], "recorded": True}:
+            raise DefinitionMismatch("Tool end lacks original completed acknowledgement")
+
+    return guard, ended

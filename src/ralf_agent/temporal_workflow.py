@@ -16,6 +16,8 @@ with workflow.unsafe.imports_passed_through():
     from . import (
         temporal_context_read_state,  # noqa: F401 -- preload original pure read gates
         temporal_session_identity,  # noqa: F401 -- preload pure Session addressing
+        temporal_tool_execution,  # noqa: F401 -- preload fixed Tool protocol
+        temporal_tool_execution_state,  # noqa: F401 -- preload original Tool gates
     )
     from .temporal_bindings import ROLES as _binding_roles  # noqa: F401
     from .temporal_completion_state import ACTIVITY as COMPLETION_ACTIVITY
@@ -359,6 +361,30 @@ class TemporalRunWorkflow:
         except Exception as exc:
             raise ApplicationError(
                 "Context execution end rejected",
+                type=getattr(exc, "code", "validation_error"),
+                non_retryable=True,
+            ) from None
+
+    @workflow.update(name="admit_tool_dispatch")
+    async def admit_tool_dispatch(self, request: dict) -> dict:
+        try:
+            return self.state.admit_tool_dispatch(request)
+        except Exception as exc:
+            raise ApplicationError(
+                "Tool dispatch admission rejected",
+                type=getattr(exc, "code", "validation_error"),
+                non_retryable=True,
+            ) from None
+
+    @workflow.update(name="tool_execution_ended")
+    async def tool_execution_ended(self, proof: dict) -> dict:
+        try:
+            result = self.state.tool_execution_ended(proof)
+            self.wake_revision += 1
+            return result
+        except Exception as exc:
+            raise ApplicationError(
+                "Tool execution end rejected",
                 type=getattr(exc, "code", "validation_error"),
                 non_retryable=True,
             ) from None

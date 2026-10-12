@@ -36,7 +36,8 @@ def validate_protocol(manifest):
     if (
         manifest.get("kernel") != "temporal-3"
         or type(manifest.get("binding_protocol")) is not int
-        or manifest["binding_protocol"] != 2
+        or manifest["binding_protocol"] not in (2, 3)
+        or (manifest["binding_protocol"] == 3 and "tool_execution_protocol" not in manifest)
         or type(registration) is not dict
         or set(registration) != {"version", "phases", "owner", "implementation"}
         or type(registration["version"]) is not int

@@ -1,11 +1,13 @@
-# dev80 剩余能力与架构验收清单
+# dev81 剩余能力与架构验收清单
+
+Dev81 待最终验收：显式可替换 ToolExecutionPort／tracked 默认 owner，原 Temporal History 分别保存工具意图、实际结束与效果回执；取消观察不释放真实线程，Assembly 先排空执行及结束通知再关闭资源。源码八个真实 Temporal／PostgreSQL 场景已通过，包含六种默认编排及 Agent／Graph 回执接收故障后的冷恢复。默认发布保持兼容；新协议使用 binding_protocol3，需要新 Worker。全量、安装、旧80兼容与独立审查尚待最终验收，完整 R01–R26 不标为完成。
 
 Dev80：纯可替换 Skill 文档解析、可选有界 YAML、固定 SKILL.md 文件目录及 skills-markdown 默认声明子集已验收。最终源码4954 passed／370配置跳过（713.55s），无YAML核心35／SDK359安装、真实源码6／安装6、旧79双向恢复／22模板／272模块一致通过。三项Important经14项RED→GREEN修复，两项Minor延期；原自有服务停止并等待。selector／异步加载／自动Context／Sandbox及完整R01–R26仍开放。见[本批记录](../architecture/reviews/2026-10-12-skill-documents.md)。
 
 dev66 原生／顺序持久 Turn 保持兼容；dev67 接通[Temporal 会话树](temporal-session-trees.md)，
 包括高级根保存、稳定成员私有地址和跨 Turn 召回。dev69 增加显式 Temporal Profile 工厂与实际 Worker 生命周期；完整配置／路由、租约和 R01–R26 继续开放。
 
-版本：55；日期：2026-10-12；维护者：RALF maintainers。当前增量基线：dev80；dev72 CLI工具子集通过冻结源码／安装／旧71兼容和服务停止门槛，见本批记录。
+版本：56；日期：2026-10-12；维护者：RALF maintainers。当前增量基线：dev81；dev72 CLI工具子集通过冻结源码／安装／旧71兼容和服务停止门槛，见本批记录。
 读者：框架维护者、应用开发者及适配器贡献者。基线：da55f97 的 dev30，
 以及已提交1cad308的dev31–36与已提交1f27300的dev37配置／首用及已提交e6a6de7的dev38远程原生／顺序及已提交9fcbb84的dev39复合根会话与已提交7898b78的dev40自动规则记忆及已提交0d17976的dev41受管理上下文及已提交ec9b5f5的dev42模型选择记忆阶段及已提交e413ddc的dev44高级／Temporal数据上下文和已提交5528670的dev45 Local高级自动记忆，以及已提交 adbc328 的 dev46 Temporal自动记忆与五类Agent绑定。
 
@@ -66,7 +68,7 @@ PG Knowledge/Inbox/Outbox、Qdrant、HTTP Embedding、Hybrid/RRF／基础重排�
 
 | ID／层 | 当前已交付基础 | 尚未完成的具体能力 | 阶段／状态 |
 | --- | --- | --- | --- |
-| R01 每 Agent 绑定 | Local 原生 Agent／顺序／Graph／Team／Dynamic／嵌套成员六类选择：provider、decision_policy、context、facts、knowledge、tool_set；稳定路径、固定父子发布与 Profile v2；Session 后端／允许的 namespace／同权威实际地址占用；Facts／Knowledge 宿主范围视图与来源校验；纯完成 verifier 的 inherit/ref/disabled；宿主与 Agent limits 的固定交集与动作额度；原生／顺序及高级 stage_policy 写目标；Temporal 十二类版本化 provider/context/knowledge/tool_set/stage_policy/facts/limits/verifier/decision_policy/session/workspace/skills；只读Workspace以原注册工具固定source/root/额度，Local及Temporal六类成员ref/disabled只收紧授权（dev76子集已验收）；dev77 WritePort／Source2、CAS和单根租约／意图回执子集已验收；session 有 stateless 有界读、原生／顺序持久 Turn／CAS 保存及显式高级根／成员会话树，与 Facts／Knowledge 宿主 namespace selector、原始检索资源固定及原有子 Run 子树 | 其余环境绑定角色及完整 Temporal 配置；其他资源身份／selector／作用域视图；artifacts／sandbox 绑定与准入；skills ref/disabled 的dev79子集已验收；Workspace append/delete/mkdir／subroot selector／权限／远端租约；实际Temporal原生阻塞写取消／关闭／租约窗口延期；stage_policy 已支持 Local 原生／顺序／图／Team／动态／嵌套规则／模型选择记忆；上下文历史摘要与引用／产物组合已交付，其他阶段／组合仍待交付。artifacts／sandbox 显式选择仍被拒绝 | H1：子集已交付 |
+| R01 每 Agent 绑定 | Local 原生 Agent／顺序／Graph／Team／Dynamic／嵌套成员六类选择：provider、decision_policy、context、facts、knowledge、tool_set；稳定路径、固定父子发布与 Profile v2；Session 后端／允许的 namespace／同权威实际地址占用；Facts／Knowledge 宿主范围视图与来源校验；纯完成 verifier 的 inherit/ref/disabled；宿主与 Agent limits 的固定交集与动作额度；原生／顺序及高级 stage_policy 写目标；Temporal 十二类版本化 provider/context/knowledge/tool_set/stage_policy/facts/limits/verifier/decision_policy/session/workspace/skills；只读Workspace以原注册工具固定source/root/额度，Local及Temporal六类成员ref/disabled只收紧授权（dev76子集已验收）；dev77 WritePort／Source2、CAS和单根租约／意图回执子集已验收；session 有 stateless 有界读、原生／顺序持久 Turn／CAS 保存及显式高级根／成员会话树，与 Facts／Knowledge 宿主 namespace selector、原始检索资源固定及原有子 Run 子树 | 其余环境绑定角色及完整 Temporal 配置；其他资源身份／selector／作用域视图；artifacts／sandbox 绑定与准入；skills ref/disabled 的dev79子集已验收；Workspace append/delete/mkdir／subroot selector／权限／远端租约；dev81实际阻塞写取消／关闭／租约与显式结束协议已完成源码八场景，待最终验收；stage_policy 已支持 Local 原生／顺序／图／Team／动态／嵌套规则／模型选择记忆；上下文历史摘要与引用／产物组合已交付，其他阶段／组合仍待交付。artifacts／sandbox 显式选择仍被拒绝 | H1：子集已交付 |
 | R02 Agent／Session 入口 | H2a Local stateless Agent/Runtime/AgentRun、RunRef/WaitResult；独立任务托管、纯观察等待、原根流程控制路由、owned/borrowed 关闭与 CloseIncomplete 重试、显式重连；保留旧 RunHandle DTO；H2b1 同库原生／顺序及 H2b2 图／团队／动态／嵌套及 H2b3 授权根 namespace、H2b4a 远程原生／顺序及 H2b4b 复合根保存意图／准确回执／终态只查询恢复、异步 Profile 配置，SessionKey／路由／Turn／busy／CAS rebind；H2c1 Temporal 原生／顺序共同入口、异步重连、固定 RPC 组件与客户端 detach；H2c2 已注册 Graph／Team／Dynamic／嵌套入口与实际子 Run 控制；H2c3 Temporal History Session／原 Namespace UUID／耐久 Turn／busy／启动意图／空闲 CAS，普通与 managed Conversation 及原后代静默证据；dev66 原生／顺序外置Root保存及 dev67 图／Team／Plan／DAG／嵌套根保存、稳定成员地址、原根／私有数据只读取一次、数据集身份与跨Turn召回 | 跨权威会话租约、输入续接／业务 deadline、Temporal 推荐配置／其他绑定角色、移交与耐久 FIFO | H2a／H2b1／H2b2／H2b3／H2b4a／H2b4b／H2c1／H2c2／H2c3：子集已交付；完整 H2 未交付 |
 | R03 Harness 与公共规则 | 纯 Harness/NativeHarness、ToolExecutor、共享决策／证据规则、Workflow Compiler/Interpreter、固定声明的 AgentHarness 组合入口；Local 原生／顺序及高级实际 Agent、Temporal 的规则／模型选择记忆、历史摘要和数据上下文，独立来源／提案／意图／回执与 Run 额度 | 其余广义 Harness 受管理阶段及默认组合；逐步提取 RuntimeKernel 纯规则；Prepare/Verify/Memory 等阶段的身份、证据、取消和恢复协议。保持 Local/Temporal 各自唯一执行权威 | H1–H3：部分抽象已实现 |
 | R04 配置与装配 | Local 版本 Profile/Catalog、JSON/TOML、工厂、sync/async 装配与历史路由；dev69 显式 Temporal Profile／十类绑定工厂、实际 Worker 排空与离线起步模块；dev70 多版本 Host、原队列 Run/Session 路由、共享资源全局排空与声明 PostgreSQL EffectJournal；dev71 普通启动参数纯预检与纠正重试 | 复杂 SDK 对象语义的构造校验；配置迁移、剩余环境角色、完整绑定／推荐组合配置；CLI/ProfiledEngine 异步工厂路由；插件显式安装／激活／兼容检查；配置／组件迁移、旧代码归档、部署版本管理；配置来源／监听按需分期 | H1／H5：子集已交付 |
@@ -516,6 +518,6 @@ R01/R13沿原ToolSource／Action／History接入可替换WritePort、Memory／PO
 
 R13接入同步可替换目录和Memory／JSON+Markdown File默认，原SkillToolSource读Action和声明工厂。最终源码4757／357配置跳过、核心142／SDK204安装、实际7项与旧77兼容通过；四项Important已修复，原服务停止并等待。[指南](skills.md)／[证据](../architecture/reviews/2026-10-12-skills-catalog.md)。专用R01角色、完整YAML、异步加载／自动目录阶段、Sandbox／Runner和R01–R26仍开放。
 
-## dev80：每Agent Skills绑定
+## dev79：每Agent Skills绑定
 
 R01/R13沿原借用工具目录、授权交集和Local/History接入显式ref/disabled；正式116、实际六类6及旧78Worker Activity前拒绝通过。最终源码4823／364配置跳过、核心55／SDK127安装、真实源码与安装各6、旧78兼容和实际执行前拒绝通过；两项Important闭环，自有服务停止并等待。[指南](skills-bindings.md)和[证据](../architecture/reviews/2026-10-12-skills-bindings.md)。selector／自动目录阶段、asyncLoader／Sandbox／Runner和完整目标仍开放。

@@ -28,18 +28,21 @@
 **Files:** create tests/test_workspace_write_lifetime_service.py; optional test-only helper tests/workspace_write_lifetime_probe.py; inspect original temporal_activities.py/temporal_assembly_lifecycle.py/workspace_write_tools.py/native FD and journal code.
 **Interfaces:** existing original Profile/Writer/definitions and managed approvals/cancel/diagnostics; no new public interface intended. Use declared postgres EffectJournal and native actual query_write after real owner release.
 
-- [ ] Create owned temp services from previous proven runners at distinct17283/56381 endpoints; observe actual readiness, do not reuse stopped processes.
-- [ ] Write tests before product: block actual native replace, original approvals, cancellation, zero-wait failed close, FD/second owner refusal, actual release/drain/close, original receipt query, restart/History and no duplicate effects across six definitions. Compare actual cancellation/quiescence evidence with original contract.
-- [ ] Run `.venv/bin/python -m pytest tests/test_workspace_write_lifetime_service.py -q -W error` with actual both services, zeroSKIP; record failure if any, otherwise actual behavior proof. Fix discovered product issue only after true RED and document any required versioned boundary; never relax assertions to hide gap.
+- [x] Create owned temp services from previous proven runners at distinct17283/56381 endpoints; observe actual readiness, do not reuse stopped processes.
+- [x] Write tests before product: block actual native replace, original approvals, cancellation, zero-wait failed close, FD/second owner refusal, actual release/drain/close, original receipt query, restart/History and no duplicate effects across six definitions. Compare actual cancellation/quiescence evidence with original contract.
+- [x] Run `.venv/bin/python -m pytest tests/test_workspace_write_lifetime_service.py -q -W error` with actual both services, zeroSKIP; record failure if any, otherwise actual behavior proof. Fix discovered product issue only after true RED and document any required versioned boundary; never relax assertions to hide gap.
 
-### Task 2: Recovery controls and documentation Minor closure
+### Task 2: Explicit managed Tool end protocol and recovery controls
 
-**Files:** tests/test_workspace_write_lifetime_service.py and meaningful offline lifecycle regression if product fix needed; docs/skill-documents.md, docs/remaining-work.md, architecture/specs and capability/status guides as appropriate.
-**Interfaces:** same original public cancel/reconcile/owner lifecycle; pure doc clarification of YAML merge restriction and correct historical dev79 heading.
+**Files:** create src/ralf_agent/tool_execution.py, temporal_tool_execution.py, temporal_tool_execution_state.py and temporal_tool_execution_activities.py; modify temporal_activities.py/temporal_state.py/temporal_workflow.py/temporal_builder.py/temporal_profile.py and public exports; create tests/test_tool_execution.py tests/test_temporal_tool_execution.py tests/test_temporal_tool_execution_configuration.py; original actual service test and doc Minor files.
+**Interfaces:** ToolExecutionPort/ToolExecutionOwner(*,version,max_calls=8); TemporalRuntime(tool_execution=None), Temporal-only Profile tool_execution/tracked; explicit tool_execution_protocol1 on temporal-3, strict original admission/end Updates. Consume original actual owner and preserve original sole History authority; no standalone scheduler.
 
+- [ ] Read the spec protocol addendum and original actual failure evidence. Public owner/default/config/strict metadata and pure History gate tests BEFORE implementation; trueRED missingAPI/newmarker, actualcoldcases already failremote-stop conservatively.
+- [ ] Implement fixed registration, actual defaultowner and borrowedcustomport, explicit Temporal-only factory, original envelope intention/admission/end/effect/stop gates and diagnostics; keep legacy defaults unchanged. Runtime/Assembly drain actualToolOwner AND endACK before Worker/resources close.
+- [ ] Run new pure/config/owner tests and actual lost-receipt Agent/Graph plus six legacy default compositions, zeroSKIP; no clearing remote_uncertain from query alone. Add wrong/duplicate/late proof and closure/cancellation/error/identity regressions as specified. Newprotocol changes must be explicit and oldWorker refusal proven in Task3.
 - [ ] Pin repeat cancel/failed-close then retry and genuine stable receipt query on restart; preserve unknown/terminal behavior and original actual handler ownership.
 - [ ] Clarify intentionally refused YAML merge keys and restore dev79 historical section (two dev80 deferred Minors in this separate batch); no YAML behavior change.
-- [ ] Run `.venv/bin/python -m pytest tests/test_workspace_write_tools.py tests/test_workspace_write_processes.py tests/test_workspace_write_execution.py tests/test_temporal_assembly_lifetime.py tests/test_temporal_assembly_cleanup.py tests/test_skill_documents.py tests/test_skill_document_review.py -q -W error`; formal completion and final batch commit.
+- [ ] Run `.venv/bin/python -m pytest tests/test_workspace_write_tools.py tests/test_workspace_write_processes.py tests/test_workspace_write_execution.py tests/test_temporal_assembly_lifetime.py tests/test_temporal_assembly_cleanup.py tests/test_skill_documents.py tests/test_skill_document_review.py tests/test_tool_execution.py tests/test_temporal_tool_execution.py tests/test_temporal_tool_execution_configuration.py -q -W error`; formal completion and final batch commit.
 
 ### Task 3: Frozen verified capability delivery
 
@@ -49,3 +52,5 @@
 - [ ] Sole fresh strongest read-only review; all findings AND Declined regraded before one unified Important TDD pass; defer new Minors/no re-review.
 - [ ] Full green suite, isolated core+SDK installed contracts and actual6 zeroSKIP, fixedsource/wheel/sdist/installhashes and guides, actual old80 defaultLocal/CLI/Temporal/native two-way recovery and22 templates.
 - [ ] Stop+wait every owned service/Worker; local main and formalTask3/closure commits, rebuild/check payload after docs, archive this plan's ownSDD only; exhaustive rulings/minors retained, whole goal remains ACTIVE.
+
+Task2 adds two explicit lost-receipt fault-injection cases (Agent and Graph) alongside the six real default cases: test-only borrowed proxy delegates actual PostgreSQL begin/observation/ack, refuses received until original assembly closes, then permits genuine native query on restart. This is an injected receiver-boundary loss, not an actual PostgreSQL server crash.

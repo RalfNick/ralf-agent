@@ -1,5 +1,7 @@
 # Implementation progress — 2026-10-05 M1 local runtime
 
+Dev81 待最终验收：显式可替换 ToolExecutionPort／tracked 默认 owner，原 Temporal History 分别保存工具意图、实际结束与效果回执；取消观察不释放真实线程，Assembly 先排空执行及结束通知再关闭资源。源码八个真实 Temporal／PostgreSQL 场景已通过，包含六种默认编排及 Agent／Graph 回执接收故障后的冷恢复。默认发布保持兼容；新协议使用 binding_protocol3，需要新 Worker。全量、安装、旧80兼容与独立审查尚待最终验收，完整 R01–R26 不标为完成。 见[本批记录](../architecture/reviews/2026-10-12-native-write-lifetime.md)。
+
 Dev80：纯可替换 Skill 文档解析、可选有界 YAML、固定 SKILL.md 文件目录及 skills-markdown 默认声明子集已验收。最终源码4954 passed／370配置跳过（713.55s），无YAML核心35／SDK359安装、真实源码6／安装6、旧79双向恢复／22模板／272模块一致通过。三项Important经14项RED→GREEN修复，两项Minor延期；原自有服务停止并等待。selector／异步加载／自动Context／Sandbox及完整R01–R26仍开放。见[本批记录](../architecture/reviews/2026-10-12-skill-documents.md)。
 
 Dev79：每Agent Skills的借用原生目录工具、Local／Temporal固定ref/disabled与Profile工厂已验收。最终源码4823 passed／364配置跳过（734.81s），核心55／SDK127安装、真实源码6／安装6、旧78双向恢复／22模板／269模块一致通过。两项Important经10项RED→GREEN修复；真实旧Local／Worker拒绝新角色且新Local继续原Run，自有服务停止并等待。selector／自动目录阶段／标准加载／Sandbox及完整R01–R26继续开放。见[验收记录](../architecture/reviews/2026-10-12-skills-bindings.md)。
