@@ -1,5 +1,7 @@
 # Implementation progress — 2026-10-05 M1 local runtime
 
+Dev79：每Agent Skills的借用原生目录工具、Local／Temporal固定ref/disabled与Profile工厂已验收。最终源码4823 passed／364配置跳过（734.81s），核心55／SDK127安装、真实源码6／安装6、旧78双向恢复／22模板／269模块一致通过。两项Important经10项RED→GREEN修复；真实旧Local／Worker拒绝新角色且新Local继续原Run，自有服务停止并等待。selector／自动目录阶段／标准加载／Sandbox及完整R01–R26继续开放。见[验收记录](../architecture/reviews/2026-10-12-skills-bindings.md)。
+
 Dev78：同步可替换Skills目录、Memory／固定JSON+Markdown File默认和原受管理读工具已验收。最终源码4757 passed／357配置跳过（741.54s），核心142／SDK204安装、真实六类编排及显式Scope默认工厂7项、旧77双向恢复／22模板／268模块一致通过。独立审查四项Important经22项RED→GREEN修复，自有Temporal已停止并等待。专用skills角色、完整YAML／异步加载器／Sandbox及完整R01–R26继续开放。见[验收记录](../architecture/reviews/2026-10-12-skills-catalog.md)。
 
 Dev77：可替换Workspace CAS写入、Memory／POSIX默认、稳定效果键／单根租约与原Source／Local／Temporal恢复子集已验收。最终源码4615 passed／351配置跳过（700.98s），核心安装100／SDK214、真实源码及安装各6项、旧76双向恢复／新协议拒绝／22模板／264模块一致通过；独立审查三项Important经RED→GREEN修复，自有服务已停止并等待。实际Temporal阻塞原生写的取消／关闭／租约窗口为延期证据项，完整R01–R26继续开放。见[验收记录](../architecture/reviews/2026-10-12-workspace-writes.md)。

@@ -26,6 +26,7 @@ from .binding_catalog import BindingCatalog
 from .binding_data import FactsBindingResource, KnowledgeBindingResource
 from .binding_definitions import AgentDefinition, BoundDefinition
 from .binding_sessions import SessionBindingResource
+from .binding_skills import SkillBindingResource
 from .binding_types import AgentBindingDescriptor, BindingSelection
 from .binding_workspace import WorkspaceBindingResource
 from .business_evaluation import evaluate_business, load_business_cases
@@ -321,7 +322,7 @@ from .workflow import (
     WorkflowSelection,
 )
 
-__version__ = "0.1.0.dev78"
+__version__ = "0.1.0.dev79"
 from .filesystem_skills import FileSystemSkillCatalog
 from .filesystem_workspace import FileSystemWorkspace
 from .filesystem_workspace_writes import FileSystemWritableWorkspace
@@ -711,3 +712,4 @@ __all__ += ["SkillSpec", "SkillError", "SkillCatalogPort", "InMemorySkillCatalog
 __all__ += ["FileSystemSkillCatalog"]
 
 __all__ += ["SkillToolSource"]
+__all__ += ["SkillBindingResource"]

@@ -1,5 +1,7 @@
 # RALF AgentHarness 目标架构
 
+当前dev79交付每Agent Skills原工具绑定；最终源码4823／364配置跳过、核心55／SDK127安装、真实六类、旧78双向兼容／执行前拒绝及自有服务停止通过。selector／自动目录阶段与完整H4仍开放。[本批证据](../reviews/2026-10-12-skills-bindings.md)。
+
 当前dev78交付可替换Skills目录与原受管理读工具；最终源码4757／357配置跳过、核心142／SDK204安装、真实7项、旧77兼容及自有服务停止通过。专用skills角色与完整H4仍开放。[本批证据](../reviews/2026-10-12-skills-catalog.md)。
 
 当前dev77子集已验收补Workspace CAS写入与单根租约，保持原Engine／History权威；证据与未完成门槛见[本批记录](../reviews/2026-10-12-workspace-writes.md)。其他环境绑定／Skills／Sandbox／Runner／H5与真实质量继续开放。

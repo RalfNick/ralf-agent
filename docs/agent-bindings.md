@@ -75,9 +75,12 @@ anthropic-messages、gemini-content、openai-responses。服务、账号和任�
 | limits | 原 Spec 与宿主强制上限 | 纯同步策略，与宿主／Spec 取最小值 | 只关闭额外 Agent 策略，宿主限制仍生效 |
 | stage_policy | 默认关闭或宿主自动记忆规则 | 宿主注册的 ManagedMemoryPolicy | 关闭自动记忆阶段 |
 | workspace | 原宿主工具授权，不激活新阶段 | 借用已注册单一 Workspace Source；Source2含显式CAS写入；与原工具授权取交集 | 只排除 Workspace 工具，业务工具保留 |
-| artifacts/sandbox/skills | 原宿主行为；不激活新阶段 | 拒绝 | 拒绝 |
+| skills | 原宿主工具授权，不自动注入Context | 借用已注册单一Skills Source，取原授权交集 | 只排除原生Skills工具，业务与Workspace工具保留 |
+| artifacts/sandbox | 原宿主行为；不激活新阶段 | 拒绝 | 拒绝 |
 
 工具子集不能增加 AgentSpec 未声明的工具；HostPolicy、审批、效果分类和执行器始终由宿主控制。
+Skills绑定与验收边界见[Skills 指南](skills-bindings.md)。
+
 Workspace 绑定见[Workspace 指南](workspace.md)。绑定不分配第二个文件根，Source2写入见[写入指南](workspace-writes.md)；不支持 selector／Sandbox 隔离。
 目录绑定不授予企业资源权限。facts 使用当前 Agent 名称作为既有 namespace；knowledge
 使用构造器固定的 namespace。Session、Facts 和 Knowledge Resource 的 namespace selector 受宿主 allowlist 约束；数据范围配置见[H1d 教程](data-bindings.md)。原始数据组件 ref 和其他角色仍拒绝 selector，不能跨 Scope。

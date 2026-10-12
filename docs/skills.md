@@ -137,3 +137,5 @@ asyncio.run(load_reference())
 专用 skills 绑定／selector、自动索引上下文阶段、标准 frontmatter、远端／异步加载器、
 插件安装和激活、Sandbox／Runner与真实任务质量仍待交付。
 [本批验收](../architecture/reviews/2026-10-12-skills-catalog.md)区分运行实现和未完成门槛。
+
+每 Agent 目录选择／禁用见[Skills绑定](skills-bindings.md)；dev79绑定子集已验收，普通目录工具不自动开启该角色。

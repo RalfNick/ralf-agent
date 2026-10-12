@@ -155,6 +155,17 @@ def validate_manifest(manifest):
         for record in manifest.get("binding_catalog", {}).get("records", {}).values():
             if record["role"] == "workspace":
                 _record(record["identity"])
+    if "skills_binding_protocol" in manifest:
+        if (
+            type(manifest["skills_binding_protocol"]) is not int
+            or manifest["skills_binding_protocol"] != 1
+        ):
+            raise DefinitionMismatch("Unsupported Temporal Skills binding protocol")
+        from .binding_skills import _record
+
+        for record in manifest.get("binding_catalog", {}).get("records", {}).values():
+            if record["role"] == "skills":
+                _record(record["identity"])
     for key in ("tools", "providers", "harness", "context_builder", "tool_executor", "policy"):
         if not isinstance(manifest.get(key), dict):
             raise ValidationError(f"Temporal runtime release requires {key}")

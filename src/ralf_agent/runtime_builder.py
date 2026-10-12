@@ -213,6 +213,7 @@ _BINDING_FACTORY_KINDS = {
     "limits": "limits",
     "stage_policy": "stage_policy",
     "workspace": "workspace",
+    "skills": "skills",
 }
 
 
@@ -521,6 +522,7 @@ class ComponentRegistry:
                 "provider",
                 "tool_set",
                 "workspace",
+                "skills",
                 "artifact_store",
                 "reference_selector",
                 "embedding_provider",

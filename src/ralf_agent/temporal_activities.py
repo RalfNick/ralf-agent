@@ -530,6 +530,8 @@ class TemporalRuntime:
                 result["binding_catalog"] = catalog
                 if any(record["role"] == "workspace" for record in catalog["records"].values()):
                     result["workspace_binding_protocol"] = 1
+                if any(record["role"] == "skills" for record in catalog["records"].values()):
+                    result["skills_binding_protocol"] = 1
             if memory is not None:
                 result["managed_memory"] = memory
         from .binding_workspace import has_writable_workspace

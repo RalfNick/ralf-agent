@@ -103,6 +103,21 @@ class AgentBindingResolver:
             tools = select_workspace_tools(
                 tools, e.tools.manifests(tools), None if workspace is None else workspace.identity
             )
+        if descriptor.skills.mode != "inherit":
+            from .binding_skills import select_skill_tools
+
+            skills = None
+            if descriptor.skills.mode == "ref":
+                if e.binding_catalog is None:
+                    raise DefinitionMismatch("Skills selection requires a host BindingCatalog")
+                skills, records["skills"] = e.binding_catalog.resolve(
+                    "skills", descriptor.skills, e.scope
+                )
+            else:
+                records["skills"] = {"mode": "disabled"}
+            tools = select_skill_tools(
+                tools, e.tools.manifests(tools), None if skills is None else skills.identity
+            )
         if values["provider"] is None:
             raise DefinitionMismatch("The selected model provider is unavailable")
         return StepComponents(
@@ -240,6 +255,8 @@ class AgentBindingResolver:
                 for entry in entries.values()
             ):
                 manifest["kernel"] = "local-bindings-12"
+        if any(entry["descriptor"]["skills"]["mode"] != "inherit" for entry in entries.values()):
+            manifest["kernel"] = "local-bindings-13"
         return manifest
 
 

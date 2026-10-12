@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.1.0.dev79 — Per-Agent Skills bindings
+
+- Add original per-Agent Skills ref/disabled binding, borrowed registered-tools resources, Local/Temporal fixed grants and explicit protocol admission.
+- Two Important fixes preserve legacy business configs and verify actual native handler/reconciler provenance; core55/SDK127 installed, actual6 source/installed, old78 compatibility/refusal, final source4823/364 configured skips and owned service stop/wait pass. Selectors/automatic Context/Sandbox remain separate.
+
 ## 0.1.0.dev78 — Managed Skills catalogs
 
 - Add immutable scoped SkillSpec/CatalogPort, Memory and fixed JSON/Markdown File defaults, original managed readonly tools and skills-file async declarations.

@@ -30,29 +30,29 @@
 **Files:** create src/ralf_agent/binding_skills.py, tests/test_skill_bindings.py; modify public exports only.
 **Interfaces:** consumes original ToolRegistry.manifests, strict native Source1 registration and ordinary Skill data; produces SkillBindingResource(registry,*,names).identity and select_skill_tools(names,manifests,resource_identity)->tuple of effective original names. New helpers _names/_record may wrap original bounded names and strict snapshot validation.
 
-- [ ] Write tests for native two-tool resource, detached identity, single-source matching, malformed names/effects/digest/identity and canonical bool/int difference, changed registrations and borrowed close. Ref intersects existing names and retains business tools; disabled strips native skills only; zero match denies.
-- [ ] Run `.venv/bin/python -m pytest tests/test_skill_bindings.py -q -W error`; Expected absent public API/selector failures before product.
-- [ ] Implement pure Resource/selection using original registrations, no model/catalog/client I/O or resource close.
-- [ ] Run new plus tests/test_workspace_bindings.py tests/test_workspace_binding_review.py; Expected pass, formal task completion and final-batch commit after gates.
+- [x] Write tests for native two-tool resource, detached identity, single-source matching, malformed names/effects/digest/identity and canonical bool/int difference, changed registrations and borrowed close. Ref intersects existing names and retains business tools; disabled strips native skills only; zero match denies.
+- [x] Run `.venv/bin/python -m pytest tests/test_skill_bindings.py -q -W error`; Expected absent public API/selector failures before product.
+- [x] Implement pure Resource/selection using original registrations, no model/catalog/client I/O or resource close.
+- [x] Run new plus tests/test_workspace_bindings.py tests/test_workspace_binding_review.py; Expected pass, formal task completion and final-batch commit after gates.
 
 ### Task 2: Local role and declarative default
 
 **Files:** modify binding_catalog.py, binding_runtime.py, runtime_builder.py, skill_factories.py; create tests/test_skill_binding_configuration.py and tests/test_skill_binding_execution.py; locate existing capability/release allow lists before edit.
 **Interfaces:** consumes pure Resource/selector and existing BindingSelection/AgentBindingDescriptor.skills; produces SELECTABLE skills role/ref/disabled, exact resource records, opt-in local-bindings-13 and skills/registered-tools default. Validator returns None, pure config exactly names; borrowed original context.tools registry.
 
-- [ ] Write failing role/default factory tests including explicit Scope, selector refusal, no already-granted match, both tool_set/Workspace intersection, typed forged identity and partial cleanup before/after allocation. Expected unsupported skills role/factory.
-- [ ] Implement component_identity, original resolver tool intersection and explicit kernel; inherited components and manifests retain old bytes.
-- [ ] Write/run six Local original approval/restart/saved-read cases selecting independent member catalogs via skills role. Dedicated role never executes instruction text or grants protected tools.
-- [ ] Run new Local/config plus tests/test_skill_bindings.py tests/test_workspace_binding_configuration.py tests/test_workspace_binding_execution.py tests/test_binding_execution.py. Expected pass; formal task command must use actual found paths, final-batch commit.
+- [x] Write failing role/default factory tests including explicit Scope, selector refusal, no already-granted match, both tool_set/Workspace intersection, typed forged identity and partial cleanup before/after allocation. Expected unsupported skills role/factory.
+- [x] Implement component_identity, original resolver tool intersection and explicit kernel; inherited components and manifests retain old bytes.
+- [x] Write/run six Local original approval/restart/saved-read cases selecting independent member catalogs via skills role. Dedicated role never executes instruction text or grants protected tools.
+- [x] Run new Local/config plus tests/test_skill_bindings.py tests/test_workspace_binding_configuration.py tests/test_workspace_binding_execution.py tests/test_binding_execution.py. Expected pass; formal task command must use actual found paths, final-batch commit.
 
 ### Task 3: Temporal role and actual authority proof
 
 **Files:** modify temporal_bindings.py, temporal_state.py, temporal_activities.py; create tests/test_skill_binding_temporal.py and tests/test_skill_binding_temporal_service.py; locate actual existing Temporal binding tests before edit.
 **Interfaces:** consumes Resource/selector and existing fixed catalog/definition; produces skills role, typed protocol1 producer/validation, original History member dispatch/grants. No new Activity/state authority.
 
-- [ ] Write failing SDK tests for ref/disabled/selector/wrongScope/missingprotocol/falseprotocol, native resource identities and selected registration drift; expected unsupported role. Implement same shared pure selection and original published protocol before dispatch.
-- [ ] Required actual owned Temporal six-composition approval/Worker restart/repeatcommands/savedread/History plus per-member distinct catalog tests, zero skips; actual old78 Worker new opt-in refusal before ANY original model/tool Activity; stop/wait helper Workers.
-- [ ] Run new SDK/offline groups with original TemporalWorkspace/ToolSet grants; all pass. Only after required actual proof bump dev79; formal task completion and final-batch commit.
+- [x] Write failing SDK tests for ref/disabled/selector/wrongScope/missingprotocol/falseprotocol, native resource identities and selected registration drift; expected unsupported role. Implement same shared pure selection and original published protocol before dispatch.
+- [x] Required actual owned Temporal six-composition approval/Worker restart/repeatcommands/savedread/History plus per-member distinct catalog tests, zero skips; actual old78 Worker new opt-in refusal before ANY original model/tool Activity; stop/wait helper Workers.
+- [x] Run new SDK/offline groups with original TemporalWorkspace/ToolSet grants; all pass. Only after required actual proof bump dev79; formal task completion and final-batch commit.
 
 ### Task 4: Documentation and frozen delivery
 
