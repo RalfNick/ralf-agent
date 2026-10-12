@@ -1,6 +1,6 @@
 # dev81 原生写生命周期与工具结束协议验收
 
-基线11581df／dev80；候选95d3837，统一修复完成，最终本地提交在Git历史中可查。完整R01–R26继续ACTIVE。
+基线11581df／dev80；候选95d3837，统一修复本地提交c4b621a。完整R01–R26继续ACTIVE。
 
 显式可替换ToolExecutionPort／ToolExecutionOwner与Temporal tracked工厂，保持原Local／Temporal执行权威及默认发布。新发布使用binding_protocol3/tool_execution_protocol1；固定原History独占invocation，原Intent／实际End／Effect分别记录，迟到证据不能取消转成功。通知机械owner固定256槽，先于admission预留；容量拒绝、RPC失败和通知观察者取消保持原ACK待重试。borrowed注入等待但不全局关闭；工厂owned在原账本排空后关闭。
 
@@ -10,7 +10,7 @@
 
 固定核心安装67项（2.13s）、SDK232项（4.53s）；278模块源码／冻结／wheel／sdist／core／SDK完全一致；核心guide实际无Temporal SDK和PyYAML运行。真实旧80 Local／CLI／Temporal／nativeSession 80→81→80原Run／Turn／审批／回执双向兼容，22模板字节相同。实际旧80Worker在任何Activity/model/tool前拒绝binding3；自有拒绝Worker实际exit0并等待。166CI测试argv存在，11变更Markdown395本地链接通过。
 
-完整冻结源码5021 passed／378配置跳过（758.54s）；自有Temporal／PostgreSQL原启动进程实际exit0并等待。最终文档包校验在闭环提交后重建确认。DockerCLI存在但daemon不可用；未启动Docker、下载镜像、使用真实模型或推送远端。Killed-owner process、远端peer、Sandbox／Runner／selector与H5仍是后续能力。
+完整冻结源码5021 passed／378配置跳过（758.54s）；自有Temporal／PostgreSQL原启动进程实际exit0并等待。最终761项文档／测试／示例／配置sdist payload已字节校验；闭环文档追加后再次重建确认。DockerCLI存在但daemon不可用；未启动Docker、下载镜像、使用真实模型或推送远端。Killed-owner process、远端peer、Sandbox／Runner／selector与H5仍是后续能力。
 
 ## 裁定与成本
 
@@ -43,3 +43,5 @@
 - Final: Ruling: Interimdocs/checks — Keep pending until actualfinalgates; rewritefinalevidence after fixes. Cost if wrong: unverified status cannot bepublished.
 - Final: Ruling: Sandbox/remoteleases/otherR — Still outside81 and fullR01–R26ACTIVE; nextwrittenbatch later. Cost if wrong: fullcompletion remains not achieved.
 - Ruling: final notification mechanism uses Runtime's fixed mechanical ContextExecutionOwner (notification-only), not a fourth required customToolPort method — original public3-methodport remains replaceable; reserve bounded notification entry before Historyadmission, no thirdauthority, and drain bothowners before closure — costifwrong: Runtime owns an additional mechanicaltask per optincall, max256; metadata fixes notificationimplementation/capacity; actual businessslots unchanged. This supersedes prior spec sentence requiring publicnotificationmethod BEFORE fixes.
+
+正式Task2提交后184项通过（10.31s）；R01–R26整体目标保持ACTIVE。本批仅本地提交，没有推送远端。
