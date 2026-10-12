@@ -50,6 +50,6 @@
 **Files:** pyproject/version/CI/guides/status/progress/remaining/harness/CHANGELOG and architecture/reviews/2026-10-12-skill-discovery-context.md.
 **Interfaces:** actualpassive directorydefaultsubset, honestH3/H4/qualityboundary.
 
-- [ ] Solefresh strongestread-onlyreview; regradeALLfindings ANDDeclined BEFOREoneunifiedImportanttrueRED→GREENpass; deferMinors/no re-review.
-- [ ] Fullgreensuite, freshcore+SDKinstalledcontracts/actualservicezeroSKIP, frozenmodules/wheel/sdist/installhashes/docs/guides/CIargv; actualold81defaultsLocal/CLI/Temporal/nativebidirectional22templates, newadapterrelease actualpreI/Orejection.
-- [ ] Stopandactualwait originalownedservices/Workers; main/formalclosurelocalcommits, finaldocrebuildpayloadcheck; archiveonlythisplanSDD with exhaustive rulings/costs/minors; wholeR01–R26goalACTIVE, no push.
+- [x] Solefresh strongestread-onlyreview; regradeALLfindings ANDDeclined BEFOREoneunifiedImportanttrueRED→GREENpass; deferMinors/no re-review.
+- [x] Fullgreensuite, freshcore+SDKinstalledcontracts/actualservicezeroSKIP, frozenmodules/wheel/sdist/installhashes/docs/guides/CIargv; actualold81defaultsLocal/CLI/Temporal/nativebidirectional22templates, newadapterrelease actualpreI/Orejection.
+- [x] Stopandactualwait originalownedservices/Workers; main/formalclosurelocalcommits, finaldocrebuildpayloadcheck; archiveonlythisplanSDD with exhaustive rulings/costs/minors; wholeR01–R26goalACTIVE, no push.
