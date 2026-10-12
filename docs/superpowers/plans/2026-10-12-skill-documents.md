@@ -59,8 +59,8 @@
 **Files:** parser/file/declaredguide, architecture/reviews/2026-10-12-skill-documents.md, capability/status/progress/remaining/harness/CHANGELOG/CI/version.
 **Interfaces:** honest bounded standard-document profile, customparser guide and verified install/recovery defaults.
 
-- [ ] Freshcore import/customparser tests withoutYAML, optionalYAML+SDK contractandactualservicezeroSKIP; exact269+new module/wheel/sdist/installhashes; runnableinstalledexamples, actualold79 defaultLocal/CLI/Temporal/native two-way compatibility/22templatesunchanged.
-- [ ] Solefreshstrongestreadonlyreview; allfindings/declines regradedbefore ONE unifiedImportantTDDpass; Minorsdeferred/nore-review.
-- [ ] Greenfullsuite, rebuiltclosurepackage/docs, allownedservicesactualstopwait, localmain/formalTask4/closurecommit; exhaustiveRulings/minorscollected andownSDDarchive. WholegoalR01–R26active, no implicitfullstandardecosystem/H4 completion.
+- [x] Freshcore import/customparser tests withoutYAML, optionalYAML+SDK contractandactualservicezeroSKIP; exact269+new module/wheel/sdist/installhashes; runnableinstalledexamples, actualold79 defaultLocal/CLI/Temporal/native two-way compatibility/22templatesunchanged.
+- [x] Solefreshstrongestreadonlyreview; allfindings/declines regradedbefore ONE unifiedImportantTDDpass; Minorsdeferred/nore-review.
+- [x] Greenfullsuite, rebuiltclosurepackage/docs, allownedservicesactualstopwait, localmain/formalTask4/closurecommit; exhaustiveRulings/minorscollected andownSDDarchive. WholegoalR01–R26active, no implicitfullstandardecosystem/H4 completion.
 
 Expanded YAML alias graphs also fit4096 visited values and65536 aggregate UTF8 scalar bytes before ordinary JSON copying. Source event/alias/depth checks remain separate.
