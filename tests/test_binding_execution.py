@@ -304,10 +304,10 @@ def test_identity_drift_after_response_preserves_received_evidence(tmp_path):
 
 
 @pytest.mark.parametrize("role", ["workspace", "sandbox"])
-def test_unsupported_reference_fails_before_any_run_or_model(tmp_path, role):
+def test_unregistered_environment_reference_fails_before_any_run_or_model(tmp_path, role):
     catalog = bound_catalog()
     with engine(tmp_path / (role + ".sqlite"), catalog) as runtime:
-        with pytest.raises(DefinitionMismatch if role == "workspace" else ValidationError):
+        with pytest.raises(DefinitionMismatch):
             runtime.submit(definition(**{role: choice("unsupported")}), "q", command_id="s")
         assert runtime.store.conn.execute("SELECT count(*) FROM runs").fetchone()[0] == 0
 
