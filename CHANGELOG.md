@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.0.dev83 — Native Sandbox preview candidate
+
+- Add replaceable SandboxProvider, bounded DTOs and explicit preinstalled Docker native default.
+- Reuse original ToolSource, async owned assembly, per-Agent sandbox binding and recognized Temporal protocol4/1.
+- Actual Local/Temporal six compositions, native stop/cancel, lost create/start receipt and cold process recovery pass. Final independent review, full-suite, fixed installation and old82 compatibility gates remain pending; complete R01–R26 stays open.
+
 ## 0.1.0.dev82 — Passive Skill directory discovery
 
 - Add replaceable pure SkillSelector/LexicalSkillSelector and borrowed SkillDirectoryRetriever through native KnowledgeContext and original execution authority.

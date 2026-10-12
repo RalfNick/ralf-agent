@@ -175,6 +175,10 @@ handler 接收 JSON 参数和 InvocationContext。Context 提供 scope、run_id�
 | `KnowledgeContext(retriever, namespace="default", limit=5, max_chars=8000)` | async references/validate；注入 knowledge=；来源按 Scope/版本/TTL 校验 |
 | `KnowledgeContextPort` | 可直接实现 identity/limit/max_chars/async references/validate，无需继承默认 Facade |
 | `SkillSelector`／`LexicalSkillSelector(version="1")` | 固定普通 JSON identity、纯同步 select(query, entries, *, limit)→普通唯一名称列表；默认词项／中文 bigram，有界1–100，无模型调用 |
+| `SandboxProvider`／`SandboxRequest`／`SandboxObservation`／`SandboxResult` | 固定 Scope 与宿主调用身份的 async run/observe/stop；完成 DTO 保留真实停止证据，argv／时间／输出有界 |
+| `DockerSandbox(socket_path, image, version="1")` | 显式已启动 Linux Docker 和已安装 SHA256 镜像；aopen 校验服务／镜像，受限临时容器，无隐藏拉取 |
+| `SandboxToolSource(provider, version="1")` | 借用 Provider，复用原受管理 sandbox_run；宿主限额，取消等待保留实际操作，aclose 可重试，不关闭共享 Provider |
+| `SandboxBindingResource(registry, names=[...])` | 借用原 native Sandbox 工具；每 Agent ref／disabled 只收紧 grants，不扩权、不执行或拥有资源 |
 | `SkillDirectoryRetriever(catalog, *, version, names=None, selector=None, max_entries=1000)` | 借用原 SkillCatalogPort，原 async retrieve/validate 与 Knowledge DTO；被动元数据／Scope／names／来源固定，不读取正文或注册工具；见[目录发现](skill-discovery.md) |
 | `LexicalRetriever(store)` | 默认中英文词法检索，无远程模型调用 |
 | `EmbeddingProvider`／`VectorIndex` | 显式注入 async embed 与 scoped 索引；索引不保存知识正文 |

@@ -12,7 +12,11 @@ Docker、拉取镜像或注入宿主凭据。镜像带隐式 Volumes 时拒绝�
 
 ```python
 from ralf_agent import (
-    DockerSandbox, SandboxToolSource, Scope, ToolPolicy, ToolRegistry,
+    DockerSandbox,
+    SandboxToolSource,
+    Scope,
+    ToolPolicy,
+    ToolRegistry,
     register_tool_source,
 )
 
@@ -26,10 +30,15 @@ await provider.aopen()
 source = SandboxToolSource(provider, version="tool-v1", max_timeout=30)
 registry = ToolRegistry()
 await register_tool_source(
-    registry, source,
-    policies={"sandbox_run": ToolPolicy(
-        "1", effect="read_only", requires_approval=True,
-    )},
+    registry,
+    source,
+    policies={
+        "sandbox_run": ToolPolicy(
+            "1",
+            effect="read_only",
+            requires_approval=True,
+        )
+    },
 )
 # 将 registry 注入原 Engine；宿主负责按此顺序关闭自有资源。
 # await source.aclose(wait_timeout=30)

@@ -41,6 +41,17 @@ jobs:
         working-directory: ${{ runner.temp }}
         run: |
           python -m pytest -q -W error -p no:cacheprovider -c /dev/null "$RUNNER_TEMP/session-contracts/tests/test_skill_selection.py" "$RUNNER_TEMP/session-contracts/tests/test_skill_retrieval.py" "$RUNNER_TEMP/session-contracts/tests/test_skill_retrieval_configuration.py" "$RUNNER_TEMP/session-contracts/tests/test_skill_retrieval_execution.py" "$RUNNER_TEMP/session-contracts/tests/test_skill_retrieval_review.py"
+      - name: Installed Sandbox contracts outside checkout
+        working-directory: ${{ runner.temp }}
+        run: |
+          python -m pytest -q -W error -p no:cacheprovider -c /dev/null "$RUNNER_TEMP/session-contracts/tests/test_sandbox.py" "$RUNNER_TEMP/session-contracts/tests/test_docker_sandbox.py" "$RUNNER_TEMP/session-contracts/tests/test_sandbox_tools.py" "$RUNNER_TEMP/session-contracts/tests/test_sandbox_configuration.py" "$RUNNER_TEMP/session-contracts/tests/test_sandbox_bindings.py" "$RUNNER_TEMP/session-contracts/tests/test_sandbox_binding_execution.py" "$RUNNER_TEMP/session-contracts/tests/test_sandbox_binding_configuration.py" "$RUNNER_TEMP/session-contracts/tests/test_sandbox_temporal_protocol.py" "$RUNNER_TEMP/session-contracts/tests/test_native_sandbox_leases.py"
+      - name: Installed actual native Docker Sandbox outside checkout
+        working-directory: ${{ runner.temp }}
+        run: |
+          docker pull alpine:3.22
+          export RALF_TEST_DOCKER_IMAGE="$(docker image inspect alpine:3.22 --format '{{.Id}}')"
+          export RALF_TEST_DOCKER_SOCKET=/var/run/docker.sock
+          python -m pytest -q -W error -p no:cacheprovider -c /dev/null "$RUNNER_TEMP/session-contracts/tests/test_docker_sandbox_service.py" "$RUNNER_TEMP/session-contracts/tests/test_docker_sandbox_recovery_service.py" "$RUNNER_TEMP/session-contracts/tests/test_sandbox_tools_service.py" "$RUNNER_TEMP/session-contracts/tests/test_sandbox_binding_service.py" "$RUNNER_TEMP/session-contracts/tests/test_sandbox_native_crash_service.py"
       - name: Installed wheel smoke test outside checkout
         working-directory: ${{ runner.temp }}
         run: |

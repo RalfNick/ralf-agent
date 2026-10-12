@@ -361,7 +361,7 @@ def test_actual_independent_providers_cannot_restart_same_completed_invocation()
                 for _ in range(500):
                     if (await second.observe(r.Scope(), identity)).state == "running":
                         break
-                    await asyncio.sleep(.01)
+                    await asyncio.sleep(0.01)
                 else:
                     pytest.fail("Original invocation never began")
             with pytest.raises(r.SandboxUnavailable):

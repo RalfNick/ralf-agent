@@ -1,5 +1,8 @@
 # Ralf-Agent
 
+Dev83 候选增加[原生 Sandbox](docs/sandbox.md)：可替换端口、显式本地 Docker 默认、
+原工具审批和每 Agent 授权交集；六类 Local／Temporal 真实恢复通过，最终发布验收进行中。
+
 dev79 增加[每 Agent Skills选择](docs/skills-bindings.md)：原生目录工具的固定选择与禁用、审批及恢复；安装包、真实Temporal和旧78兼容通过。完整能力继续建设。
 
 dev78 增加[可替换Skills目录与受管理加载](docs/skills.md)：Memory／File默认、固定内容、显式Scope和原审批恢复；安装包、真实Temporal及旧77兼容通过。完整能力继续建设。

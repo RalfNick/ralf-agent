@@ -1,5 +1,7 @@
 # RALF AgentHarness 目标架构
 
+Dev83 候选已实现受限原生 SandboxProvider／Docker 默认、原 ToolSource、显式异步声明和每 Agent sandbox ref/disabled 授权交集。Local／Temporal 六类真实审批重启与已采纳结果恢复、原生冷接管和真实停止追踪通过；完整发布仍待独立审查、全量、固定安装及旧82兼容验收。远程沙箱、持久工作区、Artifact传输、外部Runner及完整R01–R26继续开放。见[原生沙箱指南](../../docs/sandbox.md)。
+
 Dev82 子集已验收：纯可替换 SkillSelector／LexicalSkillSelector、SkillDirectoryRetriever、JSON／可选 SKILL.md 声明，通过原 KnowledgeContext 自动提供被动目录；正文仍走原授权 skill_get，不增加工具权限或执行权威。最终源码5089 passed／386配置跳过（845.08s (0:14:05)），核心155／SDK271安装、真实源码8／安装8、旧81双向恢复／22模板／旧Worker业务I/O前拒绝及281模块一致通过。三项Important经10项有效失败复现统一修复，无新增延期Minor；自有Temporal实际退出并等待。完整R01–R26、语义选择、插件激活、Sandbox／Runner及真实质量仍开放。见[本批记录](../reviews/2026-10-12-skill-discovery-context.md)。
 
 Dev81 子集已验收：原生写真实生命周期及显式可替换 ToolExecutionPort／tracked owner，原 Temporal History 分别保存独占调用身份、实际结束与效果回执；容量拒绝／RPC失败／观察者取消的通知保持受管理重试。最终源码5021 passed／378配置跳过（758.54s），核心67／SDK232安装、真实源码8／安装8、旧80双向恢复／22模板／旧Worker执行前拒绝及278模块一致通过。三项Important经3项RED→GREEN统一修复，无新延期Minor；原自有服务停止并实际等待退出。完整R01–R26、Sandbox／Runner与质量目标仍开放。 见[本批记录](../reviews/2026-10-12-native-write-lifetime.md)。
@@ -323,7 +325,7 @@ SDK直接运行不依赖Service，身份与Scope不从用户提示词取得。
 | 组件装配 | H1a与Local H1b六类绑定，覆盖原生/顺序/图/Team/Dynamic/嵌套、固定父子Release及Profile v2 | 补Temporal绑定、其他规范资源身份/环境角色；Local Session H1c已交付，不把Local H1b当完整H1 |
 | 上下文/记忆/RAG | 多个端口/适配器与可选链路已有实现 | 组合为推荐受管理管线，补自动阶段与作用域路由 |
 | Agent/Session应用API | H2a Local stateless Agent/Runtime、AgentRun/RunRef/WaitResult、托管／观察／可重试关闭；H2b1 原生／顺序及 H2b2 同库复合 Session/Turn、busy、固定绑定与 CAS rebind；H2c1 Temporal 原生／顺序共同入口与固定 RPC 派发／detach | H2c2 已接通已注册高级入口；补远程会话、续接、Temporal 绑定与完整共同验收；旧RunHandle DTO保留 |
-| Workspace/Skill/Sandbox | 尚未完整交付 | 分别实现，不能把现有可信Python称为隔离 |
+| Workspace/Skill/Sandbox | Workspace读写与Skill目录已交付子集；dev83受限Docker／原工具／Sandbox角色候选已通过真实编排恢复 | 最终发布验收进行中；远端、持久共享工作区、Artifact传输及完整H4仍未交付 |
 | 实时事件 | 持久事实订阅已有，Agent delta尚未统一 | 独立展示协议，不改变采纳语义 |
 | 企业Service | 有限HTTP/A2A与交接 | 身份、容量、运维、迁移/保留和恢复控制面后续验收 |
 
