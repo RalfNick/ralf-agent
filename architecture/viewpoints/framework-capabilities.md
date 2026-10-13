@@ -1,5 +1,7 @@
 # RALF 通用框架能力与扩展验收
 
+dev101 补齐固定候选[配置／原生控制检查](../../docs/codex-coding-preflight.md)，有限原生命令读写、路径／网络拒绝与后继整容器停止探针通过。execution_admitted=false；[原 Action 委托集成](../specs/delegated-coding-action-contract.md)、专用认证／模型 Turn 和 Local／Temporal 恢复仍待验收，R13 未完成。
+
 dev100 开始第二阶段首个 Codex Runner 的协议／启动证据基础，见[实现边界](../../docs/codex-runner-foundation.md)。机械通信与 Journal 不拥有 Run／Action 权威；R13 完整受限 Coding 链路、Local／Temporal 版本化停止采纳和真实外部 Runner 验收仍开放。
 
 当前交付顺序按用户修订的[阶段门槛](../../docs/delivery-gates.md)：第一阶段关闭单 Agent、语义 RAG、Plan、Team 的完整参考链路，第二阶段环境与执行，第三阶段服务化与治理。下文 R01–R26 和历史记录全部保留；新增实现必须说明阻塞哪个当前门槛，非阻塞额外适配器保留后续，不以接口或测试数量判断完成。

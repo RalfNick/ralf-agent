@@ -1,6 +1,8 @@
 # RALF AgentHarness 目标架构
 
-本架构继续作为职责和扩展契约基线；推进按[分阶段交付门槛](../../docs/delivery-gates.md)，dev99 已冻结四条参考业务链路，dev100 转入环境与执行。首个外部 Runner 的通信／启动证据基础不改变纯 Harness 或原执行权威，实际隔离与版本化停止门禁尚待验收。见[实现边界](../../docs/codex-runner-foundation.md)。成员完成反馈仍复用原 verifier，父级 gate 负责原回执采纳。
+dev101 追加[固定原生配置和控制检查](../../docs/codex-coding-preflight.md)及有限命令环境证据。[委托 Coding Action 集成契约](../specs/delegated-coding-action-contract.md)继续复用原审批、效果与唯一执行权威；控制读回不获业务执行许可，完整原生工具／认证／恢复继续开放。
+
+本架构继续作为职责和扩展契约基线；推进按[分阶段交付门槛](../../docs/delivery-gates.md)，dev99 已冻结四条参考业务链路，dev100 转入环境与执行。首个外部 Runner 的通信／启动证据基础不改变纯 Harness 或原执行权威，完整业务工具隔离与版本化停止采纳尚待验收。见[实现边界](../../docs/codex-runner-foundation.md)。成员完成反馈仍复用原 verifier，父级 gate 负责原回执采纳。
 
 Dev94 首个知识检索适配契约子集已验收，沿用原 KnowledgeContext、BuildContext、Runtime 与执行权威。Suite 只验证固定行为，不持有新 Run／Session／租约或 History；原活跃操作／资源／workspace 在 release或close 失败后仍由同owner负责。完整 Harness 与其他角色仍开放。见[本批验收](../reviews/2026-10-13-knowledge-adapter-contracts.md)。
 

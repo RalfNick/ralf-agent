@@ -15,6 +15,31 @@ from collections import deque
 _METHODS = frozenset(
     {"initialize", "thread/start", "thread/read", "thread/resume", "turn/start", "turn/interrupt"}
 )
+_CONTROL_METHODS = frozenset(
+    {
+        "initialize",
+        "config/read",
+        "configRequirements/read",
+        "experimentalFeature/list",
+        "permissionProfile/list",
+        "mcpServerStatus/list",
+        "skills/list",
+        "plugin/list",
+        "plugin/installed",
+    }
+)
+_BWRAP_WARNING = (
+    "Codex could not find bubblewrap on PATH. Install bubblewrap with your OS package manager. "
+    "See the sandbox prerequisites: https://developers.openai.com/codex/concepts/sandboxing#prerequisites. "
+    "Codex will use the bundled bubblewrap in the meantime."
+)
+_UNTRUSTED_WORKSPACE_WARNING = (
+    "Project-local config, hooks, and exec policies are disabled in the following folders "
+    "until the project is trusted, but skills still load.\n"
+    "    1. /workspace/.codex\n"
+    "       To load project-local config, hooks, and exec policies, add /workspace as a "
+    "trusted project in /home/ralf/.codex/config.toml.\n"
+)
 _MAX_ID = 2**53 - 1
 
 
@@ -113,6 +138,7 @@ class CodexRPCTransport:
         max_message_bytes: int = 1048576,
         max_events: int = 256,
         request_timeout: float = 30.0,
+        control_only: bool = False,
     ):
         if os.name != "posix":
             raise ValueError("CodexRPCTransport requires POSIX process groups")
@@ -139,6 +165,10 @@ class CodexRPCTransport:
             if type(value) is not int or not 1 <= value <= upper:
                 raise ValueError(f"{name} must be an integer between 1 and {upper}")
         _positive_number(request_timeout, "request_timeout")
+        if type(control_only) is not bool:
+            raise ValueError("control_only must be a boolean")
+        self._control_only = control_only
+        self._control_notifications = 0
         self._argv = argv
         self._env = dict(env)
         self._max_message_bytes = max_message_bytes
@@ -268,9 +298,15 @@ class CodexRPCTransport:
                 self._fail(error)
                 raise error from None
 
-    async def request(self, method: str, params: dict) -> dict:
+    async def request(self, method: str, params: dict | None) -> dict:
         self._require_open()
-        if type(method) is not str or method not in _METHODS or type(params) is not dict:
+        methods = _CONTROL_METHODS if self._control_only else _METHODS
+        nullable = self._control_only and method == "configRequirements/read" and params is None
+        if (
+            type(method) is not str
+            or method not in methods
+            or (type(params) is not dict and not nullable)
+        ):
             raise ValueError("request method or params are outside the stable transport subset")
         if len(self._pending) >= self._max_events:
             raise CodexRPCError("outstanding request limit reached")
@@ -287,7 +323,13 @@ class CodexRPCTransport:
             return await future
 
         try:
-            return await asyncio.wait_for(exchange(), timeout=self._request_timeout)
+            result = await asyncio.wait_for(exchange(), timeout=self._request_timeout)
+            if self._control_only:
+                # The reader may already have rejected peer traffic following
+                # this reply in the same batch. A resolved future is then not
+                # evidence of a successful control-only exchange.
+                self._require_open()
+            return result
         finally:
             self._pending.pop(request_id, None)
             if not future.done():
@@ -352,6 +394,9 @@ class CodexRPCTransport:
         if type(message) is not dict or message.get("jsonrpc", "2.0") != "2.0":
             raise ValueError("invalid JSON-RPC object")
         if "method" in message:
+            if self._control_only:
+                self._control_notification(message)
+                return
             if (
                 type(message["method"]) is not str
                 or not message["method"]
@@ -389,6 +434,35 @@ class CodexRPCTransport:
             future.set_exception(CodexRPCRemoteError(message["error"]))
         else:
             future.set_result(message["result"])
+
+    def _control_notification(self, message):
+        # Observed stable startup status only. No peer request is answered, no
+        # warning is treated as enforcement proof, and nothing is logged raw.
+        if set(message) != {"method", "params"} or type(message["params"]) is not dict:
+            raise ValueError("unexpected native control traffic")
+        method, params = message["method"], message["params"]
+        if method == "configWarning":
+            valid = (
+                set(params) == {"summary", "details"}
+                and type(params["summary"]) is str
+                and params["summary"] in {_BWRAP_WARNING, _UNTRUSTED_WORKSPACE_WARNING}
+                and params["details"] is None
+            )
+        elif method == "remoteControl/status/changed":
+            valid = (
+                set(params) == {"status", "serverName", "installationId", "environmentId"}
+                and params["status"] == "disabled"
+                and params["environmentId"] is None
+                and all(
+                    type(params[k]) is str and bool(params[k])
+                    for k in ("serverName", "installationId")
+                )
+            )
+        else:
+            valid = False
+        if not valid or self._control_notifications >= self._max_events:
+            raise ValueError("unreviewed or overflowing native control status")
+        self._control_notifications += 1
 
     def _fail(self, error):
         if self._failure is None:

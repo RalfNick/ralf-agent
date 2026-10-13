@@ -1,4 +1,6 @@
-# Implementation status — 0.1.0.dev100
+# Implementation status — 0.1.0.dev101
+
+Dev101 固定 Coding 候选配置、只读原生启动校验和 seccomp 资产已实现：真实 App Server 九项控制查询与有限原生命令读写／拒绝／整容器停止探针通过；控制结果保持 execution_admitted=false。独立审查的最终回执后违规请求 P2 已修复。原 Action 委托、专用认证、完整原生 Turn、Local／Temporal 停止采纳仍开放，不标记 R13 或第二阶段完成。见[使用边界](codex-coding-preflight.md)与[验收记录](../architecture/reviews/2026-10-14-codex-coding-preflight.md)。
 
 Dev100 进入第二阶段，新增固定 Codex 0.144.4 协议子集、有界 stdio 通信与独占持久启动证据。启动取消 P1 已由同一独立审查者复验闭环，受影响源码／固定安装各 127 项零跳过；原 351 个产品模块保留。仅基础组件，无完整 Runner 工厂／绑定；真实 Codex、受限工作区和 Temporal 委托取消未验收，R13／第二阶段继续开放。见[实现边界](codex-runner-foundation.md)与[验收记录](../architecture/reviews/2026-10-14-codex-runner-foundation.md)。下列阶段验收与历史记录保留。
 

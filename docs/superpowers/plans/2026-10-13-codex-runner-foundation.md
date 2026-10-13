@@ -25,11 +25,20 @@
 - [x] Implement bounded stdio transport: fixed argv/environment, request correlation, notifications/server requests, no automatic approvals/retries, actual transport cleanup.
 - [x] Implement exclusive durable native StartIntent/Thread/Turn evidence, immutable identity, at-most-one submission permission, independent cancel intent, restart and alias tests.
 - [x] Test these components together with a real finite fake App Server process, including lost Turn receipt and acknowledgment without native-stop evidence.
-- [ ] Review, document implemented versus unverified boundaries, verify wheel packaging and locally commit.
+- [x] Review, document implemented versus unverified boundaries, verify wheel packaging and locally commit (dev100, `8f32658`).
 
 Batch A is an implementation milestone, **not** acceptance of an external Coding Runner. It deliberately exposes no Engine selection or factory claiming a runnable isolated application.
 
 ## Batch B: restricted environment and authority integration
+
+Dev101 delivers the limited [control preflight](../../codex-coding-preflight.md) and native
+namespace read/write/test, path/network rejection and detached-child containment probes.
+Complete business tool/credential enforcement and authority integration remain open under
+[delegated Coding Action integration](../../../architecture/specs/delegated-coding-action-contract.md).
+
+- [x] Pin pure candidate config and stable readback inventory; no business start on the control connection.
+- [x] Probe exact Docker29 seccomp delta with native commands and whole-container stop; retain original default rejection.
+
 
 - [ ] Prove a concrete restricted environment: retained scoped workspace, read/write/test capability, denied protected roots and general network, disabled unapproved MCP/plugins/hooks, credential separation, successor containment and output export.
 - [ ] Add explicitly versioned delegated admission and stop-gated cancellation to Local and Temporal, including cold restoration; preserve old Run behavior and old-worker rejection before business I/O.

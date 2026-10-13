@@ -1,7 +1,15 @@
 The Codex App Server schema subset in
-src/ralf_agent/_codex_protocol_schema.json is derived from schemas generated
+src/ralf_agent/_codex_protocol_schema.json and _codex_control_schema.json
+are derived from schemas generated
 by OpenAI Codex 0.144.4 (@openai/codex), distributed under Apache-2.0.
 Upstream project: https://github.com/openai/codex
 
 RALF's extraction removes descriptions and unused definitions. The selected
 native input hashes and extraction command are recorded with the schema.
+
+src/ralf_agent/_codex_coding_seccomp.json is derived from the Moby
+profiles/seccomp v0.1.0 default policy vendored in Docker 29.0.1,
+distributed under Apache-2.0. Upstream: https://github.com/moby/profiles
+RALF Agent appended 12 namespace/Bubblewrap setup rules and changed JSON
+formatting. The remaining upstream policy is preserved. Source, license,
+exact delta and probe boundaries: tools/codex-seccomp-provenance.json.

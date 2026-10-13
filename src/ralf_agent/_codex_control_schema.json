@@ -1,0 +1,3015 @@
+{
+  "external_version": "0.144.4",
+  "generator": "codex app-server generate-json-schema (no --experimental)",
+  "schemas": {
+    "config/read": {
+      "request": {
+        "$ref": "#/definitions/ConfigReadParams",
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "definitions": {
+          "ConfigReadParams": {
+            "properties": {
+              "cwd": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "includeLayers": {
+                "type": "boolean"
+              }
+            },
+            "type": "object"
+          }
+        }
+      },
+      "response": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "definitions": {
+          "AbsolutePathBuf": {
+            "type": "string"
+          },
+          "AnalyticsConfig": {
+            "additionalProperties": true,
+            "properties": {
+              "enabled": {
+                "type": [
+                  "boolean",
+                  "null"
+                ]
+              }
+            },
+            "type": "object"
+          },
+          "ApprovalsReviewer": {
+            "enum": [
+              "user",
+              "auto_review",
+              "guardian_subagent"
+            ],
+            "type": "string"
+          },
+          "AskForApproval": {
+            "oneOf": [
+              {
+                "enum": [
+                  "untrusted",
+                  "on-request",
+                  "never"
+                ],
+                "type": "string"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "granular": {
+                    "properties": {
+                      "mcp_elicitations": {
+                        "type": "boolean"
+                      },
+                      "request_permissions": {
+                        "default": false,
+                        "type": "boolean"
+                      },
+                      "rules": {
+                        "type": "boolean"
+                      },
+                      "sandbox_approval": {
+                        "type": "boolean"
+                      },
+                      "skill_approval": {
+                        "default": false,
+                        "type": "boolean"
+                      }
+                    },
+                    "required": [
+                      "mcp_elicitations",
+                      "rules",
+                      "sandbox_approval"
+                    ],
+                    "type": "object"
+                  }
+                },
+                "required": [
+                  "granular"
+                ],
+                "type": "object"
+              }
+            ]
+          },
+          "AutoCompactTokenLimitScope": {
+            "oneOf": [
+              {
+                "enum": [
+                  "total"
+                ],
+                "type": "string"
+              },
+              {
+                "enum": [
+                  "body_after_prefix"
+                ],
+                "type": "string"
+              }
+            ]
+          },
+          "Config": {
+            "additionalProperties": true,
+            "properties": {
+              "analytics": {
+                "anyOf": [
+                  {
+                    "$ref": "#/definitions/AnalyticsConfig"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "approval_policy": {
+                "anyOf": [
+                  {
+                    "$ref": "#/definitions/AskForApproval"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "approvals_reviewer": {
+                "anyOf": [
+                  {
+                    "$ref": "#/definitions/ApprovalsReviewer"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "compact_prompt": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "desktop": {
+                "additionalProperties": true,
+                "type": [
+                  "object",
+                  "null"
+                ]
+              },
+              "developer_instructions": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "forced_chatgpt_workspace_id": {
+                "anyOf": [
+                  {
+                    "$ref": "#/definitions/ForcedChatgptWorkspaceIds"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "forced_login_method": {
+                "anyOf": [
+                  {
+                    "$ref": "#/definitions/ForcedLoginMethod"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "instructions": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "model": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "model_auto_compact_token_limit": {
+                "format": "int64",
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              },
+              "model_auto_compact_token_limit_scope": {
+                "anyOf": [
+                  {
+                    "$ref": "#/definitions/AutoCompactTokenLimitScope"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "model_context_window": {
+                "format": "int64",
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              },
+              "model_provider": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "model_reasoning_effort": {
+                "anyOf": [
+                  {
+                    "$ref": "#/definitions/ReasoningEffort"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "model_reasoning_summary": {
+                "anyOf": [
+                  {
+                    "$ref": "#/definitions/ReasoningSummary"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "model_verbosity": {
+                "anyOf": [
+                  {
+                    "$ref": "#/definitions/Verbosity"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "review_model": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "sandbox_mode": {
+                "anyOf": [
+                  {
+                    "$ref": "#/definitions/SandboxMode"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "sandbox_workspace_write": {
+                "anyOf": [
+                  {
+                    "$ref": "#/definitions/SandboxWorkspaceWrite"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "service_tier": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "tools": {
+                "anyOf": [
+                  {
+                    "$ref": "#/definitions/ToolsV2"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "web_search": {
+                "anyOf": [
+                  {
+                    "$ref": "#/definitions/WebSearchMode"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "type": "object"
+          },
+          "ConfigLayer": {
+            "properties": {
+              "config": true,
+              "disabledReason": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "name": {
+                "$ref": "#/definitions/ConfigLayerSource"
+              },
+              "version": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "config",
+              "name",
+              "version"
+            ],
+            "type": "object"
+          },
+          "ConfigLayerMetadata": {
+            "properties": {
+              "name": {
+                "$ref": "#/definitions/ConfigLayerSource"
+              },
+              "version": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "name",
+              "version"
+            ],
+            "type": "object"
+          },
+          "ConfigLayerSource": {
+            "oneOf": [
+              {
+                "properties": {
+                  "domain": {
+                    "type": "string"
+                  },
+                  "key": {
+                    "type": "string"
+                  },
+                  "type": {
+                    "enum": [
+                      "mdm"
+                    ],
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "domain",
+                  "key",
+                  "type"
+                ],
+                "type": "object"
+              },
+              {
+                "properties": {
+                  "file": {
+                    "allOf": [
+                      {
+                        "$ref": "#/definitions/AbsolutePathBuf"
+                      }
+                    ]
+                  },
+                  "type": {
+                    "enum": [
+                      "system"
+                    ],
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "file",
+                  "type"
+                ],
+                "type": "object"
+              },
+              {
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "name": {
+                    "type": "string"
+                  },
+                  "type": {
+                    "enum": [
+                      "enterpriseManaged"
+                    ],
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "id",
+                  "name",
+                  "type"
+                ],
+                "type": "object"
+              },
+              {
+                "properties": {
+                  "file": {
+                    "allOf": [
+                      {
+                        "$ref": "#/definitions/AbsolutePathBuf"
+                      }
+                    ]
+                  },
+                  "profile": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "type": {
+                    "enum": [
+                      "user"
+                    ],
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "file",
+                  "type"
+                ],
+                "type": "object"
+              },
+              {
+                "properties": {
+                  "dotCodexFolder": {
+                    "$ref": "#/definitions/AbsolutePathBuf"
+                  },
+                  "type": {
+                    "enum": [
+                      "project"
+                    ],
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "dotCodexFolder",
+                  "type"
+                ],
+                "type": "object"
+              },
+              {
+                "properties": {
+                  "type": {
+                    "enum": [
+                      "sessionFlags"
+                    ],
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "type"
+                ],
+                "type": "object"
+              },
+              {
+                "properties": {
+                  "file": {
+                    "$ref": "#/definitions/AbsolutePathBuf"
+                  },
+                  "type": {
+                    "enum": [
+                      "legacyManagedConfigTomlFromFile"
+                    ],
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "file",
+                  "type"
+                ],
+                "type": "object"
+              },
+              {
+                "properties": {
+                  "type": {
+                    "enum": [
+                      "legacyManagedConfigTomlFromMdm"
+                    ],
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "type"
+                ],
+                "type": "object"
+              }
+            ]
+          },
+          "ForcedChatgptWorkspaceIds": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              }
+            ]
+          },
+          "ForcedLoginMethod": {
+            "enum": [
+              "chatgpt",
+              "api"
+            ],
+            "type": "string"
+          },
+          "ReasoningEffort": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "ReasoningSummary": {
+            "oneOf": [
+              {
+                "enum": [
+                  "auto",
+                  "concise",
+                  "detailed"
+                ],
+                "type": "string"
+              },
+              {
+                "enum": [
+                  "none"
+                ],
+                "type": "string"
+              }
+            ]
+          },
+          "SandboxMode": {
+            "enum": [
+              "read-only",
+              "workspace-write",
+              "danger-full-access"
+            ],
+            "type": "string"
+          },
+          "SandboxWorkspaceWrite": {
+            "properties": {
+              "exclude_slash_tmp": {
+                "default": false,
+                "type": "boolean"
+              },
+              "exclude_tmpdir_env_var": {
+                "default": false,
+                "type": "boolean"
+              },
+              "network_access": {
+                "default": false,
+                "type": "boolean"
+              },
+              "writable_roots": {
+                "default": [],
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              }
+            },
+            "type": "object"
+          },
+          "ToolsV2": {
+            "properties": {
+              "web_search": {
+                "anyOf": [
+                  {
+                    "$ref": "#/definitions/WebSearchToolConfig"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "type": "object"
+          },
+          "Verbosity": {
+            "enum": [
+              "low",
+              "medium",
+              "high"
+            ],
+            "type": "string"
+          },
+          "WebSearchContextSize": {
+            "enum": [
+              "low",
+              "medium",
+              "high"
+            ],
+            "type": "string"
+          },
+          "WebSearchLocation": {
+            "additionalProperties": false,
+            "properties": {
+              "city": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "country": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "region": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "timezone": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "type": "object"
+          },
+          "WebSearchMode": {
+            "enum": [
+              "disabled",
+              "cached",
+              "indexed",
+              "live"
+            ],
+            "type": "string"
+          },
+          "WebSearchToolConfig": {
+            "additionalProperties": false,
+            "properties": {
+              "allowed_domains": {
+                "items": {
+                  "type": "string"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
+              },
+              "context_size": {
+                "anyOf": [
+                  {
+                    "$ref": "#/definitions/WebSearchContextSize"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "location": {
+                "anyOf": [
+                  {
+                    "$ref": "#/definitions/WebSearchLocation"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "type": "object"
+          }
+        },
+        "properties": {
+          "config": {
+            "$ref": "#/definitions/Config"
+          },
+          "layers": {
+            "items": {
+              "$ref": "#/definitions/ConfigLayer"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
+          "origins": {
+            "additionalProperties": {
+              "$ref": "#/definitions/ConfigLayerMetadata"
+            },
+            "type": "object"
+          }
+        },
+        "required": [
+          "config",
+          "origins"
+        ],
+        "type": "object"
+      }
+    },
+    "configRequirements/read": {
+      "request": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "definitions": {},
+        "type": "null"
+      },
+      "response": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "definitions": {
+          "AskForApproval": {
+            "oneOf": [
+              {
+                "enum": [
+                  "untrusted",
+                  "on-request",
+                  "never"
+                ],
+                "type": "string"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "granular": {
+                    "properties": {
+                      "mcp_elicitations": {
+                        "type": "boolean"
+                      },
+                      "request_permissions": {
+                        "default": false,
+                        "type": "boolean"
+                      },
+                      "rules": {
+                        "type": "boolean"
+                      },
+                      "sandbox_approval": {
+                        "type": "boolean"
+                      },
+                      "skill_approval": {
+                        "default": false,
+                        "type": "boolean"
+                      }
+                    },
+                    "required": [
+                      "mcp_elicitations",
+                      "rules",
+                      "sandbox_approval"
+                    ],
+                    "type": "object"
+                  }
+                },
+                "required": [
+                  "granular"
+                ],
+                "type": "object"
+              }
+            ]
+          },
+          "ComputerUseRequirements": {
+            "properties": {
+              "allowLockedComputerUse": {
+                "type": [
+                  "boolean",
+                  "null"
+                ]
+              }
+            },
+            "type": "object"
+          },
+          "ConfigRequirements": {
+            "properties": {
+              "allowAppshots": {
+                "type": [
+                  "boolean",
+                  "null"
+                ]
+              },
+              "allowManagedHooksOnly": {
+                "type": [
+                  "boolean",
+                  "null"
+                ]
+              },
+              "allowRemoteControl": {
+                "type": [
+                  "boolean",
+                  "null"
+                ]
+              },
+              "allowedApprovalPolicies": {
+                "items": {
+                  "$ref": "#/definitions/AskForApproval"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
+              },
+              "allowedPermissionProfiles": {
+                "additionalProperties": {
+                  "type": "boolean"
+                },
+                "type": [
+                  "object",
+                  "null"
+                ]
+              },
+              "allowedSandboxModes": {
+                "items": {
+                  "$ref": "#/definitions/SandboxMode"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
+              },
+              "allowedWebSearchModes": {
+                "items": {
+                  "$ref": "#/definitions/WebSearchMode"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
+              },
+              "allowedWindowsSandboxImplementations": {
+                "items": {
+                  "$ref": "#/definitions/WindowsSandboxSetupMode"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
+              },
+              "computerUse": {
+                "anyOf": [
+                  {
+                    "$ref": "#/definitions/ComputerUseRequirements"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "defaultPermissions": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "enforceResidency": {
+                "anyOf": [
+                  {
+                    "$ref": "#/definitions/ResidencyRequirement"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "featureRequirements": {
+                "additionalProperties": {
+                  "type": "boolean"
+                },
+                "type": [
+                  "object",
+                  "null"
+                ]
+              },
+              "models": {
+                "anyOf": [
+                  {
+                    "$ref": "#/definitions/ModelsRequirements"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "type": "object"
+          },
+          "ModelsRequirements": {
+            "properties": {
+              "newThread": {
+                "anyOf": [
+                  {
+                    "$ref": "#/definitions/NewThreadModelDefaults"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "type": "object"
+          },
+          "NewThreadModelDefaults": {
+            "properties": {
+              "model": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "modelReasoningEffort": {
+                "anyOf": [
+                  {
+                    "$ref": "#/definitions/ReasoningEffort"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "serviceTier": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "type": "object"
+          },
+          "ReasoningEffort": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "ResidencyRequirement": {
+            "enum": [
+              "us"
+            ],
+            "type": "string"
+          },
+          "SandboxMode": {
+            "enum": [
+              "read-only",
+              "workspace-write",
+              "danger-full-access"
+            ],
+            "type": "string"
+          },
+          "WebSearchMode": {
+            "enum": [
+              "disabled",
+              "cached",
+              "indexed",
+              "live"
+            ],
+            "type": "string"
+          },
+          "WindowsSandboxSetupMode": {
+            "enum": [
+              "elevated",
+              "unelevated"
+            ],
+            "type": "string"
+          }
+        },
+        "properties": {
+          "requirements": {
+            "anyOf": [
+              {
+                "$ref": "#/definitions/ConfigRequirements"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object"
+      }
+    },
+    "experimentalFeature/list": {
+      "request": {
+        "$ref": "#/definitions/ExperimentalFeatureListParams",
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "definitions": {
+          "ExperimentalFeatureListParams": {
+            "properties": {
+              "cursor": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "limit": {
+                "format": "uint32",
+                "minimum": 0.0,
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              },
+              "threadId": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "type": "object"
+          }
+        }
+      },
+      "response": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "definitions": {
+          "ExperimentalFeature": {
+            "properties": {
+              "announcement": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "defaultEnabled": {
+                "type": "boolean"
+              },
+              "displayName": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "enabled": {
+                "type": "boolean"
+              },
+              "name": {
+                "type": "string"
+              },
+              "stage": {
+                "allOf": [
+                  {
+                    "$ref": "#/definitions/ExperimentalFeatureStage"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "defaultEnabled",
+              "enabled",
+              "name",
+              "stage"
+            ],
+            "type": "object"
+          },
+          "ExperimentalFeatureStage": {
+            "oneOf": [
+              {
+                "enum": [
+                  "beta"
+                ],
+                "type": "string"
+              },
+              {
+                "enum": [
+                  "underDevelopment"
+                ],
+                "type": "string"
+              },
+              {
+                "enum": [
+                  "stable"
+                ],
+                "type": "string"
+              },
+              {
+                "enum": [
+                  "deprecated"
+                ],
+                "type": "string"
+              },
+              {
+                "enum": [
+                  "removed"
+                ],
+                "type": "string"
+              }
+            ]
+          }
+        },
+        "properties": {
+          "data": {
+            "items": {
+              "$ref": "#/definitions/ExperimentalFeature"
+            },
+            "type": "array"
+          },
+          "nextCursor": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "data"
+        ],
+        "type": "object"
+      }
+    },
+    "initialize": {
+      "request": {
+        "$ref": "#/definitions/InitializeParams",
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "definitions": {
+          "ClientInfo": {
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "version": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "name",
+              "version"
+            ],
+            "type": "object"
+          },
+          "InitializeCapabilities": {
+            "properties": {
+              "experimentalApi": {
+                "default": false,
+                "type": "boolean"
+              },
+              "mcpServerOpenaiFormElicitation": {
+                "type": "boolean"
+              },
+              "optOutNotificationMethods": {
+                "items": {
+                  "type": "string"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
+              },
+              "requestAttestation": {
+                "default": false,
+                "type": "boolean"
+              }
+            },
+            "type": "object"
+          },
+          "InitializeParams": {
+            "properties": {
+              "capabilities": {
+                "anyOf": [
+                  {
+                    "$ref": "#/definitions/InitializeCapabilities"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "clientInfo": {
+                "$ref": "#/definitions/ClientInfo"
+              }
+            },
+            "required": [
+              "clientInfo"
+            ],
+            "type": "object"
+          }
+        }
+      },
+      "response": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "definitions": {
+          "AbsolutePathBuf": {
+            "type": "string"
+          }
+        },
+        "properties": {
+          "codexHome": {
+            "allOf": [
+              {
+                "$ref": "#/definitions/AbsolutePathBuf"
+              }
+            ]
+          },
+          "platformFamily": {
+            "type": "string"
+          },
+          "platformOs": {
+            "type": "string"
+          },
+          "userAgent": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "codexHome",
+          "platformFamily",
+          "platformOs",
+          "userAgent"
+        ],
+        "type": "object"
+      }
+    },
+    "mcpServerStatus/list": {
+      "request": {
+        "$ref": "#/definitions/ListMcpServerStatusParams",
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "definitions": {
+          "ListMcpServerStatusParams": {
+            "properties": {
+              "cursor": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "detail": {
+                "anyOf": [
+                  {
+                    "$ref": "#/definitions/McpServerStatusDetail"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "limit": {
+                "format": "uint32",
+                "minimum": 0.0,
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              },
+              "threadId": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "type": "object"
+          },
+          "McpServerStatusDetail": {
+            "enum": [
+              "full",
+              "toolsAndAuthOnly"
+            ],
+            "type": "string"
+          }
+        }
+      },
+      "response": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "definitions": {
+          "McpAuthStatus": {
+            "enum": [
+              "unsupported",
+              "notLoggedIn",
+              "bearerToken",
+              "oAuth"
+            ],
+            "type": "string"
+          },
+          "McpServerInfo": {
+            "properties": {
+              "icons": {
+                "items": true,
+                "type": [
+                  "array",
+                  "null"
+                ]
+              },
+              "name": {
+                "type": "string"
+              },
+              "version": {
+                "type": "string"
+              },
+              "websiteUrl": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "name",
+              "version"
+            ],
+            "type": "object"
+          },
+          "McpServerStatus": {
+            "properties": {
+              "authStatus": {
+                "$ref": "#/definitions/McpAuthStatus"
+              },
+              "name": {
+                "type": "string"
+              },
+              "resourceTemplates": {
+                "items": {
+                  "$ref": "#/definitions/ResourceTemplate"
+                },
+                "type": "array"
+              },
+              "resources": {
+                "items": {
+                  "$ref": "#/definitions/Resource"
+                },
+                "type": "array"
+              },
+              "serverInfo": {
+                "anyOf": [
+                  {
+                    "$ref": "#/definitions/McpServerInfo"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "tools": {
+                "additionalProperties": {
+                  "$ref": "#/definitions/Tool"
+                },
+                "type": "object"
+              }
+            },
+            "required": [
+              "authStatus",
+              "name",
+              "resourceTemplates",
+              "resources",
+              "tools"
+            ],
+            "type": "object"
+          },
+          "Resource": {
+            "properties": {
+              "_meta": true,
+              "annotations": true,
+              "icons": {
+                "items": true,
+                "type": [
+                  "array",
+                  "null"
+                ]
+              },
+              "mimeType": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "name": {
+                "type": "string"
+              },
+              "size": {
+                "format": "int64",
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              },
+              "uri": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "name",
+              "uri"
+            ],
+            "type": "object"
+          },
+          "ResourceTemplate": {
+            "properties": {
+              "annotations": true,
+              "mimeType": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "name": {
+                "type": "string"
+              },
+              "uriTemplate": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "name",
+              "uriTemplate"
+            ],
+            "type": "object"
+          },
+          "Tool": {
+            "properties": {
+              "_meta": true,
+              "annotations": true,
+              "icons": {
+                "items": true,
+                "type": [
+                  "array",
+                  "null"
+                ]
+              },
+              "inputSchema": true,
+              "name": {
+                "type": "string"
+              },
+              "outputSchema": true
+            },
+            "required": [
+              "inputSchema",
+              "name"
+            ],
+            "type": "object"
+          }
+        },
+        "properties": {
+          "data": {
+            "items": {
+              "$ref": "#/definitions/McpServerStatus"
+            },
+            "type": "array"
+          },
+          "nextCursor": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "data"
+        ],
+        "type": "object"
+      }
+    },
+    "permissionProfile/list": {
+      "request": {
+        "$ref": "#/definitions/PermissionProfileListParams",
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "definitions": {
+          "PermissionProfileListParams": {
+            "properties": {
+              "cursor": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "cwd": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "limit": {
+                "format": "uint32",
+                "minimum": 0.0,
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              }
+            },
+            "type": "object"
+          }
+        }
+      },
+      "response": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "definitions": {
+          "PermissionProfileSummary": {
+            "properties": {
+              "allowed": {
+                "type": "boolean"
+              },
+              "id": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "allowed",
+              "id"
+            ],
+            "type": "object"
+          }
+        },
+        "properties": {
+          "data": {
+            "items": {
+              "$ref": "#/definitions/PermissionProfileSummary"
+            },
+            "type": "array"
+          },
+          "nextCursor": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "data"
+        ],
+        "type": "object"
+      }
+    },
+    "plugin/installed": {
+      "request": {
+        "$ref": "#/definitions/PluginInstalledParams",
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "definitions": {
+          "AbsolutePathBuf": {
+            "type": "string"
+          },
+          "PluginInstalledParams": {
+            "properties": {
+              "cwds": {
+                "items": {
+                  "$ref": "#/definitions/AbsolutePathBuf"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
+              },
+              "installSuggestionPluginNames": {
+                "items": {
+                  "type": "string"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
+              }
+            },
+            "type": "object"
+          }
+        }
+      },
+      "response": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "definitions": {
+          "AbsolutePathBuf": {
+            "type": "string"
+          },
+          "MarketplaceInterface": {
+            "properties": {
+              "displayName": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "type": "object"
+          },
+          "MarketplaceLoadErrorInfo": {
+            "properties": {
+              "marketplacePath": {
+                "$ref": "#/definitions/AbsolutePathBuf"
+              },
+              "message": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "marketplacePath",
+              "message"
+            ],
+            "type": "object"
+          },
+          "PluginAuthPolicy": {
+            "enum": [
+              "ON_INSTALL",
+              "ON_USE"
+            ],
+            "type": "string"
+          },
+          "PluginAvailability": {
+            "oneOf": [
+              {
+                "enum": [
+                  "DISABLED_BY_ADMIN"
+                ],
+                "type": "string"
+              },
+              {
+                "enum": [
+                  "AVAILABLE"
+                ],
+                "type": "string"
+              }
+            ]
+          },
+          "PluginInstallPolicy": {
+            "enum": [
+              "NOT_AVAILABLE",
+              "AVAILABLE",
+              "INSTALLED_BY_DEFAULT"
+            ],
+            "type": "string"
+          },
+          "PluginInstallPolicySource": {
+            "enum": [
+              "WORKSPACE_SETTING",
+              "IMPLICIT_CANONICAL_APP"
+            ],
+            "type": "string"
+          },
+          "PluginInterface": {
+            "properties": {
+              "brandColor": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "capabilities": {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "category": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "composerIcon": {
+                "anyOf": [
+                  {
+                    "$ref": "#/definitions/AbsolutePathBuf"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "composerIconUrl": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "defaultPrompt": {
+                "items": {
+                  "type": "string"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
+              },
+              "developerName": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "displayName": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "logo": {
+                "anyOf": [
+                  {
+                    "$ref": "#/definitions/AbsolutePathBuf"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "logoDark": {
+                "anyOf": [
+                  {
+                    "$ref": "#/definitions/AbsolutePathBuf"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "logoUrl": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "logoUrlDark": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "longDescription": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "privacyPolicyUrl": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "screenshotUrls": {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "screenshots": {
+                "items": {
+                  "$ref": "#/definitions/AbsolutePathBuf"
+                },
+                "type": "array"
+              },
+              "shortDescription": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "termsOfServiceUrl": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "websiteUrl": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "capabilities",
+              "screenshotUrls",
+              "screenshots"
+            ],
+            "type": "object"
+          },
+          "PluginMarketplaceEntry": {
+            "properties": {
+              "interface": {
+                "anyOf": [
+                  {
+                    "$ref": "#/definitions/MarketplaceInterface"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "name": {
+                "type": "string"
+              },
+              "path": {
+                "anyOf": [
+                  {
+                    "$ref": "#/definitions/AbsolutePathBuf"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "plugins": {
+                "items": {
+                  "$ref": "#/definitions/PluginSummary"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "name",
+              "plugins"
+            ],
+            "type": "object"
+          },
+          "PluginShareContext": {
+            "properties": {
+              "creatorAccountUserId": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "creatorName": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "discoverability": {
+                "anyOf": [
+                  {
+                    "$ref": "#/definitions/PluginShareDiscoverability"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "remotePluginId": {
+                "type": "string"
+              },
+              "remoteVersion": {
+                "default": null,
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "sharePrincipals": {
+                "items": {
+                  "$ref": "#/definitions/PluginSharePrincipal"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
+              },
+              "shareUrl": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "remotePluginId"
+            ],
+            "type": "object"
+          },
+          "PluginShareDiscoverability": {
+            "enum": [
+              "LISTED",
+              "UNLISTED",
+              "PRIVATE"
+            ],
+            "type": "string"
+          },
+          "PluginSharePrincipal": {
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "principalId": {
+                "type": "string"
+              },
+              "principalType": {
+                "$ref": "#/definitions/PluginSharePrincipalType"
+              },
+              "role": {
+                "$ref": "#/definitions/PluginSharePrincipalRole"
+              }
+            },
+            "required": [
+              "name",
+              "principalId",
+              "principalType",
+              "role"
+            ],
+            "type": "object"
+          },
+          "PluginSharePrincipalRole": {
+            "enum": [
+              "reader",
+              "editor",
+              "owner"
+            ],
+            "type": "string"
+          },
+          "PluginSharePrincipalType": {
+            "enum": [
+              "user",
+              "group",
+              "workspace"
+            ],
+            "type": "string"
+          },
+          "PluginSource": {
+            "oneOf": [
+              {
+                "properties": {
+                  "path": {
+                    "$ref": "#/definitions/AbsolutePathBuf"
+                  },
+                  "type": {
+                    "enum": [
+                      "local"
+                    ],
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "path",
+                  "type"
+                ],
+                "type": "object"
+              },
+              {
+                "properties": {
+                  "path": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "refName": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "sha": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "type": {
+                    "enum": [
+                      "git"
+                    ],
+                    "type": "string"
+                  },
+                  "url": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "type",
+                  "url"
+                ],
+                "type": "object"
+              },
+              {
+                "properties": {
+                  "package": {
+                    "type": "string"
+                  },
+                  "registry": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "type": {
+                    "enum": [
+                      "npm"
+                    ],
+                    "type": "string"
+                  },
+                  "version": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  }
+                },
+                "required": [
+                  "package",
+                  "type"
+                ],
+                "type": "object"
+              },
+              {
+                "properties": {
+                  "type": {
+                    "enum": [
+                      "remote"
+                    ],
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "type"
+                ],
+                "type": "object"
+              }
+            ]
+          },
+          "PluginSummary": {
+            "properties": {
+              "authPolicy": {
+                "$ref": "#/definitions/PluginAuthPolicy"
+              },
+              "availability": {
+                "allOf": [
+                  {
+                    "$ref": "#/definitions/PluginAvailability"
+                  }
+                ],
+                "default": "AVAILABLE"
+              },
+              "enabled": {
+                "type": "boolean"
+              },
+              "id": {
+                "type": "string"
+              },
+              "installPolicy": {
+                "$ref": "#/definitions/PluginInstallPolicy"
+              },
+              "installPolicySource": {
+                "anyOf": [
+                  {
+                    "$ref": "#/definitions/PluginInstallPolicySource"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "installed": {
+                "type": "boolean"
+              },
+              "interface": {
+                "anyOf": [
+                  {
+                    "$ref": "#/definitions/PluginInterface"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "keywords": {
+                "default": [],
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "localVersion": {
+                "default": null,
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "name": {
+                "type": "string"
+              },
+              "remotePluginId": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "shareContext": {
+                "anyOf": [
+                  {
+                    "$ref": "#/definitions/PluginShareContext"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "source": {
+                "$ref": "#/definitions/PluginSource"
+              },
+              "version": {
+                "default": null,
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "authPolicy",
+              "enabled",
+              "id",
+              "installPolicy",
+              "installed",
+              "name",
+              "source"
+            ],
+            "type": "object"
+          }
+        },
+        "properties": {
+          "marketplaceLoadErrors": {
+            "default": [],
+            "items": {
+              "$ref": "#/definitions/MarketplaceLoadErrorInfo"
+            },
+            "type": "array"
+          },
+          "marketplaces": {
+            "items": {
+              "$ref": "#/definitions/PluginMarketplaceEntry"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "marketplaces"
+        ],
+        "type": "object"
+      }
+    },
+    "plugin/list": {
+      "request": {
+        "$ref": "#/definitions/PluginListParams",
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "definitions": {
+          "AbsolutePathBuf": {
+            "type": "string"
+          },
+          "PluginListMarketplaceKind": {
+            "enum": [
+              "local",
+              "vertical",
+              "workspace-directory",
+              "shared-with-me",
+              "created-by-me-remote"
+            ],
+            "type": "string"
+          },
+          "PluginListParams": {
+            "properties": {
+              "cwds": {
+                "items": {
+                  "$ref": "#/definitions/AbsolutePathBuf"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
+              },
+              "marketplaceKinds": {
+                "items": {
+                  "$ref": "#/definitions/PluginListMarketplaceKind"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
+              }
+            },
+            "type": "object"
+          }
+        }
+      },
+      "response": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "definitions": {
+          "AbsolutePathBuf": {
+            "type": "string"
+          },
+          "MarketplaceInterface": {
+            "properties": {
+              "displayName": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "type": "object"
+          },
+          "MarketplaceLoadErrorInfo": {
+            "properties": {
+              "marketplacePath": {
+                "$ref": "#/definitions/AbsolutePathBuf"
+              },
+              "message": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "marketplacePath",
+              "message"
+            ],
+            "type": "object"
+          },
+          "PluginAuthPolicy": {
+            "enum": [
+              "ON_INSTALL",
+              "ON_USE"
+            ],
+            "type": "string"
+          },
+          "PluginAvailability": {
+            "oneOf": [
+              {
+                "enum": [
+                  "DISABLED_BY_ADMIN"
+                ],
+                "type": "string"
+              },
+              {
+                "enum": [
+                  "AVAILABLE"
+                ],
+                "type": "string"
+              }
+            ]
+          },
+          "PluginInstallPolicy": {
+            "enum": [
+              "NOT_AVAILABLE",
+              "AVAILABLE",
+              "INSTALLED_BY_DEFAULT"
+            ],
+            "type": "string"
+          },
+          "PluginInstallPolicySource": {
+            "enum": [
+              "WORKSPACE_SETTING",
+              "IMPLICIT_CANONICAL_APP"
+            ],
+            "type": "string"
+          },
+          "PluginInterface": {
+            "properties": {
+              "brandColor": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "capabilities": {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "category": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "composerIcon": {
+                "anyOf": [
+                  {
+                    "$ref": "#/definitions/AbsolutePathBuf"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "composerIconUrl": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "defaultPrompt": {
+                "items": {
+                  "type": "string"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
+              },
+              "developerName": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "displayName": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "logo": {
+                "anyOf": [
+                  {
+                    "$ref": "#/definitions/AbsolutePathBuf"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "logoDark": {
+                "anyOf": [
+                  {
+                    "$ref": "#/definitions/AbsolutePathBuf"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "logoUrl": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "logoUrlDark": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "longDescription": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "privacyPolicyUrl": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "screenshotUrls": {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "screenshots": {
+                "items": {
+                  "$ref": "#/definitions/AbsolutePathBuf"
+                },
+                "type": "array"
+              },
+              "shortDescription": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "termsOfServiceUrl": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "websiteUrl": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "capabilities",
+              "screenshotUrls",
+              "screenshots"
+            ],
+            "type": "object"
+          },
+          "PluginMarketplaceEntry": {
+            "properties": {
+              "interface": {
+                "anyOf": [
+                  {
+                    "$ref": "#/definitions/MarketplaceInterface"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "name": {
+                "type": "string"
+              },
+              "path": {
+                "anyOf": [
+                  {
+                    "$ref": "#/definitions/AbsolutePathBuf"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "plugins": {
+                "items": {
+                  "$ref": "#/definitions/PluginSummary"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "name",
+              "plugins"
+            ],
+            "type": "object"
+          },
+          "PluginShareContext": {
+            "properties": {
+              "creatorAccountUserId": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "creatorName": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "discoverability": {
+                "anyOf": [
+                  {
+                    "$ref": "#/definitions/PluginShareDiscoverability"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "remotePluginId": {
+                "type": "string"
+              },
+              "remoteVersion": {
+                "default": null,
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "sharePrincipals": {
+                "items": {
+                  "$ref": "#/definitions/PluginSharePrincipal"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
+              },
+              "shareUrl": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "remotePluginId"
+            ],
+            "type": "object"
+          },
+          "PluginShareDiscoverability": {
+            "enum": [
+              "LISTED",
+              "UNLISTED",
+              "PRIVATE"
+            ],
+            "type": "string"
+          },
+          "PluginSharePrincipal": {
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "principalId": {
+                "type": "string"
+              },
+              "principalType": {
+                "$ref": "#/definitions/PluginSharePrincipalType"
+              },
+              "role": {
+                "$ref": "#/definitions/PluginSharePrincipalRole"
+              }
+            },
+            "required": [
+              "name",
+              "principalId",
+              "principalType",
+              "role"
+            ],
+            "type": "object"
+          },
+          "PluginSharePrincipalRole": {
+            "enum": [
+              "reader",
+              "editor",
+              "owner"
+            ],
+            "type": "string"
+          },
+          "PluginSharePrincipalType": {
+            "enum": [
+              "user",
+              "group",
+              "workspace"
+            ],
+            "type": "string"
+          },
+          "PluginSource": {
+            "oneOf": [
+              {
+                "properties": {
+                  "path": {
+                    "$ref": "#/definitions/AbsolutePathBuf"
+                  },
+                  "type": {
+                    "enum": [
+                      "local"
+                    ],
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "path",
+                  "type"
+                ],
+                "type": "object"
+              },
+              {
+                "properties": {
+                  "path": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "refName": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "sha": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "type": {
+                    "enum": [
+                      "git"
+                    ],
+                    "type": "string"
+                  },
+                  "url": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "type",
+                  "url"
+                ],
+                "type": "object"
+              },
+              {
+                "properties": {
+                  "package": {
+                    "type": "string"
+                  },
+                  "registry": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "type": {
+                    "enum": [
+                      "npm"
+                    ],
+                    "type": "string"
+                  },
+                  "version": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  }
+                },
+                "required": [
+                  "package",
+                  "type"
+                ],
+                "type": "object"
+              },
+              {
+                "properties": {
+                  "type": {
+                    "enum": [
+                      "remote"
+                    ],
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "type"
+                ],
+                "type": "object"
+              }
+            ]
+          },
+          "PluginSummary": {
+            "properties": {
+              "authPolicy": {
+                "$ref": "#/definitions/PluginAuthPolicy"
+              },
+              "availability": {
+                "allOf": [
+                  {
+                    "$ref": "#/definitions/PluginAvailability"
+                  }
+                ],
+                "default": "AVAILABLE"
+              },
+              "enabled": {
+                "type": "boolean"
+              },
+              "id": {
+                "type": "string"
+              },
+              "installPolicy": {
+                "$ref": "#/definitions/PluginInstallPolicy"
+              },
+              "installPolicySource": {
+                "anyOf": [
+                  {
+                    "$ref": "#/definitions/PluginInstallPolicySource"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "installed": {
+                "type": "boolean"
+              },
+              "interface": {
+                "anyOf": [
+                  {
+                    "$ref": "#/definitions/PluginInterface"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "keywords": {
+                "default": [],
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "localVersion": {
+                "default": null,
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "name": {
+                "type": "string"
+              },
+              "remotePluginId": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "shareContext": {
+                "anyOf": [
+                  {
+                    "$ref": "#/definitions/PluginShareContext"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "source": {
+                "$ref": "#/definitions/PluginSource"
+              },
+              "version": {
+                "default": null,
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "authPolicy",
+              "enabled",
+              "id",
+              "installPolicy",
+              "installed",
+              "name",
+              "source"
+            ],
+            "type": "object"
+          }
+        },
+        "properties": {
+          "featuredPluginIds": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "marketplaceLoadErrors": {
+            "default": [],
+            "items": {
+              "$ref": "#/definitions/MarketplaceLoadErrorInfo"
+            },
+            "type": "array"
+          },
+          "marketplaces": {
+            "items": {
+              "$ref": "#/definitions/PluginMarketplaceEntry"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "marketplaces"
+        ],
+        "type": "object"
+      }
+    },
+    "skills/list": {
+      "request": {
+        "$ref": "#/definitions/SkillsListParams",
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "definitions": {
+          "SkillsListParams": {
+            "properties": {
+              "cwds": {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "forceReload": {
+                "type": "boolean"
+              }
+            },
+            "type": "object"
+          }
+        }
+      },
+      "response": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "definitions": {
+          "AbsolutePathBuf": {
+            "type": "string"
+          },
+          "SkillDependencies": {
+            "properties": {
+              "tools": {
+                "items": {
+                  "$ref": "#/definitions/SkillToolDependency"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "tools"
+            ],
+            "type": "object"
+          },
+          "SkillErrorInfo": {
+            "properties": {
+              "message": {
+                "type": "string"
+              },
+              "path": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "message",
+              "path"
+            ],
+            "type": "object"
+          },
+          "SkillInterface": {
+            "properties": {
+              "brandColor": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "defaultPrompt": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "displayName": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "iconLarge": {
+                "anyOf": [
+                  {
+                    "$ref": "#/definitions/AbsolutePathBuf"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "iconSmall": {
+                "anyOf": [
+                  {
+                    "$ref": "#/definitions/AbsolutePathBuf"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "shortDescription": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "type": "object"
+          },
+          "SkillMetadata": {
+            "properties": {
+              "dependencies": {
+                "anyOf": [
+                  {
+                    "$ref": "#/definitions/SkillDependencies"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "enabled": {
+                "type": "boolean"
+              },
+              "interface": {
+                "anyOf": [
+                  {
+                    "$ref": "#/definitions/SkillInterface"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "name": {
+                "type": "string"
+              },
+              "path": {
+                "$ref": "#/definitions/AbsolutePathBuf"
+              },
+              "scope": {
+                "$ref": "#/definitions/SkillScope"
+              },
+              "shortDescription": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "description",
+              "enabled",
+              "name",
+              "path",
+              "scope"
+            ],
+            "type": "object"
+          },
+          "SkillScope": {
+            "enum": [
+              "user",
+              "repo",
+              "system",
+              "admin"
+            ],
+            "type": "string"
+          },
+          "SkillToolDependency": {
+            "properties": {
+              "command": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "transport": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "type": {
+                "type": "string"
+              },
+              "url": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "value": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "type",
+              "value"
+            ],
+            "type": "object"
+          },
+          "SkillsListEntry": {
+            "properties": {
+              "cwd": {
+                "type": "string"
+              },
+              "errors": {
+                "items": {
+                  "$ref": "#/definitions/SkillErrorInfo"
+                },
+                "type": "array"
+              },
+              "skills": {
+                "items": {
+                  "$ref": "#/definitions/SkillMetadata"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "cwd",
+              "errors",
+              "skills"
+            ],
+            "type": "object"
+          }
+        },
+        "properties": {
+          "data": {
+            "items": {
+              "$ref": "#/definitions/SkillsListEntry"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "data"
+        ],
+        "type": "object"
+      }
+    }
+  },
+  "source_digest_kind": "canonical-json-utf8-sorted-keys",
+  "source_sha256": {
+    "ClientRequest.json": "5be9bf8117c33b8d1c20a25cd72eaea9122899cd527744ffaac1d12e3f0ba0fb",
+    "v1/InitializeResponse.json": "747401b5d7d395b71e4023d3d13aaaaefb0f6ae044d611675f59838672720c3d",
+    "v2/ConfigReadResponse.json": "24ad01fe1ee9b71e0f09ef9052db4f6d250d35abbb750d155cab98c10105390b",
+    "v2/ConfigRequirementsReadResponse.json": "2b58de34466436e9701a58d7fea47774c7c6a3e4ae7efcdc1a438e04d6cce880",
+    "v2/ExperimentalFeatureListResponse.json": "c3b75b295dd5197e045f888d9fb4ab4d4abf113ab03f04d2186978126eb0e950",
+    "v2/ListMcpServerStatusResponse.json": "b72d826608cdf06cc7bbec9caeb8db6f7463bdd2854f43a572bdde0cb3e221ad",
+    "v2/PermissionProfileListResponse.json": "695a64e0c32a58006040f487aa04a37eeacd60885aa1ec2f8a927b0d9c671d7b",
+    "v2/PluginInstalledResponse.json": "8a66d6b3f882a6b0d710fabe4171274e9b972fc63c6cfce68d30b313e1c925cb",
+    "v2/PluginListResponse.json": "501c954b5c9bcb804bc2d65d0718b6a5885b743b01702f873eae285ab1873c6f",
+    "v2/SkillsListResponse.json": "fc6abca9b65f95ed94d90815ae0682fdb91af42cc1e928a0f6767537ad85d356"
+  }
+}

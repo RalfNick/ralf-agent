@@ -66,11 +66,15 @@ class CodexProtocol:
     Validation neither starts a process nor changes Run/Action state.
     """
 
+    _schema_file = "_codex_protocol_schema.json"
+    _schema_digest = _SCHEMA_SHA256
+    _null_requests = frozenset()
+
     def __init__(self, *, external_version: str = _VERSION):
         if external_version != _VERSION:
             raise DefinitionMismatch("Codex protocol version differs from the reviewed Schema")
-        data = files("ralf_agent").joinpath("_codex_protocol_schema.json").read_bytes()
-        if hashlib.sha256(data).hexdigest() != _SCHEMA_SHA256:
+        data = files("ralf_agent").joinpath(self._schema_file).read_bytes()
+        if hashlib.sha256(data).hexdigest() != self._schema_digest:
             raise DefinitionMismatch("Codex protocol Schema integrity differs")
         document = json.loads(data)
         self._requests, self._responses = {}, {}
@@ -97,7 +101,12 @@ class CodexProtocol:
     def _validate(self, method, value, *, response):
         validators = self._responses if response else self._requests
         label = "response" if response else "request"
-        if type(method) is not str or method not in validators or type(value) is not dict:
+        nullable = not response and type(method) is str and method in self._null_requests
+        if (
+            type(method) is not str
+            or method not in validators
+            or (type(value) is not dict and not (nullable and value is None))
+        ):
             raise ValidationError(f"Codex {label} method or value is not supported")
         snapshot = _snapshot(value, label)
         if not validators[method].is_valid(snapshot):
@@ -120,3 +129,26 @@ class CodexProtocol:
 
     def validate_response(self, method: str, result: dict) -> dict:
         return self._validate(method, result, response=True)
+
+
+class CodexControlProtocol(CodexProtocol):
+    """Stable configuration readback only; never permits a Thread or Turn."""
+
+    _schema_file = "_codex_control_schema.json"
+    _schema_digest = "87807599334eb051aee3aedfae349c936108a0122770e73f0d466433d39d55bf"
+    _null_requests = frozenset({"configRequirements/read"})
+
+    @property
+    def identity(self):
+        return {
+            "kind": "codex-app-server-control-protocol",
+            "version": "1",
+            "external_version": _VERSION,
+            "schema_digest": self._schema_digest,
+            "methods": sorted(self._requests),
+            "experimental_api": False,
+            "execution_admitted": False,
+        }
+
+    def validate_request(self, method: str, params: dict | None) -> dict | None:
+        return self._validate(method, params, response=False)

@@ -1,6 +1,8 @@
-# dev100：剩余能力与架构验收清单
+# dev101：剩余能力与架构验收清单
 
-第二阶段首批新增 [Codex 协议／启动日志基础](codex-runner-foundation.md)。回执丢失禁止重发，通信／证据组件不增加执行权威。完整 Runner、真实隔离环境、Local／Temporal 停止门禁及真实 Codex 验收未完成；第一阶段 dev99 冻结证据和 R01–R26 保留。
+Dev101 已补固定候选的[配置／原生控制检查](codex-coding-preflight.md)及有限 namespace 命令／后继停止证据。下一步以[原 Action 委托契约](../architecture/specs/delegated-coding-action-contract.md)实现准入、共享启动日志、停止采纳和冷恢复；专用原生认证与真实模型 Turn 待验收。控制检查不授予执行权，完整 R13／第二阶段继续开放。
+
+第二阶段首批新增 [Codex 协议／启动日志基础](codex-runner-foundation.md)。回执丢失禁止重发，通信／证据组件不增加执行权威。完整 Runner、真实业务工具隔离、Local／Temporal 停止门禁及真实模型 Codex 验收未完成；第一阶段 dev99 冻结证据和 R01–R26 保留。
 
 当前按用户修订的[分阶段交付门槛](delivery-gates.md)推进：四条有限 Local 参考链路的安装／必要恢复／质量／文档验证已通过，随本地提交冻结后转入环境执行阶段；服务与企业治理随后推进。R01–R26 保留，非阻塞扩展不自动进入当前批次。默认模型配置、失败历史和真实质量范围分别登记，不以案例分数宣称完整框架或 M1 验收。
 

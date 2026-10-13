@@ -1,0 +1,2483 @@
+{
+  "config/read": {
+    "config": {
+      "agents": null,
+      "allow_login_shell": false,
+      "analytics": {
+        "enabled": false
+      },
+      "approval_policy": "never",
+      "approvals_reviewer": "user",
+      "apps": {
+        "_default": {
+          "approvals_reviewer": null,
+          "default_tools_approval_mode": null,
+          "destructive_enabled": false,
+          "enabled": false,
+          "open_world_enabled": false
+        }
+      },
+      "apps_mcp_product_sku": null,
+      "audio": null,
+      "auto_review": null,
+      "background_terminal_max_timeout": null,
+      "chatgpt_base_url": null,
+      "check_for_update_on_startup": false,
+      "cli_auth_credentials_store": "ephemeral",
+      "compact_prompt": null,
+      "debug": null,
+      "default_permissions": "ralf-coding-v1",
+      "desktop": null,
+      "developer_instructions": null,
+      "disable_paste_burst": null,
+      "experimental_compact_prompt_file": null,
+      "experimental_realtime_start_instructions": null,
+      "experimental_realtime_webrtc_call_base_url": null,
+      "experimental_realtime_ws_backend_prompt": null,
+      "experimental_realtime_ws_base_url": null,
+      "experimental_realtime_ws_model": null,
+      "experimental_realtime_ws_startup_context": null,
+      "experimental_thread_config_endpoint": null,
+      "experimental_thread_store": null,
+      "experimental_thread_store_endpoint": null,
+      "experimental_use_unified_exec_tool": null,
+      "features": {
+        "apply_patch_freeform": false,
+        "apply_patch_streaming_events": false,
+        "apps": false,
+        "artifact": false,
+        "auth_elicitation": false,
+        "browser_use": false,
+        "browser_use_external": false,
+        "browser_use_full_cdp_access": false,
+        "chronicle": false,
+        "code_mode": false,
+        "code_mode_host": false,
+        "code_mode_only": false,
+        "codex_git_commit": false,
+        "collaboration_modes": false,
+        "computer_use": false,
+        "concurrent_reasoning_summaries": false,
+        "current_time_reminder": false,
+        "default_mode_request_user_input": false,
+        "deferred_executor": false,
+        "elevated_windows_sandbox": false,
+        "enable_fanout": false,
+        "enable_mcp_apps": false,
+        "enable_request_compression": false,
+        "exec_permission_approvals": false,
+        "experimental_windows_sandbox": false,
+        "external_migration": false,
+        "fast_mode": false,
+        "goals": false,
+        "guardian_approval": false,
+        "hooks": false,
+        "image_detail_original": false,
+        "image_generation": false,
+        "in_app_browser": false,
+        "item_ids": false,
+        "js_repl": false,
+        "js_repl_tools_only": false,
+        "local_thread_store_compression": false,
+        "memories": false,
+        "mentions_v2": false,
+        "multi_agent": false,
+        "multi_agent_mode": false,
+        "multi_agent_v2": false,
+        "network_proxy": false,
+        "non_prefixed_mcp_tool_names": false,
+        "personality": false,
+        "plugin_hooks": false,
+        "plugin_sharing": false,
+        "plugins": false,
+        "prevent_idle_sleep": false,
+        "realtime_conversation": false,
+        "remote_compaction_v2": false,
+        "remote_control": false,
+        "remote_models": false,
+        "remote_plugin": false,
+        "request_permissions_tool": false,
+        "request_rule": false,
+        "resize_all_images": false,
+        "respect_system_proxy": false,
+        "responses_websockets": false,
+        "responses_websockets_v2": false,
+        "rollout_budget": false,
+        "runtime_metrics": false,
+        "search_tool": false,
+        "secret_auth_storage": false,
+        "shell_snapshot": false,
+        "shell_tool": true,
+        "shell_zsh_fork": false,
+        "skill_env_var_dependency_prompt": false,
+        "skill_mcp_dependency_install": false,
+        "sqlite": false,
+        "standalone_web_search": false,
+        "steer": false,
+        "terminal_resize_reflow": false,
+        "terminal_visualization_instructions": false,
+        "token_budget": false,
+        "tool_call_mcp_elicitation": false,
+        "tool_search": false,
+        "tool_search_always_defer_mcp_tools": false,
+        "tool_suggest": false,
+        "tui_app_server": false,
+        "unavailable_dummy_tools": false,
+        "undo": false,
+        "unified_exec": true,
+        "unified_exec_zsh_fork": false,
+        "use_agent_identity": false,
+        "use_legacy_landlock": false,
+        "use_linux_sandbox_bwrap": false,
+        "web_search_cached": false,
+        "web_search_request": false,
+        "workspace_dependencies": false,
+        "workspace_owner_usage_nudge": false
+      },
+      "feedback": null,
+      "file_opener": null,
+      "forced_chatgpt_workspace_id": null,
+      "forced_login_method": null,
+      "ghost_snapshot": null,
+      "hide_agent_reasoning": false,
+      "history": {
+        "max_bytes": null,
+        "persistence": "save-all"
+      },
+      "hooks": null,
+      "include_apps_instructions": null,
+      "include_collaboration_mode_instructions": null,
+      "include_environment_context": null,
+      "include_permissions_instructions": null,
+      "instructions": null,
+      "js_repl_node_module_dirs": null,
+      "js_repl_node_path": null,
+      "log_dir": null,
+      "marketplaces": {},
+      "mcp_oauth_callback_port": null,
+      "mcp_oauth_callback_url": null,
+      "mcp_oauth_credentials_store": null,
+      "mcp_servers": {},
+      "memories": null,
+      "model": null,
+      "model_auto_compact_token_limit": null,
+      "model_auto_compact_token_limit_scope": null,
+      "model_catalog_json": null,
+      "model_context_window": null,
+      "model_instructions_file": null,
+      "model_provider": null,
+      "model_providers": {},
+      "model_reasoning_effort": null,
+      "model_reasoning_summary": null,
+      "model_supports_reasoning_summaries": null,
+      "model_verbosity": null,
+      "notice": null,
+      "notify": null,
+      "openai_base_url": null,
+      "orchestrator": null,
+      "oss_provider": null,
+      "otel": null,
+      "permissions": {
+        "ralf-coding-v1": {
+          "description": null,
+          "extends": null,
+          "filesystem": {
+            "/forbidden": "deny",
+            "/home/ralf": "deny",
+            "/opt/codex/bin/codex": "read",
+            "/tmp": "deny",
+            "/traps": "deny",
+            ":minimal": "read",
+            ":workspace_roots": {
+              ".": "write",
+              ".agents": "deny",
+              ".codex": "deny",
+              ".git": "deny"
+            },
+            "glob_scan_max_depth": null
+          },
+          "network": {
+            "allow_local_binding": null,
+            "allow_upstream_proxy": null,
+            "dangerously_allow_all_unix_sockets": null,
+            "dangerously_allow_non_loopback_proxy": null,
+            "domains": null,
+            "enable_socks5": null,
+            "enable_socks5_udp": null,
+            "enabled": false,
+            "mitm": null,
+            "mode": null,
+            "proxy_url": null,
+            "socks_url": null,
+            "unix_sockets": null
+          },
+          "workspace_roots": null
+        }
+      },
+      "personality": null,
+      "plan_mode_reasoning_effort": null,
+      "plugins": {},
+      "profile": null,
+      "profiles": {},
+      "project_doc_fallback_filenames": [],
+      "project_doc_max_bytes": 32768,
+      "project_root_markers": null,
+      "projects": null,
+      "realtime": null,
+      "review_model": null,
+      "sandbox_mode": null,
+      "sandbox_workspace_write": null,
+      "service_tier": null,
+      "shell_environment_policy": {
+        "exclude": null,
+        "experimental_use_profile": false,
+        "ignore_default_excludes": false,
+        "include_only": null,
+        "inherit": "none",
+        "set": {
+          "PATH": "/usr/bin:/bin",
+          "TMPDIR": "/workspace/.tmp"
+        }
+      },
+      "show_raw_agent_reasoning": null,
+      "skills": {
+        "config": [
+          {
+            "enabled": false,
+            "path": "/home/ralf/.codex/skills/.system/imagegen/SKILL.md"
+          },
+          {
+            "enabled": false,
+            "path": "/home/ralf/.codex/skills/.system/openai-docs/SKILL.md"
+          },
+          {
+            "enabled": false,
+            "path": "/home/ralf/.codex/skills/.system/plugin-creator/SKILL.md"
+          },
+          {
+            "enabled": false,
+            "path": "/home/ralf/.codex/skills/.system/skill-creator/SKILL.md"
+          },
+          {
+            "enabled": false,
+            "path": "/home/ralf/.codex/skills/.system/skill-installer/SKILL.md"
+          }
+        ]
+      },
+      "sqlite_home": null,
+      "suppress_unstable_features_warning": null,
+      "tool_output_token_limit": null,
+      "tool_suggest": null,
+      "tools": null,
+      "tui": null,
+      "web_search": "disabled",
+      "windows": null
+    },
+    "layers": [
+      {
+        "config": {},
+        "disabledReason": "To load project-local config, hooks, and exec policies, add /workspace as a trusted project in /home/ralf/.codex/config.toml.",
+        "name": {
+          "dotCodexFolder": "/workspace/.codex",
+          "type": "project"
+        },
+        "version": "sha256:44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+      },
+      {
+        "config": {
+          "allow_login_shell": false,
+          "analytics": {
+            "enabled": false
+          },
+          "approval_policy": "never",
+          "approvals_reviewer": "user",
+          "apps": {
+            "_default": {
+              "destructive_enabled": false,
+              "enabled": false,
+              "open_world_enabled": false
+            }
+          },
+          "check_for_update_on_startup": false,
+          "cli_auth_credentials_store": "ephemeral",
+          "default_permissions": "ralf-coding-v1",
+          "features": {
+            "apply_patch_freeform": false,
+            "apply_patch_streaming_events": false,
+            "apps": false,
+            "apps_mcp_path_override": false,
+            "artifact": false,
+            "auth_elicitation": false,
+            "browser_use": false,
+            "browser_use_external": false,
+            "browser_use_full_cdp_access": false,
+            "chronicle": false,
+            "code_mode": false,
+            "code_mode_host": false,
+            "code_mode_only": false,
+            "codex_git_commit": false,
+            "collaboration_modes": false,
+            "computer_use": false,
+            "concurrent_reasoning_summaries": false,
+            "current_time_reminder": false,
+            "default_mode_request_user_input": false,
+            "deferred_executor": false,
+            "elevated_windows_sandbox": false,
+            "enable_fanout": false,
+            "enable_mcp_apps": false,
+            "enable_request_compression": false,
+            "exec_permission_approvals": false,
+            "experimental_windows_sandbox": false,
+            "external_migration": false,
+            "fast_mode": false,
+            "goals": false,
+            "guardian_approval": false,
+            "hooks": false,
+            "image_detail_original": false,
+            "image_generation": false,
+            "in_app_browser": false,
+            "item_ids": false,
+            "js_repl": false,
+            "js_repl_tools_only": false,
+            "local_thread_store_compression": false,
+            "memories": false,
+            "mentions_v2": false,
+            "multi_agent": false,
+            "multi_agent_mode": false,
+            "multi_agent_v2": false,
+            "network_proxy": false,
+            "non_prefixed_mcp_tool_names": false,
+            "personality": false,
+            "plugin_hooks": false,
+            "plugin_sharing": false,
+            "plugins": false,
+            "prevent_idle_sleep": false,
+            "realtime_conversation": false,
+            "remote_compaction_v2": false,
+            "remote_control": false,
+            "remote_models": false,
+            "remote_plugin": false,
+            "request_permissions_tool": false,
+            "request_rule": false,
+            "resize_all_images": false,
+            "respect_system_proxy": false,
+            "responses_websockets": false,
+            "responses_websockets_v2": false,
+            "rollout_budget": false,
+            "runtime_metrics": false,
+            "search_tool": false,
+            "secret_auth_storage": false,
+            "shell_snapshot": false,
+            "shell_tool": true,
+            "shell_zsh_fork": false,
+            "skill_env_var_dependency_prompt": false,
+            "skill_mcp_dependency_install": false,
+            "sqlite": false,
+            "standalone_web_search": false,
+            "steer": false,
+            "terminal_resize_reflow": false,
+            "terminal_visualization_instructions": false,
+            "token_budget": false,
+            "tool_call_mcp_elicitation": false,
+            "tool_search": false,
+            "tool_search_always_defer_mcp_tools": false,
+            "tool_suggest": false,
+            "tui_app_server": false,
+            "unavailable_dummy_tools": false,
+            "undo": false,
+            "unified_exec": true,
+            "unified_exec_zsh_fork": false,
+            "use_agent_identity": false,
+            "use_legacy_landlock": false,
+            "use_linux_sandbox_bwrap": false,
+            "web_search_cached": false,
+            "web_search_request": false,
+            "workspace_dependencies": false,
+            "workspace_owner_usage_nudge": false
+          },
+          "permissions": {
+            "ralf-coding-v1": {
+              "filesystem": {
+                "/forbidden": "deny",
+                "/home/ralf": "deny",
+                "/opt/codex/bin/codex": "read",
+                "/tmp": "deny",
+                "/traps": "deny",
+                ":minimal": "read",
+                ":workspace_roots": {
+                  ".": "write",
+                  ".agents": "deny",
+                  ".codex": "deny",
+                  ".git": "deny"
+                }
+              },
+              "network": {
+                "enabled": false
+              }
+            }
+          },
+          "shell_environment_policy": {
+            "experimental_use_profile": false,
+            "ignore_default_excludes": false,
+            "inherit": "none",
+            "set": {
+              "PATH": "/usr/bin:/bin",
+              "TMPDIR": "/workspace/.tmp"
+            }
+          },
+          "skills": {
+            "config": [
+              {
+                "enabled": false,
+                "path": "/home/ralf/.codex/skills/.system/imagegen/SKILL.md"
+              },
+              {
+                "enabled": false,
+                "path": "/home/ralf/.codex/skills/.system/openai-docs/SKILL.md"
+              },
+              {
+                "enabled": false,
+                "path": "/home/ralf/.codex/skills/.system/plugin-creator/SKILL.md"
+              },
+              {
+                "enabled": false,
+                "path": "/home/ralf/.codex/skills/.system/skill-creator/SKILL.md"
+              },
+              {
+                "enabled": false,
+                "path": "/home/ralf/.codex/skills/.system/skill-installer/SKILL.md"
+              }
+            ]
+          },
+          "web_search": "disabled"
+        },
+        "name": {
+          "file": "/home/ralf/.codex/config.toml",
+          "profile": null,
+          "type": "user"
+        },
+        "version": "sha256:d3195ce1484a937eaf84cec38dfd6c86992d41dc4ffbe7640ccfc7f448f9abfa"
+      },
+      {
+        "config": {},
+        "name": {
+          "file": "/etc/codex/config.toml",
+          "type": "system"
+        },
+        "version": "sha256:44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+      }
+    ],
+    "origins": {
+      "allow_login_shell": {
+        "name": {
+          "file": "/home/ralf/.codex/config.toml",
+          "profile": null,
+          "type": "user"
+        },
+        "version": "sha256:d3195ce1484a937eaf84cec38dfd6c86992d41dc4ffbe7640ccfc7f448f9abfa"
+      },
+      "analytics.enabled": {
+        "name": {
+          "file": "/home/ralf/.codex/config.toml",
+          "profile": null,
+          "type": "user"
+        },
+        "version": "sha256:d3195ce1484a937eaf84cec38dfd6c86992d41dc4ffbe7640ccfc7f448f9abfa"
+      },
+      "approval_policy": {
+        "name": {
+          "file": "/home/ralf/.codex/config.toml",
+          "profile": null,
+          "type": "user"
+        },
+        "version": "sha256:d3195ce1484a937eaf84cec38dfd6c86992d41dc4ffbe7640ccfc7f448f9abfa"
+      },
+      "approvals_reviewer": {
+        "name": {
+          "file": "/home/ralf/.codex/config.toml",
+          "profile": null,
+          "type": "user"
+        },
+        "version": "sha256:d3195ce1484a937eaf84cec38dfd6c86992d41dc4ffbe7640ccfc7f448f9abfa"
+      },
+      "apps._default.destructive_enabled": {
+        "name": {
+          "file": "/home/ralf/.codex/config.toml",
+          "profile": null,
+          "type": "user"
+        },
+        "version": "sha256:d3195ce1484a937eaf84cec38dfd6c86992d41dc4ffbe7640ccfc7f448f9abfa"
+      },
+      "apps._default.enabled": {
+        "name": {
+          "file": "/home/ralf/.codex/config.toml",
+          "profile": null,
+          "type": "user"
+        },
+        "version": "sha256:d3195ce1484a937eaf84cec38dfd6c86992d41dc4ffbe7640ccfc7f448f9abfa"
+      },
+      "apps._default.open_world_enabled": {
+        "name": {
+          "file": "/home/ralf/.codex/config.toml",
+          "profile": null,
+          "type": "user"
+        },
+        "version": "sha256:d3195ce1484a937eaf84cec38dfd6c86992d41dc4ffbe7640ccfc7f448f9abfa"
+      },
+      "check_for_update_on_startup": {
+        "name": {
+          "file": "/home/ralf/.codex/config.toml",
+          "profile": null,
+          "type": "user"
+        },
+        "version": "sha256:d3195ce1484a937eaf84cec38dfd6c86992d41dc4ffbe7640ccfc7f448f9abfa"
+      },
+      "cli_auth_credentials_store": {
+        "name": {
+          "file": "/home/ralf/.codex/config.toml",
+          "profile": null,
+          "type": "user"
+        },
+        "version": "sha256:d3195ce1484a937eaf84cec38dfd6c86992d41dc4ffbe7640ccfc7f448f9abfa"
+      },
+      "default_permissions": {
+        "name": {
+          "file": "/home/ralf/.codex/config.toml",
+          "profile": null,
+          "type": "user"
+        },
+        "version": "sha256:d3195ce1484a937eaf84cec38dfd6c86992d41dc4ffbe7640ccfc7f448f9abfa"
+      },
+      "features.apply_patch_freeform": {
+        "name": {
+          "file": "/home/ralf/.codex/config.toml",
+          "profile": null,
+          "type": "user"
+        },
+        "version": "sha256:d3195ce1484a937eaf84cec38dfd6c86992d41dc4ffbe7640ccfc7f448f9abfa"
+      },
+      "features.apply_patch_streaming_events": {
+        "name": {
+          "file": "/home/ralf/.codex/config.toml",
+          "profile": null,
+          "type": "user"
+        },
+        "version": "sha256:d3195ce1484a937eaf84cec38dfd6c86992d41dc4ffbe7640ccfc7f448f9abfa"
+      },
+      "features.apps": {
+        "name": {
+          "file": "/home/ralf/.codex/config.toml",
+          "profile": null,
+          "type": "user"
+        },
+        "version": "sha256:d3195ce1484a937eaf84cec38dfd6c86992d41dc4ffbe7640ccfc7f448f9abfa"
+      },
+      "features.apps_mcp_path_override": {
+        "name": {
+          "file": "/home/ralf/.codex/config.toml",
+          "profile": null,
+          "type": "user"
+        },
+        "version": "sha256:d3195ce1484a937eaf84cec38dfd6c86992d41dc4ffbe7640ccfc7f448f9abfa"
+      },
+      "features.artifact": {
+        "name": {
+          "file": "/home/ralf/.codex/config.toml",
+          "profile": null,
+          "type": "user"
+        },
+        "version": "sha256:d3195ce1484a937eaf84cec38dfd6c86992d41dc4ffbe7640ccfc7f448f9abfa"
+      },
+      "features.auth_elicitation": {
+        "name": {
+          "file": "/home/ralf/.codex/config.toml",
+          "profile": null,
+          "type": "user"
+        },
+        "version": "sha256:d3195ce1484a937eaf84cec38dfd6c86992d41dc4ffbe7640ccfc7f448f9abfa"
+      },
+      "features.browser_use": {
+        "name": {
+          "file": "/home/ralf/.codex/config.toml",
+          "profile": null,
+          "type": "user"
+        },
+        "version": "sha256:d3195ce1484a937eaf84cec38dfd6c86992d41dc4ffbe7640ccfc7f448f9abfa"
+      },
+      "features.browser_use_external": {
+        "name": {
+          "file": "/home/ralf/.codex/config.toml",
+          "profile": null,
+          "type": "user"
+        },
+        "version": "sha256:d3195ce1484a937eaf84cec38dfd6c86992d41dc4ffbe7640ccfc7f448f9abfa"
+      },
+      "features.browser_use_full_cdp_access": {
+        "name": {
+          "file": "/home/ralf/.codex/config.toml",
+          "profile": null,
+          "type": "user"
+        },
+        "version": "sha256:d3195ce1484a937eaf84cec38dfd6c86992d41dc4ffbe7640ccfc7f448f9abfa"
+      },
+      "features.chronicle": {
+        "name": {
+          "file": "/home/ralf/.codex/config.toml",
+          "profile": null,
+          "type": "user"
+        },
+        "version": "sha256:d3195ce1484a937eaf84cec38dfd6c86992d41dc4ffbe7640ccfc7f448f9abfa"
+      },
+      "features.code_mode": {
+        "name": {
+          "file": "/home/ralf/.codex/config.toml",
+          "profile": null,
+          "type": "user"
+        },
+        "version": "sha256:d3195ce1484a937eaf84cec38dfd6c86992d41dc4ffbe7640ccfc7f448f9abfa"
+      },
+      "features.code_mode_host": {
+        "name": {
+          "file": "/home/ralf/.codex/config.toml",
+          "profile": null,
+          "type": "user"
+        },
+        "version": "sha256:d3195ce1484a937eaf84cec38dfd6c86992d41dc4ffbe7640ccfc7f448f9abfa"
+      },
+      "features.code_mode_only": {
+        "name": {
+          "file": "/home/ralf/.codex/config.toml",
+          "profile": null,
+          "type": "user"
+        },
+        "version": "sha256:d3195ce1484a937eaf84cec38dfd6c86992d41dc4ffbe7640ccfc7f448f9abfa"
+      },
+      "features.codex_git_commit": {
+        "name": {
+          "file": "/home/ralf/.codex/config.toml",
+          "profile": null,
+          "type": "user"
+        },
+        "version": "sha256:d3195ce1484a937eaf84cec38dfd6c86992d41dc4ffbe7640ccfc7f448f9abfa"
+      },
+      "features.collaboration_modes": {
+        "name": {
+          "file": "/home/ralf/.codex/config.toml",
+          "profile": null,
+          "type": "user"
+        },
+        "version": "sha256:d3195ce1484a937eaf84cec38dfd6c86992d41dc4ffbe7640ccfc7f448f9abfa"
+      },
+      "features.computer_use": {
+        "name": {
+          "file": "/home/ralf/.codex/config.toml",
+          "profile": null,
+          "type": "user"
+        },
+        "version": "sha256:d3195ce1484a937eaf84cec38dfd6c86992d41dc4ffbe7640ccfc7f448f9abfa"
+      },
+      "features.concurrent_reasoning_summaries": {
+        "name": {
+          "file": "/home/ralf/.codex/config.toml",
+          "profile": null,
+          "type": "user"
+        },
+        "version": "sha256:d3195ce1484a937eaf84cec38dfd6c86992d41dc4ffbe7640ccfc7f448f9abfa"
+      },
+      "features.current_time_reminder": {
+        "name": {
+          "file": "/home/ralf/.codex/config.toml",
+          "profile": null,
+          "type": "user"
+        },
+        "version": "sha256:d3195ce1484a937eaf84cec38dfd6c86992d41dc4ffbe7640ccfc7f448f9abfa"
+      },
+      "features.default_mode_request_user_input": {
+        "name": {
+          "file": "/home/ralf/.codex/config.toml",
+          "profile": null,
+          "type": "user"
+        },
+        "version": "sha256:d3195ce1484a937eaf84cec38dfd6c86992d41dc4ffbe7640ccfc7f448f9abfa"
+      },
+      "features.deferred_executor": {
+        "name": {
+          "file": "/home/ralf/.codex/config.toml",
+          "profile": null,
+          "type": "user"
+        },
+        "version": "sha256:d3195ce1484a937eaf84cec38dfd6c86992d41dc4ffbe7640ccfc7f448f9abfa"
+      },
+      "features.elevated_windows_sandbox": {
+        "name": {
+          "file": "/home/ralf/.codex/config.toml",
+          "profile": null,
+          "type": "user"
+        },
+        "version": "sha256:d3195ce1484a937eaf84cec38dfd6c86992d41dc4ffbe7640ccfc7f448f9abfa"
+      },
+      "features.enable_fanout": {
+        "name": {
+          "file": "/home/ralf/.codex/config.toml",
+          "profile": null,
+          "type": "user"
+        },
+        "version": "sha256:d3195ce1484a937eaf84cec38dfd6c86992d41dc4ffbe7640ccfc7f448f9abfa"
+      },
+      "features.enable_mcp_apps": {
+        "name": {
+          "file": "/home/ralf/.codex/config.toml",
+          "profile": null,
+          "type": "user"
+        },
+        "version": "sha256:d3195ce1484a937eaf84cec38dfd6c86992d41dc4ffbe7640ccfc7f448f9abfa"
+      },
+      "features.enable_request_compression": {
+        "name": {
+          "file": "/home/ralf/.codex/config.toml",
+          "profile": null,
+          "type": "user"
+        },
+        "version": "sha256:d3195ce1484a937eaf84cec38dfd6c86992d41dc4ffbe7640ccfc7f448f9abfa"
+      },
+      "features.exec_permission_approvals": {
+        "name": {
+          "file": "/home/ralf/.codex/config.toml",
+          "profile": null,
+          "type": "user"
+        },
+        "version": "sha256:d3195ce1484a937eaf84cec38dfd6c86992d41dc4ffbe7640ccfc7f448f9abfa"
+      },
+      "features.experimental_windows_sandbox": {
+        "name": {
+          "file": "/home/ralf/.codex/config.toml",
+          "profile": null,
+          "type": "user"
+        },
+        "version": "sha256:d3195ce1484a937eaf84cec38dfd6c86992d41dc4ffbe7640ccfc7f448f9abfa"
+      },
+      "features.external_migration": {
+        "name": {
+          "file": "/home/ralf/.codex/config.toml",
+          "profile": null,
+          "type": "user"
+        },
+        "version": "sha256:d3195ce1484a937eaf84cec38dfd6c86992d41dc4ffbe7640ccfc7f448f9abfa"
+      },
+      "features.fast_mode": {
+        "name": {
+          "file": "/home/ralf/.codex/config.toml",
+          "profile": null,
+          "type": "user"
+        },
+        "version": "sha256:d3195ce1484a937eaf84cec38dfd6c86992d41dc4ffbe7640ccfc7f448f9abfa"
+      },
+      "features.goals": {
+        "name": {
+          "file": "/home/ralf/.codex/config.toml",
+          "profile": null,
+          "type": "user"
+        },
+        "version": "sha256:d3195ce1484a937eaf84cec38dfd6c86992d41dc4ffbe7640ccfc7f448f9abfa"
+      },
+      "features.guardian_approval": {
+        "name": {
+          "file": "/home/ralf/.codex/config.toml",
+          "profile": null,
+          "type": "user"
+        },
+        "version": "sha256:d3195ce1484a937eaf84cec38dfd6c86992d41dc4ffbe7640ccfc7f448f9abfa"
+      },
+      "features.hooks": {
+        "name": {
+          "file": "/home/ralf/.codex/config.toml",
+          "profile": null,
+          "type": "user"
+        },
+        "version": "sha256:d3195ce1484a937eaf84cec38dfd6c86992d41dc4ffbe7640ccfc7f448f9abfa"
+      },
+      "features.image_detail_original": {
+        "name": {
+          "file": "/home/ralf/.codex/config.toml",
+          "profile": null,
+          "type": "user"
+        },
+        "version": "sha256:d3195ce1484a937eaf84cec38dfd6c86992d41dc4ffbe7640ccfc7f448f9abfa"
+      },
+      "features.image_generation": {
+        "name": {
+          "file": "/home/ralf/.codex/config.toml",
+          "profile": null,
+          "type": "user"
+        },
+        "version": "sha256:d3195ce1484a937eaf84cec38dfd6c86992d41dc4ffbe7640ccfc7f448f9abfa"
+      },
+      "features.in_app_browser": {
+        "name": {
+          "file": "/home/ralf/.codex/config.toml",
+          "profile": null,
+          "type": "user"
+        },
+        "version": "sha256:d3195ce1484a937eaf84cec38dfd6c86992d41dc4ffbe7640ccfc7f448f9abfa"
+      },
+      "features.item_ids": {
+        "name": {
+          "file": "/home/ralf/.codex/config.toml",
+          "profile": null,
+          "type": "user"
+        },
+        "version": "sha256:d3195ce1484a937eaf84cec38dfd6c86992d41dc4ffbe7640ccfc7f448f9abfa"
+      },
+      "features.js_repl": {
+        "name": {
+          "file": "/home/ralf/.codex/config.toml",
+          "profile": null,
+          "type": "user"
+        },
+        "version": "sha256:d3195ce1484a937eaf84cec38dfd6c86992d41dc4ffbe7640ccfc7f448f9abfa"
+      },
+      "features.js_repl_tools_only": {
+        "name": {
+          "file": "/home/ralf/.codex/config.toml",
+          "profile": null,
+          "type": "user"
+        },
+        "version": "sha256:d3195ce1484a937eaf84cec38dfd6c86992d41dc4ffbe7640ccfc7f448f9abfa"
+      },
+      "features.local_thread_store_compression": {
+        "name": {
+          "file": "/home/ralf/.codex/config.toml",
+          "profile": null,
+          "type": "user"
+        },
+        "version": "sha256:d3195ce1484a937eaf84cec38dfd6c86992d41dc4ffbe7640ccfc7f448f9abfa"
+      },
+      "features.memories": {
+        "name": {
+          "file": "/home/ralf/.codex/config.toml",
+          "profile": null,
+          "type": "user"
+        },
+        "version": "sha256:d3195ce1484a937eaf84cec38dfd6c86992d41dc4ffbe7640ccfc7f448f9abfa"
+      },
+      "features.mentions_v2": {
+        "name": {
+          "file": "/home/ralf/.codex/config.toml",
+          "profile": null,
+          "type": "user"
+        },
+        "version": "sha256:d3195ce1484a937eaf84cec38dfd6c86992d41dc4ffbe7640ccfc7f448f9abfa"
+      },
+      "features.multi_agent": {
+        "name": {
+          "file": "/home/ralf/.codex/config.toml",
+          "profile": null,
+          "type": "user"
+        },
+        "version": "sha256:d3195ce1484a937eaf84cec38dfd6c86992d41dc4ffbe7640ccfc7f448f9abfa"
+      },
+      "features.multi_agent_mode": {
+        "name": {
+          "file": "/home/ralf/.codex/config.toml",
+          "profile": null,
+          "type": "user"
+        },
+        "version": "sha256:d3195ce1484a937eaf84cec38dfd6c86992d41dc4ffbe7640ccfc7f448f9abfa"
+      },
+      "features.multi_agent_v2": {
+        "name": {
+          "file": "/home/ralf/.codex/config.toml",
+          "profile": null,
+          "type": "user"
+        },
+        "version": "sha256:d3195ce1484a937eaf84cec38dfd6c86992d41dc4ffbe7640ccfc7f448f9abfa"
+      },
+      "features.network_proxy": {
+        "name": {
+          "file": "/home/ralf/.codex/config.toml",
+          "profile": null,
+          "type": "user"
+        },
+        "version": "sha256:d3195ce1484a937eaf84cec38dfd6c86992d41dc4ffbe7640ccfc7f448f9abfa"
+      },
+      "features.non_prefixed_mcp_tool_names": {
+        "name": {
+          "file": "/home/ralf/.codex/config.toml",
+          "profile": null,
+          "type": "user"
+        },
+        "version": "sha256:d3195ce1484a937eaf84cec38dfd6c86992d41dc4ffbe7640ccfc7f448f9abfa"
+      },
+      "features.personality": {
+        "name": {
+          "file": "/home/ralf/.codex/config.toml",
+          "profile": null,
+          "type": "user"
+        },
+        "version": "sha256:d3195ce1484a937eaf84cec38dfd6c86992d41dc4ffbe7640ccfc7f448f9abfa"
+      },
+      "features.plugin_hooks": {
+        "name": {
+          "file": "/home/ralf/.codex/config.toml",
+          "profile": null,
+          "type": "user"
+        },
+        "version": "sha256:d3195ce1484a937eaf84cec38dfd6c86992d41dc4ffbe7640ccfc7f448f9abfa"
+      },
+      "features.plugin_sharing": {
+        "name": {
+          "file": "/home/ralf/.codex/config.toml",
+          "profile": null,
+          "type": "user"
+        },
+        "version": "sha256:d3195ce1484a937eaf84cec38dfd6c86992d41dc4ffbe7640ccfc7f448f9abfa"
+      },
+      "features.plugins": {
+        "name": {
+          "file": "/home/ralf/.codex/config.toml",
+          "profile": null,
+          "type": "user"
+        },
+        "version": "sha256:d3195ce1484a937eaf84cec38dfd6c86992d41dc4ffbe7640ccfc7f448f9abfa"
+      },
+      "features.prevent_idle_sleep": {
+        "name": {
+          "file": "/home/ralf/.codex/config.toml",
+          "profile": null,
+          "type": "user"
+        },
+        "version": "sha256:d3195ce1484a937eaf84cec38dfd6c86992d41dc4ffbe7640ccfc7f448f9abfa"
+      },
+      "features.realtime_conversation": {
+        "name": {
+          "file": "/home/ralf/.codex/config.toml",
+          "profile": null,
+          "type": "user"
+        },
+        "version": "sha256:d3195ce1484a937eaf84cec38dfd6c86992d41dc4ffbe7640ccfc7f448f9abfa"
+      },
+      "features.remote_compaction_v2": {
+        "name": {
+          "file": "/home/ralf/.codex/config.toml",
+          "profile": null,
+          "type": "user"
+        },
+        "version": "sha256:d3195ce1484a937eaf84cec38dfd6c86992d41dc4ffbe7640ccfc7f448f9abfa"
+      },
+      "features.remote_control": {
+        "name": {
+          "file": "/home/ralf/.codex/config.toml",
+          "profile": null,
+          "type": "user"
+        },
+        "version": "sha256:d3195ce1484a937eaf84cec38dfd6c86992d41dc4ffbe7640ccfc7f448f9abfa"
+      },
+      "features.remote_models": {
+        "name": {
+          "file": "/home/ralf/.codex/config.toml",
+          "profile": null,
+          "type": "user"
+        },
+        "version": "sha256:d3195ce1484a937eaf84cec38dfd6c86992d41dc4ffbe7640ccfc7f448f9abfa"
+      },
+      "features.remote_plugin": {
+        "name": {
+          "file": "/home/ralf/.codex/config.toml",
+          "profile": null,
+          "type": "user"
+        },
+        "version": "sha256:d3195ce1484a937eaf84cec38dfd6c86992d41dc4ffbe7640ccfc7f448f9abfa"
+      },
+      "features.request_permissions_tool": {
+        "name": {
+          "file": "/home/ralf/.codex/config.toml",
+          "profile": null,
+          "type": "user"
+        },
+        "version": "sha256:d3195ce1484a937eaf84cec38dfd6c86992d41dc4ffbe7640ccfc7f448f9abfa"
+      },
+      "features.request_rule": {
+        "name": {
+          "file": "/home/ralf/.codex/config.toml",
+          "profile": null,
+          "type": "user"
+        },
+        "version": "sha256:d3195ce1484a937eaf84cec38dfd6c86992d41dc4ffbe7640ccfc7f448f9abfa"
+      },
+      "features.resize_all_images": {
+        "name": {
+          "file": "/home/ralf/.codex/config.toml",
+          "profile": null,
+          "type": "user"
+        },
+        "version": "sha256:d3195ce1484a937eaf84cec38dfd6c86992d41dc4ffbe7640ccfc7f448f9abfa"
+      },
+      "features.respect_system_proxy": {
+        "name": {
+          "file": "/home/ralf/.codex/config.toml",
+          "profile": null,
+          "type": "user"
+        },
+        "version": "sha256:d3195ce1484a937eaf84cec38dfd6c86992d41dc4ffbe7640ccfc7f448f9abfa"
+      },
+      "features.responses_websockets": {
+        "name": {
+          "file": "/home/ralf/.codex/config.toml",
+          "profile": null,
+          "type": "user"
+        },
+        "version": "sha256:d3195ce1484a937eaf84cec38dfd6c86992d41dc4ffbe7640ccfc7f448f9abfa"
+      },
+      "features.responses_websockets_v2": {
+        "name": {
+          "file": "/home/ralf/.codex/config.toml",
+          "profile": null,
+          "type": "user"
+        },
+        "version": "sha256:d3195ce1484a937eaf84cec38dfd6c86992d41dc4ffbe7640ccfc7f448f9abfa"
+      },
+      "features.rollout_budget": {
+        "name": {
+          "file": "/home/ralf/.codex/config.toml",
+          "profile": null,
+          "type": "user"
+        },
+        "version": "sha256:d3195ce1484a937eaf84cec38dfd6c86992d41dc4ffbe7640ccfc7f448f9abfa"
+      },
+      "features.runtime_metrics": {
+        "name": {
+          "file": "/home/ralf/.codex/config.toml",
+          "profile": null,
+          "type": "user"
+        },
+        "version": "sha256:d3195ce1484a937eaf84cec38dfd6c86992d41dc4ffbe7640ccfc7f448f9abfa"
+      },
+      "features.search_tool": {
+        "name": {
+          "file": "/home/ralf/.codex/config.toml",
+          "profile": null,
+          "type": "user"
+        },
+        "version": "sha256:d3195ce1484a937eaf84cec38dfd6c86992d41dc4ffbe7640ccfc7f448f9abfa"
+      },
+      "features.secret_auth_storage": {
+        "name": {
+          "file": "/home/ralf/.codex/config.toml",
+          "profile": null,
+          "type": "user"
+        },
+        "version": "sha256:d3195ce1484a937eaf84cec38dfd6c86992d41dc4ffbe7640ccfc7f448f9abfa"
+      },
+      "features.shell_snapshot": {
+        "name": {
+          "file": "/home/ralf/.codex/config.toml",
+          "profile": null,
+          "type": "user"
+        },
+        "version": "sha256:d3195ce1484a937eaf84cec38dfd6c86992d41dc4ffbe7640ccfc7f448f9abfa"
+      },
+      "features.shell_tool": {
+        "name": {
+          "file": "/home/ralf/.codex/config.toml",
+          "profile": null,
+          "type": "user"
+        },
+        "version": "sha256:d3195ce1484a937eaf84cec38dfd6c86992d41dc4ffbe7640ccfc7f448f9abfa"
+      },
+      "features.shell_zsh_fork": {
+        "name": {
+          "file": "/home/ralf/.codex/config.toml",
+          "profile": null,
+          "type": "user"
+        },
+        "version": "sha256:d3195ce1484a937eaf84cec38dfd6c86992d41dc4ffbe7640ccfc7f448f9abfa"
+      },
+      "features.skill_env_var_dependency_prompt": {
+        "name": {
+          "file": "/home/ralf/.codex/config.toml",
+          "profile": null,
+          "type": "user"
+        },
+        "version": "sha256:d3195ce1484a937eaf84cec38dfd6c86992d41dc4ffbe7640ccfc7f448f9abfa"
+      },
+      "features.skill_mcp_dependency_install": {
+        "name": {
+          "file": "/home/ralf/.codex/config.toml",
+          "profile": null,
+          "type": "user"
+        },
+        "version": "sha256:d3195ce1484a937eaf84cec38dfd6c86992d41dc4ffbe7640ccfc7f448f9abfa"
+      },
+      "features.sqlite": {
+        "name": {
+          "file": "/home/ralf/.codex/config.toml",
+          "profile": null,
+          "type": "user"
+        },
+        "version": "sha256:d3195ce1484a937eaf84cec38dfd6c86992d41dc4ffbe7640ccfc7f448f9abfa"
+      },
+      "features.standalone_web_search": {
+        "name": {
+          "file": "/home/ralf/.codex/config.toml",
+          "profile": null,
+          "type": "user"
+        },
+        "version": "sha256:d3195ce1484a937eaf84cec38dfd6c86992d41dc4ffbe7640ccfc7f448f9abfa"
+      },
+      "features.steer": {
+        "name": {
+          "file": "/home/ralf/.codex/config.toml",
+          "profile": null,
+          "type": "user"
+        },
+        "version": "sha256:d3195ce1484a937eaf84cec38dfd6c86992d41dc4ffbe7640ccfc7f448f9abfa"
+      },
+      "features.terminal_resize_reflow": {
+        "name": {
+          "file": "/home/ralf/.codex/config.toml",
+          "profile": null,
+          "type": "user"
+        },
+        "version": "sha256:d3195ce1484a937eaf84cec38dfd6c86992d41dc4ffbe7640ccfc7f448f9abfa"
+      },
+      "features.terminal_visualization_instructions": {
+        "name": {
+          "file": "/home/ralf/.codex/config.toml",
+          "profile": null,
+          "type": "user"
+        },
+        "version": "sha256:d3195ce1484a937eaf84cec38dfd6c86992d41dc4ffbe7640ccfc7f448f9abfa"
+      },
+      "features.token_budget": {
+        "name": {
+          "file": "/home/ralf/.codex/config.toml",
+          "profile": null,
+          "type": "user"
+        },
+        "version": "sha256:d3195ce1484a937eaf84cec38dfd6c86992d41dc4ffbe7640ccfc7f448f9abfa"
+      },
+      "features.tool_call_mcp_elicitation": {
+        "name": {
+          "file": "/home/ralf/.codex/config.toml",
+          "profile": null,
+          "type": "user"
+        },
+        "version": "sha256:d3195ce1484a937eaf84cec38dfd6c86992d41dc4ffbe7640ccfc7f448f9abfa"
+      },
+      "features.tool_search": {
+        "name": {
+          "file": "/home/ralf/.codex/config.toml",
+          "profile": null,
+          "type": "user"
+        },
+        "version": "sha256:d3195ce1484a937eaf84cec38dfd6c86992d41dc4ffbe7640ccfc7f448f9abfa"
+      },
+      "features.tool_search_always_defer_mcp_tools": {
+        "name": {
+          "file": "/home/ralf/.codex/config.toml",
+          "profile": null,
+          "type": "user"
+        },
+        "version": "sha256:d3195ce1484a937eaf84cec38dfd6c86992d41dc4ffbe7640ccfc7f448f9abfa"
+      },
+      "features.tool_suggest": {
+        "name": {
+          "file": "/home/ralf/.codex/config.toml",
+          "profile": null,
+          "type": "user"
+        },
+        "version": "sha256:d3195ce1484a937eaf84cec38dfd6c86992d41dc4ffbe7640ccfc7f448f9abfa"
+      },
+      "features.tui_app_server": {
+        "name": {
+          "file": "/home/ralf/.codex/config.toml",
+          "profile": null,
+          "type": "user"
+        },
+        "version": "sha256:d3195ce1484a937eaf84cec38dfd6c86992d41dc4ffbe7640ccfc7f448f9abfa"
+      },
+      "features.unavailable_dummy_tools": {
+        "name": {
+          "file": "/home/ralf/.codex/config.toml",
+          "profile": null,
+          "type": "user"
+        },
+        "version": "sha256:d3195ce1484a937eaf84cec38dfd6c86992d41dc4ffbe7640ccfc7f448f9abfa"
+      },
+      "features.undo": {
+        "name": {
+          "file": "/home/ralf/.codex/config.toml",
+          "profile": null,
+          "type": "user"
+        },
+        "version": "sha256:d3195ce1484a937eaf84cec38dfd6c86992d41dc4ffbe7640ccfc7f448f9abfa"
+      },
+      "features.unified_exec": {
+        "name": {
+          "file": "/home/ralf/.codex/config.toml",
+          "profile": null,
+          "type": "user"
+        },
+        "version": "sha256:d3195ce1484a937eaf84cec38dfd6c86992d41dc4ffbe7640ccfc7f448f9abfa"
+      },
+      "features.unified_exec_zsh_fork": {
+        "name": {
+          "file": "/home/ralf/.codex/config.toml",
+          "profile": null,
+          "type": "user"
+        },
+        "version": "sha256:d3195ce1484a937eaf84cec38dfd6c86992d41dc4ffbe7640ccfc7f448f9abfa"
+      },
+      "features.use_agent_identity": {
+        "name": {
+          "file": "/home/ralf/.codex/config.toml",
+          "profile": null,
+          "type": "user"
+        },
+        "version": "sha256:d3195ce1484a937eaf84cec38dfd6c86992d41dc4ffbe7640ccfc7f448f9abfa"
+      },
+      "features.use_legacy_landlock": {
+        "name": {
+          "file": "/home/ralf/.codex/config.toml",
+          "profile": null,
+          "type": "user"
+        },
+        "version": "sha256:d3195ce1484a937eaf84cec38dfd6c86992d41dc4ffbe7640ccfc7f448f9abfa"
+      },
+      "features.use_linux_sandbox_bwrap": {
+        "name": {
+          "file": "/home/ralf/.codex/config.toml",
+          "profile": null,
+          "type": "user"
+        },
+        "version": "sha256:d3195ce1484a937eaf84cec38dfd6c86992d41dc4ffbe7640ccfc7f448f9abfa"
+      },
+      "features.web_search_cached": {
+        "name": {
+          "file": "/home/ralf/.codex/config.toml",
+          "profile": null,
+          "type": "user"
+        },
+        "version": "sha256:d3195ce1484a937eaf84cec38dfd6c86992d41dc4ffbe7640ccfc7f448f9abfa"
+      },
+      "features.web_search_request": {
+        "name": {
+          "file": "/home/ralf/.codex/config.toml",
+          "profile": null,
+          "type": "user"
+        },
+        "version": "sha256:d3195ce1484a937eaf84cec38dfd6c86992d41dc4ffbe7640ccfc7f448f9abfa"
+      },
+      "features.workspace_dependencies": {
+        "name": {
+          "file": "/home/ralf/.codex/config.toml",
+          "profile": null,
+          "type": "user"
+        },
+        "version": "sha256:d3195ce1484a937eaf84cec38dfd6c86992d41dc4ffbe7640ccfc7f448f9abfa"
+      },
+      "features.workspace_owner_usage_nudge": {
+        "name": {
+          "file": "/home/ralf/.codex/config.toml",
+          "profile": null,
+          "type": "user"
+        },
+        "version": "sha256:d3195ce1484a937eaf84cec38dfd6c86992d41dc4ffbe7640ccfc7f448f9abfa"
+      },
+      "permissions.ralf-coding-v1.filesystem./forbidden": {
+        "name": {
+          "file": "/home/ralf/.codex/config.toml",
+          "profile": null,
+          "type": "user"
+        },
+        "version": "sha256:d3195ce1484a937eaf84cec38dfd6c86992d41dc4ffbe7640ccfc7f448f9abfa"
+      },
+      "permissions.ralf-coding-v1.filesystem./home/ralf": {
+        "name": {
+          "file": "/home/ralf/.codex/config.toml",
+          "profile": null,
+          "type": "user"
+        },
+        "version": "sha256:d3195ce1484a937eaf84cec38dfd6c86992d41dc4ffbe7640ccfc7f448f9abfa"
+      },
+      "permissions.ralf-coding-v1.filesystem./opt/codex/bin/codex": {
+        "name": {
+          "file": "/home/ralf/.codex/config.toml",
+          "profile": null,
+          "type": "user"
+        },
+        "version": "sha256:d3195ce1484a937eaf84cec38dfd6c86992d41dc4ffbe7640ccfc7f448f9abfa"
+      },
+      "permissions.ralf-coding-v1.filesystem./tmp": {
+        "name": {
+          "file": "/home/ralf/.codex/config.toml",
+          "profile": null,
+          "type": "user"
+        },
+        "version": "sha256:d3195ce1484a937eaf84cec38dfd6c86992d41dc4ffbe7640ccfc7f448f9abfa"
+      },
+      "permissions.ralf-coding-v1.filesystem./traps": {
+        "name": {
+          "file": "/home/ralf/.codex/config.toml",
+          "profile": null,
+          "type": "user"
+        },
+        "version": "sha256:d3195ce1484a937eaf84cec38dfd6c86992d41dc4ffbe7640ccfc7f448f9abfa"
+      },
+      "permissions.ralf-coding-v1.filesystem.:minimal": {
+        "name": {
+          "file": "/home/ralf/.codex/config.toml",
+          "profile": null,
+          "type": "user"
+        },
+        "version": "sha256:d3195ce1484a937eaf84cec38dfd6c86992d41dc4ffbe7640ccfc7f448f9abfa"
+      },
+      "permissions.ralf-coding-v1.filesystem.:workspace_roots..": {
+        "name": {
+          "file": "/home/ralf/.codex/config.toml",
+          "profile": null,
+          "type": "user"
+        },
+        "version": "sha256:d3195ce1484a937eaf84cec38dfd6c86992d41dc4ffbe7640ccfc7f448f9abfa"
+      },
+      "permissions.ralf-coding-v1.filesystem.:workspace_roots..agents": {
+        "name": {
+          "file": "/home/ralf/.codex/config.toml",
+          "profile": null,
+          "type": "user"
+        },
+        "version": "sha256:d3195ce1484a937eaf84cec38dfd6c86992d41dc4ffbe7640ccfc7f448f9abfa"
+      },
+      "permissions.ralf-coding-v1.filesystem.:workspace_roots..codex": {
+        "name": {
+          "file": "/home/ralf/.codex/config.toml",
+          "profile": null,
+          "type": "user"
+        },
+        "version": "sha256:d3195ce1484a937eaf84cec38dfd6c86992d41dc4ffbe7640ccfc7f448f9abfa"
+      },
+      "permissions.ralf-coding-v1.filesystem.:workspace_roots..git": {
+        "name": {
+          "file": "/home/ralf/.codex/config.toml",
+          "profile": null,
+          "type": "user"
+        },
+        "version": "sha256:d3195ce1484a937eaf84cec38dfd6c86992d41dc4ffbe7640ccfc7f448f9abfa"
+      },
+      "permissions.ralf-coding-v1.network.enabled": {
+        "name": {
+          "file": "/home/ralf/.codex/config.toml",
+          "profile": null,
+          "type": "user"
+        },
+        "version": "sha256:d3195ce1484a937eaf84cec38dfd6c86992d41dc4ffbe7640ccfc7f448f9abfa"
+      },
+      "shell_environment_policy.experimental_use_profile": {
+        "name": {
+          "file": "/home/ralf/.codex/config.toml",
+          "profile": null,
+          "type": "user"
+        },
+        "version": "sha256:d3195ce1484a937eaf84cec38dfd6c86992d41dc4ffbe7640ccfc7f448f9abfa"
+      },
+      "shell_environment_policy.ignore_default_excludes": {
+        "name": {
+          "file": "/home/ralf/.codex/config.toml",
+          "profile": null,
+          "type": "user"
+        },
+        "version": "sha256:d3195ce1484a937eaf84cec38dfd6c86992d41dc4ffbe7640ccfc7f448f9abfa"
+      },
+      "shell_environment_policy.inherit": {
+        "name": {
+          "file": "/home/ralf/.codex/config.toml",
+          "profile": null,
+          "type": "user"
+        },
+        "version": "sha256:d3195ce1484a937eaf84cec38dfd6c86992d41dc4ffbe7640ccfc7f448f9abfa"
+      },
+      "shell_environment_policy.set.PATH": {
+        "name": {
+          "file": "/home/ralf/.codex/config.toml",
+          "profile": null,
+          "type": "user"
+        },
+        "version": "sha256:d3195ce1484a937eaf84cec38dfd6c86992d41dc4ffbe7640ccfc7f448f9abfa"
+      },
+      "shell_environment_policy.set.TMPDIR": {
+        "name": {
+          "file": "/home/ralf/.codex/config.toml",
+          "profile": null,
+          "type": "user"
+        },
+        "version": "sha256:d3195ce1484a937eaf84cec38dfd6c86992d41dc4ffbe7640ccfc7f448f9abfa"
+      },
+      "skills.config.0.enabled": {
+        "name": {
+          "file": "/home/ralf/.codex/config.toml",
+          "profile": null,
+          "type": "user"
+        },
+        "version": "sha256:d3195ce1484a937eaf84cec38dfd6c86992d41dc4ffbe7640ccfc7f448f9abfa"
+      },
+      "skills.config.0.path": {
+        "name": {
+          "file": "/home/ralf/.codex/config.toml",
+          "profile": null,
+          "type": "user"
+        },
+        "version": "sha256:d3195ce1484a937eaf84cec38dfd6c86992d41dc4ffbe7640ccfc7f448f9abfa"
+      },
+      "skills.config.1.enabled": {
+        "name": {
+          "file": "/home/ralf/.codex/config.toml",
+          "profile": null,
+          "type": "user"
+        },
+        "version": "sha256:d3195ce1484a937eaf84cec38dfd6c86992d41dc4ffbe7640ccfc7f448f9abfa"
+      },
+      "skills.config.1.path": {
+        "name": {
+          "file": "/home/ralf/.codex/config.toml",
+          "profile": null,
+          "type": "user"
+        },
+        "version": "sha256:d3195ce1484a937eaf84cec38dfd6c86992d41dc4ffbe7640ccfc7f448f9abfa"
+      },
+      "skills.config.2.enabled": {
+        "name": {
+          "file": "/home/ralf/.codex/config.toml",
+          "profile": null,
+          "type": "user"
+        },
+        "version": "sha256:d3195ce1484a937eaf84cec38dfd6c86992d41dc4ffbe7640ccfc7f448f9abfa"
+      },
+      "skills.config.2.path": {
+        "name": {
+          "file": "/home/ralf/.codex/config.toml",
+          "profile": null,
+          "type": "user"
+        },
+        "version": "sha256:d3195ce1484a937eaf84cec38dfd6c86992d41dc4ffbe7640ccfc7f448f9abfa"
+      },
+      "skills.config.3.enabled": {
+        "name": {
+          "file": "/home/ralf/.codex/config.toml",
+          "profile": null,
+          "type": "user"
+        },
+        "version": "sha256:d3195ce1484a937eaf84cec38dfd6c86992d41dc4ffbe7640ccfc7f448f9abfa"
+      },
+      "skills.config.3.path": {
+        "name": {
+          "file": "/home/ralf/.codex/config.toml",
+          "profile": null,
+          "type": "user"
+        },
+        "version": "sha256:d3195ce1484a937eaf84cec38dfd6c86992d41dc4ffbe7640ccfc7f448f9abfa"
+      },
+      "skills.config.4.enabled": {
+        "name": {
+          "file": "/home/ralf/.codex/config.toml",
+          "profile": null,
+          "type": "user"
+        },
+        "version": "sha256:d3195ce1484a937eaf84cec38dfd6c86992d41dc4ffbe7640ccfc7f448f9abfa"
+      },
+      "skills.config.4.path": {
+        "name": {
+          "file": "/home/ralf/.codex/config.toml",
+          "profile": null,
+          "type": "user"
+        },
+        "version": "sha256:d3195ce1484a937eaf84cec38dfd6c86992d41dc4ffbe7640ccfc7f448f9abfa"
+      },
+      "web_search": {
+        "name": {
+          "file": "/home/ralf/.codex/config.toml",
+          "profile": null,
+          "type": "user"
+        },
+        "version": "sha256:d3195ce1484a937eaf84cec38dfd6c86992d41dc4ffbe7640ccfc7f448f9abfa"
+      }
+    }
+  },
+  "configRequirements/read": {
+    "requirements": null
+  },
+  "experimentalFeature/list": {
+    "data": [
+      {
+        "announcement": null,
+        "defaultEnabled": false,
+        "description": null,
+        "displayName": null,
+        "enabled": false,
+        "name": "undo",
+        "stage": "removed"
+      },
+      {
+        "announcement": null,
+        "defaultEnabled": true,
+        "description": null,
+        "displayName": null,
+        "enabled": true,
+        "name": "shell_tool",
+        "stage": "stable"
+      },
+      {
+        "announcement": null,
+        "defaultEnabled": false,
+        "description": null,
+        "displayName": null,
+        "enabled": false,
+        "name": "secret_auth_storage",
+        "stage": "stable"
+      },
+      {
+        "announcement": null,
+        "defaultEnabled": true,
+        "description": null,
+        "displayName": null,
+        "enabled": true,
+        "name": "unified_exec",
+        "stage": "stable"
+      },
+      {
+        "announcement": null,
+        "defaultEnabled": false,
+        "description": null,
+        "displayName": null,
+        "enabled": false,
+        "name": "shell_zsh_fork",
+        "stage": "underDevelopment"
+      },
+      {
+        "announcement": null,
+        "defaultEnabled": false,
+        "description": null,
+        "displayName": null,
+        "enabled": false,
+        "name": "unified_exec_zsh_fork",
+        "stage": "underDevelopment"
+      },
+      {
+        "announcement": null,
+        "defaultEnabled": true,
+        "description": null,
+        "displayName": null,
+        "enabled": false,
+        "name": "shell_snapshot",
+        "stage": "stable"
+      },
+      {
+        "announcement": null,
+        "defaultEnabled": false,
+        "description": null,
+        "displayName": null,
+        "enabled": false,
+        "name": "deferred_executor",
+        "stage": "underDevelopment"
+      },
+      {
+        "announcement": null,
+        "defaultEnabled": false,
+        "description": null,
+        "displayName": null,
+        "enabled": false,
+        "name": "js_repl",
+        "stage": "removed"
+      },
+      {
+        "announcement": null,
+        "defaultEnabled": false,
+        "description": null,
+        "displayName": null,
+        "enabled": false,
+        "name": "code_mode",
+        "stage": "underDevelopment"
+      },
+      {
+        "announcement": null,
+        "defaultEnabled": true,
+        "description": null,
+        "displayName": null,
+        "enabled": false,
+        "name": "code_mode_host",
+        "stage": "stable"
+      },
+      {
+        "announcement": null,
+        "defaultEnabled": false,
+        "description": null,
+        "displayName": null,
+        "enabled": false,
+        "name": "code_mode_only",
+        "stage": "underDevelopment"
+      },
+      {
+        "announcement": null,
+        "defaultEnabled": false,
+        "description": null,
+        "displayName": null,
+        "enabled": false,
+        "name": "js_repl_tools_only",
+        "stage": "removed"
+      },
+      {
+        "announcement": null,
+        "defaultEnabled": true,
+        "description": null,
+        "displayName": null,
+        "enabled": true,
+        "name": "terminal_resize_reflow",
+        "stage": "removed"
+      },
+      {
+        "announcement": null,
+        "defaultEnabled": false,
+        "description": null,
+        "displayName": null,
+        "enabled": false,
+        "name": "web_search_request",
+        "stage": "deprecated"
+      },
+      {
+        "announcement": null,
+        "defaultEnabled": false,
+        "description": null,
+        "displayName": null,
+        "enabled": false,
+        "name": "web_search_cached",
+        "stage": "deprecated"
+      },
+      {
+        "announcement": null,
+        "defaultEnabled": false,
+        "description": null,
+        "displayName": null,
+        "enabled": false,
+        "name": "standalone_web_search",
+        "stage": "underDevelopment"
+      },
+      {
+        "announcement": null,
+        "defaultEnabled": false,
+        "description": null,
+        "displayName": null,
+        "enabled": false,
+        "name": "search_tool",
+        "stage": "removed"
+      },
+      {
+        "announcement": null,
+        "defaultEnabled": false,
+        "description": null,
+        "displayName": null,
+        "enabled": false,
+        "name": "codex_git_commit",
+        "stage": "removed"
+      },
+      {
+        "announcement": null,
+        "defaultEnabled": false,
+        "description": null,
+        "displayName": null,
+        "enabled": false,
+        "name": "runtime_metrics",
+        "stage": "underDevelopment"
+      },
+      {
+        "announcement": null,
+        "defaultEnabled": true,
+        "description": null,
+        "displayName": null,
+        "enabled": false,
+        "name": "sqlite",
+        "stage": "removed"
+      },
+      {
+        "announcement": "native descriptive metadata",
+        "defaultEnabled": false,
+        "description": "native descriptive metadata",
+        "displayName": "native descriptive metadata",
+        "enabled": false,
+        "name": "memories",
+        "stage": "beta"
+      },
+      {
+        "announcement": null,
+        "defaultEnabled": false,
+        "description": null,
+        "displayName": null,
+        "enabled": false,
+        "name": "local_thread_store_compression",
+        "stage": "underDevelopment"
+      },
+      {
+        "announcement": null,
+        "defaultEnabled": false,
+        "description": null,
+        "displayName": null,
+        "enabled": false,
+        "name": "chronicle",
+        "stage": "underDevelopment"
+      },
+      {
+        "announcement": null,
+        "defaultEnabled": false,
+        "description": null,
+        "displayName": null,
+        "enabled": false,
+        "name": "apply_patch_freeform",
+        "stage": "removed"
+      },
+      {
+        "announcement": null,
+        "defaultEnabled": false,
+        "description": null,
+        "displayName": null,
+        "enabled": false,
+        "name": "apply_patch_streaming_events",
+        "stage": "underDevelopment"
+      },
+      {
+        "announcement": null,
+        "defaultEnabled": false,
+        "description": null,
+        "displayName": null,
+        "enabled": false,
+        "name": "exec_permission_approvals",
+        "stage": "underDevelopment"
+      },
+      {
+        "announcement": null,
+        "defaultEnabled": true,
+        "description": null,
+        "displayName": null,
+        "enabled": false,
+        "name": "hooks",
+        "stage": "stable"
+      },
+      {
+        "announcement": null,
+        "defaultEnabled": false,
+        "description": null,
+        "displayName": null,
+        "enabled": false,
+        "name": "request_permissions_tool",
+        "stage": "underDevelopment"
+      },
+      {
+        "announcement": null,
+        "defaultEnabled": false,
+        "description": null,
+        "displayName": null,
+        "enabled": false,
+        "name": "use_linux_sandbox_bwrap",
+        "stage": "removed"
+      },
+      {
+        "announcement": null,
+        "defaultEnabled": false,
+        "description": null,
+        "displayName": null,
+        "enabled": false,
+        "name": "use_legacy_landlock",
+        "stage": "deprecated"
+      },
+      {
+        "announcement": null,
+        "defaultEnabled": false,
+        "description": null,
+        "displayName": null,
+        "enabled": false,
+        "name": "request_rule",
+        "stage": "removed"
+      },
+      {
+        "announcement": null,
+        "defaultEnabled": false,
+        "description": null,
+        "displayName": null,
+        "enabled": false,
+        "name": "experimental_windows_sandbox",
+        "stage": "removed"
+      },
+      {
+        "announcement": null,
+        "defaultEnabled": false,
+        "description": null,
+        "displayName": null,
+        "enabled": false,
+        "name": "elevated_windows_sandbox",
+        "stage": "removed"
+      },
+      {
+        "announcement": null,
+        "defaultEnabled": false,
+        "description": null,
+        "displayName": null,
+        "enabled": false,
+        "name": "remote_models",
+        "stage": "removed"
+      },
+      {
+        "announcement": null,
+        "defaultEnabled": true,
+        "description": null,
+        "displayName": null,
+        "enabled": false,
+        "name": "enable_request_compression",
+        "stage": "stable"
+      },
+      {
+        "announcement": "native descriptive metadata",
+        "defaultEnabled": false,
+        "description": "native descriptive metadata",
+        "displayName": "native descriptive metadata",
+        "enabled": false,
+        "name": "network_proxy",
+        "stage": "beta"
+      },
+      {
+        "announcement": null,
+        "defaultEnabled": false,
+        "description": null,
+        "displayName": null,
+        "enabled": false,
+        "name": "respect_system_proxy",
+        "stage": "underDevelopment"
+      },
+      {
+        "announcement": null,
+        "defaultEnabled": true,
+        "description": null,
+        "displayName": null,
+        "enabled": false,
+        "name": "multi_agent",
+        "stage": "stable"
+      },
+      {
+        "announcement": null,
+        "defaultEnabled": false,
+        "description": null,
+        "displayName": null,
+        "enabled": false,
+        "name": "multi_agent_v2",
+        "stage": "underDevelopment"
+      },
+      {
+        "announcement": null,
+        "defaultEnabled": false,
+        "description": null,
+        "displayName": null,
+        "enabled": false,
+        "name": "multi_agent_mode",
+        "stage": "removed"
+      },
+      {
+        "announcement": null,
+        "defaultEnabled": false,
+        "description": null,
+        "displayName": null,
+        "enabled": false,
+        "name": "enable_fanout",
+        "stage": "underDevelopment"
+      },
+      {
+        "announcement": null,
+        "defaultEnabled": true,
+        "description": null,
+        "displayName": null,
+        "enabled": false,
+        "name": "apps",
+        "stage": "stable"
+      },
+      {
+        "announcement": null,
+        "defaultEnabled": false,
+        "description": null,
+        "displayName": null,
+        "enabled": false,
+        "name": "enable_mcp_apps",
+        "stage": "underDevelopment"
+      },
+      {
+        "announcement": null,
+        "defaultEnabled": false,
+        "description": null,
+        "displayName": null,
+        "enabled": false,
+        "name": "apps_mcp_path_override",
+        "stage": "removed"
+      },
+      {
+        "announcement": null,
+        "defaultEnabled": false,
+        "description": null,
+        "displayName": null,
+        "enabled": false,
+        "name": "tool_search",
+        "stage": "removed"
+      },
+      {
+        "announcement": null,
+        "defaultEnabled": true,
+        "description": null,
+        "displayName": null,
+        "enabled": true,
+        "name": "tool_search_always_defer_mcp_tools",
+        "stage": "removed"
+      },
+      {
+        "announcement": null,
+        "defaultEnabled": false,
+        "description": null,
+        "displayName": null,
+        "enabled": false,
+        "name": "non_prefixed_mcp_tool_names",
+        "stage": "underDevelopment"
+      },
+      {
+        "announcement": null,
+        "defaultEnabled": false,
+        "description": null,
+        "displayName": null,
+        "enabled": false,
+        "name": "unavailable_dummy_tools",
+        "stage": "removed"
+      },
+      {
+        "announcement": null,
+        "defaultEnabled": true,
+        "description": null,
+        "displayName": null,
+        "enabled": false,
+        "name": "tool_suggest",
+        "stage": "stable"
+      },
+      {
+        "announcement": null,
+        "defaultEnabled": true,
+        "description": null,
+        "displayName": null,
+        "enabled": false,
+        "name": "plugins",
+        "stage": "stable"
+      },
+      {
+        "announcement": null,
+        "defaultEnabled": false,
+        "description": null,
+        "displayName": null,
+        "enabled": false,
+        "name": "plugin_hooks",
+        "stage": "removed"
+      },
+      {
+        "announcement": null,
+        "defaultEnabled": true,
+        "description": null,
+        "displayName": null,
+        "enabled": false,
+        "name": "in_app_browser",
+        "stage": "stable"
+      },
+      {
+        "announcement": null,
+        "defaultEnabled": true,
+        "description": null,
+        "displayName": null,
+        "enabled": false,
+        "name": "browser_use",
+        "stage": "stable"
+      },
+      {
+        "announcement": null,
+        "defaultEnabled": true,
+        "description": null,
+        "displayName": null,
+        "enabled": false,
+        "name": "browser_use_full_cdp_access",
+        "stage": "stable"
+      },
+      {
+        "announcement": null,
+        "defaultEnabled": true,
+        "description": null,
+        "displayName": null,
+        "enabled": false,
+        "name": "browser_use_external",
+        "stage": "stable"
+      },
+      {
+        "announcement": null,
+        "defaultEnabled": true,
+        "description": null,
+        "displayName": null,
+        "enabled": false,
+        "name": "computer_use",
+        "stage": "stable"
+      },
+      {
+        "announcement": null,
+        "defaultEnabled": true,
+        "description": null,
+        "displayName": null,
+        "enabled": false,
+        "name": "remote_plugin",
+        "stage": "stable"
+      },
+      {
+        "announcement": null,
+        "defaultEnabled": true,
+        "description": null,
+        "displayName": null,
+        "enabled": false,
+        "name": "plugin_sharing",
+        "stage": "stable"
+      },
+      {
+        "announcement": null,
+        "defaultEnabled": false,
+        "description": null,
+        "displayName": null,
+        "enabled": false,
+        "name": "external_migration",
+        "stage": "removed"
+      },
+      {
+        "announcement": null,
+        "defaultEnabled": true,
+        "description": null,
+        "displayName": null,
+        "enabled": false,
+        "name": "image_generation",
+        "stage": "stable"
+      },
+      {
+        "announcement": null,
+        "defaultEnabled": true,
+        "description": null,
+        "displayName": null,
+        "enabled": true,
+        "name": "resize_all_images",
+        "stage": "removed"
+      },
+      {
+        "announcement": null,
+        "defaultEnabled": false,
+        "description": null,
+        "displayName": null,
+        "enabled": false,
+        "name": "item_ids",
+        "stage": "underDevelopment"
+      },
+      {
+        "announcement": null,
+        "defaultEnabled": false,
+        "description": null,
+        "displayName": null,
+        "enabled": false,
+        "name": "concurrent_reasoning_summaries",
+        "stage": "underDevelopment"
+      },
+      {
+        "announcement": null,
+        "defaultEnabled": true,
+        "description": null,
+        "displayName": null,
+        "enabled": false,
+        "name": "skill_mcp_dependency_install",
+        "stage": "stable"
+      },
+      {
+        "announcement": null,
+        "defaultEnabled": false,
+        "description": null,
+        "displayName": null,
+        "enabled": false,
+        "name": "skill_env_var_dependency_prompt",
+        "stage": "removed"
+      },
+      {
+        "announcement": null,
+        "defaultEnabled": true,
+        "description": null,
+        "displayName": null,
+        "enabled": false,
+        "name": "mentions_v2",
+        "stage": "stable"
+      },
+      {
+        "announcement": null,
+        "defaultEnabled": true,
+        "description": null,
+        "displayName": null,
+        "enabled": false,
+        "name": "steer",
+        "stage": "removed"
+      },
+      {
+        "announcement": null,
+        "defaultEnabled": false,
+        "description": null,
+        "displayName": null,
+        "enabled": false,
+        "name": "default_mode_request_user_input",
+        "stage": "underDevelopment"
+      },
+      {
+        "announcement": null,
+        "defaultEnabled": false,
+        "description": null,
+        "displayName": null,
+        "enabled": false,
+        "name": "terminal_visualization_instructions",
+        "stage": "underDevelopment"
+      },
+      {
+        "announcement": null,
+        "defaultEnabled": true,
+        "description": null,
+        "displayName": null,
+        "enabled": false,
+        "name": "guardian_approval",
+        "stage": "stable"
+      },
+      {
+        "announcement": null,
+        "defaultEnabled": true,
+        "description": null,
+        "displayName": null,
+        "enabled": false,
+        "name": "goals",
+        "stage": "stable"
+      },
+      {
+        "announcement": null,
+        "defaultEnabled": false,
+        "description": null,
+        "displayName": null,
+        "enabled": false,
+        "name": "token_budget",
+        "stage": "underDevelopment"
+      },
+      {
+        "announcement": null,
+        "defaultEnabled": false,
+        "description": null,
+        "displayName": null,
+        "enabled": false,
+        "name": "rollout_budget",
+        "stage": "underDevelopment"
+      },
+      {
+        "announcement": null,
+        "defaultEnabled": false,
+        "description": null,
+        "displayName": null,
+        "enabled": false,
+        "name": "current_time_reminder",
+        "stage": "underDevelopment"
+      },
+      {
+        "announcement": null,
+        "defaultEnabled": true,
+        "description": null,
+        "displayName": null,
+        "enabled": false,
+        "name": "collaboration_modes",
+        "stage": "removed"
+      },
+      {
+        "announcement": null,
+        "defaultEnabled": true,
+        "description": null,
+        "displayName": null,
+        "enabled": false,
+        "name": "tool_call_mcp_elicitation",
+        "stage": "stable"
+      },
+      {
+        "announcement": null,
+        "defaultEnabled": true,
+        "description": null,
+        "displayName": null,
+        "enabled": false,
+        "name": "auth_elicitation",
+        "stage": "stable"
+      },
+      {
+        "announcement": null,
+        "defaultEnabled": true,
+        "description": null,
+        "displayName": null,
+        "enabled": false,
+        "name": "personality",
+        "stage": "stable"
+      },
+      {
+        "announcement": null,
+        "defaultEnabled": false,
+        "description": null,
+        "displayName": null,
+        "enabled": false,
+        "name": "artifact",
+        "stage": "underDevelopment"
+      },
+      {
+        "announcement": null,
+        "defaultEnabled": true,
+        "description": null,
+        "displayName": null,
+        "enabled": false,
+        "name": "fast_mode",
+        "stage": "stable"
+      },
+      {
+        "announcement": null,
+        "defaultEnabled": false,
+        "description": null,
+        "displayName": null,
+        "enabled": false,
+        "name": "realtime_conversation",
+        "stage": "underDevelopment"
+      },
+      {
+        "announcement": null,
+        "defaultEnabled": false,
+        "description": null,
+        "displayName": null,
+        "enabled": false,
+        "name": "remote_control",
+        "stage": "removed"
+      },
+      {
+        "announcement": null,
+        "defaultEnabled": false,
+        "description": null,
+        "displayName": null,
+        "enabled": false,
+        "name": "image_detail_original",
+        "stage": "removed"
+      },
+      {
+        "announcement": null,
+        "defaultEnabled": true,
+        "description": null,
+        "displayName": null,
+        "enabled": true,
+        "name": "tui_app_server",
+        "stage": "removed"
+      },
+      {
+        "announcement": "native descriptive metadata",
+        "defaultEnabled": false,
+        "description": "native descriptive metadata",
+        "displayName": "native descriptive metadata",
+        "enabled": false,
+        "name": "prevent_idle_sleep",
+        "stage": "beta"
+      },
+      {
+        "announcement": null,
+        "defaultEnabled": false,
+        "description": null,
+        "displayName": null,
+        "enabled": false,
+        "name": "workspace_owner_usage_nudge",
+        "stage": "removed"
+      },
+      {
+        "announcement": null,
+        "defaultEnabled": false,
+        "description": null,
+        "displayName": null,
+        "enabled": false,
+        "name": "responses_websockets",
+        "stage": "removed"
+      },
+      {
+        "announcement": null,
+        "defaultEnabled": false,
+        "description": null,
+        "displayName": null,
+        "enabled": false,
+        "name": "responses_websockets_v2",
+        "stage": "removed"
+      },
+      {
+        "announcement": null,
+        "defaultEnabled": true,
+        "description": null,
+        "displayName": null,
+        "enabled": false,
+        "name": "remote_compaction_v2",
+        "stage": "stable"
+      },
+      {
+        "announcement": null,
+        "defaultEnabled": false,
+        "description": null,
+        "displayName": null,
+        "enabled": false,
+        "name": "use_agent_identity",
+        "stage": "underDevelopment"
+      },
+      {
+        "announcement": null,
+        "defaultEnabled": true,
+        "description": null,
+        "displayName": null,
+        "enabled": false,
+        "name": "workspace_dependencies",
+        "stage": "stable"
+      }
+    ],
+    "nextCursor": null
+  },
+  "initialize": {
+    "codexHome": "/home/ralf/.codex",
+    "platformFamily": "unix",
+    "platformOs": "linux",
+    "userAgent": "ralf_control_probe/0.144.4 (Alpine Linux 3.22.6; aarch64) unknown (ralf_control_probe; 1)"
+  },
+  "mcpServerStatus/list": {
+    "data": [],
+    "nextCursor": null
+  },
+  "permissionProfile/list": {
+    "data": [
+      {
+        "allowed": true,
+        "description": null,
+        "id": ":read-only"
+      },
+      {
+        "allowed": true,
+        "description": null,
+        "id": ":workspace"
+      },
+      {
+        "allowed": true,
+        "description": null,
+        "id": ":danger-full-access"
+      },
+      {
+        "allowed": true,
+        "description": null,
+        "id": "ralf-coding-v1"
+      }
+    ],
+    "nextCursor": null
+  },
+  "plugin/installed": {
+    "marketplaceLoadErrors": [],
+    "marketplaces": []
+  },
+  "plugin/list": {
+    "featuredPluginIds": [],
+    "marketplaceLoadErrors": [],
+    "marketplaces": []
+  },
+  "skills/list": {
+    "data": [
+      {
+        "cwd": "/workspace",
+        "errors": [],
+        "skills": [
+          {
+            "description": "Bundled native system skill",
+            "enabled": false,
+            "interface": {
+              "brandColor": null,
+              "defaultPrompt": "native descriptive metadata",
+              "displayName": "native descriptive metadata",
+              "iconLarge": "/home/ralf/.codex/skills/.system/imagegen/assets/imagegen.png",
+              "iconSmall": "/home/ralf/.codex/skills/.system/imagegen/assets/imagegen-small.svg",
+              "shortDescription": "native descriptive metadata"
+            },
+            "name": "imagegen",
+            "path": "/home/ralf/.codex/skills/.system/imagegen/SKILL.md",
+            "scope": "system"
+          },
+          {
+            "dependencies": {
+              "tools": [
+                {
+                  "description": "OpenAI Developer Docs MCP server",
+                  "transport": "streamable_http",
+                  "type": "mcp",
+                  "url": "https://developers.openai.com/mcp",
+                  "value": "openaiDeveloperDocs"
+                }
+              ]
+            },
+            "description": "Bundled native system skill",
+            "enabled": false,
+            "interface": {
+              "brandColor": null,
+              "defaultPrompt": "native descriptive metadata",
+              "displayName": "native descriptive metadata",
+              "iconLarge": "/home/ralf/.codex/skills/.system/openai-docs/assets/openai.png",
+              "iconSmall": "/home/ralf/.codex/skills/.system/openai-docs/assets/openai-small.svg",
+              "shortDescription": "native descriptive metadata"
+            },
+            "name": "openai-docs",
+            "path": "/home/ralf/.codex/skills/.system/openai-docs/SKILL.md",
+            "scope": "system"
+          },
+          {
+            "description": "Bundled native system skill",
+            "enabled": false,
+            "interface": {
+              "brandColor": null,
+              "defaultPrompt": "native descriptive metadata",
+              "displayName": "native descriptive metadata",
+              "iconLarge": "/home/ralf/.codex/skills/.system/plugin-creator/assets/plugin-creator.png",
+              "iconSmall": "/home/ralf/.codex/skills/.system/plugin-creator/assets/plugin-creator-small.svg",
+              "shortDescription": "native descriptive metadata"
+            },
+            "name": "plugin-creator",
+            "path": "/home/ralf/.codex/skills/.system/plugin-creator/SKILL.md",
+            "scope": "system"
+          },
+          {
+            "description": "Bundled native system skill",
+            "enabled": false,
+            "interface": {
+              "brandColor": null,
+              "defaultPrompt": null,
+              "displayName": "native descriptive metadata",
+              "iconLarge": "/home/ralf/.codex/skills/.system/skill-creator/assets/skill-creator.png",
+              "iconSmall": "/home/ralf/.codex/skills/.system/skill-creator/assets/skill-creator-small.svg",
+              "shortDescription": "native descriptive metadata"
+            },
+            "name": "skill-creator",
+            "path": "/home/ralf/.codex/skills/.system/skill-creator/SKILL.md",
+            "scope": "system",
+            "shortDescription": "Bundled native system skill"
+          },
+          {
+            "description": "Bundled native system skill",
+            "enabled": false,
+            "interface": {
+              "brandColor": null,
+              "defaultPrompt": null,
+              "displayName": "native descriptive metadata",
+              "iconLarge": "/home/ralf/.codex/skills/.system/skill-installer/assets/skill-installer.png",
+              "iconSmall": "/home/ralf/.codex/skills/.system/skill-installer/assets/skill-installer-small.svg",
+              "shortDescription": "native descriptive metadata"
+            },
+            "name": "skill-installer",
+            "path": "/home/ralf/.codex/skills/.system/skill-installer/SKILL.md",
+            "scope": "system",
+            "shortDescription": "Bundled native system skill"
+          }
+        ]
+      }
+    ]
+  }
+}

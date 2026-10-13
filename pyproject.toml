@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "ralf-agent"
-version = "0.1.0.dev100"
+version = "0.1.0.dev101"
 description = "Reliable agent tasks with durable approvals and recovery"
 readme = "README.md"
 requires-python = ">=3.11"
@@ -36,7 +36,7 @@ ralf-watch-events = "ralf_agent.event_watch:main"
 where = ["src"]
 
 [tool.setuptools.package-data]
-ralf_agent = ["_codex_protocol_schema.json"]
+ralf_agent = ["_codex_protocol_schema.json", "_codex_control_schema.json", "_codex_coding_seccomp.json"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

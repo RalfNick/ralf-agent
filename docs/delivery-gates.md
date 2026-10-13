@@ -1,6 +1,6 @@
 # 分阶段交付门槛
 
-日期：2026-10-14；第一阶段已冻结在本地提交 `7e530f8`／`0.1.0.dev99`，第二阶段候选为 `0.1.0.dev100`。
+日期：2026-10-14；第一阶段已冻结在本地提交 `7e530f8`／`0.1.0.dev99`，第二阶段当前批次为 `0.1.0.dev101`。
 按用户修订后的目标管理交付，R01–R26 保留完整目标；适配器数量、测试数和 dev 版本数作为辅助信息。
 
 ## 第一阶段：四条参考业务链路
@@ -52,9 +52,12 @@ dev99 启用成员验证且开启 JSON mode 的第一次完整配置中，Plan�
 
 进入阶段时固定所选部署组合；先核对已有实现，再补阻塞项。
 
-当前首批为 [Codex 通信／启动日志基础](codex-runner-foundation.md)，不标记完整 Runner 完成。
-下一门槛是实际受限 read/write/test 环境和版本化 Local／Temporal 停止采纳；Schema、
-假服务和进程组回收不能替代真实 Runner／隔离／History 证据。
+首批 [Codex 通信／启动日志基础](codex-runner-foundation.md)已交付，dev101
+继续完成[固定配置／原生控制检查](codex-coding-preflight.md)与有限实际命令 read/write/test、
+路径／网络拒绝和 setsid 后继整容器停止探针。完整 Runner 不标为完成。
+下一门槛按[原 Action 委托契约](../architecture/specs/delegated-coding-action-contract.md)集成
+Local／Temporal 的一次阶段准入、共享日志、停止采纳、冷恢复与专用认证／真实 Coding Turn。
+配置读回、Schema、假服务和进程组回收不能替代业务工具隔离与原 History 证据。
 
 | 必需项 | 清单与完成门槛 |
 | --- | --- |

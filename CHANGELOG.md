@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.0.dev101 — Codex Coding control preflight
+
+- Add a pinned pure Coding profile and control-only native readback probe with strict config layers, origins and capability inventory. Control verification never admits business execution.
+- Package the exact Docker29 seccomp delta used by native read/write/test, path/network denial and detached-child container-stop probes; preserve upstream attribution and original failure evidence.
+- Fix accepting a final control reply after peer protocol failure. Preserve the original six-method schema bytes while allowing semantically identical cross-platform generation inputs. Native authentication, complete Coding Turn and Local/Temporal lifecycle integration remain open. [Boundaries](docs/codex-coding-preflight.md).
+
 ## 0.1.0.dev100 — Codex delegated startup foundation
 
 - Add a reviewed Codex 0.144.4 protocol subset, bounded POSIX stdio transport and exclusive durable Thread/Turn startup evidence. Lost native receipts never grant a second submission; cancellation intent and native acknowledgment remain separate.

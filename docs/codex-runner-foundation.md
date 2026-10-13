@@ -1,5 +1,8 @@
 # Codex Runner：协议与启动证据基础
 
+dev101 的后续配置／控制组件与原生命令探针见[启动前检查](codex-coding-preflight.md)。
+下文保留 dev100 基础边界；默认传输仍使用原六方法，控制模式单独显式启用。
+
 dev100 提供 `CodexProtocol`、`CodexRPCTransport` 和 `RunnerJournal`。这批是首个 Codex
 委托链路的通信与持久启动基础；**完整 Coding Runner、Agent 绑定、配置工厂尚未交付**。
 实际隔离工作区和 Local／Temporal 版本化停止门禁按
@@ -61,7 +64,10 @@ codex app-server generate-json-schema --out /absolute/private/codex-schemas
 python tools/generate_codex_protocol.py /absolute/private/codex-schemas /absolute/private/subset.json
 ```
 
-脚本固定七个原始 digest，拒绝不匹配输入；不用 `--experimental`，脚本仅读文件。
+dev101 脚本固定完整输入的 canonical JSON digest，仅允许对象键顺序／空白差异，
+拒绝内容变化与重复键／非有限数；原产物保留七个原始审查生成来源 digest，并非后续
+每次原始文件字节 digest。不用 `--experimental`，脚本仅读文件；`--control` 生成独立
+只读控制子集，使用明确的 canonical 来源摘要。
 派生包内 Schema SHA-256：
 `5d2ba8cdee699144bd0ec23760146c6f45919fa9ac6ec5b61004dc3ea7b2a275`。
 Schema 来自 Apache-2.0 的 OpenAI Codex 发行版生成产物；升级需重新审查。

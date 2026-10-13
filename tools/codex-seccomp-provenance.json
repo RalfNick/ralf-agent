@@ -1,0 +1,65 @@
+{
+  "profile": "codex-contained-coding-docker29-ns-v1",
+  "asset": "src/ralf_agent/_codex_coding_seccomp.json",
+  "upstream": {
+    "project": "github.com/moby/profiles/seccomp",
+    "module_version": "v0.1.0",
+    "docker_engine_version": "29.0.1",
+    "revision": "docker-v29.0.1",
+    "running_engine_git_commit": "198b5e3",
+    "source_url": "https://raw.githubusercontent.com/moby/moby/docker-v29.0.1/vendor/github.com/moby/profiles/seccomp/default.json",
+    "commit_source_url": "https://raw.githubusercontent.com/moby/moby/198b5e3/vendor/github.com/moby/profiles/seccomp/default.json",
+    "source_sha256": "01536f1d1df938ae611eba20d6349e0de7a99b6ecdee1549427a0b01b8301e28",
+    "license": "Apache-2.0",
+    "license_url": "https://raw.githubusercontent.com/moby/moby/docker-v29.0.1/vendor/github.com/moby/profiles/seccomp/LICENSE",
+    "license_sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+    "notice": {
+      "module_url": "https://raw.githubusercontent.com/moby/profiles/seccomp/v0.1.0/NOTICE",
+      "vendor_url": "https://raw.githubusercontent.com/moby/moby/docker-v29.0.1/vendor/github.com/moby/profiles/seccomp/NOTICE",
+      "retrieved_http_status": 404,
+      "checked_at": "2026-10-14",
+      "attribution": "Moby profiles/seccomp, distributed under Apache-2.0; neither pinned source location supplies a NOTICE file."
+    }
+  },
+  "modification": {
+    "license": "Apache-2.0",
+    "attribution": "RALF Agent: appended 12 reviewed namespace/Bubblewrap setup rules; all upstream policy fields and rules preserved.",
+    "profile_sha256": "569e7aa0a4d8ed2b0bfada839187309d880c21350c36eaa2b55f15c0c85b41aa",
+    "added_rules": 12,
+    "scope": "Exact clone/unshare flags, eight exact mount flag sets, pivot_root, and umount2(MNT_DETACH). Byte formatting changed from upstream tabs/no final newline to two-space indentation/final newline."
+  },
+  "probe": {
+    "date": "2026-10-14",
+    "docker_desktop": "4.53.0 (211793)",
+    "kernel": "6.12.54-linuxkit",
+    "architecture": "arm64",
+    "codex_version": "0.144.4",
+    "image": "sha256:0a38a968acc4f11ab75cfd4b65a1c2f1982a18bfc27d9fb0dc1045bef5e79d43",
+    "native_config_sha256": "a7601ff4e38741358d8fbfde39f96defcfbd1079ca6b940703190148d8a96b67",
+    "passed": [
+      "Native scoped input read, solution write and exact-byte shell test",
+      "Ten protected/state/sibling/traversal/symlink locations deny reads and writes",
+      "Native AF_INET socket EPERM with outer bridge and successful owned-listener control",
+      "Native setsid child heartbeat stops after whole-container kill; Running=false and PID=0",
+      "Unchanged default seccomp fails closed before command marker"
+    ],
+    "constraints": [
+      "Non-root 10001:10001; fixed normal image home; read-only root; cap-drop ALL; no-new-privileges",
+      "Protected directories preprovisioned; exact Codex trampoline read path; private per-UID synthetic mount registry",
+      "Native proc mount kernel EPERM; explicit native retry without proc retains restricted filesystem/network policy",
+      "No production auth/config/key/socket/repository mounts, login, model calls, or business Turns"
+    ],
+    "unverified": [
+      "App Server effective configuration and capability inheritance",
+      "Builtin read/file/apply_patch through actual native AgentTurn",
+      "Synthetic credential channels and approved dedicated real auth/model availability",
+      "Application Turn cancellation and retained crash/cold recovery integration"
+    ],
+    "business_environment_admitted": false
+  },
+  "verifier": {
+    "path": "tools/verify_codex_seccomp.py",
+    "usage": "python tools/verify_codex_seccomp.py OFFICIAL_BASELINE INSTALLED_PROFILE",
+    "authority": "Pure offline integrity check only; no networking, Docker, task execution, environment admission, or public sandbox implementation."
+  }
+}
