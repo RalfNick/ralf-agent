@@ -80,6 +80,14 @@ from .executors import DispatchEnvelope, EffectObservation, PythonToolExecutor, 
 from .fact_index import IndexedMemoryStore
 from .fact_index_ports import AsyncFactIndexMetadataStore, FactIndexCatalog, FactIndexMetadataStore
 from .fact_scan import AsyncFactScanner, FactScanner, FactScanPage, FactScanQuery
+from .facts_adapter_contract import (
+    FactsAdapterFixture,
+    FactsContractAddress,
+    FactsContractPause,
+    FactsContractResource,
+    FactsContractSession,
+)
+from .facts_adapter_contract_reference import offline_facts_fixture
 from .file_artifacts import FileArtifactStore
 from .gemini_functions import GeminiFunctionProvider
 from .governance import TemporalExecutionPolicy
@@ -377,7 +385,7 @@ from .workflow import (
     WorkflowSelection,
 )
 
-__version__ = "0.1.0.dev95"
+__version__ = "0.1.0.dev96"
 from .binding_artifacts import ArtifactBindingResource, ArtifactView
 from .binding_sandbox import SandboxBindingResource
 from .docker_sandbox import DockerSandbox
@@ -879,4 +887,13 @@ __all__ += [
     "SessionContractResource",
     "SessionContractSession",
     "offline_session_fixture",
+]
+
+__all__ += [
+    "FactsAdapterFixture",
+    "FactsContractAddress",
+    "FactsContractPause",
+    "FactsContractResource",
+    "FactsContractSession",
+    "offline_facts_fixture",
 ]

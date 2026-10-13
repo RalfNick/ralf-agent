@@ -29,9 +29,13 @@ async def _run_case(case_id, fixture, workspace):
         from .knowledge_adapter_contract import run_knowledge_case
 
         return await run_knowledge_case(case_id, fixture, workspace)
-    from .session_adapter_contract import run_session_case
+    if catalog.role == "session-store":
+        from .session_adapter_contract import run_session_case
 
-    return await run_session_case(case_id, fixture, workspace)
+        return await run_session_case(case_id, fixture, workspace)
+    from .facts_adapter_contract import run_facts_case
+
+    return await run_facts_case(case_id, fixture, workspace)
 
 
 async def _drain_cancelled(task):

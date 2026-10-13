@@ -1833,6 +1833,7 @@ class LocalEngine:
         return items, summary
 
     async def _load_references(self, run, step):
+        from .facts_store_values import facts_read_value
         from .session_store_values import session_read_value
 
         components = self._components(run)
@@ -1878,7 +1879,7 @@ class LocalEngine:
         if memory is None:
             facts, facts_manifest = [], {"disabled": True}
         elif policy is None:
-            facts = await memory_call(memory.facts, self.scope, step["name"])
+            facts = facts_read_value(await memory_call(memory.facts, self.scope, step["name"]))
         else:
             facts, facts_manifest = await self._recall_pages(
                 memory, "recall", step["name"], policy.facts, policy.max_pages

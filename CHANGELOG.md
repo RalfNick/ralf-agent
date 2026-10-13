@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.0.dev96 — Facts adapter contract preview
+
+- Develop explicit core and managed Facts profiles with current reads, CAS, expiry, bounded recall and original memory-stage recovery checks.
+- Provide an independent editable SQLite reference, configured defaults and process recovery evidence through the original execution authorities.
+- Accept the bounded subset after 7989 source checks / 617 configured skips, core and SDK installations each 262 zero-skip checks, original dev95 compatibility and 342-module provenance. Same-reviewer closure fixes timing, bounded namespaces and borrowed audit snapshots. Indexing, other adapter roles, arbitrary remote certification, full R25/R01–R26 and actual model/service/adoption quality remain open.
+
 ## 0.1.0.dev95 — Session adapter contract preview
 
 - Add explicit core and receipts Session adapter profiles while retaining Knowledge v1 evidence bytes.

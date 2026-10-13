@@ -87,6 +87,20 @@ jobs:
           python -m agent_app seed
           python -m agent_app run --format json --command-id CI-EXTERNAL-SESSION
           python -m agent_app run --format toml --async --command-id CI-EXTERNAL-ASYNC
+      - name: Installed external Facts adapter contracts outside checkout
+        working-directory: ${{ runner.temp }}
+        run: |
+          python -m pytest -q -W error -p no:cacheprovider -c /dev/null "$RUNNER_TEMP/session-contracts/tests/test_facts_adapter_catalog.py" "$RUNNER_TEMP/session-contracts/tests/test_facts_adapter_roles.py" "$RUNNER_TEMP/session-contracts/tests/test_facts_adapter_cli.py" "$RUNNER_TEMP/session-contracts/tests/test_facts_adapter_contract.py" "$RUNNER_TEMP/session-contracts/tests/test_facts_store_values.py" "$RUNNER_TEMP/session-contracts/tests/test_facts_adapter_reference.py" "$RUNNER_TEMP/session-contracts/tests/test_facts_adapter_starter.py" "$RUNNER_TEMP/session-contracts/tests/test_facts_adapter_recovery.py"
+          ralf-check-adapter --role facts-store --profile core
+          ralf-check-adapter --role facts-store --profile managed --offline --evidence-dir "$RUNNER_TEMP/facts-adapter-evidence"
+          ralf init wheel-facts-adapter --template facts-contracts
+          cd wheel-facts-adapter
+          python -m agent_app check
+          python -m agent_app check --profile managed
+          python -m agent_app seed
+          python -m agent_app run --mode core --format json --command-id CI-EXTERNAL-FACTS-CORE
+          python -m agent_app run --mode pipeline --format toml --async --command-id CI-EXTERNAL-FACTS-PIPELINE
+          python -m agent_app run --mode managed --borrowed --command-id CI-EXTERNAL-FACTS-MANAGED
       - name: Installed Skill document contracts outside checkout
         working-directory: ${{ runner.temp }}
         run: |

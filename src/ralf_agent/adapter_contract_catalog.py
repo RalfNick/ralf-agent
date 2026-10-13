@@ -1,8 +1,8 @@
 """Frozen adapter requirements selected by role, contract version and profile.
 
 Catalogs supply metadata, never fixture capabilities or verdicts. Knowledge v1
-retains its original digest input; explicit Session profiles have separate case
-requirements and include their profile in the suite digest.
+retains its original digest input; explicit Session and Facts profiles have
+separate case requirements and include their profile in the suite digest.
 """
 
 from dataclasses import dataclass, field
@@ -40,6 +40,24 @@ SESSION_CONTRACT_CASES = (
     ("S12", "reopened-receipts"),
     ("S13", "accepted-write-lost-ack"),
     ("S14", "managed-save-recovery"),
+)
+FACTS_CONTRACT_CASES = (
+    ("F01", "identity-and-port"),
+    ("F02", "current-read-and-version"),
+    ("F03", "scope-and-namespace"),
+    ("F04", "compare-and-swap"),
+    ("F05", "expiry-and-currentness"),
+    ("F06", "detached-finite-values"),
+    ("F07", "backend-errors"),
+    ("F08", "backend-drift"),
+    ("F09", "lifecycle-and-suspension"),
+    ("F10", "local-consumer"),
+    ("F11", "bounded-recall-and-cursors"),
+    ("F12", "validation-and-scoped-binding"),
+    ("F13", "exact-inspection-and-reopen"),
+    ("F14", "pipeline-partial-replay"),
+    ("F15", "accepted-write-lost-ack"),
+    ("F16", "receipt-and-settlement-recovery"),
 )
 _BOOLEAN_OBSERVATIONS = frozenset(
     (
@@ -89,6 +107,32 @@ _SESSION_COUNTS = frozenset(
         "rejection_checks",
         "scope_checks",
         "address_checks",
+    )
+)
+_FACTS_COUNTS = frozenset(
+    (
+        "facts_calls",
+        "put_calls",
+        "recall_calls",
+        "validate_calls",
+        "inspection_calls",
+        "fact_count",
+        "version",
+        "close_calls",
+        "backend_switches",
+        "consumer_runs",
+        "model_calls",
+        "write_count",
+        "receipt_checks",
+        "reopen_calls",
+        "rejection_checks",
+        "scope_checks",
+        "namespace_checks",
+        "used_chars",
+        "scanned",
+        "skipped",
+        "duplicate_checks",
+        "settlement_checks",
     )
 )
 STATUS_CODES = MappingProxyType(
@@ -175,16 +219,38 @@ _SESSION_RECEIPTS = AdapterContractCatalog(
     _BOOLEAN_OBSERVATIONS,
     _SESSION_COUNTS,
 )
+_FACTS_CORE = AdapterContractCatalog(
+    "facts-store",
+    "1",
+    "core",
+    FACTS_CONTRACT_CASES[:10],
+    _BOOLEAN_OBSERVATIONS,
+    _FACTS_COUNTS,
+)
+_FACTS_MANAGED = AdapterContractCatalog(
+    "facts-store",
+    "1",
+    "managed",
+    FACTS_CONTRACT_CASES,
+    _BOOLEAN_OBSERVATIONS,
+    _FACTS_COUNTS,
+)
 _CATALOGS = MappingProxyType(
     {
         (catalog.role, catalog.contract_version, catalog.profile): catalog
-        for catalog in (_KNOWLEDGE, _SESSION_CORE, _SESSION_RECEIPTS)
+        for catalog in (
+            _KNOWLEDGE,
+            _SESSION_CORE,
+            _SESSION_RECEIPTS,
+            _FACTS_CORE,
+            _FACTS_MANAGED,
+        )
     }
 )
 _CASE_CATALOGS = MappingProxyType(
     {
         case_id: catalog
-        for catalog in (_KNOWLEDGE, _SESSION_RECEIPTS)
+        for catalog in (_KNOWLEDGE, _SESSION_RECEIPTS, _FACTS_MANAGED)
         for case_id in catalog.case_ids
     }
 )

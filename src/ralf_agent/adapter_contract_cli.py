@@ -18,10 +18,14 @@ async def _execute(arguments):
             from .adapter_contract_reference import offline_knowledge_fixture
 
             fixture = offline_knowledge_fixture()
-        else:
+        elif arguments.role == "session-store":
             from .session_adapter_contract_reference import offline_session_fixture
 
             fixture = offline_session_fixture()
+        else:
+            from .facts_adapter_contract_reference import offline_facts_fixture
+
+            fixture = offline_facts_fixture()
     try:
         return await suite.run(fixture=fixture, evidence_dir=arguments.evidence_dir)
     finally:
@@ -34,7 +38,9 @@ def main(argv=None):
     )
     parser.add_argument("--role", default="knowledge-retriever")
     parser.add_argument("--contract-version", default="1")
-    parser.add_argument("--profile", default="core", help="core, or session-store receipts")
+    parser.add_argument(
+        "--profile", default="core", help="core, session-store receipts, or facts-store managed"
+    )
     parser.add_argument("--offline", action="store_true")
     parser.add_argument("--evidence-dir", help="New private directory for retained case evidence")
     arguments = parser.parse_args(argv)
