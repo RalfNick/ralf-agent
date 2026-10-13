@@ -1021,6 +1021,11 @@ class TemporalRuntime:
         received = None
         try:
             self.validate_release(request["runtime_manifest"])
+            from .temporal_state import validate_coding_selection
+
+            validate_coding_selection(
+                request["runtime_manifest"], AgentSpec(**request["step"]).tools
+            )
             from .temporal_session_state import validate_context_evidence, validate_history
 
             validate_history(request, request["runtime_manifest"], request.get("scope"))
@@ -1559,6 +1564,9 @@ class TemporalRuntime:
 
     def _envelope(self, request):
         self.validate_release(request["runtime_manifest"])
+        from .temporal_state import validate_coding_selection
+
+        validate_coding_selection(request["runtime_manifest"], (request["tool"],))
         context = InvocationContext(
             Scope(**request["scope"]),
             request["run_id"],

@@ -2,12 +2,15 @@
 
 | 项目 | 内容 |
 | --- | --- |
-| 状态 | 待实现的集成契约；不代表完整 Runner 或验收已交付 |
+| 状态 | dev103 部分 Local 实施；完整通用集成与验收仍待完成 |
 | 范围 | 一个显式选择的受限 Codex Coding 场景，一个逻辑 Action 对应一个原生 Turn |
 | 上位契约 | [Runner 能力契约](runner-capability-contract.md)、[Run 命令契约](run-command-contract.md) |
 | 现有基础 | [Codex 协议与启动证据基础](../../docs/codex-runner-foundation.md) |
 
-本文固定下一步的责任与验收边界，不分配新的 kernel、数据库 Schema、联合绑定协议或发行版本。实施时须发布可被旧执行器识别并拒绝的版本门禁，且保留既有默认声明与历史视图。
+本文固定责任与验收边界。dev103 有限 Local 实施分配显式 `local-10`、
+`delegated_execution_protocol=1` 与原接受事务内的 Schema 14；默认发布不升级，
+联合 per-Agent 绑定协议与 Temporal 委托协议本批未分配。实施须使旧执行器在业务
+I/O 前拒绝新声明，同时保留既有默认声明与历史视图。
 
 dev102 已增加具体 `DockerCodingEnvironment`、借用原 `PostgresEffectJournal` 的
 `PostgresRunnerJournal` 与 Local／PG 共用纯阶段规则，见[环境／日志指南](../../docs/codex-coding-environment.md)和[本批登记](../reviews/2026-10-14-codex-environment-journal.md)。
@@ -17,17 +20,26 @@ argv 可重启已停容器，不能声称旧 grant 失效。完整 G3／G5／G7�
 PG 初始化 P1／全循环取消 P2 已由同一审查者实际复验修复，最终受影响源码 301 项零
 跳过；这些修复不关闭下列原权威生命周期要求。
 
+dev103 将 SDK 根级未绑定 Agent／顺序 Workflow 接入原 ToolAction 准入、原 Run
+停止采纳和独立未知效果记录；具体资源使用 `execute / reconcile / stop_existing /
+aclose`，通用 Runner Port、per-Agent／声明工厂及复杂父级尚未接入。公共
+`DelegatedExecutionStore` 负责原预算回读与有限待停止查询，避免依赖 SQLite 私有
+扫描。opt-in 版本 2 环境停止后移除原完整 container ID，确认实际缺席后保存 fenced，
+使旧 start argv 失效并保留宿主 workspace／状态／证据。专用认证、真实业务 Turn、
+原 Temporal History 准入／控制与共享 PG 采纳仍开放。实现和证据分别见
+[使用边界](../../docs/local-coding-delegation.md)及[本批登记](../reviews/2026-10-14-local-coding-delegation.md)。
+
 ## 1. 实现边界
 
 保留 `Action.kind = "tool"`、`ToolSpec.effect = "queryable_write"` 与 `requires_approval = true`。既有参数 Schema、操作摘要、稳定 effect key、审批、预算预留和结果提交继续由原执行权威管理。该 Action 表示整个委托 Turn；外部内部文件、命令与重试不因此成为 RALF 管理的逐步骤工具调用。
 
 Local Coordinator／SQLite 和 Temporal Workflow／History 分别保持原 Run／Action 权威。原生 RPC、启动证据日志和容器所有者只执行已准入的有限操作并返回证据；不建立另一个调度器，不决定 Run 终态，不在 ModelProvider 或纯 Harness 中运行外部循环。
 
-| 对象 | 现有基础 | 本契约要求的待实现集成 |
+| 对象 | 当前有限实现 | 本契约要求的剩余集成 |
 | --- | --- | --- |
-| 原 Tool Action | 类型化调用、审批、效果身份、结果提交 | 显式委托标记及独立原生生命周期记录 |
-| Codex 协议／RPC／环境 | 固定协议验证、有界传输、本地进程清理；dev102 保留环境的同 ID 检查与实际整容器停止 | 原权威准入、原句柄观察、旧启动失效及停止证据采纳 |
-| RunnerJournal | Local 独占 SQLite 启动阶段、原生句柄与取消意图 | Local Action 绑定与采纳；不能充当 Temporal 共享日志 |
+| 原 Tool Action | 类型化调用、审批、效果身份、结果提交；dev103 根级未绑定 Local 原 Action 的显式委托及独立生命周期 | per-Agent／声明工厂、复杂父级组合与 Temporal 原 History 接入 |
+| Codex 协议／RPC／环境 | 固定协议、有界同连接传输／等待拒绝；dev103 有限 Local 原权威准入／句柄采纳、opt-in 原容器停止移除和旧启动失效 | 完整组合准入、实际业务任务与跨宿主停止证据 |
+| RunnerJournal | Local 独占 SQLite 启动阶段、原生句柄、取消意图及 dev103 原 Local Action 采纳 | 剩余组合恢复；不能充当 Temporal 共享日志 |
 | PostgresRunnerJournal（dev102） | 借用原 EffectJournal 同事务保存原 dispatch／启动意图，共享有限阶段与固定句柄 | 原 History phase／control grant、取消顺序、停止与结果采纳；日志许可不代替准入 |
 | Coding 控制读回／namespace 门禁 | 控制检查和物理限制的基础 | 与业务授权、专用原生认证、完整执行生命周期及实际验收结合 |
 
@@ -35,7 +47,11 @@ Local Coordinator／SQLite 和 Temporal Workflow／History 分别保持原 Run�
 
 ## 2. 显式声明和有限接口
 
-待实现的 `ToolSpec.config.delegated_runner` 是严格校验的标记，绑定 adapter、原生版本、协议摘要、场景 Profile、有效配置、能力报告与输入契约。注册工具的实现摘要和实际 Runner 资源身份同时固定；普通 callable 添加同名配置不能取得启动权。引擎在进入通用 ToolExecutor 之前识别此路径，直接调用通用 handler 必须拒绝启动。
+dev103 的 `ToolSpec.config.delegated_runner` 使用严格版本 1 标记，固定实际 Runner
+身份及输入契约；具体 Codex 资源身份含原生版本、协议／Profile、物理依赖和生命周期
+版本。注册工具的实现摘要和实际资源身份同时固定；普通 callable 添加同名配置不能
+取得启动权。引擎在进入通用 ToolExecutor 之前识别此路径，直接调用通用 handler
+拒绝启动。首期输入仅 task 文本，产物、上下文引用和通用能力报告的声明入口仍待完成。
 
 可选 per-Agent `runner` 绑定沿用 `inherit / ref / disabled`：继承显式 Profile 默认，引用精确组件／版本，或禁用委托能力。无 Runner 声明的旧 Agent 保持原路径；禁用或缺失 Runner 时，显式委托工具不能静默换执行器或降低场景限制。新增绑定字段只进入显式新声明，不改变旧声明序列化字节。
 

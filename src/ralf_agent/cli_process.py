@@ -1,5 +1,6 @@
 """Bounded trusted POSIX process execution, without a shell or sandbox claim."""
 
+import errno
 import os
 import selectors
 import signal
@@ -12,10 +13,29 @@ from .tool_sources import ToolSourceError
 
 def stop_process(process):
     for signum in (signal.SIGTERM, signal.SIGKILL):
-        try:
-            os.killpg(process.pid, signum)
-        except ProcessLookupError:
-            pass
+        deadline = time.monotonic() + 0.1
+        while True:
+            try:
+                os.killpg(process.pid, signum)
+            except ProcessLookupError:
+                break
+            except PermissionError as error:
+                # Darwin can report EPERM for an original group containing only
+                # zombies until reaping removes the group. Retry that same
+                # signal/PGID briefly, requiring success or actual ESRCH. A
+                # persistent denial remains an error, never stop evidence.
+                if error.errno != errno.EPERM:
+                    raise
+                # If the zombie is our direct child, only our wait/poll can
+                # remove it. Reaping it does not prove descendant-group exit;
+                # the original group must still pass the next signal attempt.
+                process.poll()
+                remaining = deadline - time.monotonic()
+                if remaining <= 0:
+                    raise
+                time.sleep(min(0.005, remaining))
+            else:
+                break
         if signum == signal.SIGTERM:
             try:
                 process.wait(timeout=0.1)

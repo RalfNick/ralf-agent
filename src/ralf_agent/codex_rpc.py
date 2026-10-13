@@ -139,6 +139,7 @@ class CodexRPCTransport:
         max_events: int = 256,
         request_timeout: float = 30.0,
         control_only: bool = False,
+        coding_mode: bool = False,
     ):
         if os.name != "posix":
             raise ValueError("CodexRPCTransport requires POSIX process groups")
@@ -167,7 +168,13 @@ class CodexRPCTransport:
         _positive_number(request_timeout, "request_timeout")
         if type(control_only) is not bool:
             raise ValueError("control_only must be a boolean")
+        if type(coding_mode) is not bool:
+            raise ValueError("coding_mode must be a boolean")
+        if control_only and coding_mode:
+            raise ValueError("control_only and coding_mode are mutually exclusive")
         self._control_only = control_only
+        self._coding_mode = coding_mode
+        self._coding_business = False
         self._control_notifications = 0
         self._argv = argv
         self._env = dict(env)
@@ -282,7 +289,7 @@ class CodexRPCTransport:
         output.append(10)
         return bytes(output)
 
-    async def _send(self, payload):
+    async def _send(self, payload, *, coding_business=False):
         async with self._write_lock:
             self._require_open()
             try:
@@ -291,6 +298,8 @@ class CodexRPCTransport:
                 # another frame, so repeated timeouts cannot grow that buffer.
                 await self._stdin.drain()
                 self._require_open()
+                if coding_business:
+                    self._coding_business = True
                 self._stdin.write(payload)
                 await self._stdin.drain()
             except (OSError, RuntimeError):
@@ -300,8 +309,18 @@ class CodexRPCTransport:
 
     async def request(self, method: str, params: dict | None) -> dict:
         self._require_open()
-        methods = _CONTROL_METHODS if self._control_only else _METHODS
-        nullable = self._control_only and method == "configRequirements/read" and params is None
+        methods = (
+            _METHODS | _CONTROL_METHODS
+            if self._coding_mode
+            else _CONTROL_METHODS
+            if self._control_only
+            else _METHODS
+        )
+        nullable = (
+            (self._control_only or self._coding_mode)
+            and method == "configRequirements/read"
+            and params is None
+        )
         if (
             type(method) is not str
             or method not in methods
@@ -319,15 +338,18 @@ class CodexRPCTransport:
         self._pending[request_id] = future
 
         async def exchange():
-            await self._send(payload)
+            await self._send(
+                payload,
+                coding_business=self._coding_mode and method in _METHODS and method != "initialize",
+            )
             return await future
 
         try:
             result = await asyncio.wait_for(exchange(), timeout=self._request_timeout)
-            if self._control_only:
+            if self._control_only or (self._coding_mode and method in _CONTROL_METHODS):
                 # The reader may already have rejected peer traffic following
                 # this reply in the same batch. A resolved future is then not
-                # evidence of a successful control-only exchange.
+                # evidence of a successful control exchange.
                 self._require_open()
             return result
         finally:
@@ -394,7 +416,7 @@ class CodexRPCTransport:
         if type(message) is not dict or message.get("jsonrpc", "2.0") != "2.0":
             raise ValueError("invalid JSON-RPC object")
         if "method" in message:
-            if self._control_only:
+            if self._control_only or (self._coding_mode and not self._coding_business):
                 self._control_notification(message)
                 return
             if (
@@ -560,7 +582,11 @@ class CodexRPCTransport:
         elif self._launch_task is not None:
             await self._settle_task(self._launch_task)
         self._state = "closed"
-        self._events.clear()
+        # Coding adoption still needs every already-validated peer frame. This
+        # inbox remains max_events bounded and next_event drains it before the
+        # closed error. Default/control transports keep their prior semantics.
+        if not self._coding_mode:
+            self._events.clear()
         self._event_ready.set()
 
     @staticmethod

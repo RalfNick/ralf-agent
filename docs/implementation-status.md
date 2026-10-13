@@ -1,4 +1,6 @@
-# Implementation status — 0.1.0.dev102
+# Implementation status — 0.1.0.dev103
+
+Dev103 增加[原 Local ToolAction 的 Coding 委托](local-coding-delegation.md)：显式 SDK 注册、一个审批／预留／attempt、原 Run 的一次阶段准入、同连接配置校验、原 Thread／Turn 回执与停止采纳已接通。Docker opt-in 移除原容器并使旧 start argv 失效，宿主工作区与证据保留。仅根级未绑定 Agent／顺序 Workflow；更复杂编排、per-Agent runner、声明工厂和 Temporal 原生委托尚未接入，所选不支持路径在业务 I/O 前拒绝。存储通过公共 DelegatedExecutionStore 能力查询待停止 Run，不依赖 SQLite 私有扫描；默认 kernel／Schema 保留，委托发布显式 local-10／Schema 14。实际环境证据与结构化假服务的业务协议验证分别登记，专用认证／真实模型 Turn 未通过，完整 G1–G8／R13／第二阶段仍开放。最终审查、回归、安装及兼容结果见[本批登记](../architecture/reviews/2026-10-14-local-coding-delegation.md)，dev99 冻结范围保持。
 
 Dev102 新增[保留 Docker Coding 环境与共享 PG 启动证据](codex-coding-environment.md)：原 container ID／generation 冷检查、保留 workspace／状态与实际整容器停止已有有限证据；共享视图借用原 EffectJournal，原 dispatch／启动意图同事务提交，Local／PG 共用纯规则。最终受影响源码 301 项零跳过，含 PG 39 检查／17 实际案例，初始化路由 P1 与全循环取消 P2 由同一审查者实际复验闭环；独立 wheel 安装同 301 项零跳过，实际安装控制／停止／冷重开通过，见[本批登记](../architecture/reviews/2026-10-14-codex-environment-journal.md)。原始 Docker argv 仍可重启已停容器，原 Action／Local／Temporal 准入、旧启动失效与 History 未接入，专用认证／业务 Turn 未执行。R13、完整 G3／G5／G7／G8 和第二阶段仍开放，dev99 保持冻结，不重新评测。
 

@@ -141,6 +141,9 @@ class LocalEngine:
             else {}
         )
         self.store = store
+        from .local_delegated_coding import store_registration
+
+        self._delegated_store_registration = store_registration(store)
         from .user_input import UserInputPolicy
 
         if user_input_policies is not None and (
@@ -324,6 +327,21 @@ class LocalEngine:
     def close(self):
         if self._lifecycle == "closed":
             return
+        if self._lifecycle != "store_closed":
+            from .local_delegated_coding import delegated_pending
+
+            if self._delegated_store_registration is not None and delegated_pending(self):
+                raise ValidationError(
+                    "Stop pending delegated native work before closing its coordinator"
+                )
+            from .delegated_coding import registered_coding_tool
+
+            for name in getattr(self.tools, "_tools", {}):
+                handler = registered_coding_tool(self.tools.get(name))
+                if handler is not None and handler.runner.active_operations:
+                    raise ValidationError(
+                        "Finish active delegated resource ownership before closing"
+                    )
         if self._lifecycle == "closing":
             raise ValidationError("Engine is already closing")
         if (
@@ -363,6 +381,10 @@ class LocalEngine:
             or any(not t.done() for t in self._parallel_tasks.get(run_id, ()))
             or (not supervisor and self._operation_active(run_id))
         ):
+            return
+        from .local_delegated_coding import delegated_stop_settled
+
+        if not delegated_stop_settled(self._authorized(run_id)):
             return
         with self.store.transaction():
             run = self._authorized(run_id)
@@ -641,6 +663,13 @@ class LocalEngine:
         input_tools = manifest_tools(self, names)
         if input_tools:
             manifest.update(kernel="local-9", user_input_protocol=1, user_input_tools=input_tools)
+        from .local_delegated_coding import manifest_tools
+
+        coding = manifest_tools(self, names)
+        if coding:
+            manifest.update(
+                kernel="local-10", delegated_execution_protocol=1, delegated_coding_tools=coding
+            )
         return manifest
 
     def _history_registration(self, components=None):
@@ -797,6 +826,9 @@ class LocalEngine:
             from .binding_runtime import unwrap_definition
 
             definition = unwrap_definition(definition)
+        from .local_delegated_coding import validate_definition
+
+        validate_definition(self, definition, _parent_call)
         budget, session_id = payload["budget"], payload["session_id"]
         if definition["kind"] in {"team", "dynamic"}:
             return self._orchestration.accept(
@@ -883,6 +915,9 @@ class LocalEngine:
         from .local_session_model_history import activate_native_history
 
         activate_native_history(self, manifest)
+        from .local_delegated_coding import activate as activate_coding
+
+        activate_coding(self, manifest, definition, _parent_call)
         data = {
             "id": run_id,
             "revision": 0,
@@ -980,7 +1015,22 @@ class LocalEngine:
 
         def apply():
             run = self._authorized(run_id)
-            active = run_id in self._active or self._operation_active(run_id)
+            from .local_delegated_coding import delegated_stop_settled, request_cancel
+
+            active = (
+                run_id in self._active
+                or self._operation_active(run_id)
+                or not delegated_stop_settled(run)
+            )
+            request_cancel(
+                run,
+                {
+                    "command": "cancel",
+                    "command_id": command_id,
+                    "run_id": run_id,
+                    "applied_after_revision": run["revision"],
+                },
+            )
             if not active and self._normalize_abandoned(run):
                 self._commit(run, "abandoned_attempts_unknown")
             if run["state"] in {"succeeded", "failed"}:
@@ -1034,6 +1084,34 @@ class LocalEngine:
             action = next((a for a in run["actions"] if a["id"] == action_id), None)
             if action is None or action["kind"] != "tool" or action["status"] != "outcome_unknown":
                 raise ValidationError("No unknown tool effect to reconcile")
+            if "delegated_execution" in action:
+                self._check_release(run)
+            if "delegated_execution" in action and (
+                run["state"] in {"cancelling", "cancelled", "failed"}
+                or "cancel" in action["delegated_execution"]
+            ):
+                from .local_delegated_coding import delegated_stop_settled
+
+                if not delegated_stop_settled(run):
+                    raise ValidationError(
+                        "Effect confirmation requires original delegated stop and fencing"
+                    )
+                state = action["delegated_execution"]
+                state["effect_case"] = "confirmed"
+                state["effect_confirmation"] = {
+                    "result": copy.deepcopy(result),
+                    "source": "local-owner",
+                    "command_id": command_id,
+                }
+                self.store.settle(
+                    action["attempts"][0]["id"],
+                    self.tools.get(action["tool"]).spec.cost,
+                    {"effect": "confirmed"},
+                )
+                self._commit(
+                    run, "effect_reconciled", {"action_id": action_id, "source": "local-owner"}
+                )
+                return {"state_revision": run["revision"]}
             self._tool_result(
                 run, action, result, {"source": "local-owner", "command_id": command_id}
             )
@@ -1055,6 +1133,9 @@ class LocalEngine:
         )
 
     def _check_release(self, run):
+        from .local_delegated_coding import validate_journal as validate_coding_journal
+
+        validate_coding_journal(self, run)
         from .local_user_input import validate_journal as validate_input_journal
 
         validate_input_journal(self, run)
@@ -1140,6 +1221,10 @@ class LocalEngine:
         validate_inherited_limits(manifest, source)
 
     def _commit(self, run, kind, data=None):
+        from .local_delegated_coding import delegated_stop_settled
+
+        if run["state"] in TERMINAL and not delegated_stop_settled(run):
+            raise ValidationError("Terminal Run requires stopped and fenced delegated work")
         if kind == "run_succeeded":
             from .local_session_model_history import publish_native_history
 
@@ -1151,6 +1236,9 @@ class LocalEngine:
         changed = False
         for action in run["actions"]:
             if action["status"] == "executing":
+                if "delegated_execution" in action:
+                    action["delegated_execution"]["native_unknown"] = True
+                    action["delegated_execution"]["effect_case"] = "unknown"
                 action["status"] = "outcome_unknown"
                 action["attempts"][-1]["status"] = "unknown"
                 self.store.mark_unknown(action["attempts"][-1]["id"])
@@ -1161,7 +1249,17 @@ class LocalEngine:
         with self.store.transaction():
             run = self._authorized(run_id)
             if run["state"] not in TERMINAL:
-                run["state"] = "cancelled" if run["state"] == "cancelling" else "failed"
+                from .local_delegated_coding import delegated_stop_settled, request_cancel
+
+                if not delegated_stop_settled(run):
+                    run["delegated_failure"] = {
+                        "code": code,
+                        "terminal": "cancelled" if run["state"] == "cancelling" else "failed",
+                    }
+                    request_cancel(run, {"command": "failure", "code": code})
+                    run["state"] = "cancelling"
+                else:
+                    run["state"] = "cancelled" if run["state"] == "cancelling" else "failed"
                 from .local_user_input import retire
 
                 retire(run)
@@ -1217,6 +1315,10 @@ class LocalEngine:
         if self._operation_active(run_id):
             raise CoordinatorBusy("The previous Action is still running; wait for its result")
         run = self._authorized(run_id)
+        from .local_delegated_coding import delegated_stop_settled
+
+        if run["state"] in TERMINAL and not delegated_stop_settled(run):
+            raise DefinitionMismatch("Terminal Run retains unsettled delegated work")
         if run["state"] in TERMINAL:
             if "native_model_history" in run or run.get("workflow") or run.get("orchestration"):
                 from .local_session_model_history import recover_native_tree
@@ -1290,8 +1392,13 @@ class LocalEngine:
                     self._adopt_received_evidence(run_id)
                     break
                 if run["state"] == "cancelling":
+                    from .local_delegated_coding import stop_work
+
+                    if not await self._guarded(run_id, stop_work(self, run_id)):
+                        break
                     with self.store.transaction():
-                        run["state"] = "cancelled"
+                        run = self._authorized(run_id)
+                        run["state"] = run.get("delegated_failure", {}).get("terminal", "cancelled")
                         self._commit(run, "run_cancelled")
                     from .local_session_model_history import (
                         _uses_session_history,
@@ -1395,6 +1502,10 @@ class LocalEngine:
             raise
 
     async def _finish_node(self, run_id, result):
+        from .local_delegated_coding import delegated_stop_settled
+
+        if not delegated_stop_settled(self._authorized(run_id)):
+            raise ValidationError("Finish node requires stopped and fenced delegated work")
         from .session_store_values import session_append_revision, session_read_value
 
         run = self._authorized(run_id)
@@ -2257,6 +2368,19 @@ class LocalEngine:
 
     def _tool_result(self, run, action, result, receipt):
         canonical(result)
+        if "delegated_execution" in action:
+            from .local_delegated_coding import delegated_stop_settled
+
+            if not delegated_stop_settled(run):
+                raise ValidationError(
+                    "Delegated tool result requires original stop and fencing evidence"
+                )
+            if (
+                run["state"] in {"cancelling", "cancelled", "failed"}
+                or "cancel" in action["delegated_execution"]
+            ):
+                raise ValidationError("Cancelled delegated ToolAction cannot publish a result")
+            action["delegated_execution"]["effect_case"] = "confirmed"
         if action["status"] == "completed":
             # Evidence can arrive from a handler, automatic query and operator
             # concurrently. The first ResultCommit is immutable; later evidence
@@ -2361,6 +2485,12 @@ class LocalEngine:
                     run, "approval_requested", {"action_id": action_id, "digest": action["digest"]}
                 )
             return False
+        from .delegated_coding import registered_coding_tool
+
+        if registered_coding_tool(tool) is not None:
+            from .local_delegated_coding import tool as coding_tool
+
+            return await coding_tool(self, run_id, action_id)
         previous_attempt = self._last_dispatched_attempt(action)
         context = InvocationContext(
             self.scope,

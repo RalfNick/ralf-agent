@@ -200,6 +200,9 @@ class ToolRegistry:
             raise DefinitionMismatch(f"Tool already registered: {spec.name}")
         if not callable(handler) or (reconciler is not None and not callable(reconciler)):
             raise ValidationError("Tool handlers and reconcilers must be callable")
+        from .delegated_coding import registered_coding_tool
+
+        registered_coding_tool(RegisteredTool(spec, handler, reconciler, ""))
         # Bound arguments, instance state and captured dependencies belong in the
         # integrator's explicit version/config identity, never inferred from repr
         # or serialized automatically (they may include secrets).
@@ -263,8 +266,11 @@ class ToolRegistry:
 
 
 def _callable_identity(function):
+    from .delegated_coding import CodingToolHandler
     from .tool_functions import TypedFunctionHandler
 
+    if type(function) is CodingToolHandler:
+        return function.implementation_identity
     if type(function) is TypedFunctionHandler:
         return function.implementation_identity
     if function is None:

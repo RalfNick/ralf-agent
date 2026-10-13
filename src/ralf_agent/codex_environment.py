@@ -65,7 +65,9 @@ class DockerCodingEnvironment:
     Docker Desktop maps the nonroot guest UID differently from the host caller.
     Mount subdirectories are writable inside a host-owned 0700 root; metadata,
     the lease, and seccomp stay outside both mounts. No host credentials or
-    repository/socket mounts enter the container. No container removal occurs.
+    repository/socket mounts enter the container. Default v1 retains the stopped
+    container. Explicit v2 retirement removes its original ID and retains all
+    host state with a durable absence-confirmed tombstone.
     """
 
     def __init__(
@@ -76,6 +78,8 @@ class DockerCodingEnvironment:
         docker_executable: str,
         docker_host: str,
         command_timeout: float = 20.0,
+        retire_on_stop: bool = False,
+        expected_generation: str | None = None,
     ):
         try:
             path = Path(root)
@@ -98,6 +102,15 @@ class DockerCodingEnvironment:
                 and type(command_timeout) in (int, float)
                 and math.isfinite(command_timeout)
                 and 0 < command_timeout <= 60
+                and type(retire_on_stop) is bool
+                and (
+                    expected_generation is None
+                    or (
+                        retire_on_stop
+                        and type(expected_generation) is str
+                        and re.fullmatch(r"[a-f0-9]{32}", expected_generation)
+                    )
+                )
             )
         except (OSError, TypeError, ValueError):
             valid = False
@@ -114,6 +127,9 @@ class DockerCodingEnvironment:
         self._executable_pin = _pin(executable.resolve(strict=True))
         self._host = docker_host
         self._timeout = command_timeout
+        self._retire_on_stop = retire_on_stop
+        self._expected_generation = expected_generation
+        self._expected_container_id = None
         self._profile = CodexCodingProfile()
         self._seccomp = Path(__file__).with_name("_codex_coding_seccomp.json").read_bytes()
         _require(_digest(self._seccomp) == _SECCOMP_DIGEST)
@@ -133,6 +149,10 @@ class DockerCodingEnvironment:
             "tool_network_enabled": False,
             "execution_admitted": False,
         }
+        if retire_on_stop:
+            self._identity.update({"version": "2", "retire_on_stop": True})
+            if expected_generation is not None:
+                self._identity["expected_generation"] = expected_generation
         self._resource_id = resource_id
         self._name = "ralf-coding-" + _digest(_canonical(self._identity).encode())[:32]
         self._metadata = None
@@ -142,6 +162,7 @@ class DockerCodingEnvironment:
         self._closing = False
         self._closed = False
         self._last = None
+        self._existing_only = False
         self._operation_lock = asyncio.Lock()
         self._operation_task = None
         self._worker_lock = threading.RLock()
@@ -169,6 +190,7 @@ class DockerCodingEnvironment:
             or self._last is None
             or self._last["running"]
             or not self._last["stopped"]
+            or (self._retire_on_stop and self._metadata["retirement"] is not None)
         ):
             raise ValidationError("Coding transport requires a prepared stopped owned resource")
         self._check_root()
@@ -193,6 +215,19 @@ class DockerCodingEnvironment:
 
     async def stop(self) -> dict:
         return await self._owned(self._stop)
+
+    async def stop_existing(self, *, expected_container_id: str | None = None) -> dict | None:
+        """Cold control only; None means no metadata, never general stop proof.
+
+        No provision, create or start is permitted. An unresolved create intent
+        without its original full container locator retains its lease for retry.
+        """
+        if expected_container_id is not None and (
+            type(expected_container_id) is not str
+            or re.fullmatch(r"[a-f0-9]{64}", expected_container_id) is None
+        ):
+            raise ValidationError("Coding recovery requires an original full container locator")
+        return await self._owned(lambda: self._stop_existing(expected_container_id))
 
     async def aclose(self) -> None:
         await self._owned(self._close)
@@ -288,16 +323,19 @@ class DockerCodingEnvironment:
                 and info.st_size <= 65536
             )
             value = json.loads(path.read_bytes())
-            _require(
-                type(value) is dict
-                and set(value)
-                == {"identity", "generation", "container_id", "files", "lease_pin", "last_state"}
-            )
+            keys = {"identity", "generation", "container_id", "files", "lease_pin", "last_state"}
+            if self._retire_on_stop:
+                keys.add("retirement")
+            _require(type(value) is dict and set(value) == keys)
             _require(_canonical(value["identity"]) == _canonical(self._identity))
             _require(value["lease_pin"] == self._lease_pin)
             _require(
                 type(value["generation"]) is str
                 and re.fullmatch(r"[a-f0-9]{32}", value["generation"])
+            )
+            _require(
+                self._expected_generation is None
+                or value["generation"] == self._expected_generation
             )
             _require(
                 value["container_id"] is None
@@ -306,6 +344,12 @@ class DockerCodingEnvironment:
                     and re.fullmatch(r"[a-f0-9]{64}", value["container_id"])
                 )
             )
+            _require(
+                self._expected_container_id is None
+                or value["container_id"] == self._expected_container_id
+            )
+            if self._retire_on_stop:
+                self._validate_retirement(value)
             self._metadata = value
             self._check_files()
         except (OSError, ValueError, TypeError, KeyError):
@@ -359,7 +403,7 @@ class DockerCodingEnvironment:
             path.chmod(0o444 if relative.startswith("state/") else 0o600)
         self._metadata = {
             "identity": self.identity,
-            "generation": uuid.uuid4().hex,
+            "generation": self._expected_generation or uuid.uuid4().hex,
             "container_id": None,
             "lease_pin": self._lease_pin,
             "last_state": None,
@@ -379,6 +423,8 @@ class DockerCodingEnvironment:
                 )
             },
         }
+        if self._retire_on_stop:
+            self._metadata["retirement"] = None
         self._write_metadata()
 
     def _check_files(self):
@@ -470,7 +516,7 @@ class DockerCodingEnvironment:
         return [*args, self._profile.identity["image_id"], *_COMMAND]
 
     def _prepare(self):
-        if self._closed or self._closing:
+        if self._closed or self._closing or self._existing_only:
             raise ValidationError("Coding environment is closing or closed")
         self._acquire()
         if (self._root / "environment.json").exists():
@@ -478,6 +524,10 @@ class DockerCodingEnvironment:
         elif self._metadata is None:
             self._provision()
         self._check_files()
+        if self._retire_on_stop and self._metadata["retirement"] is not None:
+            result = self._inspect()
+            self._prepared = True
+            return result
         if self._metadata["container_id"] is None:
             # A persisted intent can recover only its exact generation-labelled,
             # never-started created container after a create/metadata crash.
@@ -627,6 +677,11 @@ class DockerCodingEnvironment:
             raise ValidationError("Coding resource has no prepared owned container")
         self._check_root()
         self._check_files()
+        if self._retire_on_stop and self._metadata["retirement"] is not None:
+            self._validate_retirement(self._metadata)
+            if not self._container_present():
+                return self._record_fenced()
+            _require(self._metadata["retirement"]["phase"] != "fenced")
         state = self._inspect_raw()["State"]
         self._last = {
             "identity": self.identity,
@@ -642,6 +697,8 @@ class DockerCodingEnvironment:
             "finished_at": state["FinishedAt"],
             "execution_admitted": False,
         }
+        if self._retire_on_stop:
+            self._last.update({"container_present": True, "retired": False, "fenced": False})
         self._metadata["last_state"] = {
             k: self._last[k]
             for k in (
@@ -659,12 +716,151 @@ class DockerCodingEnvironment:
 
     def _stop(self):
         state = self._inspect()
+        if self._retire_on_stop and state["fenced"]:
+            return state
         if state["running"]:
             self._cli(["kill", "--signal=KILL", self._metadata["container_id"]])
         result = self._inspect()
         if not result["stopped"]:
             raise ExecutionHostFailed("Coding container stop is not confirmed")
+        if self._retire_on_stop:
+            # Commit original-ID, generation and actual stopped/Pid0 evidence
+            # before dispatch. A lost removal reply is unknown until a separate
+            # successful exact-ID inventory query confirms absence.
+            self._metadata["retirement"] = {"phase": "intent", "stopped": copy.deepcopy(result)}
+            self._validate_retirement(self._metadata)
+            self._write_metadata()
+            try:
+                self._cli(["rm", self._metadata["container_id"]])
+            except ExecutionHostFailed:
+                if self._container_present():
+                    raise
+            else:
+                if self._container_present():
+                    raise ExecutionHostFailed("Coding container retirement is not confirmed")
+            return self._record_fenced()
         return result
+
+    def _stop_existing(self, expected_container_id=None):
+        if self._closed:
+            raise ValidationError("Coding environment is closed")
+        if expected_container_id is not None:
+            _require(
+                self._expected_container_id is None
+                or self._expected_container_id == expected_container_id
+            )
+            self._expected_container_id = expected_container_id
+        self._existing_only = True
+        self._acquire()
+        try:
+            (self._root / "environment.json").lstat()
+        except FileNotFoundError:
+            # A live object must not forget its known original locator when
+            # metadata disappears. Missing metadata is only a cold no-record
+            # result, never permission to relinquish existing ownership.
+            _require(
+                self._metadata is None
+                and not self._prepared
+                and self._expected_container_id is None
+            )
+            # No original locator has been loaded and no Docker operation has
+            # been dispatched. Release this metadata-only lease; caller must
+            # separately interpret missing preparation in its original Action.
+            os.close(self._lease)
+            self._lease = None
+            return None
+        self._read_metadata()
+        if self._metadata["container_id"] is None:
+            raise ValidationError("Coding recovery has no original full container locator")
+        return self._stop()
+
+    def _validate_retirement(self, metadata):
+        retirement = metadata["retirement"]
+        if retirement is None:
+            return
+        _require(
+            type(retirement) is dict
+            and set(retirement) == {"phase", "stopped"}
+            and retirement["phase"] in ("intent", "fenced")
+        )
+        stopped = retirement["stopped"]
+        _require(
+            type(stopped) is dict
+            and set(stopped)
+            == {
+                "identity",
+                "resource_id",
+                "container_id",
+                "generation",
+                "running",
+                "pid",
+                "stopped",
+                "status",
+                "exit_code",
+                "started_at",
+                "finished_at",
+                "execution_admitted",
+                "container_present",
+                "retired",
+                "fenced",
+            }
+        )
+        _require(
+            metadata["container_id"] is not None
+            and stopped["container_id"] == metadata["container_id"]
+            and stopped["generation"] == metadata["generation"]
+            and stopped["resource_id"] == self._resource_id
+            and _canonical(stopped["identity"]) == _canonical(self._identity)
+        )
+        _require(
+            stopped["stopped"] is True
+            and stopped["running"] is False
+            and type(stopped["pid"]) is int
+            and stopped["pid"] == 0
+            and stopped["container_present"] is True
+            and stopped["retired"] is False
+            and stopped["fenced"] is False
+            and stopped["execution_admitted"] is False
+            and stopped["status"] in ("created", "exited")
+            and type(stopped["exit_code"]) is int
+            and all(
+                type(stopped[k]) is str and len(stopped[k]) <= 64
+                for k in ("started_at", "finished_at")
+            )
+        )
+
+    def _container_present(self):
+        """Successful exact full-ID inventory, never infer absence from errors."""
+        _require(self._metadata["container_id"] is not None)
+        try:
+            ids = (
+                self._cli(
+                    [
+                        "ps",
+                        "-a",
+                        "--no-trunc",
+                        "--filter",
+                        "id=" + self._metadata["container_id"],
+                        "--format",
+                        "{{.ID}}",
+                    ]
+                )[0]
+                .decode("ascii")
+                .split()
+            )
+        except UnicodeError:
+            raise ExecutionHostFailed("Docker container absence query is invalid") from None
+        _require(ids in ([], [self._metadata["container_id"]]))
+        return bool(ids)
+
+    def _record_fenced(self):
+        self._validate_retirement(self._metadata)
+        _require(self._metadata["retirement"] is not None)
+        self._metadata["retirement"]["phase"] = "fenced"
+        self._write_metadata()
+        self._last = copy.deepcopy(self._metadata["retirement"]["stopped"])
+        self._last.update({"container_present": False, "retired": True, "fenced": True})
+        return self._last
 
     def _close(self):
         if self._closed:
@@ -675,6 +871,8 @@ class DockerCodingEnvironment:
             return
         # A failure keeps the lease and permits another aclose/stop attempt.
         if self._metadata is None or self._metadata["container_id"] is None:
+            if self._existing_only:
+                raise ExecutionHostFailed("Coding recovery has no confirmed original container")
             self._closing = False
             self._prepare()
             self._closing = True

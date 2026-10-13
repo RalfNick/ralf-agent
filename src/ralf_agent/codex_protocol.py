@@ -152,3 +152,44 @@ class CodexControlProtocol(CodexProtocol):
 
     def validate_request(self, method: str, params: dict | None) -> dict | None:
         return self._validate(method, params, response=False)
+
+
+class CodexCodingProtocol(CodexProtocol):
+    """The finite union of reviewed business and control shapes.
+
+    This schema permission does not admit execution. The runner must verify
+    the same connection's control readback, profile and original engine grant.
+    Both reference protocols retain their original resource bytes and identity.
+    """
+
+    _null_requests = CodexControlProtocol._null_requests
+
+    def __init__(self, *, external_version: str = _VERSION):
+        self._business_protocol = CodexProtocol(external_version=external_version)
+        self._control_protocol = CodexControlProtocol(external_version=external_version)
+        self._requests = {
+            **self._control_protocol._requests,
+            **self._business_protocol._requests,
+        }
+        self._responses = {
+            **self._control_protocol._responses,
+            **self._business_protocol._responses,
+        }
+
+    @property
+    def identity(self):
+        return {
+            "kind": "codex-app-server-coding-protocol",
+            "version": "1",
+            "external_version": _VERSION,
+            "business_protocol": self._business_protocol.identity,
+            "control_protocol": self._control_protocol.identity,
+            "methods": sorted(self._requests),
+            "experimental_api": False,
+            "execution_admitted": False,
+            "environment_verified": False,
+            "governance_verified": False,
+        }
+
+    def validate_request(self, method: str, params: dict | None) -> dict | None:
+        return self._validate(method, params, response=False)

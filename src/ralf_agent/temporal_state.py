@@ -218,6 +218,17 @@ def validate_manifest(manifest):
     return detached(manifest)
 
 
+def validate_coding_selection(manifest, names):
+    """Local coding has no Temporal admission or native lifecycle protocol yet."""
+    for name in names:
+        tool = manifest.get("tools", {}).get(name, {})
+        config = tool.get("config", {})
+        if "delegated_runner" in config:
+            raise DefinitionMismatch(
+                "Delegated coding is supported only by the original Local authority"
+            )
+
+
 def validate_request(request, manifest):
     validate_session_history(request, manifest)
     credits(request["budget"])
@@ -307,6 +318,7 @@ def validate_request(request, manifest):
         ] + (planner_agents if definition["kind"] in {"graph", "team", "dynamic"} else [])
     for value in steps:
         spec = AgentSpec(**value)
+        validate_coding_selection(manifest, spec.tools)
         validate_schema_references(spec.output_schema)
         if spec.provider not in manifest["providers"]:
             raise DefinitionMismatch(f"Model provider not configured: {spec.provider}")

@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.0.dev103 — Local original-Action Coding delegation
+
+- Add an explicit borrowed SDK Coding tool, a bounded Codex Runner and original Local Action admission, budget, approval, startup receipts, cancellation and cold recovery. Root unbound Agent and sequence are the supported subset; graph, Team, dynamic, per-Agent binding and Temporal delegation remain open.
+- Add opt-in same-container retirement and durable fencing without changing the retained environment default. Success requires original Turn completion, final original Thread readback, actual resource retirement and transport closure; ambiguous outcomes retain independent effect evidence.
+- Close five integration findings and a Darwin CLI zombie-group exit race through the same independent reviewer. Keep unknown usage, unsupported credentials and fake business protocols distinct from actual native controls and model quality. Final validation and compatibility evidence are registered in [the acceptance record](architecture/reviews/2026-10-14-local-coding-delegation.md).
+
 ## 0.1.0.dev102 — Retained Coding environment and shared startup evidence
 
 - Add an explicit retained Docker Coding resource with exact container ID/generation, private configuration, exclusive lease and actual command ownership; record finite native isolation, whole-container stop and cold same-resource inspection.

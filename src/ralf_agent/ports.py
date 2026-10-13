@@ -22,6 +22,26 @@ class SessionResourceAdmission(Protocol):
     def session_resource_owner(self, scope: Scope, resource: dict) -> str | None: ...
 
 
+class DelegatedExecutionStore(Protocol):
+    """Optional Local coding authority; omission preserves ExecutionStore version 1.
+
+    All methods are completed synchronous operations. Prepare returns None and
+    activates a reader refusal gate atomically with first submission acceptance.
+    Reservation returns detached {id, amount, state} facts for exactly the given
+    original Run/attempt or None. Pending returns a detached tuple of at most
+    10000 unique bounded original Run IDs in the Scope with unsettled native stop
+    work, including terminal Runs. It never returns a lazy iterator or performs
+    external business I/O. Close must keep the authority and coordinator open
+    until this query is empty and borrowed native resources have no active owners.
+    """
+
+    delegated_execution_version: int
+
+    def prepare_delegated_execution(self) -> None: ...
+    def delegated_execution_reservation(self, run_id: str, reservation_id: str) -> dict | None: ...
+    def delegated_pending(self, scope: Scope) -> tuple[str, ...]: ...
+
+
 class ManagedStageStore(Protocol):
     """Optional semantic gate; old readers must refuse newly accepted stage Runs.
 

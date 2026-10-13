@@ -12,6 +12,7 @@ from .types import CommandReceipt, RunEvent, canonical, credits, digest
 
 
 class SQLiteStore:
+    delegated_execution_version = 1
     native_history_version = 1
     session_admission_version = 5
     managed_stage_version = 1
@@ -63,6 +64,7 @@ class SQLiteStore:
                     "11",
                     "12",
                     "13",
+                    "14",
                 }:
                     raise ValidationError("Unsupported execution database Schema")
             except (sqlite3.DatabaseError, ValidationError) as exc:
@@ -106,6 +108,7 @@ class SQLiteStore:
             "11",
             "12",
             "13",
+            "14",
         }:
             self.close()
             raise ValidationError("Unsupported execution database Schema")
@@ -126,9 +129,44 @@ class SQLiteStore:
             "CREATE TABLE IF NOT EXISTS native_history_publications (workspace TEXT NOT NULL, principal TEXT NOT NULL, stream TEXT NOT NULL, seq INTEGER NOT NULL, message_id TEXT NOT NULL, data TEXT NOT NULL, PRIMARY KEY(workspace,principal,stream,seq), UNIQUE(workspace,principal,stream,message_id))"
         )
 
+    def prepare_delegated_execution(self):
+        """Opt in atomically with first native release acceptance; base creation stays 1."""
+        if self.readonly or not self.conn.in_transaction:
+            raise ValidationError(
+                "Delegated execution requires its original acceptance transaction"
+            )
+        self.prepare_native_history()
+        self.create_session_admission()._prepare(14)
+
+    def delegated_pending(self, scope):
+        """Completed finite public read of scoped Runs retaining native stop work."""
+        from .types import Scope
+
+        if type(scope) is not Scope:
+            raise ValidationError("Delegated pending query requires the original Scope")
+        rows = self.conn.execute(
+            "SELECT data FROM runs WHERE json_extract(data,'$.scope.workspace')=? AND json_extract(data,'$.scope.principal')=? AND json_type(data,'$.actions')='array'",
+            (scope.workspace, scope.principal),
+        )
+        result = []
+        for row in rows:
+            run = json.loads(row[0])
+            if not _delegated_settled(run):
+                result.append(run["id"])
+                if len(result) > 10000:
+                    raise ValidationError("Delegated pending query exceeds finite capacity")
+        return tuple(result)
+
+    def delegated_execution_reservation(self, run_id, reservation_id):
+        row = self.conn.execute(
+            "SELECT amount,state FROM reservations WHERE run_id=? AND id=?",
+            (run_id, reservation_id),
+        ).fetchone()
+        return {"id": reservation_id, "amount": row[0], "state": row[1]} if row else None
+
     def native_history_publications(self, scope, stream):
         row = self.conn.execute("SELECT value FROM metadata WHERE key='schema_version'").fetchone()
-        if row[0] != "13":
+        if row[0] not in {"13", "14"}:
             return []
         rows = self.conn.execute(
             "SELECT data FROM native_history_publications WHERE workspace=? AND principal=? AND stream=? ORDER BY seq LIMIT 129",
@@ -357,6 +395,7 @@ class SQLiteStore:
                     run["state"] not in {"succeeded", "failed", "cancelled"}
                     or run.get("workflow", {}).get("quiescent") is False
                     or run.get("orchestration", {}).get("quiescent") is False
+                    or not _delegated_settled(run)
                 )
             ),
             None,
@@ -375,7 +414,7 @@ class SQLiteStore:
         version = self.conn.execute(
             "SELECT value FROM metadata WHERE key='schema_version'"
         ).fetchone()[0]
-        if version in {"2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13"}:
+        if version in {"2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14"}:
             owner = self.create_session_admission().route_owner(scope, resource)
             if owner is not None:
                 return owner
@@ -384,6 +423,7 @@ class SQLiteStore:
                 run["state"] not in {"succeeded", "failed", "cancelled"}
                 or run.get("workflow", {}).get("quiescent") is False
                 or run.get("orchestration", {}).get("quiescent") is False
+                or not _delegated_settled(run)
             ):
                 return run["id"]
         return None
@@ -396,7 +436,19 @@ class SQLiteStore:
                     and action["id"] != exclude_action_id
                     and action["tool"] == tool
                     and action["arguments"] == arguments
-                    and action["status"] in {"outcome_unknown", "executing"}
+                    and (
+                        (
+                            "delegated_execution" not in action
+                            and action["status"] in {"outcome_unknown", "executing"}
+                        )
+                        or (
+                            "delegated_execution" in action
+                            and (
+                                action["delegated_execution"].get("effect_case") == "unknown"
+                                or not _delegated_settled({"actions": [action]})
+                            )
+                        )
+                    )
                 ):
                     return {"run_id": run["id"], "action_id": action["id"]}
         return None
@@ -486,3 +538,9 @@ class SQLiteStore:
                 "UPDATE reservations SET state='settled',actual=?,usage=? WHERE id=?",
                 (actual, encoded, reservation_id),
             )
+
+
+def _delegated_settled(run):
+    from .local_delegated_coding import delegated_stop_settled
+
+    return delegated_stop_settled(run)

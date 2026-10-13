@@ -50,6 +50,8 @@ def test_lost_ack_restart_reuses_output_and_does_not_append_twice(tmp_path, name
                 assert done.snapshot.state == "succeeded" and done.snapshot.result == "ok"
                 assert backend.append_calls == provider.calls == 0
                 assert backend.memory.read(r.Scope(), session_ref.key.storage_key)[0] == 1
+                # Run.wait observes the terminal receipt; Session also requires owner exit.
+                await settled(runtime)
                 assert not (await session.status()).busy
         finally:
             backend.close()

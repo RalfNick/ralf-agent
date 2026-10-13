@@ -1,6 +1,6 @@
 # 分阶段交付门槛
 
-日期：2026-10-14；第一阶段已冻结在本地提交 `7e530f8`／`0.1.0.dev99`，第二阶段当前批次为 `0.1.0.dev102`。
+日期：2026-10-14；第一阶段已冻结在本地提交 `7e530f8`／`0.1.0.dev99`，第二阶段当前批次为 `0.1.0.dev103`。
 按用户修订后的目标管理交付，R01–R26 保留完整目标；适配器数量、测试数和 dev 版本数作为辅助信息。
 
 ## 第一阶段：四条参考业务链路
@@ -61,6 +61,14 @@ argv 仍可重启，未形成旧启动失效保护。下一门槛按[原 Action 
 Local／Temporal 的一次阶段准入、共享日志的 History 绑定、停止采纳、冷恢复与专用认证／真实 Coding Turn。
 配置读回、Schema、假服务和进程组回收不能替代业务工具隔离与原 History 证据。
 完整 G3／G5／G7／G8 和 R13 未关闭；最终受影响源码 301 项零跳过、P1／P2 实际复验闭环，安装证据见[本批登记](../architecture/reviews/2026-10-14-codex-environment-journal.md)。
+
+dev103 [有限 Local 委托](local-coding-delegation.md)将原审批、一个预算预留／attempt、
+一次阶段准入、停止采纳及未知效果接回原 ToolAction；opt-in 移除原容器，实际旧 argv
+失效已验证。首期只支持 SDK 根级未绑定 Agent／顺序 Workflow；公共 Store 待停止查询
+和显式 local-10／Schema 14 门禁保护冷关闭与旧读取器。原 Thread／Turn 业务恢复使用
+结构化假服务验证，真实环境的无模型控制与停止证据独立登记；未验证专用认证或真实
+Coding 模型 Turn。G1 的 per-Agent／JSON／TOML、完整 G3／G5、Temporal／PG History、
+G7／G8／R13 与第二阶段继续开放，最终验收见[本批记录](../architecture/reviews/2026-10-14-local-coding-delegation.md)。
 
 | 必需项 | 清单与完成门槛 |
 | --- | --- |

@@ -4,7 +4,7 @@ import json
 from dataclasses import dataclass, field
 from typing import Any, Protocol, runtime_checkable
 
-from .errors import DefinitionMismatch, ValidationError
+from .errors import AuthorizationDenied, DefinitionMismatch, ValidationError
 from .tools import ToolRegistry, invoke
 from .types import InvocationContext, Scope, canonical, digest
 
@@ -120,6 +120,10 @@ class PythonToolExecutor:
         if digest(tool.manifest) != digest(envelope.tool_manifest):
             raise DefinitionMismatch("Tool executor differs from the pinned tool manifest")
         tool.validate(envelope.arguments)
+        from .delegated_coding import registered_coding_tool
+
+        if registered_coding_tool(tool) is not None:
+            raise AuthorizationDenied("Native Coding cannot use the ordinary ToolExecutor")
         return tool
 
     async def execute(self, envelope: DispatchEnvelope) -> EffectObservation:

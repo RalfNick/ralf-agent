@@ -30,7 +30,7 @@ class SQLiteSessionAdmission:
         row = self.transaction_owner.conn.execute(
             "SELECT value FROM metadata WHERE key='schema_version'"
         ).fetchone()
-        return row[0] in {"2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13"}
+        return row[0] in {"2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14"}
 
     def _writing(self):
         if self.transaction_owner.readonly or not self.transaction_owner.conn.in_transaction:
@@ -193,6 +193,7 @@ class SQLiteSessionAdmission:
                 run["state"] not in {"succeeded", "failed", "cancelled"}
                 or run.get("workflow", {}).get("quiescent") is False
                 or run.get("orchestration", {}).get("quiescent") is False
+                or not _delegated_settled(run)
                 or any(
                     a["kind"] == "tool"
                     and a["status"] in {"executing", "outcome_unknown", "receipt_received"}
@@ -233,6 +234,7 @@ class SQLiteSessionAdmission:
                 run["state"] not in {"succeeded", "failed", "cancelled"}
                 or run.get("workflow", {}).get("quiescent") is False
                 or run.get("orchestration", {}).get("quiescent") is False
+                or not _delegated_settled(run)
                 or any(
                     a["kind"] == "tool"
                     and a["status"] in {"executing", "outcome_unknown", "receipt_received"}
@@ -241,3 +243,9 @@ class SQLiteSessionAdmission:
             ):
                 return run["id"]
         return None
+
+
+def _delegated_settled(run):
+    from .local_delegated_coding import delegated_stop_settled
+
+    return delegated_stop_settled(run)

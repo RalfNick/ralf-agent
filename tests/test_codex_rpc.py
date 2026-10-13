@@ -83,6 +83,38 @@ def test_handshake_out_of_order_and_raw_peer_requests(tmp_path):
     asyncio.run(scenario())
 
 
+@pytest.mark.parametrize("coding_mode", [False, True])
+def test_only_coding_mode_retains_bounded_queued_peer_after_close(tmp_path, coding_mode):
+    rpc = peer(
+        tmp_path,
+        """
+        message=json.loads(sys.stdin.readline())
+        send({'id':'queued-peer','method':'account/auth/request','params':{}})
+        send({'id':message['id'],'result':{}})
+        time.sleep(10)
+    """,
+        coding_mode=coding_mode,
+        max_events=2,
+    )
+
+    async def scenario():
+        await rpc.start()
+        await rpc.request("thread/start", {})
+        # No event consumer was scheduled before the queue-owning close.
+        assert len(rpc._events) == 1
+        await rpc.aclose()
+        if coding_mode:
+            assert await rpc.next_event() == {
+                "id": "queued-peer",
+                "method": "account/auth/request",
+                "params": {},
+            }
+        with pytest.raises(CodexRPCClosed):
+            await rpc.next_event()
+
+    asyncio.run(scenario())
+
+
 def test_timeout_and_cancel_do_not_retry_or_misroute_late_response(tmp_path):
     rpc = peer(
         tmp_path,
@@ -280,6 +312,8 @@ def test_cancelled_close_preserves_owner_and_reaps_process_group(tmp_path):
         {"request_timeout": 0},
         {"request_timeout": float("inf")},
         {"request_timeout": float("nan")},
+        {"coding_mode": 1},
+        {"coding_mode": True, "control_only": True},
     ],
 )
 def test_invalid_configuration_never_spawns(tmp_path, kwargs):

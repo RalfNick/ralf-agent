@@ -4,6 +4,8 @@ dev102 提供显式 `DockerCodingEnvironment`、借用原 `PostgresEffectJournal
 `PostgresRunnerJournal`，以及 Local／PostgreSQL 共用的纯启动阶段规则。
 这些组件补齐环境资源与共享证据基础；原 Action 准入和 Temporal History 尚未接通，
 完整 Coding Runner 未验收。环境／控制快照保持 `execution_admitted=false`。
+dev103 新增 opt-in 原容器移除门禁与冷停止接口；有限 Local 集成见
+[原 Action 委托](local-coding-delegation.md)。下文区分默认保留和显式移除两种资源策略。
 
 ## 保留的 Docker 环境
 
@@ -37,9 +39,24 @@ lease 和 seccomp 留在挂载外。Docker 客户端使用专用空配置，不�
 
 `transport_argv()` 只返回原容器的 `docker start --attach --interactive` 参数。
 调用方须在启动前重新 `inspect()`，连接结束后停止整个环境。参数不是业务准入：
-已取得的原始 argv 仍可重启已停容器，当前**没有旧启动许可失效门禁**。未来原
+默认版本 1 已取得的原始 argv 仍可重启已停容器，**没有旧启动许可失效门禁**。原
 Engine／History 必须绑定阶段 grant、epoch、generation 和已应用取消顺序。
 lease、检查后的 stopped 状态和原容器身份不能代替这一保护。
+
+### 显式停止后移除
+
+dev103 的 `retire_on_stop=True` 使用版本 2 身份，另可固定
+`expected_generation`（32 个小写十六进制字符）。默认 false 的版本 1 身份、元数据、
+返回值和保留行为维持不变。版本 2 先停止并 inspect 原完整 ID，持久化 retirement
+intent，再移除该 ID；仅实际成功的精确 ID inventory 缺席检查后保存 fenced。
+结果额外包含 `container_present / retired / fenced`。原 workspace、session state、
+启动与停止证据留在宿主；已经取得的旧 start argv 因原 ID 被移除而失效。
+
+`await environment.stop_existing()` 只检查既有元数据和原容器，不创建新环境。
+已 fenced 的原 tombstone 冷打开时只验证实际缺席，不创建替代容器；不再提供启动
+参数。停止、移除或缺席查询无法确认时保留租约和 intent，允许对原资源重试控制。
+只有从未取得定位的冷对象且确无元数据时可返回 None；这不是通用的已停止证明。
+已知启动记录的调用方仍须按原权威处理缺失证据，不能据此结束任务。
 
 实际命令由真实线程／Popen 所有者串行管理，等待者取消不等于线程退出。全事件
 循环取消窗口的 P2 修复与复验状态见[本批记录](../architecture/reviews/2026-10-14-codex-environment-journal.md)。
