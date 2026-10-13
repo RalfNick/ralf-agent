@@ -133,6 +133,11 @@ class StaticWorkflowRuntime:
             {node["tool"] for node in value["nodes"] if node.get("tool") is not None}
         )
         base["tools"].update(engine.tools.manifests(tool_names))
+        from .local_user_input import manifest_tools
+
+        input_tools = manifest_tools(engine, list(base["tools"]))
+        if input_tools:
+            base.update(kernel="local-9", user_input_protocol=1, user_input_tools=input_tools)
         return {
             **base,
             "workflow": {

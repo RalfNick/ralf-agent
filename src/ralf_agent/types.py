@@ -210,6 +210,38 @@ class RunSnapshot:
             for action in run["actions"]
             if action["status"] == "waiting_approval"
         )
+        journals = [run["input_requests"]] if "input_requests" in run else []
+        journals.extend(
+            frame["execution"]["input_requests"]
+            for frame in run.get("workflow", {}).get("nodes", {}).values()
+            if type(frame.get("execution")) is dict and "input_requests" in frame["execution"]
+        )
+        if journals:
+            from .user_input import validate_input_record
+
+            inputs = []
+            seen = set()
+            for journal in journals:
+                if type(journal) is not dict:
+                    raise ValidationError("Input journal requires original pending identities")
+                records = [(key, validate_input_record(value)) for key, value in journal.items()]
+                for key, record in sorted(records, key=lambda item: item[1]["request"]["ordinal"]):
+                    request = record["request"]
+                    if (
+                        key != request["pending_id"]
+                        or key in seen
+                        or request["owner"]
+                        != {
+                            "run_id": run["id"],
+                            "release_digest": run["release_digest"],
+                            "scope": run["scope"],
+                        }
+                    ):
+                        raise ValidationError("Input request differs from its original Run owner")
+                    seen.add(key)
+                    if record["state"] == "pending":
+                        inputs.append({"kind": "input", **request})
+            pending += tuple(inputs)
         return cls(
             run["id"],
             run["state"],

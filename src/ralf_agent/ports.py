@@ -102,6 +102,36 @@ class AsyncExecutionEngine(Protocol):
 
 
 @runtime_checkable
+class UserInputControls(Protocol):
+    """Optional original-authority control; legacy Engines remain valid."""
+
+    def send_input(
+        self,
+        run_id,
+        pending_id,
+        target_digest,
+        value,
+        *,
+        command_id,
+        expected_state_revision=None,
+    ) -> CommandReceipt: ...
+
+
+@runtime_checkable
+class AsyncUserInputControls(Protocol):
+    async def send_input(
+        self,
+        run_id,
+        pending_id,
+        target_digest,
+        value,
+        *,
+        command_id,
+        expected_state_revision=None,
+    ) -> CommandReceipt: ...
+
+
+@runtime_checkable
 class AsyncRuntimeDiagnostics(Protocol):
     async def diagnostics(self, run_id: str) -> RunDiagnostics: ...
 

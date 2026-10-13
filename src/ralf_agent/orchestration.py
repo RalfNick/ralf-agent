@@ -143,6 +143,20 @@ class OrchestrationRuntime:
             result["orchestration"].update(
                 version="3", parent_completion=registration(engine, definition)
             )
+        from .local_user_input import selected_policy
+
+        policy = selected_policy(engine, definition)
+        if policy is not None:
+            result["user_input_policy"] = {
+                "name": definition["input_policy"],
+                "policy": policy.identity,
+            }
+        if (
+            policy is not None
+            or result.get("user_input_protocol") == 1
+            or any(release.get("user_input_protocol") == 1 for release in releases.values())
+        ):
+            result.update(kernel="local-9", user_input_protocol=1)
         return result
 
     def _member_manifest(self, value):
@@ -482,8 +496,12 @@ class OrchestrationRuntime:
                 with engine.store.transaction():
                     latest = engine._authorized(run_id)
                     if latest["state"] not in TERMINAL and latest["state"] != "cancelling":
+                        from .local_user_input import pause_state
+
                         latest["state"] = (
-                            "waiting_approval"
+                            pause_state(c["state"] for c in pending)
+                            if latest["manifest"].get("user_input_protocol") == 1
+                            else "waiting_approval"
                             if any(c["state"] == "waiting_approval" for c in pending)
                             else "outcome_unknown"
                         )
@@ -545,7 +563,10 @@ class OrchestrationRuntime:
         return True
 
     def _request(self, run):
+        from .local_user_input import planning_clarifications
+
         state = run["orchestration"]
+        clarifications = planning_clarifications(self.engine, run)
         results = [
             {"id": c["id"], "member": c["member"], "result": state["results"][c["id"]]}
             for c in state["children"]
@@ -556,6 +577,7 @@ class OrchestrationRuntime:
             run["definition"]["member_order"],
             results,
             state["revision"],
+            **({"clarifications": clarifications} if clarifications else {}),
             **(
                 {"verification_feedback": state["verification_feedback"]}
                 if "verification_feedback" in state
@@ -633,13 +655,25 @@ class OrchestrationRuntime:
                     raise ValidationError("A planner may pause only for a managed pending child")
                 with engine.store.transaction():
                     if latest["state"] not in TERMINAL and latest["state"] != "cancelling":
-                        latest["state"] = "outcome_unknown"
+                        from .local_user_input import pause_state
+
+                        latest["state"] = (
+                            pause_state(
+                                c["state"]
+                                for c in latest["orchestration"]["children"]
+                                if c["state"] not in TERMINAL
+                            )
+                            if latest["manifest"].get("user_input_protocol") == 1
+                            else "outcome_unknown"
+                        )
                         engine._commit(latest, "planner_waiting")
                 return False
             from .dag_planning import DAGProposal, PlanningConclusion
 
             proposal = engine._component_result(
-                proposal, (DAGProposal, PlanningConclusion) if dag else PlanProposal, "Planner.plan"
+                proposal,
+                (DAGProposal, PlanningConclusion) if dag else (PlanProposal, PlanningConclusion),
+                "Planner.plan",
             )
             with engine.store.transaction():
                 latest = engine._authorized(run_id)
@@ -650,7 +684,13 @@ class OrchestrationRuntime:
             if run["state"] in TERMINAL or run["state"] == "cancelling":
                 return False
             state = run["orchestration"]
-            if dag:
+            if state["proposal"].get("status") in {"needs_input", "refused"}:
+                advance = self._dag.adopt(run)
+                from .local_user_input import request_planner
+
+                if request_planner(engine, run, state["proposal"]):
+                    return False
+            elif dag:
                 advance = self._dag.adopt(run)
             else:
                 self._validate_calls(run, state["proposal"]["steps"])

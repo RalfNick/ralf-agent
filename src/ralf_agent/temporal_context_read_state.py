@@ -141,7 +141,7 @@ def observe(state, action_id, response, receiver):
     trial.state = "running"  # Validate late evidence by the same original receiver.
     if (
         state.step_manifest.get("model_history_protocol") in (1, 2)
-        and state.manifest.get("binding_protocol") in (7, 8, 9)
+        and state.manifest.get("binding_protocol") in (7, 8, 9, 10)
         and type(response) is dict
         and response.get("ok") is False
         and response.get("code") == "activity_outcome_unknown"
@@ -200,7 +200,7 @@ def recreate_unadmitted(state, action, response):
     record = getattr(state, "context_read_stages", {}).get(action["id"], {})
     phase = record.get("phase")
     if (
-        state.manifest.get("binding_protocol") not in (7, 8, 9)
+        state.manifest.get("binding_protocol") not in (7, 8, 9, 10)
         or state.step_manifest.get("model_history_protocol") not in (1, 2)
         or state.state in {"succeeded", "failed", "cancelled"}
         or response.get("ok") is not False

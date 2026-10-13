@@ -190,6 +190,7 @@ from .ports import (
     AsyncExecutionEngine,
     AsyncLifecycle,
     AsyncRuntimeDiagnostics,
+    AsyncUserInputControls,
     ContextBuilder,
     ContextRequestValidator,
     CoordinatorLease,
@@ -198,6 +199,7 @@ from .ports import (
     ExecutionStore,
     NativeHistoryPublicationStore,
     RuntimeDiagnostics,
+    UserInputControls,
 )
 from .postgres import PostgresKnowledgeStore, PostgresMemory
 from .postgres_handoff import PostgresInbox, PostgresOutbox
@@ -326,6 +328,7 @@ from .types import (
     ToolCall,
     WorkflowSpec,
 )
+from .user_input import InputRequestProposal, PendingInput, UserInputPolicy, register_user_input
 from .vector import (
     EmbeddingProvider,
     InMemoryVectorIndex,
@@ -352,7 +355,7 @@ from .workflow import (
     WorkflowSelection,
 )
 
-__version__ = "0.1.0.dev92"
+__version__ = "0.1.0.dev93"
 from .binding_artifacts import ArtifactBindingResource, ArtifactView
 from .binding_sandbox import SandboxBindingResource
 from .docker_sandbox import DockerSandbox
@@ -819,4 +822,13 @@ __all__ += [
     "ReceiptParentCompletionGate",
     "InventoryParentCompletionGate",
     "ModelParentVerificationStage",
+]
+
+__all__ += [
+    "InputRequestProposal",
+    "PendingInput",
+    "UserInputPolicy",
+    "register_user_input",
+    "UserInputControls",
+    "AsyncUserInputControls",
 ]

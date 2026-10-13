@@ -485,6 +485,7 @@ def _choices(plan, root_input, states, *, parallel=False):
                     "running",
                     "waiting_approval",
                     "waiting_reconciliation",
+                    "waiting_input",
                 }
                 if parallel
                 else {"pending", "completed", "skipped"}

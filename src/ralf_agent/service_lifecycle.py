@@ -26,6 +26,7 @@ class LocalA2AService:
         self._engine, self._inbox = engine, inbox
         self._controls = TaskControlBridge(engine, engine.scope)
         self._active = {}
+        self._wake_requests = set()
         self._errors = deque(maxlen=100)
         self._closing, self._closed = False, False
         self._engine_closed, self._inbox_closed = False, False
@@ -61,11 +62,40 @@ class LocalA2AService:
         if scope != self._controls.scope:
             raise ValidationError("Local service wakeup Scope mismatch")
         self._controls.verify()
-        if run_id in self._active or (await self._controls.status(run_id)).state not in {
+        original_run_id = run_id
+        parent_of = getattr(self._engine, "parent_run_id", None)
+        seen = set()
+        while callable(parent_of):
+            if run_id in seen or len(seen) >= 16:
+                raise ValidationError("Managed service ownership is cyclic or exceeds depth")
+            seen.add(run_id)
+            parent = parent_of(run_id)
+            if parent is None:
+                break
+            if type(parent) is not str or not parent:
+                raise ValidationError("Managed service root requires an original Run identity")
+            run_id = parent
+        if run_id in self._active:
+            self._wake_requests.add(run_id)
+            return
+        state = (await self._controls.status(run_id)).state
+        if state not in {
             "queued",
             "running",
+            "waiting_input",
         }:
-            return
+            # An applied child control can make its owner runnable while an
+            # independent sibling still determines the aggregate root pause.
+            if (
+                original_run_id == run_id
+                or state not in {"waiting_approval", "waiting_reconciliation", "outcome_unknown"}
+                or (await self._controls.status(original_run_id)).state != "running"
+            ):
+                return
+        self._start(run_id)
+
+    def _start(self, run_id):
+        self._controls.verify()
         task = asyncio.create_task(self._engine.drive(run_id))
         self._active[run_id] = task
 
@@ -81,6 +111,26 @@ class LocalA2AService:
                             "code": error.code if isinstance(error, RalfError) else "drive_failed",
                         }
                     )
+            if run_id in self._wake_requests:
+                self._wake_requests.discard(run_id)
+                if not self._closing and not value.cancelled() and value.exception() is None:
+                    try:
+                        self._controls.verify()
+                        if self._engine.status(run_id).state not in {
+                            "succeeded",
+                            "failed",
+                            "cancelled",
+                        }:
+                            self._start(run_id)
+                    except Exception as error:
+                        self._errors.append(
+                            {
+                                "run_id": run_id,
+                                "code": error.code
+                                if isinstance(error, RalfError)
+                                else "drive_failed",
+                            }
+                        )
 
         task.add_done_callback(finished)
 
@@ -88,9 +138,17 @@ class LocalA2AService:
         if not self._engine_closed:
             active = tuple(self._active.items())
             for run_id, _ in active:
-                await self._controls.cancel(
-                    run_id, command_id=f"a2a-host-stop:{self._stop_nonce}:{run_id}"
-                )
+                # Local controls finish synchronously on this coordinator; the
+                # status/cancel sequence introduces no cooperative await gap.
+                # Terminal state still does not prove the real drive has exited.
+                if (await self._controls.status(run_id)).state not in {
+                    "succeeded",
+                    "failed",
+                    "cancelled",
+                }:
+                    await self._controls.cancel(
+                        run_id, command_id=f"a2a-host-stop:{self._stop_nonce}:{run_id}"
+                    )
             # Cancellation requests do not prove real provider/tool calls ended.
             await asyncio.gather(*(task for _, task in active), return_exceptions=True)
             _complete_sync_none(await self._engine.wait_for_threads(), "Engine thread drain")

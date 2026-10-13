@@ -57,7 +57,7 @@ class WaitResult:
             or self.ref.run_id != self.snapshot.run_id
         ):
             raise ValidationError("WaitResult requires matching Run reference and snapshot")
-        if self.wait_reason not in {"state_reached", "observation_timeout"}:
+        if self.wait_reason not in {"state_reached", "observation_timeout", "control_available"}:
             raise ValidationError("Unsupported observation reason")
         if type(self.observed_at) not in {int, float} or not math.isfinite(self.observed_at):
             raise ValidationError("Observation time must be finite")

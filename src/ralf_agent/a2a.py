@@ -13,6 +13,7 @@ import asyncio
 import copy
 import json
 import math
+from dataclasses import asdict
 from typing import Protocol, runtime_checkable
 from urllib.parse import urlsplit, urlunsplit
 
@@ -24,10 +25,11 @@ from .messaging import MessageEnvelope, _integer, _json, _text
 from .ports import is_async_callable, is_sync_callable
 from .task_controls import TaskControlBridge
 from .tool_sources import ToolDescriptor, ToolSourceError
-from .types import Scope, canonical, digest
+from .types import Scope, canonical, digest, submission_request
 
 PROTOCOL_VERSION = "0.3.0"
 RECEIPT_EXTENSION = "urn:ralf:a2a:message-receipts:v1"
+USER_INPUT_EXTENSION = "urn:ralf:a2a:user-input:v1"
 _TASK_STATES = {
     "submitted",
     "working",
@@ -45,6 +47,7 @@ _NATIVE_STATES = {
     "cancelling": "working",
     "waiting_approval": "input-required",
     "waiting_reconciliation": "input-required",
+    "waiting_input": "input-required",
     "succeeded": "completed",
     "failed": "failed",
     "cancelled": "canceled",
@@ -264,12 +267,15 @@ class A2AApplication:
         timeout=10,
         max_request_bytes=262144,
         max_response_bytes=262144,
+        enable_user_input=False,
     ):  # noqa: ASYNC109
         if not is_sync_callable(engine_for_scope) or not is_async_callable(authenticate):
             raise ValidationError("A2A requires trusted engine and async authentication callbacks")
         validate_inbox(inbox)
         if wakeup is not None and not is_async_callable(wakeup):
             raise ValidationError("A2A requires durable inbox and optional async wakeup")
+        if type(enable_user_input) is not bool:
+            raise ValidationError("A2A user input extension selection must be boolean")
         for value in (name, description, version):
             _text(value, "Agent Card text")
         _integer(budget, "A2A budget", 0, 1000000)
@@ -277,7 +283,14 @@ class A2AApplication:
         _integer(max_response_bytes, "Response byte limit", 1024, 262144)
         self._engine_for_scope = engine_for_scope
         self._authenticate = authenticate
-        self._spec = copy.deepcopy(spec)
+        from .agent_harness import AgentHarness
+
+        self._spec = AgentHarness(spec).definition
+        self._input_composite = submission_request(self._spec, None)["definition"]["kind"] not in {
+            "agent",
+            "sequence",
+            "bound_agent",
+        }
         self._inbox = inbox
         self._url = _url(url)
         self._budget = budget
@@ -285,6 +298,7 @@ class A2AApplication:
         self._timeout = _timeout(timeout)
         self._max_request = max_request_bytes
         self._max_response = max_response_bytes
+        self._user_input_enabled = enable_user_input
         self._card = {
             "protocolVersion": PROTOCOL_VERSION,
             "name": name,
@@ -318,6 +332,14 @@ class A2AApplication:
             "security": [{"hostBearer": []}],
             "supportsAuthenticatedExtendedCard": False,
         }
+        if enable_user_input:
+            self._card["capabilities"]["extensions"].append(
+                {
+                    "uri": USER_INPUT_EXTENSION,
+                    "description": "Explicit original pending input reply via metadata.ralfInput",
+                    "required": False,
+                }
+            )
 
     def agent_card(self):
         return copy.deepcopy(self._card)
@@ -326,7 +348,25 @@ class A2AApplication:
         engine = self._engine_for_scope(scope)
         if getattr(engine, "scope", None) != scope:
             raise AuthorizationDenied("Trusted engine Scope mismatch")
-        return TaskControlBridge(engine, scope)
+        controls = TaskControlBridge(engine, scope)
+        if self._user_input_enabled:
+            controls.require_input_discovery(composite=self._input_composite)
+        return controls
+
+    async def _task_snapshot(self, engine, snapshot):
+        task = self._snapshot(snapshot)
+        if self._user_input_enabled:
+            inputs = await engine.pending_inputs(snapshot.run_id)
+            engine.verify()
+            pending = [item for item in snapshot.pending if item.get("kind") != "input"]
+            pending.extend(
+                {**question, "ownerTaskId": question["owner"]["run_id"]} for question in inputs
+            )
+            if pending:
+                task["metadata"]["ralf"]["pending"] = pending
+            else:
+                task["metadata"]["ralf"].pop("pending", None)
+        return _task(task)
 
     @staticmethod
     def _snapshot(snapshot):
@@ -373,7 +413,12 @@ class A2AApplication:
             or message.get("role") != "user"
         ):
             raise ValidationError("Invalid A2A user Message")
-        if "taskId" in message or "contextId" in message:
+        targeted = "taskId" in message or "contextId" in message
+        if targeted and not (
+            self._user_input_enabled
+            and type(message.get("metadata")) is dict
+            and "ralfInput" in message["metadata"]
+        ):
             raise _RPCError(-32004, "Task continuation is unsupported")
         _text(message.get("messageId"), "Message identity")
         if not isinstance(message.get("parts"), list) or not 1 <= len(message["parts"]) <= 64:
@@ -404,14 +449,76 @@ class A2AApplication:
         ]:
             raise _RPCError(-32005, "Requested output modes are unsupported")
         _json(params)
+        if targeted:
+            self._input_message(message)
+        elif type(message.get("metadata")) is dict and "ralfInput" in message["metadata"]:
+            raise ValidationError("User input reply requires its original Task identity")
         return message
+
+    @staticmethod
+    def _input_message(message):
+        from .user_input import input_reply_payload
+
+        _text(message.get("taskId"), "Original input Task identity")
+        if "contextId" in message and message["contextId"] != message["taskId"]:
+            raise ValidationError("User input context differs from its original Task")
+        target = message["metadata"]["ralfInput"]
+        parts = message["parts"]
+        if (
+            type(target) is not dict
+            or set(target) - {"pendingId", "targetDigest", "expectedStateRevision"}
+            or {"pendingId", "targetDigest"} - set(target)
+            or len(parts) != 1
+            or set(parts[0]) != {"kind", "data"}
+            or parts[0]["kind"] != "data"
+            or type(parts[0]["data"]) is not dict
+            or set(parts[0]["data"]) != {"value"}
+        ):
+            raise ValidationError("User input reply requires exact target metadata and JSON value")
+        return input_reply_payload(
+            message["taskId"],
+            target["pendingId"],
+            target["targetDigest"],
+            parts[0]["data"]["value"],
+            expected_state_revision=target.get("expectedStateRevision"),
+        )
+
+    async def _input_reply(self, scope, engine, params, message):
+        payload = self._input_message(message)
+        envelope = MessageEnvelope(message["messageId"], "a2a:user-input", params)
+        previous = await call_inbox(self._inbox, "accept", scope, envelope)
+        if previous is None:
+            receipt = await engine.send_input(
+                payload["run_id"],
+                payload["pending_id"],
+                payload["digest"],
+                payload["value"],
+                command_id=message["messageId"],
+                expected_state_revision=payload.get("expected_state_revision"),
+            )
+            previous = {"run_id": payload["run_id"], "receipt": asdict(receipt)}
+            await call_inbox(self._inbox, "complete", scope, envelope, previous)
+        if self._wakeup is not None and previous["receipt"]["apply_state"] == "applied":
+            engine.verify()
+            if (
+                await _completed(await self._wakeup(scope, previous["run_id"]), "A2A wakeup")
+                is not None
+            ):
+                raise ValidationError("A2A wakeup must finish to None")
+        task = await self._task_snapshot(engine, await engine.status(previous["run_id"]))
+        task["metadata"]["ralf"]["inputReceipt"] = previous["receipt"]
+        return _task(task)
 
     async def _rpc(self, scope, method, params, request_id):
         if not isinstance(params, dict):
             raise ValidationError("RPC parameters require an object")
         engine = self._engine(scope)
         if method == "message/send":
+            if self._user_input_enabled:
+                engine.require_user_input_controls()
             message = self._message(params)
+            if "taskId" in message:
+                return await self._input_reply(scope, engine, params, message)
             envelope = MessageEnvelope(message["messageId"], "a2a:submissions", params)
             previous = await call_inbox(self._inbox, "accept", scope, envelope)
             if previous is None:
@@ -432,7 +539,7 @@ class A2AApplication:
                 )
                 if completed is not None:
                     raise ValidationError("A2A wakeup must finish to None")
-            return self._snapshot(await engine.status(previous["run_id"]))
+            return await self._task_snapshot(engine, await engine.status(previous["run_id"]))
         if method not in {"tasks/get", "tasks/cancel"}:
             raise _RPCError(-32601, "Method not found")
         allowed = (
@@ -467,7 +574,7 @@ class A2AApplication:
             if receipt.outcome.get("rejected"):
                 raise _RPCError(-32002, "Task cannot be canceled")
             snapshot = await engine.status(task_id)
-        return self._snapshot(snapshot)
+        return await self._task_snapshot(engine, snapshot)
 
     async def _reply(self, send, status, value):
         encoded = canonical(value).encode("utf-8")
@@ -721,6 +828,44 @@ class A2AClient:
         if task["id"] != task_id:
             raise A2AError("A2A returned a different Task identity")
         return task
+
+    async def send_input(
+        self,
+        task_id,
+        pending_id,
+        target_digest,
+        value,
+        *,
+        command_id,
+        expected_state_revision=None,
+    ):
+        from .user_input import input_reply_payload
+
+        _text(command_id, "Input command identity")
+        payload = input_reply_payload(
+            task_id,
+            pending_id,
+            target_digest,
+            value,
+            expected_state_revision=expected_state_revision,
+        )
+        target = {"pendingId": pending_id, "targetDigest": target_digest}
+        if "expected_state_revision" in payload:
+            target["expectedStateRevision"] = payload["expected_state_revision"]
+        return await self.rpc(
+            "message/send",
+            {
+                "message": {
+                    "kind": "message",
+                    "role": "user",
+                    "messageId": command_id,
+                    "taskId": task_id,
+                    "metadata": {"ralfInput": target},
+                    "parts": [{"kind": "data", "data": {"value": payload["value"]}}],
+                },
+                "configuration": {"blocking": False},
+            },
+        )
 
     async def get_by_message(self, message_id):
         _text(message_id, "Message identity")

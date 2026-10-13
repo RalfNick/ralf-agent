@@ -8,7 +8,7 @@ from .temporal_bindings import request_release_digest
 from .types import digest
 
 
-def child_reference(runtime, parent, info, call):
+def child_identity(scope, parent_run_id, info, call):
     if (
         not isinstance(call, dict)
         or type(call.get("started")) is not bool
@@ -18,17 +18,22 @@ def child_reference(runtime, parent, info, call):
         or not isinstance(call["request"].get("definition"), dict)
     ):
         raise DefinitionMismatch("Temporal child intent requires original typed evidence")
-    scope = asdict(runtime.scope)
-    command_id = "ralf-child:" + digest([scope, parent.run_id, call["id"]])
+    scope = asdict(scope)
+    command_id = "ralf-child:" + digest([scope, parent_run_id, call["id"]])
     run_id = "ralf-temporal-" + digest([scope, command_id])
     if call.get("command_id") != command_id or call.get("run_id") != run_id:
         raise DefinitionMismatch("Temporal child intent differs from its original parent")
+    return run_id, request_release_digest(call["request"], info.manifest)
+
+
+def child_reference(runtime, parent, info, call):
+    run_id, release = child_identity(runtime.scope, parent.run_id, info, call)
     return type(parent)(
         parent.authority_locator,
         parent.workspace,
         parent.principal,
         run_id,
-        request_release_digest(call["request"], info.manifest),
+        release,
     )
 
 
@@ -81,9 +86,22 @@ async def pending_controls(runtime, ref, view):
     while todo:
         owner, info, depth = todo.pop()
         runtime._validate(owner)
+        from .control_discovery import snapshot_inputs
+
+        pending.extend(
+            {"ref": owner.to_dict(), **question}
+            for question in snapshot_inputs(
+                info.snapshot,
+                runtime.scope,
+                release_digest=owner.release_digest,
+                aggregate=info.workflow["backend"] == "temporal-parent",
+            )
+        )
         if info.workflow["backend"] == "temporal":
             pending.extend(
-                {**a, "kind": "approval", "ref": owner.to_dict()} for a in info.snapshot.pending
+                {**a, "kind": "approval", "ref": owner.to_dict()}
+                for a in info.snapshot.pending
+                if a.get("kind") != "input"
             )
             pending.extend(
                 {

@@ -2,6 +2,7 @@
 
 import copy
 import json
+from functools import wraps
 from pathlib import Path
 from typing import Protocol
 
@@ -81,6 +82,21 @@ class SQLiteRunReader:
                 store.budget(run_id),
                 workflow_details(run, store),
             )
+
+    def parent_run_id(self, run_id):
+        with SQLiteStore(self.db_path, readonly=True) as store:
+            store.conn.execute("BEGIN")
+            run = self._run(store, run_id)
+            parent_id = run.get("parent_id")
+            if parent_id is None:
+                return None
+            parent = self._run(store, parent_id)
+            if not any(
+                call["run_id"] == run_id and call["id"] == run.get("call_id")
+                for call in parent.get("orchestration", {}).get("children", [])
+            ):
+                raise DefinitionMismatch("Managed child has no original parent ownership")
+            return parent_id
 
     def submit_receipt(self, command_id, payload):
         return self.command_receipt(command_id, "submit", payload)
@@ -210,15 +226,17 @@ class ProfiledEngine:
         return self.reader.events(run_id, after=after, limit=limit)
 
     def __getattr__(self, name):
-        if name == "diagnostics":
-            method = getattr(self.reader, "diagnostics", None)
+        if name in {"diagnostics", "parent_run_id"}:
+            method = getattr(self.reader, name, None)
             if _synchronous(method):
-
-                def diagnostics(run_id):
+                # The bridge pins wrapper code and this original bound reader
+                # method, rather than each fresh wrapper allocation.
+                @wraps(method)
+                def observe(run_id):
                     self._ensure_open()
                     return method(run_id)
 
-                return diagnostics
+                return observe
         raise AttributeError(name)
 
     def _control_receipt(self, command_id, kind, payload):
@@ -250,6 +268,40 @@ class ProfiledEngine:
         if receipt is not None:
             return receipt
         return self._for_run(run_id).cancel(run_id, command_id=command_id)
+
+    def send_input(
+        self,
+        run_id,
+        pending_id,
+        target_digest,
+        value,
+        *,
+        command_id,
+        expected_state_revision=None,
+    ):
+        from .user_input import input_reply_payload
+
+        payload = input_reply_payload(
+            run_id,
+            pending_id,
+            target_digest,
+            value,
+            expected_state_revision=expected_state_revision,
+        )
+        receipt = self._control_receipt(command_id, "send_input", payload)
+        if receipt is not None:
+            return receipt
+        operation = getattr(self._for_run(run_id), "send_input", None)
+        if not _synchronous(operation):
+            raise ValidationError("Original authority does not support user input")
+        return operation(
+            run_id,
+            pending_id,
+            target_digest,
+            value,
+            command_id=command_id,
+            expected_state_revision=expected_state_revision,
+        )
 
     def reconcile(self, run_id, action_id, result, *, command_id):
         receipt = self._control_receipt(

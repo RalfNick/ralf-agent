@@ -440,6 +440,10 @@ class AgentBindingResolver:
             manifest["model_continuation_protocol"] = 1
         if manifest.get("parent_completion_protocol") == 1:
             manifest["kernel"] = "local-bindings-16"
+        if manifest.get("user_input_protocol") == 1 or any(
+            entry["manifest"].get("user_input_protocol") == 1 for entry in entries.values()
+        ):
+            manifest.update(kernel="local-bindings-17", user_input_protocol=1)
         return manifest
 
 

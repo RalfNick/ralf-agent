@@ -158,7 +158,26 @@ class TemporalRuntime:
         runtime_profile=None,
         model_continuation=False,
         model_history=None,
+        user_input_policies=None,
     ):
+        from .user_input import UserInputPolicy
+
+        if user_input_policies is not None and type(user_input_policies) is not dict:
+            raise ValidationError("User input policies require a named ordinary registry")
+        self.user_input_policies = dict(user_input_policies or {})
+        for name, component in self.user_input_policies.items():
+            if (
+                type(name) is not str
+                or not name.strip()
+                or len(name) > 256
+                or type(component) is not UserInputPolicy
+            ):
+                raise ValidationError(
+                    "User input policies require bounded names and concrete policies"
+                )
+            UserInputPolicy.from_dict(component.to_dict())
+        self._user_input_registry = self.user_input_policies
+        self._user_input_pins = tuple(self.user_input_policies.items())
         from .types import runtime_profile_identity
 
         if type(model_continuation) is not bool:
@@ -760,6 +779,13 @@ class TemporalRuntime:
             result["parent_completion_policies"] = registrations(
                 self.parent_completion_policies, result, self
             )
+        from .temporal_user_input import registration as input_registration
+
+        inputs = input_registration(self)
+        if inputs:
+            result.update(
+                kernel="temporal-3", binding_protocol=10, dispatch_admission="history-1", **inputs
+            )
         return result
 
     @property
@@ -781,6 +807,12 @@ class TemporalRuntime:
         from .binding_artifacts import _method_matches
         from .task_controls import _binding
         from .temporal_components import orchestration_identity
+
+        if (
+            self.user_input_policies is not self._user_input_registry
+            or tuple(self.user_input_policies.items()) != self._user_input_pins
+        ):
+            raise DefinitionMismatch("Original user input policy registry changed")
 
         if self.parent_completion_policies is not self._parent_completion_registry or set(
             self.parent_completion_policies
@@ -1189,6 +1221,9 @@ class TemporalRuntime:
                 "output": detached(proposal.output),
                 "tool_calls": [asdict(call) for call in proposal.tool_calls],
             }
+            from .temporal_user_input import authorize_proposal
+
+            input_authorization = authorize_proposal(self, proposal, request)
             decision = {}
             if self._manifest.get("decision_protocol") == 1:
                 from .temporal_decision import evidence as decision_evidence
@@ -1203,6 +1238,7 @@ class TemporalRuntime:
                 **selected_proposal,
                 **({"continuation_proposal": raw_proposal} if continuation is not None else {}),
                 **decision,
+                **input_authorization,
                 "usage": usage,
             }
         except Exception as exc:
@@ -1280,6 +1316,9 @@ class TemporalRuntime:
                 "output": detached(proposal.output),
                 "tool_calls": [asdict(call) for call in proposal.tool_calls],
             }
+            from .temporal_user_input import authorize_proposal
+
+            input_authorization = authorize_proposal(self, proposal, original)
             evidence = {}
             if self._manifest.get("decision_protocol") == 1:
                 from .temporal_decision import evidence as decision_evidence
@@ -1292,6 +1331,7 @@ class TemporalRuntime:
                 **base,
                 **selected,
                 **evidence,
+                **input_authorization,
                 "usage": usage,
                 **({"continuation_proposal": raw_proposal} if continuation is not None else {}),
                 **({"history_proposal": raw_proposal} if self.model_history is not None else {}),

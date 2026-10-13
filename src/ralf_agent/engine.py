@@ -108,6 +108,7 @@ class LocalEngine:
         stage_policy=None,
         model_continuation=False,
         model_history=None,
+        user_input_policies=None,
     ):
         # Python 3.12's Protocol isinstance check ignores proxy __getattr__.
         # Validate the declared public operations so delegating adapters work too.
@@ -140,6 +141,20 @@ class LocalEngine:
             else {}
         )
         self.store = store
+        from .user_input import UserInputPolicy
+
+        if user_input_policies is not None and (
+            type(user_input_policies) is not dict
+            or any(
+                not isinstance(name, str) or not name.strip() or type(value) is not UserInputPolicy
+                for name, value in user_input_policies.items()
+            )
+        ):
+            raise ValidationError("User input policies require named original policies")
+        self.user_input_policies = dict(user_input_policies or {})
+        self._user_input_policy_pins = {
+            name: policy.identity for name, policy in self.user_input_policies.items()
+        }
         self.conversation_resource = conversation_resource
         self.providers = dict(providers)
         self.tools = tools
@@ -615,6 +630,11 @@ class LocalEngine:
         context_stage = context_stage_manifest(self, context)
         if context_stage is not None:
             manifest["managed_context"] = context_stage
+        from .local_user_input import manifest_tools
+
+        input_tools = manifest_tools(self, names)
+        if input_tools:
+            manifest.update(kernel="local-9", user_input_protocol=1, user_input_tools=input_tools)
         return manifest
 
     def _history_registration(self, components=None):
@@ -964,6 +984,9 @@ class LocalEngine:
                     "reason": "already_terminal" if run["state"] == "cancelled" else "applied_noop"
                 }
             run["state"] = "cancelling" if active else "cancelled"
+            from .local_user_input import retire
+
+            retire(run)
             if run.get("orchestration") is not None:
                 self._orchestration.cancel_children(run)
             if is_graph(run):
@@ -980,6 +1003,15 @@ class LocalEngine:
 
         return self.store.command(
             self.scope, command_id, "cancel", {"run_id": run_id}, run_id, apply
+        )
+
+    def send_input(
+        self, run_id, pending_id, target_digest, value, *, command_id, expected_state_revision=None
+    ):
+        from .local_user_input import send_input
+
+        return send_input(
+            self, run_id, pending_id, target_digest, value, command_id, expected_state_revision
         )
 
     def reconcile(self, run_id, action_id, result, *, command_id):
@@ -1017,6 +1049,9 @@ class LocalEngine:
         )
 
     def _check_release(self, run):
+        from .local_user_input import validate_journal as validate_input_journal
+
+        validate_input_journal(self, run)
         if "parent_completion_stages" in run:
             from .local_parent_completion import validate_journal
 
@@ -1121,6 +1156,9 @@ class LocalEngine:
             run = self._authorized(run_id)
             if run["state"] not in TERMINAL:
                 run["state"] = "cancelled" if run["state"] == "cancelling" else "failed"
+                from .local_user_input import retire
+
+                retire(run)
                 run["error"] = {"code": code}
                 if run.get("orchestration") is not None:
                     self._orchestration.cancel_children(run)
@@ -1212,6 +1250,10 @@ class LocalEngine:
                 self._mark_workflow_quiescent(run_id)
             return self.status(run_id)
         self._check_release(run)
+        from .local_user_input import own_pending
+
+        if own_pending(self, run):
+            return self.status(run_id)
         self._active.add(run_id)
         try:
             with self.store.transaction():
@@ -1576,6 +1618,13 @@ class LocalEngine:
                             call.call_id,
                         )
                     )
+                from .user_input import input_tool_policy
+
+                if len(effective_calls) != 1 and any(
+                    input_tool_policy(self.tools.get(call.name)) is not None
+                    for call in effective_calls
+                ):
+                    raise ValidationError("User input must be the sole tool call in its decision")
                 proposal = validate_decision(
                     AgentSpec(**copy.deepcopy(step)),
                     DecisionProposal(proposed.output, tuple(effective_calls)),
@@ -2247,6 +2296,20 @@ class LocalEngine:
                     run["error"] = {"code": "prior_effect_unknown", **unresolved}
                     self._commit(run, "prior_effect_blocks_write", run["error"])
                 return False
+        from .user_input import input_tool_policy
+
+        input_policy = input_tool_policy(tool)
+        if input_policy is not None:
+            if (
+                self._step_manifest(run, action["node"])
+                .get("user_input_tools", {})
+                .get(action["tool"])
+                != input_policy.identity
+            ):
+                raise DefinitionMismatch("Input tool differs from its pinned original policy")
+            from .local_user_input import request_tool
+
+            return request_tool(self, run_id, action_id, input_policy)
         if tool.spec.requires_approval and not action["approved"]:
             with self.store.transaction():
                 action["status"] = "waiting_approval"

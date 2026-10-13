@@ -273,7 +273,11 @@ def _slot(run, actions, value, path):
     }
     receipts = []
     for action in actions:
-        if action["kind"] != "tool" or action["status"] != "completed":
+        if (
+            action["kind"] != "tool"
+            or action["status"] != "completed"
+            or "input_pending_id" in action
+        ):
             continue
         before = actions.index(action) < actions.index(final)
         consumed = before and any(
@@ -365,6 +369,7 @@ def evidence(engine, owner, policy):
                             action["node"] == index
                             and action["kind"] == "tool"
                             and action["status"] == "completed"
+                            and "input_pending_id" not in action
                         ):
                             receipts.append(
                                 {
@@ -423,6 +428,9 @@ def _source(engine, run, policy, candidate):
 
     state, definition = run["orchestration"], run["definition"]
     children, receipts = evidence(engine, run, policy)
+    from .local_user_input import answered_lineage
+
+    clarifications = answered_lineage(engine, run)
     return ParentCompletionRequest(
         parent_id=run["id"],
         parent_kind=definition["kind"],
@@ -434,6 +442,7 @@ def _source(engine, run, policy, candidate):
         if definition.get("plan_mode") == "dag" and not _is_conclusion(run)
         else state["proposal"],
         candidate=candidate,
+        **({"clarifications": clarifications} if clarifications else {}),
         children=children,
         receipts=receipts,
         constraints={

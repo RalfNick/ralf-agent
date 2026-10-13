@@ -53,7 +53,10 @@ def prepare(state, action, result):
                 for k in ("id", "tool", "arguments", "result", "receipt", "effect_key")
             }
             for a in state.actions
-            if a["kind"] == "tool" and a["node"] == state.node and a["status"] == "completed"
+            if a["kind"] == "tool"
+            and a["node"] == state.node
+            and a["status"] == "completed"
+            and a["tool"] not in state.manifest.get("user_input_tools", {})
         ],
     ).to_dict()
     source = {

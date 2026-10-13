@@ -19,6 +19,7 @@ from .model_check_starter import MODEL_CHECK_FILES
 from .observable_starter import OBSERVABLE_FILES
 from .orchestration_starter import PLAN_FILES, TEAM_FILES
 from .temporal_starter import TEMPORAL_FILES
+from .user_input_starter import USER_INPUT_FILES
 
 
 @dataclass(frozen=True)
@@ -855,9 +856,10 @@ def create_starter(destination, *, template="oncall") -> StarterProject:
         "model-check",
         "observable",
         "sessions",
+        "user-input",
     ):
         raise ValidationError(
-            "Starter template must be oncall, rag, config, model, graph, mcp, cli, parallel, async, plan, team, dag, nested, a2a, temporal, ingest, hybrid, context, memory, model-check, observable or sessions"
+            "Starter template must be oncall, rag, config, model, graph, mcp, cli, parallel, async, plan, team, dag, nested, a2a, temporal, ingest, hybrid, context, memory, model-check, observable, sessions or user-input"
         )
     files = {
         "oncall": _FILES,
@@ -882,6 +884,7 @@ def create_starter(destination, *, template="oncall") -> StarterProject:
         "model-check": MODEL_CHECK_FILES,
         "observable": OBSERVABLE_FILES,
         "sessions": SESSIONS_FILES,
+        "user-input": USER_INPUT_FILES,
     }[template]
     try:
         directory = Path(destination).expanduser().resolve()

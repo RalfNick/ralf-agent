@@ -51,6 +51,24 @@ def diagnostics_inspection(details, db, factory=None, *, config=None):
     configured_factory = factory or ("YOUR_MODULE:create_engine" if needs_factory else None)
     pending = []
     for action in snapshot.pending:
+        if action.get("kind") == "input":
+            item = dict(action)
+            item["send_input_command"] = command_hint(
+                db,
+                configured_factory,
+                "send-input",
+                item["owner"]["run_id"],
+                item["pending_id"],
+                "--digest",
+                item["target_digest"],
+                "--value-json",
+                '"YOUR_ANSWER"',
+                "--command-id",
+                "reply:" + item["pending_id"],
+                config=config,
+            )
+            pending.append(item)
+            continue
         item = dict(action)
         item["effect"] = effect(actions[item["action_id"]])
         for decision in ("approve", "reject"):
@@ -160,6 +178,17 @@ def render_inspection(report):
         for node_id, node in report["workflow"].get("dag", {}).get("nodes", {}).items():
             lines.append(f"DAG node: {node_id} ({node['state']})")
     for item in report["pending"]:
+        if item.get("kind") == "input":
+            lines.extend(
+                [
+                    f"Question: {item['pending_id']}",
+                    item["prompt"],
+                    "Reply Schema: " + json.dumps(item["reply_schema"], ensure_ascii=False),
+                    "Replace YOUR_ANSWER with a Schema-valid JSON value, then send input:",
+                    "  " + item["send_input_command"],
+                ]
+            )
+            continue
         lines.extend(
             [
                 f"Approval: {item['action_id']} / {item['tool']} ({item['effect']})",

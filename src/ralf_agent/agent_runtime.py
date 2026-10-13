@@ -296,7 +296,8 @@ class Runtime:
         self._validate(ref)
         root = self._root_reference(ref)
         receipt = getattr(self.engine, method)(ref.run_id, *args, **kwargs)
-        self._supervisor.start(root)
+        if method != "send_input" or receipt.apply_state == "applied":
+            self._supervisor.start(root)
         return receipt
 
     def _root_reference(self, ref):
@@ -359,8 +360,17 @@ class Runtime:
                             "ref": owner.to_dict(),
                         }
                     )
+            from .control_discovery import snapshot_inputs
+
+            pending.extend(
+                {"ref": owner.to_dict(), **question}
+                for question in snapshot_inputs(
+                    info.snapshot, self.scope, release_digest=owner.release_digest
+                )
+            )
             for action in info.snapshot.pending:
-                pending.append({"kind": "approval", "ref": owner.to_dict(), **action})
+                if action.get("kind") != "input":
+                    pending.append({"kind": "approval", "ref": owner.to_dict(), **action})
             for action in info.snapshot.actions:
                 if action["kind"] == "tool" and action["status"] == "outcome_unknown":
                     pending.append(
@@ -473,6 +483,7 @@ class Runtime:
 class AgentRun:
     def __init__(self, runtime, ref, *, receipt=None, turn=None):
         self._runtime, self.ref, self.receipt, self.turn = runtime, ref, receipt, turn
+        self._input_wait_supported = None
 
     async def status(self):
         return await self._runtime._aobserve(self.ref, "status")
@@ -498,6 +509,14 @@ class AgentRun:
     async def pending(self):
         return await self._runtime._apending(self.ref)
 
+    async def _input_available(self):
+        if self._input_wait_supported is None:
+            info = await self._runtime._aobserve(self.ref, "diagnostics")
+            self._input_wait_supported = info.manifest.get("user_input_protocol") == 1
+        if not self._input_wait_supported:
+            return False
+        return any(item["kind"] == "input" for item in await self.pending())
+
     async def wait(self, *, wait_timeout=None, terminal_only=False):
         if type(terminal_only) is not bool:
             raise ValidationError("terminal_only must be bool")
@@ -507,8 +526,11 @@ class AgentRun:
         root = await self._runtime._await_root(self.ref)
         while True:
             snapshot = await self.status()
+            observed_at = time.time()
             if snapshot.state in TERMINAL or not terminal_only and snapshot.state in PAUSED:
                 return WaitResult(self.ref, snapshot, "state_reached", time.time())
+            if not terminal_only and await self._input_available():
+                return WaitResult(self.ref, snapshot, "control_available", observed_at)
             self._runtime._check_wait_errors(self.ref, root)
             if deadline is not None and loop.time() >= deadline:
                 return WaitResult(self.ref, snapshot, "observation_timeout", time.time())
@@ -529,6 +551,18 @@ class AgentRun:
 
     async def cancel(self, *, command_id):
         return await self._control("cancel", command_id=command_id)
+
+    async def send_input(
+        self, pending_id, target_digest, value, *, command_id, expected_state_revision=None
+    ):
+        return await self._control(
+            "send_input",
+            pending_id,
+            target_digest,
+            value,
+            command_id=command_id,
+            expected_state_revision=expected_state_revision,
+        )
 
     async def reconcile(self, action_id, result, *, command_id):
         return await self._control("reconcile", action_id, result, command_id=command_id)

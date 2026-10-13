@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.0.dev93 — Durable user input preview
+
+- Add explicit intrinsic questions, fixed reply policies and durable original-owner controls on Local and Temporal. Replies continue the original Run/Turn without changing submitted task or repeating adopted work.
+- Support selected flat/DAG planning conclusions and graph/Team/nested child questions; preserve original budgets, native model history and separate business-effect receipts.
+- Provide replaceable named policies, SDK/Profile configuration, CLI/starter and explicit A2A continuation. Observation cancellation remains independent of business cancellation.
+- Accepted source: 7339 passed / 617 configured skips; isolated core / SDK: 259 / 277 passed with no skips. Source and installed Temporal each pass 12 actual recovery cases with 24 reaped Workers and 48 saved History replays. Old dev92 defaults and original Runs remain compatible; six review findings are fixed. Fixture Providers do not establish live model quality, full R01–R26/H3/M1 or independent adoption.
+
 ## 0.1.0.dev92 — Receipt-backed parent completion preview
 
 - Add explicit, replaceable Plan/Team completion policies, strict original-child/tool evidence, receipt rules and a concrete inventory gate.

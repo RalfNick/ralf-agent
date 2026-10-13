@@ -22,7 +22,7 @@ def close_nodes(run, failed_index=None):
         if state["state"] not in {"completed", "skipped", "failed", "cancelled"}:
             state["state"] = "failed" if index == failed_index else "cancelled"
     for action in run["actions"]:
-        if action["status"] in {"ready", "waiting_approval", "not_dispatched"}:
+        if action["status"] in {"ready", "waiting_approval", "waiting_input", "not_dispatched"}:
             action["status"] = "cancelled"
 
 
@@ -180,14 +180,10 @@ class ParallelWorkflowRuntime:
                 with engine.store.transaction():
                     run = engine._authorized(run_id)
                     states = {s["state"] for s in run["workflow"]["nodes"].values()}
-                    run["state"] = (
-                        "waiting_reconciliation"
-                        if "waiting_reconciliation" in states
-                        else "waiting_approval"
-                        if "waiting_approval" in states
-                        else "running"
-                        if "running" in states
-                        else "failed"
+                    from .local_user_input import pause_state
+
+                    run["state"] = pause_state(
+                        states, fallback="running" if "running" in states else "failed"
                     )
                     if run["state"] == "failed":
                         run["error"] = {"code": "invalid_workflow_state"}

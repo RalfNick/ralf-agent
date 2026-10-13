@@ -81,6 +81,9 @@ class TemporalParentWorkflow(TemporalRunWorkflow):
         await workflow.sleep(seconds)
         if self.state.state not in TERMINAL:
             self.state.state, self.state.error = "cancelled", {"code": "deadline_exceeded"}
+            from .temporal_user_input import close_pending
+
+            close_pending(self.state)
             self.state._emit("deadline_exceeded")
             self.wake_revision += 1
 
@@ -294,7 +297,9 @@ class TemporalParentWorkflow(TemporalRunWorkflow):
             # Quiescent waiting/terminal parents sleep without producing polling
             # Activities; unsettled children keep resource evidence observable.
             await self._notify_session()
-            if self.state.state in TERMINAL and self.state.quiescent:
+            if (
+                self.state.state in TERMINAL or self.state.stage == "waiting_input"
+            ) and self.state.quiescent:
                 await workflow.wait_condition(lambda wake=observed_wake: self.wake_revision != wake)
             elif changed:
                 continue

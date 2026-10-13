@@ -17,7 +17,7 @@ def validate_protocol(manifest):
     if (
         manifest.get("kernel") != "temporal-3"
         or type(manifest.get("binding_protocol")) is not int
-        or manifest["binding_protocol"] != 9
+        or manifest["binding_protocol"] not in (9, 10)
         or type(manifest.get("parent_completion_protocol")) is not int
         or manifest["parent_completion_protocol"] != 1
         or type(registry) is not dict
@@ -134,7 +134,7 @@ def source(state, candidate):
     from .temporal_parent_state import child_run_id
     from .temporal_state import detached
 
-    children, receipts, seen = [], [], set()
+    children, receipts, seen, input_replies = [], [], set(), []
     policy = state.manifest["parent_completion_policies"][state.definition["completion_policy"]]
 
     def visit(
@@ -186,6 +186,24 @@ def source(state, candidate):
         run_id, release = call["run_id"], request_release_digest(call["request"], state.manifest)
         if call.get("observed_release_digest") != release:
             raise DefinitionMismatch("Parent source changed original observed child release")
+        if state.manifest.get("user_input_protocol") == 1:
+            from .temporal_user_input import observed_journal
+
+            journal = observed_journal(
+                {
+                    "snapshot": snapshot,
+                    "workflow": flow,
+                    "scope": state.scope,
+                    "manifest": state.manifest,
+                    "release_digest": release,
+                    "input_requests": call.get("input_requests", {}),
+                    "planning_input_sources": call.get("planning_input_sources", {}),
+                },
+                call["request"],
+            )
+            input_replies.extend(
+                value for value in journal.values() if value["state"] == "answered"
+            )
         actions = snapshot["actions"]
         kind = call["request"]["definition"]["kind"]
         finals = [
@@ -243,6 +261,8 @@ def source(state, candidate):
         for index, action in enumerate(actions):
             if action["kind"] != "tool" or action["status"] != "completed":
                 continue
+            if action["tool"] in state.manifest.get("user_input_tools", {}):
+                continue
             consumed = []
             for model in final_models:
                 target = next(a for a in actions if a["id"] == model["action_id"])
@@ -297,6 +317,9 @@ def source(state, candidate):
 
     for call in _source_children(state):
         visit(call, state.definition, state.run_id, [])
+    from .temporal_user_input import clarifications
+
+    input_replies = [*clarifications(state), *input_replies]
     request = ParentCompletionRequest(
         parent_id=state.run_id,
         parent_kind=state.kind,
@@ -326,6 +349,7 @@ def source(state, candidate):
             "verifier_budget": policy["identity"]["verifier_budget"],
             "parent_budget": state.budget,
         },
+        **({"clarifications": input_replies} if input_replies else {}),
     ).to_dict()
     if (
         len(canonical(request).encode("utf-8")) > policy["identity"]["max_source_bytes"]

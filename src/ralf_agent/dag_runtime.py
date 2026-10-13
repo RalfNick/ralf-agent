@@ -106,12 +106,11 @@ class DAGRuntime:
                         "waiting_approval",
                         "waiting_reconciliation",
                         "outcome_unknown",
+                        "waiting_input",
                     }:
-                        record["state"] = (
-                            "waiting_approval"
-                            if call["state"] == "waiting_approval"
-                            else "waiting_reconciliation"
-                        )
+                        from .local_user_input import pause_state
+
+                        record["state"] = pause_state([call["state"]])
             ready, skipped, settled, result = _choices(
                 ExecutionPlan(dag["plan"]), run["input"], choices, parallel=True
             )
@@ -156,8 +155,12 @@ class DAGRuntime:
                 with engine.store.transaction():
                     latest = engine._authorized(run_id)
                     if latest["state"] not in CLOSED:
+                        from .local_user_input import pause_state
+
                         latest["state"] = (
-                            "waiting_approval"
+                            pause_state(c["state"] for c in pending)
+                            if latest["manifest"].get("user_input_protocol") == 1
+                            else "waiting_approval"
                             if any(c["state"] == "waiting_approval" for c in pending)
                             else "outcome_unknown"
                         )

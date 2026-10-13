@@ -85,7 +85,7 @@ def main(argv=None):
     init.add_argument(
         "--template",
         default="oncall",
-        help="Starter template: oncall, rag, config, model, graph, mcp, cli, parallel, async, plan, team, dag, nested, a2a, temporal, ingest, hybrid, context, memory, model-check, observable or sessions",
+        help="Starter template: oncall, rag, config, model, graph, mcp, cli, parallel, async, plan, team, dag, nested, a2a, temporal, ingest, hybrid, context, memory, model-check, observable, sessions or user-input",
     )
     run = commands.add_parser(
         "run", help="Submit an Agent/Workflow declaration using a runtime config or factory"
@@ -114,6 +114,13 @@ def main(argv=None):
     approve.add_argument("--digest", required=True)
     approve.add_argument("--command-id", required=True)
     approve.add_argument("--reject", action="store_true")
+    send_input = commands.add_parser("send-input", help="Answer an original pending input request")
+    send_input.add_argument("run_id")
+    send_input.add_argument("pending_id")
+    send_input.add_argument("--digest", required=True)
+    send_input.add_argument("--value-json", required=True, help="Schema-valid JSON reply value")
+    send_input.add_argument("--command-id", required=True)
+    send_input.add_argument("--expected-state-revision", type=int)
     args = parser.parse_args(argv)
     try:
         if args.command == "init":
@@ -196,6 +203,33 @@ def main(argv=None):
                             args.digest,
                             command_id=args.command_id,
                             approved=not args.reject,
+                        )
+                    )
+                elif args.command == "send-input":
+                    try:
+                        value = json.loads(args.value_json)
+                    except (ValueError, RecursionError) as exc:
+                        raise ValidationError("Input reply must be valid JSON") from exc
+                    from .user_input import input_reply_payload
+
+                    input_reply_payload(
+                        args.run_id,
+                        args.pending_id,
+                        args.digest,
+                        value,
+                        expected_state_revision=args.expected_state_revision,
+                    )
+                    operation = getattr(engine, "send_input", None)
+                    if not is_sync_callable(operation):
+                        raise ValidationError("Original authority does not support user input")
+                    result = asdict(
+                        operation(
+                            args.run_id,
+                            args.pending_id,
+                            args.digest,
+                            value,
+                            command_id=args.command_id,
+                            expected_state_revision=args.expected_state_revision,
                         )
                     )
                 else:

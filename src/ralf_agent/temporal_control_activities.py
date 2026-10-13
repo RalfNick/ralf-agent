@@ -85,6 +85,7 @@ async def control(runtime, client, value):
             **(
                 await engine._view(call["run_id"], "diagnostics")
                 if value["runtime_manifest"].get("model_history_protocol") == 2
+                or value["runtime_manifest"].get("user_input_protocol") == 1
                 else asdict(await engine.diagnostics(call["run_id"]))
             ),
             "scope": value["scope"],

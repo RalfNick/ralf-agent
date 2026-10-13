@@ -8,7 +8,15 @@ from typing import Protocol, runtime_checkable
 from .errors import AuthorizationDenied, DefinitionMismatch, ValidationError
 from .handoff import _completed
 from .ports import is_async_callable, is_sync_callable
-from .types import CommandReceipt, RunHandle, RunSnapshot, Scope, _require_text, canonical
+from .types import (
+    CommandReceipt,
+    RunDiagnostics,
+    RunHandle,
+    RunSnapshot,
+    Scope,
+    _require_text,
+    canonical,
+)
 
 
 @runtime_checkable
@@ -75,6 +83,11 @@ class TaskControlBridge:
         if not all(predicate(getattr(engine, name, None)) for name in names):
             raise ValidationError("Task controls must use one synchronous or native async mode")
         self._bindings = {name: _binding(getattr(engine, name)) for name in names}
+        optional = getattr(engine, "send_input", None)
+        if optional is not None:
+            if not predicate(optional):
+                raise ValidationError("User input control must use the registered control mode")
+            self._bindings["send_input"] = _binding(optional)
 
     @property
     def scope(self):
@@ -93,6 +106,60 @@ class TaskControlBridge:
         """Revalidate before a host wakeup following other asynchronous I/O."""
         self._check()
 
+    def require_user_input_controls(self):
+        self._check()
+        if "send_input" not in self._bindings:
+            raise ValidationError("Selected user input requires original send_input controls")
+
+    def require_input_discovery(self, *, composite=False):
+        """Select optional observation ports without changing the legacy contract."""
+        self._check()
+        predicate = is_async_callable if self._async else is_sync_callable
+        for name in ("diagnostics", "parent_run_id"):
+            method = getattr(self._engine, name, None)
+            if method is None:
+                continue
+            if not predicate(method):
+                raise ValidationError("Input discovery must use the original control mode")
+            binding = _binding(method)
+            if name in self._bindings and self._bindings[name] != binding:
+                raise DefinitionMismatch("Input discovery registration changed")
+            self._bindings[name] = binding
+        if composite and (
+            "diagnostics" not in self._bindings
+            or not self._async
+            and "parent_run_id" not in self._bindings
+        ):
+            raise ValidationError("Composite user input requires verifiable original discovery")
+        self._check()
+
+    async def input_diagnostics(self, run_id):
+        _require_text(run_id, "Run ID")
+        info = await self._call("diagnostics", run_id)
+        if (
+            not isinstance(info, RunDiagnostics)
+            or info.snapshot.run_id != run_id
+            or info.snapshot.consistency != "authoritative"
+            or len(info.release_digest) != 64
+            or any(char not in "0123456789abcdef" for char in info.release_digest)
+        ):
+            raise ValidationError("Input discovery requires original RunDiagnostics")
+        canonical(asdict(info))
+        return copy.deepcopy(info)
+
+    async def input_parent(self, run_id):
+        _require_text(run_id, "Run ID")
+        parent = await self._call("parent_run_id", run_id)
+        if parent is not None:
+            _require_text(parent, "Original parent Run ID")
+        return parent
+
+    async def pending_inputs(self, run_id):
+        from .control_discovery import pending_inputs
+
+        _require_text(run_id, "Run ID")
+        return await pending_inputs(self, run_id)
+
     async def _call(self, name, *args, **kwargs):
         self._check()
         operation = getattr(self._engine, name)
@@ -102,7 +169,7 @@ class TaskControlBridge:
         return value
 
     @staticmethod
-    def _receipt(value, command_id, kind, run_id=None):
+    def _receipt(value, command_id, kind, run_id=None, *, allow_rejected=False):
         if not isinstance(value, CommandReceipt):
             raise ValidationError("Task control must return a CommandReceipt")
         if (
@@ -111,7 +178,10 @@ class TaskControlBridge:
             or run_id is not None
             and value.run_id != run_id
             or value.record_state != "durably_recorded"
-            or value.apply_state not in {"applied", "pending"}
+            or value.apply_state
+            not in (
+                {"applied", "pending", "rejected"} if allow_rejected else {"applied", "pending"}
+            )
             or not isinstance(value.outcome, dict)
         ):
             raise ValidationError("Task control receipt does not match the request")
@@ -141,6 +211,7 @@ class TaskControlBridge:
                 "running",
                 "waiting_approval",
                 "waiting_reconciliation",
+                "waiting_input",
                 "outcome_unknown",
                 "cancelling",
                 "succeeded",
@@ -165,3 +236,37 @@ class TaskControlBridge:
         value = await self._call("cancel", run_id, command_id=command_id)
         self._receipt(value, command_id, "cancel", run_id)
         return copy.deepcopy(value)
+
+    async def send_input(
+        self,
+        run_id,
+        pending_id,
+        target_digest,
+        value,
+        *,
+        command_id,
+        expected_state_revision=None,
+    ):
+        from .user_input import input_reply_payload
+
+        _require_text(command_id, "Command ID")
+        if "send_input" not in self._bindings:
+            raise ValidationError("Original task authority does not support user input")
+        payload = input_reply_payload(
+            run_id,
+            pending_id,
+            target_digest,
+            value,
+            expected_state_revision=expected_state_revision,
+        )
+        receipt = await self._call(
+            "send_input",
+            payload["run_id"],
+            payload["pending_id"],
+            payload["digest"],
+            payload["value"],
+            command_id=command_id,
+            expected_state_revision=expected_state_revision,
+        )
+        self._receipt(receipt, command_id, "send_input", run_id, allow_rejected=True)
+        return copy.deepcopy(receipt)

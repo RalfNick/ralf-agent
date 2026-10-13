@@ -29,6 +29,7 @@ COMPONENT_KINDS = frozenset(
         "planners",
         "plan_verifiers",
         "parent_completion_policies",
+        "user_input_policies",
         "verifier",
         "limits",
         "stage_policy",

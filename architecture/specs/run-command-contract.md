@@ -7,6 +7,14 @@
 
 本文细化[架构设计](../design.md)第4、5、8、9、10及13节的运行契约，供 SDK、CLI、API、控制台和 Engine 实现共同使用。它不改变企业首版交付目标，也不把预览版本的接口预留当作企业能力已实现。
 
+Dev93 正在将补充输入命令落实到原执行权威，尚未验收。所选能力使用
+`send_input(run_id, pending_id, target_digest, value, *, command_id,
+expected_state_revision=None)`；摘要固定问题而不依赖最新 Run revision。
+同命令重复返回原回执，关闭／陈旧／无效回复不推进执行；回复保留原 Run、
+Session Turn、任务和预算，不成为新的 submit。明确区分普通业务
+`needs_input` 输出与显式等待协议。完整规则见
+[本批设计](../../docs/superpowers/specs/2026-10-13-durable-user-input-design.md)。
+
 ## 1. 职责与唯一状态权威
 
 | 组件 | 本规格中的职责 | 恢复边界 |

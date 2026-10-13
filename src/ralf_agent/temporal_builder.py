@@ -132,9 +132,11 @@ class TemporalRuntimeBuilder:
             data_path = (path if path.is_absolute() else self.base_dir / path).resolve()
         from .parent_completion_factories import preflight_parent_completion_providers
         from .query_factories import preflight_query_providers
+        from .user_input_factories import preflight_user_input
 
         preflight_query_providers(profile)
         preflight_parent_completion_providers(profile)
+        preflight_user_input(profile)
         validate_continuation_declarations(
             profile, enabled=profile.execution.get("model_continuation", False)
         )

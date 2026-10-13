@@ -1,6 +1,8 @@
 # Ralf-Agent
 
-当前版本增加显式 [Plan／Team 业务完成验证](docs/parent-completion.md)：纯回执规则、独立受管理模型验证及安装后库存参考组合；模型不能绕过业务规则或替换候选。保留既有 [Responses 推理续接](docs/responses-reasoning.md)、原推荐默认及执行权威。真实模型质量和完整能力验收继续开放。
+dev93 增加显式[持久用户输入](docs/user-input.md)：Agent 提问、Plan 澄清及原 Run／Turn 续接，由原 Local／Temporal 执行权威保存问题、答案和控制回执。完整源码、实际 Worker 恢复、安装与旧版本兼容门槛已通过，见[本批验收](architecture/reviews/2026-10-13-durable-user-input.md)。完整能力与真实模型质量继续验收。
+
+dev92 增加显式 [Plan／Team 业务完成验证](docs/parent-completion.md)：纯回执规则、独立受管理模型验证及安装后库存参考组合；模型不能绕过业务规则或替换候选。保留既有 [Responses 推理续接](docs/responses-reasoning.md)、原推荐默认及执行权威。真实模型质量和完整能力验收继续开放。
 
 Dev83 已验收[原生 Sandbox](docs/sandbox.md)：可替换端口、显式本地 Docker 默认、
 原工具审批和每 Agent 授权交集；六类 Local／Temporal 真实恢复、安装和旧82兼容通过。
@@ -12,7 +14,7 @@ dev78 增加[可替换Skills目录与受管理加载](docs/skills.md)：Memory�
 
 dev77 增加[受管理Workspace写入](docs/workspace-writes.md)：可替换Memory／File、CAS、审批和恢复；安装包、真实Temporal／PG及旧76兼容通过。完整框架能力继续建设。
 
-当前工作区 **0.1.0.dev92** 提供显式语义知识库、相关事实召回和 Plan／Team 默认组合，
+当前工作区 **0.1.0.dev93** 提供显式语义知识库、相关事实召回和 Plan／Team 默认组合，
 复用原执行、审批和恢复协议。见[H3 使用与扩展指南](docs/h3-intelligent-combinations.md)。
 dev48 增加[显式 HTTP 语义重排](docs/http-reranking.md)，保留原知识来源及旧默认配置。
 dev49 增加[Query transform 与语义 Facts 召回](docs/query-and-semantic-recall.md)，支持显式语义记忆组合及保留语义顺序的上下文。候选窗口外事实和真实质量仍待完善。

@@ -144,11 +144,14 @@ class DynamicWorkflowSpec(_JsonValue):
         plan_mode="flat",
         version="1",
         completion_policy=None,
+        input_policy=None,
     ):
         _require_text(planner, "Planner")
         _require_text(verifier, "Plan verifier")
         if completion_policy is not None:
             _require_text(completion_policy, "Parent completion policy")
+        if input_policy is not None:
+            _require_text(input_policy, "User input policy")
         _integer(max_revisions, "Plan revision limit", 1, 32)
         _integer(max_steps, "Plan step limit", 1, 256)
         if plan_mode not in {"flat", "dag"}:
@@ -169,6 +172,7 @@ class DynamicWorkflowSpec(_JsonValue):
                     if completion_policy is not None
                     else {}
                 ),
+                **({"input_policy": input_policy} if input_policy is not None else {}),
             }
         )
 

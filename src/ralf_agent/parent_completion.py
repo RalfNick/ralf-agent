@@ -210,6 +210,7 @@ class ParentCompletionRequest(_JsonValue):
         children,
         receipts,
         constraints,
+        clarifications=None,
     ):
         _text(parent_id, "Parent ID")
         _digest(release_digest, "Parent release")
@@ -251,6 +252,10 @@ class ParentCompletionRequest(_JsonValue):
                 "constraints": constraints,
             }
         )
+        if clarifications is not None:
+            from .user_input import validate_clarifications
+
+            data["clarifications"] = validate_clarifications(clarifications, scope=scope)
         by_run, ids = {}, set()
         for value in data["children"]:
             _child(value, revision)
@@ -315,7 +320,7 @@ class ParentCompletionRequest(_JsonValue):
     def from_dict(cls, value):
         if (
             type(value) is not dict
-            or set(value) != _REQUEST_FIELDS
+            or set(value) not in (_REQUEST_FIELDS, _REQUEST_FIELDS | {"clarifications"})
             or type(value.get("schema_version")) is not int
             or value["schema_version"] != 1
         ):

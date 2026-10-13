@@ -1,5 +1,13 @@
 # RALF AgentHarness 目标架构
 
+Dev93 持久用户输入子集已验收：Harness／Planner 只提出问题，原执行
+权威采纳问题、应用 `send_input` 并恢复原 Run。显式工具和规划适配复用同一
+持久协议，Facade 与 A2A 只投影和路由原 owner；没有额外等待队列或状态权威。
+回复是补充证据，原任务与发布不被隐式改写。源码 7339 passed／617 配置跳过，
+独立安装、源码及安装各 12 项真实 Temporal 恢复、旧92兼容和六项审查修复通过。
+完整 H2／H3／M1／R01–R26 及真实模型质量仍开放。见
+[本批验收](../reviews/2026-10-13-durable-user-input.md)。
+
 Dev92 R10／H3 父级完成验证子集已验收：显式可替换policy、真实子Run／工具回执、Receipt／Inventory纯gate、受管理模型stage、Plan反馈和Team拒绝沿原Local／Temporal权威实现，提供SDK／Profile和安装后默认参考。最终源码7126 passed／605配置依赖跳过；独立核心522／SDK413零跳过，实际源码及安装Temporal各7项／各23条History重放；旧91默认及六类原Run双向兼容、旧Local／Worker业务I/O前拒绝、321产品模块一致和自有服务退出通过。一次fresh review及同一reviewer修复复验闭环五项Important，包括根Session写响应丢失后的原回执／真实结束证明恢复。原通用推荐版本1／2默认保持；真实模型质量、完整R10／H3／M1／R01–R26及外部采用继续开放。见[使用指南](../../docs/parent-completion.md)及[本批验收](../reviews/2026-10-13-parent-completion.md)。
 
 Dev91 显式 Responses 推理续接子集已验收：保留原有序 output／密文／phase 和工具原参数，复用原 ModelContinuation／ModelHistory 与 Local／Temporal 执行权威，接通 SDK／Profile／四类评测 CLI。最终源码6792 passed／598配置依赖跳过（856.08s），独立核心安装494 passed／零跳过，实际源码Temporal5／安装Temporal17通过；311产品模块一致，旧90四类原Run及默认字节兼容。一次审查3个P2与1个CI Minor已修复，另5项公共边界回归通过；自有服务正常退出0并等待。原默认和历史发布不迁移；真实模型质量、完整R05／H3／M1／R01–R26及独立采用继续开放。见[使用指南](../../docs/responses-reasoning.md)及[本批验收](../reviews/2026-10-13-responses-reasoning.md)。

@@ -281,7 +281,7 @@ def catalog_registration(runtime):
 def effective_manifest(manifest, descriptor):
     choices = validate_descriptor(manifest, descriptor)
     result = detached(manifest)
-    if manifest.get("binding_protocol") in (8, 9):
+    if manifest.get("binding_protocol") in (8, 9, 10):
         if "model_history" in result:
             result["model_history_protocol"] = (
                 2 if result["model_history"]["identity"].get("scope") == "session" else 1

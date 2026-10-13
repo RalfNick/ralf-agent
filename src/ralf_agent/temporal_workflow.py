@@ -20,6 +20,7 @@ with workflow.unsafe.imports_passed_through():
         temporal_session_identity,  # noqa: F401 -- preload pure Session addressing
         temporal_tool_execution,  # noqa: F401 -- preload fixed Tool protocol
         temporal_tool_execution_state,  # noqa: F401 -- preload original Tool gates
+        temporal_user_input,  # noqa: F401 -- preload original pure input gates
     )
     from .temporal_bindings import ROLES as _binding_roles  # noqa: F401
     from .temporal_completion_state import ACTIVITY as COMPLETION_ACTIVITY
@@ -271,7 +272,7 @@ class TemporalRunWorkflow:
                     self.state.accept_tool(action["id"], response)
             except ActivityError as exc:
                 complete_history_read = (
-                    self.state.manifest.get("binding_protocol") in (7, 8, 9)
+                    self.state.manifest.get("binding_protocol") in (7, 8, 9, 10)
                     and self.state.manifest.get("model_history_protocol") in (1, 2)
                     and owns_context_read(self.state.manifest, action)
                     and action.get("phase") in {"context", "plan"}
@@ -338,6 +339,9 @@ class TemporalRunWorkflow:
         await workflow.sleep(seconds)
         if self.state.state not in {"succeeded", "failed", "cancelled"}:
             self.state.state, self.state.error = "cancelled", {"code": "deadline_exceeded"}
+            from .temporal_user_input import close_pending
+
+            close_pending(self.state)
             self.state._emit("deadline_exceeded")
             self.wake_revision += 1
 

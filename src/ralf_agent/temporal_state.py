@@ -110,7 +110,7 @@ def validate_manifest(manifest):
     if manifest["kernel"] == "temporal-3":
         if (
             type(manifest.get("binding_protocol")) is not int
-            or manifest.get("binding_protocol") not in (1, 2, 3, 4, 5, 6, 7, 8, 9)
+            or manifest.get("binding_protocol") not in (1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
             or manifest.get("dispatch_admission") != "history-1"
         ):
             raise DefinitionMismatch("Unsupported Temporal binding/memory protocol")
@@ -162,6 +162,9 @@ def validate_manifest(manifest):
     from .temporal_decision_state import validate_model_history_protocol
 
     validate_model_history_protocol(manifest)
+    from .temporal_user_input import validate_protocol as validate_inputs
+
+    validate_inputs(manifest)
     if "workspace_binding_protocol" in manifest:
         if type(manifest["workspace_binding_protocol"]) is not int or manifest[
             "workspace_binding_protocol"
@@ -253,6 +256,11 @@ def validate_request(request, manifest):
                     validate_schema_references(node.output_schema)
                 validate_schema_references(graph.to_dict()["output_schema"])
             elif kind in {"team", "dynamic"}:
+                if current.get("input_policy") is not None and (
+                    manifest.get("user_input_protocol") != 1
+                    or current["input_policy"] not in manifest.get("user_input_policies", {})
+                ):
+                    raise DefinitionMismatch("Original planner input policy unavailable")
                 registries = manifest["orchestration"]
                 fields = (
                     [("strategy", "teams")]
@@ -333,6 +341,9 @@ class TemporalRunState:
 
         validate_bindings(request, manifest, scope)
         self.release_digest = request_release_digest(request, manifest)
+        from .temporal_user_input import initialize as initialize_inputs
+
+        initialize_inputs(self)
         self.epoch = execution_epoch or f"history:{run_id}"
         if "context_read_protocol" in manifest and (
             execution_epoch is not None
@@ -469,12 +480,25 @@ class TemporalRunState:
                 raise IdempotencyConflict("Command ID already identifies different content")
             return detached(self.receipts[command_id])
         kind = payload.get("kind")
-        if kind not in {"approve", "cancel", "reconcile", "drive"}:
+        if kind not in {"approve", "cancel", "reconcile", "drive", "send_input"}:
             raise ValidationError("Unknown Temporal command")
-        self._emit("command_recorded", {"command_id": command_id, "kind": kind})
+        if kind == "send_input":
+            from .temporal_user_input import validate_command
+
+            validate_command(self, payload)
+        self._emit(
+            "command_recorded", {"command_id": command_id, "kind": kind}, bump=kind != "send_input"
+        )
         try:
             outcome = self._apply(kind, payload, command_id)
-            receipt = self._receipt(command_id, kind, outcome)
+            receipt = self._receipt(
+                command_id,
+                kind,
+                outcome,
+                apply_state="rejected"
+                if kind == "send_input" and outcome.get("rejected")
+                else "applied",
+            )
         except (ValidationError, DefinitionMismatch) as exc:
             receipt = self._receipt(command_id, kind, {"error": exc.code}, apply_state="rejected")
         self.command_digests[command_id] = identity
@@ -482,10 +506,15 @@ class TemporalRunState:
         self._emit(
             "command_applied",
             {"command_id": command_id, "kind": kind, "apply_state": receipt["apply_state"]},
+            bump=kind != "send_input",
         )
         return detached(receipt)
 
     def _apply(self, kind, payload, command_id):
+        if kind == "send_input":
+            from .temporal_user_input import apply_reply
+
+            return apply_reply(self, payload, command_id)
         if kind == "cancel":
             if self.state in {"succeeded", "failed"}:
                 return {"rejected": True, "reason": "too_late"}
@@ -495,6 +524,9 @@ class TemporalRunState:
             from .temporal_completion_state import close_pending
 
             close_pending(self)
+            from .temporal_user_input import close_pending as close_inputs
+
+            close_inputs(self)
             self._emit(
                 "cancel_applied", {"state": self.state, "remote_stop_confirmed": self.quiescent}
             )
@@ -562,6 +594,8 @@ class TemporalRunState:
         )
 
     def snapshot(self):
+        from .temporal_user_input import pending as pending_inputs
+
         return {
             "run_id": self.run_id,
             "state": self.state,
@@ -577,7 +611,8 @@ class TemporalRunState:
                 }
                 for a in self.actions
                 if a["status"] == "waiting_approval" and self.state not in TERMINAL
-            ],
+            ]
+            + pending_inputs(self),
             "actions": detached(self.actions),
             "consistency": "authoritative",
         }
@@ -588,6 +623,11 @@ class TemporalRunState:
             "manifest": detached(self.manifest),
             "release_digest": self.release_digest,
             "budget": self.budget,
+            **(
+                {"input_requests": detached(self.input_requests)}
+                if self.manifest.get("user_input_protocol") == 1
+                else {}
+            ),
             **(
                 {"native_history_episodes": detached(self.native_history_episodes)}
                 if self.manifest.get("model_history_protocol") == 2
@@ -716,6 +756,8 @@ class TemporalRunState:
             if operation is not None:
                 return operation
         if self.state in TERMINAL:
+            return None
+        if self.state == "waiting_input":
             return None
         if any(not value["execution_stopped"] for value in self.tool_executions.values()):
             return None
@@ -1157,6 +1199,10 @@ class TemporalRunState:
                 )
             if received_v2:
                 validate_call_ids([item["call_id"] for item in proposals])
+            from .temporal_user_input import validate_authorization, validate_batch
+
+            validate_batch(self, proposals)
+            validate_authorization(self, action, response, proposals)
             from .temporal_limits_state import tool_batch_allowed
 
             if not tool_batch_allowed(self, proposals):
@@ -1199,6 +1245,10 @@ class TemporalRunState:
                     "decision_adopted",
                     {"action_id": action_id, "proposed_actions": [a["id"] for a in proposals]},
                 )
+                from .temporal_user_input import adopt_tool
+
+                if len(proposals) == 1:
+                    adopt_tool(self, proposals[0])
             else:
                 result = final_output(response["output"], self.step["output_schema"])
                 if self.step_manifest.get("model_history_protocol") in (1, 2):
@@ -1225,7 +1275,12 @@ class TemporalRunState:
 
                 if not prepare_completion(self, action, result):
                     self.finish_output(action, result)
-        except (ValidationError, AuthorizationDenied, AgentLimitExceeded) as exc:
+        except (
+            ValidationError,
+            AuthorizationDenied,
+            AgentLimitExceeded,
+            DefinitionMismatch,
+        ) as exc:
             if received_v2:
                 self._reject_model(action, exc.code)
             else:

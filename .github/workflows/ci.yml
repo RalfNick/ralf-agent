@@ -53,6 +53,13 @@ jobs:
           python -m ralf_agent.parent_completion_starter --kind team --model-verification
           ralf-evaluate-orchestration --offline --completion-gate --kind plan-and-execute
           ralf-evaluate-orchestration --offline --completion-gate --kind team
+      - name: Installed durable user input outside checkout
+        working-directory: ${{ runner.temp }}
+        run: |
+          python -m pytest -q -W error -p no:cacheprovider -c /dev/null "$RUNNER_TEMP/session-contracts/tests/test_user_input.py" "$RUNNER_TEMP/session-contracts/tests/test_user_input_values.py" "$RUNNER_TEMP/session-contracts/tests/test_user_input_planning_scope.py" "$RUNNER_TEMP/session-contracts/tests/test_local_user_input.py" "$RUNNER_TEMP/session-contracts/tests/test_local_user_input_process.py" "$RUNNER_TEMP/session-contracts/tests/test_user_input_api.py" "$RUNNER_TEMP/session-contracts/tests/test_user_input_api_configuration.py" "$RUNNER_TEMP/session-contracts/tests/test_user_input_api_a2a.py" "$RUNNER_TEMP/session-contracts/tests/test_user_input_api_service.py" "$RUNNER_TEMP/session-contracts/tests/test_user_input_api_starter.py" "$RUNNER_TEMP/session-contracts/tests/test_user_input_api_wait.py"
+          ralf init wheel-input --template user-input
+          cd wheel-input
+          python -m agent_app run --command-id installed-question
       - name: Installed Skill document contracts outside checkout
         working-directory: ${{ runner.temp }}
         run: |
@@ -222,6 +229,8 @@ jobs:
         run: python -m pytest -q -W error tests/test_temporal_deepseek_thinking_service.py tests/test_temporal_responses_reasoning_service.py tests/test_temporal_session_model_history_service.py
       - name: Actual parent completion Worker recovery and History replay
         run: python -m pytest -q -W error tests/test_temporal_parent_completion_service.py
+      - name: Actual durable user input Worker recovery and History replay
+        run: python -m pytest -q -W error tests/test_temporal_user_input_service.py
       - run: python -m build
       - run: python -m pip install --force-reinstall --no-deps dist/*.whl
       - name: Installed Temporal Artifact bindings outside checkout
@@ -242,6 +251,10 @@ jobs:
         working-directory: ${{ runner.temp }}
         run: |
           python -m pytest -q -W error -p no:cacheprovider -c /dev/null "$RUNNER_TEMP/artifact-contracts/tests/test_temporal_parent_completion.py" "$RUNNER_TEMP/artifact-contracts/tests/test_temporal_parent_completion_service.py"
+      - name: Installed durable user input recovery outside checkout
+        working-directory: ${{ runner.temp }}
+        run: |
+          python -m pytest -q -W error -p no:cacheprovider -c /dev/null "$RUNNER_TEMP/artifact-contracts/tests/test_temporal_user_input.py" "$RUNNER_TEMP/artifact-contracts/tests/test_user_input_api_temporal.py" "$RUNNER_TEMP/artifact-contracts/tests/test_temporal_user_input_service.py"
       - name: Stop task-owned Temporal Service
         if: always()
         run: |

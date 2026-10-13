@@ -21,6 +21,7 @@ class PlanningRequest(_JsonValue):
         capabilities=None,
         constraints=None,
         verification_feedback=None,
+        clarifications=None,
     ):
         if (
             capabilities is not None
@@ -51,6 +52,10 @@ class PlanningRequest(_JsonValue):
                 raise ValidationError(
                     "Planner feedback requires a bounded original verification source"
                 )
+        if clarifications is not None:
+            from .user_input import validate_clarifications
+
+            clarifications = validate_clarifications(clarifications, max_records=32)
         self._data_json = canonical(
             {
                 "task": task,
@@ -64,6 +69,7 @@ class PlanningRequest(_JsonValue):
                     if verification_feedback is not None
                     else {}
                 ),
+                **({"clarifications": clarifications} if clarifications is not None else {}),
             }
         )
 
@@ -131,7 +137,10 @@ class CompleteVerifier:
 class ModelPlanner:
     """Uses an allowlisted, tool-free child Agent; no hidden Provider loop."""
 
-    def __init__(self, *, provider="default", instructions=None, version="1"):
+    def __init__(self, *, provider="default", instructions=None, version="1", input_requests=False):
+        if type(input_requests) is not bool:
+            raise ValidationError("Model planner input_requests must be a boolean")
+        self._input_requests = input_requests
         self.agent = AgentSpec(
             "planner",
             instructions
@@ -166,11 +175,48 @@ class ModelPlanner:
             },
         )
 
+        if input_requests:
+            from dataclasses import replace
+
+            schema = {
+                "oneOf": [
+                    self.agent.output_schema,
+                    {
+                        "type": "object",
+                        "required": ["status", "reason"],
+                        "additionalProperties": False,
+                        "properties": {
+                            "status": {"enum": ["needs_input", "refused"]},
+                            "reason": {"type": "string", "minLength": 1, "maxLength": 4096},
+                        },
+                    },
+                ],
+            }
+            self.agent = replace(
+                self.agent,
+                output_schema=schema,
+                instructions=instructions
+                or (
+                    self.agent.instructions + " If required information is missing, return "
+                    '{"status":"needs_input","reason":"the specific question"}. '
+                    'For a request you must refuse, return {"status":"refused","reason":"why"}. '
+                    "Use validated clarifications explicitly; do not invent missing information."
+                ),
+            )
+            # Select a separate implementation so default Temporal releases retain
+            # the published plan method identity used by their recovery manifests.
+            self.plan = self._plan_with_input
+
     @property
     def identity(self):
         from dataclasses import asdict
 
-        return {"kind": "model-planner", "version": "1", "agent": asdict(self.agent)}
+        return {
+            "kind": "model-planner",
+            "version": "1",
+            "agent": asdict(self.agent),
+            **({"input_requests": True} if self._input_requests else {}),
+        }
 
     async def plan(self, request, caller):
         result = await caller.call("planner", "@planner", request.to_dict())
@@ -179,6 +225,22 @@ class ModelPlanner:
         if result.state != "succeeded":
             raise ValidationError("The managed planner Agent did not succeed")
         output = result.result
+        if not isinstance(output, dict) or set(output) != {"steps"}:
+            raise ValidationError("Model planner must return an explicit steps object")
+        try:
+            return PlanProposal([PlanStep(**step) for step in output["steps"]])
+        except (TypeError, KeyError) as exc:
+            raise ValidationError("Model planner returned invalid steps") from exc
+
+    async def _plan_with_input(self, request, caller):
+        result = await caller.call("planner", "@planner", request.to_dict())
+        if result.state not in {"succeeded", "failed", "cancelled"}:
+            return None
+        if result.state != "succeeded":
+            raise ValidationError("The managed planner Agent did not succeed")
+        output = result.result
+        if type(output) is dict and set(output) == {"status", "reason"}:
+            return PlanningConclusion(output["status"], output["reason"])
         if not isinstance(output, dict) or set(output) != {"steps"}:
             raise ValidationError("Model planner must return an explicit steps object")
         try:

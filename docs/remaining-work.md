@@ -1,4 +1,11 @@
-# dev92：剩余能力与架构验收清单
+# dev93：剩余能力与架构验收清单
+
+Dev93 的持久用户输入子集已验收：问题和答案沿原 Run／Turn 保存，回复具有
+独立命令回执，动态规划消耗原修订额度而不重置预算。最终源码 7339 passed／
+617 配置依赖跳过；独立核心 259／SDK 277 零跳过，源码和安装 Temporal 各 12 项、
+24 Worker 实际等待、48 条 History 重放；旧 dev92 兼容与六项审查修复通过。
+R01–R26／H3／M1 整体目标、真实模型质量与独立采用继续开放。
+见[使用指南](user-input.md)与[本批验收](../architecture/reviews/2026-10-13-durable-user-input.md)。
 
 Dev92 R10／H3 父级完成验证子集已验收：显式可替换policy、真实子Run／工具回执、Receipt／Inventory纯gate、受管理模型stage、Plan反馈和Team拒绝沿原Local／Temporal权威实现，提供SDK／Profile和安装后默认参考。最终源码7126 passed／605配置依赖跳过；独立核心522／SDK413零跳过，实际源码及安装Temporal各7项／各23条History重放；旧91默认及六类原Run双向兼容、旧Local／Worker业务I/O前拒绝、321产品模块一致和自有服务退出通过。一次fresh review及同一reviewer修复复验闭环五项Important，包括根Session写响应丢失后的原回执／真实结束证明恢复。原通用推荐版本1／2默认保持；真实模型质量、完整R10／H3／M1／R01–R26及外部采用继续开放。见[使用指南](parent-completion.md)及[本批验收](../architecture/reviews/2026-10-13-parent-completion.md)。
 
@@ -78,7 +85,7 @@ PG Knowledge/Inbox/Outbox、Qdrant、HTTP Embedding、Hybrid/RRF／基础重排�
 | ID／层 | 当前已交付基础 | 尚未完成的具体能力 | 阶段／状态 |
 | --- | --- | --- | --- |
 | R01 每 Agent 绑定 | dev83 Local／Temporal原生、顺序、Graph、Team、Dynamic及嵌套支持十三类版本化角色provider/context/knowledge/tool_set/stage_policy/facts/limits/verifier/decision_policy/session/workspace/skills/sandbox；固定成员路径、父子发布和Profile；Session树与Facts／Knowledge宿主namespace；Workspace／Skills／Sandbox选择只收紧原授权。dev84实现第十四类artifacts及纯Context派生、ref/disabled/inherit、host namespace选择，六组合SQLite/file已有子集证据 | 其余Artifact角色selector和组合契约；其余资源身份／selector／作用域视图与完整配置；Workspace append/delete/mkdir／subroot／权限／远端租约；其他受管理阶段、Runner及完整隔离治理 | H1：已有子集交付；dev84 Artifact子集已验收 |
-| R02 Agent／Session 入口 | H2a Local stateless Agent/Runtime/AgentRun、RunRef/WaitResult；独立任务托管、纯观察等待、原根流程控制路由、owned/borrowed 关闭与 CloseIncomplete 重试、显式重连；保留旧 RunHandle DTO；H2b1 同库原生／顺序及 H2b2 图／团队／动态／嵌套及 H2b3 授权根 namespace、H2b4a 远程原生／顺序及 H2b4b 复合根保存意图／准确回执／终态只查询恢复、异步 Profile 配置，SessionKey／路由／Turn／busy／CAS rebind；H2c1 Temporal 原生／顺序共同入口、异步重连、固定 RPC 组件与客户端 detach；H2c2 已注册 Graph／Team／Dynamic／嵌套入口与实际子 Run 控制；H2c3 Temporal History Session／原 Namespace UUID／耐久 Turn／busy／启动意图／空闲 CAS，普通与 managed Conversation 及原后代静默证据；dev66 原生／顺序外置Root保存及 dev67 图／Team／Plan／DAG／嵌套根保存、稳定成员地址、原根／私有数据只读取一次、数据集身份与跨Turn召回 | 跨权威会话租约、输入续接／业务 deadline、Temporal 推荐配置／其他绑定角色、移交与耐久 FIFO | H2a／H2b1／H2b2／H2b3／H2b4a／H2b4b／H2c1／H2c2／H2c3：子集已交付；完整 H2 未交付 |
+| R02 Agent／Session 入口 | H2a Local stateless Agent/Runtime/AgentRun、RunRef/WaitResult；独立任务托管、纯观察等待、原根流程控制路由、owned/borrowed 关闭与 CloseIncomplete 重试、显式重连；保留旧 RunHandle DTO；H2b1 同库原生／顺序及 H2b2 图／团队／动态／嵌套及 H2b3 授权根 namespace、H2b4a 远程原生／顺序及 H2b4b 复合根保存意图／准确回执／终态只查询恢复、异步 Profile 配置，SessionKey／路由／Turn／busy／CAS rebind；H2c1 Temporal 原生／顺序共同入口、异步重连、固定 RPC 组件与客户端 detach；H2c2 已注册 Graph／Team／Dynamic／嵌套入口与实际子 Run 控制；H2c3 Temporal History Session／原 Namespace UUID／耐久 Turn／busy／启动意图／空闲 CAS，普通与 managed Conversation 及原后代静默证据；dev66 原生／顺序外置Root保存及 dev67 图／Team／Plan／DAG／嵌套根保存、稳定成员地址、原根／私有数据只读取一次、数据集身份与跨Turn召回；dev93原owner问题／答案、同Run/Turn续接、纯观察等待与SDK/Profile/CLI/A2A | 跨权威会话租约、业务 deadline、Temporal 推荐配置／其他绑定角色、移交与耐久 FIFO | H2a／H2b1／H2b2／H2b3／H2b4a／H2b4b／H2c1／H2c2／H2c3：子集已交付；完整 H2 未交付 |
 | R03 Harness 与公共规则 | 纯 Harness/NativeHarness、ToolExecutor、共享决策／证据规则、dev88纯历史策略／dev89跨Turn原生历史、Workflow Compiler/Interpreter、固定声明的 AgentHarness 组合入口；Local 原生／顺序及高级实际 Agent、Temporal 的规则／模型选择记忆、历史摘要和数据上下文，独立来源／提案／意图／回执与 Run 额度 | 其余广义 Harness 受管理阶段及默认组合；逐步提取 RuntimeKernel 纯规则；Prepare/Verify/Memory 等阶段的身份、证据、取消和恢复协议。保持 Local/Temporal 各自唯一执行权威 | H1–H3：部分抽象已实现 |
 | R04 配置与装配 | Local 版本 Profile/Catalog、JSON/TOML、工厂、sync/async 装配与历史路由；dev69 显式 Temporal Profile／十类绑定工厂、实际 Worker 排空与离线起步模块；dev70 多版本 Host、原队列 Run/Session 路由、共享资源全局排空与声明 PostgreSQL EffectJournal；dev71 普通启动参数纯预检与纠正重试；dev85版本2完整资源声明替换与互斥召回默认切换 | 复杂 SDK 对象语义的构造校验；配置迁移、剩余环境角色、完整绑定／推荐组合配置；CLI/ProfiledEngine 异步工厂路由；插件显式安装／激活／兼容检查；配置／组件迁移、旧代码归档、部署版本管理；配置来源／监听按需分期 | H1／H5：子集已交付 |
 | R05 模型适配 | Chat Completions、DeepSeek 非思考／dev90显式思考原生续接、Anthropic 文本／工具、Gemini 文本／显式原生函数、stateless Responses/JSON/完整 SSE；dev91显式 Responses reasoning/phase 原生续接与配置／恢复子集；dev87原History两阶段，dev88完整已采纳历史，dev89跨Session原生Turn，dev90原推理与工具参数、配置和恢复子集 | 其余 Responses 范围及线上型号／任务兼容、DeepSeek思考线上兼容／质量及其余受限字段；能力／用量／错误／超时／重试一致性；路由/fallback/负载策略及效果不重复契约；国内外及本地模型真实兼容矩阵。兼容 URL 不证明每个模型支持同一能力 | A1／H5：协议子集已交付，线上验收未完成 |
@@ -86,7 +93,7 @@ PG Knowledge/Inbox/Outbox、Qdrant、HTTP Embedding、Hybrid/RRF／基础重排�
 | R07 Agent 能力包 | 原生循环、可定制 AgentSpec、规划／团队／RAG starter、dev47 显式 semantic-knowledge／memory-recall／Plan／Team 默认组合；dev85显式版本2规则DAG结果串接；dev86安装后RAG与Plan／Team完整有限任务执行器 | 更完整 Search／业务 Plan／Team 与 Coding 能力包；默认 verifier／上下文／工具、替换示例、诊断及业务验收。Coding 依赖环境／Runner | H3／H4：组件有基础，完整默认组合未交付 |
 | R08 静态 Workflow | 顺序、串行／有界并行 Graph、条件／映射、Agent/Transform/Tool 节点及嵌套 | 通用受管理异步自定义节点；HumanInput/Retrieve/Planner/Verifier 节点族；受限循环；first-success/quorum/reducer 合并和类型化工作流状态。复用审批、预算与恢复 | G1/G2／H5：子集已交付 |
 | R09 流式 Workflow | 模型完整 SSE 收集、耐久 Run 事件游标 | 逐记录 StreamChannel/Source/Operator/Sink、背压、关闭／失败传播、检查点／重放和 Sink 效果身份。事件订阅和模型 delta 展示均不等于节点数据流 | G5：未交付 |
-| R10 动态规划／验证 | Rule/Model Planner、Plan/Revision、动态 DAG/CAS 修订、受限 execute/verify/replan；Local Agent纯CompletionVerifier；dev92父级原回执gate／库存默认、可替换受管理模型stage、真实Plan反馈／Team拒绝及Local／Temporal恢复 | 更多领域oracle和受管理非模型验证阶段、非literal来源证明；durable needs_input/send_input续接；复杂重规划、依赖、参数、拒绝与停止的真实模型实测。Schema合法不等于业务正确 | H2／H3／A4：子集已验收，质量未验收 |
+| R10 动态规划／验证 | Rule/Model Planner、Plan/Revision、动态 DAG/CAS 修订、受限 execute/verify/replan；Local Agent纯CompletionVerifier；dev92父级原回执gate／库存默认、可替换受管理模型stage、真实Plan反馈／Team拒绝及Local／Temporal恢复；dev93显式needs_input／ModelPlanner input_requests、固定回复Schema、自身澄清和原修订续接 | 更多领域oracle和受管理非模型验证阶段、非literal来源证明；复杂重规划、依赖、参数、拒绝与停止的真实模型实测。Schema合法不等于业务正确 | H2／H3／A4：子集已验收，质量未验收 |
 | R11 多 Agent | Sequential/Router/Supervisor、子Run、隔离Session、递归预算／取消和恢复；dev83 Local／Temporal六类实际Agent的十三角色成员绑定和节点回执完成验证；dev84新增独立artifacts成员存储／namespace | 其他角色／selector／受管理阶段；类型化交接／受控共享状态／reducer；按需Debate/Critic；跨权威关联、停止和未知远端效果；全局容量及团队质量验收。普通消息不能作为成功回执 | H1／H4／H5：基础团队已交付，完整范围未完成 |
 
 ### 工具、上下文、记忆与知识
@@ -106,10 +113,10 @@ PG Knowledge/Inbox/Outbox、Qdrant、HTTP Embedding、Hybrid/RRF／基础重排�
 | ID／层 | 当前已交付基础 | 尚未完成的具体能力 | 阶段／状态 |
 | --- | --- | --- | --- |
 | R19 执行模式／后端一致性 | Local 单 Coordinator/SQLite；Temporal 独立 History，原生 Agent/sequence 与显式发布的 Agent-node Graph/Team/Dynamic/嵌套、RAG；scoped Facts/Knowledge 与 opt-in History Sessions／原生顺序及显式高级根／成员外置数据保存 | 单 Coordinator 多 Process Worker；Temporal 其余环境绑定角色／selector、完整配置／数据迁移、其他受管理 Harness 阶段及直接 Tool/Transform 图节点等组合；共同能力／故障／升级门禁；Continue-As-New、部署版本及长期容量。PG Facts/Knowledge 不等于 PG ExecutionStore/分布式调度 | H5／C1：分布式子集已交付 |
-| R20 MQ／A2A | memory/SQLite/Redis Streams、Inbox/Outbox、PG 共享回执；A2A JSON-RPC0.3 文本/数据 polling、async controls | 保留／压缩／积压／重投递与 failover 认证；额外 Broker 按需；A2A SSE/push/files/Task continuation 及真实停止约定。ack 不等于效果确认，不承诺跨系统全局恰好一次 | H4／H5：子集已交付 |
-| R21 控制／审批／预算／容量 | 幂等命令与 DAG patch、local policy、固定动作、unknown holds／父子额度；每 Agent 固定决策／上下文／工具Action caps；Temporal timer/审批期限 | Local deadline／审批过期、输入／鉴权续接；not-executed/in-progress 核验证据；业务资源别名规范化；真实费用／共享账户；独立并发／工作区额度／背压，真实调用未退出仍占容量 | H2／H5：基础已交付 |
+| R20 MQ／A2A | memory/SQLite/Redis Streams、Inbox/Outbox、PG 共享回执；A2A JSON-RPC0.3 文本/数据 polling、async controls；dev93显式输入扩展展示公共根Task原问题／ownerTaskId，回复并恢复原任务 | 保留／压缩／积压／重投递与 failover 认证；额外 Broker 按需；A2A SSE/push/files/通用Task continuation 及真实停止约定。ack 不等于效果确认，不承诺跨系统全局恰好一次 | H4／H5：子集已交付 |
+| R21 控制／审批／预算／容量 | 幂等命令与 DAG patch、local policy、固定动作、unknown holds／父子额度；每 Agent 固定决策／上下文／工具Action caps；Temporal timer/审批期限；dev93幂等send_input、无预算重置的原输入续接 | Local deadline／审批过期、鉴权续接；not-executed/in-progress 核验证据；业务资源别名规范化；真实费用／共享账户；独立并发／工作区额度／背压，真实调用未退出仍占容量 | H2／H5：基础已交付 |
 | R22 事件／展示／观察 | 耐久 Run 事件／游标／分页、pull 订阅、SSE 编码、只读 CLI、opt-in middleware | 托管 HTTP/SSE/WebSocket；类型化 Agent/model delta、结束／取消／重连；OTel trace/metrics、跨 Run/远端关联、审计／脱敏／保留。展示 hook 不得丢失业务证据 | H2／H5／B2：观察基础已交付 |
-| R23 Service／交互／作业 | packaged 本地 HTTP/A2A service、owned shutdown、remote CLI、二十二种 wheel starter | 统一 Agent Service/sessions/资源库、默认托管／共享池、TUI/Web 基础控制台；渠道／定时／后台／唤醒／索引；审批／核验／恢复管理。现有模板不是完整应用平台 | H5／B1/B2：有限服务已交付 |
+| R23 Service／交互／作业 | packaged 本地 HTTP/A2A service、owned shutdown、remote CLI、二十三种 wheel starter（含user-input） | 统一 Agent Service/sessions/资源库、默认托管／共享池、TUI/Web 基础控制台；渠道／定时／后台／唤醒／索引；审批／核验／恢复管理。现有模板不是完整应用平台 | H5／B1/B2：有限服务已交付 |
 | R24 企业身份／运维 | 宿主 Scope、本地授权、版本固定和部分容量保护 | OIDC/企业 actor、资源 ACL/SourceCatalog、凭据代理、工作区配额；保留／迁移／备份／恢复、升级回滚、健康／HA/故障演练、自部署文档和控制面。Scope 字段不是认证体系 | H5／C2：企业目标未交付 |
 | R25 扩展验收／首用 | SDK/API/教程/恢复/发布/贡献文档、适配测试、wheel starter 和旧新兼容证据 | 外部作者可复用的按角色 AdapterContractSuite；完整声明→默认→替换→生命周期→错误→恢复示例；独立开发者换模型/库/工具/节点；性能／升级矩阵、稳定 API 弃用策略。公开 PyPI/Release／社区采用本轮未核验 | 横向验收：部分已交付 |
 | R26 真实质量／M1／比较 | 冻结 20 案例规划、八案例业务执行器；dev21 真实小试验；独立 response/receipt 窗口和 Worker 故障证据；dev85重复任务摘要与评测边界修复；dev86八类RAG来源oracle及五类库存Plan／Team回执、实际可见引用评分与私有报告 | 完整最终配置重复业务／规划／记忆／RAG 引用任务；M1 20 类原型完整 fixture/评分器；成组窗口／Temporal 契约报告；独立首次采用；同模型/工具/服务的 AgentScope/LangGraph 实现与成绩 | A4／M1／D：验收未完成 |

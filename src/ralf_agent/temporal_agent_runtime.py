@@ -11,6 +11,7 @@ from .agent_harness import AgentHarness
 from .agent_run import RunRef, WaitResult
 from .agent_runtime import AgentRun, CloseReport, Runtime, seconds
 from .errors import AuthorizationDenied, DefinitionMismatch, RuntimeClosed, ValidationError
+from .ports import is_async_callable
 from .rpc_supervisor import RpcTaskSupervisor
 from .run_supervisor import PAUSED, TERMINAL
 from .temporal import TemporalEngine
@@ -34,12 +35,12 @@ def refuse_lazy(value):
         value.close()
 
 
-def receipt_result(receipt, run_id, kind, command_id):
+def receipt_result(receipt, run_id, kind, command_id, *, allow_rejected=False):
     if (
         not isinstance(receipt, CommandReceipt)
         or (receipt.run_id, receipt.kind, receipt.command_id) != (run_id, kind, command_id)
         or receipt.record_state != "durably_recorded"
-        or receipt.apply_state != "applied"
+        or receipt.apply_state not in ({"applied", "rejected"} if allow_rejected else {"applied"})
         or not isinstance(receipt.outcome, dict)
     ):
         refuse_lazy(receipt)
@@ -77,6 +78,10 @@ class TemporalClientRuntime(Runtime):
             raise ValidationError(
                 "Temporal facade requires a TemporalEngine and explicit ownership"
             )
+        if engine.release.get("user_input_protocol") == 1 and not is_async_callable(
+            getattr(engine, "send_input", None)
+        ):
+            raise ValidationError("Selected user input requires async send_input controls")
         if close_policy != "detach":
             raise ValidationError(
                 "Temporal client Runtime supports detach only; Workers are borrowed"
@@ -383,7 +388,13 @@ class TemporalClientRuntime(Runtime):
             await self._observe_with(view, ref, "diagnostics")
             receipt = await getattr(view, method)(ref.run_id, *args, **kwargs)
             self._validate(ref)
-            return receipt_result(receipt, ref.run_id, method, kwargs["command_id"])
+            return receipt_result(
+                receipt,
+                ref.run_id,
+                method,
+                kwargs["command_id"],
+                allow_rejected=method == "send_input",
+            )
 
         return await self._supervisor.call(operation())
 
@@ -435,6 +446,16 @@ class TemporalAgentRun(AgentRun):
         timeout = None if wait_timeout is None else seconds(wait_timeout, "Wait timeout")
         loop = asyncio.get_running_loop()
         deadline = None if timeout is None else loop.time() + timeout
+
+        async def observe():
+            snapshot = await self.status()
+            available = (
+                not terminal_only
+                and snapshot.state not in TERMINAL | REMOTE_PAUSED
+                and await self._input_available()
+            )
+            return snapshot, available
+
         while True:
             self._runtime._validate(self.ref)
             remaining = None if deadline is None else max(0, deadline - loop.time())
@@ -448,18 +469,20 @@ class TemporalAgentRun(AgentRun):
                 )
                 return self._observation(reason)
             if remaining is None:
-                snapshot = await self.status()
+                snapshot, available = await observe()
             else:
                 observation_timeout = asyncio.timeout(remaining)
                 try:
                     async with observation_timeout:
-                        snapshot = await self.status()
+                        snapshot, available = await observe()
                 except TimeoutError:
                     if not observation_timeout.expired():
                         raise
                     return self._observation("observation_timeout")
             if snapshot.state in TERMINAL or not terminal_only and snapshot.state in REMOTE_PAUSED:
                 return self._observation("state_reached")
+            if available:
+                return self._observation("control_available")
             await asyncio.sleep(
                 0.05 if deadline is None else min(0.05, max(0, deadline - loop.time()))
             )

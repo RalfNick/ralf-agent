@@ -62,7 +62,10 @@ def verify_completion(engine, run_id, result):
                     for key in ("id", "tool", "arguments", "result", "receipt", "effect_key")
                 }
                 for a in run["actions"]
-                if a["node"] == run["node"] and a["kind"] == "tool" and a["status"] == "completed"
+                if a["node"] == run["node"]
+                and a["kind"] == "tool"
+                and a["status"] == "completed"
+                and "input_pending_id" not in a
             ],
         )
         identity = engine._component_identity(verifier, ("verify",), True, "Completion verifier")

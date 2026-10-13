@@ -470,7 +470,11 @@ class ComponentRegistry:
             "model",
             lambda c, ctx: {"model": ModelPlanner(**c)},
             validator=lambda c: (
-                (_fields(c, {"provider", "instructions", "version"}) or ModelPlanner(**c)) and None
+                (
+                    _fields(c, {"provider", "instructions", "version", "input_requests"})
+                    or ModelPlanner(**c)
+                )
+                and None
             ),
         )
         self.register(
@@ -608,6 +612,9 @@ class ComponentRegistry:
         from .sandbox_factories import register_sandbox_tools
 
         register_sandbox_tools(self)
+        from .user_input_factories import register_user_input_factories
+
+        register_user_input_factories(self)
 
         from .artifact_binding_factories import register_artifact_bindings
 
@@ -749,9 +756,11 @@ class RuntimeBuilder:
             raise ValidationError("Build a RuntimeProfile")
         from .parent_completion_factories import preflight_parent_completion_providers
         from .query_factories import preflight_query_providers
+        from .user_input_factories import preflight_user_input
 
         preflight_query_providers(profile)
         preflight_parent_completion_providers(profile)
+        preflight_user_input(profile)
         histories = model_history_declarations(profile)
         if histories and "model_continuation" not in profile.components:
             raise ValidationError(
@@ -845,6 +854,13 @@ class RuntimeBuilder:
                 "Execution engine factory",
             )
             validate_engine(candidate)
+            from .user_input_factories import validate_user_input_controls
+
+            validate_user_input_controls(
+                candidate,
+                context.tools,
+                policies_selected="user_input_policies" in profile.components,
+            )
             return RuntimeInstance(candidate, context)
         except Exception as exc:
             # A rejected value without close cannot own execution resources.
@@ -912,6 +928,13 @@ class RuntimeBuilder:
                 "Execution engine factory",
             )
             validate_engine(candidate)
+            from .user_input_factories import validate_user_input_controls
+
+            validate_user_input_controls(
+                candidate,
+                context.tools,
+                policies_selected="user_input_policies" in profile.components,
+            )
             return RuntimeInstance(candidate, context)
         except BaseException as exc:
             owner = candidate if callable(getattr(candidate, "close", None)) else None

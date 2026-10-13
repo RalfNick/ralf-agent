@@ -75,6 +75,14 @@ class TemporalParentState(TemporalRunState):
 
         validate_bindings(request, manifest, scope)
         self.release_digest = request_release_digest(request, manifest)
+        from .temporal_user_input import initialize as initialize_inputs
+
+        initialize_inputs(self)
+        if self.definition.get("input_policy") is not None and (
+            manifest.get("user_input_protocol") != 1
+            or self.definition["input_policy"] not in manifest.get("user_input_policies", {})
+        ):
+            raise DefinitionMismatch("Original planner input policy unavailable")
         self.state, self.revision, self.result, self.error = "queued", 0, None, None
         self.children, self.queue, self.event_log = [], [], []
         self.receipts, self.command_digests = {}, {}
@@ -249,7 +257,9 @@ class TemporalParentState(TemporalRunState):
         }
 
     def snapshot(self):
-        pending = []
+        from .temporal_user_input import pending as pending_inputs
+
+        pending = pending_inputs(self)
         for call in self.children:
             for item in call.get("snapshot", {}).get("pending", []):
                 pending.append(
@@ -278,6 +288,16 @@ class TemporalParentState(TemporalRunState):
             "manifest": detached(self.manifest),
             "release_digest": self.release_digest,
             "budget": self.budget,
+            **(
+                {"input_requests": detached(self.input_requests)}
+                if self.manifest.get("user_input_protocol") == 1
+                else {}
+            ),
+            **(
+                {"planning_input_sources": detached(self.planning_input_sources)}
+                if self.manifest.get("user_input_protocol") == 1
+                else {}
+            ),
             **(
                 {"parent_completion_stages": detached(self.parent_completion_stages)}
                 if self.manifest.get("parent_completion_protocol") == 1
@@ -348,6 +368,10 @@ class TemporalParentState(TemporalRunState):
         return super().command(command_id, payload)
 
     def _apply(self, kind, payload, command_id):
+        if kind == "send_input":
+            from .temporal_user_input import apply_reply
+
+            return apply_reply(self, payload, command_id)
         if kind == "drive":
             if self.manifest["kernel"] == "temporal-3":
                 self.memory_recovery_revision += 1
@@ -360,6 +384,9 @@ class TemporalParentState(TemporalRunState):
                 return {"rejected": True, "reason": "too_late"}
             if self.state != "cancelled":
                 self.state = "cancelled"
+                from .temporal_user_input import close_pending
+
+                close_pending(self)
                 self._emit("cancel_applied")
             return {"state_revision": self.revision, "remote_stop_confirmed": self.quiescent}
         if kind == "patch":
@@ -425,6 +452,11 @@ class TemporalParentState(TemporalRunState):
             from .dag_planning import PlanningConclusion
 
             conclusion = PlanningConclusion(**value)
+            from .temporal_user_input import adopt_planner
+
+            if adopt_planner(self, conclusion.to_dict()):
+                self._emit("planning_conclusion_adopted")
+                return
             if self.parent_completion_enabled:
                 self.planning_conclusion = conclusion.to_dict()
                 self.dag = None
@@ -579,6 +611,7 @@ class TemporalParentState(TemporalRunState):
     def next_calls(self):
         if (
             self.state in TERMINAL
+            or self.stage == "waiting_input"
             or not self.root_context_ready
             or self.pending_session is not None
             or self.root_aggregate is not None
@@ -659,6 +692,7 @@ class TemporalParentState(TemporalRunState):
                     "queued",
                     "running",
                     "waiting_approval",
+                    "waiting_input",
                     "waiting_reconciliation",
                     "outcome_unknown",
                     "cancelling",
@@ -703,6 +737,11 @@ class TemporalParentState(TemporalRunState):
                     )
                 }
             native = {}
+            if self.manifest.get("user_input_protocol") == 1:
+                from .temporal_user_input import observed_journal
+
+                native["input_requests"] = observed_journal(value, call["request"])
+                native["planning_input_sources"] = detached(value.get("planning_input_sources", {}))
             if self.manifest.get("model_history_protocol") == 2:
                 from .temporal_session_model_history import observed_bundle
 
@@ -779,7 +818,7 @@ class TemporalParentState(TemporalRunState):
                         "failed",
                         {"code": "child_run_failed", "run_id": run_id},
                     )
-                elif any(
+                elif self.manifest.get("user_input_protocol") != 1 and any(
                     c["state"] == "waiting_approval" for c in self.children if not c.get("settled")
                 ):
                     self.state = "waiting_approval"
@@ -789,6 +828,17 @@ class TemporalParentState(TemporalRunState):
                     if not c.get("settled")
                 ):
                     self.state = "outcome_unknown"
+                elif any(
+                    c["state"] == "waiting_approval" for c in self.children if not c.get("settled")
+                ):
+                    self.state = "waiting_approval"
+                elif (
+                    any(
+                        c["state"] == "waiting_input" for c in self.children if not c.get("settled")
+                    )
+                    or self.stage == "waiting_input"
+                ):
+                    self.state = "waiting_input"
                 else:
                     self.state = "running"
             self._emit(
@@ -836,6 +886,8 @@ class TemporalParentState(TemporalRunState):
         return {"plan_revision": self.plan_revision, "state_revision": self.revision}
 
     def planning_request(self):
+        from .temporal_user_input import clarifications
+
         results = [
             {"id": c["id"], "member": c["member"], "result": c["snapshot"]["result"]}
             for c in self.children
@@ -866,6 +918,7 @@ class TemporalParentState(TemporalRunState):
                 if self.verification_feedback is not None
                 else {}
             ),
+            **({"clarifications": clarifications(self)} if clarifications(self) else {}),
         ).to_dict()
 
     def accept_verification(self, value):

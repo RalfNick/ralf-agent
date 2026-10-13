@@ -4,7 +4,7 @@ import copy
 
 from .engine import TERMINAL, LocalEngine
 from .errors import ValidationError
-from .types import digest
+from .types import RunSnapshot, digest
 from .workflow import (
     ExecutionPlan,
     StaticWorkflowCompiler,
@@ -195,6 +195,12 @@ class NodeEngine(LocalEngine):
     def _check_release(self, run):
         self.parent._check_release(self.parent._authorized(run["id"]))
         super()._check_release(run)
+
+    def status(self, run_id):
+        frame = self._authorized(run_id)
+        if "input_requests" in frame:
+            frame = {**frame, "release_digest": self.parent._authorized(run_id)["release_digest"]}
+        return RunSnapshot.from_record(frame)
 
     def _operation_active(self, run_id):
         # The parent owns this Task and all real worker threads. Sibling threads

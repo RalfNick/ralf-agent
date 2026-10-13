@@ -370,6 +370,8 @@ class TemporalEngine:
         text(command_id, "Command ID")
         sdk = _sdk()
         payload = {"kind": kind, "scope": asdict(self.scope), **values}
+        if kind == "send_input":
+            payload["run_id"] = run_id
         await self._view(run_id, "status")
         await self._guard(kind, command_id, run_id, payload)
         try:
@@ -386,8 +388,25 @@ class TemporalEngine:
                 raise NotFound("Temporal Run was not found") from None
             raise
         if receipt["apply_state"] == "rejected":
+            if kind == "send_input":
+                return CommandReceipt(**receipt)
             _raise_code(receipt["outcome"]["error"])
         return CommandReceipt(**receipt)
+
+    async def send_input(
+        self, run_id, pending_id, target_digest, value, *, command_id, expected_state_revision=None
+    ):
+        from .user_input import input_reply_payload
+
+        payload = input_reply_payload(
+            run_id,
+            pending_id,
+            target_digest,
+            value,
+            expected_state_revision=expected_state_revision,
+        )
+        payload.pop("run_id")
+        return await self._command(run_id, "send_input", command_id, **payload)
 
     async def approve(self, run_id, action_id, target_digest, *, command_id, approved=True):
         return await self._command(
@@ -538,6 +557,8 @@ def _workflow_runner():
             "ralf_agent.temporal_bindings",
             "ralf_agent.temporal_context",
             "ralf_agent.model_history",
+            "ralf_agent.user_input",
+            "ralf_agent.temporal_user_input",
             "ralf_agent.temporal_context_read_protocol",
             "ralf_agent.temporal_context_read_state",
             "ralf_agent.temporal_tool_execution",
