@@ -157,6 +157,13 @@ from .messaging import Delivery, InMemoryMessageBus, MessageBus, MessageBusError
 from .middleware import LoggingMiddleware, NoopMiddleware
 from .middleware_models import MiddlewareProvider
 from .middleware_tools import MiddlewareToolExecutor
+from .model_adapter_contract import (
+    ModelAdapterFixture,
+    ModelContractPause,
+    ModelContractResource,
+    ModelContractSession,
+)
+from .model_adapter_contract_reference import offline_model_fixture
 from .model_compatibility import evaluate_model_compatibility
 from .model_context import FrozenContextSummarizer, ManagedModelSummarizer, ManagedSummary
 from .model_continuation import ContinuedModelResponse, ModelContinuation
@@ -385,7 +392,7 @@ from .workflow import (
     WorkflowSelection,
 )
 
-__version__ = "0.1.0.dev96"
+__version__ = "0.1.0.dev97"
 from .binding_artifacts import ArtifactBindingResource, ArtifactView
 from .binding_sandbox import SandboxBindingResource
 from .docker_sandbox import DockerSandbox
@@ -896,4 +903,12 @@ __all__ += [
     "FactsContractResource",
     "FactsContractSession",
     "offline_facts_fixture",
+]
+
+__all__ += [
+    "ModelAdapterFixture",
+    "ModelContractPause",
+    "ModelContractResource",
+    "ModelContractSession",
+    "offline_model_fixture",
 ]

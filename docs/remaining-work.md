@@ -1,4 +1,6 @@
-# dev96：剩余能力与架构验收清单
+# dev97：剩余能力与架构验收清单
+
+Dev97 模型替换与业务组合子集已验收：固定 model-provider core P01–P10／tools P01–P16、可编辑 SQLite 供应方、SDK／JSON／TOML、同步／异步与 owned／borrowed 装配接通 Agent／当前来源 RAG／规则 DAG Plan／Supervisor Team。最终源码 8183 passed／617 配置依赖跳过；独立核心／SDK 各 205 项零跳过，修复后的安装应用共 192 种配置组合通过。六项 P2 经同一审查者闭环；实际原响应、审批效果与遗失响应窗口、旧 dev96 的 16 组 Run／Turn 双向恢复、8 类原生模型方法与默认及 K/S/Facts 字节兼容通过。345 产品模块与安装包保持一致。新返回模型证据以 128 层容器为界，超限保留完成与结算，历史已接收记录保持。未重新验收真实模型、远程服务、Temporal 或独立采用；完整 R01–R26／H3／M1、路由、索引生命周期和质量目标继续开放。 见[验收记录](../architecture/reviews/2026-10-13-model-adapter-contracts.md)。
 
 Dev96 Facts 存储契约子集已验收：core F01–F10／managed F01–F16，独立 SQLite 替换、SDK／JSON／TOML、同步／异步装配及原提炼／受管理恢复通过。最终源码 7989 passed／617 配置依赖跳过；独立核心／SDK 各 262 项零跳过，每套安装示例完成同一应用 24 种配置组合及实际原工厂恢复。旧 dev95 的 16 组 Run／Turn 双向兼容、80 个已回收子进程、原默认／方法／K/S 字节及 342 模块一致通过。一次独立审查的三项 P2 已由同一审查者闭环，含慢速／最长及空白 namespace、历史计数与审计快照修复。本批没有重新验收真实远程服务、Temporal、模型／语义质量或独立采用；其他角色、索引生命周期、完整 R25／R01–R26／H3／M1 继续开放。 见[验收记录](../architecture/reviews/2026-10-13-facts-adapter-contracts.md)。
 
@@ -123,9 +125,9 @@ PG Knowledge/Inbox/Outbox、Qdrant、HTTP Embedding、Hybrid/RRF／基础重排�
 | R20 MQ／A2A | memory/SQLite/Redis Streams、Inbox/Outbox、PG 共享回执；A2A JSON-RPC0.3 文本/数据 polling、async controls；dev93显式输入扩展展示公共根Task原问题／ownerTaskId，回复并恢复原任务 | 保留／压缩／积压／重投递与 failover 认证；额外 Broker 按需；A2A SSE/push/files/通用Task continuation 及真实停止约定。ack 不等于效果确认，不承诺跨系统全局恰好一次 | H4／H5：子集已交付 |
 | R21 控制／审批／预算／容量 | 幂等命令与 DAG patch、local policy、固定动作、unknown holds／父子额度；每 Agent 固定决策／上下文／工具Action caps；Temporal timer/审批期限；dev93幂等send_input、无预算重置的原输入续接 | Local deadline／审批过期、鉴权续接；not-executed/in-progress 核验证据；业务资源别名规范化；真实费用／共享账户；独立并发／工作区额度／背压，真实调用未退出仍占容量 | H2／H5：基础已交付 |
 | R22 事件／展示／观察 | 耐久 Run 事件／游标／分页、pull 订阅、SSE 编码、只读 CLI、opt-in middleware | 托管 HTTP/SSE/WebSocket；类型化 Agent/model delta、结束／取消／重连；OTel trace/metrics、跨 Run/远端关联、审计／脱敏／保留。展示 hook 不得丢失业务证据 | H2／H5／B2：观察基础已交付 |
-| R23 Service／交互／作业 | packaged 本地 HTTP/A2A service、owned shutdown、remote CLI、二十六种已验收 wheel starter（含user-input、adapter-contracts、session-contracts、facts-contracts） | 统一 Agent Service/sessions/资源库、默认托管／共享池、TUI/Web 基础控制台；渠道／定时／后台／唤醒／索引；审批／核验／恢复管理。现有模板不是完整应用平台 | H5／B1/B2：有限服务已交付 |
+| R23 Service／交互／作业 | packaged 本地 HTTP/A2A service、owned shutdown、remote CLI、二十七种已验收 wheel starter（含user-input、adapter-contracts、session-contracts、facts-contracts、model-contracts） | 统一 Agent Service/sessions/资源库、默认托管／共享池、TUI/Web 基础控制台；渠道／定时／后台／唤醒／索引；审批／核验／恢复管理。现有模板不是完整应用平台 | H5／B1/B2：有限服务已交付 |
 | R24 企业身份／运维 | 宿主 Scope、本地授权、版本固定和部分容量保护 | OIDC/企业 actor、资源 ACL/SourceCatalog、凭据代理、工作区配额；保留／迁移／备份／恢复、升级回滚、健康／HA/故障演练、自部署文档和控制面。Scope 字段不是认证体系 | H5／C2：企业目标未交付 |
-| R25 扩展验收／首用 | SDK/API/教程/恢复/发布/贡献文档、wheel starter 和旧新兼容；dev94知识角色v1固定黑盒Suite、独立可编辑外部Source、配置／生命周期／原真实进程恢复子集；dev95 Session core／receipts、独立替换与原保存恢复子集已验收；dev96 Facts core／managed、独立替换及原提炼／受管理恢复子集已验收 | Facts 索引／严格非法输入及其余完整组合；模型／工具等其余角色Suite；Session 严格非法输入和其余完整替换／恢复组合；独立开发者换模型/库/工具/节点；性能／升级矩阵、稳定 API 弃用策略。公开 PyPI/Release／社区采用本轮未核验 | 横向验收：知识／Session／Facts 角色子集已交付，完整R25未完成 |
+| R25 扩展验收／首用 | SDK/API/教程/恢复/发布/贡献文档、wheel starter 和旧新兼容；dev94知识角色v1固定黑盒Suite、独立可编辑外部Source、配置／生命周期／原真实进程恢复子集；dev95 Session core／receipts、独立替换与原保存恢复子集已验收；dev96 Facts core／managed、独立替换及原提炼／受管理恢复子集已验收；dev97 ModelProvider core／tools 和原 Agent／RAG／Plan／Team 配置与恢复子集已验收 | Facts 索引／严格非法输入及其余完整组合；其余模型协议组合与工具等其余角色Suite；Session 严格非法输入和其余完整替换／恢复组合；独立开发者换模型/库/工具/节点；性能／升级矩阵、稳定 API 弃用策略。公开 PyPI/Release／社区采用本轮未核验 | 横向验收：知识／Session／Facts／模型角色子集已交付，完整R25未完成 |
 | R26 真实质量／M1／比较 | 冻结 20 案例规划、八案例业务执行器；dev21 真实小试验；独立 response/receipt 窗口和 Worker 故障证据；dev85重复任务摘要与评测边界修复；dev86八类RAG来源oracle及五类库存Plan／Team回执、实际可见引用评分与私有报告 | 完整最终配置重复业务／规划／记忆／RAG 引用任务；M1 20 类原型完整 fixture/评分器；成组窗口／Temporal 契约报告；独立首次采用；同模型/工具/服务的 AgentScope/LangGraph 实现与成绩 | A4／M1／D：验收未完成 |
 
 每层的完成条件都是：公共契约、最小默认、另一实现替换、配置／注入、身份／错误／

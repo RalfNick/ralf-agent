@@ -232,6 +232,11 @@ class LocalEngine:
             raise ValidationError("BindingCatalog must match the trusted Engine Scope")
         self.binding_catalog = binding_catalog
         self._bindings = AgentBindingResolver(self)
+        # Live method bindings supplement the provider's declared version
+        # identity without changing durable release bytes. Only currently
+        # configured providers are retained, not objects from historical Runs.
+        # Declared versions still identify implementations across rebuilds.
+        self._provider_method_pins = []
         self.policy = policy
         self.owner = uuid.uuid4().hex
         self._active = set()
@@ -557,6 +562,7 @@ class LocalEngine:
                 raise ValidationError("ModelProvider.complete must be an async method")
             if not isinstance(getattr(provider, "identity", None), dict) or not provider.identity:
                 raise ValidationError("ModelProvider.identity must be a non-empty JSON object")
+            self._check_provider_method(provider)
             providers[step["provider"]] = copy.deepcopy(provider.identity)
             continuation = provider_continuation_identity(provider)
             if continuation is not None and not self.model_continuation:
@@ -2120,11 +2126,40 @@ class LocalEngine:
         return self._adopt_model_response(run_id, action["id"])
 
     def _check_provider_release(self, run, provider, name):
+        self._check_provider_method(provider)
+        if self._components(run).provider is not provider:
+            raise DefinitionMismatch("The executing model Provider is no longer selected")
         self._check_release(run)
         if digest(self._component_identity(provider, ("complete",), False, "Provider")) != digest(
             self._step_manifest(run)["providers"][name]
         ):
             raise DefinitionMismatch("The executing model Provider differs from this Run")
+
+    def _check_provider_method(self, provider):
+        from .binding_artifacts import _same_binding
+        from .task_controls import _binding
+
+        current = list(self.providers.values())
+        if self.binding_catalog is not None:
+            current.extend(
+                component
+                for (role, _, _), (component, _) in self.binding_catalog._entries.items()
+                if role == "provider"
+            )
+        self._provider_method_pins[:] = [
+            entry
+            for entry in self._provider_method_pins
+            if any(entry[0] is value for value in current)
+        ]
+        if not any(provider is value for value in current):
+            raise DefinitionMismatch("The executing model Provider is no longer configured")
+        binding = _binding(provider.complete)
+        for owner, expected in self._provider_method_pins:
+            if owner is provider:
+                if not _same_binding(binding, expected):
+                    raise DefinitionMismatch("The live model Provider method changed")
+                return
+        self._provider_method_pins.append((provider, binding))
 
     def _preflight_provider_request(self, run_id, provider, name, messages, descriptions):
         """Optional pure validation before reserving or starting a model call."""

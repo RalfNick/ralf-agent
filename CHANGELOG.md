@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.0.dev97 — ModelProvider replacement
+
+- Develop fixed core/tools ModelProvider contracts and an editable configured
+  Agent/RAG/Plan/Team business application under the original execution authority.
+- Preserve explicit resume/new-Attempt cost semantics and original unknown holds;
+  read-only inspection does not dispatch. Six P2 repairs are closed; frozen source 8183 passed / 617 configured skips, core/SDK each 205 zero-skip checks, repaired application 192 configurations, original dev96 compatibility and 345-module provenance pass. Actual model/service quality and full R01–R26 remain open.
+
 ## 0.1.0.dev96 — Facts adapter contract preview
 
 - Develop explicit core and managed Facts profiles with current reads, CAS, expiry, bounded recall and original memory-stage recovery checks.

@@ -101,6 +101,22 @@ jobs:
           python -m agent_app run --mode core --format json --command-id CI-EXTERNAL-FACTS-CORE
           python -m agent_app run --mode pipeline --format toml --async --command-id CI-EXTERNAL-FACTS-PIPELINE
           python -m agent_app run --mode managed --borrowed --command-id CI-EXTERNAL-FACTS-MANAGED
+      - name: Installed ModelProvider replacements outside checkout
+        working-directory: ${{ runner.temp }}
+        run: |
+          python -m pytest -q -W error -p no:cacheprovider -c /dev/null "$RUNNER_TEMP/session-contracts/tests/test_model_adapter_catalog.py" "$RUNNER_TEMP/session-contracts/tests/test_model_adapter_roles.py" "$RUNNER_TEMP/session-contracts/tests/test_model_adapter_cli.py" "$RUNNER_TEMP/session-contracts/tests/test_model_adapter_contract.py" "$RUNNER_TEMP/session-contracts/tests/test_model_adapter_reference.py" "$RUNNER_TEMP/session-contracts/tests/test_model_adapter_starter.py" "$RUNNER_TEMP/session-contracts/tests/test_model_adapter_recovery.py" "$RUNNER_TEMP/session-contracts/tests/test_model_evidence.py" "$RUNNER_TEMP/session-contracts/tests/test_model_compatibility.py"
+          ralf-check-adapter --role model-provider --profile core
+          ralf-check-adapter --role model-provider --profile tools --offline --evidence-dir "$RUNNER_TEMP/model-adapter-evidence"
+          ralf-check-model
+          ralf init wheel-model-adapter --template model-contracts
+          cd wheel-model-adapter
+          python -m agent_app check
+          python -m agent_app check --profile tools
+          python -m agent_app seed
+          python -m agent_app run --kind agent --format sdk --command-id CI-MODEL-AGENT
+          python -m agent_app run --kind rag --format json --provider alternate --async --command-id CI-MODEL-RAG
+          python -m agent_app run --kind plan --format toml --borrowed --command-id CI-MODEL-PLAN
+          python -m agent_app run --kind team --format toml --provider alternate --borrowed --command-id CI-MODEL-TEAM
       - name: Installed Skill document contracts outside checkout
         working-directory: ${{ runner.temp }}
         run: |

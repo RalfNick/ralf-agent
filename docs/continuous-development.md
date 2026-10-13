@@ -1,7 +1,7 @@
 # 持续能力开发与验收队列
 
 用户授权：2026-10-10 持续执行直到能力完成；当前接续先补齐完整默认单 Agent、语义 RAG、Plan／Team 主链路，再分阶段验收全部能力。只本地提交，不推送远端。
-dev95 已本地提交（`a147fde`），dev96 Facts 基础／受管理替换与原记忆恢复子集已验收，当前完成本地交付；实际提交以 Git 为准。下一批沿现有执行权威补齐 ModelProvider 固定契约及单 Agent／RAG／Plan／Team 可编辑业务组合；完整 R01–R26、索引生命周期、环境与质量目标保持。
+dev96 已本地提交（`a55cf20`），Facts 基础／受管理替换与原记忆恢复子集已验收。dev97 ModelProvider 固定契约及单 Agent／RAG／Plan／Team 可编辑业务组合子集已验收，本地交付以实际 Git 为准。下一批继续默认链路的自动 Facts 索引维护；完整 R01–R26、环境与质量目标保持。
 权威范围保持[剩余清单](remaining-work.md) R01–R26、[Harness 架构](../architecture/viewpoints/harness-runtime.md) H1–H5；下文排序不删除或缩小任何目标，也不新增执行权威。
 历史设计中明确后置的高级 Realtime/TTS、公共插件市场和运行中热迁移保持单独路线图；按需适配器不以数量定义完成。完整 M1、对等框架比较和企业正式可用仍未完成。
 
@@ -201,3 +201,8 @@ source-once Context／RAG／记忆、真实处理器结束通知接通。唯一�
 环境／Runner、长期容量／迁移及真实质量。完整 R01–R26 继续 active；只本地提交，不推送。
 
 最终冻结产品全量7679 exit0；安装全服务57843 exit0。旧新默认、21 starters、typed Session、Local审批与Temporal默认/native-v1 History兼容通过；旧66 Worker新协议无业务Activity即拒绝。实际源码41/469.59s在主P1修复后、最后重复拒绝分支前，最终安装41重新覆盖全部服务形状。唯一审查的读者P1以2状态+1真实线程+1重复读者RED→GREEN闭环；一项候选注释Minor待修。PostgreSQL65460、Temporal92718均exit0，PGstopped=0，测试Worker全部结束。仅本地提交；完整R01–R26目标active。
+
+
+## dev97 模型替换与业务组合
+
+Dev97 模型替换与业务组合子集已验收：固定 model-provider core P01–P10／tools P01–P16、可编辑 SQLite 供应方、SDK／JSON／TOML、同步／异步与 owned／borrowed 装配接通 Agent／当前来源 RAG／规则 DAG Plan／Supervisor Team。最终源码 8183 passed／617 配置依赖跳过；独立核心／SDK 各 205 项零跳过，修复后的安装应用共 192 种配置组合通过。六项 P2 经同一审查者闭环；实际原响应、审批效果与遗失响应窗口、旧 dev96 的 16 组 Run／Turn 双向恢复、8 类原生模型方法与默认及 K/S/Facts 字节兼容通过。345 产品模块与安装包保持一致。新返回模型证据以 128 层容器为界，超限保留完成与结算，历史已接收记录保持。未重新验收真实模型、远程服务、Temporal 或独立采用；完整 R01–R26／H3／M1、路由、索引生命周期和质量目标继续开放。 见[验收记录](../architecture/reviews/2026-10-13-model-adapter-contracts.md)。

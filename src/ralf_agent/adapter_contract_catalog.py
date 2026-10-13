@@ -1,7 +1,7 @@
 """Frozen adapter requirements selected by role, contract version and profile.
 
 Catalogs supply metadata, never fixture capabilities or verdicts. Knowledge v1
-retains its original digest input; explicit Session and Facts profiles have
+retains its original digest input; explicit Session, Facts and Model profiles have
 separate case requirements and include their profile in the suite digest.
 """
 
@@ -58,6 +58,24 @@ FACTS_CONTRACT_CASES = (
     ("F14", "pipeline-partial-replay"),
     ("F15", "accepted-write-lost-ack"),
     ("F16", "receipt-and-settlement-recovery"),
+)
+MODEL_CONTRACT_CASES = (
+    ("P01", "identity-and-port"),
+    ("P02", "response-and-metering"),
+    ("P03", "detached-request-and-response"),
+    ("P04", "completed-invalid-evidence"),
+    ("P05", "provider-errors"),
+    ("P06", "component-drift"),
+    ("P07", "backend-drift"),
+    ("P08", "lifecycle-and-suspension"),
+    ("P09", "local-consumer"),
+    ("P10", "recorded-response-recovery"),
+    ("P11", "tool-proposals-and-schema"),
+    ("P12", "authorization-boundary"),
+    ("P13", "durable-approval"),
+    ("P14", "followup-tool-evidence"),
+    ("P15", "duplicate-submit-replay"),
+    ("P16", "accepted-call-lost-response"),
 )
 _BOOLEAN_OBSERVATIONS = frozenset(
     (
@@ -133,6 +151,28 @@ _FACTS_COUNTS = frozenset(
         "skipped",
         "duplicate_checks",
         "settlement_checks",
+    )
+)
+_MODEL_COUNTS = frozenset(
+    (
+        "model_calls",
+        "request_count",
+        "response_count",
+        "close_calls",
+        "backend_switches",
+        "identity_checks",
+        "method_checks",
+        "consumer_runs",
+        "rejection_checks",
+        "received_count",
+        "adopted_count",
+        "tool_calls",
+        "write_count",
+        "approval_count",
+        "duplicate_checks",
+        "reservation_checks",
+        "settlement_checks",
+        "reopen_calls",
     )
 )
 STATUS_CODES = MappingProxyType(
@@ -235,6 +275,22 @@ _FACTS_MANAGED = AdapterContractCatalog(
     _BOOLEAN_OBSERVATIONS,
     _FACTS_COUNTS,
 )
+_MODEL_CORE = AdapterContractCatalog(
+    "model-provider",
+    "1",
+    "core",
+    MODEL_CONTRACT_CASES[:10],
+    _BOOLEAN_OBSERVATIONS,
+    _MODEL_COUNTS,
+)
+_MODEL_TOOLS = AdapterContractCatalog(
+    "model-provider",
+    "1",
+    "tools",
+    MODEL_CONTRACT_CASES,
+    _BOOLEAN_OBSERVATIONS,
+    _MODEL_COUNTS,
+)
 _CATALOGS = MappingProxyType(
     {
         (catalog.role, catalog.contract_version, catalog.profile): catalog
@@ -244,13 +300,15 @@ _CATALOGS = MappingProxyType(
             _SESSION_RECEIPTS,
             _FACTS_CORE,
             _FACTS_MANAGED,
+            _MODEL_CORE,
+            _MODEL_TOOLS,
         )
     }
 )
 _CASE_CATALOGS = MappingProxyType(
     {
         case_id: catalog
-        for catalog in (_KNOWLEDGE, _SESSION_RECEIPTS, _FACTS_MANAGED)
+        for catalog in (_KNOWLEDGE, _SESSION_RECEIPTS, _FACTS_MANAGED, _MODEL_TOOLS)
         for case_id in catalog.case_ids
     }
 )

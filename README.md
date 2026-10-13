@@ -2,6 +2,8 @@
 
 dev96 已验收 [Facts 适配契约](docs/facts-adapter-contracts.md)：可编辑 SQLite 实现、SDK／JSON／TOML 替换及原记忆流程恢复。完整回归 7989 passed／617 配置依赖跳过；[验收记录](architecture/reviews/2026-10-13-facts-adapter-contracts.md)说明安装、兼容和恢复证据。完整能力、真实质量和独立采用继续验收。
 
+dev97 已验收 [模型替换与业务组合](docs/model-adapter-contracts.md)：可编辑 Provider 与 Agent／RAG／Plan／Team、192 种安装配置组合和原恢复。完整回归 8183 passed／617 配置依赖跳过；边界见[验收记录](architecture/reviews/2026-10-13-model-adapter-contracts.md)。
+
 dev95 已验收 [Session 适配契约](docs/session-adapter-contracts.md)：基础存储与准确回执分开，提供可编辑 SQLite 替换、安装后示例和原保存恢复。完整能力及真实质量仍按[剩余清单](docs/remaining-work.md)逐项验收。
 
 dev94 已验收首个[知识适配契约套件](docs/adapter-contracts.md)：安装后可运行固定 K01–K12、编辑独立适配器并通过 JSON／TOML 接入 Agent／RAG／Plan／Team。保持原执行权威和旧默认；模型／语义质量、其他角色及完整能力继续验收。见[本批记录](architecture/reviews/2026-10-13-knowledge-adapter-contracts.md)。

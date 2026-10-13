@@ -1,5 +1,6 @@
 """Completed model evidence is distinct from an accepted model decision."""
 
+import asyncio
 import copy
 import inspect
 import json
@@ -7,23 +8,56 @@ import json
 from .errors import ValidationError
 from .types import ModelResponse, ToolCall, canonical
 
+_MAX_MODEL_RESPONSE_NESTING = 128
 
-def _close_lazy(value, seen=None):
-    seen = set() if seen is None else seen
-    if id(value) in seen:
-        return
-    seen.add(id(value))
-    if inspect.iscoroutine(value) or inspect.isgenerator(value):
-        value.close()
-    elif isinstance(value, ToolCall):
-        for item in (value.name, value.arguments, value.call_id):
-            _close_lazy(item, seen)
-    elif isinstance(value, dict):
-        for item in value.values():
-            _close_lazy(item, seen)
-    elif isinstance(value, (tuple, list)):
-        for item in value:
-            _close_lazy(item, seen)
+
+def _check_container_depth(value):
+    """Bound newly returned evidence, not the definition of finite JSON.
+
+    Response fields later sit inside Actions, Runs and public snapshots. A
+    fixed conservative container limit keeps all their durable detachments
+    safe instead of depending on the interpreter's current recursion margin.
+    Already received records are not revalidated or rewritten by this policy.
+    """
+    pending, visited = [(value, 0)], {}
+    while pending:
+        item, depth = pending.pop()
+        if not isinstance(item, (dict, tuple, list)):
+            continue
+        depth += 1
+        if depth > _MAX_MODEL_RESPONSE_NESTING:
+            raise ValidationError("New model response evidence exceeds container nesting limit")
+        if visited.get(id(item), -1) >= depth:
+            continue
+        visited[id(item)] = depth
+        children = item.values() if isinstance(item, dict) else item
+        pending.extend((child, depth) for child in children)
+
+
+def _close_lazy(value):
+    # Invalid completed evidence may exceed the JSON encoder's recursion limit
+    # or contain cycles. Cleanup must not lose the known completion as well.
+    pending, seen = [value], set()
+    while pending:
+        item = pending.pop()
+        if id(item) in seen:
+            continue
+        seen.add(id(item))
+        if inspect.iscoroutine(item) or inspect.isgenerator(item):
+            try:
+                item.close()
+            except (Exception, asyncio.CancelledError):
+                # A supplier generator's finally block can fail during close.
+                # The original value remains completed-invalid evidence, and
+                # its failure must not strand other lazy descendants.
+                pass
+        elif isinstance(item, ToolCall):
+            pending.extend((item.name, item.arguments, item.call_id))
+        elif isinstance(item, dict):
+            pending.extend(item.keys())
+            pending.extend(item.values())
+        elif isinstance(item, (tuple, list)):
+            pending.extend(item)
 
 
 def snapshot_model_response(response):
@@ -41,8 +75,16 @@ def snapshot_model_response(response):
                 for call in value
             ]
         try:
-            received[field] = json.loads(canonical(encoded))
-        except ValidationError:
+            _check_container_depth(encoded)
+            # The durable authority detaches received evidence before recording
+            # it. Some Python JSON encoders accept a deeper tree than deepcopy;
+            # verify that boundary here while completion is still known.
+            serialized = canonical(encoded)
+            # Durable SQLite text and response digests both require UTF-8.
+            # Python's JSON encoder can otherwise retain unpaired surrogates.
+            serialized.encode("utf-8")
+            received[field] = copy.deepcopy(json.loads(serialized))
+        except (ValidationError, RecursionError, UnicodeError):
             _close_lazy(value)
             received[field] = fallback
             invalid.append(field)
@@ -50,8 +92,11 @@ def snapshot_model_response(response):
 
     if isinstance(response, ContinuedModelResponse):
         try:
-            received["continuation"] = response.continuation.to_dict()
-        except (AttributeError, TypeError, ValidationError):
+            continuation = response.continuation.to_dict()
+            _check_container_depth(continuation)
+            canonical(continuation).encode("utf-8")
+            received["continuation"] = continuation
+        except (AttributeError, TypeError, ValidationError, RecursionError, UnicodeError):
             received["continuation"] = None
             invalid.append("continuation")
     if invalid:
