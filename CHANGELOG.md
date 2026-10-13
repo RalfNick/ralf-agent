@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.0.dev99 — Reference business delivery gates
+
+- Add explicit inventory member completion verification through existing per-Agent bindings, committed tool receipts and bounded feedback; preserve legacy defaults and original parent completion checks.
+- Provide an installed local semantic RAG reference application with explicit pinned model assets, optional CPU dependencies, borrowed generation/embedding components and owned worker cleanup. Add opt-in native JSON answer instructions without changing strict scoring or old prompts.
+- Prioritize installed SingleAgent, semantic RAG, Plan and Team delivery gates. Preserve unsuccessful real-model baselines and distinguish finite reference task quality from framework, deployment and adoption acceptance. Close the finite Local reference gates after 8397 source checks / 617 configured skips, core/SDK each 254 installed checks, actual bound-member process recovery and dev98 compatibility. Semantic RAG passes 24/24; separately frozen non-JSON Plan/Team each pass 15/15, with all prior failures preserved. SingleAgent reuses the unchanged dev98 24/24 chain with dev99 installation checks. Full R01–R26 remains open. Local commit only, no public release claim. [Acceptance](architecture/reviews/2026-10-13-phase1-business-chains.md).
+
 ## 0.1.0.dev98 — Managed native Facts index maintenance
 
 - Add opt-in source-snapshot generations and an original Graph ToolAction before an ordinary reader Agent. Preserve original index defaults, current-source validation, execution authority and exact historical effect receipts.

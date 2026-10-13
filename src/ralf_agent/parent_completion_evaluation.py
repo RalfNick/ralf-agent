@@ -12,7 +12,7 @@ from .decisions import final_output
 from .errors import ValidationError
 from .orchestration_evaluation import _CHECKS, _consumed, _input_model, _score
 from .parent_completion import ParentCompletionRequest, ParentCompletionVerdict
-from .types import digest
+from .types import canonical, digest
 
 _JOURNAL_FIELDS = {
     "schema_version",
@@ -49,6 +49,87 @@ def _release(run):
     )
 
 
+def _bound_worker(parent, child, member, expected_definition):
+    """Validate the original member projection, not a fresh binding resolution."""
+    name = member["name"]
+    path = parent["definition"]["kind"] + "/members/" + name
+    wrapper = parent["definition"]["binding_definition"]
+    declared = wrapper["agent_bindings"][path]
+    entry = parent["manifest"]["agent_bindings"]["steps"][path]
+    identity = {
+        "kind": "inventory-member-completion-verifier",
+        "version": "1",
+        "member": name,
+        "request_pointer": "/request",
+    }
+    verifier = {"mode": "ref", "component_id": "inventory-" + name, "version": "1"}
+    _require(name in {"researcher", "writer"})
+    _require(wrapper["kind"] == "bound_definition")
+    _require(canonical(declared) == canonical(entry["descriptor"]))
+    _require(canonical(declared["verifier"]) == canonical(verifier))
+    _require(
+        all(
+            canonical(value) == canonical({"mode": "inherit"})
+            for role, value in declared.items()
+            if role not in {"schema_version", "verifier"}
+        )
+    )
+    _require(
+        canonical(entry["resolved"]["verifier"])
+        == canonical(
+            {
+                "role": "verifier",
+                "component_id": "inventory-" + name,
+                "version": "1",
+                "interface_version": 1,
+                "scope": parent["scope"],
+                "identity": identity,
+            }
+        )
+    )
+    _require(canonical(entry["manifest"]["completion_verifier"]) == canonical(identity))
+    expected_binding = {
+        "kind": "bound_agent",
+        "schema_version": 1,
+        "bindings": declared,
+        "spec": {k: v for k, v in member.items() if k != "kind"},
+    }
+    _require(
+        canonical(child["definition"])
+        == canonical(
+            {
+                **expected_definition,
+                "binding_definition": expected_binding,
+            }
+        )
+    )
+    _require(
+        canonical(child["manifest"]["agent_bindings"])
+        == canonical(
+            {
+                "schema_version": 1,
+                "steps": {"agent": entry},
+            }
+        )
+    )
+    recorded_release = parent["manifest"]["orchestration"]["members"][name]
+    _require(
+        canonical({k: v for k, v in child["manifest"].items() if k != "parent_call"})
+        == canonical(recorded_release)
+    )
+    _require(
+        canonical(entry["manifest"]["tools"])
+        == canonical({tool: parent["manifest"]["tools"][tool] for tool in member["tools"]})
+    )
+
+
+def _leaf_manifest(child):
+    manifest = child["manifest"]
+    if "agent_bindings" in manifest:
+        return manifest["agent_bindings"]["steps"]["agent"]["manifest"]
+    return manifest
+
+
 def _owned_runs(parent, children):
     calls = parent["orchestration"]["children"]
     _require(type(children) is list and len(calls) == len(children))
@@ -73,21 +154,24 @@ def _owned_runs(parent, children):
         _release(child)
         if call["role"] == "worker":
             member = parent["definition"]["members"][call["member"]]
-            _require(
-                member.get("kind", "agent") == "agent"
-                and child["definition"]
-                == {
-                    "kind": "agent",
-                    "name": member["name"],
-                    "version": member["version"],
-                    "steps": [{k: v for k, v in member.items() if k != "kind"}],
-                }
-            )
+            _require(member.get("kind", "agent") == "agent")
+            expected_definition = {
+                "kind": "agent",
+                "name": member["name"],
+                "version": member["version"],
+                "steps": [{k: v for k, v in member.items() if k != "kind"}],
+            }
+            if "agent_bindings" in parent["manifest"]:
+                _bound_worker(parent, child, member, expected_definition)
+            else:
+                _require(child["definition"] == expected_definition)
             _require(not call["planning"] and call["proposal"]["member"] == call["member"])
             _require(call["proposal"]["input"] == child["input"])
             # Leaf releases share the parent's configured components but pin
             # only their own declared tools and native leaf kernel.
             excluded = {"kernel", "tools", "parent_call"}
+            if "agent_bindings" in parent["manifest"]:
+                excluded.add("agent_bindings")
             _require(
                 all(
                     value == parent["manifest"].get(name)
@@ -96,7 +180,7 @@ def _owned_runs(parent, children):
                 )
             )
             _require(
-                child["manifest"]["tools"]
+                _leaf_manifest(child)["tools"]
                 == {name: parent["manifest"]["tools"][name] for name in member["tools"]}
             )
         else:
@@ -223,7 +307,7 @@ def _original_evidence(child, call, frozen):
                 {
                     "run_id": child["id"],
                     "action_id": action["id"],
-                    "tool": child["manifest"]["tools"][action["tool"]],
+                    "tool": _leaf_manifest(child)["tools"][action["tool"]],
                     "arguments": action["arguments"],
                     "scope": child["scope"],
                 }

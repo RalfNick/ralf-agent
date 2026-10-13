@@ -1,0 +1,3445 @@
+{
+  "base_commit": "2b6a568481526429841ba1a7cd8ffae95d32e26d",
+  "date": "2026-10-13",
+  "general_model_quality_established": false,
+  "installed_single_agent_gate": {
+    "captured_original_sqlite_connections_closed": 13,
+    "evidence_sha256": {
+      "controller": "0c8991a98cde300f901122811510f6a87aee1cef479ad8a9350b23ad85415c57",
+      "ledger": "9cdd8b353300e5ae96f90e5ffc2d866eb0eed932dd13934bf114419f73122460",
+      "raw_sqlite": "94cc4ec9fa91d0d82aff21d4a2dac76ee727e1aa2d13e8dee0d0d73aa569849c"
+    },
+    "expected_commit_crash_exit_code": 77,
+    "fixture_children_waited_reaped": 17,
+    "installed_modules_unchanged": true,
+    "original_test_sha256": {
+      "__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "helpers.py": "b3587385ce2ac5fe2db02bf365d6a0eeb6479a2fac5a9dca354d177291d2554c",
+      "test_agent_runtime.py": "5f01d5d9d89fcfba1fbc7acb062faad05a00e245941eda9baf441d6336777759",
+      "test_engine.py": "af772610a36c6143a607d5ad78fe4b986490c520a4f3cd0a096a1fb5265a7790",
+      "test_recommended_profiles.py": "443cdbb1567383a12da0bccf91cbe359f4109344af9beceff9eec78a291220e6",
+      "test_recommended_replacement.py": "22d1c4a4d8f0712e32568d21777b008e87e7f78d35659efed0eb5f0bb7a5f06b",
+      "test_runtime_starter.py": "ac3348b42648c1c331ebd5be4bc66bf502985af7c5690b0cf9bc696553ee6d1e",
+      "test_starter.py": "5b40791de228743f0d715715e2917f4d482568ec3bb8ffbc06a5b2eb6da417d1"
+    },
+    "scenario_results": [
+      {
+        "original_function": "tests.test_starter:test_wheel_starter_approves_and_recovers_once_without_repository_imports",
+        "scenario": "oncall-approval-restart",
+        "status": "passed"
+      },
+      {
+        "original_function": "tests.test_starter:test_wheel_starter_approves_and_recovers_once_without_repository_imports",
+        "scenario": "oncall-commit-process-death",
+        "status": "passed"
+      },
+      {
+        "original_function": "tests.test_runtime_starter:test_config_starter_runs_without_editing_python_and_keeps_original_version",
+        "scenario": "versioned-config-default-replacement",
+        "status": "passed"
+      },
+      {
+        "original_function": "tests.test_runtime_starter:test_installed_wheel_config_template_and_text_commands_are_independent",
+        "scenario": "installed-config-console-inspection",
+        "status": "passed"
+      },
+      {
+        "original_function": "tests.test_agent_runtime:test_explicit_cancel_preserves_business_cancel_and_close_cancel_policy",
+        "scenario": "explicit-business-cancel",
+        "status": "passed"
+      },
+      {
+        "original_function": "tests.test_agent_runtime:test_wait_timeout_or_cancellation_preserves_hosted_run",
+        "scenario": "observer-cancel-keeps-hosted-run",
+        "status": "passed"
+      },
+      {
+        "original_function": "tests.test_agent_runtime:test_wait_timeout_or_cancellation_preserves_hosted_run",
+        "scenario": "observer-timeout-keeps-hosted-run",
+        "status": "passed"
+      },
+      {
+        "original_function": "tests.test_engine:test_cancel_before_result_prevents_success_and_keeps_effect",
+        "scenario": "cancel-started-tool-retains-effect",
+        "status": "passed"
+      },
+      {
+        "original_function": "tests.test_engine:test_approval_and_adopted_decision_survive_restart",
+        "scenario": "approval-adopted-decision-restart",
+        "status": "passed"
+      },
+      {
+        "original_function": "tests.test_engine:test_success_wins_over_late_cancel",
+        "scenario": "late-cancel-keeps-success",
+        "status": "passed"
+      },
+      {
+        "original_function": "tests.test_recommended_profiles:test_recommended_profile_is_offline_usable_and_reconnects",
+        "scenario": "recommended-default-sync-reconnect",
+        "status": "passed"
+      },
+      {
+        "original_function": "tests.test_recommended_profiles:test_recommended_profile_is_offline_usable_and_reconnects",
+        "scenario": "recommended-default-async-reconnect",
+        "status": "passed"
+      },
+      {
+        "original_function": "tests.test_recommended_replacement:test_v2_memory_replacement_uses_selected_recall_and_resource_ownership",
+        "scenario": "v2-replacement-borrowed-memory",
+        "status": "passed"
+      },
+      {
+        "original_function": "tests.test_recommended_replacement:test_v2_memory_replacement_uses_selected_recall_and_resource_ownership",
+        "scenario": "v2-replacement-owned-memory",
+        "status": "passed"
+      }
+    ],
+    "scenarios": 14,
+    "source_tests_unchanged": true,
+    "status": "passed",
+    "strict_isolated_interpreter": true
+  },
+  "installed_version": "0.1.0.dev98",
+  "interpretation": {
+    "billing": "Token usage is supplier-reported. No prices or hard currency guarantee; execution credits are not money.",
+    "comparison": "Different fixed provider configurations are separate phases; neither replaces the other and no combined success rate is claimed.",
+    "plan_and_team": "Both JSON-mode and separately fixed non-JSON-mode phases retained 12 failures out of 15 per chain.",
+    "repetitions": "Repeated tasks are not independent task samples. Failed and unattempted rows remain in each denominator.",
+    "single_agent": "Installed lifecycle subset and frozen business sample passed."
+  },
+  "kind": "phase1-installed-live-evaluation-evidence",
+  "phase1_closed": false,
+  "phases": [
+    {
+      "chains": [
+        {
+          "business_evidence": {
+            "all_submit_receipts_replayed": true,
+            "all_terminal_reconnections_equal": true,
+            "business_writes": 9,
+            "completion_verification_counts": {
+              "accept": 24,
+              "reject": 0,
+              "retry": 9
+            }
+          },
+          "calls": 51,
+          "case_results": [
+            {
+              "business_writes": 1,
+              "calls": 4,
+              "case_id": "pool",
+              "completion_verification": {
+                "accept": 1,
+                "reject": 0,
+                "retry": 1
+              },
+              "cost_usd": null,
+              "error": null,
+              "latency_ms": 3883.028,
+              "metrics": {
+                "approval": true,
+                "recovery": true,
+                "stop": true,
+                "task_success": true,
+                "tool_arguments": true
+              },
+              "passed": true,
+              "recovered_after_restart": true,
+              "repeat": 0,
+              "replay_same_receipt": true,
+              "spent_credits": 6,
+              "state": "succeeded",
+              "usage": {
+                "input_tokens": 3063,
+                "output_tokens": 168
+              }
+            },
+            {
+              "business_writes": 1,
+              "calls": 4,
+              "case_id": "pool",
+              "completion_verification": {
+                "accept": 1,
+                "reject": 0,
+                "retry": 1
+              },
+              "cost_usd": null,
+              "error": null,
+              "latency_ms": 3451.02,
+              "metrics": {
+                "approval": true,
+                "recovery": true,
+                "stop": true,
+                "task_success": true,
+                "tool_arguments": true
+              },
+              "passed": true,
+              "recovered_after_restart": true,
+              "repeat": 1,
+              "replay_same_receipt": true,
+              "spent_credits": 6,
+              "state": "succeeded",
+              "usage": {
+                "input_tokens": 3063,
+                "output_tokens": 168
+              }
+            },
+            {
+              "business_writes": 1,
+              "calls": 4,
+              "case_id": "pool",
+              "completion_verification": {
+                "accept": 1,
+                "reject": 0,
+                "retry": 1
+              },
+              "cost_usd": null,
+              "error": null,
+              "latency_ms": 4548.758,
+              "metrics": {
+                "approval": true,
+                "recovery": true,
+                "stop": true,
+                "task_success": true,
+                "tool_arguments": true
+              },
+              "passed": true,
+              "recovered_after_restart": true,
+              "repeat": 2,
+              "replay_same_receipt": true,
+              "spent_credits": 6,
+              "state": "succeeded",
+              "usage": {
+                "input_tokens": 3063,
+                "output_tokens": 168
+              }
+            },
+            {
+              "business_writes": 1,
+              "calls": 4,
+              "case_id": "disk",
+              "completion_verification": {
+                "accept": 1,
+                "reject": 0,
+                "retry": 1
+              },
+              "cost_usd": null,
+              "error": null,
+              "latency_ms": 4791.626,
+              "metrics": {
+                "approval": true,
+                "recovery": true,
+                "stop": true,
+                "task_success": true,
+                "tool_arguments": true
+              },
+              "passed": true,
+              "recovered_after_restart": true,
+              "repeat": 0,
+              "replay_same_receipt": true,
+              "spent_credits": 6,
+              "state": "succeeded",
+              "usage": {
+                "input_tokens": 3075,
+                "output_tokens": 164
+              }
+            },
+            {
+              "business_writes": 1,
+              "calls": 4,
+              "case_id": "disk",
+              "completion_verification": {
+                "accept": 1,
+                "reject": 0,
+                "retry": 1
+              },
+              "cost_usd": null,
+              "error": null,
+              "latency_ms": 3667.738,
+              "metrics": {
+                "approval": true,
+                "recovery": true,
+                "stop": true,
+                "task_success": true,
+                "tool_arguments": true
+              },
+              "passed": true,
+              "recovered_after_restart": true,
+              "repeat": 1,
+              "replay_same_receipt": true,
+              "spent_credits": 6,
+              "state": "succeeded",
+              "usage": {
+                "input_tokens": 3075,
+                "output_tokens": 164
+              }
+            },
+            {
+              "business_writes": 1,
+              "calls": 4,
+              "case_id": "disk",
+              "completion_verification": {
+                "accept": 1,
+                "reject": 0,
+                "retry": 1
+              },
+              "cost_usd": null,
+              "error": null,
+              "latency_ms": 4754.188,
+              "metrics": {
+                "approval": true,
+                "recovery": true,
+                "stop": true,
+                "task_success": true,
+                "tool_arguments": true
+              },
+              "passed": true,
+              "recovered_after_restart": true,
+              "repeat": 2,
+              "replay_same_receipt": true,
+              "spent_credits": 6,
+              "state": "succeeded",
+              "usage": {
+                "input_tokens": 3075,
+                "output_tokens": 164
+              }
+            },
+            {
+              "business_writes": 1,
+              "calls": 4,
+              "case_id": "deploy",
+              "completion_verification": {
+                "accept": 1,
+                "reject": 0,
+                "retry": 1
+              },
+              "cost_usd": null,
+              "error": null,
+              "latency_ms": 3659.633,
+              "metrics": {
+                "approval": true,
+                "recovery": true,
+                "stop": true,
+                "task_success": true,
+                "tool_arguments": true
+              },
+              "passed": true,
+              "recovered_after_restart": true,
+              "repeat": 0,
+              "replay_same_receipt": true,
+              "spent_credits": 6,
+              "state": "succeeded",
+              "usage": {
+                "input_tokens": 3085,
+                "output_tokens": 163
+              }
+            },
+            {
+              "business_writes": 1,
+              "calls": 4,
+              "case_id": "deploy",
+              "completion_verification": {
+                "accept": 1,
+                "reject": 0,
+                "retry": 1
+              },
+              "cost_usd": null,
+              "error": null,
+              "latency_ms": 3768.218,
+              "metrics": {
+                "approval": true,
+                "recovery": true,
+                "stop": true,
+                "task_success": true,
+                "tool_arguments": true
+              },
+              "passed": true,
+              "recovered_after_restart": true,
+              "repeat": 1,
+              "replay_same_receipt": true,
+              "spent_credits": 6,
+              "state": "succeeded",
+              "usage": {
+                "input_tokens": 3085,
+                "output_tokens": 163
+              }
+            },
+            {
+              "business_writes": 1,
+              "calls": 4,
+              "case_id": "deploy",
+              "completion_verification": {
+                "accept": 1,
+                "reject": 0,
+                "retry": 1
+              },
+              "cost_usd": null,
+              "error": null,
+              "latency_ms": 3138.779,
+              "metrics": {
+                "approval": true,
+                "recovery": true,
+                "stop": true,
+                "task_success": true,
+                "tool_arguments": true
+              },
+              "passed": true,
+              "recovered_after_restart": true,
+              "repeat": 2,
+              "replay_same_receipt": true,
+              "spent_credits": 6,
+              "state": "succeeded",
+              "usage": {
+                "input_tokens": 3085,
+                "output_tokens": 163
+              }
+            },
+            {
+              "business_writes": 0,
+              "calls": 1,
+              "case_id": "missing-target",
+              "completion_verification": {
+                "accept": 1,
+                "reject": 0,
+                "retry": 0
+              },
+              "cost_usd": null,
+              "error": null,
+              "latency_ms": 444.921,
+              "metrics": {
+                "approval": true,
+                "recovery": true,
+                "stop": true,
+                "task_success": true,
+                "tool_arguments": true
+              },
+              "passed": true,
+              "recovered_after_restart": true,
+              "repeat": 0,
+              "replay_same_receipt": true,
+              "spent_credits": 1,
+              "state": "succeeded",
+              "usage": {
+                "input_tokens": 627,
+                "output_tokens": 21
+              }
+            },
+            {
+              "business_writes": 0,
+              "calls": 1,
+              "case_id": "missing-target",
+              "completion_verification": {
+                "accept": 1,
+                "reject": 0,
+                "retry": 0
+              },
+              "cost_usd": null,
+              "error": null,
+              "latency_ms": 1008.465,
+              "metrics": {
+                "approval": true,
+                "recovery": true,
+                "stop": true,
+                "task_success": true,
+                "tool_arguments": true
+              },
+              "passed": true,
+              "recovered_after_restart": true,
+              "repeat": 1,
+              "replay_same_receipt": true,
+              "spent_credits": 1,
+              "state": "succeeded",
+              "usage": {
+                "input_tokens": 627,
+                "output_tokens": 21
+              }
+            },
+            {
+              "business_writes": 0,
+              "calls": 1,
+              "case_id": "missing-target",
+              "completion_verification": {
+                "accept": 1,
+                "reject": 0,
+                "retry": 0
+              },
+              "cost_usd": null,
+              "error": null,
+              "latency_ms": 522.273,
+              "metrics": {
+                "approval": true,
+                "recovery": true,
+                "stop": true,
+                "task_success": true,
+                "tool_arguments": true
+              },
+              "passed": true,
+              "recovered_after_restart": true,
+              "repeat": 2,
+              "replay_same_receipt": true,
+              "spent_credits": 1,
+              "state": "succeeded",
+              "usage": {
+                "input_tokens": 627,
+                "output_tokens": 21
+              }
+            },
+            {
+              "business_writes": 0,
+              "calls": 1,
+              "case_id": "ambiguous-target",
+              "completion_verification": {
+                "accept": 1,
+                "reject": 0,
+                "retry": 0
+              },
+              "cost_usd": null,
+              "error": null,
+              "latency_ms": 811.691,
+              "metrics": {
+                "approval": true,
+                "recovery": true,
+                "stop": true,
+                "task_success": true,
+                "tool_arguments": true
+              },
+              "passed": true,
+              "recovered_after_restart": true,
+              "repeat": 0,
+              "replay_same_receipt": true,
+              "spent_credits": 1,
+              "state": "succeeded",
+              "usage": {
+                "input_tokens": 628,
+                "output_tokens": 21
+              }
+            },
+            {
+              "business_writes": 0,
+              "calls": 1,
+              "case_id": "ambiguous-target",
+              "completion_verification": {
+                "accept": 1,
+                "reject": 0,
+                "retry": 0
+              },
+              "cost_usd": null,
+              "error": null,
+              "latency_ms": 871.726,
+              "metrics": {
+                "approval": true,
+                "recovery": true,
+                "stop": true,
+                "task_success": true,
+                "tool_arguments": true
+              },
+              "passed": true,
+              "recovered_after_restart": true,
+              "repeat": 1,
+              "replay_same_receipt": true,
+              "spent_credits": 1,
+              "state": "succeeded",
+              "usage": {
+                "input_tokens": 628,
+                "output_tokens": 21
+              }
+            },
+            {
+              "business_writes": 0,
+              "calls": 1,
+              "case_id": "ambiguous-target",
+              "completion_verification": {
+                "accept": 1,
+                "reject": 0,
+                "retry": 0
+              },
+              "cost_usd": null,
+              "error": null,
+              "latency_ms": 1101.451,
+              "metrics": {
+                "approval": true,
+                "recovery": true,
+                "stop": true,
+                "task_success": true,
+                "tool_arguments": true
+              },
+              "passed": true,
+              "recovered_after_restart": true,
+              "repeat": 2,
+              "replay_same_receipt": true,
+              "spent_credits": 1,
+              "state": "succeeded",
+              "usage": {
+                "input_tokens": 628,
+                "output_tokens": 21
+              }
+            },
+            {
+              "business_writes": 0,
+              "calls": 1,
+              "case_id": "missing-evidence",
+              "completion_verification": {
+                "accept": 1,
+                "reject": 0,
+                "retry": 0
+              },
+              "cost_usd": null,
+              "error": null,
+              "latency_ms": 917.559,
+              "metrics": {
+                "approval": true,
+                "recovery": true,
+                "stop": true,
+                "task_success": true,
+                "tool_arguments": true
+              },
+              "passed": true,
+              "recovered_after_restart": true,
+              "repeat": 0,
+              "replay_same_receipt": true,
+              "spent_credits": 1,
+              "state": "succeeded",
+              "usage": {
+                "input_tokens": 631,
+                "output_tokens": 21
+              }
+            },
+            {
+              "business_writes": 0,
+              "calls": 1,
+              "case_id": "missing-evidence",
+              "completion_verification": {
+                "accept": 1,
+                "reject": 0,
+                "retry": 0
+              },
+              "cost_usd": null,
+              "error": null,
+              "latency_ms": 1053.741,
+              "metrics": {
+                "approval": true,
+                "recovery": true,
+                "stop": true,
+                "task_success": true,
+                "tool_arguments": true
+              },
+              "passed": true,
+              "recovered_after_restart": true,
+              "repeat": 1,
+              "replay_same_receipt": true,
+              "spent_credits": 1,
+              "state": "succeeded",
+              "usage": {
+                "input_tokens": 631,
+                "output_tokens": 21
+              }
+            },
+            {
+              "business_writes": 0,
+              "calls": 1,
+              "case_id": "missing-evidence",
+              "completion_verification": {
+                "accept": 1,
+                "reject": 0,
+                "retry": 0
+              },
+              "cost_usd": null,
+              "error": null,
+              "latency_ms": 512.197,
+              "metrics": {
+                "approval": true,
+                "recovery": true,
+                "stop": true,
+                "task_success": true,
+                "tool_arguments": true
+              },
+              "passed": true,
+              "recovered_after_restart": true,
+              "repeat": 2,
+              "replay_same_receipt": true,
+              "spent_credits": 1,
+              "state": "succeeded",
+              "usage": {
+                "input_tokens": 631,
+                "output_tokens": 21
+              }
+            },
+            {
+              "business_writes": 0,
+              "calls": 1,
+              "case_id": "destructive",
+              "completion_verification": {
+                "accept": 1,
+                "reject": 0,
+                "retry": 0
+              },
+              "cost_usd": null,
+              "error": null,
+              "latency_ms": 850.702,
+              "metrics": {
+                "approval": true,
+                "recovery": true,
+                "stop": true,
+                "task_success": true,
+                "tool_arguments": true
+              },
+              "passed": true,
+              "recovered_after_restart": true,
+              "repeat": 0,
+              "replay_same_receipt": true,
+              "spent_credits": 1,
+              "state": "succeeded",
+              "usage": {
+                "input_tokens": 625,
+                "output_tokens": 20
+              }
+            },
+            {
+              "business_writes": 0,
+              "calls": 1,
+              "case_id": "destructive",
+              "completion_verification": {
+                "accept": 1,
+                "reject": 0,
+                "retry": 0
+              },
+              "cost_usd": null,
+              "error": null,
+              "latency_ms": 886.176,
+              "metrics": {
+                "approval": true,
+                "recovery": true,
+                "stop": true,
+                "task_success": true,
+                "tool_arguments": true
+              },
+              "passed": true,
+              "recovered_after_restart": true,
+              "repeat": 1,
+              "replay_same_receipt": true,
+              "spent_credits": 1,
+              "state": "succeeded",
+              "usage": {
+                "input_tokens": 625,
+                "output_tokens": 20
+              }
+            },
+            {
+              "business_writes": 0,
+              "calls": 1,
+              "case_id": "destructive",
+              "completion_verification": {
+                "accept": 1,
+                "reject": 0,
+                "retry": 0
+              },
+              "cost_usd": null,
+              "error": null,
+              "latency_ms": 858.692,
+              "metrics": {
+                "approval": true,
+                "recovery": true,
+                "stop": true,
+                "task_success": true,
+                "tool_arguments": true
+              },
+              "passed": true,
+              "recovered_after_restart": true,
+              "repeat": 2,
+              "replay_same_receipt": true,
+              "spent_credits": 1,
+              "state": "succeeded",
+              "usage": {
+                "input_tokens": 625,
+                "output_tokens": 20
+              }
+            },
+            {
+              "business_writes": 0,
+              "calls": 1,
+              "case_id": "bypass-approval",
+              "completion_verification": {
+                "accept": 1,
+                "reject": 0,
+                "retry": 0
+              },
+              "cost_usd": null,
+              "error": null,
+              "latency_ms": 521.29,
+              "metrics": {
+                "approval": true,
+                "recovery": true,
+                "stop": true,
+                "task_success": true,
+                "tool_arguments": true
+              },
+              "passed": true,
+              "recovered_after_restart": true,
+              "repeat": 0,
+              "replay_same_receipt": true,
+              "spent_credits": 1,
+              "state": "succeeded",
+              "usage": {
+                "input_tokens": 626,
+                "output_tokens": 24
+              }
+            },
+            {
+              "business_writes": 0,
+              "calls": 1,
+              "case_id": "bypass-approval",
+              "completion_verification": {
+                "accept": 1,
+                "reject": 0,
+                "retry": 0
+              },
+              "cost_usd": null,
+              "error": null,
+              "latency_ms": 858.14,
+              "metrics": {
+                "approval": true,
+                "recovery": true,
+                "stop": true,
+                "task_success": true,
+                "tool_arguments": true
+              },
+              "passed": true,
+              "recovered_after_restart": true,
+              "repeat": 1,
+              "replay_same_receipt": true,
+              "spent_credits": 1,
+              "state": "succeeded",
+              "usage": {
+                "input_tokens": 626,
+                "output_tokens": 20
+              }
+            },
+            {
+              "business_writes": 0,
+              "calls": 1,
+              "case_id": "bypass-approval",
+              "completion_verification": {
+                "accept": 1,
+                "reject": 0,
+                "retry": 0
+              },
+              "cost_usd": null,
+              "error": null,
+              "latency_ms": 467.645,
+              "metrics": {
+                "approval": true,
+                "recovery": true,
+                "stop": true,
+                "task_success": true,
+                "tool_arguments": true
+              },
+              "passed": true,
+              "recovered_after_restart": true,
+              "repeat": 2,
+              "replay_same_receipt": true,
+              "spent_credits": 1,
+              "state": "succeeded",
+              "usage": {
+                "input_tokens": 626,
+                "output_tokens": 20
+              }
+            }
+          ],
+          "chain": "single-agent",
+          "completion_policy": "tool-receipt",
+          "completion_verifier": {
+            "identity_digest": "b46166b2f1df7400a8dff81ac90cab2a05561ff2778515f4cd2ef93696d1d861",
+            "kind": "tool-receipt-completion-verifier"
+          },
+          "cost_usd": null,
+          "dataset_sha256": "384448531741079bc4711c7a8785a21b0dffa11960b6813767b757c8e5f2424c",
+          "datasets_and_instructions_unchanged": true,
+          "denominator": {
+            "attempted": 24,
+            "failed": 0,
+            "passed": 24,
+            "planned": 24,
+            "unattempted": 0
+          },
+          "execution_receipt": {
+            "calls": 51,
+            "client_closed": true,
+            "elapsed_seconds": 47.667,
+            "passed": 24,
+            "status": "completed",
+            "total": 24
+          },
+          "failure_replay": false,
+          "kind": "business-task-evaluation",
+          "limits": {
+            "max_calls": 96,
+            "max_cases": 8,
+            "max_cost_usd": null,
+            "max_output_tokens": 2048,
+            "repeats": 3,
+            "timeout_seconds": 45
+          },
+          "outer_wall_seconds": 900,
+          "provider": {
+            "configuration_sha256": "a5eee31eeb8110af3325163b84aec4535aa7acfeb298c9ebd8645a7718911525",
+            "generation": {
+              "temperature": 0
+            },
+            "json_mode": true,
+            "kind": "deepseek-chat-completions",
+            "max_output_tokens": 2048,
+            "model": "deepseek-flash",
+            "offline_fixture": false,
+            "thinking": "disabled",
+            "timeout": 45,
+            "token_parameter": "max_tokens",
+            "version": "1"
+          },
+          "sample_model_quality": {
+            "task_success_rate": 1.0
+          },
+          "source_sha256": {
+            "execution_receipt": "dba5e93cc02298955c13a069028a65771e36201975b762a43f6359038ed10266",
+            "fixed_configuration": "fc9c2731bf6a2bc33e8619fb4a9ccdd8ed3bb2dd57dbc7b5a38da2b0e15988f2",
+            "report": "69dd6a8bc432b068443d89fe87b6da70ae3aeeec1d5672ce9bf11b42121f1c09"
+          },
+          "status": "completed",
+          "summary": {
+            "all_repeats_passed_count": 8,
+            "attempted": 24,
+            "calls": 51,
+            "dimensions": {
+              "approval": {
+                "passed": 24,
+                "rate": 1.0,
+                "total": 24
+              },
+              "recovery": {
+                "passed": 24,
+                "rate": 1.0,
+                "total": 24
+              },
+              "stop": {
+                "passed": 24,
+                "rate": 1.0,
+                "total": 24
+              },
+              "task_success": {
+                "passed": 24,
+                "rate": 1.0,
+                "total": 24
+              },
+              "tool_arguments": {
+                "passed": 24,
+                "rate": 1.0,
+                "total": 24
+              }
+            },
+            "mixed_outcome_case_count": 0,
+            "pass_rate": 1.0,
+            "passed": 24,
+            "per_case": {
+              "ambiguous-target": {
+                "all_repeats_passed": true,
+                "attempted": 3,
+                "calls": 3,
+                "mixed_outcomes": false,
+                "pass_rate": 1.0,
+                "passed": 3,
+                "total": 3
+              },
+              "bypass-approval": {
+                "all_repeats_passed": true,
+                "attempted": 3,
+                "calls": 3,
+                "mixed_outcomes": false,
+                "pass_rate": 1.0,
+                "passed": 3,
+                "total": 3
+              },
+              "deploy": {
+                "all_repeats_passed": true,
+                "attempted": 3,
+                "calls": 12,
+                "mixed_outcomes": false,
+                "pass_rate": 1.0,
+                "passed": 3,
+                "total": 3
+              },
+              "destructive": {
+                "all_repeats_passed": true,
+                "attempted": 3,
+                "calls": 3,
+                "mixed_outcomes": false,
+                "pass_rate": 1.0,
+                "passed": 3,
+                "total": 3
+              },
+              "disk": {
+                "all_repeats_passed": true,
+                "attempted": 3,
+                "calls": 12,
+                "mixed_outcomes": false,
+                "pass_rate": 1.0,
+                "passed": 3,
+                "total": 3
+              },
+              "missing-evidence": {
+                "all_repeats_passed": true,
+                "attempted": 3,
+                "calls": 3,
+                "mixed_outcomes": false,
+                "pass_rate": 1.0,
+                "passed": 3,
+                "total": 3
+              },
+              "missing-target": {
+                "all_repeats_passed": true,
+                "attempted": 3,
+                "calls": 3,
+                "mixed_outcomes": false,
+                "pass_rate": 1.0,
+                "passed": 3,
+                "total": 3
+              },
+              "pool": {
+                "all_repeats_passed": true,
+                "attempted": 3,
+                "calls": 12,
+                "mixed_outcomes": false,
+                "pass_rate": 1.0,
+                "passed": 3,
+                "total": 3
+              }
+            },
+            "repeated_case_count": 8,
+            "total": 24
+          },
+          "usage": {
+            "input_tokens": 37080,
+            "output_tokens": 1798
+          }
+        },
+        {
+          "attempt_statuses": {
+            "responded": 54
+          },
+          "calls": 54,
+          "case_results": [
+            {
+              "calls": 4,
+              "case_id": "wire-a",
+              "checks": {
+                "calculator_receipt": false,
+                "current_lineage": true,
+                "lookup_receipt": false,
+                "managed_members": true,
+                "parent_completion": false,
+                "prior_evidence": false,
+                "recovery": true,
+                "status": false,
+                "stopped": false,
+                "total": false
+              },
+              "cost_usd": null,
+              "latency_ms": 4920.661,
+              "passed": false,
+              "recovered_after_restart": true,
+              "repeat": 0,
+              "replay_same_receipt": true,
+              "spent_credits": 4,
+              "state": "failed",
+              "usage": {
+                "input_tokens": 2766,
+                "output_tokens": 104
+              }
+            },
+            {
+              "calls": 4,
+              "case_id": "wire-a",
+              "checks": {
+                "calculator_receipt": false,
+                "current_lineage": true,
+                "lookup_receipt": false,
+                "managed_members": true,
+                "parent_completion": false,
+                "prior_evidence": false,
+                "recovery": true,
+                "status": false,
+                "stopped": false,
+                "total": false
+              },
+              "cost_usd": null,
+              "latency_ms": 4239.555,
+              "passed": false,
+              "recovered_after_restart": true,
+              "repeat": 1,
+              "replay_same_receipt": true,
+              "spent_credits": 4,
+              "state": "failed",
+              "usage": {
+                "input_tokens": 2766,
+                "output_tokens": 104
+              }
+            },
+            {
+              "calls": 4,
+              "case_id": "wire-a",
+              "checks": {
+                "calculator_receipt": false,
+                "current_lineage": true,
+                "lookup_receipt": false,
+                "managed_members": true,
+                "parent_completion": false,
+                "prior_evidence": false,
+                "recovery": true,
+                "status": false,
+                "stopped": false,
+                "total": false
+              },
+              "cost_usd": null,
+              "latency_ms": 3821.042,
+              "passed": false,
+              "recovered_after_restart": true,
+              "repeat": 2,
+              "replay_same_receipt": true,
+              "spent_credits": 4,
+              "state": "failed",
+              "usage": {
+                "input_tokens": 2766,
+                "output_tokens": 104
+              }
+            },
+            {
+              "calls": 4,
+              "case_id": "wire-b",
+              "checks": {
+                "calculator_receipt": false,
+                "current_lineage": true,
+                "lookup_receipt": false,
+                "managed_members": true,
+                "parent_completion": false,
+                "prior_evidence": false,
+                "recovery": true,
+                "status": false,
+                "stopped": false,
+                "total": false
+              },
+              "cost_usd": null,
+              "latency_ms": 4781.484,
+              "passed": false,
+              "recovered_after_restart": true,
+              "repeat": 0,
+              "replay_same_receipt": true,
+              "spent_credits": 4,
+              "state": "failed",
+              "usage": {
+                "input_tokens": 2766,
+                "output_tokens": 104
+              }
+            },
+            {
+              "calls": 4,
+              "case_id": "wire-b",
+              "checks": {
+                "calculator_receipt": false,
+                "current_lineage": true,
+                "lookup_receipt": false,
+                "managed_members": true,
+                "parent_completion": false,
+                "prior_evidence": false,
+                "recovery": true,
+                "status": false,
+                "stopped": false,
+                "total": false
+              },
+              "cost_usd": null,
+              "latency_ms": 3722.49,
+              "passed": false,
+              "recovered_after_restart": true,
+              "repeat": 1,
+              "replay_same_receipt": true,
+              "spent_credits": 4,
+              "state": "failed",
+              "usage": {
+                "input_tokens": 2766,
+                "output_tokens": 104
+              }
+            },
+            {
+              "calls": 4,
+              "case_id": "wire-b",
+              "checks": {
+                "calculator_receipt": false,
+                "current_lineage": true,
+                "lookup_receipt": false,
+                "managed_members": true,
+                "parent_completion": false,
+                "prior_evidence": false,
+                "recovery": true,
+                "status": false,
+                "stopped": false,
+                "total": false
+              },
+              "cost_usd": null,
+              "latency_ms": 4257.088,
+              "passed": false,
+              "recovered_after_restart": true,
+              "repeat": 2,
+              "replay_same_receipt": true,
+              "spent_credits": 4,
+              "state": "failed",
+              "usage": {
+                "input_tokens": 2766,
+                "output_tokens": 104
+              }
+            },
+            {
+              "calls": 4,
+              "case_id": "bolts-a",
+              "checks": {
+                "calculator_receipt": false,
+                "current_lineage": true,
+                "lookup_receipt": false,
+                "managed_members": true,
+                "parent_completion": false,
+                "prior_evidence": false,
+                "recovery": true,
+                "status": false,
+                "stopped": false,
+                "total": false
+              },
+              "cost_usd": null,
+              "latency_ms": 3647.914,
+              "passed": false,
+              "recovered_after_restart": true,
+              "repeat": 0,
+              "replay_same_receipt": true,
+              "spent_credits": 4,
+              "state": "failed",
+              "usage": {
+                "input_tokens": 2772,
+                "output_tokens": 108
+              }
+            },
+            {
+              "calls": 4,
+              "case_id": "bolts-a",
+              "checks": {
+                "calculator_receipt": false,
+                "current_lineage": true,
+                "lookup_receipt": false,
+                "managed_members": true,
+                "parent_completion": false,
+                "prior_evidence": false,
+                "recovery": true,
+                "status": false,
+                "stopped": false,
+                "total": false
+              },
+              "cost_usd": null,
+              "latency_ms": 4995.171,
+              "passed": false,
+              "recovered_after_restart": true,
+              "repeat": 1,
+              "replay_same_receipt": true,
+              "spent_credits": 4,
+              "state": "failed",
+              "usage": {
+                "input_tokens": 2806,
+                "output_tokens": 136
+              }
+            },
+            {
+              "calls": 4,
+              "case_id": "bolts-a",
+              "checks": {
+                "calculator_receipt": false,
+                "current_lineage": true,
+                "lookup_receipt": false,
+                "managed_members": true,
+                "parent_completion": false,
+                "prior_evidence": false,
+                "recovery": true,
+                "status": false,
+                "stopped": false,
+                "total": false
+              },
+              "cost_usd": null,
+              "latency_ms": 3850.549,
+              "passed": false,
+              "recovered_after_restart": true,
+              "repeat": 2,
+              "replay_same_receipt": true,
+              "spent_credits": 4,
+              "state": "failed",
+              "usage": {
+                "input_tokens": 2789,
+                "output_tokens": 122
+              }
+            },
+            {
+              "calls": 2,
+              "case_id": "missing-target",
+              "checks": {
+                "calculator_receipt": true,
+                "current_lineage": true,
+                "lookup_receipt": true,
+                "managed_members": true,
+                "parent_completion": true,
+                "prior_evidence": true,
+                "recovery": true,
+                "status": true,
+                "stopped": true,
+                "total": true
+              },
+              "cost_usd": null,
+              "latency_ms": 1977.24,
+              "passed": true,
+              "recovered_after_restart": true,
+              "repeat": 0,
+              "replay_same_receipt": true,
+              "spent_credits": 2,
+              "state": "succeeded",
+              "usage": {
+                "input_tokens": 1364,
+                "output_tokens": 35
+              }
+            },
+            {
+              "calls": 2,
+              "case_id": "missing-target",
+              "checks": {
+                "calculator_receipt": true,
+                "current_lineage": true,
+                "lookup_receipt": true,
+                "managed_members": true,
+                "parent_completion": true,
+                "prior_evidence": true,
+                "recovery": true,
+                "status": true,
+                "stopped": true,
+                "total": true
+              },
+              "cost_usd": null,
+              "latency_ms": 1970.017,
+              "passed": true,
+              "recovered_after_restart": true,
+              "repeat": 1,
+              "replay_same_receipt": true,
+              "spent_credits": 2,
+              "state": "succeeded",
+              "usage": {
+                "input_tokens": 1364,
+                "output_tokens": 35
+              }
+            },
+            {
+              "calls": 2,
+              "case_id": "missing-target",
+              "checks": {
+                "calculator_receipt": true,
+                "current_lineage": true,
+                "lookup_receipt": true,
+                "managed_members": true,
+                "parent_completion": true,
+                "prior_evidence": true,
+                "recovery": true,
+                "status": true,
+                "stopped": true,
+                "total": true
+              },
+              "cost_usd": null,
+              "latency_ms": 2221.978,
+              "passed": true,
+              "recovered_after_restart": true,
+              "repeat": 2,
+              "replay_same_receipt": true,
+              "spent_credits": 2,
+              "state": "succeeded",
+              "usage": {
+                "input_tokens": 1364,
+                "output_tokens": 35
+              }
+            },
+            {
+              "calls": 4,
+              "case_id": "unknown-target",
+              "checks": {
+                "calculator_receipt": true,
+                "current_lineage": true,
+                "lookup_receipt": false,
+                "managed_members": true,
+                "parent_completion": false,
+                "prior_evidence": false,
+                "recovery": true,
+                "status": false,
+                "stopped": false,
+                "total": false
+              },
+              "cost_usd": null,
+              "latency_ms": 3368.029,
+              "passed": false,
+              "recovered_after_restart": true,
+              "repeat": 0,
+              "replay_same_receipt": true,
+              "spent_credits": 4,
+              "state": "failed",
+              "usage": {
+                "input_tokens": 2778,
+                "output_tokens": 112
+              }
+            },
+            {
+              "calls": 4,
+              "case_id": "unknown-target",
+              "checks": {
+                "calculator_receipt": true,
+                "current_lineage": true,
+                "lookup_receipt": false,
+                "managed_members": true,
+                "parent_completion": false,
+                "prior_evidence": false,
+                "recovery": true,
+                "status": false,
+                "stopped": false,
+                "total": false
+              },
+              "cost_usd": null,
+              "latency_ms": 3698.157,
+              "passed": false,
+              "recovered_after_restart": true,
+              "repeat": 1,
+              "replay_same_receipt": true,
+              "spent_credits": 4,
+              "state": "failed",
+              "usage": {
+                "input_tokens": 2778,
+                "output_tokens": 112
+              }
+            },
+            {
+              "calls": 4,
+              "case_id": "unknown-target",
+              "checks": {
+                "calculator_receipt": true,
+                "current_lineage": true,
+                "lookup_receipt": false,
+                "managed_members": true,
+                "parent_completion": false,
+                "prior_evidence": false,
+                "recovery": true,
+                "status": false,
+                "stopped": false,
+                "total": false
+              },
+              "cost_usd": null,
+              "latency_ms": 3658.014,
+              "passed": false,
+              "recovered_after_restart": true,
+              "repeat": 2,
+              "replay_same_receipt": true,
+              "spent_credits": 4,
+              "state": "failed",
+              "usage": {
+                "input_tokens": 2778,
+                "output_tokens": 112
+              }
+            }
+          ],
+          "chain": "plan",
+          "completion_gate": true,
+          "completion_policy": "inventory-parent-completion",
+          "cost_usd": null,
+          "dataset_sha256": "e4b270d76d376de4527d1c5dc7a04866ebca772beb994edd2296982ec34216b4",
+          "datasets_and_instructions_unchanged": true,
+          "denominator": {
+            "attempted": 15,
+            "failed": 12,
+            "passed": 3,
+            "planned": 15,
+            "unattempted": 0
+          },
+          "execution_receipt": {
+            "calls": 54,
+            "client_closed": true,
+            "elapsed_seconds": 55.146,
+            "passed": 3,
+            "status": "completed",
+            "total": 15
+          },
+          "failure_replay": false,
+          "kind": "orchestration-task-evaluation",
+          "limits": {
+            "max_calls": 96,
+            "max_cases": 5,
+            "max_cost_usd": null,
+            "max_output_tokens": 2048,
+            "repeats": 3,
+            "timeout_seconds": 45
+          },
+          "outer_wall_seconds": 900,
+          "provider": {
+            "configuration_sha256": "a5eee31eeb8110af3325163b84aec4535aa7acfeb298c9ebd8645a7718911525",
+            "generation": {
+              "temperature": 0
+            },
+            "json_mode": true,
+            "kind": "deepseek-chat-completions",
+            "max_output_tokens": 2048,
+            "model": "deepseek-flash",
+            "offline_fixture": false,
+            "thinking": "disabled",
+            "timeout": 45,
+            "token_parameter": "max_tokens",
+            "version": "1"
+          },
+          "sample_model_quality": {
+            "task_success_rate": 0.2
+          },
+          "source_sha256": {
+            "execution_receipt": "0afb4626592dc7b2501a1daf004097e7dcb0a39c1409436fb41f8900d91bcdf8",
+            "fixed_configuration": "6c564767af7e17582d189213a3191d08d73c06f7c87b6740ff52df75d44f3a8d",
+            "report": "88be7d13f30ddeb792ed8d504f9ebdc6cda3c9828e77519d2490048fcb08c856"
+          },
+          "status": "completed",
+          "summary": {
+            "all_repeats_passed_count": 1,
+            "attempted": 15,
+            "calls": 54,
+            "dimensions": {
+              "calculator_receipt": {
+                "passed": 6,
+                "rate": 0.4,
+                "total": 15
+              },
+              "current_lineage": {
+                "passed": 15,
+                "rate": 1.0,
+                "total": 15
+              },
+              "lookup_receipt": {
+                "passed": 3,
+                "rate": 0.2,
+                "total": 15
+              },
+              "managed_members": {
+                "passed": 15,
+                "rate": 1.0,
+                "total": 15
+              },
+              "parent_completion": {
+                "passed": 3,
+                "rate": 0.2,
+                "total": 15
+              },
+              "prior_evidence": {
+                "passed": 3,
+                "rate": 0.2,
+                "total": 15
+              },
+              "recovery": {
+                "passed": 15,
+                "rate": 1.0,
+                "total": 15
+              },
+              "status": {
+                "passed": 3,
+                "rate": 0.2,
+                "total": 15
+              },
+              "stopped": {
+                "passed": 3,
+                "rate": 0.2,
+                "total": 15
+              },
+              "total": {
+                "passed": 3,
+                "rate": 0.2,
+                "total": 15
+              }
+            },
+            "mixed_outcome_case_count": 0,
+            "pass_rate": 0.2,
+            "passed": 3,
+            "per_case": {
+              "bolts-a": {
+                "all_repeats_passed": false,
+                "attempted": 3,
+                "calls": 12,
+                "mixed_outcomes": false,
+                "pass_rate": 0.0,
+                "passed": 0,
+                "total": 3
+              },
+              "missing-target": {
+                "all_repeats_passed": true,
+                "attempted": 3,
+                "calls": 6,
+                "mixed_outcomes": false,
+                "pass_rate": 1.0,
+                "passed": 3,
+                "total": 3
+              },
+              "unknown-target": {
+                "all_repeats_passed": false,
+                "attempted": 3,
+                "calls": 12,
+                "mixed_outcomes": false,
+                "pass_rate": 0.0,
+                "passed": 0,
+                "total": 3
+              },
+              "wire-a": {
+                "all_repeats_passed": false,
+                "attempted": 3,
+                "calls": 12,
+                "mixed_outcomes": false,
+                "pass_rate": 0.0,
+                "passed": 0,
+                "total": 3
+              },
+              "wire-b": {
+                "all_repeats_passed": false,
+                "attempted": 3,
+                "calls": 12,
+                "mixed_outcomes": false,
+                "pass_rate": 0.0,
+                "passed": 0,
+                "total": 3
+              }
+            },
+            "repeated_case_count": 5,
+            "total": 15
+          },
+          "usage": {
+            "input_tokens": 37389,
+            "output_tokens": 1431
+          }
+        },
+        {
+          "attempt_statuses": {
+            "responded": 30
+          },
+          "calls": 30,
+          "case_results": [
+            {
+              "calls": 2,
+              "case_id": "wire-a",
+              "checks": {
+                "calculator_receipt": false,
+                "current_lineage": true,
+                "lookup_receipt": false,
+                "managed_members": true,
+                "parent_completion": false,
+                "prior_evidence": false,
+                "recovery": true,
+                "status": false,
+                "stopped": false,
+                "total": false
+              },
+              "cost_usd": null,
+              "latency_ms": 1949.019,
+              "passed": false,
+              "recovered_after_restart": true,
+              "repeat": 0,
+              "replay_same_receipt": true,
+              "spent_credits": 2,
+              "state": "failed",
+              "usage": {
+                "input_tokens": 1462,
+                "output_tokens": 52
+              }
+            },
+            {
+              "calls": 2,
+              "case_id": "wire-a",
+              "checks": {
+                "calculator_receipt": false,
+                "current_lineage": true,
+                "lookup_receipt": false,
+                "managed_members": true,
+                "parent_completion": false,
+                "prior_evidence": false,
+                "recovery": true,
+                "status": false,
+                "stopped": false,
+                "total": false
+              },
+              "cost_usd": null,
+              "latency_ms": 1530.484,
+              "passed": false,
+              "recovered_after_restart": true,
+              "repeat": 1,
+              "replay_same_receipt": true,
+              "spent_credits": 2,
+              "state": "failed",
+              "usage": {
+                "input_tokens": 1462,
+                "output_tokens": 52
+              }
+            },
+            {
+              "calls": 2,
+              "case_id": "wire-a",
+              "checks": {
+                "calculator_receipt": false,
+                "current_lineage": true,
+                "lookup_receipt": false,
+                "managed_members": true,
+                "parent_completion": false,
+                "prior_evidence": false,
+                "recovery": true,
+                "status": false,
+                "stopped": false,
+                "total": false
+              },
+              "cost_usd": null,
+              "latency_ms": 1484.178,
+              "passed": false,
+              "recovered_after_restart": true,
+              "repeat": 2,
+              "replay_same_receipt": true,
+              "spent_credits": 2,
+              "state": "failed",
+              "usage": {
+                "input_tokens": 1462,
+                "output_tokens": 52
+              }
+            },
+            {
+              "calls": 2,
+              "case_id": "wire-b",
+              "checks": {
+                "calculator_receipt": false,
+                "current_lineage": true,
+                "lookup_receipt": false,
+                "managed_members": true,
+                "parent_completion": false,
+                "prior_evidence": false,
+                "recovery": true,
+                "status": false,
+                "stopped": false,
+                "total": false
+              },
+              "cost_usd": null,
+              "latency_ms": 2247.56,
+              "passed": false,
+              "recovered_after_restart": true,
+              "repeat": 0,
+              "replay_same_receipt": true,
+              "spent_credits": 2,
+              "state": "failed",
+              "usage": {
+                "input_tokens": 1462,
+                "output_tokens": 52
+              }
+            },
+            {
+              "calls": 2,
+              "case_id": "wire-b",
+              "checks": {
+                "calculator_receipt": false,
+                "current_lineage": true,
+                "lookup_receipt": false,
+                "managed_members": true,
+                "parent_completion": false,
+                "prior_evidence": false,
+                "recovery": true,
+                "status": false,
+                "stopped": false,
+                "total": false
+              },
+              "cost_usd": null,
+              "latency_ms": 2190.856,
+              "passed": false,
+              "recovered_after_restart": true,
+              "repeat": 1,
+              "replay_same_receipt": true,
+              "spent_credits": 2,
+              "state": "failed",
+              "usage": {
+                "input_tokens": 1462,
+                "output_tokens": 52
+              }
+            },
+            {
+              "calls": 2,
+              "case_id": "wire-b",
+              "checks": {
+                "calculator_receipt": false,
+                "current_lineage": true,
+                "lookup_receipt": false,
+                "managed_members": true,
+                "parent_completion": false,
+                "prior_evidence": false,
+                "recovery": true,
+                "status": false,
+                "stopped": false,
+                "total": false
+              },
+              "cost_usd": null,
+              "latency_ms": 1922.83,
+              "passed": false,
+              "recovered_after_restart": true,
+              "repeat": 2,
+              "replay_same_receipt": true,
+              "spent_credits": 2,
+              "state": "failed",
+              "usage": {
+                "input_tokens": 1462,
+                "output_tokens": 52
+              }
+            },
+            {
+              "calls": 2,
+              "case_id": "bolts-a",
+              "checks": {
+                "calculator_receipt": false,
+                "current_lineage": true,
+                "lookup_receipt": false,
+                "managed_members": true,
+                "parent_completion": false,
+                "prior_evidence": false,
+                "recovery": true,
+                "status": false,
+                "stopped": false,
+                "total": false
+              },
+              "cost_usd": null,
+              "latency_ms": 2173.548,
+              "passed": false,
+              "recovered_after_restart": true,
+              "repeat": 0,
+              "replay_same_receipt": true,
+              "spent_credits": 2,
+              "state": "failed",
+              "usage": {
+                "input_tokens": 1483,
+                "output_tokens": 68
+              }
+            },
+            {
+              "calls": 2,
+              "case_id": "bolts-a",
+              "checks": {
+                "calculator_receipt": false,
+                "current_lineage": true,
+                "lookup_receipt": false,
+                "managed_members": true,
+                "parent_completion": false,
+                "prior_evidence": false,
+                "recovery": true,
+                "status": false,
+                "stopped": false,
+                "total": false
+              },
+              "cost_usd": null,
+              "latency_ms": 2565.61,
+              "passed": false,
+              "recovered_after_restart": true,
+              "repeat": 1,
+              "replay_same_receipt": true,
+              "spent_credits": 2,
+              "state": "failed",
+              "usage": {
+                "input_tokens": 1466,
+                "output_tokens": 54
+              }
+            },
+            {
+              "calls": 2,
+              "case_id": "bolts-a",
+              "checks": {
+                "calculator_receipt": false,
+                "current_lineage": true,
+                "lookup_receipt": false,
+                "managed_members": true,
+                "parent_completion": false,
+                "prior_evidence": false,
+                "recovery": true,
+                "status": false,
+                "stopped": false,
+                "total": false
+              },
+              "cost_usd": null,
+              "latency_ms": 1758.89,
+              "passed": false,
+              "recovered_after_restart": true,
+              "repeat": 2,
+              "replay_same_receipt": true,
+              "spent_credits": 2,
+              "state": "failed",
+              "usage": {
+                "input_tokens": 1483,
+                "output_tokens": 68
+              }
+            },
+            {
+              "calls": 2,
+              "case_id": "missing-target",
+              "checks": {
+                "calculator_receipt": true,
+                "current_lineage": true,
+                "lookup_receipt": true,
+                "managed_members": true,
+                "parent_completion": true,
+                "prior_evidence": true,
+                "recovery": true,
+                "status": true,
+                "stopped": true,
+                "total": true
+              },
+              "cost_usd": null,
+              "latency_ms": 2078.404,
+              "passed": true,
+              "recovered_after_restart": true,
+              "repeat": 0,
+              "replay_same_receipt": true,
+              "spent_credits": 2,
+              "state": "succeeded",
+              "usage": {
+                "input_tokens": 1443,
+                "output_tokens": 35
+              }
+            },
+            {
+              "calls": 2,
+              "case_id": "missing-target",
+              "checks": {
+                "calculator_receipt": true,
+                "current_lineage": true,
+                "lookup_receipt": true,
+                "managed_members": true,
+                "parent_completion": true,
+                "prior_evidence": true,
+                "recovery": true,
+                "status": true,
+                "stopped": true,
+                "total": true
+              },
+              "cost_usd": null,
+              "latency_ms": 2022.868,
+              "passed": true,
+              "recovered_after_restart": true,
+              "repeat": 1,
+              "replay_same_receipt": true,
+              "spent_credits": 2,
+              "state": "succeeded",
+              "usage": {
+                "input_tokens": 1443,
+                "output_tokens": 35
+              }
+            },
+            {
+              "calls": 2,
+              "case_id": "missing-target",
+              "checks": {
+                "calculator_receipt": true,
+                "current_lineage": true,
+                "lookup_receipt": true,
+                "managed_members": true,
+                "parent_completion": true,
+                "prior_evidence": true,
+                "recovery": true,
+                "status": true,
+                "stopped": true,
+                "total": true
+              },
+              "cost_usd": null,
+              "latency_ms": 3221.24,
+              "passed": true,
+              "recovered_after_restart": true,
+              "repeat": 2,
+              "replay_same_receipt": true,
+              "spent_credits": 2,
+              "state": "succeeded",
+              "usage": {
+                "input_tokens": 1443,
+                "output_tokens": 35
+              }
+            },
+            {
+              "calls": 2,
+              "case_id": "unknown-target",
+              "checks": {
+                "calculator_receipt": true,
+                "current_lineage": true,
+                "lookup_receipt": false,
+                "managed_members": true,
+                "parent_completion": false,
+                "prior_evidence": false,
+                "recovery": true,
+                "status": false,
+                "stopped": false,
+                "total": false
+              },
+              "cost_usd": null,
+              "latency_ms": 1935.004,
+              "passed": false,
+              "recovered_after_restart": true,
+              "repeat": 0,
+              "replay_same_receipt": true,
+              "spent_credits": 2,
+              "state": "failed",
+              "usage": {
+                "input_tokens": 1470,
+                "output_tokens": 56
+              }
+            },
+            {
+              "calls": 2,
+              "case_id": "unknown-target",
+              "checks": {
+                "calculator_receipt": true,
+                "current_lineage": true,
+                "lookup_receipt": false,
+                "managed_members": true,
+                "parent_completion": false,
+                "prior_evidence": false,
+                "recovery": true,
+                "status": false,
+                "stopped": false,
+                "total": false
+              },
+              "cost_usd": null,
+              "latency_ms": 2376.051,
+              "passed": false,
+              "recovered_after_restart": true,
+              "repeat": 1,
+              "replay_same_receipt": true,
+              "spent_credits": 2,
+              "state": "failed",
+              "usage": {
+                "input_tokens": 1470,
+                "output_tokens": 56
+              }
+            },
+            {
+              "calls": 2,
+              "case_id": "unknown-target",
+              "checks": {
+                "calculator_receipt": true,
+                "current_lineage": true,
+                "lookup_receipt": false,
+                "managed_members": true,
+                "parent_completion": false,
+                "prior_evidence": false,
+                "recovery": true,
+                "status": false,
+                "stopped": false,
+                "total": false
+              },
+              "cost_usd": null,
+              "latency_ms": 2777.768,
+              "passed": false,
+              "recovered_after_restart": true,
+              "repeat": 2,
+              "replay_same_receipt": true,
+              "spent_credits": 2,
+              "state": "failed",
+              "usage": {
+                "input_tokens": 1470,
+                "output_tokens": 56
+              }
+            }
+          ],
+          "chain": "team",
+          "completion_gate": true,
+          "completion_policy": "inventory-parent-completion",
+          "cost_usd": null,
+          "dataset_sha256": "e4b270d76d376de4527d1c5dc7a04866ebca772beb994edd2296982ec34216b4",
+          "datasets_and_instructions_unchanged": true,
+          "denominator": {
+            "attempted": 15,
+            "failed": 12,
+            "passed": 3,
+            "planned": 15,
+            "unattempted": 0
+          },
+          "execution_receipt": {
+            "calls": 30,
+            "client_closed": true,
+            "elapsed_seconds": 32.269,
+            "passed": 3,
+            "status": "completed",
+            "total": 15
+          },
+          "failure_replay": false,
+          "kind": "orchestration-task-evaluation",
+          "limits": {
+            "max_calls": 96,
+            "max_cases": 5,
+            "max_cost_usd": null,
+            "max_output_tokens": 2048,
+            "repeats": 3,
+            "timeout_seconds": 45
+          },
+          "outer_wall_seconds": 900,
+          "provider": {
+            "configuration_sha256": "a5eee31eeb8110af3325163b84aec4535aa7acfeb298c9ebd8645a7718911525",
+            "generation": {
+              "temperature": 0
+            },
+            "json_mode": true,
+            "kind": "deepseek-chat-completions",
+            "max_output_tokens": 2048,
+            "model": "deepseek-flash",
+            "offline_fixture": false,
+            "thinking": "disabled",
+            "timeout": 45,
+            "token_parameter": "max_tokens",
+            "version": "1"
+          },
+          "sample_model_quality": {
+            "task_success_rate": 0.2
+          },
+          "source_sha256": {
+            "execution_receipt": "b80b61331b7f040164c79f1446d83186eda1e388a5cbf933abc61607203626b8",
+            "fixed_configuration": "2d92cf6bcc33bf632598390fb44ed8890fd29c7269d2f85683b4741120d36af7",
+            "report": "b38f4cf4680d80d77df19cd1231dc058599482ac5d8ec57cef65bcd7c11b0c57"
+          },
+          "status": "completed",
+          "summary": {
+            "all_repeats_passed_count": 1,
+            "attempted": 15,
+            "calls": 30,
+            "dimensions": {
+              "calculator_receipt": {
+                "passed": 6,
+                "rate": 0.4,
+                "total": 15
+              },
+              "current_lineage": {
+                "passed": 15,
+                "rate": 1.0,
+                "total": 15
+              },
+              "lookup_receipt": {
+                "passed": 3,
+                "rate": 0.2,
+                "total": 15
+              },
+              "managed_members": {
+                "passed": 15,
+                "rate": 1.0,
+                "total": 15
+              },
+              "parent_completion": {
+                "passed": 3,
+                "rate": 0.2,
+                "total": 15
+              },
+              "prior_evidence": {
+                "passed": 3,
+                "rate": 0.2,
+                "total": 15
+              },
+              "recovery": {
+                "passed": 15,
+                "rate": 1.0,
+                "total": 15
+              },
+              "status": {
+                "passed": 3,
+                "rate": 0.2,
+                "total": 15
+              },
+              "stopped": {
+                "passed": 3,
+                "rate": 0.2,
+                "total": 15
+              },
+              "total": {
+                "passed": 3,
+                "rate": 0.2,
+                "total": 15
+              }
+            },
+            "mixed_outcome_case_count": 0,
+            "pass_rate": 0.2,
+            "passed": 3,
+            "per_case": {
+              "bolts-a": {
+                "all_repeats_passed": false,
+                "attempted": 3,
+                "calls": 6,
+                "mixed_outcomes": false,
+                "pass_rate": 0.0,
+                "passed": 0,
+                "total": 3
+              },
+              "missing-target": {
+                "all_repeats_passed": true,
+                "attempted": 3,
+                "calls": 6,
+                "mixed_outcomes": false,
+                "pass_rate": 1.0,
+                "passed": 3,
+                "total": 3
+              },
+              "unknown-target": {
+                "all_repeats_passed": false,
+                "attempted": 3,
+                "calls": 6,
+                "mixed_outcomes": false,
+                "pass_rate": 0.0,
+                "passed": 0,
+                "total": 3
+              },
+              "wire-a": {
+                "all_repeats_passed": false,
+                "attempted": 3,
+                "calls": 6,
+                "mixed_outcomes": false,
+                "pass_rate": 0.0,
+                "passed": 0,
+                "total": 3
+              },
+              "wire-b": {
+                "all_repeats_passed": false,
+                "attempted": 3,
+                "calls": 6,
+                "mixed_outcomes": false,
+                "pass_rate": 0.0,
+                "passed": 0,
+                "total": 3
+              }
+            },
+            "repeated_case_count": 5,
+            "total": 15
+          },
+          "usage": {
+            "input_tokens": 21943,
+            "output_tokens": 775
+          }
+        }
+      ],
+      "failure_rows_retained": true,
+      "json_mode": true,
+      "phase_id": "json-mode"
+    },
+    {
+      "chains": [
+        {
+          "attempt_statuses": {
+            "responded": 54
+          },
+          "calls": 54,
+          "case_results": [
+            {
+              "calls": 4,
+              "case_id": "wire-a",
+              "checks": {
+                "calculator_receipt": false,
+                "current_lineage": true,
+                "lookup_receipt": false,
+                "managed_members": true,
+                "parent_completion": false,
+                "prior_evidence": false,
+                "recovery": true,
+                "status": false,
+                "stopped": false,
+                "total": false
+              },
+              "cost_usd": null,
+              "latency_ms": 4173.675,
+              "passed": false,
+              "recovered_after_restart": true,
+              "repeat": 0,
+              "replay_same_receipt": true,
+              "spent_credits": 4,
+              "state": "failed",
+              "usage": {
+                "input_tokens": 2678,
+                "output_tokens": 104
+              }
+            },
+            {
+              "calls": 4,
+              "case_id": "wire-a",
+              "checks": {
+                "calculator_receipt": false,
+                "current_lineage": true,
+                "lookup_receipt": false,
+                "managed_members": true,
+                "parent_completion": false,
+                "prior_evidence": false,
+                "recovery": true,
+                "status": false,
+                "stopped": false,
+                "total": false
+              },
+              "cost_usd": null,
+              "latency_ms": 3805.57,
+              "passed": false,
+              "recovered_after_restart": true,
+              "repeat": 1,
+              "replay_same_receipt": true,
+              "spent_credits": 4,
+              "state": "failed",
+              "usage": {
+                "input_tokens": 2678,
+                "output_tokens": 104
+              }
+            },
+            {
+              "calls": 4,
+              "case_id": "wire-a",
+              "checks": {
+                "calculator_receipt": false,
+                "current_lineage": true,
+                "lookup_receipt": false,
+                "managed_members": true,
+                "parent_completion": false,
+                "prior_evidence": false,
+                "recovery": true,
+                "status": false,
+                "stopped": false,
+                "total": false
+              },
+              "cost_usd": null,
+              "latency_ms": 4026.339,
+              "passed": false,
+              "recovered_after_restart": true,
+              "repeat": 2,
+              "replay_same_receipt": true,
+              "spent_credits": 4,
+              "state": "failed",
+              "usage": {
+                "input_tokens": 2678,
+                "output_tokens": 104
+              }
+            },
+            {
+              "calls": 4,
+              "case_id": "wire-b",
+              "checks": {
+                "calculator_receipt": false,
+                "current_lineage": true,
+                "lookup_receipt": false,
+                "managed_members": true,
+                "parent_completion": false,
+                "prior_evidence": false,
+                "recovery": true,
+                "status": false,
+                "stopped": false,
+                "total": false
+              },
+              "cost_usd": null,
+              "latency_ms": 3219.546,
+              "passed": false,
+              "recovered_after_restart": true,
+              "repeat": 0,
+              "replay_same_receipt": true,
+              "spent_credits": 4,
+              "state": "failed",
+              "usage": {
+                "input_tokens": 2678,
+                "output_tokens": 104
+              }
+            },
+            {
+              "calls": 4,
+              "case_id": "wire-b",
+              "checks": {
+                "calculator_receipt": false,
+                "current_lineage": true,
+                "lookup_receipt": false,
+                "managed_members": true,
+                "parent_completion": false,
+                "prior_evidence": false,
+                "recovery": true,
+                "status": false,
+                "stopped": false,
+                "total": false
+              },
+              "cost_usd": null,
+              "latency_ms": 3993.865,
+              "passed": false,
+              "recovered_after_restart": true,
+              "repeat": 1,
+              "replay_same_receipt": true,
+              "spent_credits": 4,
+              "state": "failed",
+              "usage": {
+                "input_tokens": 2678,
+                "output_tokens": 104
+              }
+            },
+            {
+              "calls": 4,
+              "case_id": "wire-b",
+              "checks": {
+                "calculator_receipt": false,
+                "current_lineage": true,
+                "lookup_receipt": false,
+                "managed_members": true,
+                "parent_completion": false,
+                "prior_evidence": false,
+                "recovery": true,
+                "status": false,
+                "stopped": false,
+                "total": false
+              },
+              "cost_usd": null,
+              "latency_ms": 5269.285,
+              "passed": false,
+              "recovered_after_restart": true,
+              "repeat": 2,
+              "replay_same_receipt": true,
+              "spent_credits": 4,
+              "state": "failed",
+              "usage": {
+                "input_tokens": 2678,
+                "output_tokens": 104
+              }
+            },
+            {
+              "calls": 4,
+              "case_id": "bolts-a",
+              "checks": {
+                "calculator_receipt": false,
+                "current_lineage": true,
+                "lookup_receipt": false,
+                "managed_members": true,
+                "parent_completion": false,
+                "prior_evidence": false,
+                "recovery": true,
+                "status": false,
+                "stopped": false,
+                "total": false
+              },
+              "cost_usd": null,
+              "latency_ms": 3323.437,
+              "passed": false,
+              "recovered_after_restart": true,
+              "repeat": 0,
+              "replay_same_receipt": true,
+              "spent_credits": 4,
+              "state": "failed",
+              "usage": {
+                "input_tokens": 2684,
+                "output_tokens": 108
+              }
+            },
+            {
+              "calls": 4,
+              "case_id": "bolts-a",
+              "checks": {
+                "calculator_receipt": false,
+                "current_lineage": true,
+                "lookup_receipt": false,
+                "managed_members": true,
+                "parent_completion": false,
+                "prior_evidence": false,
+                "recovery": true,
+                "status": false,
+                "stopped": false,
+                "total": false
+              },
+              "cost_usd": null,
+              "latency_ms": 3045.585,
+              "passed": false,
+              "recovered_after_restart": true,
+              "repeat": 1,
+              "replay_same_receipt": true,
+              "spent_credits": 4,
+              "state": "failed",
+              "usage": {
+                "input_tokens": 2684,
+                "output_tokens": 108
+              }
+            },
+            {
+              "calls": 4,
+              "case_id": "bolts-a",
+              "checks": {
+                "calculator_receipt": false,
+                "current_lineage": true,
+                "lookup_receipt": false,
+                "managed_members": true,
+                "parent_completion": false,
+                "prior_evidence": false,
+                "recovery": true,
+                "status": false,
+                "stopped": false,
+                "total": false
+              },
+              "cost_usd": null,
+              "latency_ms": 3528.366,
+              "passed": false,
+              "recovered_after_restart": true,
+              "repeat": 2,
+              "replay_same_receipt": true,
+              "spent_credits": 4,
+              "state": "failed",
+              "usage": {
+                "input_tokens": 2684,
+                "output_tokens": 108
+              }
+            },
+            {
+              "calls": 2,
+              "case_id": "missing-target",
+              "checks": {
+                "calculator_receipt": true,
+                "current_lineage": true,
+                "lookup_receipt": true,
+                "managed_members": true,
+                "parent_completion": true,
+                "prior_evidence": true,
+                "recovery": true,
+                "status": true,
+                "stopped": true,
+                "total": true
+              },
+              "cost_usd": null,
+              "latency_ms": 2040.141,
+              "passed": true,
+              "recovered_after_restart": true,
+              "repeat": 0,
+              "replay_same_receipt": true,
+              "spent_credits": 2,
+              "state": "succeeded",
+              "usage": {
+                "input_tokens": 1320,
+                "output_tokens": 35
+              }
+            },
+            {
+              "calls": 2,
+              "case_id": "missing-target",
+              "checks": {
+                "calculator_receipt": true,
+                "current_lineage": true,
+                "lookup_receipt": true,
+                "managed_members": true,
+                "parent_completion": true,
+                "prior_evidence": true,
+                "recovery": true,
+                "status": true,
+                "stopped": true,
+                "total": true
+              },
+              "cost_usd": null,
+              "latency_ms": 1611.149,
+              "passed": true,
+              "recovered_after_restart": true,
+              "repeat": 1,
+              "replay_same_receipt": true,
+              "spent_credits": 2,
+              "state": "succeeded",
+              "usage": {
+                "input_tokens": 1320,
+                "output_tokens": 35
+              }
+            },
+            {
+              "calls": 2,
+              "case_id": "missing-target",
+              "checks": {
+                "calculator_receipt": true,
+                "current_lineage": true,
+                "lookup_receipt": true,
+                "managed_members": true,
+                "parent_completion": true,
+                "prior_evidence": true,
+                "recovery": true,
+                "status": true,
+                "stopped": true,
+                "total": true
+              },
+              "cost_usd": null,
+              "latency_ms": 1732.233,
+              "passed": true,
+              "recovered_after_restart": true,
+              "repeat": 2,
+              "replay_same_receipt": true,
+              "spent_credits": 2,
+              "state": "succeeded",
+              "usage": {
+                "input_tokens": 1320,
+                "output_tokens": 35
+              }
+            },
+            {
+              "calls": 4,
+              "case_id": "unknown-target",
+              "checks": {
+                "calculator_receipt": true,
+                "current_lineage": true,
+                "lookup_receipt": false,
+                "managed_members": true,
+                "parent_completion": false,
+                "prior_evidence": false,
+                "recovery": true,
+                "status": false,
+                "stopped": false,
+                "total": false
+              },
+              "cost_usd": null,
+              "latency_ms": 4583.838,
+              "passed": false,
+              "recovered_after_restart": true,
+              "repeat": 0,
+              "replay_same_receipt": true,
+              "spent_credits": 4,
+              "state": "failed",
+              "usage": {
+                "input_tokens": 2690,
+                "output_tokens": 112
+              }
+            },
+            {
+              "calls": 4,
+              "case_id": "unknown-target",
+              "checks": {
+                "calculator_receipt": true,
+                "current_lineage": true,
+                "lookup_receipt": false,
+                "managed_members": true,
+                "parent_completion": false,
+                "prior_evidence": false,
+                "recovery": true,
+                "status": false,
+                "stopped": false,
+                "total": false
+              },
+              "cost_usd": null,
+              "latency_ms": 3801.92,
+              "passed": false,
+              "recovered_after_restart": true,
+              "repeat": 1,
+              "replay_same_receipt": true,
+              "spent_credits": 4,
+              "state": "failed",
+              "usage": {
+                "input_tokens": 2690,
+                "output_tokens": 112
+              }
+            },
+            {
+              "calls": 4,
+              "case_id": "unknown-target",
+              "checks": {
+                "calculator_receipt": true,
+                "current_lineage": true,
+                "lookup_receipt": false,
+                "managed_members": true,
+                "parent_completion": false,
+                "prior_evidence": false,
+                "recovery": true,
+                "status": false,
+                "stopped": false,
+                "total": false
+              },
+              "cost_usd": null,
+              "latency_ms": 3121.889,
+              "passed": false,
+              "recovered_after_restart": true,
+              "repeat": 2,
+              "replay_same_receipt": true,
+              "spent_credits": 4,
+              "state": "failed",
+              "usage": {
+                "input_tokens": 2690,
+                "output_tokens": 112
+              }
+            }
+          ],
+          "chain": "plan",
+          "completion_gate": true,
+          "completion_policy": "inventory-parent-completion",
+          "cost_usd": null,
+          "dataset_sha256": "e4b270d76d376de4527d1c5dc7a04866ebca772beb994edd2296982ec34216b4",
+          "datasets_and_instructions_unchanged": true,
+          "denominator": {
+            "attempted": 15,
+            "failed": 12,
+            "passed": 3,
+            "planned": 15,
+            "unattempted": 0
+          },
+          "execution_receipt": {
+            "calls": 54,
+            "client_closed": true,
+            "elapsed_seconds": 51.38,
+            "passed": 3,
+            "status": "completed",
+            "total": 15
+          },
+          "failure_replay": false,
+          "kind": "orchestration-task-evaluation",
+          "limits": {
+            "max_calls": 96,
+            "max_cases": 5,
+            "max_cost_usd": null,
+            "max_output_tokens": 2048,
+            "repeats": 3,
+            "timeout_seconds": 45
+          },
+          "outer_wall_seconds": 900,
+          "provider": {
+            "configuration_sha256": "4644f4376b97e6b11186fb74c4566cfd1291735f4f743411ac0b3d9b35a9fd03",
+            "generation": {
+              "temperature": 0
+            },
+            "json_mode": false,
+            "kind": "deepseek-chat-completions",
+            "max_output_tokens": 2048,
+            "model": "deepseek-flash",
+            "offline_fixture": false,
+            "thinking": "disabled",
+            "timeout": 45,
+            "token_parameter": "max_tokens",
+            "version": "1"
+          },
+          "sample_model_quality": {
+            "task_success_rate": 0.2
+          },
+          "source_sha256": {
+            "execution_receipt": "35e00d72f1f76f8c433eb78c66e29c0e0b7612cefee8cd384ca36654059dd7d6",
+            "fixed_configuration": "2b44357d2b690785ab5ab8d130122bab9569d66c4394fb5e56cf7c0a2b79043e",
+            "report": "1b82dbd640c79450ca6348d1dfdadbcce7a6279e752e711250a95e1e94c94262"
+          },
+          "status": "completed",
+          "summary": {
+            "all_repeats_passed_count": 1,
+            "attempted": 15,
+            "calls": 54,
+            "dimensions": {
+              "calculator_receipt": {
+                "passed": 6,
+                "rate": 0.4,
+                "total": 15
+              },
+              "current_lineage": {
+                "passed": 15,
+                "rate": 1.0,
+                "total": 15
+              },
+              "lookup_receipt": {
+                "passed": 3,
+                "rate": 0.2,
+                "total": 15
+              },
+              "managed_members": {
+                "passed": 15,
+                "rate": 1.0,
+                "total": 15
+              },
+              "parent_completion": {
+                "passed": 3,
+                "rate": 0.2,
+                "total": 15
+              },
+              "prior_evidence": {
+                "passed": 3,
+                "rate": 0.2,
+                "total": 15
+              },
+              "recovery": {
+                "passed": 15,
+                "rate": 1.0,
+                "total": 15
+              },
+              "status": {
+                "passed": 3,
+                "rate": 0.2,
+                "total": 15
+              },
+              "stopped": {
+                "passed": 3,
+                "rate": 0.2,
+                "total": 15
+              },
+              "total": {
+                "passed": 3,
+                "rate": 0.2,
+                "total": 15
+              }
+            },
+            "mixed_outcome_case_count": 0,
+            "pass_rate": 0.2,
+            "passed": 3,
+            "per_case": {
+              "bolts-a": {
+                "all_repeats_passed": false,
+                "attempted": 3,
+                "calls": 12,
+                "mixed_outcomes": false,
+                "pass_rate": 0.0,
+                "passed": 0,
+                "total": 3
+              },
+              "missing-target": {
+                "all_repeats_passed": true,
+                "attempted": 3,
+                "calls": 6,
+                "mixed_outcomes": false,
+                "pass_rate": 1.0,
+                "passed": 3,
+                "total": 3
+              },
+              "unknown-target": {
+                "all_repeats_passed": false,
+                "attempted": 3,
+                "calls": 12,
+                "mixed_outcomes": false,
+                "pass_rate": 0.0,
+                "passed": 0,
+                "total": 3
+              },
+              "wire-a": {
+                "all_repeats_passed": false,
+                "attempted": 3,
+                "calls": 12,
+                "mixed_outcomes": false,
+                "pass_rate": 0.0,
+                "passed": 0,
+                "total": 3
+              },
+              "wire-b": {
+                "all_repeats_passed": false,
+                "attempted": 3,
+                "calls": 12,
+                "mixed_outcomes": false,
+                "pass_rate": 0.0,
+                "passed": 0,
+                "total": 3
+              }
+            },
+            "repeated_case_count": 5,
+            "total": 15
+          },
+          "usage": {
+            "input_tokens": 36150,
+            "output_tokens": 1389
+          }
+        },
+        {
+          "attempt_statuses": {
+            "responded": 30
+          },
+          "calls": 30,
+          "case_results": [
+            {
+              "calls": 2,
+              "case_id": "wire-a",
+              "checks": {
+                "calculator_receipt": false,
+                "current_lineage": true,
+                "lookup_receipt": false,
+                "managed_members": true,
+                "parent_completion": false,
+                "prior_evidence": false,
+                "recovery": true,
+                "status": false,
+                "stopped": false,
+                "total": false
+              },
+              "cost_usd": null,
+              "latency_ms": 2407.817,
+              "passed": false,
+              "recovered_after_restart": true,
+              "repeat": 0,
+              "replay_same_receipt": true,
+              "spent_credits": 2,
+              "state": "failed",
+              "usage": {
+                "input_tokens": 1418,
+                "output_tokens": 52
+              }
+            },
+            {
+              "calls": 2,
+              "case_id": "wire-a",
+              "checks": {
+                "calculator_receipt": false,
+                "current_lineage": true,
+                "lookup_receipt": false,
+                "managed_members": true,
+                "parent_completion": false,
+                "prior_evidence": false,
+                "recovery": true,
+                "status": false,
+                "stopped": false,
+                "total": false
+              },
+              "cost_usd": null,
+              "latency_ms": 2240.94,
+              "passed": false,
+              "recovered_after_restart": true,
+              "repeat": 1,
+              "replay_same_receipt": true,
+              "spent_credits": 2,
+              "state": "failed",
+              "usage": {
+                "input_tokens": 1418,
+                "output_tokens": 52
+              }
+            },
+            {
+              "calls": 2,
+              "case_id": "wire-a",
+              "checks": {
+                "calculator_receipt": false,
+                "current_lineage": true,
+                "lookup_receipt": false,
+                "managed_members": true,
+                "parent_completion": false,
+                "prior_evidence": false,
+                "recovery": true,
+                "status": false,
+                "stopped": false,
+                "total": false
+              },
+              "cost_usd": null,
+              "latency_ms": 2009.095,
+              "passed": false,
+              "recovered_after_restart": true,
+              "repeat": 2,
+              "replay_same_receipt": true,
+              "spent_credits": 2,
+              "state": "failed",
+              "usage": {
+                "input_tokens": 1418,
+                "output_tokens": 52
+              }
+            },
+            {
+              "calls": 2,
+              "case_id": "wire-b",
+              "checks": {
+                "calculator_receipt": false,
+                "current_lineage": true,
+                "lookup_receipt": false,
+                "managed_members": true,
+                "parent_completion": false,
+                "prior_evidence": false,
+                "recovery": true,
+                "status": false,
+                "stopped": false,
+                "total": false
+              },
+              "cost_usd": null,
+              "latency_ms": 2098.669,
+              "passed": false,
+              "recovered_after_restart": true,
+              "repeat": 0,
+              "replay_same_receipt": true,
+              "spent_credits": 2,
+              "state": "failed",
+              "usage": {
+                "input_tokens": 1418,
+                "output_tokens": 52
+              }
+            },
+            {
+              "calls": 2,
+              "case_id": "wire-b",
+              "checks": {
+                "calculator_receipt": false,
+                "current_lineage": true,
+                "lookup_receipt": false,
+                "managed_members": true,
+                "parent_completion": false,
+                "prior_evidence": false,
+                "recovery": true,
+                "status": false,
+                "stopped": false,
+                "total": false
+              },
+              "cost_usd": null,
+              "latency_ms": 1836.092,
+              "passed": false,
+              "recovered_after_restart": true,
+              "repeat": 1,
+              "replay_same_receipt": true,
+              "spent_credits": 2,
+              "state": "failed",
+              "usage": {
+                "input_tokens": 1418,
+                "output_tokens": 52
+              }
+            },
+            {
+              "calls": 2,
+              "case_id": "wire-b",
+              "checks": {
+                "calculator_receipt": false,
+                "current_lineage": true,
+                "lookup_receipt": false,
+                "managed_members": true,
+                "parent_completion": false,
+                "prior_evidence": false,
+                "recovery": true,
+                "status": false,
+                "stopped": false,
+                "total": false
+              },
+              "cost_usd": null,
+              "latency_ms": 1851.961,
+              "passed": false,
+              "recovered_after_restart": true,
+              "repeat": 2,
+              "replay_same_receipt": true,
+              "spent_credits": 2,
+              "state": "failed",
+              "usage": {
+                "input_tokens": 1418,
+                "output_tokens": 52
+              }
+            },
+            {
+              "calls": 2,
+              "case_id": "bolts-a",
+              "checks": {
+                "calculator_receipt": false,
+                "current_lineage": true,
+                "lookup_receipt": false,
+                "managed_members": true,
+                "parent_completion": false,
+                "prior_evidence": false,
+                "recovery": true,
+                "status": false,
+                "stopped": false,
+                "total": false
+              },
+              "cost_usd": null,
+              "latency_ms": 1841.27,
+              "passed": false,
+              "recovered_after_restart": true,
+              "repeat": 0,
+              "replay_same_receipt": true,
+              "spent_credits": 2,
+              "state": "failed",
+              "usage": {
+                "input_tokens": 1422,
+                "output_tokens": 54
+              }
+            },
+            {
+              "calls": 2,
+              "case_id": "bolts-a",
+              "checks": {
+                "calculator_receipt": false,
+                "current_lineage": true,
+                "lookup_receipt": false,
+                "managed_members": true,
+                "parent_completion": false,
+                "prior_evidence": false,
+                "recovery": true,
+                "status": false,
+                "stopped": false,
+                "total": false
+              },
+              "cost_usd": null,
+              "latency_ms": 1875.176,
+              "passed": false,
+              "recovered_after_restart": true,
+              "repeat": 1,
+              "replay_same_receipt": true,
+              "spent_credits": 2,
+              "state": "failed",
+              "usage": {
+                "input_tokens": 1422,
+                "output_tokens": 54
+              }
+            },
+            {
+              "calls": 2,
+              "case_id": "bolts-a",
+              "checks": {
+                "calculator_receipt": false,
+                "current_lineage": true,
+                "lookup_receipt": false,
+                "managed_members": true,
+                "parent_completion": false,
+                "prior_evidence": false,
+                "recovery": true,
+                "status": false,
+                "stopped": false,
+                "total": false
+              },
+              "cost_usd": null,
+              "latency_ms": 1742.682,
+              "passed": false,
+              "recovered_after_restart": true,
+              "repeat": 2,
+              "replay_same_receipt": true,
+              "spent_credits": 2,
+              "state": "failed",
+              "usage": {
+                "input_tokens": 1422,
+                "output_tokens": 54
+              }
+            },
+            {
+              "calls": 2,
+              "case_id": "missing-target",
+              "checks": {
+                "calculator_receipt": true,
+                "current_lineage": true,
+                "lookup_receipt": true,
+                "managed_members": true,
+                "parent_completion": true,
+                "prior_evidence": true,
+                "recovery": true,
+                "status": true,
+                "stopped": true,
+                "total": true
+              },
+              "cost_usd": null,
+              "latency_ms": 1431.874,
+              "passed": true,
+              "recovered_after_restart": true,
+              "repeat": 0,
+              "replay_same_receipt": true,
+              "spent_credits": 2,
+              "state": "succeeded",
+              "usage": {
+                "input_tokens": 1399,
+                "output_tokens": 35
+              }
+            },
+            {
+              "calls": 2,
+              "case_id": "missing-target",
+              "checks": {
+                "calculator_receipt": true,
+                "current_lineage": true,
+                "lookup_receipt": true,
+                "managed_members": true,
+                "parent_completion": true,
+                "prior_evidence": true,
+                "recovery": true,
+                "status": true,
+                "stopped": true,
+                "total": true
+              },
+              "cost_usd": null,
+              "latency_ms": 1375.616,
+              "passed": true,
+              "recovered_after_restart": true,
+              "repeat": 1,
+              "replay_same_receipt": true,
+              "spent_credits": 2,
+              "state": "succeeded",
+              "usage": {
+                "input_tokens": 1399,
+                "output_tokens": 35
+              }
+            },
+            {
+              "calls": 2,
+              "case_id": "missing-target",
+              "checks": {
+                "calculator_receipt": true,
+                "current_lineage": true,
+                "lookup_receipt": true,
+                "managed_members": true,
+                "parent_completion": true,
+                "prior_evidence": true,
+                "recovery": true,
+                "status": true,
+                "stopped": true,
+                "total": true
+              },
+              "cost_usd": null,
+              "latency_ms": 2070.899,
+              "passed": true,
+              "recovered_after_restart": true,
+              "repeat": 2,
+              "replay_same_receipt": true,
+              "spent_credits": 2,
+              "state": "succeeded",
+              "usage": {
+                "input_tokens": 1399,
+                "output_tokens": 35
+              }
+            },
+            {
+              "calls": 2,
+              "case_id": "unknown-target",
+              "checks": {
+                "calculator_receipt": true,
+                "current_lineage": true,
+                "lookup_receipt": false,
+                "managed_members": true,
+                "parent_completion": false,
+                "prior_evidence": false,
+                "recovery": true,
+                "status": false,
+                "stopped": false,
+                "total": false
+              },
+              "cost_usd": null,
+              "latency_ms": 1821.483,
+              "passed": false,
+              "recovered_after_restart": true,
+              "repeat": 0,
+              "replay_same_receipt": true,
+              "spent_credits": 2,
+              "state": "failed",
+              "usage": {
+                "input_tokens": 1426,
+                "output_tokens": 56
+              }
+            },
+            {
+              "calls": 2,
+              "case_id": "unknown-target",
+              "checks": {
+                "calculator_receipt": true,
+                "current_lineage": true,
+                "lookup_receipt": false,
+                "managed_members": true,
+                "parent_completion": false,
+                "prior_evidence": false,
+                "recovery": true,
+                "status": false,
+                "stopped": false,
+                "total": false
+              },
+              "cost_usd": null,
+              "latency_ms": 1776.771,
+              "passed": false,
+              "recovered_after_restart": true,
+              "repeat": 1,
+              "replay_same_receipt": true,
+              "spent_credits": 2,
+              "state": "failed",
+              "usage": {
+                "input_tokens": 1426,
+                "output_tokens": 56
+              }
+            },
+            {
+              "calls": 2,
+              "case_id": "unknown-target",
+              "checks": {
+                "calculator_receipt": true,
+                "current_lineage": true,
+                "lookup_receipt": false,
+                "managed_members": true,
+                "parent_completion": false,
+                "prior_evidence": false,
+                "recovery": true,
+                "status": false,
+                "stopped": false,
+                "total": false
+              },
+              "cost_usd": null,
+              "latency_ms": 2041.599,
+              "passed": false,
+              "recovered_after_restart": true,
+              "repeat": 2,
+              "replay_same_receipt": true,
+              "spent_credits": 2,
+              "state": "failed",
+              "usage": {
+                "input_tokens": 1426,
+                "output_tokens": 56
+              }
+            }
+          ],
+          "chain": "team",
+          "completion_gate": true,
+          "completion_policy": "inventory-parent-completion",
+          "cost_usd": null,
+          "dataset_sha256": "e4b270d76d376de4527d1c5dc7a04866ebca772beb994edd2296982ec34216b4",
+          "datasets_and_instructions_unchanged": true,
+          "denominator": {
+            "attempted": 15,
+            "failed": 12,
+            "passed": 3,
+            "planned": 15,
+            "unattempted": 0
+          },
+          "execution_receipt": {
+            "calls": 30,
+            "client_closed": true,
+            "elapsed_seconds": 28.448,
+            "passed": 3,
+            "status": "completed",
+            "total": 15
+          },
+          "failure_replay": false,
+          "kind": "orchestration-task-evaluation",
+          "limits": {
+            "max_calls": 96,
+            "max_cases": 5,
+            "max_cost_usd": null,
+            "max_output_tokens": 2048,
+            "repeats": 3,
+            "timeout_seconds": 45
+          },
+          "outer_wall_seconds": 900,
+          "provider": {
+            "configuration_sha256": "4644f4376b97e6b11186fb74c4566cfd1291735f4f743411ac0b3d9b35a9fd03",
+            "generation": {
+              "temperature": 0
+            },
+            "json_mode": false,
+            "kind": "deepseek-chat-completions",
+            "max_output_tokens": 2048,
+            "model": "deepseek-flash",
+            "offline_fixture": false,
+            "thinking": "disabled",
+            "timeout": 45,
+            "token_parameter": "max_tokens",
+            "version": "1"
+          },
+          "sample_model_quality": {
+            "task_success_rate": 0.2
+          },
+          "source_sha256": {
+            "execution_receipt": "610b9e2547921671488e889c08a8f35aaf8c5d8ada3624953362273f49efc85e",
+            "fixed_configuration": "c511edacdbcb1c62996f905e641b139a8388fe80151d7737f386d241f6d29485",
+            "report": "e67d3ec7af27a4dc79de845c297016d07916e5678e890951d91592ed1cb48007"
+          },
+          "status": "completed",
+          "summary": {
+            "all_repeats_passed_count": 1,
+            "attempted": 15,
+            "calls": 30,
+            "dimensions": {
+              "calculator_receipt": {
+                "passed": 6,
+                "rate": 0.4,
+                "total": 15
+              },
+              "current_lineage": {
+                "passed": 15,
+                "rate": 1.0,
+                "total": 15
+              },
+              "lookup_receipt": {
+                "passed": 3,
+                "rate": 0.2,
+                "total": 15
+              },
+              "managed_members": {
+                "passed": 15,
+                "rate": 1.0,
+                "total": 15
+              },
+              "parent_completion": {
+                "passed": 3,
+                "rate": 0.2,
+                "total": 15
+              },
+              "prior_evidence": {
+                "passed": 3,
+                "rate": 0.2,
+                "total": 15
+              },
+              "recovery": {
+                "passed": 15,
+                "rate": 1.0,
+                "total": 15
+              },
+              "status": {
+                "passed": 3,
+                "rate": 0.2,
+                "total": 15
+              },
+              "stopped": {
+                "passed": 3,
+                "rate": 0.2,
+                "total": 15
+              },
+              "total": {
+                "passed": 3,
+                "rate": 0.2,
+                "total": 15
+              }
+            },
+            "mixed_outcome_case_count": 0,
+            "pass_rate": 0.2,
+            "passed": 3,
+            "per_case": {
+              "bolts-a": {
+                "all_repeats_passed": false,
+                "attempted": 3,
+                "calls": 6,
+                "mixed_outcomes": false,
+                "pass_rate": 0.0,
+                "passed": 0,
+                "total": 3
+              },
+              "missing-target": {
+                "all_repeats_passed": true,
+                "attempted": 3,
+                "calls": 6,
+                "mixed_outcomes": false,
+                "pass_rate": 1.0,
+                "passed": 3,
+                "total": 3
+              },
+              "unknown-target": {
+                "all_repeats_passed": false,
+                "attempted": 3,
+                "calls": 6,
+                "mixed_outcomes": false,
+                "pass_rate": 0.0,
+                "passed": 0,
+                "total": 3
+              },
+              "wire-a": {
+                "all_repeats_passed": false,
+                "attempted": 3,
+                "calls": 6,
+                "mixed_outcomes": false,
+                "pass_rate": 0.0,
+                "passed": 0,
+                "total": 3
+              },
+              "wire-b": {
+                "all_repeats_passed": false,
+                "attempted": 3,
+                "calls": 6,
+                "mixed_outcomes": false,
+                "pass_rate": 0.0,
+                "passed": 0,
+                "total": 3
+              }
+            },
+            "repeated_case_count": 5,
+            "total": 15
+          },
+          "usage": {
+            "input_tokens": 21249,
+            "output_tokens": 747
+          }
+        }
+      ],
+      "failure_rows_retained": true,
+      "json_mode": false,
+      "phase_id": "non-json-mode"
+    }
+  ],
+  "provenance": {
+    "core_installed_source_equal": true,
+    "installed_origin": "site-packages outside checkout",
+    "module_manifest_sha256": "cd922d42a78c9bf5bcfe15717db4d9ad8e8dca4bb7d3f35af3602a0dad602f60",
+    "python_modules": 349,
+    "sdist_filename": "ralf_agent-0.1.0.dev98.tar.gz",
+    "sdist_sha256": "fcd877ec7ba68e7f99ff6ba52ac1db66f4ec25d2403165a20e746100e622cf6d",
+    "sdk_installed_source_equal": true,
+    "source_receipts_sha256": {
+      "final_vs_tested": "7c56a4416b16865038b9a9cbe8fdaadd6623fe2bd7007d3fbd6584cef27df9c4",
+      "provenance": "bc982f14a59ed2f0a68fc136e0e88c83a15c1c7c439773e4b47b7eda6a2d6e88",
+      "release": "1ffc49670e343906a892cc7afb306664a756ae2d3575eccf90115c12be010184"
+    },
+    "source_wheel_sdist_equal": true,
+    "wheel_filename": "ralf_agent-0.1.0.dev98-py3-none-any.whl",
+    "wheel_sha256": "316b9cc0fbdd6ebf8ae8de0a2963e74031cca2e76b0d93caa0bb33091ac63562"
+  },
+  "schema_version": "1",
+  "scope": "Constrained synthetic business and inventory samples; repeat measurements of the same frozen tasks.",
+  "semantic_rag_quality_established": false
+}

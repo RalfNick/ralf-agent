@@ -31,6 +31,54 @@ assert report["model_quality"] is None
 
 调用 `run_reference(..., business_provider=provider, verification_provider=reviewer)`可以分别替换两个模型，客户端由调用者拥有并关闭。模型阶段固定为无工具的一次决策，必须返回 `{status,feedback,evidence_ids}`。实际 Provider 配置仍遵循[模型工具指南](sdk-model-tools.md)与[原生续接](model-continuation.md)；思考 Provider 需要原 continuation/history 装配。参考函数没有自动开启这些能力，使用原生思考协议时应显式构造 Runtime/Profile。
 
+## 成员完成验证与固定评测
+
+`member_verification=True` 显式给 researcher／writer 绑定
+`InventoryMemberCompletionVerifier`：研究结果必须来自原 `inventory_lookup` 回执，完成报价
+必须消费原 `calculator` 回执；缺输入、未知商品和库存不足仍如实停止。拒绝完成时复用原
+有界反馈循环，不重新执行已采纳的工具。父级 gate 和可选独立 reviewer 保持原职责。
+旧默认为 False，定义、额度和报告保持；启用后是新定义，请使用新数据库或原恢复工厂。
+
+```sh
+python -m ralf_agent.parent_completion_starter --kind plan --member-verification --db-path ./plan.sqlite
+python -m ralf_agent.parent_completion_starter --kind team --member-verification --db-path ./team.sqlite
+```
+
+下面在安装后执行原五个库存案例，生成配置固定并且每个案例重复三次；更换 `kind`
+分别验收 Plan／Team。客户端由宿主拥有，失败及未尝试项进入原评分分母。工具均只读，
+写审批不适用；该集合不证明模型自主规划或任意团队质量。
+
+```python
+import asyncio
+import os
+import httpx
+from ralf_agent import DeepSeekChatProvider, EvaluationLimits, evaluate_orchestration
+
+async def main():
+    async with httpx.AsyncClient(timeout=45) as client:
+        provider = DeepSeekChatProvider(
+            os.environ["RALF_GENERATION_MODEL"],
+            api_key=os.environ["RALF_GENERATION_KEY"],
+            base_url=os.environ["RALF_GENERATION_URL"],
+            client=client, json_mode=False, temperature=0,
+            max_output_tokens=2048, timeout=45,
+        )
+        return await evaluate_orchestration(
+            provider, kind="plan-and-execute", completion_gate=True,
+            member_verification=True,
+            limits=EvaluationLimits(max_cases=5, repeats=3, max_calls=96,
+                                    max_output_tokens=2048, timeout_seconds=45),
+            evidence_dir="./private-plan-evidence",
+        )
+
+report = asyncio.run(main())
+```
+
+CLI `ralf-evaluate-orchestration --member-verification --completion-gate` 也支持原
+已注册 Provider 配置；启用成员验证但未启用父级 gate 时在客户端创建前拒绝。原 JSON／TOML 能力绑定
+可显式注册自定义 CompletionVerifier；参考政策仅约束库存业务，不成为所有 Agent 的默认。
+阶段质量结果及支持边界见 [delivery-gates.md](delivery-gates.md)。
+
 ## SDK 和 TOML：接入自己的工具
 
 下面的完整离线例子使用一个真实计算工具。先把 TOML 保存为 `completion.toml`；两个 demo adapter 由应用显式注册，框架不会根据字符串导入任意模块。

@@ -1,5 +1,7 @@
 # RALF AgentHarness 目标架构
 
+本架构继续作为职责和扩展契约基线；推进按[分阶段交付门槛](../../docs/delivery-gates.md)，先复用现有组合完成四条参考业务链路。成员业务完成反馈复用原 Agent verifier 与执行权威，父级 gate 仍负责原回执采纳，不新增 Harness 状态机或调度器。
+
 Dev94 首个知识检索适配契约子集已验收，沿用原 KnowledgeContext、BuildContext、Runtime 与执行权威。Suite 只验证固定行为，不持有新 Run／Session／租约或 History；原活跃操作／资源／workspace 在 release或close 失败后仍由同owner负责。完整 Harness 与其他角色仍开放。见[本批验收](../reviews/2026-10-13-knowledge-adapter-contracts.md)。
 
 Dev93 持久用户输入子集已验收：Harness／Planner 只提出问题，原执行

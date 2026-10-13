@@ -76,6 +76,11 @@ def arguments(argv):
         action="store_true",
         help="Require declared inventory receipts before parent success",
     )
+    parser.add_argument(
+        "--member-verification",
+        action="store_true",
+        help="Require inventory member receipts with --completion-gate; bounded retry feedback",
+    )
     return parser.parse_args(argv)
 
 
@@ -113,6 +118,9 @@ def _own_client(owned, component):
 async def run(args):
     if type(args.completion_gate) is not bool:
         raise ValidationError("Parent completion gate enablement must be boolean")
+    member_verification = getattr(args, "member_verification", False)
+    if type(member_verification) is not bool or member_verification and not args.completion_gate:
+        raise ValidationError("Member verification requires a boolean and the parent gate")
     limits, prices = _configuration(args)
     cases = load_orchestration_cases(args.cases)
     async with AsyncExitStack() as owned:
@@ -134,6 +142,7 @@ async def run(args):
             model_continuation=args.provider
             in {"gemini-functions", "deepseek-thinking", "openai-responses-reasoning"},
             completion_gate=args.completion_gate,
+            **({"member_verification": True} if member_verification else {}),
         )
         if reason:
             report["reason"] = reason

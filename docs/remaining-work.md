@@ -1,4 +1,6 @@
-# dev98：剩余能力与架构验收清单
+# dev99：剩余能力与架构验收清单
+
+当前按用户修订的[分阶段交付门槛](delivery-gates.md)推进：四条有限 Local 参考链路的安装／必要恢复／质量／文档验证已通过，随本地提交冻结后转入环境执行阶段；服务与企业治理随后推进。R01–R26 保留，非阻塞扩展不自动进入当前批次。默认模型配置、失败历史和真实质量范围分别登记，不以案例分数宣称完整框架或 M1 验收。
 
 Dev98 自动 Facts 索引维护首期子集已验收：来源快照分代、原 Graph ToolAction、准确效果日志和 ready-only Agent 门禁；SDK／JSON／TOML、owned／borrowed 与可编辑 memory-index 模板接通原 Session／Profile 恢复。最终冻结源码 8298 passed／617 配置依赖跳过，两套安装各 163 项零跳过，12 种配置／32 个实际 Turn、六类进程窗口和旧 dev97 的 16 组 Run／Turn 双向兼容通过。349 产品模块一致，四项审查问题由同一审查者闭环。首期仅原生 SQLite／Hash；真实语义／模型质量、远程及 Temporal 维护、后台／增量物理清理／GC、两项 P3 严格输入观察、完整 R01–R26／H3／M1 和外部采用继续开放。 见[使用指南](fact-index-maintenance.md)与[验收记录](../architecture/reviews/2026-10-13-fact-index-maintenance.md)。
 

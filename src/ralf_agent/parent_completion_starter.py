@@ -183,43 +183,59 @@ def _tools(dataset):
     return registry
 
 
-def _definition(kind):
+def _definition(kind, *, member_verification=False):
     members = {
         "researcher": AgentSpec(
             "researcher",
             "Read the structured dataset_id,target,quantity request (for Team: task). If target or quantity is null, return {request,lookup:null} without tools. Otherwise use inventory_lookup with the exact dataset_id and target. Consume the actual tool result and return {request,lookup}; never invent facts or calculate.",
             tools=("inventory_lookup",),
-            max_decisions=2,
+            max_decisions=4 if member_verification else 2,
             output_schema=_EVIDENCE_SCHEMA,
         ),
         "writer": AgentSpec(
             "writer",
             "Consume researcher evidence (for Team: results.researcher). Missing input or insufficient stock requires needs_input,total:null; a negative lookup requires not_found,total:null. Otherwise call calculator with the exact original quantity and lookup unit_price_cents. Consume its receipt and return completed with its integer total. Stop on missing input, unknown SKU or insufficient stock; do not call calculator then.",
             tools=("calculator",),
-            max_decisions=2,
+            max_decisions=4 if member_verification else 2,
             output_schema=_OUTPUT_SCHEMA,
         ),
     }
     if kind == "team":
-        return TeamSpec(
+        definition = TeamSpec(
             "inventory-reference-team",
             members,
             strategy="supervisor",
             strategy_config={"supervisor": "writer"},
             completion_policy="inventory",
-            child_budget=4,
+            child_budget=8 if member_verification else 4,
             max_concurrency=1,
         )
-    return DynamicWorkflowSpec(
-        "inventory-reference-plan",
-        members,
-        plan_mode="dag",
-        completion_policy="inventory",
-        child_budget=4,
-        max_concurrency=1,
-        max_revisions=1,
-        max_steps=4,
-    )
+    else:
+        definition = DynamicWorkflowSpec(
+            "inventory-reference-plan",
+            members,
+            plan_mode="dag",
+            completion_policy="inventory",
+            child_budget=8 if member_verification else 4,
+            max_concurrency=1,
+            max_revisions=1,
+            max_steps=4,
+        )
+    if member_verification:
+        from .binding_definitions import BoundDefinition
+        from .binding_types import AgentBindingDescriptor, BindingSelection
+
+        prefix = "team" if kind == "team" else "dynamic"
+        return BoundDefinition(
+            definition,
+            {
+                prefix + "/members/" + member: AgentBindingDescriptor(
+                    verifier=BindingSelection.ref("inventory-" + member, "1")
+                )
+                for member in ("researcher", "writer")
+            },
+        )
+    return definition
 
 
 def _report(engine, handle, snapshot, *, business_offline, verification_offline):
@@ -273,6 +289,7 @@ async def run_reference(
     db_path=None,
     business_provider=None,
     verification_provider=None,
+    member_verification=False,
 ):
     """Run one receipt-gated inventory task, borrowing optional provider clients.
 
@@ -284,6 +301,7 @@ async def run_reference(
         type(kind) is not str
         or kind not in {"plan", "team"}
         or type(model_verification) is not bool
+        or type(member_verification) is not bool
     ):
         raise ValidationError("Reference requires kind plan/team and boolean model_verification")
     from jsonschema import Draft202012Validator
@@ -315,27 +333,49 @@ async def run_reference(
     async def execute(path):
         store = SQLiteStore(path)
         try:
+            options = {}
+            if member_verification:
+                from .binding_catalog import BindingCatalog
+                from .inventory_member_completion import InventoryMemberCompletionVerifier
+                from .types import Scope
+
+                catalog = BindingCatalog(scope=Scope())
+                for member in ("researcher", "writer"):
+                    catalog.register(
+                        "verifier",
+                        "inventory-" + member,
+                        "1",
+                        InventoryMemberCompletionVerifier(member),
+                    )
+                options["binding_catalog"] = catalog
             engine = LocalEngine(
                 store,
                 providers=providers,
                 tools=_tools(dataset),
                 parent_completion_policies={"inventory": policy},
+                **options,
             )
         except BaseException:
             store.close()
             raise
         with engine:
             handle = engine.submit(
-                _definition(kind), incoming, command_id="inventory-reference", budget=12
+                _definition(kind, member_verification=member_verification),
+                incoming,
+                command_id="inventory-reference",
+                budget=20 if member_verification else 12,
             )
             snapshot = await engine.drive(handle.run_id)
-            return _report(
+            report = _report(
                 engine,
                 handle,
                 snapshot,
                 business_offline=business_offline,
                 verification_offline=verification_offline,
             )
+            if member_verification:
+                report["member_verification"] = True
+            return report
 
     if db_path is not None:
         return await execute(Path(db_path))
@@ -349,6 +389,7 @@ def main(argv=None):
     )
     parser.add_argument("--kind", choices=("plan", "team"), default="plan")
     parser.add_argument("--model-verification", action="store_true")
+    parser.add_argument("--member-verification", action="store_true")
     parser.add_argument("--db-path")
     parser.add_argument(
         "--task", help="Structured dataset_id,target,quantity JSON; defaults to three wire units."
@@ -361,6 +402,7 @@ def main(argv=None):
                 args.kind,
                 task=task,
                 model_verification=args.model_verification,
+                member_verification=args.member_verification,
                 db_path=args.db_path,
             )
         )

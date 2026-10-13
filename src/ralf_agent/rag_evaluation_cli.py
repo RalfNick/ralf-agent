@@ -31,6 +31,11 @@ def arguments(argv):
         default=128,
         help="Global single-text embedding adapter invocation cap",
     )
+    parser.add_argument(
+        "--typed-answers",
+        action="store_true",
+        help="Use explicit scalar/object JSON answer instructions for the reference tasks",
+    )
     return parser.parse_args(argv)
 
 
@@ -67,6 +72,9 @@ def _embedding_provider(args, limits):
 
 
 async def run(args):
+    typed_answers = getattr(args, "typed_answers", False)
+    if type(typed_answers) is not bool:
+        raise ValidationError("Typed answer enablement must be boolean")
     limits, prices = _configuration(args)
     if not 1 <= args.max_embedding_calls <= 100000:
         raise ValidationError("Embedding call limit must be a bounded positive integer")
@@ -97,6 +105,7 @@ async def run(args):
             max_embedding_calls=args.max_embedding_calls,
             model_continuation=args.provider
             in {"gemini-functions", "deepseek-thinking", "openai-responses-reasoning"},
+            **({"typed_answers": True} if typed_answers else {}),
         )
         if reason:
             report["reason"] = reason

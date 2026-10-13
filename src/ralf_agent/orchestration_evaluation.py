@@ -341,7 +341,16 @@ class _OrchestrationProvider(PinnedEvaluationProvider):
         super().validate_request(messages, tools)
 
 
-def _assembly(case, provider, kind, directory, *, model_continuation=False, completion_gate=False):
+def _assembly(
+    case,
+    provider,
+    kind,
+    directory,
+    *,
+    model_continuation=False,
+    completion_gate=False,
+    member_verification=False,
+):
     """Factories capture trusted tools and borrow the caller's audited provider."""
     registry = ComponentRegistry()
     registry.register("provider", "evaluation-borrowed", lambda config, context: provider)
@@ -373,11 +382,42 @@ def _assembly(case, provider, kind, directory, *, model_continuation=False, comp
                 }
             },
         }
+    bindings = None
+    binding_components = None
+    if member_verification:
+        from .binding_types import AgentBindingDescriptor, BindingSelection
+        from .inventory_member_completion import InventoryMemberCompletionVerifier
+
+        registry.register(
+            "verifier",
+            "evaluation-inventory-member",
+            lambda config, context: InventoryMemberCompletionVerifier(**config),
+        )
+        prefix = "dynamic" if kind == "plan-and-execute" else "team"
+        bindings = {
+            prefix + "/members/" + member: AgentBindingDescriptor(
+                verifier=BindingSelection.ref("inventory-" + member, "1")
+            )
+            for member in ("researcher", "writer")
+        }
+        binding_components = [
+            {
+                "role": "verifier",
+                "component_id": "inventory-" + member,
+                "version": "1",
+                "component": {
+                    "adapter": "evaluation-inventory-member",
+                    "config": {"member": member, "request_pointer": "/request"},
+                },
+            }
+            for member in ("researcher", "writer")
+        ]
     profile = recommended_profile(
         kind,
         version="2",
         provider={"adapter": "evaluation-borrowed"},
         components=components,
+        **({"binding_components": binding_components} if member_verification else {}),
     )
     members = {
         "researcher": AgentSpec(
@@ -385,7 +425,7 @@ def _assembly(case, provider, kind, directory, *, model_continuation=False, comp
             "Read the task request. If target or quantity is missing return {request,lookup:null}, without guessing. Otherwise call inventory_lookup with the exact dataset_id and target. Return only JSON {request,lookup}, preserving the original request and the actual lookup tool receipt; do not calculate or invent inventory facts. Exact output schema: "
             + canonical(_EVIDENCE_SCHEMA),
             tools=("inventory_lookup",),
-            max_decisions=2,
+            max_decisions=4 if member_verification else 2,
             output_schema=_EVIDENCE_SCHEMA,
         ),
         "writer": AgentSpec(
@@ -393,7 +433,7 @@ def _assembly(case, provider, kind, directory, *, model_continuation=False, comp
             "Consume the supplied researcher evidence (for a Team, results.researcher). If required input is missing or quantity exceeds stock, return needs_input and total=null. If the actual lookup says found=false return not_found and total=null. Otherwise call calculator using exactly the original request quantity and the lookup item's unit_price_cents. Consume its actual receipt and return completed and that total in integer cents. Return only JSON matching this schema: "
             + canonical(OUTPUT_SCHEMA),
             tools=("calculator",),
-            max_decisions=2,
+            max_decisions=4 if member_verification else 2,
             output_schema=OUTPUT_SCHEMA,
         ),
     }
@@ -405,7 +445,14 @@ def _assembly(case, provider, kind, directory, *, model_continuation=False, comp
         if completion_gate
         else {}
     )
-    harness = recommended_harness(kind, members, version="2", child_budget=8, **completion_options)
+    harness = recommended_harness(
+        kind,
+        members,
+        version="2",
+        child_budget=8,
+        **completion_options,
+        **({"agent_bindings": bindings} if member_verification else {}),
+    )
     return RuntimeBuilder(registry, base_dir=directory), profile, harness
 
 
@@ -569,6 +616,7 @@ async def evaluate_orchestration(
     prices=None,
     model_continuation=False,
     completion_gate=False,
+    member_verification=False,
 ):
     """Measure real managed member results and receipts, without implicit I/O.
 
@@ -578,6 +626,8 @@ async def evaluate_orchestration(
     """
     if type(completion_gate) is not bool:
         raise ValidationError("Parent completion gate enablement must be boolean")
+    if type(member_verification) is not bool or member_verification and not completion_gate:
+        raise ValidationError("Inventory member verification requires the parent completion gate")
     if type(model_continuation) is not bool:
         raise ValidationError("Model continuation enablement must be boolean")
     if kind not in {"plan-and-execute", "team"} or type(offline) is not bool:
@@ -624,6 +674,8 @@ async def evaluate_orchestration(
     }
     if completion_gate:
         report["completion_gate"] = True
+    if member_verification:
+        report["member_verification"] = True
     checks = _CHECKS + (("current_lineage", "parent_completion") if completion_gate else ())
     if provider is None:
         report["reason"] = "provider_not_configured"
@@ -674,6 +726,7 @@ async def evaluate_orchestration(
                     directory,
                     model_continuation=model_continuation,
                     completion_gate=completion_gate,
+                    member_verification=member_verification,
                 )
                 row["runtime"] = {
                     "name": profile.name,

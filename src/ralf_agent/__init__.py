@@ -131,6 +131,7 @@ from .ingestion_types import (
     PreparedIngestion,
     SourceDocument,
 )
+from .inventory_member_completion import InventoryMemberCompletionVerifier
 from .invocation_records import InvocationMiddleware, InvocationRecord
 from .knowledge_adapter_contract import (
     KnowledgeAdapterFixture,
@@ -402,7 +403,7 @@ from .workflow import (
     WorkflowSelection,
 )
 
-__version__ = "0.1.0.dev98"
+__version__ = "0.1.0.dev99"
 from .binding_artifacts import ArtifactBindingResource, ArtifactView
 from .binding_sandbox import SandboxBindingResource
 from .docker_sandbox import DockerSandbox
@@ -931,3 +932,5 @@ __all__ += [
     "ModelContractSession",
     "offline_model_fixture",
 ]
+
+__all__ += ["InventoryMemberCompletionVerifier"]
