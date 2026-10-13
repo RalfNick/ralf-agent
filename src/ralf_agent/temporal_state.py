@@ -110,7 +110,7 @@ def validate_manifest(manifest):
     if manifest["kernel"] == "temporal-3":
         if (
             type(manifest.get("binding_protocol")) is not int
-            or manifest.get("binding_protocol") not in (1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
+            or manifest.get("binding_protocol") not in (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11)
             or manifest.get("dispatch_admission") != "history-1"
         ):
             raise DefinitionMismatch("Unsupported Temporal binding/memory protocol")
@@ -132,6 +132,10 @@ def validate_manifest(manifest):
     from .temporal_tool_execution import validate_protocol as validate_tool_execution
 
     validate_tool_execution(manifest)
+    if "coding_execution_protocol" in manifest or manifest.get("binding_protocol") == 11:
+        from .temporal_coding_protocol import validate_protocol as validate_coding_protocol
+
+        validate_coding_protocol(manifest)
     from .binding_sandbox import validate_sandbox_protocol
 
     validate_sandbox_protocol(manifest)
@@ -219,11 +223,11 @@ def validate_manifest(manifest):
 
 
 def validate_coding_selection(manifest, names):
-    """Local coding has no Temporal admission or native lifecycle protocol yet."""
+    """Only explicitly published finite original Coding releases may select tools."""
     for name in names:
         tool = manifest.get("tools", {}).get(name, {})
         config = tool.get("config", {})
-        if "delegated_runner" in config:
+        if "delegated_runner" in config and "coding_execution_protocol" not in manifest:
             raise DefinitionMismatch(
                 "Delegated coding is supported only by the original Local authority"
             )
@@ -316,6 +320,12 @@ def validate_request(request, manifest):
             )
             for path, value in agent_paths(definition).items()
         ] + (planner_agents if definition["kind"] in {"graph", "team", "dynamic"} else [])
+    if definition.get("kind") not in {"agent", "sequence"} and any(
+        "delegated_runner" in manifest.get("tools", {}).get(name, {}).get("config", {})
+        for value in steps
+        for name in value.get("tools", ())
+    ):
+        raise DefinitionMismatch("Temporal Coding requires original Agent or sequence topology")
     for value in steps:
         spec = AgentSpec(**value)
         validate_coding_selection(manifest, spec.tools)
@@ -532,7 +542,13 @@ class TemporalRunState:
                 return {"rejected": True, "reason": "too_late"}
             if self.state == "cancelled":
                 return {"reason": "already_terminal"}
-            self.state = "cancelled"
+            from .temporal_coding_state import enabled as coding_enabled
+            from .temporal_coding_state import request_stop, stopped
+
+            request_stop(self, {"code": "cancel_requested"})
+            self.state = (
+                "cancelling" if coding_enabled(self.manifest) and not stopped(self) else "cancelled"
+            )
             from .temporal_completion_state import close_pending
 
             close_pending(self)
@@ -595,8 +611,11 @@ class TemporalRunState:
 
     @property
     def quiescent(self):
+        from .temporal_coding_state import stopped as coding_stopped
+
         return (
-            self.active_action is None
+            coding_stopped(self)
+            and self.active_action is None
             and not self.remote_uncertain
             and all(value["execution_stopped"] for value in self.tool_executions.values())
             and (
@@ -731,6 +750,8 @@ class TemporalRunState:
             self.active_action = None
 
     def envelope(self, action):
+        if "delegated_execution" in action:
+            return detached(action["delegated_execution"]["tool_request"])
         return {
             "runtime_manifest": detached(self.manifest),
             "scope": self.scope,
@@ -752,6 +773,13 @@ class TemporalRunState:
 
     def next_operation(self):
         if self.active_action is not None:
+            return None
+        from .temporal_coding_state import next_stop
+
+        stop_operation = next_stop(self)
+        if stop_operation is not None:
+            return stop_operation
+        if self.state == "cancelling":
             return None
         if self.pending_session is not None or self.session_recovery:
             from .temporal_session_save_state import next_stage as next_session
@@ -811,9 +839,12 @@ class TemporalRunState:
                 return None
             if not self._reserve(action, manifest["cost"]):
                 return None
+            from .temporal_coding_state import prepare as prepare_coding
             from .temporal_tool_execution_state import prepare
 
-            return action, prepare(self, action, self.envelope(action))
+            return action, prepare(
+                self, action, prepare_coding(self, action, self.envelope(action))
+            )
         if self.decisions >= self.step["max_decisions"]:
             self.state, self.error = "failed", {"code": "decision_limit"}
             self._emit("run_failed", self.error)
@@ -1058,6 +1089,9 @@ class TemporalRunState:
         from .temporal_tool_execution_state import unknown
 
         unknown(self, action_id)
+        from .temporal_coding_state import unknown as coding_unknown
+
+        coding_unknown(self, action_id)
         action["status"], action["attempts"][0]["status"] = "outcome_unknown", "unknown"
         self.reservations[action["attempts"][0]["id"]]["status"] = "unknown"
         self.active_action, self.remote_uncertain = None, True
@@ -1065,12 +1099,21 @@ class TemporalRunState:
             from .temporal_tool_execution_state import refresh
 
             refresh(self)
-        if self.state not in TERMINAL:
+        if self.state not in TERMINAL and self.state != "cancelling":
             self.state = "waiting_reconciliation" if action["kind"] == "tool" else "failed"
             self.error = {"code": code, "action_id": action_id}
         self._emit("action_outcome_unknown", {"action_id": action_id, "code": code})
 
     def admit_tool_dispatch(self, payload):
+        action = (
+            next((a for a in self.actions if a["id"] == payload.get("action_id")), None)
+            if type(payload) is dict
+            else None
+        )
+        if action is not None and "delegated_execution" in action:
+            from .temporal_coding_state import admit_dispatch
+
+            return admit_dispatch(self, payload)
         from .temporal_tool_execution_state import admit
 
         return admit(self, payload)
@@ -1078,7 +1121,41 @@ class TemporalRunState:
     def tool_execution_ended(self, payload):
         from .temporal_tool_execution_state import ended
 
-        return ended(self, payload)
+        result = ended(self, payload)
+        from .temporal_coding_state import refresh as refresh_coding
+
+        refresh_coding(self)
+        return result
+
+    def coding_state(self, payload):
+        from .temporal_coding_state import query
+
+        return query(self, payload)
+
+    def admit_coding_phase(self, payload):
+        from .temporal_coding_state import grant
+
+        return grant(self, payload)
+
+    def coding_receipt(self, payload):
+        from .temporal_coding_state import adopt
+
+        return adopt(self, payload)
+
+    def admit_coding_stop(self, payload):
+        from .temporal_coding_state import admit_stop
+
+        return admit_stop(self, payload)
+
+    def coding_owner_stopped(self, payload):
+        from .temporal_coding_state import owner_stopped
+
+        return owner_stopped(self, payload)
+
+    def accept_coding_stop(self, action_id, response):
+        from .temporal_coding_state import accept_stop
+
+        return accept_stop(self, action_id, response)
 
     def accept_failure(self, action_id, response):
         if response.get("dispatched", True):
@@ -1407,6 +1484,13 @@ class TemporalRunState:
             return
         action = next(a for a in self.actions if a["id"] == action_id)
         result = detached(response["result"])
+        from .temporal_coding_state import accepts_result
+
+        if not accepts_result(self, action, result):
+            self.operation_unknown(action_id, "coding_result_unverified")
+            return
+        if "delegated_execution" in action:
+            action["delegated_execution"]["effect_case"] = "confirmed"
         if action["status"] == "completed":
             self._emit(
                 "late_effect_evidence",
@@ -1442,7 +1526,7 @@ class TemporalRunState:
             "effect_reconciled" if reconciled else "tool_result_committed",
             {"action_id": action_id, "source": response.get("source", "tool-handler")},
         )
-        if self.state not in TERMINAL:
+        if self.state not in TERMINAL and self.state != "cancelling":
             self.state, self.error = "running", None
             message = {
                 "role": "tool",
@@ -1457,6 +1541,9 @@ class TemporalRunState:
             self.messages.append(message)
 
     def retry_blocked(self):
+        from .temporal_coding_state import retry_stops
+
+        retry_stops(self)
         self.pending_acks.extend(self.deferred_acks)
         self.deferred_acks = []
         # Retrying a journal acknowledgement is safe after business terminal;

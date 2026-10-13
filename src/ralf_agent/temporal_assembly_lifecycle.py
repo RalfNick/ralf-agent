@@ -101,6 +101,7 @@ class TemporalRuntimeAssembly:
         self._worker_lifetime = asyncio.Event()
         self._worker_stop = None
         self._worker_failure = None
+        self._coding_stop_task = None
         self._aclosing = False
         self._client, self._queue = None, None
         self._engines = []
@@ -243,6 +244,20 @@ class TemporalRuntimeAssembly:
             except (Exception, asyncio.CancelledError):
                 if not self._worker_ready.done():
                     raise
+        if getattr(self._runtime, "coding_execution", False):
+            from .temporal_coding_runtime import close as close_coding
+
+            if self._coding_stop_task is None:
+                self._coding_stop_task = asyncio.create_task(
+                    close_coding(self._runtime, client=self._client, scope=self._scope)
+                )
+                self._coding_stop_task.add_done_callback(_observe)
+            try:
+                await _bounded_task(self._coding_stop_task, wait_timeout)
+            except BaseException:
+                if self._coding_stop_task.done():
+                    self._coding_stop_task = None
+                raise
         await self._calls.aclose(wait_timeout=wait_timeout)
         await self._runtime.close_context_execution(wait_timeout=wait_timeout)
         await self._runtime.close_session_execution(wait_timeout=wait_timeout)

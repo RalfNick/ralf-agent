@@ -26,6 +26,7 @@ ROLES = frozenset(
         "sandbox",
         "artifacts",
         "model_history",
+        "runner",
     }
 )
 
@@ -38,12 +39,22 @@ def provider_alias(selection):
     return "binding:" + key("provider", selection)
 
 
-def reject_runner_descriptor(descriptor):
+def coding_enabled(manifest):
+    if not isinstance(manifest, dict) or "coding_execution_protocol" not in manifest:
+        return False
+    from .temporal_coding_protocol import validate_protocol
+
+    validate_protocol(manifest)
+    return True
+
+
+def reject_runner_descriptor(descriptor, manifest=None):
     if isinstance(descriptor, dict) and "runner" in descriptor:
-        raise ValidationError("Temporal Runner bindings require original History integration")
+        if not coding_enabled(manifest):
+            raise ValidationError("Temporal Runner bindings require original History integration")
 
 
-def normalize_request(request):
+def normalize_request(request, manifest=None):
     from .binding_definitions import AgentDefinition, BoundDefinition, decode_definition
 
     value = request["definition"]
@@ -58,7 +69,7 @@ def normalize_request(request):
             {k: v.to_dict() for k, v in wrapper.agent_bindings.items()},
         )
     for descriptor in selections.values():
-        reject_runner_descriptor(descriptor)
+        reject_runner_descriptor(descriptor, manifest)
     result = submission_request(
         spec, request["input"], budget=request["budget"], session_id=request["session_id"]
     )
@@ -72,7 +83,7 @@ def step_descriptor(request, node):
 
 
 def validate_descriptor(manifest, descriptor, scope=None):
-    reject_runner_descriptor(descriptor)
+    reject_runner_descriptor(descriptor, manifest)
     descriptor = AgentBindingDescriptor.from_dict(descriptor)
     records = manifest.get("binding_catalog", {}).get("records", {})
     for role in (*BINDING_ROLES, "model_history"):
@@ -226,6 +237,8 @@ def catalog_registration(runtime):
     for (role, component_id, version), (component, record) in sorted(catalog._entries.items()):
         if role not in ROLES:
             continue
+        if role == "runner" and not getattr(runtime, "coding_execution", False):
+            continue
         choice = BindingSelection.ref(component_id, version)
         component, record = catalog.resolve(role, choice, catalog.scope)
         extra = {}
@@ -289,7 +302,7 @@ def catalog_registration(runtime):
 def effective_manifest(manifest, descriptor):
     choices = validate_descriptor(manifest, descriptor)
     result = detached(manifest)
-    if manifest.get("binding_protocol") in (8, 9, 10):
+    if manifest.get("binding_protocol") in (8, 9, 10, 11):
         if "model_history" in result:
             result["model_history_protocol"] = (
                 2 if result["model_history"]["identity"].get("scope") == "session" else 1
@@ -400,7 +413,41 @@ def effective_step(step, manifest, descriptor):
         except KeyError:
             raise DefinitionMismatch("Original Sandbox tool registrations unavailable") from None
         result["tools"] = list(select_sandbox_tools(names, registrations, resource))
+    validate_runner_tools(manifest, choices, result["tools"])
     return result
+
+
+def validate_runner_tools(manifest, choices, names):
+    """Compare selected grants to their original fixed Runner resource in History."""
+    if not coding_enabled(manifest):
+        return
+    resources = []
+    for name in names:
+        try:
+            marker = manifest["tools"][name].get("config", {}).get("delegated_runner")
+        except KeyError:
+            raise DefinitionMismatch("Original selected Tool registration unavailable") from None
+        if marker is not None:
+            if type(marker) is not dict or set(marker) != {"version", "runner"}:
+                raise DefinitionMismatch("Original Coding Tool resource marker changed")
+            if name not in manifest["coding_execution_protocol"]["tools"]:
+                raise DefinitionMismatch(
+                    "Selected Coding tool lacks original protocol registration"
+                )
+            resources.append(marker["runner"])
+    choice = choices.runner
+    if choice.mode == "disabled" and resources:
+        raise AuthorizationDenied("Disabled Runner cannot grant a selected Coding tool")
+    if not resources:
+        if choice.mode == "ref":
+            raise AuthorizationDenied("Selected Runner has no already-granted Coding tool")
+        return
+    if any(resource != resources[0] for resource in resources[1:]):
+        raise ValidationError("Runner binding requires one unique selected Coding resource")
+    if choice.mode == "ref":
+        record = manifest["binding_catalog"]["records"][key("runner", choice)]
+        if record["identity"].get("runner") != resources[0]:
+            raise DefinitionMismatch("Selected Runner differs from original Coding tool resource")
 
 
 def selected_runtime(runtime, request):

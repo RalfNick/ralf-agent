@@ -342,9 +342,9 @@ class TemporalClientRuntime(Runtime):
         if declaration["kind"] in {"bound_agent", "bound_definition"}:
             if self.engine.release["kernel"] != "temporal-3":
                 raise ValidationError("Temporal bindings require their explicit registered release")
-            declaration = normalize_request(submission_request(harness.definition, None))[
-                "definition"
-            ]
+            declaration = normalize_request(
+                submission_request(harness.definition, None), self.engine.release
+            )["definition"]
         if declaration["kind"] not in self.capabilities["supported_definition_kinds"]:
             raise ValidationError("Temporal definition requires its supported registered release")
         input = json.loads(canonical(input))

@@ -62,6 +62,13 @@ wait for progress; service/workers continue after a disconnected caller. Tempora
 Updates and replay implement durable controls as described in its
 [message-passing documentation](https://docs.temporal.io/develop/python/message-passing).
 
+Dev106 的显式 [Temporal Coding](temporal-coding.md)已实现、正在验证 Agent／顺序
+Workflow 子集：`coding_execution=True`、原 History 阶段准入、精确共享 PG journal、
+Runner 绑定和 owned 停止／关闭。PG／History 固定 readonly 配置 bind 的真实原生
+控制、原 CID 移除与 History／PG 收尾通过；最终交付检查待登记。默认发布保持；复杂 Temporal Coding、跨宿主恢复、
+专用原生认证和真实 Coding 任务质量继续开放，最终证据见
+[本批登记](../architecture/reviews/2026-10-14-temporal-coding-delegation.md)。
+
 ## External effects
 
 Write tools require an EffectJournal. The default

@@ -17,7 +17,7 @@ def validate_protocol(manifest):
     if (
         manifest.get("kernel") != "temporal-3"
         or type(manifest.get("binding_protocol")) is not int
-        or manifest["binding_protocol"] not in (9, 10)
+        or manifest["binding_protocol"] not in (9, 10, 11)
         or type(manifest.get("parent_completion_protocol")) is not int
         or manifest["parent_completion_protocol"] != 1
         or type(registry) is not dict

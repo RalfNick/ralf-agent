@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.0.dev106 — Original Temporal Coding delegation
+
+- Add explicit Agent/sequence Coding selection, Runner bindings and asynchronous SDK/JSON/TOML PostgreSQL factories. Publish binding protocol 11 with fixed Coding protocol 1; default Local/Temporal releases preserve their bytes.
+- Keep phase grants, results and credits in the original History. Bind the original Tool claim to its actual process owner, store prepare intent and native receipts through the exact original EffectJournal, and reuse the native loop and pure rules with Local.
+- Pin PG/History configuration to an exact read-only file bind. A protected unauthenticated native-control probe passes with original config bytes/inode preserved, original container retirement, History replay and no pending PG resource; retain earlier configuration-drift failures and their manual cleanup evidence. Local omitted/False environment identity and create arguments remain unchanged.
+- Recover by querying/stopping original resources and retain independent candidates, fences, actual owner closure, unknown effects and budget holds. Owned shutdown keeps original clients and evidence receivers alive for retry. Bounded validation and preserved failure evidence are recorded in [the acceptance record](architecture/reviews/2026-10-14-temporal-coding-delegation.md); complex Temporal Coding, cross-host recovery, native authentication and real Coding task quality remain open. [Guide](docs/temporal-coding.md).
+
 ## 0.1.0.dev105 — Original Local Coding composition
 
 - Extend selected Coding tools and Runner bindings to Local graph Agent/direct Tool nodes, bounded parallel nodes, Team/Dynamic and nested original child Runs. New composition protocol1 gates readers; existing true-root and non-Coding releases keep their bytes.

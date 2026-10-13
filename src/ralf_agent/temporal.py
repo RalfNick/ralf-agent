@@ -275,7 +275,7 @@ class TemporalEngine:
         request = submission_request(spec, input, budget=budget, session_id=session_id)
         from .temporal_bindings import normalize_request
 
-        request = normalize_request(request)
+        request = normalize_request(request, self._release)
         composite = request["definition"]["kind"] in {"graph", "team", "dynamic"}
         from .spec_codec import agent_steps
 
@@ -563,6 +563,9 @@ def _workflow_runner():
             "ralf_agent.temporal_context_read_state",
             "ralf_agent.temporal_tool_execution",
             "ralf_agent.temporal_tool_execution_state",
+            "ralf_agent.coding_execution_rules",
+            "ralf_agent.temporal_coding_state",
+            "ralf_agent.temporal_coding_protocol",
             "ralf_agent.temporal_memory_state",
             "ralf_agent.temporal_facts_state",
             "ralf_agent.temporal_knowledge_state",

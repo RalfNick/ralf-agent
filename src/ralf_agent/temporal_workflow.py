@@ -15,6 +15,7 @@ from temporalio.exceptions import TimeoutError as ActivityTimeoutError
 
 with workflow.unsafe.imports_passed_through():
     from . import (
+        temporal_coding_state,  # noqa: F401 -- preload original pure native gates
         temporal_context_read_state,  # noqa: F401 -- preload original pure read gates
         temporal_parent_completion_state,  # noqa: F401 -- preload pure parent release gates
         temporal_session_identity,  # noqa: F401 -- preload pure Session addressing
@@ -23,6 +24,7 @@ with workflow.unsafe.imports_passed_through():
         temporal_user_input,  # noqa: F401 -- preload original pure input gates
     )
     from .temporal_bindings import ROLES as _binding_roles  # noqa: F401
+    from .temporal_coding_state import CODING_STOP_ACTIVITY
     from .temporal_completion_state import ACTIVITY as COMPLETION_ACTIVITY
     from .temporal_context_read_protocol import owns_activity as owns_context_read
     from .temporal_limits_state import ACTIVITY as LIMITS_ACTIVITY
@@ -196,7 +198,9 @@ class TemporalRunWorkflow:
             action, request = operation
             try:
                 response = await workflow.execute_activity(
-                    COMPLETION_ACTIVITY
+                    CODING_STOP_ACTIVITY
+                    if action["kind"] == "coding_stop"
+                    else COMPLETION_ACTIVITY
                     if action["kind"] == "agent_completion"
                     else LIMITS_ACTIVITY
                     if action["kind"] == "agent_limits"
@@ -218,7 +222,8 @@ class TemporalRunWorkflow:
                     schedule_to_close_timeout=total_timeout,
                     retry_policy=RetryPolicy(
                         maximum_attempts=1
-                        if owns_context_read(self.state.manifest, action)
+                        if action["kind"] == "coding_stop"
+                        or owns_context_read(self.state.manifest, action)
                         else 3
                         if action["kind"] in {"agent_limits", "agent_completion", "model_adoption"}
                         or (
@@ -242,6 +247,7 @@ class TemporalRunWorkflow:
                     activity_id=action["id"]
                     if action["kind"]
                     in {
+                        "coding_stop",
                         "context",
                         "managed_context",
                         "managed_memory",
@@ -252,7 +258,9 @@ class TemporalRunWorkflow:
                     }
                     else action["attempts"][0]["id"],
                 )
-                if action["kind"] == "agent_completion":
+                if action["kind"] == "coding_stop":
+                    self.state.accept_coding_stop(action["coding_action_id"], response)
+                elif action["kind"] == "agent_completion":
                     self.state.accept_completion(action["id"], response)
                 elif action["kind"] == "managed_session":
                     self.state.accept_session(action["id"], response)
@@ -272,7 +280,7 @@ class TemporalRunWorkflow:
                     self.state.accept_tool(action["id"], response)
             except ActivityError as exc:
                 complete_history_read = (
-                    self.state.manifest.get("binding_protocol") in (7, 8, 9, 10)
+                    self.state.manifest.get("binding_protocol") in (7, 8, 9, 10, 11)
                     and self.state.manifest.get("model_history_protocol") in (1, 2)
                     and owns_context_read(self.state.manifest, action)
                     and action.get("phase") in {"context", "plan"}
@@ -280,7 +288,11 @@ class TemporalRunWorkflow:
                 context_timeout = isinstance(exc.cause, ActivityTimeoutError)
                 # A server timeout is not evidence that a Python thread or
                 # downstream request stopped. Preserve the dispatched identity.
-                if action["kind"] == "managed_session":
+                if action["kind"] == "coding_stop":
+                    self.state.accept_coding_stop(
+                        action["coding_action_id"], {"ok": False, "code": "stop_outcome_unknown"}
+                    )
+                elif action["kind"] == "managed_session":
                     self.state.accept_session(
                         action["id"],
                         {
@@ -338,7 +350,15 @@ class TemporalRunWorkflow:
     async def _deadline(self, seconds):
         await workflow.sleep(seconds)
         if self.state.state not in {"succeeded", "failed", "cancelled"}:
-            self.state.state, self.state.error = "cancelled", {"code": "deadline_exceeded"}
+            from .temporal_coding_state import enabled, request_stop, stopped
+
+            request_stop(self.state, {"code": "deadline_exceeded"})
+            self.state.state = (
+                "cancelling"
+                if enabled(self.state.manifest) and not stopped(self.state)
+                else "cancelled"
+            )
+            self.state.error = {"code": "deadline_exceeded"}
             from .temporal_user_input import close_pending
 
             close_pending(self.state)
@@ -422,6 +442,63 @@ class TemporalRunWorkflow:
                 non_retryable=True,
             ) from None
 
+    @workflow.update(name="coding_owner_stopped")
+    async def coding_owner_stopped(self, proof: dict) -> dict:
+        try:
+            result = self.state.coding_owner_stopped(proof)
+            self.wake_revision += 1
+            return result
+        except Exception as exc:
+            raise ApplicationError(
+                "Original Coding process stop rejected",
+                type=getattr(exc, "code", "validation_error"),
+                non_retryable=True,
+            ) from None
+
+    @workflow.query(name="coding_state")
+    def coding_state(self, proof: dict) -> dict:
+        try:
+            return self.state.coding_state(proof)
+        except Exception as exc:
+            return {"error": getattr(exc, "code", "validation_error")}
+
+    @workflow.update(name="admit_coding_phase")
+    async def admit_coding_phase(self, payload: dict) -> dict:
+        try:
+            return self.state.admit_coding_phase(payload)
+        except Exception as exc:
+            raise ApplicationError(
+                "Original Coding phase admission rejected",
+                type=getattr(exc, "code", "validation_error"),
+                non_retryable=True,
+            ) from None
+
+    @workflow.update(name="coding_receipt")
+    async def coding_receipt(self, payload: dict) -> dict:
+        try:
+            result = self.state.coding_receipt(payload)
+            self.wake_revision += 1
+            return result
+        except Exception as exc:
+            raise ApplicationError(
+                "Original Coding receipt rejected",
+                type=getattr(exc, "code", "validation_error"),
+                non_retryable=True,
+            ) from None
+
+    @workflow.update(name="admit_coding_stop")
+    async def admit_coding_stop(self, proof: dict) -> dict:
+        try:
+            result = self.state.admit_coding_stop(proof)
+            self.wake_revision += 1
+            return result
+        except Exception as exc:
+            raise ApplicationError(
+                "Original Coding stop admission rejected",
+                type=getattr(exc, "code", "validation_error"),
+                non_retryable=True,
+            ) from None
+
     @workflow.query(name="view")
     def view(self, request: dict) -> dict:
         try:
@@ -435,6 +512,10 @@ class TemporalRunWorkflow:
                     "request": self.state.request,
                     **self.state.diagnostics(),
                 }
+            if kind == "coding_requests":
+                from .temporal_coding_state import requests
+
+                return requests(self.state)
             if kind == "status":
                 return self.state.snapshot()
             if kind == "diagnostics":

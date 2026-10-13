@@ -1,4 +1,6 @@
-# Implementation status — 0.1.0.dev105
+# Implementation status — 0.1.0.dev106
+
+Dev106 已验收原 Temporal Agent／顺序 Workflow 的有限 Coding 委托：显式 `coding_execution=True`、`tools/codex-coding-postgres` 与精确 `runner/registered-tool` 借用接通 SDK／JSON／TOML。所选发布使用 `temporal-3`／binding protocol 11／`coding_execution_protocol=1`；省略选项的默认 Local／Temporal 字节保持。原 History 独占阶段准入、结果与额度，原 PG EffectJournal 同事务记录资源意图及回执，实际 owner／原容器停止证据另行核对；关闭失败保留原资源账本供同循环重试。PG／History 原配置使用精确 readonly file bind，真实保护控制探针通过，原配置内容／inode、原 CID 移除与 History／PG 收尾已验证；此前未保护配置失败保留。复杂 Temporal Coding 仍拒绝，跨宿主、专用原生认证和真实 Coding 任务质量继续开放；固定 process-peer 协议验证不构成真实模型质量。源码全模块回归的旧协议断言已定向修订；独立安装2175项／418配置跳过、实际服务39项零跳过和旧Worker门禁已登记，完整 R01–R26／第二阶段与 dev99 冻结范围保持。见[使用指南](temporal-coding.md)和[本批登记](../architecture/reviews/2026-10-14-temporal-coding-delegation.md)。
 
 Dev105 将有限 Coding 委托扩展到 Local 图 Agent／直接 Tool 节点、串行／有界并行图、Team／Dynamic 和嵌套成员。复杂发布使用 `local-11`／`local-bindings-19`、`delegated_composition_protocol=1`；根级 Agent／顺序的旧路径和默认未选择工具的字节保持。原子 Run／节点 Action 继续拥有审批、额度和阶段准入；父级取消等待原后代实际停止，unknown 效果与 escrow 不因此清空。并行节点视图核对原 Run／Action／索引／资源，已排除的工具不影响调度，拥有资源关闭仍保留原权威供停止与退出回执。Temporal Coding、专用认证、真实 Coding 任务质量及完整 R01–R26／第二阶段继续开放。见[复杂组合指南](coding-composition.md)和[本批记录](../architecture/reviews/2026-10-14-coding-local-composition.md)，dev99 冻结链路保持。
 

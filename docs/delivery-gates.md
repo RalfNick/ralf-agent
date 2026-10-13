@@ -1,6 +1,6 @@
 # 分阶段交付门槛
 
-日期：2026-10-14；第一阶段已冻结在本地提交 `7e530f8`／`0.1.0.dev99`，第二阶段当前批次为 `0.1.0.dev105`。
+日期：2026-10-14；第一阶段已冻结在本地提交 `7e530f8`／`0.1.0.dev99`，第二阶段当前批次为 `0.1.0.dev106`（有限Agent／顺序Coding子集已验收）。
 按用户修订后的目标管理交付，R01–R26 保留完整目标；适配器数量、测试数和 dev 版本数作为辅助信息。
 
 ## 第一阶段：四条参考业务链路
@@ -83,6 +83,16 @@ dev105 补 Local 复杂组合：图 Agent／直接 Tool、并行节点原 Action
 隔离期间保存。本批[登记](../architecture/reviews/2026-10-14-coding-local-composition.md)
 分别记录协议夹具、进程冷恢复、旧读取器与安装范围。完整 Temporal History／PG 准入、
 专用原生认证和真实 Coding 质量仍开放，不标记整个 G1–G8 或 R13 完成。
+
+dev106 将有限 Agent／顺序 Coding 接入原 Temporal History 和同一 PG EffectJournal，
+显式协议 11 固定一次阶段 grant、原 Tool claim／实际进程 owner、prepare 资源意图和
+先 PG 后 History 的回执采纳。SDK／JSON／TOML、Runner 精确引用及 owned 关闭重试
+已通过有限验收；实际服务、固定 process-peer 业务协议与原生环境控制分开登记，
+最终源码／安装／旧 Worker 与故障窗口以[本批登记](../architecture/reviews/2026-10-14-temporal-coding-delegation.md)为准。
+PG／History 固定 readonly 配置 file bind 的真实原生控制、配置内容／inode保持、原 CID
+移除和 History／PG 收尾已通过；此前两次未保护配置失败及手动清理证据保留。
+原默认发布保持，复杂 Temporal Coding 仍拒绝。专用认证不可用、真实 Coding 任务质量
+未执行，跨宿主恢复、完整 G1–G8／R13／第二阶段继续开放，见[指南](temporal-coding.md)。
 
 | 必需项 | 清单与完成门槛 |
 | --- | --- |

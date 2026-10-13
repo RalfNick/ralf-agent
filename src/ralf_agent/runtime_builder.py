@@ -762,6 +762,13 @@ class RuntimeBuilder:
     def _prepare(self, profile, db_path, scope):
         if not isinstance(profile, RuntimeProfile):
             raise ValidationError("Build a RuntimeProfile")
+        tools = profile.components.get("tools")
+        if (
+            tools is not None
+            and tools["adapter"] == "codex-coding-postgres"
+            and ("tools", tools["adapter"]) in self.registry._factories
+        ):
+            raise ValidationError("PostgreSQL Coding requires original Temporal History")
         from .parent_completion_factories import preflight_parent_completion_providers
         from .query_factories import preflight_query_providers
         from .user_input_factories import preflight_user_input

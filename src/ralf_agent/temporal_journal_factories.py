@@ -28,3 +28,6 @@ def register_effect_journal(registry):
             return journal
 
     registry.register_async("effect_journal", "postgres", build, validator=validate)
+    from .temporal_coding_factories import register_temporal_coding_factories
+
+    register_temporal_coding_factories(registry)

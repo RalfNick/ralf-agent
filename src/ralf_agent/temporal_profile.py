@@ -27,6 +27,7 @@ EXECUTION_FLAGS = frozenset(
         "context_reads",
         "artifact_bindings",
         "model_continuation",
+        "coding_execution",
     }
 )
 MAX_DECLARATION_BYTES = 1_000_000
@@ -80,7 +81,8 @@ class TemporalProfile:
         flags = {
             name: execution.get(name, False)
             for name in sorted(EXECUTION_FLAGS)
-            if name not in {"artifact_bindings", "model_continuation"} or execution.get(name, False)
+            if name not in {"artifact_bindings", "model_continuation", "coding_execution"}
+            or execution.get(name, False)
         }
         from .runtime_builder import (
             model_history_declarations,

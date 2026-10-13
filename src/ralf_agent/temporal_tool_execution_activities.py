@@ -36,13 +36,15 @@ def callbacks(client, request, info):
         name: fixed[name] for name in ("scope", "action_id", "release_digest", "execution_epoch")
     } | {"request_digest": digest(fixed)}
 
-    async def guard(value, *, invocation_id):
+    async def guard(value, *, invocation_id, owner_proof=None):
         if value != fixed:
             raise DefinitionMismatch("Tool changed original complete Activity request")
         await check()
         result = await handle.execute_update(
             ADMISSION_UPDATE,
-            expected | {"run_id": workflow_id, "invocation_id": invocation_id},
+            expected
+            | {"run_id": workflow_id, "invocation_id": invocation_id}
+            | ({"owner": detached(owner_proof)} if owner_proof is not None else {}),
             id="ralf-tool-dispatch:" + fixed["action_id"] + ":" + uuid.uuid4().hex,
         )
         await check()

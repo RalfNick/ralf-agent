@@ -52,7 +52,9 @@ class TemporalSessionClient:
     def binding(self, definition):
         harness = definition if isinstance(definition, AgentHarness) else AgentHarness(definition)
         return {
-            "request": normalize_request(submission_request(harness.definition, None)),
+            "request": normalize_request(
+                submission_request(harness.definition, None), self.engine.release
+            ),
             "manifest": self.engine.release,
             "task_queue": self.engine.task_queue,
             "activity_timeout": self.engine.activity_timeout,

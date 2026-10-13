@@ -42,7 +42,7 @@ async def completed(value):
     return value
 
 
-async def execute(runtime, request, *, dispatch_guard=None, on_end=None):
+async def execute(runtime, request, *, dispatch_guard=None, on_end=None, coding_callbacks=None):
     from .temporal_activities import _code
     from .temporal_bindings import selected_runtime
     from .temporal_context_execution import ContextExecutionRejected
@@ -61,6 +61,7 @@ async def execute(runtime, request, *, dispatch_guard=None, on_end=None):
         } | {"request_digest": digest(fixed)}
         actual_end = asyncio.Event()
         claimed = False
+        authority = None
 
         async def actual_ended(value):
             if value != proof:
@@ -73,12 +74,25 @@ async def execute(runtime, request, *, dispatch_guard=None, on_end=None):
             owner(runtime)
             if host._tool_execution_closing:
                 raise ContextExecutionRejected(handler_not_started=True)
+            selected = selected_runtime(runtime, fixed)
             started = True
-            return await selected_runtime(runtime, fixed)._execute_tool(fixed)
+            return await selected._execute_tool(fixed, coding_authority=authority)
 
         async def invocation_operation():
-            nonlocal claimed
-            grant = await dispatch_guard(fixed, invocation_id=invocation)
+            nonlocal claimed, authority
+            if "coding_request" in fixed:
+                from .delegated_coding import registered_coding_tool
+
+                if not callable(coding_callbacks):
+                    raise ContextExecutionRejected(handler_not_started=True)
+                selected = selected_runtime(runtime, fixed)
+                handler = registered_coding_tool(selected.tools.get(fixed["tool"]))
+                authority = await coding_callbacks(invocation, handler.runner)
+                grant = await dispatch_guard(
+                    fixed, invocation_id=invocation, owner_proof=authority.owner_proof
+                )
+            else:
+                grant = await dispatch_guard(fixed, invocation_id=invocation)
             expected = {name: fixed[name] for name in ("run_id", "action_id", "release_digest")}
             if (
                 type(grant) is not dict

@@ -17,6 +17,7 @@ import selectors
 import signal
 import stat
 import subprocess
+import tempfile
 import threading
 import time
 import uuid
@@ -80,6 +81,7 @@ class DockerCodingEnvironment:
         command_timeout: float = 20.0,
         retire_on_stop: bool = False,
         expected_generation: str | None = None,
+        configuration_readonly: bool = False,
     ):
         try:
             path = Path(root)
@@ -103,6 +105,7 @@ class DockerCodingEnvironment:
                 and math.isfinite(command_timeout)
                 and 0 < command_timeout <= 60
                 and type(retire_on_stop) is bool
+                and type(configuration_readonly) is bool
                 and (
                     expected_generation is None
                     or (
@@ -153,6 +156,8 @@ class DockerCodingEnvironment:
             self._identity.update({"version": "2", "retire_on_stop": True})
             if expected_generation is not None:
                 self._identity["expected_generation"] = expected_generation
+        if configuration_readonly:
+            self._identity["configuration_readonly"] = True
         self._resource_id = resource_id
         self._name = "ralf-coding-" + _digest(_canonical(self._identity).encode())[:32]
         self._metadata = None
@@ -228,6 +233,133 @@ class DockerCodingEnvironment:
         ):
             raise ValidationError("Coding recovery requires an original full container locator")
         return await self._owned(lambda: self._stop_existing(expected_container_id))
+
+    async def observe_namespace_absence(self) -> dict:
+        """Query the original unprepared namespace; never provision or start it."""
+        return await self._owned(self._observe_namespace_absence)
+
+    def _observe_namespace_absence(self):
+        self._check_root()
+        previous = getattr(self, "_namespace_absence", None)
+        if previous is not None:
+            return copy.deepcopy(previous)
+        if self._closed or not self._retire_on_stop or self._expected_generation is None:
+            raise ValidationError("Namespace absence requires its original unprepared generation")
+        self._existing_only = True
+        self._acquire()
+        # lstat rejects aliases/dangling aliases as well as known metadata. A
+        # create intent with a missing locator is deliberately still refused.
+        try:
+            (self._root / "environment.json").lstat()
+        except FileNotFoundError:
+            pass
+        else:
+            raise ValidationError("Namespace absence cannot replace original environment metadata")
+        _require(
+            self._metadata is None and not self._prepared and self._expected_container_id is None
+        )
+        _require(set(p.name for p in self._root.iterdir()) == {"lease.lock"})
+        labels = {
+            "ralf.coding.environment": "1",
+            "ralf.coding.resource": self._resource_id,
+            "ralf.coding.profile": self._profile.identity["config_digest"],
+            "ralf.coding.root": _digest(_canonical(self._root_pin).encode()),
+            "ralf.coding.generation": self._expected_generation,
+        }
+        # A pinned empty client configuration prevents reading host credentials.
+        # This query-only directory is removed without creating resource metadata.
+        with tempfile.TemporaryDirectory(prefix=".namespace-query-", dir=self._root) as directory:
+            client = Path(directory)
+            client.chmod(0o700)
+            config = client / "config.json"
+            config.write_text("{}\n")
+            config.chmod(0o600)
+            client_pin, config_pin = _pin(client), _pin(config)
+            filters = [
+                ["name=^/" + self._name + "$"]
+                + ["label=" + k + "=" + v for k, v in labels.items()],
+                ["name=^/" + self._name + "$"],
+                ["label=" + k + "=" + v for k, v in labels.items()],
+            ]
+            for selected in filters:
+                args = ["ps", "-a", "--no-trunc"]
+                for value in selected:
+                    args.extend(("--filter", value))
+                args.extend(("--format", "{{.ID}}"))
+                result = self._namespace_query(client, args)
+                _require(not result.strip())
+                _require(_pin(client) == client_pin and _pin(config) == config_pin)
+                _require(config.read_bytes() == b"{}\n")
+            self._check_root()
+            try:
+                (self._root / "environment.json").lstat()
+            except FileNotFoundError:
+                pass
+            else:
+                raise DefinitionMismatch(
+                    "Original namespace gained environment metadata during query"
+                )
+        _require(set(p.name for p in self._root.iterdir()) == {"lease.lock"})
+        self._check_root()
+        evidence = {
+            "identity": self.identity,
+            "generation": self._expected_generation,
+            "container_present": False,
+            "namespace_confirmed": True,
+        }
+        os.close(self._lease)
+        self._lease = None
+        self._closed = True
+        self._namespace_absence = copy.deepcopy(evidence)
+        return evidence
+
+    def _namespace_query(self, client, args):
+        """Own/reap a bounded read-only Docker query before returning evidence."""
+        process = None
+        selector = selectors.DefaultSelector()
+        output = {"stdout": bytearray(), "stderr": bytearray()}
+        try:
+            self._check_root()
+            process = subprocess.Popen(
+                [self._docker, "--config", str(client), "--host", self._host, *args],
+                env=self.transport_env,
+                stdin=subprocess.DEVNULL,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                close_fds=True,
+                start_new_session=True,
+            )
+            for key in output:
+                selector.register(getattr(process, key), selectors.EVENT_READ, key)
+            deadline = time.monotonic() + self._timeout
+            while selector.get_map():
+                if time.monotonic() >= deadline:
+                    raise ExecutionHostFailed("Docker namespace query deadline exceeded")
+                for key, _ in selector.select(min(0.05, max(0, deadline - time.monotonic()))):
+                    chunk = os.read(key.fd, 8192)
+                    if not chunk:
+                        selector.unregister(key.fileobj)
+                        continue
+                    output[key.data].extend(chunk)
+                    if sum(map(len, output.values())) > _CAP:
+                        raise ExecutionHostFailed("Docker namespace query output bound exceeded")
+            process.wait(timeout=max(0.001, deadline - time.monotonic()))
+            if process.returncode != 0:
+                raise ExecutionHostFailed("Docker namespace query failed")
+            self._check_root()
+            return bytes(output["stdout"])
+        except (OSError, subprocess.TimeoutExpired):
+            raise ExecutionHostFailed("Docker namespace query unavailable") from None
+        finally:
+            if process is not None:
+                try:
+                    os.killpg(process.pid, signal.SIGKILL)
+                except ProcessLookupError:
+                    pass
+                process.wait()
+                process.stdout.close()
+                process.stderr.close()
+            selector.close()
 
     async def aclose(self) -> None:
         await self._owned(self._close)
@@ -513,6 +645,11 @@ class DockerCodingEnvironment:
             args += ["--label", key + "=" + value]
         for source, target in (("workspace", "/workspace"), ("state", "/home/ralf/.codex")):
             args += ["--mount", f"type=bind,source={self._root / source},target={target}"]
+        if self._identity.get("configuration_readonly") is True:
+            args += [
+                "--mount",
+                f"type=bind,source={self._root / 'state/config.toml'},target=/home/ralf/.codex/config.toml,readonly",
+            ]
         return [*args, self._profile.identity["image_id"], *_COMMAND]
 
     def _prepare(self):
@@ -637,20 +774,27 @@ class DockerCodingEnvironment:
         _require(len(seccomp) == 1)
         _require(_canonical(json.loads(seccomp[0][8:])) == _canonical(json.loads(self._seccomp)))
         mounts = container["Mounts"]
-        _require(type(mounts) is list and len(mounts) == 2)
         expected = {
-            "/workspace": str(self._root / "workspace"),
-            "/home/ralf/.codex": str(self._root / "state"),
+            "/workspace": (str(self._root / "workspace"), True),
+            "/home/ralf/.codex": (str(self._root / "state"), True),
         }
+        if self._identity.get("configuration_readonly") is True:
+            expected["/home/ralf/.codex/config.toml"] = (
+                str(self._root / "state/config.toml"),
+                False,
+            )
+        _require(type(mounts) is list and len(mounts) == len(expected))
         observed = {}
         for mount in mounts:
+            destination = mount["Destination"]
             _require(
-                mount["Type"] == "bind"
-                and mount["RW"] is True
+                destination in expected
+                and mount["Type"] == "bind"
+                and mount["RW"] is expected[destination][1]
                 and mount["Propagation"] == "rprivate"
-                and mount["Destination"] not in observed
+                and destination not in observed
             )
-            observed[mount["Destination"]] = mount["Source"]
+            observed[destination] = (mount["Source"], mount["RW"])
         _require(observed == expected)
         _require(
             type(state["Running"]) is bool

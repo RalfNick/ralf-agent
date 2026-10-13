@@ -159,7 +159,11 @@ class TemporalRuntime:
         model_continuation=False,
         model_history=None,
         user_input_policies=None,
+        coding_execution=False,
     ):
+        if type(coding_execution) is not bool:
+            raise ValidationError("Coding execution opt-in requires an ordinary boolean")
+        self.coding_execution = self._coding_execution_pin = coding_execution
         from .user_input import UserInputPolicy
 
         if user_input_policies is not None and type(user_input_policies) is not dict:
@@ -239,7 +243,9 @@ class TemporalRuntime:
         from .binding_sandbox import has_sandbox_tools
         from .temporal_tool_execution import ToolExecutionRegistration
 
-        if tool_execution is None and has_sandbox_tools(tools.manifests(tuple(tools._tools))):
+        if tool_execution is None and (
+            coding_execution or has_sandbox_tools(tools.manifests(tuple(tools._tools)))
+        ):
             from .tool_execution import ToolExecutionOwner
 
             tool_execution = ToolExecutionOwner(version="sandbox-default-1", max_calls=16)
@@ -786,6 +792,12 @@ class TemporalRuntime:
             result.update(
                 kernel="temporal-3", binding_protocol=10, dispatch_admission="history-1", **inputs
             )
+        if self.coding_execution != self._coding_execution_pin:
+            raise DefinitionMismatch("Coding execution opt-in changed")
+        if self.coding_execution:
+            from .temporal_coding_protocol import publish
+
+            result = publish(result, self)
         return result
 
     @property
@@ -1022,7 +1034,7 @@ class TemporalRuntime:
         try:
             from .temporal_bindings import reject_runner_descriptor
 
-            reject_runner_descriptor(request.get("step_bindings"))
+            reject_runner_descriptor(request.get("step_bindings"), request["runtime_manifest"])
             self.validate_release(request["runtime_manifest"])
             from .temporal_state import validate_coding_selection
 
@@ -1597,17 +1609,32 @@ class TemporalRuntime:
         self.validate_release(request["runtime_manifest"])
         return envelope, tool
 
-    async def execute_tool(self, request: dict, *, dispatch_guard=None, on_end=None) -> dict:
+    async def execute_tool(
+        self, request: dict, *, dispatch_guard=None, on_end=None, coding_callbacks=None
+    ) -> dict:
         if "tool_execution_protocol" in self._manifest:
             from .temporal_tool_execution_runtime import execute
 
-            return await execute(self, request, dispatch_guard=dispatch_guard, on_end=on_end)
+            return await execute(
+                self,
+                request,
+                dispatch_guard=dispatch_guard,
+                on_end=on_end,
+                coding_callbacks=coding_callbacks,
+            )
         return await self._execute_tool(request)
 
-    async def _execute_tool(self, request: dict) -> dict:
+    async def _execute_tool(self, request: dict, *, coding_authority=None) -> dict:
         dispatched = False
         try:
             envelope, tool = self._envelope(request)
+            from .temporal_coding_protocol import owns
+
+            if owns(request["runtime_manifest"], request["tool"]):
+                from .temporal_coding_runtime import execute
+
+                dispatched = True
+                return await execute(self, request, coding_authority)
             if self.journal is not None:
                 begun = _journal_begin(await self.journal.begin(envelope))
                 if begun.get("blocked"):
@@ -1746,8 +1773,30 @@ def registered_activities(runtime, client=None):
             from .temporal_tool_execution_activities import callbacks
 
             guard, ended = callbacks(client, request, activity.info())
-            return await runtime.execute_tool(request, dispatch_guard=guard, on_end=ended)
+            coding = None
+            if "coding_request" in request:
+                from .temporal_coding_runtime import callbacks as coding_callbacks
+
+                coding = coding_callbacks(client, request, activity.info(), runtime)
+            return await runtime.execute_tool(
+                request, dispatch_guard=guard, on_end=ended, coding_callbacks=coding
+            )
         return await runtime.execute_tool(request)
+
+    from .temporal_coding_state import CODING_STOP_ACTIVITY
+
+    @activity.defn(name=CODING_STOP_ACTIVITY)
+    async def coding_stop(request: dict) -> dict:
+        from .temporal_bindings import selected_runtime
+        from .temporal_coding_runtime import callbacks as coding_callbacks
+        from .temporal_coding_runtime import stop
+
+        await tree_guard(request)
+        return await stop(
+            selected_runtime(runtime, request),
+            request,
+            coding_callbacks(client, request, activity.info(), runtime),
+        )
 
     @activity.defn(name=RECONCILE_ACTIVITY)
     async def reconcile(request: dict) -> dict:
@@ -1830,6 +1879,7 @@ def registered_activities(runtime, client=None):
         model,
         *([model_adoption] if runtime.model_continuation else []),
         tool,
+        *([coding_stop] if runtime.coding_execution else []),
         reconcile,
         evidence,
         managed_context,

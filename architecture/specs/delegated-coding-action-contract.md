@@ -2,14 +2,14 @@
 
 | 项目 | 内容 |
 | --- | --- |
-| 状态 | dev105 部分 Local 实施；完整通用集成与验收仍待完成 |
+| 状态 | dev106 有限 Temporal Agent／顺序实施已验收；完整通用集成与验收仍待完成 |
 | 范围 | 一个显式选择的受限 Codex Coding 场景，一个逻辑 Action 对应一个原生 Turn |
 | 上位契约 | [Runner 能力契约](runner-capability-contract.md)、[Run 命令契约](run-command-contract.md) |
 | 现有基础 | [Codex 协议与启动证据基础](../../docs/codex-runner-foundation.md) |
 
 本文固定责任与验收边界。dev103 有限 Local 实施分配显式 `local-10`、
 `delegated_execution_protocol=1` 与原接受事务内的 Schema 14；默认发布不升级，
-dev104 联合绑定另分配 `local-bindings-18`／`runner_binding_protocol=1`；Temporal 委托协议尚未分配。实施须使旧执行器在业务
+dev104 联合绑定另分配 `local-bindings-18`／`runner_binding_protocol=1`；dev106 的有限 Temporal 委托分配 `temporal-3`／binding protocol 11／Coding protocol 1。实施须使旧执行器在业务
 I/O 前拒绝新声明，同时保留既有默认声明与历史视图。
 
 dev102 已增加具体 `DockerCodingEnvironment`、借用原 `PostgresEffectJournal` 的
@@ -32,6 +32,22 @@ aclose`，通用 Runner Port、per-Agent／声明工厂及复杂父级尚未接�
 dev104 增加有限根级 Local Agent／顺序 Workflow 的可选 Runner 绑定、JSON／TOML 多资源工厂及 owned 关闭隔离。`inherit` 从有效工具授权选唯一实际资源，`ref` 必须与已授予 Coding 工具的实际对象一致，`disabled` 拒绝所选 Coding 工具；省略角色保留历史字节。发布和冷恢复先检查原方法／资源身份及具体物理依赖。拥有资源的 Runtime 关闭前阻止所有新 submit／drive／原生业务 grant，允许原权威保存停止证据，失败保留原 Coordinator 和账本。复杂父级、Temporal History 和专用认证不由此交付。见[配置指南](../../docs/coding-profiles.md)和[本批登记](../reviews/2026-10-14-coding-bindings-and-profiles.md)。
 
 dev105 的复杂 Local 组合使用 `local-11`／`local-bindings-19` 与 `delegated_composition_protocol=1`。图的直接工具、Agent节点及并行视图、Team／Dynamic 和嵌套使用原 Run／Action 或原 Child Run，不新增权威。父级终态等待原后代的停止证据；额度持有与 unknown 不因停止而消除。节点投影精确映射原索引／release／请求，拥有资源关闭允许窄范围退出回执，禁止新业务。完整 Temporal History／PG、跨宿主、原生认证和真实质量继续开放，见[指南](../../docs/coding-composition.md)和[验收登记](../reviews/2026-10-14-coding-local-composition.md)。
+
+dev106 已验收有限 Temporal Agent／顺序 Workflow 的原 Action 委托。
+显式 `coding_execution=True` 发布 `temporal-3`／binding protocol 11／Coding protocol 1，
+共享 Local／Temporal 纯阶段规则与一个原生循环；History 的原 Tool claim／实际 owner
+绑定先于 native grant，恢复 callback 仅查询、采纳和停止。具体 PostgresRunnerJournal
+借用同一个原 EffectJournal，dispatch／prepare 资源意图同事务，原回执先 PG 后 History。
+成功候选、原容器 fence、实际 owner 结束、unknown 效果与额度独立核对；owned 关闭
+在 Worker／Client／PG 仍可用时处理原待停止资源，失败保留原账本重试。缺原 container ID
+且无法确认原 namespace 缺席的创建窗口继续关闭失败，不造替代资源。
+PG／History 资源固定 `configuration_readonly=True` 与第三个精确 readonly config file
+bind；原配置 inode／内容与物理校验保持。真实受保护控制及原 CID 移除／History／PG
+收尾通过，早期未保护配置漂移失败保留；Local omitted／False identity／argv保持。
+复杂 Temporal Coding、跨宿主与专用原生认证仍拒绝／不可用；固定 process-peer 的业务
+协议不证明真实 Coding Task 或质量。默认发布不迁移，最终证据见
+[指南](../../docs/temporal-coding.md)与[本批登记](../reviews/2026-10-14-temporal-coding-delegation.md)。
+下文 dev102–105 的未接入描述保留其历史边界。
 
 ## 1. 实现边界
 

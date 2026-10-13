@@ -6,11 +6,12 @@ from .errors import DefinitionMismatch, ValidationError
 from .types import canonical, digest, submission_request
 
 
-def stage_request(policy, input=None):
+def stage_request(policy, input=None, manifest=None):
     from .temporal_bindings import normalize_request
 
     return normalize_request(
-        submission_request(policy.model_stage.agent, input, budget=policy.verifier_budget)
+        submission_request(policy.model_stage.agent, input, budget=policy.verifier_budget),
+        manifest,
     )
 
 
@@ -25,7 +26,7 @@ def registration(policy, manifest, runtime):
     result["effective_agent_release"] = None
     if policy.model_stage is None:
         return json.loads(canonical(result))
-    request = stage_request(policy)
+    request = stage_request(policy, manifest=manifest)
     if request["definition"]["kind"] != "agent":
         raise ValidationError("Parent verifier requires one actual native Agent")
     descriptor = step_descriptor(request, 0)

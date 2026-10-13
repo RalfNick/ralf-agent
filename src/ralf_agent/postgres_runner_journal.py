@@ -19,6 +19,7 @@ from .errors import (
 )
 from .executors import DispatchEnvelope
 from .postgres import _advisory_key, _PostgresAdapter
+from .postgres_coding_resources import new_resource, receive_resource, validate_resource
 from .runner_journal_state import (
     _MAX_JSON,
     _MAX_RECORD,
@@ -36,8 +37,18 @@ from .types import InvocationContext, Scope, canonical
 
 _METADATA = "ralf_temporal_runner_metadata"
 _RECORDS = "ralf_temporal_runner_effects"
-_TABLES = (_METADATA, _RECORDS, "ralf_temporal_effects", "ralf_temporal_effect_evidence")
+_RESOURCES = "ralf_temporal_coding_resources"
+_TABLES = (
+    _METADATA,
+    _RECORDS,
+    _RESOURCES,
+    "ralf_temporal_effects",
+    "ralf_temporal_effect_evidence",
+)
 _SCHEMA = (
+    """CREATE TABLE IF NOT EXISTS ralf_temporal_coding_resources (
+        workspace TEXT NOT NULL, principal TEXT NOT NULL, effect_key TEXT NOT NULL,
+        record TEXT NOT NULL, PRIMARY KEY(workspace,principal,effect_key))""",
     """CREATE TABLE IF NOT EXISTS ralf_temporal_runner_metadata (
         singleton INTEGER PRIMARY KEY CHECK (singleton=1), value TEXT NOT NULL)""",
     """CREATE TABLE IF NOT EXISTS ralf_temporal_runner_effects (
@@ -220,7 +231,10 @@ class PostgresRunnerJournal:
             count = await staging._execute(
                 "SELECT count(*) FROM ralf_temporal_runner_effects", fetch="one"
             )
-            if count[0] or self._metadata_json is not None:
+            resource_count = await staging._execute(
+                "SELECT count(*) FROM ralf_temporal_coding_resources", fetch="one"
+            )
+            if count[0] or resource_count[0] or self._metadata_json is not None:
                 raise DefinitionMismatch("Original PostgreSQL Runner dataset metadata is missing")
             metadata = {
                 "kind": "postgres-runner-journal",
@@ -357,10 +371,136 @@ class PostgresRunnerJournal:
             if record is not None:
                 await self._validate_effect(key, record)
                 return {**record, "execute": False}
-            if effect is not None:
+            resource = await self._resource(key)
+            if resource is not None:
+                await self._validate_resource_effect(key, resource)
+                prepared = resource["prepared"]
+                expected = {
+                    **resource["namespace_binding"],
+                    "environment": None
+                    if prepared is None
+                    else {k: prepared[k] for k in ("identity", "container_id", "generation")},
+                }
+                if (
+                    prepared is None
+                    or resource["stop"] is not None
+                    or resource["unprepared"] is not None
+                    or resource["namespace_absent"] is not None
+                    or canonical(fixed) != canonical(expected)
+                ):
+                    raise DefinitionMismatch(
+                        "Runner startup lacks its original prepared resource intent"
+                    )
+            elif effect is not None:
                 raise DefinitionMismatch(
                     "Existing effect intent lacks original Runner startup evidence"
                 )
+            if resource is None and original.tool_manifest["effect"] != "read_only":
+                prior = await self._effect._execute(
+                    "SELECT run_id,action_id,effect_key FROM ralf_temporal_effects "
+                    "WHERE workspace=%s AND principal=%s AND target_digest=%s "
+                    "AND effect<>'read_only' AND state<>'adopted' ORDER BY effect_key LIMIT 1",
+                    (*key[:2], target),
+                    fetch="one",
+                )
+                if prior is not None:
+                    return {
+                        "execute": False,
+                        "blocked": True,
+                        "prior": dict(
+                            zip(("run_id", "action_id", "effect_key"), prior, strict=True)
+                        ),
+                    }
+            count = await self._resource_capacity()
+            if resource is None and count >= self._capacity:
+                raise ValidationError("Runner journal effect capacity is full")
+            context = original.context
+            record = new_record(key, binding_json)
+            if resource is None:
+                await self._effect._execute(
+                    "INSERT INTO ralf_temporal_effects "
+                    "(workspace,principal,effect_key,run_id,action_id,attempt_id,operation_digest,target_digest,effect,state) "
+                    "VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,'dispatched')",
+                    (
+                        *key,
+                        context.run_id,
+                        context.action_id,
+                        context.attempt_id,
+                        original.operation_digest,
+                        target,
+                        original.tool_manifest["effect"],
+                    ),
+                )
+            await self._effect._execute(
+                "INSERT INTO ralf_temporal_runner_effects (workspace,principal,effect_key,record) VALUES (%s,%s,%s,%s)",
+                (*key, _json(record, "Runner record", limit=_MAX_RECORD)),
+            )
+            return {**record, "execute": True}
+
+    async def _resource(self, key, request=None):
+        row = await self._effect._execute(
+            "SELECT record FROM ralf_temporal_coding_resources WHERE workspace=%s AND principal=%s AND effect_key=%s",
+            key,
+            fetch="one",
+        )
+        return None if row is None else validate_resource(row[0], key, request)
+
+    async def _validate_resource_effect(self, key, resource):
+        envelope = _envelope(resource["namespace_binding"], key)
+        _, target = _binding(envelope)
+        effect = await self._effect._record(key)
+        if (
+            effect is None
+            or effect["attempt_id"] != envelope.context.attempt_id
+            or effect["effect"] != envelope.tool_manifest["effect"]
+        ):
+            raise DefinitionMismatch("Original resource effect intent changed")
+        self._effect._validate_record(effect, envelope, target)
+        return envelope, target
+
+    async def _resource_capacity(self):
+        row = await self._effect._execute(
+            "SELECT (SELECT count(*) FROM ralf_temporal_coding_resources) + "
+            "(SELECT count(*) FROM ralf_temporal_runner_effects r WHERE NOT EXISTS "
+            "(SELECT 1 FROM ralf_temporal_coding_resources c WHERE c.workspace=r.workspace "
+            "AND c.principal=r.principal AND c.effect_key=r.effect_key))",
+            fetch="one",
+        )
+        return row[0]
+
+    async def begin_resource(
+        self, envelope, request, runner_identity, namespace_binding, *, owner_proof=None
+    ):
+        context = envelope.context if type(envelope) is DispatchEnvelope else None
+        if context is None:
+            raise ValidationError("Coding resource requires original DispatchEnvelope")
+        key, _ = self._key(context.scope, context.effect_key, namespace_binding)
+        resource = new_resource(
+            key, request, runner_identity, namespace_binding, owner_proof=owner_proof
+        )
+        original = _envelope(resource["namespace_binding"], key)
+        if canonical(_dispatch(original)) != canonical(_dispatch(envelope)):
+            raise ValidationError("Resource request differs from original dispatch")
+        prefix, target = _binding(original)
+        async with self._effect._transaction(("temporal-effects", *prefix[:2], target)):
+            await self._check(capacity_lock=True)
+            prior = await self._resource(key, request)
+            if prior is not None:
+                await self._validate_resource_effect(key, prior)
+                if (
+                    prior["runner"] != resource["runner"]
+                    or prior["namespace_binding"] != resource["namespace_binding"]
+                    or prior["owner"] != resource["owner"]
+                ):
+                    from .errors import IdempotencyConflict
+
+                    raise IdempotencyConflict("Original resource namespace or runner changed")
+                return {"execute": False, "resource": prior}
+            if (
+                await self._effect._record(key) is not None
+                or await self._record(key, canonical(namespace_binding)) is not None
+            ):
+                raise DefinitionMismatch("Existing effect lacks original resource intent")
             if original.tool_manifest["effect"] != "read_only":
                 prior = await self._effect._execute(
                     "SELECT run_id,action_id,effect_key FROM ralf_temporal_effects "
@@ -377,14 +517,8 @@ class PostgresRunnerJournal:
                             zip(("run_id", "action_id", "effect_key"), prior, strict=True)
                         ),
                     }
-            count = await self._effect._execute(
-                "SELECT count(*) FROM ralf_temporal_runner_effects",
-                fetch="one",
-            )
-            if count[0] >= self._capacity:
-                raise ValidationError("Runner journal effect capacity is full")
-            context = original.context
-            record = new_record(key, binding_json)
+            if await self._resource_capacity() >= self._capacity:
+                raise ValidationError("Runner journal resource capacity is full")
             await self._effect._execute(
                 "INSERT INTO ralf_temporal_effects "
                 "(workspace,principal,effect_key,run_id,action_id,attempt_id,operation_digest,target_digest,effect,state) "
@@ -400,10 +534,67 @@ class PostgresRunnerJournal:
                 ),
             )
             await self._effect._execute(
-                "INSERT INTO ralf_temporal_runner_effects (workspace,principal,effect_key,record) VALUES (%s,%s,%s,%s)",
-                (*key, _json(record, "Runner record", limit=_MAX_RECORD)),
+                "INSERT INTO ralf_temporal_coding_resources (workspace,principal,effect_key,record) VALUES (%s,%s,%s,%s)",
+                (*key, _json(resource, "Coding resource record", limit=_MAX_RECORD)),
             )
-            return {**record, "execute": True}
+            return {"execute": True, "resource": resource}
+
+    async def resource_state(self, scope, effect_key, request):
+        key, _ = self._key(scope, effect_key, request)
+        async with self._effect._transaction():
+            await self._check()
+            resource = await self._resource(key, request)
+            if resource is not None:
+                await self._validate_resource_effect(key, resource)
+            return resource
+
+    async def record_resource(self, scope, effect_key, request, *, kind, evidence):
+        key, _ = self._key(scope, effect_key, request)
+        async with self._effect._transaction():
+            await self._check()
+            resource = await self._resource(key, request)
+            if resource is None:
+                raise ValidationError("Resource receipt requires original durable intent")
+            _, target = await self._validate_resource_effect(key, resource)
+            await self._effect._execute(
+                "SELECT pg_advisory_xact_lock(%s)",
+                (_advisory_key(("temporal-effects", *key[:2], target)),),
+            )
+            await self._check()
+            resource = await self._resource(key, request)
+            if resource is None:
+                raise DefinitionMismatch("Original Coding resource intent disappeared")
+            await self._validate_resource_effect(key, resource)
+            updated = receive_resource(resource, kind, evidence)
+            await self._effect._execute(
+                "UPDATE ralf_temporal_coding_resources SET record=%s WHERE workspace=%s AND principal=%s AND effect_key=%s",
+                (_json(updated, "Coding resource record", limit=_MAX_RECORD), *key),
+            )
+            return updated
+
+    async def pending_resources(self, scope):
+        if type(scope) is not Scope:
+            raise ValidationError("Pending Coding resources require original Scope")
+        self._ready()
+        prefix = (_text(scope.workspace, "Workspace"), _text(scope.principal, "Principal"))
+        async with self._effect._transaction():
+            await self._check()
+            rows = await self._effect._execute(
+                "SELECT effect_key,record FROM ralf_temporal_coding_resources "
+                "WHERE workspace=%s AND principal=%s ORDER BY effect_key LIMIT %s",
+                (*prefix, self._capacity + 1),
+                fetch="all",
+            )
+            if len(rows) > self._capacity:
+                raise DefinitionMismatch("Original Coding resource capacity changed")
+            pending = []
+            for effect_key, encoded in rows:
+                key = (*prefix, effect_key)
+                resource = validate_resource(encoded, key)
+                await self._validate_resource_effect(key, resource)
+                if resource["pending_stop"]:
+                    pending.append(resource)
+            return tuple(pending)
 
     async def _save(self, key, record, before):
         encoded = _json(record, "Runner record", limit=_MAX_RECORD)

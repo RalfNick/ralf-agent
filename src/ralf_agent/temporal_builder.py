@@ -137,6 +137,9 @@ class TemporalRuntimeBuilder:
         preflight_query_providers(profile)
         preflight_parent_completion_providers(profile)
         preflight_user_input(profile)
+        from .temporal_coding_factories import preflight_coding_references
+
+        preflight_coding_references(profile)
         validate_continuation_declarations(
             profile, enabled=profile.execution.get("model_continuation", False)
         )
@@ -174,6 +177,8 @@ class TemporalRuntimeBuilder:
             resource_owner=resource_owner,
         )
         cleanup = _ConstructionCleanup(context)
+        context.coding_execution = profile.execution.get("coding_execution", False)
+        context.effect_journal = None
 
         async def construct(prepared):
             factory, config = prepared
@@ -191,12 +196,18 @@ class TemporalRuntimeBuilder:
         try:
             providers = {name: await construct(value) for name, value in prepared_providers.items()}
             context.providers = MappingProxyType(providers)
+            original_journal = None
+            if context.coding_execution and "effect_journal" in prepared_components:
+                original_journal = await construct(prepared_components.pop("effect_journal"))
+                context.effect_journal = original_journal
             context.tools = (
                 await construct(prepared_components.pop("tools"))
                 if "tools" in prepared_components
                 else ToolRegistry()
             )
             options = {name: await construct(value) for name, value in prepared_components.items()}
+            if original_journal is not None:
+                options["effect_journal"] = original_journal
             if profile.binding_components is not None:
                 catalog = BindingCatalog(scope=scope)
                 for declaration, prepared in prepared_bindings:

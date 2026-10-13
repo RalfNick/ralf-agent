@@ -22,7 +22,9 @@ from .errors import (
     ValidationError,
 )
 from .executors import DispatchEnvelope, EffectObservation
+from .postgres_runner_journal import PostgresRunnerJournal
 from .runner_journal import RunnerJournal
+from .temporal_coding_authority import TemporalCodingAuthority
 from .types import canonical, digest
 
 
@@ -96,7 +98,7 @@ class CodexCodingRunner:
                 and not root.is_symlink()
                 and root.stat().st_uid == os.getuid()
                 and stat.S_IMODE(root.stat().st_mode) == 0o700
-                and type(journal) is RunnerJournal
+                and type(journal) in (RunnerJournal, PostgresRunnerJournal)
                 and executable.is_absolute()
                 and executable.is_file()
                 and os.access(executable, os.X_OK)
@@ -136,6 +138,8 @@ class CodexCodingRunner:
             "credentials": "unavailable",
             "usage_bound": "unknown",
         }
+        if type(journal) is PostgresRunnerJournal:
+            self._identity["configuration_readonly"] = True
         self._active = None
         self._closing = False
 
@@ -168,7 +172,7 @@ class CodexCodingRunner:
             from .local_delegated_coding import LocalCodingAuthority
         except ImportError:
             raise AuthorizationDenied("Original Local Coding authority is unavailable") from None
-        if type(authority) is not LocalCodingAuthority:
+        if type(authority) is not LocalCodingAuthority or type(self._journal) is not RunnerJournal:
             raise AuthorizationDenied(
                 "Coding execution requires the original LocalEngine authority"
             )
@@ -195,6 +199,7 @@ class CodexCodingRunner:
             command_timeout=self._timeout,
             retire_on_stop=True,
             expected_generation=generation,
+            configuration_readonly=type(self._journal) is PostgresRunnerJournal,
         )
 
     def _binding(self, envelope, intent, state):
@@ -292,10 +297,335 @@ class CodexCodingRunner:
             if owner["stop"] is not None and owner["task"].done():
                 self._active = None
 
+    async def _history_authority(self, envelope, authority):
+        try:
+            from .temporal_coding_authority import TemporalCodingAuthority
+        except ImportError:
+            raise AuthorizationDenied("Original Temporal Coding authority is unavailable") from None
+        if (
+            type(authority) is not TemporalCodingAuthority
+            or type(self._journal) is not PostgresRunnerJournal
+        ):
+            raise AuthorizationDenied(
+                "History Coding requires original async authority and PostgreSQL journal"
+            )
+        owner = {"envelope": envelope, "authority": authority, "history": True}
+        return await self._authority_owned(owner)
+
+    async def _authority_method(self, owner, method, *args):
+        if not owner.get("history"):
+            value = getattr(owner["authority"], method)(*args)
+            if method == "adopt" and value is not None:
+                raise AuthorizationDenied("Original Local receipt requires completed None")
+            return value
+        from .temporal_coding_authority import TemporalCodingAuthority
+
+        authority = owner["authority"]
+        if type(authority) is not TemporalCodingAuthority or method not in {
+            "check",
+            "resource_state",
+            "cancelled",
+            "authorize",
+            "adopt",
+            "validate_registration",
+        }:
+            raise AuthorizationDenied("Original History Coding authority changed")
+        bound = getattr(authority, method)
+        fixed = _HISTORY_METHODS[method]
+        if getattr(bound, "__func__", None) is not fixed:
+            raise DefinitionMismatch("Original History authority method changed")
+        self._check_root()
+        value = await bound(*args)
+        self._check_root()
+        if (
+            getattr(getattr(authority, method), "__func__", None) is not fixed
+            or getattr(TemporalCodingAuthority, method) is not fixed
+        ):
+            raise DefinitionMismatch("Original History authority method changed during await")
+        if method in {"adopt", "validate_registration"}:
+            if value is not None:
+                raise AuthorizationDenied("Original History receipt requires completed None")
+        elif method == "cancelled":
+            if type(value) is not bool:
+                raise AuthorizationDenied(
+                    "Original History cancellation requires completed boolean"
+                )
+        else:
+            value = _snapshot(value, "original History Coding " + method)
+            if type(value) is not dict:
+                raise AuthorizationDenied("Original History authority requires completed object")
+        return value
+
+    async def _authority_owned(self, owner):
+        if not owner.get("history"):
+            return self._authority(owner["envelope"], owner["authority"])
+        return await self._authority_method(owner, "check", owner["envelope"], self.identity)
+
+    async def _journal_method(self, owner, method, *args, **kwargs):
+        if not owner.get("history"):
+            return getattr(self._journal, method)(*args, **kwargs)
+        if type(self._journal) is not PostgresRunnerJournal or method not in _PG_METHODS:
+            raise DefinitionMismatch("Original asynchronous Coding journal changed")
+        bound = getattr(self._journal, method)
+        fixed = _PG_METHODS[method]
+        if getattr(bound, "__func__", None) is not fixed:
+            raise DefinitionMismatch("Original asynchronous journal method changed")
+        self._check_root()
+        await self._authority_method(owner, "validate_registration")
+        value = await bound(*args, **kwargs)
+        await self._authority_method(owner, "validate_registration")
+        self._check_root()
+        if getattr(getattr(self._journal, method), "__func__", None) is not fixed:
+            raise DefinitionMismatch("Original journal method changed during await")
+        return value
+
+    async def _grant_owned(self, owner, method, params, binding):
+        if not owner.get("history"):
+            return self._grant(owner["authority"], method, params, binding)
+        grant = await self._authority_method(owner, "authorize", method, params, binding)
+        if (
+            grant.get("method") != method
+            or canonical(grant.get("params")) != canonical(params)
+            or canonical(grant.get("binding")) != canonical(binding)
+            or type(grant.get("execute")) is not bool
+        ):
+            raise AuthorizationDenied(
+                "Native startup grant differs from the original History request"
+            )
+        if not grant["execute"]:
+            raise RunnerOutcomeUnknown("startup already granted")
+
+    async def _cancelled_owned(self, owner):
+        if not owner.get("history"):
+            return self._cancelled(owner)
+        if owner.get("native_error") is not None:
+            raise owner["native_error"]
+        if await self._authority_method(owner, "cancelled"):
+            raise RunnerOutcomeUnknown("original execution cancelled")
+
+    async def _observe_owned(self, owner, kind, evidence):
+        if not owner.get("history"):
+            if kind == "prepared":
+                return owner["authority"].adopt(kind, evidence)
+            return self._observe(owner, kind, evidence)
+        context = owner["envelope"].context
+        value = evidence if kind in {"prepared", "namespace_absent"} else {"kind": kind, **evidence}
+        if kind in {"prepared", "stop", "namespace_absent"}:
+            saved = await self._journal_method(
+                owner,
+                "record_resource",
+                context.scope,
+                context.effect_key,
+                owner["intent"],
+                kind=kind,
+                evidence=value,
+            )
+            value = saved[kind]
+        elif owner["journaled"]:
+            await self._journal_method(
+                owner,
+                "record_observation",
+                context.scope,
+                context.effect_key,
+                binding=owner["binding"],
+                observation=value,
+            )
+        await self._authority_method(owner, "adopt", kind, value)
+
+    async def execute_history(self, envelope: DispatchEnvelope, authority) -> EffectObservation:
+        intent = await self._history_authority(envelope, authority)
+        self._check_root()
+        self._journal._ready()
+        arguments = envelope.arguments
+        if (
+            set(arguments) != {"task"}
+            or type(arguments["task"]) is not str
+            or not arguments["task"].strip()
+            or len(arguments["task"]) > 8192
+            or any(0xD800 <= ord(c) <= 0xDFFF for c in arguments["task"])
+        ):
+            raise ValidationError("Coding runner requires one bounded task string")
+        if self._closing:
+            raise RunnerUnavailable("resource closing")
+        if self._active is not None:
+            raise CoordinatorBusy("Another original Coding resource still owns execution")
+        original = await self._authority_method(
+            {"history": True, "authority": authority}, "resource_state", envelope, self.identity
+        )
+        # Retry/replacement invocation may only reconcile original evidence.
+        context = envelope.context
+        prior = await self._journal_method(
+            {"history": True, "authority": authority},
+            "resource_state",
+            context.scope,
+            context.effect_key,
+            intent,
+        )
+        if prior is not None or any(value is not None for value in original.values()):
+            recovered = await self.reconcile_history(envelope, authority)
+            if recovered is None:
+                raise RunnerOutcomeUnknown("original native preparation evidence remains uncertain")
+            return recovered
+        owner = {
+            "history": True,
+            "envelope": envelope,
+            "authority": authority,
+            "intent": intent,
+            "environment": None,
+            "transport": None,
+            "binding": None,
+            "journaled": False,
+            "prepared": False,
+            "stop": None,
+            "cleanup": None,
+            "task": None,
+            "cold": False,
+            "supervision": None,
+            "events": asyncio.Queue(maxsize=1000),
+            "pump": None,
+            "native_error": None,
+            "ending": False,
+            "original_state": original,
+        }
+        if self._closing:
+            raise RunnerUnavailable("resource closing")
+        if self._active is not None:
+            raise CoordinatorBusy("Another original Coding resource still owns execution")
+        self._active = owner
+        owner["task"] = asyncio.create_task(self._execute(owner))
+        try:
+            return await asyncio.shield(owner["task"])
+        except asyncio.CancelledError:
+            owner["task"].cancel()
+            await self._settle(owner["task"])
+            await self._cleanup(owner)
+            raise
+        finally:
+            if owner["stop"] is not None and owner["task"].done():
+                self._active = None
+
+    async def stop_history(self, envelope: DispatchEnvelope, authority):
+        intent = await self._history_authority(envelope, authority)
+        if self._active is not None:
+            owner = self._active
+            if not owner.get("history") or canonical(_dispatch(envelope)) != canonical(
+                _dispatch(owner["envelope"])
+            ):
+                raise CoordinatorBusy(
+                    "A different original Coding execution still owns its resource"
+                )
+            # A retained cleanup must adopt through the current pinned receiver.
+            owner["authority"] = authority
+            await self._close_owner(owner)
+            return owner.get("stop_evidence")
+        owner = {"history": True, "envelope": envelope, "authority": authority, "intent": intent}
+        original = await self._authority_method(owner, "resource_state", envelope, self.identity)
+        context = envelope.context
+        resource = await self._journal_method(
+            owner, "resource_state", context.scope, context.effect_key, intent
+        )
+        if resource is not None:
+            if resource["runner"] != self.identity:
+                raise DefinitionMismatch("Original pending resource runner changed")
+            if resource["owner"] is not None:
+                await self._authority_method(owner, "adopt", "owner", resource["owner"])
+            if original.get("prepare_grant") is None:
+                if resource["prepared"] is not None or resource["stop"] is not None:
+                    raise DefinitionMismatch(
+                        "PG native resource receipt lacks its original History preparation grant"
+                    )
+                evidence = {
+                    "namespace_binding": resource["namespace_binding"],
+                    "prepare_granted": False,
+                }
+                await self._journal_method(
+                    owner,
+                    "record_resource",
+                    context.scope,
+                    context.effect_key,
+                    intent,
+                    kind="unprepared",
+                    evidence=evidence,
+                )
+                await self._authority_method(owner, "adopt", "unprepared", evidence)
+                return None
+            prepared = resource["prepared"]
+            original["prepared"] = prepared or original.get("prepared")
+            if prepared is not None:
+                original["binding"] = self._binding(envelope, intent, prepared)
+            original["prepare_grant"] = original.get("prepare_grant") or {
+                "binding": resource["namespace_binding"]
+            }
+        known = resource is not None or any(value is not None for value in original.values())
+        env = self._environment(envelope, create=False)
+        if env is None and not known:
+            return None
+        owner.update(
+            {
+                "environment": env,
+                "transport": None,
+                "binding": None,
+                "journaled": False,
+                "prepared": False,
+                "stop": None,
+                "cleanup": None,
+                "task": None,
+                "cold": True,
+                "supervision": None,
+                "original_state": original if known else {},
+                "known_resource": known,
+                "resource_intent": resource,
+            }
+        )
+        self._active = owner
+        try:
+            await self._cleanup(owner)
+            return owner.get("stop_evidence")
+        finally:
+            if owner["stop"] is not None:
+                self._active = None
+
+    async def reconcile_history(self, envelope: DispatchEnvelope, authority):
+        stop = await self.stop_history(envelope, authority)
+        if stop is None:
+            return None
+        intent = await self._history_authority(envelope, authority)
+        owner = {"history": True, "envelope": envelope, "authority": authority, "intent": intent}
+        binding = self._binding(envelope, intent, stop)
+        record = await self._journal_method(
+            owner, "lookup", envelope.context.scope, envelope.context.effect_key, binding=binding
+        )
+        if record is None:
+            raise RunnerOutcomeUnknown("original prepare-window native evidence remains uncertain")
+        # Original native startup receipts precede every History adoption.
+        if record["thread_id"] is not None:
+            await self._authority_method(
+                owner, "adopt", "thread", {"thread_id": record["thread_id"]}
+            )
+        if record["turn_id"] is not None:
+            await self._authority_method(
+                owner,
+                "adopt",
+                "turn",
+                {"thread_id": record["thread_id"], "turn_id": record["turn_id"]},
+            )
+        candidate = None
+        for receipt in record["observations"]:
+            kind = receipt.get("kind")
+            if kind in {"observation", "result_candidate", "error"}:
+                await self._authority_method(owner, "adopt", kind, receipt)
+                if kind == "result_candidate":
+                    candidate = receipt["result"]
+        if candidate is not None:
+            return EffectObservation(candidate, source="codex-coding-runner-journal")
+        raise RunnerOutcomeUnknown("cold original native evidence remains uncertain")
+
     async def _request(self, owner, method, params, *, control=False):
-        self._cancelled(owner)
+        await self._cancelled_owned(owner)
         protocol = owner["control"] if control else self._protocol
         accepted = protocol.validate_request(method, params)
+        if owner.get("history"):
+            await self._authority_method(owner, "validate_registration")
         result = await owner["transport"].request(method, accepted)
         return protocol.validate_response(method, result)
 
@@ -336,7 +666,7 @@ class CodexCodingRunner:
         error = None
         try:
             async with asyncio.timeout(self._timeout):
-                self._cancelled(owner)
+                await self._cancelled_owned(owner)
                 env = self._environment(owner["envelope"], create=True)
                 owner["environment"] = env
                 prepare_binding = {
@@ -345,9 +675,31 @@ class CodexCodingRunner:
                     "dispatch": _dispatch(owner["envelope"]),
                     "environment": env.identity,
                 }
-                self._grant(owner["authority"], "prepare", {}, prepare_binding)
-                owner["original_state"] = owner["authority"].resource_state(
-                    owner["envelope"], self.identity
+                if owner.get("history"):
+                    context = owner["envelope"].context
+                    proof = owner["authority"].owner_proof
+                    if proof is None:
+                        raise AuthorizationDenied(
+                            "History native preparation requires original process owner proof"
+                        )
+                    begun = await self._journal_method(
+                        owner,
+                        "begin_resource",
+                        owner["envelope"],
+                        owner["intent"],
+                        self.identity,
+                        prepare_binding,
+                        owner_proof=proof,
+                    )
+                    if not begun["execute"]:
+                        raise RunnerOutcomeUnknown(
+                            "original resource preparation intent already exists"
+                        )
+                    owner["resource_intent"] = begun["resource"]
+                    await self._authority_method(owner, "adopt", "owner", proof)
+                await self._grant_owned(owner, "prepare", {}, prepare_binding)
+                owner["original_state"] = await self._authority_method(
+                    owner, "resource_state", owner["envelope"], self.identity
                 )
                 prepared = await env.prepare()
                 owner["prepared"] = True
@@ -361,11 +713,18 @@ class CodexCodingRunner:
                     raise DefinitionMismatch(
                         "Original Coding environment is not a fresh stopped resource"
                     )
-                owner["authority"].adopt("prepared", inspected)
-                self._authority(owner["envelope"], owner["authority"])
+                await self._observe_owned(owner, "prepared", inspected)
+                await self._authority_owned(owner)
                 owner["binding"] = self._binding(owner["envelope"], owner["intent"], inspected)
                 context = owner["envelope"].context
-                record = self._journal.begin(context.scope, context.effect_key, owner["binding"])
+                record = await self._journal_method(
+                    owner,
+                    "begin",
+                    context.scope,
+                    context.effect_key,
+                    owner["binding"],
+                    **({"envelope": owner["envelope"]} if owner.get("history") else {}),
+                )
                 owner["journaled"] = True
                 if not record["execute"]:
                     raise RunnerOutcomeUnknown("original journal startup already exists")
@@ -379,7 +738,7 @@ class CodexCodingRunner:
                 await transport.start()
                 await self._preflight(owner)
                 owner["pump"] = asyncio.create_task(self._pump(owner))
-                self._cancelled(owner)
+                await self._cancelled_owned(owner)
                 params = self._protocol.validate_request(
                     "thread/start",
                     {
@@ -389,8 +748,10 @@ class CodexCodingRunner:
                         "ephemeral": False,
                     },
                 )
-                self._grant(owner["authority"], "thread/start", params, owner["binding"])
-                submitted = self._journal.mark_thread_submitted(
+                await self._grant_owned(owner, "thread/start", params, owner["binding"])
+                submitted = await self._journal_method(
+                    owner,
+                    "mark_thread_submitted",
                     context.scope,
                     context.effect_key,
                     binding=owner["binding"],
@@ -401,15 +762,17 @@ class CodexCodingRunner:
                 thread_id = thread["thread"]["id"]
                 if thread["cwd"] != "/workspace" or thread["thread"]["cwd"] != "/workspace":
                     raise DefinitionMismatch("Native Thread changed the frozen Coding workspace")
-                self._journal.record_thread(
+                await self._journal_method(
+                    owner,
+                    "record_thread",
                     context.scope,
                     context.effect_key,
                     binding=owner["binding"],
                     thread_id=thread_id,
                     process_epoch=inspected["generation"],
                 )
-                owner["authority"].adopt("thread", {"thread_id": thread_id})
-                self._cancelled(owner)
+                await self._authority_method(owner, "adopt", "thread", {"thread_id": thread_id})
+                await self._cancelled_owned(owner)
                 params = self._protocol.validate_request(
                     "turn/start",
                     {
@@ -426,8 +789,10 @@ class CodexCodingRunner:
                         ],
                     },
                 )
-                self._grant(owner["authority"], "turn/start", params, owner["binding"])
-                submitted = self._journal.mark_turn_submitted(
+                await self._grant_owned(owner, "turn/start", params, owner["binding"])
+                submitted = await self._journal_method(
+                    owner,
+                    "mark_turn_submitted",
                     context.scope,
                     context.effect_key,
                     binding=owner["binding"],
@@ -436,13 +801,17 @@ class CodexCodingRunner:
                     raise RunnerOutcomeUnknown("original Turn submission already exists")
                 started = await self._request(owner, "turn/start", params)
                 turn_id = started["turn"]["id"]
-                self._journal.record_turn(
+                await self._journal_method(
+                    owner,
+                    "record_turn",
                     context.scope,
                     context.effect_key,
                     binding=owner["binding"],
                     turn_id=turn_id,
                 )
-                owner["authority"].adopt("turn", {"thread_id": thread_id, "turn_id": turn_id})
+                await self._authority_method(
+                    owner, "adopt", "turn", {"thread_id": thread_id, "turn_id": turn_id}
+                )
                 await self._terminal(owner, thread_id, turn_id)
                 history = await self._request(
                     owner,
@@ -453,7 +822,7 @@ class CodexCodingRunner:
                     },
                 )
                 candidate = self._candidate(history, thread_id, turn_id)
-                self._observe(
+                await self._observe_owned(
                     owner,
                     "observation",
                     {
@@ -467,8 +836,12 @@ class CodexCodingRunner:
             error = RunnerOutcomeUnknown("execution interrupted before adoption")
             if owner["journaled"]:
                 context = owner["envelope"].context
-                self._journal.request_cancel(
-                    context.scope, context.effect_key, binding=owner["binding"]
+                await self._journal_method(
+                    owner,
+                    "request_cancel",
+                    context.scope,
+                    context.effect_key,
+                    binding=owner["binding"],
                 )
             raise
         except (TimeoutError, CodexRPCError):
@@ -480,24 +853,24 @@ class CodexCodingRunner:
         finally:
             await self._cleanup(owner)
             if error is not None:
-                self._observe(
+                await self._observe_owned(
                     owner, "error", {"code": getattr(error, "code", "runner_outcome_unknown")}
                 )
         candidate["artifacts"] = self._artifacts(owner["environment"])
         if owner["native_error"] is not None:
-            self._observe(owner, "error", {"code": owner["native_error"].code})
+            await self._observe_owned(owner, "error", {"code": owner["native_error"].code})
             raise owner["native_error"]
         if not candidate["text"].strip() and not candidate["artifacts"]:
             error = RunnerUnavailable("empty native result")
-            self._observe(owner, "error", {"code": error.code})
+            await self._observe_owned(owner, "error", {"code": error.code})
             raise error
         candidate["stop"] = {k: owner["stop"][k] for k in ("container_id", "generation", "fenced")}
-        self._observe(owner, "result_candidate", {"result": candidate})
+        await self._observe_owned(owner, "result_candidate", {"result": candidate})
         return EffectObservation(candidate, source="codex-coding-runner")
 
     async def _terminal(self, owner, thread_id, turn_id):
         for _ in range(1000):
-            self._cancelled(owner)
+            await self._cancelled_owned(owner)
             try:
                 event = await asyncio.wait_for(owner["events"].get(), timeout=0.05)
             except TimeoutError:
@@ -513,7 +886,7 @@ class CodexCodingRunner:
                 if params.get("threadId") != thread_id or turn.get("id") != turn_id:
                     raise RunnerOutcomeUnknown("native terminal locator differs")
                 status = turn.get("status")
-                self._observe(
+                await self._observe_owned(
                     owner,
                     "observation",
                     {
@@ -649,6 +1022,14 @@ class CodexCodingRunner:
                 pass
 
     async def _retire(self, owner):
+        if owner.get("retirement_complete"):
+            stop = owner["stop_evidence"]
+            if stop is not None:
+                await self._observe_owned(owner, "stop", stop)
+            elif owner.get("namespace_absence") is not None:
+                await self._observe_owned(owner, "namespace_absent", owner["namespace_absence"])
+            owner["stop"] = stop or {"container_id": None, "generation": None, "fenced": True}
+            return
         env = owner["environment"]
         stop = None
         failure = None
@@ -696,7 +1077,32 @@ class CodexCodingRunner:
                 value is not None for value in owner["original_state"].values()
             )
             if stop is None and known:
-                raise ExecutionHostFailed("Original Coding namespace evidence is missing")
+                original = owner["original_state"]
+                resource = owner.get("resource_intent")
+                if (
+                    owner.get("history")
+                    and env is not None
+                    and resource is not None
+                    and resource["owner"] is not None
+                    and original.get("prepare_grant") is not None
+                    and all(original.get(name) is None for name in ("prepared", "thread", "turn"))
+                    and resource["prepared"] is None
+                    and resource["stop"] is None
+                ):
+                    from .temporal_coding_runtime import original_owner_stopped
+
+                    if not await original_owner_stopped(self, resource["owner"]):
+                        raise ExecutionHostFailed(
+                            "Original Worker still owns native namespace permission"
+                        )
+                    absent = await env.observe_namespace_absence()
+                    owner["namespace_absence"] = {
+                        **absent,
+                        "owner": resource["owner"],
+                        "process_present": False,
+                    }
+                else:
+                    raise ExecutionHostFailed("Original Coding namespace evidence is missing")
         except asyncio.CancelledError:
             raise
         except Exception:
@@ -726,19 +1132,23 @@ class CodexCodingRunner:
                 owner["binding"] = self._binding(owner["envelope"], owner["intent"], stop)
                 context = owner["envelope"].context
                 owner["journaled"] = (
-                    self._journal.lookup(
+                    await self._journal_method(
+                        owner,
+                        "lookup",
                         context.scope,
                         context.effect_key,
                         binding=owner["binding"],
                     )
-                    is not None
-                )
+                ) is not None
         owner["stop_evidence"] = stop
+        owner["retirement_complete"] = True
         # This local sentinel releases a no-process owner. It is never adopted
         # as namespace stop evidence or exposed by cold stop_existing.
-        owner["stop"] = stop or {"container_id": None, "generation": None, "fenced": True}
         if stop is not None:
-            self._observe(owner, "stop", stop)
+            await self._observe_owned(owner, "stop", stop)
+        elif owner.get("namespace_absence") is not None:
+            await self._observe_owned(owner, "namespace_absent", owner["namespace_absence"])
+        owner["stop"] = stop or {"container_id": None, "generation": None, "fenced": True}
 
     @staticmethod
     async def _settle(task):
@@ -862,3 +1272,35 @@ class CodexCodingRunner:
             )
             return EffectObservation(candidates[-1], source="codex-coding-runner-journal")
         raise RunnerOutcomeUnknown("cold original native evidence remains uncertain")
+
+
+# Fixed default async journal functions; no duck-typed coroutine adapters.
+_PG_METHODS = {
+    name: getattr(PostgresRunnerJournal, name)
+    for name in (
+        "begin_resource",
+        "resource_state",
+        "record_resource",
+        "pending_resources",
+        "begin",
+        "lookup",
+        "mark_thread_submitted",
+        "mark_turn_submitted",
+        "record_thread",
+        "record_turn",
+        "record_observation",
+        "request_cancel",
+    )
+}
+
+_HISTORY_METHODS = {
+    name: getattr(TemporalCodingAuthority, name)
+    for name in (
+        "check",
+        "resource_state",
+        "cancelled",
+        "authorize",
+        "adopt",
+        "validate_registration",
+    )
+}
