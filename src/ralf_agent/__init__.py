@@ -78,6 +78,16 @@ from .event_records import AsyncRunEventSource, EventCursor, EventEnvelope, Sync
 from .event_stream import RunEventSubscription
 from .executors import DispatchEnvelope, EffectObservation, PythonToolExecutor, ToolExecutor
 from .fact_index import IndexedMemoryStore
+from .fact_index_generation import GenerationIndexedMemoryStore, GenerationSourceChanged
+from .fact_index_maintenance_factories import (
+    FactIndexMaintenanceOwner,
+    create_fact_index_maintenance_owner,
+    fact_index_maintenance_components,
+    fact_index_maintenance_writer,
+    maintained_agent_workflow,
+    register_fact_index_maintenance,
+)
+from .fact_index_maintenance_tools import FactIndexMaintenanceToolSource
 from .fact_index_ports import AsyncFactIndexMetadataStore, FactIndexCatalog, FactIndexMetadataStore
 from .fact_scan import AsyncFactScanner, FactScanner, FactScanPage, FactScanQuery
 from .facts_adapter_contract import (
@@ -392,7 +402,7 @@ from .workflow import (
     WorkflowSelection,
 )
 
-__version__ = "0.1.0.dev97"
+__version__ = "0.1.0.dev98"
 from .binding_artifacts import ArtifactBindingResource, ArtifactView
 from .binding_sandbox import SandboxBindingResource
 from .docker_sandbox import DockerSandbox
@@ -424,6 +434,15 @@ from .workspace_write_tools import WritableWorkspaceToolSource
 from .workspace_writes import InMemoryWritableWorkspace, WritableWorkspacePort
 
 __all__ = [
+    "GenerationIndexedMemoryStore",
+    "GenerationSourceChanged",
+    "FactIndexMaintenanceToolSource",
+    "FactIndexMaintenanceOwner",
+    "create_fact_index_maintenance_owner",
+    "fact_index_maintenance_components",
+    "fact_index_maintenance_writer",
+    "maintained_agent_workflow",
+    "register_fact_index_maintenance",
     "DockerSandbox",
     "SandboxToolSource",
     "SandboxBindingResource",

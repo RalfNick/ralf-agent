@@ -1,4 +1,6 @@
-# Implementation status — 0.1.0.dev97
+# Implementation status — 0.1.0.dev98
+
+Dev98 自动 Facts 索引维护首期子集已验收：来源快照分代、原 Graph ToolAction、准确效果日志和 ready-only Agent 门禁；SDK／JSON／TOML、owned／borrowed 与可编辑 memory-index 模板接通原 Session／Profile 恢复。最终冻结源码 8298 passed／617 配置依赖跳过，两套安装各 163 项零跳过，12 种配置／32 个实际 Turn、六类进程窗口和旧 dev97 的 16 组 Run／Turn 双向兼容通过。349 产品模块一致，四项审查问题由同一审查者闭环。首期仅原生 SQLite／Hash；真实语义／模型质量、远程及 Temporal 维护、后台／增量物理清理／GC、两项 P3 严格输入观察、完整 R01–R26／H3／M1 和外部采用继续开放。 见[使用指南](fact-index-maintenance.md)与[验收记录](../architecture/reviews/2026-10-13-fact-index-maintenance.md)。
 
 Dev97 模型替换与业务组合子集已验收：固定 model-provider core P01–P10／tools P01–P16、可编辑 SQLite 供应方、SDK／JSON／TOML、同步／异步与 owned／borrowed 装配接通 Agent／当前来源 RAG／规则 DAG Plan／Supervisor Team。最终源码 8183 passed／617 配置依赖跳过；独立核心／SDK 各 205 项零跳过，修复后的安装应用共 192 种配置组合通过。六项 P2 经同一审查者闭环；实际原响应、审批效果与遗失响应窗口、旧 dev96 的 16 组 Run／Turn 双向恢复、8 类原生模型方法与默认及 K/S/Facts 字节兼容通过。345 产品模块与安装包保持一致。新返回模型证据以 128 层容器为界，超限保留完成与结算，历史已接收记录保持。未重新验收真实模型、远程服务、Temporal 或独立采用；完整 R01–R26／H3／M1、路由、索引生命周期和质量目标继续开放。 见[使用指南](model-adapter-contracts.md)与[验收记录](../architecture/reviews/2026-10-13-model-adapter-contracts.md)。
 

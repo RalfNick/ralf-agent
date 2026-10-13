@@ -4,6 +4,7 @@ import copy
 import inspect
 from typing import Protocol
 
+from .binding_artifacts import _same_binding
 from .errors import (
     BudgetExceeded,
     DefinitionMismatch,
@@ -97,7 +98,8 @@ class _FixedPorts:
             if isinstance(target, _DataPort) and target.backend is not backend:
                 raise DefinitionMismatch("Index data port changed")
             if any(
-                _binding(getattr(target, name, None)) != original for name, original, _ in bindings
+                not _same_binding(_binding(getattr(target, name, None)), original)
+                for name, original, _ in bindings
             ) or digest(_component(target, [name for name, _, _ in bindings])[1]) != digest(
                 identity
             ):

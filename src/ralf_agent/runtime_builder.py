@@ -585,6 +585,9 @@ class ComponentRegistry:
         from .fact_index_factories import register_fact_index
 
         register_fact_index(self)
+        from .fact_index_maintenance_factories import register_fact_index_maintenance
+
+        register_fact_index_maintenance(self)
         from .temporal_journal_factories import register_effect_journal
 
         register_effect_journal(self)

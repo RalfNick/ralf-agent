@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.0.dev98 — Managed native Facts index maintenance
+
+- Add opt-in source-snapshot generations and an original Graph ToolAction before an ordinary reader Agent. Preserve original index defaults, current-source validation, execution authority and exact historical effect receipts.
+- Provide native SQLite/Hash async factories, paired read/write ports, SDK/JSON/TOML and the editable `memory-index` starter with explicit Session IDs, grounded automatic writes and recorded-profile recovery.
+- Pin actual shutdown owners and original close methods; reject identity-equality catalog substitution and classify native source-read races without concealing ordinary CAS/budget errors.
+- Accept this local subset after 8298 source tests / 617 configured skips, core and SDK installations each 163 zero-skip tests, 12 installed configuration combinations, six-window process recovery, original dev97 compatibility and 349-module provenance. Four review findings closed by the same reviewer; two P3 strict-validation observations remain deferred. Semantic/model quality, remote/Temporal maintenance, background/GC, full R01–R26/H3/M1 and independent adoption remain open. Local commit only; no public release claim. [Evidence](architecture/reviews/2026-10-13-fact-index-maintenance.md).
+
 ## 0.1.0.dev97 — ModelProvider replacement
 
 - Develop fixed core/tools ModelProvider contracts and an editable configured

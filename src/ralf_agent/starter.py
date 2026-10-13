@@ -863,9 +863,10 @@ def create_starter(destination, *, template="oncall") -> StarterProject:
         "session-contracts",
         "facts-contracts",
         "model-contracts",
+        "memory-index",
     ):
         raise ValidationError(
-            "Starter template must be oncall, rag, config, model, graph, mcp, cli, parallel, async, plan, team, dag, nested, a2a, temporal, ingest, hybrid, context, memory, model-check, observable, sessions, user-input, adapter-contracts, session-contracts, facts-contracts or model-contracts"
+            "Starter template must be oncall, rag, config, model, graph, mcp, cli, parallel, async, plan, team, dag, nested, a2a, temporal, ingest, hybrid, context, memory, model-check, observable, sessions, user-input, adapter-contracts, session-contracts, facts-contracts, model-contracts or memory-index"
         )
     files = {
         "oncall": _FILES,
@@ -895,6 +896,7 @@ def create_starter(destination, *, template="oncall") -> StarterProject:
         "session-contracts": None,
         "facts-contracts": None,
         "model-contracts": None,
+        "memory-index": None,
     }[template]
     if template == "adapter-contracts":
         files = adapter_contract_files()
@@ -908,6 +910,10 @@ def create_starter(destination, *, template="oncall") -> StarterProject:
         from .model_adapter_contract_starter import model_contract_files
 
         files = model_contract_files()
+    elif template == "memory-index":
+        from .fact_index_maintenance_starter import fact_index_maintenance_files
+
+        files = fact_index_maintenance_files()
     try:
         directory = Path(destination).expanduser().resolve()
         if directory == Path.cwd().resolve():
