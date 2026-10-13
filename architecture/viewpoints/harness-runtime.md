@@ -1,5 +1,7 @@
 # RALF AgentHarness 目标架构
 
+dev102 增加[保留 Coding 环境与共享 PG 启动证据](../../docs/codex-coding-environment.md)，保留原容器、workspace／状态、真实命令 owner 和整容器停止检查。共享日志借用原 EffectJournal，纯规则不调度或决定 Run 终态；Harness／ModelProvider 不运行外部循环。最终受影响源码 301 项零跳过、P1／P2 已实际复验闭环，安装证据见[本批登记](../reviews/2026-10-14-codex-environment-journal.md)。原 Action／Local／Temporal 准入、History 与旧 grant 失效待接入，完整 G3／G5／G7／G8／R13 未关闭；原始 argv 可重启已停容器，lease／generation 不证明 fence，dev99 保持冻结。
+
 dev101 追加[固定原生配置和控制检查](../../docs/codex-coding-preflight.md)及有限命令环境证据。[委托 Coding Action 集成契约](../specs/delegated-coding-action-contract.md)继续复用原审批、效果与唯一执行权威；控制读回不获业务执行许可，完整原生工具／认证／恢复继续开放。
 
 本架构继续作为职责和扩展契约基线；推进按[分阶段交付门槛](../../docs/delivery-gates.md)，dev99 已冻结四条参考业务链路，dev100 转入环境与执行。首个外部 Runner 的通信／启动证据基础不改变纯 Harness 或原执行权威，完整业务工具隔离与版本化停止采纳尚待验收。见[实现边界](../../docs/codex-runner-foundation.md)。成员完成反馈仍复用原 verifier，父级 gate 负责原回执采纳。

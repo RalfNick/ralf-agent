@@ -9,6 +9,14 @@
 
 本文固定下一步的责任与验收边界，不分配新的 kernel、数据库 Schema、联合绑定协议或发行版本。实施时须发布可被旧执行器识别并拒绝的版本门禁，且保留既有默认声明与历史视图。
 
+dev102 已增加具体 `DockerCodingEnvironment`、借用原 `PostgresEffectJournal` 的
+`PostgresRunnerJournal` 与 Local／PG 共用纯阶段规则，见[环境／日志指南](../../docs/codex-coding-environment.md)和[本批登记](../reviews/2026-10-14-codex-environment-journal.md)。
+原 ID／generation 冷检查、实际整容器停止及 PG 原 dispatch／启动意图事务已有有限
+证据；原 Action／Local／Temporal 准入、停止采纳与 History 尚未集成。原始 Docker
+argv 可重启已停容器，不能声称旧 grant 失效。完整 G3／G5／G7／G8／R13 保持开放；
+PG 初始化 P1／全循环取消 P2 已由同一审查者实际复验修复，最终受影响源码 301 项零
+跳过；这些修复不关闭下列原权威生命周期要求。
+
 ## 1. 实现边界
 
 保留 `Action.kind = "tool"`、`ToolSpec.effect = "queryable_write"` 与 `requires_approval = true`。既有参数 Schema、操作摘要、稳定 effect key、审批、预算预留和结果提交继续由原执行权威管理。该 Action 表示整个委托 Turn；外部内部文件、命令与重试不因此成为 RALF 管理的逐步骤工具调用。
@@ -18,8 +26,9 @@ Local Coordinator／SQLite 和 Temporal Workflow／History 分别保持原 Run�
 | 对象 | 现有基础 | 本契约要求的待实现集成 |
 | --- | --- | --- |
 | 原 Tool Action | 类型化调用、审批、效果身份、结果提交 | 显式委托标记及独立原生生命周期记录 |
-| Codex 协议／RPC | 固定协议验证、有界传输与本地进程清理 | 原权威准入、原句柄观察、受控环境停止及证据采纳 |
+| Codex 协议／RPC／环境 | 固定协议验证、有界传输、本地进程清理；dev102 保留环境的同 ID 检查与实际整容器停止 | 原权威准入、原句柄观察、旧启动失效及停止证据采纳 |
 | RunnerJournal | Local 独占 SQLite 启动阶段、原生句柄与取消意图 | Local Action 绑定与采纳；不能充当 Temporal 共享日志 |
+| PostgresRunnerJournal（dev102） | 借用原 EffectJournal 同事务保存原 dispatch／启动意图，共享有限阶段与固定句柄 | 原 History phase／control grant、取消顺序、停止与结果采纳；日志许可不代替准入 |
 | Coding 控制读回／namespace 门禁 | 控制检查和物理限制的基础 | 与业务授权、专用原生认证、完整执行生命周期及实际验收结合 |
 
 控制读回通过不表示原生业务已经获准。当前完整链路仍缺专用原生认证接入：认证身份、受控凭据引用、原生提供方连接及失效处理须独立验证。不能借用桌面会话、环境里的未知凭据或配置中的认证存储选项声称此项已交付。
@@ -75,7 +84,7 @@ Local 的冷启动取消、异常、abandoned attempt、一般 cancelling 收尾
 
 首场景声明 `recovery_modes = [none]`。查询原句柄和采纳已有证据不等于检查点恢复、session_continue 或跨 worker 执行续接。持久 Thread／workspace 定位信息不等于可迁移执行状态。
 
-Local 可以复用 RunnerJournal 的物理身份检查、独占租约和一次阶段许可。Temporal 必须使用与原 History 绑定的权威 PostgreSQL 启动／句柄／取消／停止记录，或具备等价实际验证的共享耐久机制；本集成选择复用 PostgreSQL EffectJournal 的事务与稳定效果身份，增加严格阶段记录。每个 Activity 自建 Local SQLite、内存字典或 heartbeat 中的 Handle 均不能满足此要求。共享日志不代替 History 的审批与控制权威，也不证明原生环境可恢复。
+Local 可以复用 RunnerJournal 的物理身份检查、独占租约和一次阶段许可。Temporal 必须使用与原 History 绑定的权威 PostgreSQL 启动／句柄／取消／停止记录，或具备等价实际验证的共享耐久机制；dev102 的 PostgresRunnerJournal 已借用 PostgreSQL EffectJournal 事务与稳定效果身份增加有限启动阶段记录，原 History 绑定、停止记录与采纳仍待接入。每个 Activity 自建 Local SQLite、内存字典或 heartbeat 中的 Handle 均不能满足此要求。共享日志不代替 History 的审批与控制权威，也不证明原生环境可恢复。
 
 原 History 固定容器／daemon、workspace、session store、依赖摘要、generation 与 affinity。新 worker 只允许取得原环境的兼容租约并查询／停止同一执行；不能创建替代容器、换 workspace、换默认 Profile 或重新提交 Turn。旧 owner 死亡后，兼容 owner 能访问原容器时执行实际检查／停止；原 host／daemon 不可用时保留 `cancelling`、未知记录和 `CloseIncomplete`。
 

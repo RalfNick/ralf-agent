@@ -1,6 +1,8 @@
-# dev101：剩余能力与架构验收清单
+# dev102：剩余能力与架构验收清单
 
-Dev101 已补固定候选的[配置／原生控制检查](codex-coding-preflight.md)及有限 namespace 命令／后继停止证据。下一步以[原 Action 委托契约](../architecture/specs/delegated-coding-action-contract.md)实现准入、共享启动日志、停止采纳和冷恢复；专用原生认证与真实模型 Turn 待验收。控制检查不授予执行权，完整 R13／第二阶段继续开放。
+Dev102 增加[保留环境与共享 PG 启动证据](codex-coding-environment.md)：同容器冷检查、实际整容器停止、原 EffectJournal 原意图事务与共享纯规则已实现，最终受影响源码 301 项零跳过、PG 初始化路由 P1／全循环取消 P2 已实际复验闭环。下一批接原 Action 审批／阶段 grant、旧 worker 启动失效、原 Local／Temporal 停止采纳与 History；原始 argv 仍可重启，不宣称 fence。专用认证、业务 Turn 与完整 G3／G5／G7／G8／R13 保持开放。[本批记录](../architecture/reviews/2026-10-14-codex-environment-journal.md)保留无效中断全量，独立安装同 301 项零跳过、实际无模型控制／停止／冷重开通过，dev99 冻结范围保持。
+
+Dev101 已补固定候选的[配置／原生控制检查](codex-coding-preflight.md)及有限 namespace 命令／后继停止证据。dev102 补共享启动日志基础，下一步以[原 Action 委托契约](../architecture/specs/delegated-coding-action-contract.md)实现原准入、History 绑定、停止采纳和冷恢复；专用原生认证与真实模型 Turn 待验收。控制检查不授予执行权，完整 R13／第二阶段继续开放。
 
 第二阶段首批新增 [Codex 协议／启动日志基础](codex-runner-foundation.md)。回执丢失禁止重发，通信／证据组件不增加执行权威。完整 Runner、真实业务工具隔离、Local／Temporal 停止门禁及真实模型 Codex 验收未完成；第一阶段 dev99 冻结证据和 R01–R26 保留。
 

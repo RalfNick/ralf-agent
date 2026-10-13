@@ -1,5 +1,10 @@
 # Codex Coding：配置与环境启动前检查
 
+dev102 将这些控制基础用于具体保留的 `DockerCodingEnvironment`，并增加共享 PG
+启动证据，见[环境／日志指南](codex-coding-environment.md)。同 ID 冷检查和实际
+整容器停止已有有限证据；原始 Docker argv 仍可重启，原 Action 准入与失效门禁
+尚未接入。下列 dev101 环境／资产记录保留，控制通过仍不授业务执行权。
+
 dev101 增加固定版本的 `CodexCodingProfile`、只读 `CodexControlProtocol` 和
 `CodexControlProbe`，并随包提供实际验证的 seccomp 文件。这些组件供下一步原
 Action 委托集成使用；**尚无可运行 Coding Agent 工厂，完整 Runner 未验收**。
@@ -70,6 +75,7 @@ synthetic mount registry 与会话／工作区状态必须由实际环境实现�
 
 真实控制读回与上述原生命令证据分别成立；当前尚未在真实模型 Turn 中证明 builtin
 read／apply_patch、全部能力继承／AGENTS 来源、凭据边界、专用认证、完整取消／恢复。
-Local／Temporal 原 Action 准入和停止采纳尚待集成。下一步沿
+dev102 已增加保留环境与共享 PG 阶段日志，Local／Temporal 原 Action 准入、停止
+采纳、旧启动失效和 History 接入仍待集成。下一步沿
 [委托 Coding Action 契约](../architecture/specs/delegated-coding-action-contract.md)实现，
 保留各自唯一执行权威。详见[本批验收](../architecture/reviews/2026-10-14-codex-coding-preflight.md)。

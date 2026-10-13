@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.0.dev102 — Retained Coding environment and shared startup evidence
+
+- Add an explicit retained Docker Coding resource with exact container ID/generation, private configuration, exclusive lease and actual command ownership; record finite native isolation, whole-container stop and cold same-resource inspection.
+- Add a PostgreSQL startup journal borrowed from the original EffectJournal, with atomic dispatch/startup intent and bounded stage rules shared with Local; closing the view preserves its owner.
+- Close the failed-initialization routing P1 and loop-wide real-thread cancellation P2 through same-reviewer actual probes; affected source and independent wheel installation each pass 301 checks with no skips. Installed native controls, same-container stop and cold resource reattachment pass without auth/model requests. Original Action admission, stale-start fencing, Temporal History, dedicated native authentication and a business Coding Turn remain open. [Scope and evidence](architecture/reviews/2026-10-14-codex-environment-journal.md).
+
 ## 0.1.0.dev101 — Codex Coding control preflight
 
 - Add a pinned pure Coding profile and control-only native readback probe with strict config layers, origins and capability inventory. Control verification never admits business execution.

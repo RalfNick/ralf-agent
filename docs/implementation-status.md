@@ -1,4 +1,6 @@
-# Implementation status — 0.1.0.dev101
+# Implementation status — 0.1.0.dev102
+
+Dev102 新增[保留 Docker Coding 环境与共享 PG 启动证据](codex-coding-environment.md)：原 container ID／generation 冷检查、保留 workspace／状态与实际整容器停止已有有限证据；共享视图借用原 EffectJournal，原 dispatch／启动意图同事务提交，Local／PG 共用纯规则。最终受影响源码 301 项零跳过，含 PG 39 检查／17 实际案例，初始化路由 P1 与全循环取消 P2 由同一审查者实际复验闭环；独立 wheel 安装同 301 项零跳过，实际安装控制／停止／冷重开通过，见[本批登记](../architecture/reviews/2026-10-14-codex-environment-journal.md)。原始 Docker argv 仍可重启已停容器，原 Action／Local／Temporal 准入、旧启动失效与 History 未接入，专用认证／业务 Turn 未执行。R13、完整 G3／G5／G7／G8 和第二阶段仍开放，dev99 保持冻结，不重新评测。
 
 Dev101 固定 Coding 候选配置、只读原生启动校验和 seccomp 资产已实现：真实 App Server 九项控制查询与有限原生命令读写／拒绝／整容器停止探针通过；控制结果保持 execution_admitted=false。独立审查的最终回执后违规请求 P2 已修复。原 Action 委托、专用认证、完整原生 Turn、Local／Temporal 停止采纳仍开放，不标记 R13 或第二阶段完成。见[使用边界](codex-coding-preflight.md)与[验收记录](../architecture/reviews/2026-10-14-codex-coding-preflight.md)。
 

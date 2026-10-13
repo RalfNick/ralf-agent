@@ -9,7 +9,6 @@ authentication challenges, or full native payloads as observations.
 
 import fcntl
 import json
-import math
 import os
 import sqlite3
 import stat
@@ -19,64 +18,21 @@ import uuid
 from .errors import (
     CoordinatorBusy,
     DefinitionMismatch,
-    IdempotencyConflict,
     RuntimeClosed,
     ValidationError,
 )
+from .runner_journal_state import (
+    _MAX_RECORD,
+    _json,
+    _text,
+    append_observation,
+    cancel_record,
+    new_record,
+    receive_record,
+    submit_record,
+    validate_record,
+)
 from .types import Scope, canonical
-
-_STAGES = ("intent", "thread_submitted", "thread_confirmed", "turn_submitted", "turn_confirmed")
-_MAX_JSON = 65536
-_MAX_RECORD = 1048576
-_MAX_OBSERVATIONS = 1000
-
-
-def _text(value, label, *, limit=1024):
-    if (
-        type(value) is not str
-        or not value.strip()
-        or len(value) > limit
-        or any(ord(c) < 32 or 0xD800 <= ord(c) <= 0xDFFF for c in value)
-    ):
-        raise ValidationError(f"{label} requires bounded nonempty text")
-    return value
-
-
-def _json(value, label, *, limit=_MAX_JSON):
-    """Reject coercion, unbounded traversal, and non-finite values before serialization."""
-    if type(value) is not dict or not value:
-        raise ValidationError(f"{label} requires a nonempty JSON object")
-    pending, nodes = [(value, 0)], 0
-    while pending:
-        item, depth = pending.pop()
-        nodes += 1
-        if nodes > 10000 or depth > 32:
-            raise ValidationError(f"{label} exceeds JSON structural limits")
-        if type(item) is dict:
-            if nodes + len(pending) + len(item) > 10000:
-                raise ValidationError(f"{label} exceeds JSON structural limits")
-            for key, child in item.items():
-                _text(key, f"{label} key")
-                pending.append((child, depth + 1))
-        elif type(item) is list:
-            if nodes + len(pending) + len(item) > 10000:
-                raise ValidationError(f"{label} exceeds JSON structural limits")
-            pending.extend((child, depth + 1) for child in item)
-        elif type(item) is str:
-            if len(item) > limit or any(0xD800 <= ord(c) <= 0xDFFF for c in item):
-                raise ValidationError(f"{label} exceeds JSON text limits")
-        elif type(item) is int:
-            if not -(2**63) <= item < 2**63:
-                raise ValidationError(f"{label} exceeds JSON numeric limits")
-        elif type(item) is float:
-            if not math.isfinite(item) or abs(item) > 2**63 - 1:
-                raise ValidationError(f"{label} requires bounded finite numbers")
-        elif item is not None and type(item) is not bool:
-            raise ValidationError(f"{label} requires strict finite JSON")
-    encoded = canonical(value)
-    if len(encoded.encode("utf-8")) > limit:
-        raise ValidationError(f"{label} exceeds JSON byte limit")
-    return encoded
 
 
 class RunnerJournal:
@@ -270,58 +226,7 @@ class RunnerJournal:
         ).fetchone()
         if row is None:
             return None
-        try:
-            if len(row[0].encode("utf-8")) > _MAX_RECORD:
-                raise ValidationError("Runner record exceeds byte limit")
-            record = json.loads(row[0])
-            _json(record, "Saved Runner record", limit=_MAX_RECORD)
-            if (
-                set(record)
-                != {
-                    "scope",
-                    "effect_key",
-                    "binding",
-                    "stage",
-                    "thread_id",
-                    "process_epoch",
-                    "turn_id",
-                    "cancel_requested",
-                    "observations",
-                }
-                or record["scope"] != {"workspace": key[0], "principal": key[1]}
-                or record["effect_key"] != key[2]
-                or record["stage"] not in _STAGES
-                or type(record["cancel_requested"]) is not bool
-                or type(record["observations"]) is not list
-                or len(record["observations"]) > _MAX_OBSERVATIONS
-            ):
-                raise ValidationError("Runner record shape changed")
-            has_thread = record["stage"] in _STAGES[2:]
-            for name in ("thread_id", "process_epoch"):
-                if has_thread:
-                    _text(record[name], name)
-                elif record[name] is not None:
-                    raise ValidationError("Runner stage precedes recorded native Thread")
-            if record["stage"] == "turn_confirmed":
-                _text(record["turn_id"], "Turn ID")
-            elif record["turn_id"] is not None:
-                raise ValidationError("Runner stage precedes recorded native Turn")
-            _json(record["binding"], "Saved Runner binding")
-            for observation in record["observations"]:
-                _json(observation, "Saved Runner observation")
-                for name in ("thread_id", "turn_id", "process_epoch"):
-                    if name in observation:
-                        _text(observation[name], name)
-                if any(
-                    name in observation and observation[name] != record[name]
-                    for name in ("thread_id", "turn_id", "process_epoch")
-                ):
-                    raise ValidationError("Runner observation handle changed")
-        except (ValueError, TypeError, KeyError, RecursionError):
-            raise DefinitionMismatch("Original Runner startup evidence is inconsistent") from None
-        if canonical(record["binding"]) != binding:
-            raise IdempotencyConflict("Runner effect key pins another binding")
-        return record
+        return validate_record(row[0], key, binding)
 
     def _required(self, key, binding):
         record = self._lookup(key, binding)
@@ -355,17 +260,7 @@ class RunnerJournal:
                 >= self._capacity
             ):
                 raise ValidationError("Runner journal effect capacity is full")
-            record = {
-                "scope": {"workspace": key[0], "principal": key[1]},
-                "effect_key": key[2],
-                "binding": json.loads(binding_json),
-                "stage": "intent",
-                "thread_id": None,
-                "process_epoch": None,
-                "turn_id": None,
-                "cancel_requested": False,
-                "observations": [],
-            }
+            record = new_record(key, binding_json)
             encoded = _json(record, "Runner record", limit=_MAX_RECORD)
             self.conn.execute("INSERT INTO runner_effects VALUES (?,?,?,?)", (*key, encoded))
             return {**json.loads(encoded), "execute": True}
@@ -375,12 +270,8 @@ class RunnerJournal:
         with self._mutex:
             self._check()
             record = self._required(key, binding_json)
-            if _STAGES.index(record["stage"]) >= _STAGES.index(stage):
-                return {**record, "execute": False}
-            if record["stage"] != previous or record["cancel_requested"]:
-                raise ValidationError("Runner startup submission is out of order or cancelled")
-            record["stage"] = stage
-            return {**self._save(key, record), "execute": True}
+            record, execute = submit_record(record, previous, stage)
+            return {**(self._save(key, record) if execute else record), "execute": execute}
 
     def mark_thread_submitted(self, scope: Scope, effect_key: str, *, binding: dict) -> dict:
         return self._submit(scope, effect_key, binding, "intent", "thread_submitted")
@@ -408,15 +299,9 @@ class RunnerJournal:
         with self._mutex:
             self._check()
             record = self._required(key, binding_json)
-            if any(record[k] is not None and record[k] != v for k, v in native.items()):
-                raise IdempotencyConflict("Runner native receipt identity is immutable")
-            if all(record[k] == v for k, v in native.items()):
-                return record
-            if record["stage"] != previous:
-                raise ValidationError("Native receipt requires durable submission intent")
-            record.update(native)
-            record["stage"] = stage
-            return self._save(key, record)
+            original = canonical(record)
+            record = receive_record(record, native, previous, stage)
+            return record if canonical(record) == original else self._save(key, record)
 
     def record_observation(
         self, scope: Scope, effect_key: str, *, binding: dict, observation: dict
@@ -430,17 +315,9 @@ class RunnerJournal:
         with self._mutex:
             self._check()
             record = self._required(key, binding_json)
-            for name in ("thread_id", "turn_id", "process_epoch"):
-                if name in evidence and evidence[name] != record[name]:
-                    raise IdempotencyConflict(
-                        "Runner observation does not identify the recorded native handle"
-                    )
-            if any(canonical(item) == encoded for item in record["observations"]):
-                return record
-            if len(record["observations"]) >= _MAX_OBSERVATIONS:
-                raise ValidationError("Runner observation capacity is full")
-            record["observations"].append(evidence)
-            return self._save(key, record)
+            original = canonical(record)
+            record = append_observation(record, encoded)
+            return record if canonical(record) == original else self._save(key, record)
 
     def request_cancel(self, scope: Scope, effect_key: str, *, binding: dict) -> dict:
         key, binding_json = self._key(scope, effect_key, binding)
@@ -449,8 +326,7 @@ class RunnerJournal:
             record = self._required(key, binding_json)
             if record["cancel_requested"]:
                 return record
-            record["cancel_requested"] = True
-            return self._save(key, record)
+            return self._save(key, cancel_record(record))
 
     def close(self):
         with self._mutex:

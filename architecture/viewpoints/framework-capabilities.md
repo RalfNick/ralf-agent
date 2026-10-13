@@ -1,5 +1,7 @@
 # RALF 通用框架能力与扩展验收
 
+dev102 新增[保留环境与共享 PG 日志](../../docs/codex-coding-environment.md)：同 container ID／generation 冷检查、保留工作区与实际整容器停止，原 EffectJournal 同事务启动意图已有有限证据，Local／PG 共用纯规则。最终受影响源码 301 项零跳过、P1／P2 已实际复验闭环，安装证据见[本批登记](../reviews/2026-10-14-codex-environment-journal.md)。原 Action／History 准入、旧启动失效、专用认证和业务 Turn 未接入，原始 argv 仍可重启；完整 G3／G5／G7／G8／R13 和第二阶段开放，dev99 保持冻结。
+
 dev101 补齐固定候选[配置／原生控制检查](../../docs/codex-coding-preflight.md)，有限原生命令读写、路径／网络拒绝与后继整容器停止探针通过。execution_admitted=false；[原 Action 委托集成](../specs/delegated-coding-action-contract.md)、专用认证／模型 Turn 和 Local／Temporal 恢复仍待验收，R13 未完成。
 
 dev100 开始第二阶段首个 Codex Runner 的协议／启动证据基础，见[实现边界](../../docs/codex-runner-foundation.md)。机械通信与 Journal 不拥有 Run／Action 权威；R13 完整受限 Coding 链路、Local／Temporal 版本化停止采纳和真实外部 Runner 验收仍开放。
