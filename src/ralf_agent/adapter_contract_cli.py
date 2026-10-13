@@ -9,12 +9,19 @@ from .errors import CloseIncomplete, ValidationError
 
 
 async def _execute(arguments):
-    suite = AdapterContractSuite(role=arguments.role, contract_version=arguments.contract_version)
+    suite = AdapterContractSuite(
+        role=arguments.role, contract_version=arguments.contract_version, profile=arguments.profile
+    )
     fixture = None
     if arguments.offline:
-        from .adapter_contract_reference import offline_knowledge_fixture
+        if arguments.role == "knowledge-retriever":
+            from .adapter_contract_reference import offline_knowledge_fixture
 
-        fixture = offline_knowledge_fixture()
+            fixture = offline_knowledge_fixture()
+        else:
+            from .session_adapter_contract_reference import offline_session_fixture
+
+            fixture = offline_session_fixture()
     try:
         return await suite.run(fixture=fixture, evidence_dir=arguments.evidence_dir)
     finally:
@@ -23,10 +30,11 @@ async def _execute(arguments):
 
 def main(argv=None):
     parser = argparse.ArgumentParser(
-        description="Check adapter contracts. Use --offline explicitly for a lexical SQLite fixture."
+        description="Check adapter contracts. Use --offline explicitly for an independent SQLite fixture."
     )
     parser.add_argument("--role", default="knowledge-retriever")
     parser.add_argument("--contract-version", default="1")
+    parser.add_argument("--profile", default="core", help="core, or session-store receipts")
     parser.add_argument("--offline", action="store_true")
     parser.add_argument("--evidence-dir", help="New private directory for retained case evidence")
     arguments = parser.parse_args(argv)

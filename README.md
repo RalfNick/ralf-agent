@@ -1,5 +1,7 @@
 # Ralf-Agent
 
+dev95 已验收 [Session 适配契约](docs/session-adapter-contracts.md)：基础存储与准确回执分开，提供可编辑 SQLite 替换、安装后示例和原保存恢复。完整能力及真实质量仍按[剩余清单](docs/remaining-work.md)逐项验收。
+
 dev94 已验收首个[知识适配契约套件](docs/adapter-contracts.md)：安装后可运行固定 K01–K12、编辑独立适配器并通过 JSON／TOML 接入 Agent／RAG／Plan／Team。保持原执行权威和旧默认；模型／语义质量、其他角色及完整能力继续验收。见[本批记录](architecture/reviews/2026-10-13-knowledge-adapter-contracts.md)。
 
 dev93 增加显式[持久用户输入](docs/user-input.md)：Agent 提问、Plan 澄清及原 Run／Turn 续接，由原 Local／Temporal 执行权威保存问题、答案和控制回执。完整源码、实际 Worker 恢复、安装与旧版本兼容门槛已通过，见[本批验收](architecture/reviews/2026-10-13-durable-user-input.md)。完整能力与真实模型质量继续验收。
@@ -16,7 +18,7 @@ dev78 增加[可替换Skills目录与受管理加载](docs/skills.md)：Memory�
 
 dev77 增加[受管理Workspace写入](docs/workspace-writes.md)：可替换Memory／File、CAS、审批和恢复；安装包、真实Temporal／PG及旧76兼容通过。完整框架能力继续建设。
 
-当前工作区 **0.1.0.dev94** 提供显式语义知识库、相关事实召回和 Plan／Team 默认组合，
+当前工作区 **0.1.0.dev95** 提供显式语义知识库、相关事实召回和 Plan／Team 默认组合，
 复用原执行、审批和恢复协议。见[H3 使用与扩展指南](docs/h3-intelligent-combinations.md)。
 dev48 增加[显式 HTTP 语义重排](docs/http-reranking.md)，保留原知识来源及旧默认配置。
 dev49 增加[Query transform 与语义 Facts 召回](docs/query-and-semantic-recall.md)，支持显式语义记忆组合及保留语义顺序的上下文。候选窗口外事实和真实质量仍待完善。

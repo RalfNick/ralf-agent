@@ -1,5 +1,7 @@
 # RALF 通用框架能力与扩展验收
 
+Dev95 Session 存储契约子集已验收：core 固定 S01–S10，receipts 固定 S01–S14；独立可编辑 SQLite 替换、同步／异步 SDK／JSON／TOML 装配及原保存恢复通过。最终源码 7727 passed／617 配置依赖跳过；独立核心安装 272 零跳过，SDK 166／1 服务配置跳过，安装示例 13 个实际命令通过。旧 dev94 默认和原 Run／Turn 的 68 个进程兼容验证、338 产品模块一致、隔离／取消及示例地址审查修复通过。本批没有重新验收真实 Temporal 服务、外部远程适配器或模型质量。严格原始非法输入、其他角色 Suite、独立采用与完整 R25／R01–R26／H3／M1 继续开放。见[验收记录](../reviews/2026-10-13-session-adapter-contracts.md)。
+
 Dev94 已验收 R25 首个知识检索角色固定 Suite／报告、独立实现、安装后声明替换和真实本地恢复。原生 Temporal 兼容独立验证，不推广为任意外部适配器认证；Fixture 自报、离线质量或缺失 hook 不构成通过。其他角色与完整能力仍开放。见[本批验收](../reviews/2026-10-13-knowledge-adapter-contracts.md)。
 
 Dev93 持久用户输入子集已验收：固定回复 Schema／额度、显式工具与动态 Planner、

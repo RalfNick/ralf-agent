@@ -11,6 +11,7 @@ from dataclasses import dataclass, field
 from pathlib import PurePosixPath
 from types import MappingProxyType
 
+from .adapter_contract_catalog import catalog_for, catalog_for_case
 from .errors import ValidationError
 from .types import digest
 
@@ -102,11 +103,12 @@ def _sha256(value, *, optional=False):
         raise ValidationError("Contract evidence requires a SHA-256 digest")
 
 
-def _observations(value):
-    if type(value) is not dict or not set(value) <= OBSERVATION_KEYS:
+def _observations(value, case_id):
+    catalog = catalog_for_case(case_id)
+    if type(value) is not dict or not set(value) <= catalog.observation_keys:
         raise ValidationError("Contract observations require fixed public fields")
     for key, item in value.items():
-        if key in _BOOLEAN_OBSERVATIONS:
+        if key in catalog.boolean_observations:
             valid = type(item) is bool
         else:
             valid = type(item) is int and 0 <= item <= 2**63 - 1
@@ -159,14 +161,13 @@ class AdapterContractCaseResult:
     def __post_init__(self):
         if (
             type(self.case_id) is not str
-            or self.case_id not in CASE_IDS
             or type(self.status) is not str
             or self.status not in _STATUS_CODES
             or type(self.code) is not str
             or self.code not in _STATUS_CODES[self.status]
         ):
             raise ValidationError("Contract cases require frozen identities, statuses and codes")
-        object.__setattr__(self, "observations", _observations(self.observations))
+        object.__setattr__(self, "observations", _observations(self.observations, self.case_id))
         if (
             not isinstance(self.evidence, (tuple, list))
             or len(self.evidence) > 4
@@ -187,7 +188,7 @@ class AdapterContractCaseResult:
     def to_dict(self):
         return {
             "case_id": self.case_id,
-            "label": CASE_LABELS[self.case_id],
+            "label": catalog_for_case(self.case_id).labels[self.case_id],
             "status": self.status,
             "code": self.code,
             "observations": self.observations,
@@ -204,14 +205,17 @@ class AdapterContractReport:
     cases: tuple[AdapterContractCaseResult, ...]
     status: str | None = None
     reason: str | None = None
+    role: str = "knowledge-retriever"
+    profile: str = "core"
 
     def __post_init__(self):
+        catalog = catalog_for(self.role, "1", self.profile)
         if not isinstance(self.cases, (tuple, list)) or any(
             type(value) is not AdapterContractCaseResult for value in self.cases
         ):
             raise ValidationError("Contract reports require actual case result values")
         cases = tuple(self.cases)
-        if tuple(value.case_id for value in cases) != CASE_IDS:
+        if tuple(value.case_id for value in cases) != catalog.case_ids:
             raise ValidationError("Contract reports preserve every frozen case in order")
         object.__setattr__(self, "cases", cases)
         derived = (
@@ -241,12 +245,13 @@ class AdapterContractReport:
         )
         authorities = sorted({case.execution_authority for case in self.cases})
         evidence_kinds = sorted({case.evidence_kind for case in self.cases})
-        return {
+        catalog = catalog_for(self.role, "1", self.profile)
+        value = {
             "schema_version": "1",
-            "role": "knowledge-retriever",
+            "role": self.role,
             "contract_version": "1",
             "suite_version": "1",
-            "suite_digest": SUITE_DIGEST,
+            "suite_digest": catalog.suite_digest,
             "status": self.status,
             "reason": self.reason,
             "total": len(self.cases),
@@ -265,6 +270,9 @@ class AdapterContractReport:
             "semantic_quality": None,
             "cases": [case.to_dict() for case in self.cases],
         }
+        if self.role != "knowledge-retriever":
+            value["profile"] = self.profile
+        return value
 
 
 class AdapterContractCleanupPending(Exception):

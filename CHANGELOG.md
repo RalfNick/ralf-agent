@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.0.dev95 — Session adapter contract preview
+
+- Add explicit core and receipts Session adapter profiles while retaining Knowledge v1 evidence bytes.
+- Validate completed Local Session reads and acknowledgements, preserving legitimate idempotent original revisions.
+- Provide an independently editable SQLite replacement, configuration/starter and original save recovery reference.
+- Accept the bounded subset after 7727 source checks / 617 configured skips, isolated core 272 and SDK 166 / 1 skip, 13 installed commands, original dev94 compatibility and 338-module provenance. Scope, cancellation and example-address repairs are closed by the same reviewer. Strict malformed raw inputs, remaining adapter roles, full R25, service/model quality and independent adoption remain open.
+
 ## 0.1.0.dev94 — Knowledge adapter contract preview
 
 - Accept the bounded first role after 7516 source checks, isolated core/SDK installs, original native Temporal Worker recovery and dev93 compatibility. Five Important review findings are repaired; see the acceptance record. Other roles, model/semantic quality and full R01–R26 remain open.

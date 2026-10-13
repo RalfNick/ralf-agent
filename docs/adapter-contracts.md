@@ -6,6 +6,10 @@ The first role is `knowledge-retriever`, contract version `1`. It checks the
 existing read/source-validation contract through the original `KnowledgeContext`.
 It does not add a Store, CAS, pagination or connection attribute to that port.
 
+The separately selected `session-store` core/receipts profiles are described in
+[Session adapter checks](session-adapter-contracts.md). Their required cases and
+optional production capabilities are independent of this Knowledge contract.
+
 ```python
 from ralf_agent import AdapterContractSuite, offline_knowledge_fixture
 

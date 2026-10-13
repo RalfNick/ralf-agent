@@ -19,6 +19,7 @@ from .memory_starter import MEMORY_FILES
 from .model_check_starter import MODEL_CHECK_FILES
 from .observable_starter import OBSERVABLE_FILES
 from .orchestration_starter import PLAN_FILES, TEAM_FILES
+from .session_adapter_contract_starter import session_contract_files
 from .temporal_starter import TEMPORAL_FILES
 from .user_input_starter import USER_INPUT_FILES
 
@@ -859,9 +860,10 @@ def create_starter(destination, *, template="oncall") -> StarterProject:
         "sessions",
         "user-input",
         "adapter-contracts",
+        "session-contracts",
     ):
         raise ValidationError(
-            "Starter template must be oncall, rag, config, model, graph, mcp, cli, parallel, async, plan, team, dag, nested, a2a, temporal, ingest, hybrid, context, memory, model-check, observable, sessions, user-input or adapter-contracts"
+            "Starter template must be oncall, rag, config, model, graph, mcp, cli, parallel, async, plan, team, dag, nested, a2a, temporal, ingest, hybrid, context, memory, model-check, observable, sessions, user-input, adapter-contracts or session-contracts"
         )
     files = {
         "oncall": _FILES,
@@ -888,9 +890,12 @@ def create_starter(destination, *, template="oncall") -> StarterProject:
         "sessions": SESSIONS_FILES,
         "user-input": USER_INPUT_FILES,
         "adapter-contracts": None,
+        "session-contracts": None,
     }[template]
     if template == "adapter-contracts":
         files = adapter_contract_files()
+    elif template == "session-contracts":
+        files = session_contract_files()
     try:
         directory = Path(destination).expanduser().resolve()
         if directory == Path.cwd().resolve():

@@ -12,8 +12,8 @@ import tempfile
 from dataclasses import dataclass, field, replace
 from pathlib import Path
 
+from .adapter_contract_catalog import catalog_for, catalog_for_case
 from .adapter_contract_types import (
-    CASE_IDS,
     AdapterContractCaseResult,
     AdapterContractCleanupPending,
     AdapterContractEvidence,
@@ -24,9 +24,14 @@ from .types import canonical
 
 
 async def _run_case(case_id, fixture, workspace):
-    from .knowledge_adapter_contract import run_knowledge_case
+    catalog = catalog_for_case(case_id)
+    if catalog.role == "knowledge-retriever":
+        from .knowledge_adapter_contract import run_knowledge_case
 
-    return await run_knowledge_case(case_id, fixture, workspace)
+        return await run_knowledge_case(case_id, fixture, workspace)
+    from .session_adapter_contract import run_session_case
+
+    return await run_session_case(case_id, fixture, workspace)
 
 
 async def _drain_cancelled(task):
@@ -112,7 +117,7 @@ class _PendingCleanup:
 
 @dataclass(frozen=True)
 class AdapterContractSuite:
-    """Explicit KnowledgeRetriever contract version 1.
+    """Explicit installed adapter role and profile contract version 1.
 
     An unconfigured run describes the cases without performing I/O. Supplying a
     fixture enables its actual setup and checks. No remote backend, model or
@@ -123,6 +128,7 @@ class AdapterContractSuite:
 
     role: str = "knowledge-retriever"
     contract_version: str = "1"
+    profile: str = field(default="core", kw_only=True)
     _pending: list = field(default_factory=list, init=False, repr=False, compare=False)
     _temporaries: list = field(default_factory=list, init=False, repr=False, compare=False)
     _running: bool = field(default=False, init=False, repr=False, compare=False)
@@ -131,10 +137,14 @@ class AdapterContractSuite:
     _cleanup_report: object = field(default=None, init=False, repr=False, compare=False)
 
     def __post_init__(self):
-        if type(self.role) is not str or self.role != "knowledge-retriever":
-            raise ValidationError("Unknown adapter contract role")
-        if type(self.contract_version) is not str or self.contract_version != "1":
-            raise ValidationError("Unknown adapter contract version")
+        catalog_for(self.role, self.contract_version, self.profile)
+
+    @property
+    def case_ids(self):
+        return catalog_for(self.role, self.contract_version, self.profile).case_ids
+
+    def _report(self, **kwargs):
+        return AdapterContractReport(role=self.role, profile=self.profile, **kwargs)
 
     @property
     def pending_cleanup(self):
@@ -163,19 +173,19 @@ class AdapterContractSuite:
             self._temporaries.append(temporary)
         remainder = [
             AdapterContractCaseResult(value, "not_verified", "case_not_verified")
-            for value in CASE_IDS[len(completed) + 1 :]
+            for value in self.case_ids[len(completed) + 1 :]
         ]
-        report = AdapterContractReport(cases=(*completed, result, *remainder))
+        report = self._report(cases=(*completed, result, *remainder))
         object.__setattr__(self, "_cleanup_report", report)
         return result, remainder
 
     async def run(self, fixture=None, *, evidence_dir=None) -> AdapterContractReport:
         destination = _evidence_path(evidence_dir)
         if fixture is None:
-            return AdapterContractReport(
+            return self._report(
                 cases=tuple(
                     AdapterContractCaseResult(case_id, "not_verified", "adapter_not_configured")
-                    for case_id in CASE_IDS
+                    for case_id in self.case_ids
                 ),
                 status="not_run",
                 reason="adapter_not_configured",
@@ -199,7 +209,7 @@ class AdapterContractSuite:
                 root = destination.resolve()
             root_identity = _physical_identity(root)
             results = []
-            for case_id in CASE_IDS:
+            for case_id in self.case_ids:
                 workspace = root / case_id
                 try:
                     workspace.mkdir(mode=0o700)
@@ -233,7 +243,7 @@ class AdapterContractSuite:
                 if remainder is not None:
                     results.extend(remainder)
                     break
-            report = AdapterContractReport(cases=tuple(results))
+            report = self._report(cases=tuple(results))
             object.__setattr__(self, "_cleanup_report", report)
             return report
         finally:

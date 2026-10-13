@@ -290,6 +290,14 @@ from .semantic_memory import SemanticMemoryStore
 from .semantic_recall import TaskRecallPlanner
 from .semantic_selection import OrderedReferenceSelector
 from .service_lifecycle import LocalA2AService
+from .session_adapter_contract import (
+    SessionAdapterFixture,
+    SessionContractAddress,
+    SessionContractPause,
+    SessionContractResource,
+    SessionContractSession,
+)
+from .session_adapter_contract_reference import offline_session_fixture
 from .session_model_history import (
     native_history_address,
     native_history_envelope,
@@ -369,7 +377,7 @@ from .workflow import (
     WorkflowSelection,
 )
 
-__version__ = "0.1.0.dev94"
+__version__ = "0.1.0.dev95"
 from .binding_artifacts import ArtifactBindingResource, ArtifactView
 from .binding_sandbox import SandboxBindingResource
 from .docker_sandbox import DockerSandbox
@@ -863,3 +871,12 @@ __all__ += [
 ]
 
 __all__ += ["offline_knowledge_fixture"]
+
+__all__ += [
+    "SessionAdapterFixture",
+    "SessionContractAddress",
+    "SessionContractPause",
+    "SessionContractResource",
+    "SessionContractSession",
+    "offline_session_fixture",
+]

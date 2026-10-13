@@ -74,6 +74,19 @@ jobs:
           python -m agent_app run --kind rag --command-id CI-EXTERNAL-RAG
           python -m agent_app run --kind plan --format json --async --command-id CI-EXTERNAL-PLAN
           python -m agent_app run --kind team --format toml --borrowed --command-id CI-EXTERNAL-TEAM
+      - name: Installed external Session adapter contracts outside checkout
+        working-directory: ${{ runner.temp }}
+        run: |
+          python -m pytest -q -W error -p no:cacheprovider -c /dev/null "$RUNNER_TEMP/session-contracts/tests/test_adapter_contract_catalog.py" "$RUNNER_TEMP/session-contracts/tests/test_adapter_contract_roles.py" "$RUNNER_TEMP/session-contracts/tests/test_session_adapter_contract.py" "$RUNNER_TEMP/session-contracts/tests/test_session_store_values.py" "$RUNNER_TEMP/session-contracts/tests/test_session_adapter_reference.py" "$RUNNER_TEMP/session-contracts/tests/test_session_adapter_starter.py" "$RUNNER_TEMP/session-contracts/tests/test_session_adapter_recovery.py" "$RUNNER_TEMP/session-contracts/tests/test_session_adapter_cli.py"
+          ralf-check-adapter --role session-store --profile receipts
+          ralf-check-adapter --role session-store --profile receipts --offline --evidence-dir "$RUNNER_TEMP/session-adapter-evidence"
+          ralf init wheel-session-adapter --template session-contracts
+          cd wheel-session-adapter
+          python -m agent_app check
+          python -m agent_app check --profile receipts
+          python -m agent_app seed
+          python -m agent_app run --format json --command-id CI-EXTERNAL-SESSION
+          python -m agent_app run --format toml --async --command-id CI-EXTERNAL-ASYNC
       - name: Installed Skill document contracts outside checkout
         working-directory: ${{ runner.temp }}
         run: |

@@ -1389,6 +1389,8 @@ class LocalEngine:
             raise
 
     async def _finish_node(self, run_id, result):
+        from .session_store_values import session_append_revision, session_read_value
+
         run = self._authorized(run_id)
         if run["state"] in TERMINAL or run["state"] == "cancelling":
             return
@@ -1416,7 +1418,7 @@ class LocalEngine:
         if saved is False:
             return False
         revision, _ = (
-            (await memory_call(sessions.read, self.scope, run["session_id"]))
+            session_read_value(await memory_call(sessions.read, self.scope, run["session_id"]))
             if saved is None and sessions is not None
             else (0, [])
         )
@@ -1430,7 +1432,7 @@ class LocalEngine:
         ]:
             raise DefinitionMismatch("The executing session backend differs from this Run")
         if saved is None and sessions is not None:
-            await memory_call(
+            appended = await memory_call(
                 sessions.append,
                 self.scope,
                 run["session_id"],
@@ -1445,6 +1447,7 @@ class LocalEngine:
                 expected_revision=revision,
                 message_id=f"{run_id}:{run['node']}:result",
             )
+            session_append_revision(appended, revision)
         from .managed_memory_stage import finish_memory_stage
 
         await finish_memory_stage(self, run_id, result)
@@ -1830,6 +1833,8 @@ class LocalEngine:
         return items, summary
 
     async def _load_references(self, run, step):
+        from .session_store_values import session_read_value
+
         components = self._components(run)
         sessions, memory, policy, knowledge = (
             components.sessions,
@@ -1860,7 +1865,9 @@ class LocalEngine:
         if sessions is None:
             session, session_manifest = [], {"disabled": True}
         elif policy is None:
-            _, session = await memory_call(sessions.read, self.scope, run["session_id"])
+            _, session = session_read_value(
+                await memory_call(sessions.read, self.scope, run["session_id"])
+            )
         else:
             session, session_manifest = await self._recall_pages(
                 sessions, "read_page", run["session_id"], policy.session, policy.max_pages

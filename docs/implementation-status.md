@@ -1,4 +1,6 @@
-# Implementation status — 0.1.0.dev94
+# Implementation status — 0.1.0.dev95
+
+Dev95 Session 存储契约子集已验收：core 固定 S01–S10，receipts 固定 S01–S14；独立可编辑 SQLite 替换、同步／异步 SDK／JSON／TOML 装配及原保存恢复通过。最终源码 7727 passed／617 配置依赖跳过；独立核心安装 272 零跳过，SDK 166／1 服务配置跳过，安装示例 13 个实际命令通过。旧 dev94 默认和原 Run／Turn 的 68 个进程兼容验证、338 产品模块一致、隔离／取消及示例地址审查修复通过。本批没有重新验收真实 Temporal 服务、外部远程适配器或模型质量。严格原始非法输入、其他角色 Suite、独立采用与完整 R25／R01–R26／H3／M1 继续开放。见[使用指南](session-adapter-contracts.md)及[本批验收](../architecture/reviews/2026-10-13-session-adapter-contracts.md)。
 
 Dev94 R25 首个知识适配契约子集已验收：固定 K01–K12、安装后 SDK／CLI、独立可编辑 SQLite 参考、JSON／TOML 声明替换与 Agent／RAG／Plan／Team 消费。原方法／Query／生命周期保护保持既有权威；缺 hook 未验证，质量为 null。完整源码 7516 passed／617 配置依赖跳过，独立核心 213／SDK 133 零跳过；原生 Temporal 源码和安装各 12 项／24 Worker 实际等待／12 History 重放，旧93默认及六类原Run双向兼容、333模块一致，五项审查问题闭环。其他角色、完整 R25／R01–R26／H3／M1、真实质量与独立采用保持开放。见[使用指南](adapter-contracts.md)及[本批验收](../architecture/reviews/2026-10-13-knowledge-adapter-contracts.md)。
 
