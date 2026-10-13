@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.1.0.dev100 — Codex delegated startup foundation
+
+- Add a reviewed Codex 0.144.4 protocol subset, bounded POSIX stdio transport and exclusive durable Thread/Turn startup evidence. Lost native receipts never grant a second submission; cancellation intent and native acknowledgment remain separate.
+- Preserve the existing engines, default components and historical Run behavior. Close a cancelled-start process ownership finding through same-reviewer real-process reproduction; affected source and fixed-wheel installation each pass 127 checks. This batch does not provide a runnable isolated Coding Runner, Agent binding, configuration factory, or Codex/Temporal conformance claim. [Acceptance](architecture/reviews/2026-10-14-codex-runner-foundation.md).
+
 ## 0.1.0.dev99 — Reference business delivery gates
 
 - Add explicit inventory member completion verification through existing per-Agent bindings, committed tool receipts and bounded feedback; preserve legacy defaults and original parent completion checks.

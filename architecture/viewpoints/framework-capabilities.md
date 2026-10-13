@@ -1,5 +1,7 @@
 # RALF 通用框架能力与扩展验收
 
+dev100 开始第二阶段首个 Codex Runner 的协议／启动证据基础，见[实现边界](../../docs/codex-runner-foundation.md)。机械通信与 Journal 不拥有 Run／Action 权威；R13 完整受限 Coding 链路、Local／Temporal 版本化停止采纳和真实外部 Runner 验收仍开放。
+
 当前交付顺序按用户修订的[阶段门槛](../../docs/delivery-gates.md)：第一阶段关闭单 Agent、语义 RAG、Plan、Team 的完整参考链路，第二阶段环境与执行，第三阶段服务化与治理。下文 R01–R26 和历史记录全部保留；新增实现必须说明阻塞哪个当前门槛，非阻塞额外适配器保留后续，不以接口或测试数量判断完成。
 
 Dev99 四条有限 Local 参考链路的固定真实质量线已通过：单 Agent 24/24（复用 dev98 未改的业务／执行／Provider 字节），语义 RAG 24/24，Plan／Team 在关闭 JSON mode 的独立最终配置各 15/15。此前 dev98 与 dev99 JSON mode 的全部失败分别保留，不合并评分。安装后语义 CPU 应用、成员回执反馈、原取消／崩溃恢复与模型资源实释放已有证据；最终源码 8397 passed／617 配置依赖跳过，核心／SDK 安装各 254 项零跳过。四链路的安装／必要生命周期／质量／文档验证通过，随本地提交冻结第一阶段范围；这是阶段参考场景，不代表通用自主规划、完整 H3／M1／R01–R26、Temporal 部署或外部采用完成。见[阶段门槛](../../docs/delivery-gates.md)。

@@ -1,4 +1,6 @@
-# Implementation status — 0.1.0.dev99
+# Implementation status — 0.1.0.dev100
+
+Dev100 进入第二阶段，新增固定 Codex 0.144.4 协议子集、有界 stdio 通信与独占持久启动证据。启动取消 P1 已由同一独立审查者复验闭环，受影响源码／固定安装各 127 项零跳过；原 351 个产品模块保留。仅基础组件，无完整 Runner 工厂／绑定；真实 Codex、受限工作区和 Temporal 委托取消未验收，R13／第二阶段继续开放。见[实现边界](codex-runner-foundation.md)与[验收记录](../architecture/reviews/2026-10-14-codex-runner-foundation.md)。下列阶段验收与历史记录保留。
 
 Dev99 四条有限 Local 参考链路的固定真实质量线已通过：单 Agent 24/24（复用 dev98 未改的业务／执行／Provider 字节），语义 RAG 24/24，Plan／Team 在关闭 JSON mode 的独立最终配置各 15/15。此前 dev98 与 dev99 JSON mode 的全部失败分别保留，不合并评分。安装后语义 CPU 应用、成员回执反馈、原取消／崩溃恢复与模型资源实释放已有证据；最终源码 8397 passed／617 配置依赖跳过，核心／SDK 安装各 254 项零跳过。四链路的安装／必要生命周期／质量／文档验证通过，随本地提交冻结第一阶段范围；这是阶段参考场景，不代表通用自主规划、完整 H3／M1／R01–R26、Temporal 部署或外部采用完成。见[阶段门槛](delivery-gates.md)与[本批验收](../architecture/reviews/2026-10-13-phase1-business-chains.md)。
 

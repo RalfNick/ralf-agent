@@ -1,4 +1,5 @@
-include README.md LICENSE CONTRIBUTING.md CHANGELOG.md SECURITY.md
+include README.md LICENSE NOTICE CONTRIBUTING.md CHANGELOG.md SECURITY.md
+include tools/generate_codex_protocol.py
 recursive-include architecture *.md
 recursive-include docs *.md
 recursive-include examples *.py

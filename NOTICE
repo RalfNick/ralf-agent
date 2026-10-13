@@ -1,0 +1,7 @@
+The Codex App Server schema subset in
+src/ralf_agent/_codex_protocol_schema.json is derived from schemas generated
+by OpenAI Codex 0.144.4 (@openai/codex), distributed under Apache-2.0.
+Upstream project: https://github.com/openai/codex
+
+RALF's extraction removes descriptions and unused definitions. The selected
+native input hashes and extraction command are recorded with the schema.
