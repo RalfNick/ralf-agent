@@ -1,5 +1,7 @@
 # RALF AgentHarness 目标架构
 
+Dev94 首个知识检索适配契约子集已验收，沿用原 KnowledgeContext、BuildContext、Runtime 与执行权威。Suite 只验证固定行为，不持有新 Run／Session／租约或 History；原活跃操作／资源／workspace 在 release或close 失败后仍由同owner负责。完整 Harness 与其他角色仍开放。见[本批验收](../reviews/2026-10-13-knowledge-adapter-contracts.md)。
+
 Dev93 持久用户输入子集已验收：Harness／Planner 只提出问题，原执行
 权威采纳问题、应用 `send_input` 并恢复原 Run。显式工具和规划适配复用同一
 持久协议，Facade 与 A2A 只投影和路由原 owner；没有额外等待队列或状态权威。

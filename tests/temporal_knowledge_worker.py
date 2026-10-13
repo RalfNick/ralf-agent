@@ -140,14 +140,18 @@ def runtime(root, queue, kind, managed, *, enable_sessions=False):
                 (root / "read-ready").write_text(request["run_id"])
                 await asyncio.Event().wait()
 
-        async def prepare_context(self, request):
+        async def prepare_context(self, request, *, dispatch_guard=None, on_end=None):
             await self.gate(request)
-            return await super().prepare_context(request)
+            return await super().prepare_context(
+                request, dispatch_guard=dispatch_guard, on_end=on_end
+            )
 
-        async def manage_context(self, request, *, dispatch_guard=None):
+        async def manage_context(self, request, *, dispatch_guard=None, on_end=None):
             if request["phase"] == "plan":
                 await self.gate(request)
-            return await super().manage_context(request, dispatch_guard=dispatch_guard)
+            return await super().manage_context(
+                request, dispatch_guard=dispatch_guard, on_end=on_end
+            )
 
     execution = GatedRuntime(
         providers={"default": Provider(root)},

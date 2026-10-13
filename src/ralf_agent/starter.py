@@ -5,6 +5,7 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 
 from .a2a_starter import A2A_FILES
+from .adapter_contract_starter import adapter_contract_files
 from .async_starter import ASYNC_FILES
 from .cli_starter import CLI_FILES
 from .context_starter import context_files
@@ -857,9 +858,10 @@ def create_starter(destination, *, template="oncall") -> StarterProject:
         "observable",
         "sessions",
         "user-input",
+        "adapter-contracts",
     ):
         raise ValidationError(
-            "Starter template must be oncall, rag, config, model, graph, mcp, cli, parallel, async, plan, team, dag, nested, a2a, temporal, ingest, hybrid, context, memory, model-check, observable, sessions or user-input"
+            "Starter template must be oncall, rag, config, model, graph, mcp, cli, parallel, async, plan, team, dag, nested, a2a, temporal, ingest, hybrid, context, memory, model-check, observable, sessions, user-input or adapter-contracts"
         )
     files = {
         "oncall": _FILES,
@@ -885,7 +887,10 @@ def create_starter(destination, *, template="oncall") -> StarterProject:
         "observable": OBSERVABLE_FILES,
         "sessions": SESSIONS_FILES,
         "user-input": USER_INPUT_FILES,
+        "adapter-contracts": None,
     }[template]
+    if template == "adapter-contracts":
+        files = adapter_contract_files()
     try:
         directory = Path(destination).expanduser().resolve()
         if directory == Path.cwd().resolve():

@@ -60,6 +60,20 @@ jobs:
           ralf init wheel-input --template user-input
           cd wheel-input
           python -m agent_app run --command-id installed-question
+      - name: Installed external knowledge adapter contracts outside checkout
+        working-directory: ${{ runner.temp }}
+        run: |
+          python -m pytest -q -W error -p no:cacheprovider -c /dev/null "$RUNNER_TEMP/session-contracts/tests/test_adapter_contract_types.py" "$RUNNER_TEMP/session-contracts/tests/test_adapter_contract_runner.py" "$RUNNER_TEMP/session-contracts/tests/test_knowledge_adapter_contract.py" "$RUNNER_TEMP/session-contracts/tests/test_adapter_contract_reference.py" "$RUNNER_TEMP/session-contracts/tests/test_adapter_contract_reference_integration.py" "$RUNNER_TEMP/session-contracts/tests/test_adapter_contract_reference_process.py" "$RUNNER_TEMP/session-contracts/tests/test_adapter_contract_cli.py" "$RUNNER_TEMP/session-contracts/tests/test_knowledge_context_method_pinning.py"
+          ralf-check-adapter
+          ralf-check-adapter --offline --evidence-dir "$RUNNER_TEMP/knowledge-contract-evidence"
+          ralf init wheel-adapter --template adapter-contracts
+          cd wheel-adapter
+          python -m agent_app check
+          python -m agent_app seed
+          python -m agent_app run --kind agent --command-id CI-EXTERNAL-AGENT
+          python -m agent_app run --kind rag --command-id CI-EXTERNAL-RAG
+          python -m agent_app run --kind plan --format json --async --command-id CI-EXTERNAL-PLAN
+          python -m agent_app run --kind team --format toml --borrowed --command-id CI-EXTERNAL-TEAM
       - name: Installed Skill document contracts outside checkout
         working-directory: ${{ runner.temp }}
         run: |

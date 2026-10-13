@@ -9,6 +9,13 @@ from .a2a import (
     A2AToolSource,
     validate_a2a_client,
 )
+from .adapter_contract_reference import offline_knowledge_fixture
+from .adapter_contract_types import (
+    AdapterContractCaseResult,
+    AdapterContractEvidence,
+    AdapterContractReport,
+)
+from .adapter_contracts import AdapterContractSuite
 from .agent import Agent
 from .agent_harness import AgentHarness
 from .agent_limits import AgentLimitProposal, AgentLimitsPolicy, FixedAgentLimits
@@ -107,6 +114,13 @@ from .ingestion_types import (
     SourceDocument,
 )
 from .invocation_records import InvocationMiddleware, InvocationRecord
+from .knowledge_adapter_contract import (
+    KnowledgeAdapterFixture,
+    KnowledgeContractPause,
+    KnowledgeContractResource,
+    KnowledgeContractSession,
+    KnowledgeContractSource,
+)
 from .knowledge_ingestion import AsyncIngestionKnowledgeStore, IngestionKnowledgeStore
 from .managed_context import ManagedContextPipeline
 from .managed_memory import ManagedMemoryPolicy
@@ -355,7 +369,7 @@ from .workflow import (
     WorkflowSelection,
 )
 
-__version__ = "0.1.0.dev93"
+__version__ = "0.1.0.dev94"
 from .binding_artifacts import ArtifactBindingResource, ArtifactView
 from .binding_sandbox import SandboxBindingResource
 from .docker_sandbox import DockerSandbox
@@ -832,3 +846,20 @@ __all__ += [
     "UserInputControls",
     "AsyncUserInputControls",
 ]
+
+__all__ += [
+    "AdapterContractSuite",
+    "AdapterContractReport",
+    "AdapterContractCaseResult",
+    "AdapterContractEvidence",
+]
+
+__all__ += [
+    "KnowledgeAdapterFixture",
+    "KnowledgeContractPause",
+    "KnowledgeContractResource",
+    "KnowledgeContractSession",
+    "KnowledgeContractSource",
+]
+
+__all__ += ["offline_knowledge_fixture"]

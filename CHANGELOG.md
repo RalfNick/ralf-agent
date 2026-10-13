@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.0.dev94 — Knowledge adapter contract preview
+
+- Accept the bounded first role after 7516 source checks, isolated core/SDK installs, original native Temporal Worker recovery and dev93 compatibility. Five Important review findings are repaired; see the acceptance record. Other roles, model/semantic quality and full R01–R26 remain open.
+
+- Develop the first fixed KnowledgeRetriever black-box suite with truthful partial reports, optional private evidence and explicit offline selection.
+- Add an independent SQLite replacement and installed configuration/consumer/recovery reference; retain original execution authorities and defaults.
+- General adapter roles, service certification, semantic/model quality and full R01–R26 remain open.
+
 ## 0.1.0.dev93 — Durable user input preview
 
 - Add explicit intrinsic questions, fixed reply policies and durable original-owner controls on Local and Temporal. Replies continue the original Run/Turn without changing submitted task or repeating adopted work.

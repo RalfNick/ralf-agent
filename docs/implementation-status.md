@@ -1,4 +1,6 @@
-# Implementation status — 0.1.0.dev93
+# Implementation status — 0.1.0.dev94
+
+Dev94 R25 首个知识适配契约子集已验收：固定 K01–K12、安装后 SDK／CLI、独立可编辑 SQLite 参考、JSON／TOML 声明替换与 Agent／RAG／Plan／Team 消费。原方法／Query／生命周期保护保持既有权威；缺 hook 未验证，质量为 null。完整源码 7516 passed／617 配置依赖跳过，独立核心 213／SDK 133 零跳过；原生 Temporal 源码和安装各 12 项／24 Worker 实际等待／12 History 重放，旧93默认及六类原Run双向兼容、333模块一致，五项审查问题闭环。其他角色、完整 R25／R01–R26／H3／M1、真实质量与独立采用保持开放。见[使用指南](adapter-contracts.md)及[本批验收](../architecture/reviews/2026-10-13-knowledge-adapter-contracts.md)。
 
 Dev93 持久用户输入子集已验收：显式 `request_input` 与所选 Planner 共用固定
 问题／回复协议，由原 Local Coordinator 或 Temporal History 续接原 Run／Turn。

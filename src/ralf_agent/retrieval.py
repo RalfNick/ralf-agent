@@ -156,6 +156,10 @@ class RetrievalQuery:
         if self.limit > 2**63 - 1:
             raise ValidationError("Retrieval limit exceeds the supported integer range")
         _integer(self.max_chars, "Retrieval character budget", minimum=2)
+        # Transient guard, not a dataclass field or serialized protocol value.
+        # Preserve the original published query/request and method fingerprints
+        # while detecting replacement of the three validated input parameters.
+        object.__setattr__(self, "_initial_parameters", (self.text, self.limit, self.max_chars))
 
 
 @dataclass(frozen=True)
@@ -275,6 +279,19 @@ def _bounded_result(items, query, mode):
 
 
 def _validate_result(result, scope, namespace, query):
+    if not isinstance(query, RetrievalQuery):
+        raise ValidationError("Knowledge retrieval requires RetrievalQuery")
+    current = (query.text, query.limit, query.max_chars)
+    original = getattr(query, "_initial_parameters", None)
+    if (
+        type(original) is not tuple
+        or len(original) != 3
+        or any(
+            type(actual) is not type(initial) or actual != initial
+            for actual, initial in zip(current, original, strict=True)
+        )
+    ):
+        raise DefinitionMismatch("The original knowledge retrieval query changed")
     if not isinstance(result, RetrievalResult):
         raise ValidationError("Retriever must return RetrievalResult")
     result = RetrievalResult(result.items, result.mode, result.used_chars)
@@ -753,6 +770,11 @@ class KnowledgeContext:
         _component_identity(retriever)
         if not all(callable(getattr(retriever, name, None)) for name in ("retrieve", "validate")):
             raise ValidationError("Knowledge retriever must implement retrieve and validate")
+        from .task_controls import _binding
+
+        self._retriever_bindings = {
+            name: _binding(getattr(retriever, name)) for name in ("retrieve", "validate")
+        }
 
     @property
     def identity(self):
@@ -766,9 +788,24 @@ class KnowledgeContext:
         }
 
     def _capture(self):
+        self._check_methods()
         return self.retriever, _component_identity(self.retriever), copy.deepcopy(self.identity)
 
+    def _check_methods(self):
+        from .task_controls import _binding
+
+        try:
+            changed = any(
+                _binding(getattr(self.retriever, name, None)) != original
+                for name, original in self._retriever_bindings.items()
+            )
+        except ValidationError as exc:
+            raise DefinitionMismatch("The knowledge retriever method changed") from exc
+        if changed:
+            raise DefinitionMismatch("The knowledge retriever method changed")
+
     def _check(self, captured, retriever_identity, context_identity):
+        self._check_methods()
         if (
             self.retriever is not captured
             or digest(_component_identity(captured)) != digest(retriever_identity)

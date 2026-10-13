@@ -85,7 +85,7 @@ def main(argv=None):
     init.add_argument(
         "--template",
         default="oncall",
-        help="Starter template: oncall, rag, config, model, graph, mcp, cli, parallel, async, plan, team, dag, nested, a2a, temporal, ingest, hybrid, context, memory, model-check, observable, sessions or user-input",
+        help="Starter template: oncall, rag, config, model, graph, mcp, cli, parallel, async, plan, team, dag, nested, a2a, temporal, ingest, hybrid, context, memory, model-check, observable, sessions, user-input or adapter-contracts",
     )
     run = commands.add_parser(
         "run", help="Submit an Agent/Workflow declaration using a runtime config or factory"
