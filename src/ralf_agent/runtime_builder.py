@@ -231,6 +231,7 @@ _BINDING_FACTORY_KINDS = {
     "sandbox": "sandbox",
     "artifacts": "artifacts",
     "model_history": "model_history",
+    "runner": "runner",
 }
 
 
@@ -615,6 +616,9 @@ class ComponentRegistry:
         from .sandbox_factories import register_sandbox_tools
 
         register_sandbox_tools(self)
+        from .coding_factories import register_coding_factories
+
+        register_coding_factories(self)
         from .user_input_factories import register_user_input_factories
 
         register_user_input_factories(self)
@@ -647,6 +651,7 @@ class ComponentRegistry:
                 "fact_index_catalog",
                 "effect_journal",
                 "tool_execution",
+                "runner",
             }
             or not isinstance(name, str)
             or not name.strip()
@@ -764,6 +769,9 @@ class RuntimeBuilder:
         preflight_query_providers(profile)
         preflight_parent_completion_providers(profile)
         preflight_user_input(profile)
+        from .coding_factories import preflight_coding_references
+
+        preflight_coding_references(profile)
         histories = model_history_declarations(profile)
         if histories and "model_continuation" not in profile.components:
             raise ValidationError(

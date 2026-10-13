@@ -1020,6 +1020,9 @@ class TemporalRuntime:
         dispatched = False
         received = None
         try:
+            from .temporal_bindings import reject_runner_descriptor
+
+            reject_runner_descriptor(request.get("step_bindings"))
             self.validate_release(request["runtime_manifest"])
             from .temporal_state import validate_coding_selection
 

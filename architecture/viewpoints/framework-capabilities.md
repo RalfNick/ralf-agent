@@ -1,5 +1,7 @@
 # RALF 通用框架能力与扩展验收
 
+Dev104 将可选 `runner` 绑定和异步 `tools/codex-coding` 声明接入原 Local 根级 Agent／顺序 Workflow，支持一个 Profile 中多个独立 Runner、精确 `registered-tool` 借用和 owned 关闭重试。显式绑定使用 Descriptor 3／`local-bindings-18`，省略角色保留原 Descriptor 1／2 与默认发布；工具授权交集和原 Run／Action／预算／审批权威保持。具体资源在模型 I/O 前复核物理身份，owned 清理开始前隔离原 Engine，停止或关闭失败保留 Coordinator 和资源账本。图／Team／动态／嵌套与 Temporal Coding 继续拒绝，原生认证和真实 Coding 质量未验收。见[配置指南](../../docs/coding-profiles.md)和[本批记录](../reviews/2026-10-14-coding-bindings-and-profiles.md)；dev99 冻结链路不重复评测，完整 R01–R26／G1–G8／第二阶段继续开放。
+
 dev102 新增[保留环境与共享 PG 日志](../../docs/codex-coding-environment.md)：同 container ID／generation 冷检查、保留工作区与实际整容器停止，原 EffectJournal 同事务启动意图已有有限证据，Local／PG 共用纯规则。最终受影响源码 301 项零跳过、P1／P2 已实际复验闭环，安装证据见[本批登记](../reviews/2026-10-14-codex-environment-journal.md)。原 Action／History 准入、旧启动失效、专用认证和业务 Turn 未接入，原始 argv 仍可重启；完整 G3／G5／G7／G8／R13 和第二阶段开放，dev99 保持冻结。
 
 dev101 补齐固定候选[配置／原生控制检查](../../docs/codex-coding-preflight.md)，有限原生命令读写、路径／网络拒绝与后继整容器停止探针通过。execution_admitted=false；[原 Action 委托集成](../specs/delegated-coding-action-contract.md)、专用认证／模型 Turn 和 Local／Temporal 恢复仍待验收，R13 未完成。

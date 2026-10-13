@@ -250,6 +250,8 @@ class LocalEngine:
         self._drive_users = {}
         self._threads = ThreadExecutionTracker()
         self._lifecycle = "open"
+        self._coding_cleanup_token = None
+        self._coding_cleanup_finished = False
         if coordinator is None:
             factory = getattr(store, "create_coordinator", None)
             if factory is None:
@@ -327,6 +329,8 @@ class LocalEngine:
     def close(self):
         if self._lifecycle == "closed":
             return
+        if self._coding_cleanup_token is not None and not self._coding_cleanup_finished:
+            raise ValidationError("Owned Coding cleanup must finish before closing its Engine")
         if self._lifecycle != "store_closed":
             from .local_delegated_coding import delegated_pending
 
@@ -375,6 +379,47 @@ class LocalEngine:
         for run_id in tuple(self._quiescing_runs):
             self._mark_workflow_quiescent(run_id)
 
+    def _begin_coding_cleanup(self):
+        if self._lifecycle != "open":
+            raise ValidationError("Engine is not open for Coding cleanup")
+        if self._coding_cleanup_token is None:
+            self._coding_cleanup_token = object()
+        return self._coding_cleanup_token
+
+    def _finish_coding_cleanup(self, token):
+        if token is None or token is not self._coding_cleanup_token:
+            raise ValidationError("Original Coding cleanup ownership changed")
+        self._coding_cleanup_finished = True
+
+    async def preclose_delegated(self, *, _cleanup_token=None):
+        """Fence original pending work while its Store and coordinator remain open."""
+        if _cleanup_token is None:
+            self._ensure_open()
+        elif self._lifecycle != "open" or _cleanup_token is not self._coding_cleanup_token:
+            raise ValidationError("Original Coding cleanup ownership changed")
+        from .local_delegated_coding import delegated_pending, stop_work
+
+        if self._delegated_store_registration is not None:
+            for run_id in delegated_pending(self):
+                self._check_release(self._authorized(run_id, _cleanup_token=_cleanup_token))
+                if not await stop_work(self, run_id):
+                    raise ValidationError("Original delegated Coding stop remains incomplete")
+            if delegated_pending(self):
+                raise ValidationError("Original delegated Coding stop remains incomplete")
+        from .delegated_coding import registered_coding_tool
+
+        for name in getattr(self.tools, "_tools", {}):
+            handler = registered_coding_tool(self.tools.get(name))
+            if handler is not None and handler.runner.active_operations:
+                raise ValidationError("Original Coding worker remains active during cleanup")
+        if (
+            self._drive_users
+            or any(not task.done() for task in self._inflight.values())
+            or any(not task.done() for tasks in self._parallel_tasks.values() for task in tasks)
+            or self._threads.has_active
+        ):
+            raise ValidationError("Finish active drive tasks before delegated cleanup")
+
     def _mark_workflow_quiescent(self, run_id, *, supervisor=False):
         if (
             self._threads.has_active_for(run_id)
@@ -397,7 +442,7 @@ class LocalEngine:
         self._quiescing_runs.discard(run_id)
 
     def _ensure_open(self):
-        if self._lifecycle != "open":
+        if self._lifecycle != "open" or self._coding_cleanup_token is not None:
             raise ValidationError("Engine is not open; only close may be retried")
 
     def _operation_active(self, run_id):
@@ -408,8 +453,13 @@ class LocalEngine:
             or self._threads.has_active_for(run_id)
         )
 
-    def _authorized(self, run_id):
-        self._ensure_open()
+    def _authorized(self, run_id, *, _cleanup_token=None):
+        if not (
+            _cleanup_token is not None
+            and _cleanup_token is self._coding_cleanup_token
+            and self._lifecycle == "open"
+        ):
+            self._ensure_open()
         run = self.store.run(run_id)
         if run["scope"] != asdict(self.scope):
             raise AuthorizationDenied("Run belongs to another workspace or principal")

@@ -1,4 +1,6 @@
-# 每Agent能力绑定契约 — 目标v1.7
+# 每Agent能力绑定契约 — 目标v1.8
+
+dev104 增加可选 `runner` 角色：只有显式声明才使用 Descriptor 3；省略角色保持 v1／v2 的规范字节。支持根级 Local Agent／顺序 Workflow；图／Team／动态／嵌套及 Temporal 显式拒绝。`inherit` 选有效工具集唯一实际 Runner，`ref` 引用 Catalog 中精确对象，`disabled` 不允许有效 Coding 工具；不接受 selector。注册与解析仅借用资源，不授予工具或原生启动权。联合发布使用 `local-bindings-18`／`runner_binding_protocol=1`，只有选择 Coding 工具时同时携带原委托协议。装配、资源关闭与恢复见[配置指南](../../docs/coding-profiles.md)及[验收登记](../reviews/2026-10-14-coding-bindings-and-profiles.md)。
 
 dev89跨Session原生历史子集已验收，增加 `model_history` 可选角色：默认十四角色 Descriptor v1 原字节保持，只有显式 model_history 选择才使用 Descriptor v2；inherit/ref/disabled 经原 Catalog 固定真实策略、方法和原 Release。此角色不提供数据写入权威，原 Local/Temporal 管理读取、准确保存回执和根成功发布。纯 frame 方法保护过去轮次与当前任务；数据后端沿原 Session 角色和宿主 namespace 选择，不增加第二套存储配置。实现与最终交付状态见[本批规格](../../docs/superpowers/specs/2026-10-13-session-model-history-design.md)。
 

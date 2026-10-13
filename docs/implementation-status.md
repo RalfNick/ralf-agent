@@ -1,4 +1,6 @@
-# Implementation status — 0.1.0.dev103
+# Implementation status — 0.1.0.dev104
+
+Dev104 将可选 `runner` 绑定和异步 `tools/codex-coding` 声明接入原 Local 根级 Agent／顺序 Workflow，支持一个 Profile 中多个独立 Runner、精确 `registered-tool` 借用和 owned 关闭重试。显式绑定使用 Descriptor 3／`local-bindings-18`，省略角色保留原 Descriptor 1／2 与默认发布；工具授权交集和原 Run／Action／预算／审批权威保持。具体资源在模型 I/O 前复核物理身份，owned 清理开始前隔离原 Engine，停止或关闭失败保留 Coordinator 和资源账本。图／Team／动态／嵌套与 Temporal Coding 继续拒绝，原生认证和真实 Coding 质量未验收。见[配置指南](coding-profiles.md)和[本批记录](../architecture/reviews/2026-10-14-coding-bindings-and-profiles.md)；dev99 冻结链路不重复评测，完整 R01–R26／G1–G8／第二阶段继续开放。
 
 Dev103 增加[原 Local ToolAction 的 Coding 委托](local-coding-delegation.md)：显式 SDK 注册、一个审批／预留／attempt、原 Run 的一次阶段准入、同连接配置校验、原 Thread／Turn 回执与停止采纳已接通。Docker opt-in 移除原容器并使旧 start argv 失效，宿主工作区与证据保留。仅根级未绑定 Agent／顺序 Workflow；更复杂编排、per-Agent runner、声明工厂和 Temporal 原生委托尚未接入，所选不支持路径在业务 I/O 前拒绝。存储通过公共 DelegatedExecutionStore 能力查询待停止 Run，不依赖 SQLite 私有扫描；默认 kernel／Schema 保留，委托发布显式 local-10／Schema 14。实际环境证据与结构化假服务的业务协议验证分别登记，专用认证／真实模型 Turn 未通过，完整 G1–G8／R13／第二阶段仍开放。最终审查、回归、安装及兼容结果见[本批登记](../architecture/reviews/2026-10-14-local-coding-delegation.md)，dev99 冻结范围保持。
 

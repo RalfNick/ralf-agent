@@ -25,6 +25,7 @@ class StepComponents:
     limits: object | None
     stage_policy: object | None = None
     model_history: object | None = None
+    runner: object | None = None
 
 
 def artifact_free_context(context):
@@ -263,6 +264,24 @@ class AgentBindingResolver:
             )
         if values["provider"] is None:
             raise DefinitionMismatch("The selected model provider is unavailable")
+        from .binding_runner import select_runner_tools
+
+        runner = None
+        if "runner" in selections:
+            selection = descriptor.runner
+            if selection.mode == "ref":
+                if e.binding_catalog is None:
+                    raise DefinitionMismatch("Runner selection requires a host BindingCatalog")
+                runner, records["runner"] = e.binding_catalog.resolve("runner", selection, e.scope)
+            else:
+                records["runner"] = {"mode": selection.mode}
+            runner, registration = select_runner_tools(
+                e.tools, tools, mode=selection.mode, runner=runner
+            )
+            if selection.mode == "inherit" and registration is not None:
+                records["runner"]["identity"] = registration
+        elif select_runner_tools(e.tools, tools)[0] is not None:
+            raise ValidationError("Bound Coding tools require an explicit Runner binding")
         history = values.get("model_history", history)
         self._validate_model_history_source(history, values["session"])
         return StepComponents(
@@ -277,6 +296,7 @@ class AgentBindingResolver:
             values.get("limits"),
             values.get("stage_policy"),
             history,
+            runner,
         ), records
 
     def model_history(self):
@@ -444,6 +464,18 @@ class AgentBindingResolver:
             entry["manifest"].get("user_input_protocol") == 1 for entry in entries.values()
         ):
             manifest.update(kernel="local-bindings-17", user_input_protocol=1)
+        if any("runner" in entry["descriptor"] for entry in entries.values()):
+            if definition["kind"] not in {"agent", "sequence"}:
+                raise ValidationError("Runner bindings require a root Agent or sequence")
+            manifest.update(kernel="local-bindings-18", runner_binding_protocol=1)
+            coding = {}
+            for entry in entries.values():
+                for name, record in entry["manifest"].get("delegated_coding_tools", {}).items():
+                    if name in coding and coding[name] != record:
+                        raise DefinitionMismatch("A bound Coding tool changed between steps")
+                    coding[name] = copy.deepcopy(record)
+            if coding:
+                manifest.update(delegated_execution_protocol=1, delegated_coding_tools=coding)
         return manifest
 
 

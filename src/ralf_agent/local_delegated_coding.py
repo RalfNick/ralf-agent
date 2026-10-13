@@ -42,6 +42,21 @@ def manifest_tools(engine, names):
         handler = registered_coding_tool(engine.tools.get(name))
         if handler is not None:
             handler.check()
+            # Concrete physical pins are checked before model dispatch as well
+            # as native work. Use class methods, never replaceable instance hooks.
+            from .codex_runner import CodexCodingRunner
+
+            runner = handler.runner
+            if type(runner) is CodexCodingRunner:
+                from .runner_journal import RunnerJournal
+
+                try:
+                    CodexCodingRunner._check_root(runner)
+                    RunnerJournal._check_physical(runner._journal)
+                except (OSError, TypeError, ValueError) as exc:
+                    raise DefinitionMismatch(
+                        "Original Coding physical dependencies changed"
+                    ) from exc
             result[name] = handler.identity
     return result
 
@@ -57,6 +72,16 @@ def validate_definition(engine, definition, parent_call=None):
             return contains(unwrap_definition(value))
         if kind in {"agent", "sequence"}:
             steps = value.get("steps", [value])
+            if "binding_definition" in value:
+                from .binding_runtime import descriptor_for
+
+                steps = [
+                    {
+                        **step,
+                        "tools": engine._bindings.resolve(step, descriptor_for(value, i))[0].tools,
+                    }
+                    for i, step in enumerate(steps)
+                ]
             return any(bool(manifest_tools(engine, step.get("tools", ()))) for step in steps)
         if kind == "graph":
             return any(
@@ -68,13 +93,18 @@ def validate_definition(engine, definition, parent_call=None):
             return any(contains(member) for member in value["members"].values())
         return False
 
-    if contains(definition) and (
-        definition.get("kind") not in {"agent", "sequence"}
-        or "binding_definition" in definition
-        or parent_call is not None
+    wrapper = definition.get("binding_definition", {})
+    descriptors = (
+        [wrapper["bindings"]]
+        if wrapper.get("kind") == "bound_agent"
+        else wrapper.get("agent_bindings", {}).values()
+    )
+    explicit = any("runner" in descriptor for descriptor in descriptors)
+    if (explicit or contains(definition)) and (
+        definition.get("kind") not in {"agent", "sequence"} or parent_call is not None
     ):
         raise ValidationError(
-            "Delegated coding supports root unbound Local Agents and sequences only"
+            "Delegated coding supports root unbound or explicitly runner-bound Local Agents and sequences only"
         )
 
 
@@ -148,16 +178,14 @@ def delegated_pending(engine):
 
 
 def activate(engine, manifest, definition, parent_call=None):
-    declarations = manifest.get("delegated_coding_tools")
+    from .binding_manifests import all_step_manifests
+
+    declarations = any(item.get("delegated_coding_tools") for item in all_step_manifests(manifest))
     if not declarations:
         return
-    if (
-        definition.get("kind") not in {"agent", "sequence"}
-        or "binding_definition" in definition
-        or parent_call is not None
-    ):
+    if definition.get("kind") not in {"agent", "sequence"} or parent_call is not None:
         raise ValidationError(
-            "Delegated coding supports root unbound Local Agents and sequences only"
+            "Delegated coding supports root unbound or explicitly runner-bound Local Agents and sequences only"
         )
     check_store(engine)
     from .ports import _invoke_sync_none
@@ -194,7 +222,9 @@ def _envelope(state):
 
 
 def validate_journal(engine, run):
-    if run["manifest"].get("delegated_coding_tools"):
+    from .binding_manifests import all_step_manifests, step_manifest
+
+    if any(item.get("delegated_coding_tools") for item in all_step_manifests(run["manifest"])):
         delegated_pending(engine)
     from .delegated_coding import registered_coding_tool
     from .runner_journal_state import _json
@@ -206,6 +236,8 @@ def validate_journal(engine, run):
         try:
             _json(state, "Delegated execution", limit=1048576)
             handler = registered_coding_tool(engine.tools.get(action["tool"]))
+            recorded = step_manifest(run["manifest"], action["node"])
+            check_action_runner(engine, run, action, handler)
             request = state["request"]
             dispatch = request["dispatch"]
             expected = {
@@ -215,7 +247,7 @@ def validate_journal(engine, run):
                 "attempt_id": action["attempts"][0]["id"],
                 "effect_key": action["effect_key"],
                 "execution_epoch": dispatch["execution_epoch"],
-                "tool_manifest": engine.tools.get(action["tool"]).manifest,
+                "tool_manifest": recorded["tools"][action["tool"]],
                 "arguments": action["arguments"],
                 "operation_digest": action["digest"],
             }
@@ -245,7 +277,7 @@ def validate_journal(engine, run):
                 or request["reservation"]
                 != {
                     "id": action["attempts"][0]["id"],
-                    "amount": engine.tools.get(action["tool"]).spec.cost,
+                    "amount": recorded["tools"][action["tool"]]["cost"],
                 }
                 or request["deadline"] is not None
                 or type(state["pending_stop"]) is not bool
@@ -269,6 +301,17 @@ def validate_journal(engine, run):
             raise DefinitionMismatch("Original delegated execution journal is invalid") from exc
 
 
+def check_action_runner(engine, run, action, handler):
+    """The effective bound step and registered tool borrow the same pinned resource."""
+    if handler is None:
+        raise DefinitionMismatch("Original delegated Coding handler is unavailable")
+    handler.check()
+    if "binding_definition" in run["definition"]:
+        components = engine._components(run, action["node"])
+        if action["tool"] not in components.tools or components.runner is not handler.runner:
+            raise DefinitionMismatch("Bound Coding Action replaced its original Runner resource")
+
+
 class LocalCodingAuthority:
     """Single original approved and reserved Action; grants persist before RPC."""
 
@@ -278,7 +321,7 @@ class LocalCodingAuthority:
     def _current(self):
         engine = self._engine
         check_store(engine)
-        run = engine._authorized(self._run_id)
+        run = _original_run(engine, self._run_id)
         engine._check_release(run)
         action = next((a for a in run["actions"] if a["id"] == self._action_id), None)
         if action is None or action.get("kind") != "tool" or not action.get("approved"):
@@ -289,6 +332,7 @@ class LocalCodingAuthority:
         if handler is None:
             raise AuthorizationDenied("The original ToolAction has no registered coding resource")
         handler.check()
+        check_action_runner(engine, run, action, handler)
         state = action.get("delegated_execution")
         if state is None or state.get("version") != 1 or len(action["attempts"]) != 1:
             raise AuthorizationDenied("Delegated coding requires one original reserved execution")
@@ -352,6 +396,8 @@ class LocalCodingAuthority:
         return run["state"] in {"cancelling", "cancelled", "failed"} or "cancel" in state
 
     def authorize(self, method, params, binding):
+        if self._engine._coding_cleanup_token is not None:
+            raise AuthorizationDenied("Coding cleanup cannot submit new native work")
         canonical(params)
         canonical(binding)
         with self._engine.store.transaction():
@@ -636,6 +682,9 @@ async def tool(engine, run_id, action_id):
     handler = registered_coding_tool(engine.tools.get(action["tool"]))
     if handler is None:
         raise AuthorizationDenied("Original delegated resource is unavailable")
+    engine._check_release(run)
+    check_action_runner(engine, run, action, handler)
+    recorded = engine._step_manifest(run, action["node"])["tools"][action["tool"]]
     cold = "delegated_execution" in action
     if not cold:
         with engine.store.transaction():
@@ -644,7 +693,7 @@ async def tool(engine, run_id, action_id):
             if run["state"] == "cancelling":
                 return False
             attempt_id = action["id"] + ":1"
-            engine.store.reserve(run_id, attempt_id, engine.tools.get(action["tool"]).spec.cost)
+            engine.store.reserve(run_id, attempt_id, recorded["cost"])
             action["attempts"].append({"id": attempt_id, "status": "executing"})
             action["status"] = "executing"
             context = InvocationContext(
@@ -652,7 +701,7 @@ async def tool(engine, run_id, action_id):
             )
             envelope = DispatchEnvelope(
                 context,
-                engine.tools.get(action["tool"]).manifest,
+                recorded,
                 action["arguments"],
                 action["digest"],
             )
@@ -730,8 +779,11 @@ async def tool(engine, run_id, action_id):
 async def stop_work(engine, run_id):
     from .delegated_coding import registered_coding_tool
 
-    for action in pending_delegated_work(engine._authorized(run_id)):
+    for action in pending_delegated_work(_original_run(engine, run_id)):
+        run = _original_run(engine, run_id)
+        engine._check_release(run)
         handler = registered_coding_tool(engine.tools.get(action["tool"]))
+        check_action_runner(engine, run, action, handler)
         authority = LocalCodingAuthority(engine, run_id, action["id"])
         try:
             evidence = await handler.runner.stop_existing(
@@ -742,4 +794,9 @@ async def stop_work(engine, run_id):
                 authority.adopt("stop", evidence)
         except Exception as exc:
             authority.adopt("error", {"code": getattr(exc, "code", "delegated_stop_unknown")})
-    return delegated_stop_settled(engine._authorized(run_id))
+    return delegated_stop_settled(_original_run(engine, run_id))
+
+
+def _original_run(engine, run_id):
+    """Private receipt/stop permit; public business operations remain closed."""
+    return engine._authorized(run_id, _cleanup_token=engine._coding_cleanup_token)

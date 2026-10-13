@@ -1,6 +1,6 @@
 # 分阶段交付门槛
 
-日期：2026-10-14；第一阶段已冻结在本地提交 `7e530f8`／`0.1.0.dev99`，第二阶段当前批次为 `0.1.0.dev103`。
+日期：2026-10-14；第一阶段已冻结在本地提交 `7e530f8`／`0.1.0.dev99`，第二阶段当前批次为 `0.1.0.dev104`。
 按用户修订后的目标管理交付，R01–R26 保留完整目标；适配器数量、测试数和 dev 版本数作为辅助信息。
 
 ## 第一阶段：四条参考业务链路
@@ -69,6 +69,13 @@ dev103 [有限 Local 委托](local-coding-delegation.md)将原审批、一个预
 结构化假服务验证，真实环境的无模型控制与停止证据独立登记；未验证专用认证或真实
 Coding 模型 Turn。G1 的 per-Agent／JSON／TOML、完整 G3／G5、Temporal／PG History、
 G7／G8／R13 与第二阶段继续开放，最终验收见[本批记录](../architecture/reviews/2026-10-14-local-coding-delegation.md)。
+
+dev104 补齐 G1 的有限 Local per-Agent／声明路径：显式可选 Runner 角色、精确资源借用、
+单 Profile 多 Runner 和 JSON／TOML 异步工厂；Descriptor 3／local-bindings-18 保护旧读取器。
+owned 关闭先隔离原 Engine，再采纳原资源停止证据；失败保留原租约和清理账本供重试。
+图／Team／动态／嵌套与 Temporal 明确拒绝，尚无 Temporal 原 History Runner 准入。
+本批旧读取器／安装及恢复范围见[登记](../architecture/reviews/2026-10-14-coding-bindings-and-profiles.md)。
+完整 G1 的 Worker、G3／G5、G7／G8 和 R13 仍开放，专用原生认证和真实任务质量未验证。
 
 | 必需项 | 清单与完成门槛 |
 | --- | --- |

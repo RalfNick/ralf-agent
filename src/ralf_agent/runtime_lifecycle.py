@@ -169,6 +169,8 @@ class RuntimeInstance:
         self._engine_closed = False
         self._async_shutdown = False
         self._aclosing = False
+        self._coding_shutdown = False
+        self._coding_cleanup_token = None
 
     def _ensure_open(self):
         if self._engine_closed or self._async_shutdown:
@@ -234,11 +236,34 @@ class RuntimeInstance:
         self._aclosing = True
         self._async_shutdown = True
         try:
+            if not self._engine_closed and self._engine is not None:
+                from .delegated_coding import registered_coding_tool
+
+                tools = getattr(self._engine, "tools", None)
+                owned = {id(item.resource) for item in self._context._resources}
+                self._coding_shutdown = self._coding_shutdown or any(
+                    handler is not None and id(handler.runner) in owned
+                    for name in getattr(tools, "_tools", {})
+                    for handler in (registered_coding_tool(tools.get(name)),)
+                )
+                if self._coding_cleanup_token is None:
+                    if self._coding_shutdown:
+                        self._coding_cleanup_token = self._engine._begin_coding_cleanup()
             if self._drain_engine and self._engine is not None and not self._engine_closed:
                 wait = getattr(self._engine, "wait_for_threads", None)
                 if not is_async_callable(wait):
                     raise ValidationError("Engine wait_for_threads must be async")
                 _complete_sync_none(await wait(), "Engine wait_for_threads")
+            if self._coding_shutdown and not self._engine_closed and self._context._resources:
+                preclose = getattr(self._engine, "preclose_delegated", None)
+                if not is_async_callable(preclose):
+                    raise ValidationError("Owned Coding requires original Engine preclose")
+                _complete_sync_none(
+                    await preclose(_cleanup_token=self._coding_cleanup_token),
+                    "Engine delegated preclose",
+                )
+                await self._context.cleanup_async()
+                self._engine._finish_coding_cleanup(self._coding_cleanup_token)
             self._close_engine()
             await self._context.cleanup_async()
         finally:

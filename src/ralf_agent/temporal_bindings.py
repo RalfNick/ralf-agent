@@ -38,6 +38,11 @@ def provider_alias(selection):
     return "binding:" + key("provider", selection)
 
 
+def reject_runner_descriptor(descriptor):
+    if isinstance(descriptor, dict) and "runner" in descriptor:
+        raise ValidationError("Temporal Runner bindings require original History integration")
+
+
 def normalize_request(request):
     from .binding_definitions import AgentDefinition, BoundDefinition, decode_definition
 
@@ -52,6 +57,8 @@ def normalize_request(request):
             wrapper.definition,
             {k: v.to_dict() for k, v in wrapper.agent_bindings.items()},
         )
+    for descriptor in selections.values():
+        reject_runner_descriptor(descriptor)
     result = submission_request(
         spec, request["input"], budget=request["budget"], session_id=request["session_id"]
     )
@@ -65,6 +72,7 @@ def step_descriptor(request, node):
 
 
 def validate_descriptor(manifest, descriptor, scope=None):
+    reject_runner_descriptor(descriptor)
     descriptor = AgentBindingDescriptor.from_dict(descriptor)
     records = manifest.get("binding_catalog", {}).get("records", {})
     for role in (*BINDING_ROLES, "model_history"):

@@ -25,6 +25,7 @@ SELECTABLE_ROLES = frozenset(
         "sandbox",
         "artifacts",
         "model_history",
+        "runner",
     }
 )
 
@@ -36,6 +37,11 @@ def component_identity(role, component):
         from .model_history import model_history_registration
 
         return model_history_registration(component)
+
+    if role == "runner":
+        from .binding_runner import runner_registration
+
+        return runner_registration(component)
 
     if role == "artifacts":
         from .binding_artifacts import ArtifactBindingResource
@@ -129,6 +135,7 @@ class BindingCatalog:
             raise ValidationError("Binding catalog requires trusted Scope")
         self._scope, self._entries = scope, {}
         self._model_history_pins = {}
+        self._runner_pins = {}
 
     @property
     def scope(self):
@@ -147,11 +154,19 @@ class BindingCatalog:
             original, record = self._entries[key]
             if role == "model_history":
                 check_model_history_binding(original, self._model_history_pins[key])
+            if role == "runner":
+                from .binding_runner import check_runner_binding
+
+                check_runner_binding(original, self._runner_pins[key])
             if original is not component or digest(record["identity"]) != digest(identity):
                 raise DefinitionMismatch("Registered binding version cannot be replaced")
             return
         if role == "model_history":
             self._model_history_pins[key] = pin_model_history_binding(component)
+        if role == "runner":
+            from .binding_runner import pin_runner_binding
+
+            self._runner_pins[key] = pin_runner_binding(component)
         self._entries[key] = (
             component,
             {
@@ -167,6 +182,7 @@ class BindingCatalog:
     def unregister(self, role, component_id, version):
         self._entries.pop((role, component_id, version), None)
         self._model_history_pins.pop((role, component_id, version), None)
+        self._runner_pins.pop((role, component_id, version), None)
 
     def resolve(self, role, selection, scope):
         if not isinstance(role, str) or role not in SELECTABLE_ROLES:
@@ -185,6 +201,12 @@ class BindingCatalog:
             check_model_history_binding(
                 component,
                 self._model_history_pins[(role, selection.component_id, selection.version)],
+            )
+        if role == "runner":
+            from .binding_runner import check_runner_binding
+
+            check_runner_binding(
+                component, self._runner_pins[(role, selection.component_id, selection.version)]
             )
         if digest(component_identity(role, component)) != digest(record["identity"]):
             raise DefinitionMismatch("Registered binding component identity changed")

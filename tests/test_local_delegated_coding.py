@@ -787,7 +787,8 @@ def test_actual_composite_coding_selections_remain_unsupported(tmp_path, kind):
         if kind == "bound_agent"
         else (TeamSpec if kind == "team" else DynamicWorkflowSpec)("parent", {"member": agent})
     )
-    with pytest.raises(ValidationError, match="root unbound"):
+    expected = "explicit Runner binding" if kind == "bound_agent" else "root unbound"
+    with pytest.raises(ValidationError, match=expected):
         runtime.submit(definition, "x", command_id="s")
     assert provider.calls == 0
     runtime.close()

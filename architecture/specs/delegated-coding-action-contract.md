@@ -2,14 +2,14 @@
 
 | 项目 | 内容 |
 | --- | --- |
-| 状态 | dev103 部分 Local 实施；完整通用集成与验收仍待完成 |
+| 状态 | dev104 部分 Local 实施；完整通用集成与验收仍待完成 |
 | 范围 | 一个显式选择的受限 Codex Coding 场景，一个逻辑 Action 对应一个原生 Turn |
 | 上位契约 | [Runner 能力契约](runner-capability-contract.md)、[Run 命令契约](run-command-contract.md) |
 | 现有基础 | [Codex 协议与启动证据基础](../../docs/codex-runner-foundation.md) |
 
 本文固定责任与验收边界。dev103 有限 Local 实施分配显式 `local-10`、
 `delegated_execution_protocol=1` 与原接受事务内的 Schema 14；默认发布不升级，
-联合 per-Agent 绑定协议与 Temporal 委托协议本批未分配。实施须使旧执行器在业务
+dev104 联合绑定另分配 `local-bindings-18`／`runner_binding_protocol=1`；Temporal 委托协议尚未分配。实施须使旧执行器在业务
 I/O 前拒绝新声明，同时保留既有默认声明与历史视图。
 
 dev102 已增加具体 `DockerCodingEnvironment`、借用原 `PostgresEffectJournal` 的
@@ -29,6 +29,8 @@ aclose`，通用 Runner Port、per-Agent／声明工厂及复杂父级尚未接�
 原 Temporal History 准入／控制与共享 PG 采纳仍开放。实现和证据分别见
 [使用边界](../../docs/local-coding-delegation.md)及[本批登记](../reviews/2026-10-14-local-coding-delegation.md)。
 
+dev104 增加有限根级 Local Agent／顺序 Workflow 的可选 Runner 绑定、JSON／TOML 多资源工厂及 owned 关闭隔离。`inherit` 从有效工具授权选唯一实际资源，`ref` 必须与已授予 Coding 工具的实际对象一致，`disabled` 拒绝所选 Coding 工具；省略角色保留历史字节。发布和冷恢复先检查原方法／资源身份及具体物理依赖。拥有资源的 Runtime 关闭前阻止所有新 submit／drive／原生业务 grant，允许原权威保存停止证据，失败保留原 Coordinator 和账本。复杂父级、Temporal History 和专用认证不由此交付。见[配置指南](../../docs/coding-profiles.md)和[本批登记](../reviews/2026-10-14-coding-bindings-and-profiles.md)。
+
 ## 1. 实现边界
 
 保留 `Action.kind = "tool"`、`ToolSpec.effect = "queryable_write"` 与 `requires_approval = true`。既有参数 Schema、操作摘要、稳定 effect key、审批、预算预留和结果提交继续由原执行权威管理。该 Action 表示整个委托 Turn；外部内部文件、命令与重试不因此成为 RALF 管理的逐步骤工具调用。
@@ -37,7 +39,7 @@ Local Coordinator／SQLite 和 Temporal Workflow／History 分别保持原 Run�
 
 | 对象 | 当前有限实现 | 本契约要求的剩余集成 |
 | --- | --- | --- |
-| 原 Tool Action | 类型化调用、审批、效果身份、结果提交；dev103 根级未绑定 Local 原 Action 的显式委托及独立生命周期 | per-Agent／声明工厂、复杂父级组合与 Temporal 原 History 接入 |
+| 原 Tool Action | 类型化调用、审批、效果身份、结果提交；dev103 根级未绑定 Local 原 Action 的显式委托及独立生命周期 | 复杂父级组合与 Temporal 原 History 接入 |
 | Codex 协议／RPC／环境 | 固定协议、有界同连接传输／等待拒绝；dev103 有限 Local 原权威准入／句柄采纳、opt-in 原容器停止移除和旧启动失效 | 完整组合准入、实际业务任务与跨宿主停止证据 |
 | RunnerJournal | Local 独占 SQLite 启动阶段、原生句柄、取消意图及 dev103 原 Local Action 采纳 | 剩余组合恢复；不能充当 Temporal 共享日志 |
 | PostgresRunnerJournal（dev102） | 借用原 EffectJournal 同事务保存原 dispatch／启动意图，共享有限阶段与固定句柄 | 原 History phase／control grant、取消顺序、停止与结果采纳；日志许可不代替准入 |
@@ -53,7 +55,7 @@ dev103 的 `ToolSpec.config.delegated_runner` 使用严格版本 1 标记，固�
 取得启动权。引擎在进入通用 ToolExecutor 之前识别此路径，直接调用通用 handler
 拒绝启动。首期输入仅 task 文本，产物、上下文引用和通用能力报告的声明入口仍待完成。
 
-可选 per-Agent `runner` 绑定沿用 `inherit / ref / disabled`：继承显式 Profile 默认，引用精确组件／版本，或禁用委托能力。无 Runner 声明的旧 Agent 保持原路径；禁用或缺失 Runner 时，显式委托工具不能静默换执行器或降低场景限制。新增绑定字段只进入显式新声明，不改变旧声明序列化字节。
+可选 per-Agent `runner` 绑定沿用 `inherit / ref / disabled`：dev104 的 inherit 从有效工具集选唯一原资源，ref 引用精确组件／版本，disabled 禁用委托能力。无 Runner 声明的旧 Agent 保持原路径；禁用或缺失 Runner 时，显式委托工具不能静默换执行器或降低场景限制。新增绑定字段只进入显式新声明，不改变旧声明序列化字节。
 
 以下数据和端口均为待实现名称。跨进程只传有界、严格校验的 JSON 快照；不传 callable、连接对象或裸凭据。
 

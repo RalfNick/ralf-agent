@@ -1,9 +1,9 @@
 # Local 原 Action 的 Coding 委托
 
-dev103 增加显式 SDK 工具描述符、`CodexCodingRunner` 与原 Local ToolAction 的
-有限集成。仅支持根级、未使用 per-Agent 能力绑定的 Agent 和顺序 Workflow。
-图、Team、动态编排、嵌套成员、Temporal 与声明工厂尚未接入，显式选择这些组合
-会在模型调用前拒绝。完整 R13 和 Coding G1–G8 继续开放。
+dev104 在 dev103 原 Action 委托基础上增加每 Agent Runner 绑定、多资源声明工厂和
+owned 关闭重试。支持根级 Local Agent 和顺序 Workflow，包括显式绑定包装；
+图、Team、动态编排、嵌套成员和 Temporal 继续在模型调用前拒绝。
+完整 R13 和 Coding G1–G8 继续开放。
 
 当前 Runner 不读取、挂载或注入宿主认证；其身份明确记录 `credentials=unavailable`。
 真实原生业务 Turn 和模型质量尚未验收。真实 Docker 的控制查询／限制／停止证据与
@@ -43,10 +43,14 @@ register_coding_tool(tools, runner, name="coding", cost=1)
 镜像目前是本机明确构建的候选资产，未发布公开镜像；构造不会下载或启动业务。
 这里的装配展示结构接口，尚非安装后可直接调用真实模型的 Coding starter。
 
+绑定与 JSON／TOML 多资源配置见[Runner 配置指南](coding-profiles.md)。
+有效 Coding 工具必须对应唯一实际 Runner；Catalog 注册只借用资源。
+
 ## 原执行权威与恢复
 
 显式委托发布使用 `local-10`／`delegated_execution_protocol=1`，首次接受时在原
-事务中升级 SQLite Schema 14。未选择委托工具的发布保留原 kernel；新建默认数据库
+事务中升级 SQLite Schema 14。显式 Runner 绑定使用 `local-bindings-18`／`runner_binding_protocol=1`，角色描述符为
+Schema 3；省略角色保持原 v1／v2 字节。未选择委托工具的历史发布保留原 kernel；新建默认数据库
 仍为 Schema 1。自定义 ExecutionStore 必须显式提供原事务内的升级与预算预留查询
 契约；仅提供普通持久化端口不足以启用此路径。公共 `DelegatedExecutionStore` 的
 `delegated_pending(scope)` 返回至多 10000 个唯一 Run ID 的 tuple，覆盖尚未停止／fence
@@ -75,11 +79,15 @@ reservation 身份／类型／状态；缺失、惰性返回或组件替换都�
 
 ## 所有权和未交付能力
 
-先等待或驱动原 Run 完成停止处理，再 `await runner.aclose()`、关闭启动日志和 Engine。
+SDK 借用资源应先等待或驱动原 Run 完成停止处理，再 `await runner.aclose()`、关闭启动日志和 Engine。
+声明工厂的 owned Runtime 必须 `await runtime.aclose()`；它在第一次清理等待前隔离原
+Engine，停止并采纳原资源证据，再逆序清理 Runner／日志并关闭 Engine。清理取消或失败
+后只能重试关闭；共享及直接 Engine 客户端不能重新提交、执行或提前释放 Coordinator。
 共享 Runner 每次只拥有一个委托操作；关闭失败应保留原资源并重试，不能强行释放租约。
 Engine 不关闭借用 Runner。受影响检查、安装兼容、故障窗口和真实环境证据在
 [dev103 记录](../architecture/reviews/2026-10-14-local-coding-delegation.md)分别登记。
 
-尚缺 per-Agent runner 绑定、JSON／TOML 工厂、图／Team／动态／Temporal 集成、共享
+dev104 的绑定／工厂和关闭证据见[本批登记](../architecture/reviews/2026-10-14-coding-bindings-and-profiles.md)。
+尚缺图／Team／动态／嵌套／Temporal 集成、共享
 History 准入与控制记录、专用认证、真实业务质量、跨宿主恢复、完整工具隔离和硬费用上限。
 这些仍按[委托契约](../architecture/specs/delegated-coding-action-contract.md)验收。

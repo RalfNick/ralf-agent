@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.0.dev104 — Runner bindings and owned Coding profiles
+
+- Add opt-in Runner descriptor schema 3 and `local-bindings-18` for root Local Agent/sequence. Borrow the exact already-granted Runner through inherit/ref/disabled; omitted roles preserve legacy bytes.
+- Add asynchronous multi-Runner JSON/TOML declarations and pure registered-tool references; validate declarations before acquiring journals and close owned resources in reverse order with retries.
+- Check concrete physical dependencies before model I/O and quarantine the original Engine before cleanup awaits. Stop or close failures retain the Coordinator and original resource ledger. Temporal and complex parent Coding remain explicitly unsupported; native authentication/model quality remain open. [Scope and evidence](architecture/reviews/2026-10-14-coding-bindings-and-profiles.md).
+
 ## 0.1.0.dev103 — Local original-Action Coding delegation
 
 - Add an explicit borrowed SDK Coding tool, a bounded Codex Runner and original Local Action admission, budget, approval, startup receipts, cancellation and cold recovery. Root unbound Agent and sequence are the supported subset; graph, Team, dynamic, per-Agent binding and Temporal delegation remain open.
