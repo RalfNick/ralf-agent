@@ -300,9 +300,9 @@ sequence = BoundDefinition(
 使用 Coding 工具的 bound Agent 必须有显式 runner 字段。显式 runner descriptor 使用
 schema 3；省略 runner 的旧 descriptor 字节和原 Runtime Profile schema 1／2 保持。
 
-本入口支持根级 Local Agent 和顺序 Workflow，包括上述 runner-bound 声明。
-带显式 Runner 声明或 Coding 工具的 graph、Team、dynamic 以及嵌套成员会在模型调用前
-拒绝；Temporal 显式 Runner descriptor（包括 inherit、ref、disabled）也会拒绝，
+本入口支持 Local Agent 和顺序 Workflow，包括上述 runner-bound 声明；dev105 支持
+图／Team／Dynamic 和嵌套，具体配置与恢复见[组合指南](coding-composition.md)。
+Temporal 显式 Runner descriptor（包括 inherit、ref、disabled）仍会拒绝，
 不提供此工厂对应的 Temporal History 集成。
 
 ## 所有权与可重试关闭
@@ -339,4 +339,4 @@ except RuntimeBuildError as failure:
 ```
 
 关闭重试只处理原资源。启动回执丢失、unknown 和冷恢复不会追加新的 Thread／Turn；
-专用原生认证、真实业务质量和复杂父级／Temporal 能力仍未由这些装配示例验收。
+专用原生认证、真实业务质量和 Temporal 能力仍未由这些装配示例验收。

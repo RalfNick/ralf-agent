@@ -1,4 +1,6 @@
-# 每Agent能力绑定契约 — 目标v1.8
+# 每Agent能力绑定契约 — 目标v1.9
+
+dev105 将 Local Runner 选择扩展到 Graph Agent节点、Team／Dynamic 及嵌套成员；直接 Tool 节点使用原宿主工具授权，不伪造 Agent角色。Descriptor 3 原字节保持；复杂组合发布显式 local-bindings-19／delegated_composition_protocol=1，原根级 local-bindings-18 保持。并行节点的 Run／Action／额度／物理停止归属原父 Run，独立 Child Run 保留原 parent_call 与 escrow；被工具集排除的 Runner 不参与调度。原 Temporal 显式 Runner 声明继续拒绝。见[复杂组合指南](../../docs/coding-composition.md)和[本批登记](../reviews/2026-10-14-coding-local-composition.md)。
 
 dev104 增加可选 `runner` 角色：只有显式声明才使用 Descriptor 3；省略角色保持 v1／v2 的规范字节。支持根级 Local Agent／顺序 Workflow；图／Team／动态／嵌套及 Temporal 显式拒绝。`inherit` 选有效工具集唯一实际 Runner，`ref` 引用 Catalog 中精确对象，`disabled` 不允许有效 Coding 工具；不接受 selector。注册与解析仅借用资源，不授予工具或原生启动权。联合发布使用 `local-bindings-18`／`runner_binding_protocol=1`，只有选择 Coding 工具时同时携带原委托协议。装配、资源关闭与恢复见[配置指南](../../docs/coding-profiles.md)及[验收登记](../reviews/2026-10-14-coding-bindings-and-profiles.md)。
 

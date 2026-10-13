@@ -1,6 +1,21 @@
 """Read fixed binding manifests without resolving clients or current configuration."""
 
-from .errors import ValidationError
+import copy
+
+from .errors import DefinitionMismatch, ValidationError
+
+
+def merge_coding_manifests(manifest, selected_manifests):
+    """Union only actual selected release grants, retaining exact tool identities."""
+    coding = copy.deepcopy(manifest.get("delegated_coding_tools", {}))
+    for selected in selected_manifests:
+        for name, record in selected.get("delegated_coding_tools", {}).items():
+            if name in coding and coding[name] != record:
+                raise DefinitionMismatch("A selected Coding tool changed between releases")
+            coding[name] = copy.deepcopy(record)
+    if coding:
+        manifest.update(delegated_execution_protocol=1, delegated_coding_tools=coding)
+    return manifest
 
 
 def all_step_manifests(manifest):
@@ -10,13 +25,19 @@ def all_step_manifests(manifest):
         entries = manifest["agent_bindings"]["steps"]
         if not isinstance(entries, dict) or (
             not entries
-            and manifest.get("kernel")
-            not in {
-                "local-bindings-2",
-                "local-bindings-3",
-                "local-bindings-16",
-                "local-bindings-17",
-            }
+            and not (
+                manifest.get("kernel")
+                in {
+                    "local-bindings-2",
+                    "local-bindings-3",
+                    "local-bindings-16",
+                    "local-bindings-17",
+                }
+                or (
+                    manifest.get("kernel") == "local-bindings-19"
+                    and manifest.get("delegated_composition_protocol") == 1
+                )
+            )
         ):
             raise ValidationError("Binding manifest requires recorded steps")
         return ([manifest] if "providers" in manifest else []) + [

@@ -62,50 +62,10 @@ def manifest_tools(engine, names):
 
 
 def validate_definition(engine, definition, parent_call=None):
-    def contains(value):
-        # Follow only serialized definition nodes. Schemas, Literal inputs,
-        # argument defaults and component config are caller data, not selections.
-        kind = value.get("kind", "agent")
-        if kind in {"bound_agent", "bound_definition"}:
-            from .binding_runtime import unwrap_definition
-
-            return contains(unwrap_definition(value))
-        if kind in {"agent", "sequence"}:
-            steps = value.get("steps", [value])
-            if "binding_definition" in value:
-                from .binding_runtime import descriptor_for
-
-                steps = [
-                    {
-                        **step,
-                        "tools": engine._bindings.resolve(step, descriptor_for(value, i))[0].tools,
-                    }
-                    for i, step in enumerate(steps)
-                ]
-            return any(bool(manifest_tools(engine, step.get("tools", ()))) for step in steps)
-        if kind == "graph":
-            return any(
-                (node.get("tool") is not None and bool(manifest_tools(engine, (node["tool"],))))
-                or (node.get("agent") is not None and contains(node["agent"]))
-                for node in value["nodes"]
-            )
-        if kind in {"team", "dynamic"}:
-            return any(contains(member) for member in value["members"].values())
-        return False
-
-    wrapper = definition.get("binding_definition", {})
-    descriptors = (
-        [wrapper["bindings"]]
-        if wrapper.get("kind") == "bound_agent"
-        else wrapper.get("agent_bindings", {}).values()
-    )
-    explicit = any("runner" in descriptor for descriptor in descriptors)
-    if (explicit or contains(definition)) and (
-        definition.get("kind") not in {"agent", "sequence"} or parent_call is not None
-    ):
-        raise ValidationError(
-            "Delegated coding supports root unbound or explicitly runner-bound Local Agents and sequences only"
-        )
+    # Effective tool grants and exact resources are checked by recorded
+    # manifests. Every existing Local definition composes the same authority.
+    if definition.get("kind") not in {"agent", "sequence", "graph", "team", "dynamic"}:
+        raise ValidationError("Unsupported Local Coding composition")
 
 
 _STORE_METHODS = (
@@ -138,6 +98,9 @@ def store_registration(store):
 
 
 def check_store(engine):
+    from .node_coding_projection import original_engine
+
+    engine = original_engine(engine)
     from .binding_artifacts import _same_binding
 
     current = store_registration(engine.store)
@@ -158,6 +121,9 @@ def check_store(engine):
 
 
 def delegated_pending(engine):
+    from .node_coding_projection import original_engine
+
+    engine = original_engine(engine)
     import inspect
 
     check_store(engine)
@@ -179,14 +145,12 @@ def delegated_pending(engine):
 
 def activate(engine, manifest, definition, parent_call=None):
     from .binding_manifests import all_step_manifests
+    from .local_coding_composition import mark_composition
 
+    mark_composition(engine, manifest, definition, parent_call)
     declarations = any(item.get("delegated_coding_tools") for item in all_step_manifests(manifest))
     if not declarations:
         return
-    if definition.get("kind") not in {"agent", "sequence"} or parent_call is not None:
-        raise ValidationError(
-            "Delegated coding supports root unbound or explicitly runner-bound Local Agents and sequences only"
-        )
     check_store(engine)
     from .ports import _invoke_sync_none
 
@@ -222,6 +186,12 @@ def _envelope(state):
 
 
 def validate_journal(engine, run):
+    from .node_coding_projection import original_engine
+
+    original = original_engine(engine)
+    if original is not engine:
+        run = _original_run(original, run["id"])
+        engine = original
     from .binding_manifests import all_step_manifests, step_manifest
 
     if any(item.get("delegated_coding_tools") for item in all_step_manifests(run["manifest"])):
@@ -307,6 +277,15 @@ def check_action_runner(engine, run, action, handler):
         raise DefinitionMismatch("Original delegated Coding handler is unavailable")
     handler.check()
     if "binding_definition" in run["definition"]:
+        if (
+            run["definition"]["kind"] == "graph"
+            and run["plan"]["nodes"][action["node"]]["agent"] is None
+        ):
+            # Direct Tool nodes have a host grant, not an Agent binding role.
+            recorded = engine._step_manifest(run, action["node"])
+            if recorded.get("delegated_coding_tools", {}).get(action["tool"]) != handler.identity:
+                raise DefinitionMismatch("Original direct Coding Tool grant changed")
+            return
         components = engine._components(run, action["node"])
         if action["tool"] not in components.tools or components.runner is not handler.runner:
             raise DefinitionMismatch("Bound Coding Action replaced its original Runner resource")
@@ -316,7 +295,9 @@ class LocalCodingAuthority:
     """Single original approved and reserved Action; grants persist before RPC."""
 
     def __init__(self, engine, run_id, action_id):
-        self._engine, self._run_id, self._action_id = engine, run_id, action_id
+        from .node_coding_projection import original_engine
+
+        self._engine, self._run_id, self._action_id = original_engine(engine), run_id, action_id
 
     def _current(self):
         engine = self._engine
@@ -650,6 +631,9 @@ class LocalCodingAuthority:
 
 
 def _initial_state(engine, run, action, envelope, handler):
+    from .node_coding_projection import original_action
+
+    engine, run, action = original_action(engine, run, action)
     request = {
         "dispatch": _dispatch(envelope),
         "release_digest": run["release_digest"],
@@ -776,7 +760,7 @@ async def tool(engine, run_id, action_id):
     return False
 
 
-async def stop_work(engine, run_id):
+async def _stop_original_work(engine, run_id):
     from .delegated_coding import registered_coding_tool
 
     for action in pending_delegated_work(_original_run(engine, run_id)):
@@ -799,4 +783,29 @@ async def stop_work(engine, run_id):
 
 def _original_run(engine, run_id):
     """Private receipt/stop permit; public business operations remain closed."""
-    return engine._authorized(run_id, _cleanup_token=engine._coding_cleanup_token)
+    from .node_coding_projection import original_engine
+
+    return engine._authorized(run_id, _cleanup_token=original_engine(engine)._coding_cleanup_token)
+
+
+def stops_settled(engine, run):
+    if not delegated_stop_settled(run):
+        return False
+    if run["manifest"].get("delegated_composition_protocol") != 1:
+        return True
+    from .local_coding_children import stops_settled as child_stops_settled
+
+    return child_stops_settled(engine, run)
+
+
+async def stop_work(engine, run_id):
+    settled = await _stop_original_work(engine, run_id)
+    run = _original_run(engine, run_id)
+    if (
+        run.get("orchestration") is not None
+        and run["manifest"].get("delegated_composition_protocol") == 1
+    ):
+        from .local_coding_children import stop_children
+
+        settled = await stop_children(engine, run_id) and settled
+    return settled

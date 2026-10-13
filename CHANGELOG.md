@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.0.dev105 — Original Local Coding composition
+
+- Extend selected Coding tools and Runner bindings to Local graph Agent/direct Tool nodes, bounded parallel nodes, Team/Dynamic and nested original child Runs. New composition protocol1 gates readers; existing true-root and non-Coding releases keep their bytes.
+- Keep native requests on the original Run/Action, release and node index. Schedule actual granted Runner resources, preserve shared ownership and permit distinct resource concurrency.
+- Wait for original descendant fencing and actual workers before parent cancellation/failure; retain unknown effects and held escrow. Fix excluded-tool blocking, legal deepest-leaf closure and private quiescence receipts during owned cleanup. Temporal Coding, native credentials and task quality remain open. [Scope and evidence](architecture/reviews/2026-10-14-coding-local-composition.md).
+
 ## 0.1.0.dev104 — Runner bindings and owned Coding profiles
 
 - Add opt-in Runner descriptor schema 3 and `local-bindings-18` for root Local Agent/sequence. Borrow the exact already-granted Runner through inherit/ref/disabled; omitted roles preserve legacy bytes.

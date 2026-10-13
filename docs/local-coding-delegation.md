@@ -1,9 +1,9 @@
 # Local 原 Action 的 Coding 委托
 
-dev104 在 dev103 原 Action 委托基础上增加每 Agent Runner 绑定、多资源声明工厂和
-owned 关闭重试。支持根级 Local Agent 和顺序 Workflow，包括显式绑定包装；
-图、Team、动态编排、嵌套成员和 Temporal 继续在模型调用前拒绝。
-完整 R13 和 Coding G1–G8 继续开放。
+dev105 支持 Local 原生 Agent、顺序、图 Agent／直接 Tool 节点、串行／有界并行图、
+Team／Dynamic 和嵌套成员，沿用显式绑定／多资源工厂及 owned 关闭重试。
+Temporal Coding 继续在业务 I/O 前拒绝，完整 R13 和 Coding G1–G8 继续开放。
+复杂发布和恢复见[组合指南](coding-composition.md)。
 
 当前 Runner 不读取、挂载或注入宿主认证；其身份明确记录 `credentials=unavailable`。
 真实原生业务 Turn 和模型质量尚未验收。真实 Docker 的控制查询／限制／停止证据与
@@ -88,6 +88,7 @@ Engine 不关闭借用 Runner。受影响检查、安装兼容、故障窗口和
 [dev103 记录](../architecture/reviews/2026-10-14-local-coding-delegation.md)分别登记。
 
 dev104 的绑定／工厂和关闭证据见[本批登记](../architecture/reviews/2026-10-14-coding-bindings-and-profiles.md)。
-尚缺图／Team／动态／嵌套／Temporal 集成、共享
+dev105 的 Local 复杂组合证据见[本批登记](../architecture/reviews/2026-10-14-coding-local-composition.md)。
+尚缺 Temporal 集成、共享
 History 准入与控制记录、专用认证、真实业务质量、跨宿主恢复、完整工具隔离和硬费用上限。
 这些仍按[委托契约](../architecture/specs/delegated-coding-action-contract.md)验收。

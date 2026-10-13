@@ -157,6 +157,9 @@ class OrchestrationRuntime:
             or any(release.get("user_input_protocol") == 1 for release in releases.values())
         ):
             result.update(kernel="local-9", user_input_protocol=1)
+        from .local_coding_composition import mark_composition
+
+        mark_composition(engine, result, definition)
         return result
 
     def _member_manifest(self, value):
@@ -208,6 +211,9 @@ class OrchestrationRuntime:
         from .local_session_model_history import activate_native_history
 
         activate_native_history(engine, manifest)
+        from .local_delegated_coding import activate
+
+        activate(engine, manifest, definition, parent_call)
         from .session_resources import admit_sessions
 
         session_claim_data = admit_sessions(engine, manifest, [session])
@@ -414,6 +420,11 @@ class OrchestrationRuntime:
             return run
 
     def cancel_children(self, run):
+        from .local_coding_children import stops_settled
+
+        # Validate all original links before applying any cancellation command.
+        if run["manifest"].get("delegated_composition_protocol") == 1:
+            stops_settled(self.engine, run)
         for call in run["orchestration"]["children"]:
             self.engine.cancel(call["run_id"], command_id=f"parent-cancel:{run['id']}:{call['id']}")
 
@@ -458,6 +469,11 @@ class OrchestrationRuntime:
             raise
         finally:
             await asyncio.shield(asyncio.gather(*tasks, return_exceptions=True))
+            latest = engine._authorized(run_id)
+            if latest["state"] in TERMINAL | {"cancelling"}:
+                from .local_delegated_coding import stop_work
+
+                await asyncio.shield(stop_work(engine, run_id))
             self.observe(run_id)
 
     async def _queue(self, run_id):
@@ -729,9 +745,16 @@ class OrchestrationRuntime:
                 run = engine._authorized(run_id)
                 if run["state"] in TERMINAL or run["state"] == "cancelling":
                     self.cancel_children(run)
+                    from .local_delegated_coding import stop_work
+
+                    if not await stop_work(engine, run_id):
+                        break
                     if run["state"] == "cancelling":
                         with engine.store.transaction():
-                            run["state"] = "cancelled"
+                            run = engine._authorized(run_id)
+                            run["state"] = run.get("delegated_failure", {}).get(
+                                "terminal", "cancelled"
+                            )
                             engine._commit(run, "run_cancelled")
                     self.observe(run_id)
                     break
@@ -752,8 +775,15 @@ class OrchestrationRuntime:
         except RalfError:
             run = engine._authorized(run_id)
             if run["state"] == "cancelling":
+                self.cancel_children(run)
+                from .local_delegated_coding import stop_work
+
+                if not await stop_work(engine, run_id):
+                    self.observe(run_id)
+                    return engine.status(run_id)
                 with engine.store.transaction():
-                    run["state"] = "cancelled"
+                    run = engine._authorized(run_id)
+                    run["state"] = run.get("delegated_failure", {}).get("terminal", "cancelled")
                     engine._commit(run, "run_cancelled")
                 self.terminal(run_id)
                 return engine.status(run_id)

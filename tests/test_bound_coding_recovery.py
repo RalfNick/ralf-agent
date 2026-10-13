@@ -230,7 +230,7 @@ def test_unselected_coding_grant_does_not_activate_delegated_protocol(tmp_path):
 
 
 @pytest.mark.parametrize("parent_kind", ["team", "dynamic"])
-def test_nested_explicit_runner_disabled_refuses_before_parent_acceptance(tmp_path, parent_kind):
+def test_nested_explicit_runner_disabled_keeps_no_business_grant(tmp_path, parent_kind):
     from ralf_agent import DynamicWorkflowSpec, TeamSpec
 
     engine, provider, _ = setup_bound(tmp_path, {"coding": LifecycleRunner()}, [])
@@ -245,10 +245,14 @@ def test_nested_explicit_runner_disabled_refuses_before_parent_acceptance(tmp_pa
             )
         },
     )
-    with pytest.raises(ValidationError, match="root unbound"):
-        engine.submit(parent, "x", command_id="s")
+    handle = engine.submit(parent, "x", command_id="s")
     assert provider.calls == 0
-    assert engine.store.conn.execute("SELECT COUNT(*) FROM runs").fetchone()[0] == 0
+    saved = engine.store.run(handle.run_id)
+    assert saved["manifest"]["kernel"] == "local-bindings-19"
+    assert saved["manifest"]["delegated_composition_protocol"] == 1
+    assert "delegated_execution_protocol" not in saved["manifest"]
+    assert saved["actions"] == []
+    assert engine.store.conn.execute("SELECT COUNT(*) FROM runs").fetchone()[0] == 1
     engine.close()
 
 

@@ -30,6 +30,61 @@ class ParallelWorkflowRuntime:
     def __init__(self, engine):
         self.engine = engine
 
+    def _node_runners(self, run, node_id):
+        from .delegated_coding import registered_coding_tool
+
+        index, node = next((i, n) for i, n in enumerate(run["plan"]["nodes"]) if n["id"] == node_id)
+        recorded = self.engine._step_manifest(run, index)["tools"]
+        names = [node["tool"]] if node.get("tool") else (node.get("agent") or {}).get("tools", [])
+        return [
+            handler.runner
+            for name in names
+            if name in recorded
+            if (handler := registered_coding_tool(self.engine.tools.get(name))) is not None
+        ]
+
+    def _admit(self, run, candidates, active):
+        """An original resource has one owner until its worker and native work end."""
+        from .delegated_coding import registered_coding_tool
+        from .local_delegated_coding import pending_delegated_work
+
+        if run["manifest"].get("delegated_composition_protocol") != 1:
+            return list(candidates)
+        occupied = {id(runner) for node_id in active for runner in self._node_runners(run, node_id)}
+        pending = {}
+        for action in pending_delegated_work(run):
+            handler = registered_coding_tool(self.engine.tools.get(action["tool"]))
+            pending.setdefault(id(handler.runner), set()).add(
+                run["plan"]["nodes"][action["node"]]["id"]
+            )
+        accepted = []
+        for node_id in candidates:
+            runners = self._node_runners(run, node_id)
+            if any(
+                id(runner) in occupied
+                or pending.get(id(runner), set()) - {node_id}
+                or (runner.active_operations and node_id not in pending.get(id(runner), set()))
+                for runner in runners
+            ):
+                continue
+            accepted.append(node_id)
+            occupied.update(id(runner) for runner in runners)
+        return accepted
+
+    async def _settle_closed(self, run_id):
+        from .local_delegated_coding import stop_work
+
+        engine = self.engine
+        if not await stop_work(engine, run_id):
+            return False
+        with engine.store.transaction():
+            run = engine._authorized(run_id)
+            if run["state"] == "cancelling":
+                terminal = run.get("delegated_failure", {}).get("terminal", "cancelled")
+                run["state"] = terminal
+                engine._commit(run, "run_" + terminal)
+        return True
+
     def _select(self, run, limit):
         engine, scheduler = self.engine, self.engine.workflow_scheduler
         states = {
@@ -103,10 +158,7 @@ class ParallelWorkflowRuntime:
                         await asyncio.wait(active.values(), return_when=asyncio.FIRST_COMPLETED)
                         continue
                     if run["state"] == "cancelling":
-                        with engine.store.transaction():
-                            run = engine._authorized(run_id)
-                            run["state"] = "cancelled"
-                            engine._commit(run, "run_cancelled")
+                        await self._settle_closed(run_id)
                     break
                 engine._check_release(run)
                 slots = limit - len(active)
@@ -118,13 +170,24 @@ class ParallelWorkflowRuntime:
                     and s["state"] not in {"completed", "skipped", "failed", "cancelled"}
                     and key not in attempted
                 ]
-                for node_id in resumable[:slots]:
+                held = False
+                admitted = self._admit(run, resumable, active)[:slots]
+                held = len(admitted) < min(slots, len(resumable))
+                for node_id in admitted:
                     attempted.add(node_id)
                     active[node_id] = self._launch(run_id, node_id)
                 slots = limit - len(active)
                 if slots:
                     run = engine._authorized(run_id)
                     batch = self._select(run, slots)
+                    admitted = self._admit(run, [s.node_id for s in batch.selections], active)
+                    held = held or len(admitted) < len(batch.selections)
+                    batch = WorkflowBatch(
+                        tuple(s for s in batch.selections if s.node_id in admitted),
+                        batch.skipped,
+                        batch.done,
+                        batch.result,
+                    )
                     if batch.done:
                         from .remote_composite_saves import save_result
 
@@ -177,6 +240,10 @@ class ParallelWorkflowRuntime:
                 if active:
                     await asyncio.wait(active.values(), return_when=asyncio.FIRST_COMPLETED)
                     continue
+                if held:
+                    # A physical owner elsewhere may still be finishing. No new
+                    # frame or attempt, and the original Run remains retryable.
+                    break
                 with engine.store.transaction():
                     run = engine._authorized(run_id)
                     states = {s["state"] for s in run["workflow"]["nodes"].values()}
@@ -190,8 +257,32 @@ class ParallelWorkflowRuntime:
                     engine._commit(run, "workflow_paused")
                 break
         except RalfError as exc:
-            engine._fail(run_id, exc.code)
+            from .binding_manifests import all_step_manifests
+
+            run = engine._authorized(run_id)
+            coding = any(
+                m.get("delegated_coding_tools") for m in all_step_manifests(run["manifest"])
+            )
+            if coding and any(not task.done() for task in active.values()):
+                from .local_delegated_coding import request_cancel
+                from .local_user_input import retire
+
+                with engine.store.transaction():
+                    run = engine._authorized(run_id)
+                    run["delegated_failure"] = {
+                        "code": exc.code,
+                        "terminal": "cancelled" if run["state"] == "cancelling" else "failed",
+                    }
+                    request_cancel(run, {"command": "failure", "code": exc.code})
+                    retire(run)
+                    run["state"], run["error"] = "cancelling", {"code": exc.code}
+                    close_nodes(run)
+                    engine._commit(run, "run_cancelling")
+            else:
+                engine._fail(run_id, exc.code)
             await self._drain(active)
+            if engine._authorized(run_id)["state"] == "cancelling":
+                await self._settle_closed(run_id)
         except BaseException:
             # Keep separately tracked workers alive even if this supervisor is
             # itself cancelled. Global event-loop cancellation still leaves real

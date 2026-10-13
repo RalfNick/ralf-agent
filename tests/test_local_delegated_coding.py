@@ -428,23 +428,23 @@ def test_corrupt_native_request_cannot_release_original_journal(tmp_path):
     asyncio.run(exercise())
 
 
-def test_graph_direct_coding_tool_rejected_before_acceptance(tmp_path):
+def test_graph_direct_coding_tool_accepted_before_business_io(tmp_path):
     from ralf_agent import GraphNode, GraphWorkflowSpec
 
     runner = LifecycleRunner()
     runtime, provider = coding_engine(tmp_path, runner)
-    with pytest.raises(ValidationError, match="root unbound"):
-        runtime.submit(
-            GraphWorkflowSpec("graph", (GraphNode("coding", tool="coding"),)), "x", command_id="s"
-        )
+    handle = runtime.submit(
+        GraphWorkflowSpec("graph", (GraphNode("coding", tool="coding"),)), "x", command_id="s"
+    )
+    assert runtime.store.run(handle.run_id)["manifest"]["delegated_composition_protocol"] == 1
     assert provider.calls == 0
     assert runner.calls == []
-    assert runtime.store.conn.execute("SELECT COUNT(*) FROM runs").fetchone()[0] == 0
+    assert runtime.store.conn.execute("SELECT COUNT(*) FROM runs").fetchone()[0] == 1
     assert (
         runtime.store.conn.execute(
             "SELECT value FROM metadata WHERE key='schema_version'"
         ).fetchone()[0]
-        == "1"
+        == "14"
     )
     runtime.close()
 
@@ -765,19 +765,19 @@ def test_graph_argument_and_schema_tool_values_do_not_select_coding(tmp_path):
     runtime.close()
 
 
-def test_nested_graph_actual_coding_selection_remains_unsupported(tmp_path):
+def test_nested_graph_actual_coding_selection_has_original_parent_gate(tmp_path):
     from ralf_agent import GraphNode, GraphWorkflowSpec, TeamSpec
 
     runtime, provider = coding_engine(tmp_path, LifecycleRunner())
     graph = GraphWorkflowSpec("graph", (GraphNode("coding", tool="coding"),))
-    with pytest.raises(ValidationError, match="root unbound"):
-        runtime.submit(TeamSpec("team", {"member": graph}), "x", command_id="s")
+    handle = runtime.submit(TeamSpec("team", {"member": graph}), "x", command_id="s")
+    assert runtime.store.run(handle.run_id)["manifest"]["delegated_composition_protocol"] == 1
     assert provider.calls == 0
     runtime.close()
 
 
 @pytest.mark.parametrize("kind", ["team", "dynamic", "bound_agent"])
-def test_actual_composite_coding_selections_remain_unsupported(tmp_path, kind):
+def test_actual_composite_coding_selection_preserves_explicit_binding_requirement(tmp_path, kind):
     from ralf_agent import AgentDefinition, DynamicWorkflowSpec, TeamSpec
 
     runtime, provider = coding_engine(tmp_path, LifecycleRunner())
@@ -787,8 +787,11 @@ def test_actual_composite_coding_selections_remain_unsupported(tmp_path, kind):
         if kind == "bound_agent"
         else (TeamSpec if kind == "team" else DynamicWorkflowSpec)("parent", {"member": agent})
     )
-    expected = "explicit Runner binding" if kind == "bound_agent" else "root unbound"
-    with pytest.raises(ValidationError, match=expected):
-        runtime.submit(definition, "x", command_id="s")
+    if kind == "bound_agent":
+        with pytest.raises(ValidationError, match="explicit Runner binding"):
+            runtime.submit(definition, "x", command_id="s")
+    else:
+        handle = runtime.submit(definition, "x", command_id="s")
+        assert runtime.store.run(handle.run_id)["manifest"]["delegated_composition_protocol"] == 1
     assert provider.calls == 0
     runtime.close()

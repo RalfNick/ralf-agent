@@ -427,12 +427,12 @@ class LocalEngine:
             or (not supervisor and self._operation_active(run_id))
         ):
             return
-        from .local_delegated_coding import delegated_stop_settled
+        from .local_delegated_coding import _original_run, delegated_stop_settled
 
-        if not delegated_stop_settled(self._authorized(run_id)):
+        if not delegated_stop_settled(_original_run(self, run_id)):
             return
         with self.store.transaction():
-            run = self._authorized(run_id)
+            run = _original_run(self, run_id)
             if (
                 run.get("plan", {}).get("schema_version") == 3
                 and run["workflow"].get("quiescent") is False
@@ -1065,12 +1065,12 @@ class LocalEngine:
 
         def apply():
             run = self._authorized(run_id)
-            from .local_delegated_coding import delegated_stop_settled, request_cancel
+            from .local_delegated_coding import request_cancel, stops_settled
 
             active = (
                 run_id in self._active
                 or self._operation_active(run_id)
-                or not delegated_stop_settled(run)
+                or not stops_settled(self, run)
             )
             request_cancel(
                 run,
@@ -1223,17 +1223,23 @@ class LocalEngine:
         )
         if run.get("parent_call") is not None:
             binding = run["parent_call"]
-            parent = self._authorized(binding["parent_id"])
+            parent = self._authorized(
+                binding["parent_id"], _cleanup_token=self._coding_cleanup_token
+            )
             self._check_release(parent)
             if not any(
                 call["id"] == binding["call_id"]
                 and call["run_id"] == run["id"]
+                and call["reservation"] == binding["reservation"]
                 and ("limits_member" not in binding or call["member"] == binding["limits_member"])
                 for call in parent["orchestration"]["children"]
             ):
                 raise DefinitionMismatch("The child's pinned parent release or ownership changed")
             self._check_parent_limits(parent, binding, manifest)
             manifest["parent_call"] = copy.deepcopy(binding)
+        from .local_coding_composition import mark_composition
+
+        mark_composition(self, manifest, run["definition"], run.get("parent_call"))
         if digest(manifest) != digest(run["manifest"]):
             raise DefinitionMismatch(
                 "Pinned tool, provider or memory backend differs from this Run"
@@ -1271,9 +1277,9 @@ class LocalEngine:
         validate_inherited_limits(manifest, source)
 
     def _commit(self, run, kind, data=None):
-        from .local_delegated_coding import delegated_stop_settled
+        from .local_delegated_coding import stops_settled
 
-        if run["state"] in TERMINAL and not delegated_stop_settled(run):
+        if run["state"] in TERMINAL and not stops_settled(self, run):
             raise ValidationError("Terminal Run requires stopped and fenced delegated work")
         if kind == "run_succeeded":
             from .local_session_model_history import publish_native_history
@@ -1299,9 +1305,9 @@ class LocalEngine:
         with self.store.transaction():
             run = self._authorized(run_id)
             if run["state"] not in TERMINAL:
-                from .local_delegated_coding import delegated_stop_settled, request_cancel
+                from .local_delegated_coding import request_cancel, stops_settled
 
-                if not delegated_stop_settled(run):
+                if not stops_settled(self, run):
                     run["delegated_failure"] = {
                         "code": code,
                         "terminal": "cancelled" if run["state"] == "cancelling" else "failed",
@@ -1365,9 +1371,9 @@ class LocalEngine:
         if self._operation_active(run_id):
             raise CoordinatorBusy("The previous Action is still running; wait for its result")
         run = self._authorized(run_id)
-        from .local_delegated_coding import delegated_stop_settled
+        from .local_delegated_coding import stops_settled
 
-        if run["state"] in TERMINAL and not delegated_stop_settled(run):
+        if run["state"] in TERMINAL and not stops_settled(self, run):
             raise DefinitionMismatch("Terminal Run retains unsettled delegated work")
         if run["state"] in TERMINAL:
             if "native_model_history" in run or run.get("workflow") or run.get("orchestration"):

@@ -81,8 +81,9 @@ def create_frame(engine, parent, node_id, input):
 
 
 class NodeExecutionStore:
-    def __init__(self, authority, run_id, node_id):
+    def __init__(self, authority, run_id, node_id, *, engine=None):
         self.authority, self.run_id, self.node_id = authority, run_id, node_id
+        self._parent_engine = engine
 
     def __getattr__(self, name):
         return getattr(self.authority, name)
@@ -154,11 +155,37 @@ class NodeExecutionStore:
             elif previous != "completed":
                 state["state"] = "running" if frame["state"] == "queued" else frame["state"]
             if frame["state"] == "failed" and parent["state"] not in TERMINAL | {"cancelling"}:
+                from .local_delegated_coding import delegated_stop_settled, request_cancel
                 from .workflow_parallel import close_nodes
 
-                parent["state"], parent["error"] = "failed", copy.deepcopy(frame["error"])
+                parent["error"] = copy.deepcopy(frame["error"])
+                from .binding_manifests import all_step_manifests
+
+                coding = any(
+                    m.get("delegated_coding_tools") for m in all_step_manifests(parent["manifest"])
+                )
+                workers = self._parent_engine is not None and (
+                    any(
+                        not task.done()
+                        for task in self._parent_engine._parallel_tasks.get(self.run_id, ())
+                    )
+                    or self._parent_engine._threads.has_active_for(self.run_id)
+                )
+                if not delegated_stop_settled(parent) or (coding and workers):
+                    parent["delegated_failure"] = {
+                        "code": parent["error"]["code"],
+                        "terminal": "failed",
+                    }
+                    request_cancel(parent, {"command": "failure", "code": parent["error"]["code"]})
+                    parent["state"] = "cancelling"
+                else:
+                    parent["state"] = "failed"
                 close_nodes(parent, index)
-                self.authority.emit(self.run_id, "run_failed", {"code": parent["error"]["code"]})
+                self.authority.emit(
+                    self.run_id,
+                    "run_cancelling" if parent["state"] == "cancelling" else "run_failed",
+                    {"code": parent["error"]["code"]},
+                )
             self.authority.save_run(parent)
             frame["revision"] = parent["revision"]
 
@@ -181,7 +208,17 @@ class NodeEngine(LocalEngine):
     def __init__(self, parent, run_id, node_id):
         self.__dict__ = parent.__dict__.copy()
         self.parent, self.node_id = parent, node_id
-        self.store = NodeExecutionStore(parent.store, run_id, node_id)
+        self.store = NodeExecutionStore(parent.store, run_id, node_id, engine=parent)
+        from .task_controls import _binding
+
+        self._coding_projection = (
+            parent,
+            parent.store,
+            run_id,
+            node_id,
+            self.store,
+            {name: _binding(getattr(self.store, name)) for name in ("run", "save_run")},
+        )
         self._active, self._inflight, self._locks, self._drive_users = set(), {}, {}, {}
         self._parallel_tasks = {}
         self._quiescing_runs = set()
@@ -192,8 +229,26 @@ class NodeEngine(LocalEngine):
 
         self._bindings = AgentBindingResolver(self)
 
+    def _ensure_open(self):
+        from .node_coding_projection import original_engine
+
+        original_engine(self)._ensure_open()
+
+    def _authorized(self, run_id, *, _cleanup_token=None):
+        from .node_coding_projection import original_engine
+
+        parent = original_engine(self)
+        # This checks the live original permit, not the token copied at construction.
+        parent._authorized(run_id, _cleanup_token=_cleanup_token)
+        return self.store.run(run_id)
+
     def _check_release(self, run):
-        self.parent._check_release(self.parent._authorized(run["id"]))
+        from .node_coding_projection import original_engine
+
+        parent = original_engine(self)
+        parent._check_release(
+            parent._authorized(run["id"], _cleanup_token=parent._coding_cleanup_token)
+        )
         super()._check_release(run)
 
     def status(self, run_id):

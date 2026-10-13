@@ -465,18 +465,12 @@ class AgentBindingResolver:
         ):
             manifest.update(kernel="local-bindings-17", user_input_protocol=1)
         if any("runner" in entry["descriptor"] for entry in entries.values()):
-            if definition["kind"] not in {"agent", "sequence"}:
-                raise ValidationError("Runner bindings require a root Agent or sequence")
             manifest.update(kernel="local-bindings-18", runner_binding_protocol=1)
-            coding = {}
-            for entry in entries.values():
-                for name, record in entry["manifest"].get("delegated_coding_tools", {}).items():
-                    if name in coding and coding[name] != record:
-                        raise DefinitionMismatch("A bound Coding tool changed between steps")
-                    coding[name] = copy.deepcopy(record)
-            if coding:
-                manifest.update(delegated_execution_protocol=1, delegated_coding_tools=coding)
-        return manifest
+        from .binding_manifests import merge_coding_manifests
+        from .local_coding_composition import mark_composition
+
+        merge_coding_manifests(manifest, [entry["manifest"] for entry in entries.values()])
+        return mark_composition(self.engine, manifest, definition)
 
 
 def unwrap_definition(wrapper):

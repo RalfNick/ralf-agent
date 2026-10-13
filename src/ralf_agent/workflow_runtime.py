@@ -110,6 +110,8 @@ class StaticWorkflowRuntime:
         return plan
 
     def manifest(self, plan, *, agent_manifests=None):
+        from .binding_manifests import merge_coding_manifests
+
         engine = self.engine
         value = ExecutionPlan(plan).to_dict()
         transforms = {}
@@ -127,18 +129,23 @@ class StaticWorkflowRuntime:
             else []
         )
         if agent_manifests is not None:
+            agent_manifests = tuple(agent_manifests)
             for manifest in agent_manifests:
                 base["tools"].update(manifest["tools"])
+            merge_coding_manifests(base, agent_manifests)
         tool_names = sorted(
             {node["tool"] for node in value["nodes"] if node.get("tool") is not None}
         )
         base["tools"].update(engine.tools.manifests(tool_names))
+        from .local_delegated_coding import manifest_tools as coding_tools
+
+        merge_coding_manifests(base, [{"delegated_coding_tools": coding_tools(engine, tool_names)}])
         from .local_user_input import manifest_tools
 
         input_tools = manifest_tools(engine, list(base["tools"]))
         if input_tools:
             base.update(kernel="local-9", user_input_protocol=1, user_input_tools=input_tools)
-        return {
+        manifest = {
             **base,
             "workflow": {
                 "plan": ExecutionPlan(value).identity,
@@ -160,6 +167,9 @@ class StaticWorkflowRuntime:
                 ),
             },
         }
+        from .local_coding_composition import mark_composition
+
+        return mark_composition(engine, manifest, {"kind": "graph", "nodes": value["nodes"]})
 
     async def prepare(self, run_id):
         engine = self.engine

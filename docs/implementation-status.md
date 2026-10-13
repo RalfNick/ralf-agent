@@ -1,4 +1,6 @@
-# Implementation status — 0.1.0.dev104
+# Implementation status — 0.1.0.dev105
+
+Dev105 将有限 Coding 委托扩展到 Local 图 Agent／直接 Tool 节点、串行／有界并行图、Team／Dynamic 和嵌套成员。复杂发布使用 `local-11`／`local-bindings-19`、`delegated_composition_protocol=1`；根级 Agent／顺序的旧路径和默认未选择工具的字节保持。原子 Run／节点 Action 继续拥有审批、额度和阶段准入；父级取消等待原后代实际停止，unknown 效果与 escrow 不因此清空。并行节点视图核对原 Run／Action／索引／资源，已排除的工具不影响调度，拥有资源关闭仍保留原权威供停止与退出回执。Temporal Coding、专用认证、真实 Coding 任务质量及完整 R01–R26／第二阶段继续开放。见[复杂组合指南](coding-composition.md)和[本批记录](../architecture/reviews/2026-10-14-coding-local-composition.md)，dev99 冻结链路保持。
 
 Dev104 将可选 `runner` 绑定和异步 `tools/codex-coding` 声明接入原 Local 根级 Agent／顺序 Workflow，支持一个 Profile 中多个独立 Runner、精确 `registered-tool` 借用和 owned 关闭重试。显式绑定使用 Descriptor 3／`local-bindings-18`，省略角色保留原 Descriptor 1／2 与默认发布；工具授权交集和原 Run／Action／预算／审批权威保持。具体资源在模型 I/O 前复核物理身份，owned 清理开始前隔离原 Engine，停止或关闭失败保留 Coordinator 和资源账本。图／Team／动态／嵌套与 Temporal Coding 继续拒绝，原生认证和真实 Coding 质量未验收。见[配置指南](coding-profiles.md)和[本批记录](../architecture/reviews/2026-10-14-coding-bindings-and-profiles.md)；dev99 冻结链路不重复评测，完整 R01–R26／G1–G8／第二阶段继续开放。
 
