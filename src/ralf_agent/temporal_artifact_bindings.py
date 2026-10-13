@@ -99,7 +99,7 @@ def validate_protocol(manifest):
     if (
         manifest.get("kernel") != "temporal-3"
         or type(manifest.get("binding_protocol")) is not int
-        or manifest["binding_protocol"] not in (5, 6, 7, 8)
+        or manifest["binding_protocol"] not in (5, 6, 7, 8, 9)
         or type(manifest.get("artifacts_binding_protocol")) is not int
         or manifest["artifacts_binding_protocol"] != 1
         or type(value) is not dict
@@ -209,6 +209,12 @@ def validate_protocol(manifest):
 def effective(manifest, choices, origin):
     if choices.artifacts.mode == "inherit":
         return None
+    if choices.artifacts.mode == "disabled" and manifest.get("parent_completion_protocol") == 1:
+        identifier = origin_key(
+            choices.context.mode, choices.context.component_id, choices.context.version
+        )
+        if identifier not in manifest.get("artifact_contexts", {}).get("contexts", {}):
+            return None
     validate_protocol(manifest)
     selection = choices.context
     identifier = origin_key(selection.mode, selection.component_id, selection.version)

@@ -1,5 +1,7 @@
 # H3 语义知识、相关召回与 Plan／Team 组合
 
+Plan／Team 可显式选择[父任务完成政策](parent-completion.md)：纯业务回执规则先检查原证据，可追加独立受管理模型阶段。安装包内库存参考组合提供真实工具、合法停止和模型替换；原通用推荐版本1／2不自动注入库存业务真值。整批验收状态仍以能力清单和验收记录为准。
+
 dev89跨Session原生模型历史子集已验收。已有H3组合可显式接入同一个 `model_history` 策略的session模式，原业务/Planner/成员历史各自独立，知识/记忆召回始终使用当前任务。完整原生历史不会被默认摘要替代；产物投影需显式许可。使用与限制见[模型历史](model-history.md)和[本批验收](../architecture/reviews/2026-10-13-session-model-history.md)。该子集不关闭语义质量、长会话治理、完整H3/M1或外部采用门槛。
 
 Dev86 端到端任务评测子集已验收：源码5681 passed／447配置跳过（830.34s）、独立核心安装161；源码三次重复RAG24/24、Plan15/15、Team15/15及安装CLI／SDK例子、旧85默认／原Plan回执兼容与298模块一致通过。复用原执行权威，新增最终模型请求可见引用、实际成员／工具回执、独立Embedding计量和观察式恢复；2项Important／1项Minor经有效RED统一修复。离线／MockTransport不构成真实模型质量；完整H3／M1／R01–R26及外部采用保持开放。见[任务评测指南](task-evaluation.md)与[本批验收](../architecture/reviews/2026-10-13-task-evaluation-chains.md)。

@@ -100,6 +100,7 @@ class LocalEngine:
         team_strategies=None,
         planners=None,
         plan_verifiers=None,
+        parent_completion_policies=None,
         binding_catalog=None,
         verifier=None,
         limits=None,
@@ -187,6 +188,21 @@ class LocalEngine:
         )
         self._component_identity(self.workflow_scheduler, ("select",), True, "Workflow scheduler")
         from .orchestration import OrchestrationRuntime
+
+        if parent_completion_policies is not None and not isinstance(
+            parent_completion_policies, dict
+        ):
+            raise ValidationError("Parent completion policies require a named mapping")
+        self.parent_completion_policies = (
+            {} if parent_completion_policies is None else dict(parent_completion_policies)
+        )
+        if parent_completion_policies is not None:
+            from .parent_completion_protocol import validate_policy
+
+            for name, completion_policy in self.parent_completion_policies.items():
+                if not isinstance(name, str) or not name.strip():
+                    raise ValidationError("Parent completion policies require named registrations")
+                validate_policy(completion_policy)
 
         self._orchestration = OrchestrationRuntime(
             self, team_strategies=team_strategies, planners=planners, plan_verifiers=plan_verifiers
@@ -1001,6 +1017,10 @@ class LocalEngine:
         )
 
     def _check_release(self, run):
+        if "parent_completion_stages" in run:
+            from .local_parent_completion import validate_journal
+
+            validate_journal(self, run)
         from .context_preparation import validate_journal
 
         parallel = run.get("plan", {}).get("schema_version") == 3
@@ -1053,14 +1073,29 @@ class LocalEngine:
         if not has_agent_limits(parent["manifest"]) and not has_agent_limits(manifest):
             return
         member = binding.get("limits_member")
-        if member not in parent["definition"]["members"] and not (
-            member == "@planner"
-            and parent["manifest"]["orchestration"].get("planning_agent") is not None
+        if (
+            member not in parent["definition"]["members"]
+            and not (
+                member == "@planner"
+                and parent["manifest"]["orchestration"].get("planning_agent") is not None
+            )
+            and not (
+                member == "@verifier"
+                and parent["manifest"].get("parent_completion_protocol") == 1
+                and parent["manifest"]["orchestration"]["parent_completion"][
+                    "effective_agent_release"
+                ]
+                is not None
+            )
         ):
             raise DefinitionMismatch("Child limits require the original declared member")
         source = (
             parent["manifest"]["orchestration"].get("members", {}).get(member, parent["manifest"])
         )
+        if member == "@verifier":
+            source = parent["manifest"]["orchestration"]["parent_completion"][
+                "effective_agent_release"
+            ]["manifest"]
         validate_inherited_limits(manifest, source)
 
     def _commit(self, run, kind, data=None):

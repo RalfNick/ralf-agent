@@ -110,7 +110,7 @@ def validate_manifest(manifest):
     if manifest["kernel"] == "temporal-3":
         if (
             type(manifest.get("binding_protocol")) is not int
-            or manifest.get("binding_protocol") not in (1, 2, 3, 4, 5, 6, 7, 8)
+            or manifest.get("binding_protocol") not in (1, 2, 3, 4, 5, 6, 7, 8, 9)
             or manifest.get("dispatch_admission") != "history-1"
         ):
             raise DefinitionMismatch("Unsupported Temporal binding/memory protocol")
@@ -147,6 +147,12 @@ def validate_manifest(manifest):
     from .temporal_completion_state import validate_protocol as validate_completion_protocol
 
     validate_completion_protocol(manifest)
+    if "parent_completion_protocol" in manifest or manifest.get("binding_protocol") == 9:
+        from .temporal_parent_completion_state import (
+            validate_protocol as validate_parent_completion,
+        )
+
+        validate_parent_completion(manifest)
     from .temporal_decision_state import validate_protocol as validate_decision_protocol
 
     validate_decision_protocol(manifest)
@@ -256,6 +262,15 @@ def validate_request(request, manifest):
                 for field, registry in fields:
                     if current[field] not in registries[registry]:
                         raise DefinitionMismatch("Orchestration component unavailable")
+                if current.get("completion_policy") is not None:
+                    name = current["completion_policy"]
+                    if manifest.get("parent_completion_protocol") != 1 or name not in manifest.get(
+                        "parent_completion_policies", {}
+                    ):
+                        raise DefinitionMismatch("Parent completion policy unavailable")
+                    stage = manifest["parent_completion_policies"][name]["effective_agent_release"]
+                    if stage is not None:
+                        planner_agents.append(stage["step"])
                 if kind == "dynamic":
                     planner = registries["planners"][current["planner"]]
                     if planner.get("agent") is not None:

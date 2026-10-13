@@ -16,6 +16,7 @@ from temporalio.exceptions import TimeoutError as ActivityTimeoutError
 with workflow.unsafe.imports_passed_through():
     from . import (
         temporal_context_read_state,  # noqa: F401 -- preload original pure read gates
+        temporal_parent_completion_state,  # noqa: F401 -- preload pure parent release gates
         temporal_session_identity,  # noqa: F401 -- preload pure Session addressing
         temporal_tool_execution,  # noqa: F401 -- preload fixed Tool protocol
         temporal_tool_execution_state,  # noqa: F401 -- preload original Tool gates
@@ -270,7 +271,7 @@ class TemporalRunWorkflow:
                     self.state.accept_tool(action["id"], response)
             except ActivityError as exc:
                 complete_history_read = (
-                    self.state.manifest.get("binding_protocol") in (7, 8)
+                    self.state.manifest.get("binding_protocol") in (7, 8, 9)
                     and self.state.manifest.get("model_history_protocol") in (1, 2)
                     and owns_context_read(self.state.manifest, action)
                     and action.get("phase") in {"context", "plan"}

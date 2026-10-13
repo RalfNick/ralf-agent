@@ -1,5 +1,6 @@
 """Bounded plan proposals, managed model planning and pure verification."""
 
+import re
 from typing import Protocol
 
 from .dag_planning import DAGProposal, PlanningConclusion
@@ -11,7 +12,16 @@ PlanStep = ChildCall
 
 
 class PlanningRequest(_JsonValue):
-    def __init__(self, task, members, results, revision, capabilities=None, constraints=None):
+    def __init__(
+        self,
+        task,
+        members,
+        results,
+        revision,
+        capabilities=None,
+        constraints=None,
+        verification_feedback=None,
+    ):
         if (
             capabilities is not None
             and not isinstance(capabilities, dict)
@@ -19,6 +29,28 @@ class PlanningRequest(_JsonValue):
             and not isinstance(constraints, dict)
         ):
             raise ValidationError("Planning capabilities/constraints require JSON objects")
+        if verification_feedback is not None:
+            value = verification_feedback
+            if (
+                type(value) is not dict
+                or set(value) != {"revision", "feedback", "evidence_ids", "source_digest"}
+                or type(value["revision"]) is not int
+                or value["revision"] < 0
+                or type(revision) is not int
+                or value["revision"] != revision - 1
+                or not isinstance(value["feedback"], str)
+                or not value["feedback"].strip()
+                or len(value["feedback"]) > 4096
+                or type(value["evidence_ids"]) is not list
+                or len(value["evidence_ids"]) > 256
+                or any(not isinstance(item, str) or not item for item in value["evidence_ids"])
+                or len(set(value["evidence_ids"])) != len(value["evidence_ids"])
+                or not isinstance(value["source_digest"], str)
+                or re.fullmatch(r"[a-f0-9]{64}", value["source_digest"]) is None
+            ):
+                raise ValidationError(
+                    "Planner feedback requires a bounded original verification source"
+                )
         self._data_json = canonical(
             {
                 "task": task,
@@ -27,6 +59,11 @@ class PlanningRequest(_JsonValue):
                 "revision": revision,
                 **({"capabilities": capabilities} if capabilities is not None else {}),
                 **({"constraints": constraints} if constraints is not None else {}),
+                **(
+                    {"verification_feedback": verification_feedback}
+                    if verification_feedback is not None
+                    else {}
+                ),
             }
         )
 

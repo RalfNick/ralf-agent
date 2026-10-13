@@ -1,7 +1,7 @@
 """Pure finite parent authority; child evidence is adopted by Workflow History."""
 
 from .dag_planning import DAGNode, DAGProposal
-from .errors import IdempotencyConflict, ValidationError
+from .errors import DefinitionMismatch, IdempotencyConflict, ValidationError
 from .governance import TemporalExecutionPolicy
 from .orchestration_types import ChildCall, TeamSelection
 from .planning import PlanningRequest
@@ -91,6 +91,9 @@ class TemporalParentState(TemporalRunState):
         self.command_digests[command_id] = digest(payload)
         self.receipts[command_id] = self._receipt(command_id, "submit", {"state_revision": 0})
         self._emit("run_submitted", {"release_digest": self.release_digest}, bump=False)
+        from .temporal_parent_completion_state import initialize as initialize_completion
+
+        initialize_completion(self)
         from .temporal_parent_session import initialize
 
         initialize(self)
@@ -127,17 +130,48 @@ class TemporalParentState(TemporalRunState):
 
         accept_read(self, action_id, response)
 
-    def _complete_parent(self, result):
+    def _complete_parent(self, result, *, verified=False):
         from .temporal_parent_session import prepare_result
 
+        if self.parent_completion_enabled and not verified:
+            self.prepare_parent_completion(result)
+            return
         if not self._native_capacity():
             return
         if not prepare_result(self, result):
             self._complete_node(result)
+        elif self.parent_completion_enabled:
+            self.parent_completion_stages["r" + str(self.planning_revision)][
+                "publication_intent_digest"
+            ] = digest(self.session_stages["root"]["intent"])
 
     def _complete_node(self, result):
         from .temporal_parent_session import release_allowance
 
+        if self.parent_completion_enabled:
+            from .temporal_parent_completion_state import check_source
+
+            try:
+                stage = self.parent_completion_stages["r" + str(self.planning_revision)]
+                if stage["status"] != "adopted" or stage["adopted_verdict"]["status"] != "accept":
+                    raise DefinitionMismatch("Parent publication lacks original accepted verdict")
+                check_source(self, stage, result, publication=True)
+            except (
+                KeyError,
+                IndexError,
+                StopIteration,
+                TypeError,
+                ValueError,
+                ValidationError,
+                DefinitionMismatch,
+            ) as exc:
+                self.state, self.error = (
+                    "failed",
+                    {"code": getattr(exc, "code", "validation_error")},
+                )
+                release_allowance(self)
+                self._emit("run_failed", self.error)
+                return
         release_allowance(self)
         if not self._native_capacity():
             return
@@ -161,6 +195,21 @@ class TemporalParentState(TemporalRunState):
         from .temporal_session_save_state import request_recovery
 
         request_recovery(self)
+
+    def prepare_parent_completion(self, result):
+        from .temporal_parent_completion_state import prepare
+
+        prepare(self, result)
+
+    def next_parent_completion_operation(self):
+        from .temporal_parent_completion_state import next_operation
+
+        return next_operation(self)
+
+    def accept_parent_completion(self, action_id, response):
+        from .temporal_parent_completion_state import accept
+
+        accept(self, action_id, response)
 
     @property
     def budget(self):
@@ -229,6 +278,11 @@ class TemporalParentState(TemporalRunState):
             "manifest": detached(self.manifest),
             "release_digest": self.release_digest,
             "budget": self.budget,
+            **(
+                {"parent_completion_stages": detached(self.parent_completion_stages)}
+                if self.manifest.get("parent_completion_protocol") == 1
+                else {}
+            ),
             **(
                 {"native_history_bundle": bundle(self)}
                 if self.manifest.get("model_history_protocol") == 2
@@ -317,6 +371,7 @@ class TemporalParentState(TemporalRunState):
             validate_schema_references(node.output_schema)
         validate_schema_references(graph.to_dict()["output_schema"])
         self.plan_revision += 1
+        self.planning_conclusion = None
         self.dag = {
             "plan": StaticWorkflowCompiler().compile(graph).to_dict(),
             "nodes": {node.id: {"state": "pending"} for node in graph.nodes},
@@ -349,6 +404,10 @@ class TemporalParentState(TemporalRunState):
             for call in selection.calls:
                 if call["member"] not in self.definition["members"]:
                     raise ValidationError("Unknown team member")
+                if self.parent_completion_enabled and any(
+                    c["member"] == call["member"] for c in self.children
+                ):
+                    raise ValidationError("Checked Team business member cannot execute twice")
                 prior = next((c for c in self.children if c["call_id"] == call["id"]), None)
                 if prior is not None:
                     if prior["member"] != call["member"] or prior["input"] != call["input"]:
@@ -356,13 +415,20 @@ class TemporalParentState(TemporalRunState):
                     raise ValidationError("Completed child cannot be dispatched again")
             if len({c["id"] for c in selection.calls}) != len(selection.calls):
                 raise ValidationError("Duplicate child selection identity")
+            if self.parent_completion_enabled and len(
+                {c["member"] for c in selection.calls}
+            ) != len(selection.calls):
+                raise ValidationError("Checked Team cannot select duplicate business members")
             self.queue = selection.calls
             self.stage = "execute"
         elif value.get("status") in {"refused", "needs_input"}:
             from .dag_planning import PlanningConclusion
 
             conclusion = PlanningConclusion(**value)
-            if "session_tree_protocol" in self.manifest:
+            if self.parent_completion_enabled:
+                self.planning_conclusion = conclusion.to_dict()
+                self.dag = None
+            if "session_tree_protocol" in self.manifest or self.parent_completion_enabled:
                 self._complete_parent(conclusion.to_dict())
             else:
                 self.state, self.result = "succeeded", conclusion.to_dict()
@@ -394,20 +460,48 @@ class TemporalParentState(TemporalRunState):
         self._emit("selection_adopted")
 
     def _member(self, member):
+        if member == "@verifier":
+            return self.manifest["parent_completion_policies"][
+                self.definition["completion_policy"]
+            ]["effective_agent_release"]["definition"]["steps"][0]
         if member == "@planner":
             return self.manifest["orchestration"]["planners"][self.definition["planner"]]["agent"]
         return self.definition["members"][member]
 
-    def delegate(self, call, *, graph_node=None):
+    def delegate(self, call, *, graph_node=None, verifier=False):
         if self.state in TERMINAL:
             return None
-        if len(self.children) >= min(
-            self.policy.max_children, self.definition.get("max_steps", 256)
+        if verifier and (
+            call.member != "@verifier"
+            or call.id != "verdict"
+            or not self.parent_completion_enabled
+            or self.parent_completion_pending is None
         ):
+            raise ValidationError("Verifier child requires original parent policy intent")
+        if call.member == "@verifier" and not verifier:
+            raise ValidationError("Ordinary callers cannot select parent verifier")
+        limit = min(self.policy.max_children, self.definition.get("max_steps", 256))
+        if len(self.children) >= limit:
             raise ValidationError("Child limit exceeded")
-        if self.child_cap > self.budget["remaining"]:
+        cap = (
+            self.manifest["parent_completion_policies"][self.definition["completion_policy"]][
+                "identity"
+            ]["verifier_budget"]
+            if verifier
+            else self.child_cap
+        )
+        if cap > self.budget["remaining"]:
             raise ValidationError("Parent budget cannot reserve child cap")
-        identity = f"{self.planning_revision}:{call.id}"
+        identity = (
+            f"r{self.planning_revision}.verifier.verdict"
+            if verifier
+            else f"{self.planning_revision}:{call.id}"
+        )
+        prior = next((c for c in self.children if c["id"] == identity), None)
+        if prior is not None:
+            if prior["input"] != call.input or prior["member"] != call.member:
+                raise IdempotencyConflict("Original child intent changed")
+            return detached(prior)
         command_id = "ralf-child:" + digest([self.scope, self.run_id, identity])
         if self.kind == "graph":
             node = next(
@@ -418,8 +512,15 @@ class TemporalParentState(TemporalRunState):
             member = node.agent
         else:
             member = decode_spec(self._member(call.member))
-        request = submission_request(member, call.input, budget=self.child_cap)
+        request = submission_request(member, call.input, budget=cap)
         from .temporal_bindings import project_child
+
+        if verifier:
+            request["agent_bindings"] = detached(
+                self.manifest["parent_completion_policies"][self.definition["completion_policy"]][
+                    "effective_agent_release"
+                ]["agent_bindings"]
+            )
 
         request = project_child(self.request, call.member, request)
         if "session_lineage" in self.request:
@@ -432,7 +533,7 @@ class TemporalParentState(TemporalRunState):
                 call.id,
                 request,
                 proposal=self.dag["proposal"]
-                if self.kind == "dynamic" and call.member != "@planner"
+                if self.kind == "dynamic" and call.member not in {"@planner", "@verifier"}
                 else None,
                 planning_revision=self.planning_revision,
             )
@@ -446,12 +547,24 @@ class TemporalParentState(TemporalRunState):
             "command_id": command_id,
             "run_id": child_run_id(self.scope, command_id),
             "request": request,
-            "cap": self.child_cap,
+            "cap": cap,
             "settled": False,
             "spent": 0,
             "state": "queued",
             "depth": self.depth + 1,
             "started": False,
+            **(
+                {
+                    "role": "verifier"
+                    if verifier
+                    else "planner"
+                    if call.member == "@planner"
+                    else "worker",
+                    "planning_revision": self.planning_revision,
+                }
+                if self.manifest.get("parent_completion_protocol") == 1
+                else {}
+            ),
         }
         self.children.append(entry)
         self.state = "running"
@@ -459,7 +572,7 @@ class TemporalParentState(TemporalRunState):
             self.dag["nodes"][graph_node].update(state="running", call_id=identity)
         self._emit(
             "child_intent_recorded",
-            {"call_id": identity, "run_id": entry["run_id"], "cap": self.child_cap},
+            {"call_id": identity, "run_id": entry["run_id"], "cap": cap},
         )
         return detached(entry)
 
@@ -610,7 +723,11 @@ class TemporalParentState(TemporalRunState):
                 return
             # Validate the output before adopting evidence or releasing capacity.
             node, normalized = None, snapshot["result"]
-            if call["member"] != "@planner" and snapshot["state"] == "succeeded" and self.dag:
+            if (
+                call["member"] not in {"@planner", "@verifier"}
+                and snapshot["state"] == "succeeded"
+                and self.dag
+            ):
                 node = next(
                     (n for n in self.dag["nodes"].values() if n.get("call_id") == call["id"]), None
                 )
@@ -629,6 +746,7 @@ class TemporalParentState(TemporalRunState):
                 state=snapshot["state"],
                 spent=spent,
                 observation_digest=fingerprint,
+                observed_release_digest=value["release_digest"],
                 uncertain=budget["unknown"] > 0
                 or flow.get("reconciliation_pending", False)
                 or flow.get("unknown_remote_execution", False),
@@ -643,10 +761,18 @@ class TemporalParentState(TemporalRunState):
                 and not snapshot["pending"]
             ):
                 call["settled"] = True
-            if call["member"] != "@planner" and call["state"] == "succeeded" and call["settled"]:
+            if (
+                call["member"] not in {"@planner", "@verifier"}
+                and call["state"] == "succeeded"
+                and call["settled"]
+            ):
                 self.results[call["member"]] = detached(normalized)
                 if node is not None:
                     node.update(state="completed", result=detached(normalized))
+            if call.get("role") == "verifier":
+                from .temporal_parent_completion_state import observe_verifier
+
+                observe_verifier(self, call)
             if self.state not in TERMINAL:
                 if call["state"] in {"failed", "cancelled"}:
                     self.state, self.error = (
@@ -678,6 +804,8 @@ class TemporalParentState(TemporalRunState):
             or self.definition.get("plan_mode") != "dag"
             or self.dag is None
             or self.state in TERMINAL
+            or self.parent_completion_enabled
+            and self.stage != "execute"
         ):
             raise ValidationError("Only active DAG parents accept patches")
         if type(expected_revision) is not int or expected_revision != self.plan_revision:
@@ -711,7 +839,7 @@ class TemporalParentState(TemporalRunState):
         results = [
             {"id": c["id"], "member": c["member"], "result": c["snapshot"]["result"]}
             for c in self.children
-            if c["state"] == "succeeded" and c["member"] != "@planner"
+            if c["state"] == "succeeded" and c["member"] not in {"@planner", "@verifier"}
         ]
         return PlanningRequest(
             self.request["input"],
@@ -733,6 +861,11 @@ class TemporalParentState(TemporalRunState):
                 "parent_budget": self.budget,
                 "remaining_depth": self.policy.max_depth - self.depth - 1,
             },
+            **(
+                {"verification_feedback": self.verification_feedback}
+                if self.verification_feedback is not None
+                else {}
+            ),
         ).to_dict()
 
     def accept_verification(self, value):
@@ -745,6 +878,8 @@ class TemporalParentState(TemporalRunState):
                 self.state, self.error = "failed", {"code": "plan_revision_limit"}
             else:
                 self.planning_revision += 1
+                self.verification_feedback = None
+                self.planning_conclusion = None
                 self.stage, self.dag = "plan", None
                 self.state = "running"
                 self._emit("replanning_requested")

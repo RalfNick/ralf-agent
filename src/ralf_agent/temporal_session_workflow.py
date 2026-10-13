@@ -15,6 +15,7 @@ with workflow.unsafe.imports_passed_through():
     from . import (  # noqa: F401
         temporal_context_read_protocol,
         temporal_context_read_state,
+        temporal_parent_completion_state,
         temporal_session_identity,  # noqa: F401 -- preload pure Session addressing
     )
     from .temporal_parent_state import PARENT_WORKFLOW_NAME

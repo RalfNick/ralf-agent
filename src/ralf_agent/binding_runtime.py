@@ -27,6 +27,32 @@ class StepComponents:
     model_history: object | None = None
 
 
+def artifact_free_context(context):
+    """Prove built-in Context has no Artifact or replaceable auxiliary reader."""
+    from .context import ContextAssembler
+    from .context_budget import CanonicalCharacterCounter, UTF8TokenEstimator, WholeGroupBudgeter
+    from .context_pipeline import BudgetedContextAssembler
+    from .context_summaries import ExcerptContextSummarizer
+
+    if type(context) is ContextAssembler:
+        return getattr(context.assemble, "__func__", None) is ContextAssembler.assemble
+    if type(context) is not BudgetedContextAssembler:
+        return False
+    context._check()
+    for slot, allowed in (
+        (context._counter, {CanonicalCharacterCounter, UTF8TokenEstimator}),
+        (context._budgeter, {WholeGroupBudgeter}),
+        (context._summarizer, {ExcerptContextSummarizer}),
+    ):
+        if slot is not None and (
+            type(slot.component) not in allowed
+            or getattr(getattr(slot.component, slot.name), "__func__", None)
+            is not getattr(type(slot.component), slot.name)
+        ):
+            return False
+    return getattr(context.assemble, "__func__", None) is BudgetedContextAssembler.assemble
+
+
 def step_path(definition, index, plan=None):
     if definition["kind"] == "graph":
         nodes = definition["nodes"] if plan is None else plan["nodes"]
@@ -185,7 +211,8 @@ class AgentBindingResolver:
                 )
             else:
                 records["artifacts"] = {"mode": "disabled"}
-            values["context"] = self._artifact_context(values["context"], target)
+            if target is not None or not artifact_free_context(values["context"]):
+                values["context"] = self._artifact_context(values["context"], target)
         tools = tuple(values["tool_set"])
         if not set(tools).issubset(step["tools"]):
             raise ValidationError("A bound tool set cannot expand AgentSpec tools")
@@ -411,6 +438,8 @@ class AgentBindingResolver:
             manifest["kernel"] = "local-bindings-15"
         if self.engine.model_continuation:
             manifest["model_continuation_protocol"] = 1
+        if manifest.get("parent_completion_protocol") == 1:
+            manifest["kernel"] = "local-bindings-16"
         return manifest
 
 

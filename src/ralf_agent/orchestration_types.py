@@ -101,8 +101,11 @@ class TeamSpec(_JsonValue):
         max_concurrency=1,
         max_depth=None,
         version="1",
+        completion_policy=None,
     ):
         _require_text(strategy, "Team strategy")
+        if completion_policy is not None:
+            _require_text(completion_policy, "Parent completion policy")
         config = {} if strategy_config is None else strategy_config
         if not isinstance(config, dict):
             raise ValidationError("Team strategy config must be a JSON object")
@@ -112,6 +115,11 @@ class TeamSpec(_JsonValue):
                 **_definition(name, members, version, child_budget, max_concurrency, max_depth),
                 "strategy": strategy,
                 "strategy_config": config,
+                **(
+                    {"completion_policy": completion_policy}
+                    if completion_policy is not None
+                    else {}
+                ),
             }
         )
 
@@ -135,9 +143,12 @@ class DynamicWorkflowSpec(_JsonValue):
         max_depth=None,
         plan_mode="flat",
         version="1",
+        completion_policy=None,
     ):
         _require_text(planner, "Planner")
         _require_text(verifier, "Plan verifier")
+        if completion_policy is not None:
+            _require_text(completion_policy, "Parent completion policy")
         _integer(max_revisions, "Plan revision limit", 1, 32)
         _integer(max_steps, "Plan step limit", 1, 256)
         if plan_mode not in {"flat", "dag"}:
@@ -153,6 +164,11 @@ class DynamicWorkflowSpec(_JsonValue):
                 "max_revisions": max_revisions,
                 "max_steps": max_steps,
                 **({"plan_mode": "dag"} if plan_mode == "dag" else {}),
+                **(
+                    {"completion_policy": completion_policy}
+                    if completion_policy is not None
+                    else {}
+                ),
             }
         )
 
@@ -160,7 +176,7 @@ class DynamicWorkflowSpec(_JsonValue):
 class ChildCall(_JsonValue):
     def __init__(self, id, member, input):
         _identifier(id)
-        if member != "@planner":
+        if member not in ("@planner", "@verifier"):
             _identifier(member)
         self._data_json = canonical({"id": id, "member": member, "input": input})
 

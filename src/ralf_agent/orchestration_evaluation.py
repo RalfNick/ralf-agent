@@ -341,7 +341,7 @@ class _OrchestrationProvider(PinnedEvaluationProvider):
         super().validate_request(messages, tools)
 
 
-def _assembly(case, provider, kind, directory, *, model_continuation=False):
+def _assembly(case, provider, kind, directory, *, model_continuation=False, completion_gate=False):
     """Factories capture trusted tools and borrow the caller's audited provider."""
     registry = ComponentRegistry()
     registry.register("provider", "evaluation-borrowed", lambda config, context: provider)
@@ -355,6 +355,24 @@ def _assembly(case, provider, kind, directory, *, model_continuation=False):
         components["planners"] = {"adapter": "dag-rule"}
     else:
         components["team_strategies"] = {"adapter": "defaults"}
+    if completion_gate:
+        components["parent_completion_policies"] = {
+            "adapter": "configured",
+            "config": {
+                "policies": {
+                    "inventory": {
+                        "gate": {
+                            "adapter": "inventory",
+                            "config": {
+                                "dataset": copy.deepcopy(case["dataset"]),
+                                "request_pointer": "/request",
+                                "on_missing": "replan" if kind == "plan-and-execute" else "reject",
+                            },
+                        }
+                    }
+                }
+            },
+        }
     profile = recommended_profile(
         kind,
         version="2",
@@ -379,7 +397,15 @@ def _assembly(case, provider, kind, directory, *, model_continuation=False):
             output_schema=OUTPUT_SCHEMA,
         ),
     }
-    harness = recommended_harness(kind, members, version="2", child_budget=8)
+    completion_options = (
+        {
+            "completion_policy": "inventory",
+            **({"max_revisions": 2} if kind == "plan-and-execute" else {}),
+        }
+        if completion_gate
+        else {}
+    )
+    harness = recommended_harness(kind, members, version="2", child_budget=8, **completion_options)
     return RuntimeBuilder(registry, base_dir=directory), profile, harness
 
 
@@ -542,6 +568,7 @@ async def evaluate_orchestration(
     offline=False,
     prices=None,
     model_continuation=False,
+    completion_gate=False,
 ):
     """Measure real managed member results and receipts, without implicit I/O.
 
@@ -549,6 +576,8 @@ async def evaluate_orchestration(
     or unfinished runs are observed on reconnection, never resumed for scoring.
     Provider clients are borrowed; the evaluation owns and closes its runtimes.
     """
+    if type(completion_gate) is not bool:
+        raise ValidationError("Parent completion gate enablement must be boolean")
     if type(model_continuation) is not bool:
         raise ValidationError("Model continuation enablement must be boolean")
     if kind not in {"plan-and-execute", "team"} or type(offline) is not bool:
@@ -593,6 +622,9 @@ async def evaluate_orchestration(
         "evidence_retained": evidence_dir is not None,
         "evaluates": "managed inventory evidence, arithmetic receipts, final outcomes and stopping",
     }
+    if completion_gate:
+        report["completion_gate"] = True
+    checks = _CHECKS + (("current_lineage", "parent_completion") if completion_gate else ())
     if provider is None:
         report["reason"] = "provider_not_configured"
         return report
@@ -619,7 +651,7 @@ async def evaluate_orchestration(
                     "repeat": repeat,
                     "dataset_sha256": digest(case["dataset"]),
                     "passed": False,
-                    "checks": dict.fromkeys(_CHECKS, False),
+                    "checks": dict.fromkeys(checks, False),
                     "calls": 0,
                     "state": "not_run",
                     "usage": None,
@@ -636,7 +668,12 @@ async def evaluate_orchestration(
                 path = _new_evidence_path(directory, case["id"], repeat)
                 before, started = len(audited.attempts), time.perf_counter()
                 builder, profile, harness = _assembly(
-                    case, audited, kind, directory, model_continuation=model_continuation
+                    case,
+                    audited,
+                    kind,
+                    directory,
+                    model_continuation=model_continuation,
+                    completion_gate=completion_gate,
                 )
                 row["runtime"] = {
                     "name": profile.name,
@@ -663,7 +700,24 @@ async def evaluate_orchestration(
                     children = [
                         runtime.store.run(c["run_id"]) for c in parent["orchestration"]["children"]
                     ]
-                    row["checks"] = _score(case, parent, children, kind)
+                    if completion_gate:
+                        from .parent_completion_evaluation import score_parent_completion
+
+                        row["checks"] = score_parent_completion(case, parent, children, kind)
+                        stages = parent.get("parent_completion_stages", {})
+                        journal = stages.get("r" + str(parent["orchestration"]["revision"]), {})
+                        row["completion"] = {
+                            "revision": parent["orchestration"]["revision"],
+                            "attempts": len(stages),
+                            "source_sha256": journal.get("source_digest"),
+                            "journal_sha256": digest(stages),
+                            "adopted": journal.get("status") == "adopted",
+                        }
+                        row["checks"]["stopped"] = row["checks"]["stopped"] and all(
+                            runtime.store.budget(child["id"])["held"] == 0 for child in children
+                        )
+                    else:
+                        row["checks"] = _score(case, parent, children, kind)
                     row["run_id"] = handle.run_id
                     row["state"] = snapshot.state
                     row["result_sha256"] = digest(snapshot.result)

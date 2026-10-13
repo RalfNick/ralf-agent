@@ -87,7 +87,10 @@ def validate_native_request(request, manifest):
     value = request.get("session_native_history")
     if value is None:
         return
-    if manifest.get("binding_protocol") != 8 or manifest.get("model_history_protocol") != 2:
+    if (
+        manifest.get("binding_protocol") not in (8, 9)
+        or manifest.get("model_history_protocol") != 2
+    ):
         raise DefinitionMismatch("Native Session snapshot requires its original History protocol")
     if (
         type(value) is not dict

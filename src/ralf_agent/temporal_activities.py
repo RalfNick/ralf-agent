@@ -136,6 +136,7 @@ class TemporalRuntime:
         team_strategies=None,
         planners=None,
         plan_verifiers=None,
+        parent_completion_policies=None,
         knowledge=None,
         execution_policy=None,
         binding_catalog=None,
@@ -406,6 +407,7 @@ class TemporalRuntime:
         ]
         self._decision_enabled = (
             self.model_continuation
+            or bool(parent_completion_policies)
             or not default_policy(self.harness)
             or any(k[0] == "decision_policy" for k in self._catalog_objects)
         )
@@ -441,6 +443,22 @@ class TemporalRuntime:
         self.teams = {**teams, **(team_strategies or {})}
         self.planners = {**plans, **(planners or {})}
         self.verifiers = {**verifiers, **(plan_verifiers or {})}
+        self.parent_completion_policies = dict(parent_completion_policies or {})
+        self._parent_completion_registry = self.parent_completion_policies
+        self._parent_completion_pins = [
+            (
+                name,
+                component,
+                _binding(component.gate.verify),
+                None
+                if component.model_stage is None
+                else (
+                    _binding(component.model_stage.prepare),
+                    _binding(component.model_stage.interpret),
+                ),
+            )
+            for name, component in self.parent_completion_policies.items()
+        ]
         self._orchestration = orchestration_identity(self.teams, self.planners, self.verifiers)
         self._registrations = [
             (attribute, registry, name, component, method, _binding(getattr(component, method)))
@@ -625,10 +643,6 @@ class TemporalRuntime:
                 dispatch_admission="history-1",
                 workspace_binding_protocol=2,
             )
-        if self._session_topology_pin is not None:
-            from .temporal_session_tree_protocol import propose_manifest
-
-            result = propose_manifest(result, self._session_topology_pin)
         from .binding_sandbox import has_sandbox_tools
 
         sandbox_enabled = has_sandbox_tools(result["tools"]) or any(
@@ -730,6 +744,22 @@ class TemporalRuntime:
                 binding_protocol=8 if session_mode else 7,
                 model_history_protocol=2 if session_mode else 1,
             )
+        if self._session_topology_pin is not None:
+            from .temporal_session_tree_protocol import propose_manifest
+
+            result = propose_manifest(result, self._session_topology_pin)
+        if self.parent_completion_policies:
+            from .temporal_parent_completion import registrations
+
+            result.update(
+                kernel="temporal-3",
+                binding_protocol=9,
+                dispatch_admission="history-1",
+                parent_completion_protocol=1,
+            )
+            result["parent_completion_policies"] = registrations(
+                self.parent_completion_policies, result, self
+            )
         return result
 
     @property
@@ -751,6 +781,26 @@ class TemporalRuntime:
         from .binding_artifacts import _method_matches
         from .task_controls import _binding
         from .temporal_components import orchestration_identity
+
+        if self.parent_completion_policies is not self._parent_completion_registry or set(
+            self.parent_completion_policies
+        ) != {p[0] for p in self._parent_completion_pins}:
+            raise DefinitionMismatch("Parent completion registry changed")
+        for name, component, gate, stage in self._parent_completion_pins:
+            current_stage = (
+                None
+                if component.model_stage is None
+                else (
+                    _binding(component.model_stage.prepare),
+                    _binding(component.model_stage.interpret),
+                )
+            )
+            if (
+                self.parent_completion_policies[name] is not component
+                or _binding(component.gate.verify) != gate
+                or current_stage != stage
+            ):
+                raise DefinitionMismatch("Parent completion registration changed")
 
         if self.model_history is not self._model_history_pin:
             raise DefinitionMismatch("Model history policy changed")
@@ -778,7 +828,10 @@ class TemporalRuntime:
         host = getattr(self, "_selected_host", None)
         if host is not None:
             host.validate_release(expected)
-            if self._manifest.get("artifacts_binding_protocol") == 1:
+            if self._manifest.get("artifacts_binding_protocol") == 1 and not (
+                self._manifest.get("parent_completion_protocol") == 1
+                and "artifact_binding" not in self.context.identity
+            ):
                 self.context.check()
                 if self.context.identity != self._manifest["context_builder"]:
                     raise DefinitionMismatch("Selected Artifact Context changed")
@@ -917,6 +970,11 @@ class TemporalRuntime:
 
     async def verify_completion(self, request: dict) -> dict:
         from .temporal_completion import evaluate
+
+        return await evaluate(self, request)
+
+    async def verify_parent_completion(self, request: dict) -> dict:
+        from .temporal_parent_completion import evaluate
 
         return await evaluate(self, request)
 

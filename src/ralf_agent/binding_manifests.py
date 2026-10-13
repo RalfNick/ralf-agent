@@ -9,7 +9,9 @@ def all_step_manifests(manifest):
     try:
         entries = manifest["agent_bindings"]["steps"]
         if not isinstance(entries, dict) or (
-            not entries and manifest.get("kernel") not in {"local-bindings-2", "local-bindings-3"}
+            not entries
+            and manifest.get("kernel")
+            not in {"local-bindings-2", "local-bindings-3", "local-bindings-16"}
         ):
             raise ValidationError("Binding manifest requires recorded steps")
         return ([manifest] if "providers" in manifest else []) + [

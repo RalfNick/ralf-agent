@@ -72,6 +72,21 @@ def _selected(parent, manifest, member, call_id, proposal):
         return decode_spec(node["agent"]), ["graph", "nodes", member]
     if kind not in {"team", "dynamic"}:
         raise ValidationError("Only actual composite parents project member lineage")
+    if member == "@verifier":
+        if (
+            call_id != "verdict"
+            or proposal is not None
+            or manifest.get("parent_completion_protocol") != 1
+        ):
+            raise ValidationError("Verifier lineage requires original parent policy intent")
+        release = manifest["parent_completion_policies"][parent["completion_policy"]][
+            "effective_agent_release"
+        ]
+        if release is None:
+            raise ValidationError("Original parent policy has no managed verifier stage")
+        from .types import AgentSpec
+
+        return AgentSpec(**release["definition"]["steps"][0]), [kind, "verifier", call_id]
     if member == "@planner":
         if kind != "dynamic" or proposal is not None:
             raise ValidationError("Planner lineage requires its original dynamic parent")
@@ -96,12 +111,16 @@ def _selected(parent, manifest, member, call_id, proposal):
     return decode_spec(parent["members"][member]), path
 
 
-def _child_bindings(parent, member, child):
+def _child_bindings(parent, member, child, manifest=None):
     from .temporal_bindings import project_child
 
     # project_child's legacy path projection is checked against the declaration
     # here; this helper does not activate tree execution or copy arbitrary lineage.
     source = {k: v for k, v in parent.items() if k != "session_lineage"}
+    if member == "@verifier":
+        return manifest["parent_completion_policies"][parent["definition"]["completion_policy"]][
+            "effective_agent_release"
+        ]["agent_bindings"]
     return project_child(source, member, {"definition": child}).get("agent_bindings", {})
 
 
@@ -164,10 +183,15 @@ def project_lineage(
     )
     if expected["definition"] != child_request["definition"]:
         raise DefinitionMismatch("Child lineage differs from actual declared Agent definition")
-    bindings = _child_bindings(parent_request, member, expected["definition"])
+    bindings = _child_bindings(parent_request, member, expected["definition"], manifest)
     if child_request.get("agent_bindings", {}) != bindings:
         raise DefinitionMismatch("Child lineage changed original member selections")
-    command_id = "ralf-child:" + digest([scope, parent_run_id, f"{planning_revision}:{call_id}"])
+    key = (
+        f"r{planning_revision}.verifier.verdict"
+        if member == "@verifier"
+        else f"{planning_revision}:{call_id}"
+    )
+    command_id = "ralf-child:" + digest([scope, parent_run_id, key])
     value = detached(lineage)
     value["links"].append(
         {
@@ -241,12 +265,15 @@ def validate_lineage(request, manifest, scope, *, parent_run_id=None):
             current["definition"], manifest, link["member"], link["call_id"], link["proposal"]
         )
         child = submission_request(spec, None, budget=1)
-        bindings = _child_bindings(current, link["member"], child["definition"])
+        bindings = _child_bindings(current, link["member"], child["definition"], manifest)
         if bindings:
             child["agent_bindings"] = bindings
-        command = "ralf-child:" + digest(
-            [scope, current_id, f"{link['planning_revision']}:{link['call_id']}"]
+        key = (
+            f"r{link['planning_revision']}.verifier.verdict"
+            if link["member"] == "@verifier"
+            else f"{link['planning_revision']}:{link['call_id']}"
         )
+        command = "ralf-child:" + digest([scope, current_id, key])
         child_id = "ralf-temporal-" + digest([scope, command])
         if child_id != link["child_run_id"]:
             raise DefinitionMismatch("Session lineage changed original child identity")

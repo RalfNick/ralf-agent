@@ -141,4 +141,15 @@ def registered_parent_activities(runtime, client):
         await validate_tree_activity(client, value, workflow_id=activity.info().workflow_id)
         return result
 
-    return [child_control, selection, context]
+    from .temporal_parent_completion_state import ACTIVITY as PARENT_COMPLETION_ACTIVITY
+
+    @activity.defn(name=PARENT_COMPLETION_ACTIVITY)
+    async def parent_completion(value: dict) -> dict:
+        return await runtime.verify_parent_completion(value)
+
+    return [
+        child_control,
+        selection,
+        context,
+        *([parent_completion] if runtime.parent_completion_policies else []),
+    ]

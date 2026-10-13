@@ -13,8 +13,14 @@ from temporalio.exceptions import (
 )
 
 with workflow.unsafe.imports_passed_through():
-    from . import temporal_context_read_protocol, temporal_context_read_state  # noqa: F401
+    from . import (  # noqa: F401 -- preload frozen pure DTO/adoption  # noqa: F401
+        parent_completion,
+        parent_completion_protocol,
+        temporal_context_read_protocol,
+        temporal_context_read_state,
+    )
     from .orchestration_types import ChildCall
+    from .temporal_parent_completion_state import ACTIVITY as PARENT_COMPLETION_ACTIVITY
     from .temporal_parent_session import ROOT_READ_ACTIVITY
     from .temporal_parent_state import (
         CONTROL_ACTIVITY,
@@ -82,6 +88,9 @@ class TemporalParentWorkflow(TemporalRunWorkflow):
     async def run(self, accepted: dict) -> None:
         self.state.observation_version = (
             2 if workflow.patched("ralf-parent-control-evidence-v2") else 1
+        )
+        self.state.parent_completion_enabled = (
+            self.state.parent_completion_enabled and workflow.patched("ralf-parent-completion-v1")
         )
         timeout = timedelta(seconds=accepted["activity_timeout"])
         deadline = self.state.policy.run_timeout_seconds
@@ -155,6 +164,29 @@ class TemporalParentWorkflow(TemporalRunWorkflow):
                     self.state.accept_session(action["id"], response)
                 continue
             if self.state.state not in TERMINAL:
+                try:
+                    completion = self.state.next_parent_completion_operation()
+                    if completion is not None:
+                        action, request = completion
+                        # This Activity is explicitly pure. Retry only its fixed
+                        # proposal; selection/control and model dispatch retain
+                        # their original one-attempt execution contracts.
+                        try:
+                            response = await workflow.execute_activity(
+                                PARENT_COMPLETION_ACTIVITY,
+                                request,
+                                start_to_close_timeout=timeout,
+                                schedule_to_close_timeout=timeout * 4 + timedelta(seconds=5),
+                                retry_policy=RetryPolicy(maximum_attempts=3),
+                                activity_id=action["id"],
+                            )
+                        except ActivityError:
+                            response = {"ok": False, "code": "parent_activity_unavailable"}
+                        self.state.accept_parent_completion(action["id"], response)
+                        continue
+                except ValidationError as exc:
+                    self.state.state, self.state.error = "failed", {"code": exc.code}
+                    self.state._emit("parent_failed")
                 try:
                     calls = self.state.next_calls()
                 except ValidationError as exc:

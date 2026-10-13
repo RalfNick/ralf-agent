@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.0.dev92 — Receipt-backed parent completion preview
+
+- Add explicit, replaceable Plan/Team completion policies, strict original-child/tool evidence, receipt rules and a concrete inventory gate.
+- Manage a fixed tool-free verification Agent through the original Local/Temporal authorities, with separate source/intent/proposal/adoption records and bounded real Plan feedback. A model verdict cannot waive the pure gate or replace the candidate.
+- Provide SDK/Profile configuration, an installed offline inventory reference and opt-in independent evaluation; retain original recommended defaults and Run identities.
+- Final source, actual Worker recovery, installed package and compatibility gates are recorded separately. Literal evidence, limited domain rules and protocol fixtures do not establish live model quality, full R10/H3/M1/R01–R26 or independent adoption.
+
 ## 0.1.0.dev91 — Responses reasoning continuation preview
 
 - Add explicit OpenAIResponsesReasoningProvider / openai-responses-reasoning, stateless native reasoning/function history, preserved assistant phase and original arguments.

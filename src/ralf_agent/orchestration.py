@@ -136,6 +136,13 @@ class OrchestrationRuntime:
 
             for view in all_step_manifests(release):
                 result["tools"].update(view["tools"])
+        if definition.get("completion_policy") is not None:
+            from .local_parent_completion import registration
+
+            result.update(kernel="local-8", parent_completion_protocol=1)
+            result["orchestration"].update(
+                version="3", parent_completion=registration(engine, definition)
+            )
         return result
 
     def _member_manifest(self, value):
@@ -223,12 +230,14 @@ class OrchestrationRuntime:
         engine.store.emit(run_id, "run_submitted", {"release_digest": data["release_digest"]})
         return {"state_revision": 0}
 
-    def _key(self, run, call, *, planning=False):
+    def _key(self, run, call, *, planning=False, verification=False):
+        if verification:
+            return f"r{run['orchestration']['revision']}.verifier.verdict"
         if run["definition"]["kind"] == "team":
             return call.id
         return f"r{run['orchestration']['revision']}.{'planner' if planning else 'step'}.{call.id}"
 
-    def delegate(self, run_id, call, *, planning=False):
+    def delegate(self, run_id, call, *, planning=False, verification=False):
         engine = self.engine
         with engine.store.transaction():
             run = engine._authorized(run_id)
@@ -238,10 +247,21 @@ class OrchestrationRuntime:
             state, definition = run["orchestration"], run["definition"]
             if planning and state["stage"] != "select":
                 raise ValidationError("Managed planning calls require the planning stage")
-            key = self._key(run, call, planning=planning)
+            if verification and (
+                state["stage"] != "verify"
+                or call.member != "@verifier"
+                or call.id != "verdict"
+                or run["manifest"].get("parent_completion_protocol") != 1
+            ):
+                raise ValidationError("Managed verification requires the original declared stage")
+            key = self._key(run, call, planning=planning, verification=verification)
             existing = next((c for c in state["children"] if c["id"] == key), None)
             if existing is not None:
-                if existing["proposal"] != call.to_dict() or existing["planning"] != planning:
+                if (
+                    existing["proposal"] != call.to_dict()
+                    or existing["planning"] != planning
+                    or (verification and existing.get("role") != "verifier")
+                ):
                     raise DefinitionMismatch("The stable child call changed")
                 return existing
             member = definition["members"].get(call.member)
@@ -249,32 +269,42 @@ class OrchestrationRuntime:
                 planner = self.component(self.planners, definition["planner"])
                 agent = getattr(planner, "agent", None)
                 member = None if agent is None else asdict(agent)
+            if verification:
+                from .local_parent_completion import selected
+
+                completion_policy = selected(engine, definition)
+                if completion_policy.model_stage is None:
+                    raise ValidationError("No model verifier Agent is declared")
+                member = completion_policy.model_stage.agent
             if member is None:
                 raise ValidationError("Delegation must name a registered member")
             self._check_depth(run)
-            if (
-                planning
-                and sum(
-                    engine._authorized(c["run_id"])["state"] not in TERMINAL
-                    for c in state["children"]
-                )
-                >= definition["max_concurrency"]
-            ):
+            if (planning or verification) and sum(
+                engine._authorized(c["run_id"])["state"] not in TERMINAL for c in state["children"]
+            ) >= definition["max_concurrency"]:
                 raise ValidationError("Pending children occupy the managed planning capacity")
             limit = (
-                len(definition["members"])
+                len(definition["members"]) + (1 if verification else 0)
                 if definition["kind"] == "team"
                 else definition["max_steps"]
             )
             if len(state["children"]) >= limit:
                 raise ValidationError("The child step limit was exhausted")
             reservation = f"child:{run_id}:{key}"
-            allowance = definition["child_budget"]
+            allowance = (
+                completion_policy.verifier_budget if verification else definition["child_budget"]
+            )
             engine.store.reserve(run_id, reservation, allowance)
             from .binding_paths import has_disabled_session, member_spec
             from .spec_codec import decode_spec
 
-            child_spec = decode_spec(member) if planning else member_spec(definition, call.member)
+            child_spec = (
+                member
+                if verification
+                else decode_spec(member)
+                if planning
+                else member_spec(definition, call.member)
+            )
             child_session = (
                 None if has_disabled_session(child_spec) else f"{run['session_id']}:child:{key}"
             )
@@ -305,6 +335,11 @@ class OrchestrationRuntime:
                 "settled": False,
                 "state": "queued",
             }
+            if run["manifest"].get("parent_completion_protocol") == 1:
+                record.update(
+                    role="verifier" if verification else "planner" if planning else "worker",
+                    planning_revision=state["revision"],
+                )
             state["children"].append(record)
             state["quiescent"] = False
             engine._commit(run, "child_submitted", {"call_id": key, "run_id": handle.run_id})
@@ -338,7 +373,11 @@ class OrchestrationRuntime:
                 if child.get("orchestration") is not None:
                     self.observe(child["id"])
                     child = engine._authorized(child["id"])
-                if child["state"] == "succeeded" and not call["planning"]:
+                if (
+                    child["state"] == "succeeded"
+                    and not call["planning"]
+                    and call.get("role") != "verifier"
+                ):
                     state["results"][call["id"]] = copy.deepcopy(child["result"])
                 if child["state"] not in TERMINAL or call["settled"]:
                     continue
@@ -462,6 +501,11 @@ class OrchestrationRuntime:
             self.engine._check_release(run)
             if run["state"] in TERMINAL or run["state"] == "cancelling":
                 return
+            if run["manifest"].get("parent_completion_protocol") == 1:
+                from .local_parent_completion import _check_source, selected
+
+                record = run["parent_completion_stages"][f"r{run['orchestration']['revision']}"]
+                _check_source(self.engine, run, record, selected(self.engine, run["definition"]))
             from .session_composites import save_composite_turn_result
 
             save_composite_turn_result(self.engine, run, result)
@@ -471,6 +515,8 @@ class OrchestrationRuntime:
     async def _team(self, run_id):
         engine = self.engine
         run = engine._authorized(run_id)
+        if run["orchestration"]["stage"] == "verify":
+            return await self._complete(run_id, run["orchestration"]["completion_candidate"])
         if run["orchestration"]["queue"] or any(
             c["state"] not in TERMINAL for c in run["orchestration"]["children"]
         ):
@@ -479,7 +525,7 @@ class OrchestrationRuntime:
         results = {
             c["member"]: run["orchestration"]["results"][c["id"]]
             for c in run["orchestration"]["children"]
-            if c["state"] == "succeeded"
+            if c["state"] == "succeeded" and c.get("role") != "verifier"
         }
         request = TeamRequest(
             run["input"],
@@ -490,8 +536,7 @@ class OrchestrationRuntime:
         selection = engine._component_result(strategy.select(request), TeamSelection, "Team.select")
         engine._check_release(engine._authorized(run_id))
         if selection.done:
-            await self._finish(run_id, selection.result)
-            return False
+            return await self._complete(run_id, selection.result)
         self._validate_calls(run, selection.calls)
         with engine.store.transaction():
             latest = engine._authorized(run_id)
@@ -504,13 +549,18 @@ class OrchestrationRuntime:
         results = [
             {"id": c["id"], "member": c["member"], "result": state["results"][c["id"]]}
             for c in state["children"]
-            if not c["planning"] and c["state"] == "succeeded"
+            if not c["planning"] and c["state"] == "succeeded" and c.get("role") != "verifier"
         ]
         return PlanningRequest(
             run["input"],
             run["definition"]["member_order"],
             results,
             state["revision"],
+            **(
+                {"verification_feedback": state["verification_feedback"]}
+                if "verification_feedback" in state
+                else {}
+            ),
             **(
                 {
                     "capabilities": run["definition"]["members"],
@@ -533,6 +583,8 @@ class OrchestrationRuntime:
         run = engine._authorized(run_id)
         state, definition = run["orchestration"], run["definition"]
         dag = definition.get("plan_mode") == "dag"
+        if state["stage"] == "verify":
+            return await self._complete(run_id, state["completion_candidate"])
         if state["stage"] == "execute":
             if not await (self._dag.execute(run_id) if dag else self._queue(run_id)):
                 return False
@@ -551,8 +603,7 @@ class OrchestrationRuntime:
                 latest["orchestration"]["revisions"][-1]["verification"] = verdict.to_dict()
                 engine._commit(latest, "plan_verified")
             if verdict.status == "succeeded":
-                await self._finish(run_id, verdict.result)
-                return False
+                return await self._complete(run_id, verdict.result)
             if verdict.status == "failed":
                 raise ChildRunFailed("Plan verification did not succeed")
             if state["revision"] + 1 >= definition["max_revisions"]:
@@ -563,6 +614,7 @@ class OrchestrationRuntime:
                 current.update(
                     revision=current["revision"] + 1, proposal=None, request=None, stage="select"
                 )
+                current.pop("verification_feedback", None)
                 engine._commit(latest, "plan_replanning")
             return True
         if state["proposal"] is None:
@@ -610,8 +662,25 @@ class OrchestrationRuntime:
                 engine._commit(run, "plan_revision_adopted")
                 advance = True
         if not advance:
-            await self._finish(run_id, run["orchestration"]["proposal"])
+            return await self._complete(run_id, run["orchestration"]["proposal"])
         return advance
+
+    async def _complete(self, run_id, candidate):
+        if self.engine._authorized(run_id)["definition"].get("completion_policy") is None:
+            await self._finish(run_id, candidate)
+            return False
+        with self.engine.store.transaction():
+            run = self.engine._authorized(run_id)
+            if run["state"] in TERMINAL | {"cancelling"}:
+                return False
+            if run["orchestration"]["stage"] != "verify":
+                run["orchestration"].update(
+                    stage="verify", completion_candidate=copy.deepcopy(candidate)
+                )
+                self.engine._commit(run, "parent_completion_candidate_recorded")
+        from .local_parent_completion import complete
+
+        return await complete(self, run_id, candidate)
 
     async def drive(self, run_id):
         engine = self.engine

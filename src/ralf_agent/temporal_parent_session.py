@@ -207,6 +207,10 @@ def prepare_result(state, result):
                 "snapshot_digest": digest(c.get("snapshot")),
             }
             for c in state.children
+            if not (
+                state.manifest.get("parent_completion_protocol") == 1
+                and c.get("role") == "verifier"
+            )
         ],
     }
     aggregate_id = state.run_id + ":aggregate"

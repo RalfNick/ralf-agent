@@ -1,5 +1,7 @@
 # 动态规划与多 Agent
 
+`TeamSpec`／`DynamicWorkflowSpec`可以显式设置 `completion_policy="name"`。原父权威冻结业务子Run和回执，再采纳纯gate及可选受管理模型验证；模型验证不能放宽gate或替换候选结果。Plan反馈进入下一次实际规划，Team仅accept/reject。接口、默认参考链路、配置与恢复边界见[业务完成验证](parent-completion.md)。未选中政策的旧定义保持。
+
 dev14 的 TeamSpec 和 DynamicWorkflowSpec 使用受管理父子 Run。各成员仍是 AgentSpec，使用同一 Harness、模型、工具、上下文、记忆、审批及效果恢复。父级保存委派与 PlanRevision；策略只提出方案，LocalEngine 提交执行事实。
 
 ## 从安装包开始

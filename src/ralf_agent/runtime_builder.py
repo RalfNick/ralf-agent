@@ -479,6 +479,17 @@ class ComponentRegistry:
             lambda c, ctx: {"complete": CompleteVerifier()},
             validator=lambda c: _fields(c, {}),
         )
+        from .parent_completion_factories import (
+            configured_parent_completion,
+            parent_completion_config,
+        )
+
+        self.register(
+            "parent_completion_policies",
+            "configured",
+            configured_parent_completion,
+            validator=parent_completion_config,
+        )
         self.register(
             "planners",
             "dag-rule",
@@ -736,9 +747,11 @@ class RuntimeBuilder:
     def _prepare(self, profile, db_path, scope):
         if not isinstance(profile, RuntimeProfile):
             raise ValidationError("Build a RuntimeProfile")
+        from .parent_completion_factories import preflight_parent_completion_providers
         from .query_factories import preflight_query_providers
 
         preflight_query_providers(profile)
+        preflight_parent_completion_providers(profile)
         histories = model_history_declarations(profile)
         if histories and "model_continuation" not in profile.components:
             raise ValidationError(

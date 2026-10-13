@@ -75,6 +75,10 @@ def validate_descriptor(manifest, descriptor, scope=None):
             choice.selector and role not in {"facts", "knowledge", "session", "artifacts"}
         ):
             raise ValidationError("Unsupported Temporal binding role or resource selector")
+        if choice.mode == "disabled" and manifest.get("parent_completion_protocol") == 1:
+            # The explicit new parent protocol permits disabling absent
+            # auxiliary ports; it grants no resource or execution capability.
+            continue
         if role == "artifacts":
             from .temporal_artifact_bindings import validate_protocol
 
@@ -277,7 +281,7 @@ def catalog_registration(runtime):
 def effective_manifest(manifest, descriptor):
     choices = validate_descriptor(manifest, descriptor)
     result = detached(manifest)
-    if manifest.get("binding_protocol") == 8:
+    if manifest.get("binding_protocol") in (8, 9):
         if "model_history" in result:
             result["model_history_protocol"] = (
                 2 if result["model_history"]["identity"].get("scope") == "session" else 1
@@ -433,7 +437,11 @@ def selected_runtime(runtime, request):
                 for name in view._model_history_registration["implementation"]
             }
         )
-    if choices.artifacts.mode != "inherit":
+    if choices.artifacts.mode != "inherit" and not (
+        choices.artifacts.mode == "disabled"
+        and runtime.manifest.get("parent_completion_protocol") == 1
+        and not getattr(view.context, "bind_artifacts", None)
+    ):
         from .binding_runtime import AgentBindingResolver
 
         target = None
@@ -461,7 +469,7 @@ def project_child(parent_request, member, request):
         source = parent_request.get("session_turn", parent_request.get("session_observer"))
         if source is not None:
             request["session_observer"] = {"coordinator_id": source["coordinator_id"]}
-    if "agent_bindings" not in parent_request or member == "@planner":
+    if "agent_bindings" not in parent_request or member in {"@planner", "@verifier"}:
         return request
     prefix = f"{parent_request['definition']['kind']}/" + (
         f"nodes/{member}"
@@ -502,6 +510,11 @@ def capabilities(manifest):
         "rag": any("knowledge_context" in c for c in configurations),
         "agent_limits": manifest.get("limits_protocol") == 1,
         "completion_verification": manifest.get("completion_protocol") == 1,
+        **(
+            {"parent_completion_verification": True}
+            if manifest.get("parent_completion_protocol") == 1
+            else {}
+        ),
         "custom_harness": manifest.get("decision_protocol") == 1,
         "session_data_reads": manifest.get("session_data_protocol") == 1,
         "session_data_writes": "session_save_protocol" in manifest,
@@ -527,6 +540,19 @@ def selected_session_data(request, manifest):
     # Model planners are managed child Agents and inherit host capabilities.
     # They are absent from the public member binding paths.
     def visit(definition):
+        if definition.get("completion_policy") is not None:
+            stage = (
+                manifest.get("parent_completion_policies", {})
+                .get(definition["completion_policy"], {})
+                .get("effective_agent_release")
+            )
+            if stage is not None:
+                selected = effective_manifest(
+                    manifest,
+                    stage["agent_bindings"].get("agent", AgentBindingDescriptor().to_dict()),
+                )
+                if selected.get("session_data") is not None:
+                    values.append(selected["session_data"])
         if definition.get("kind") == "dynamic":
             planner = (
                 manifest.get("orchestration", {}).get("planners", {}).get(definition["planner"], {})

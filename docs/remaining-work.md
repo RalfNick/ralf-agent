@@ -1,4 +1,6 @@
-# dev91：剩余能力与架构验收清单
+# dev92：剩余能力与架构验收清单
+
+Dev92 R10／H3 父级完成验证子集已验收：显式可替换policy、真实子Run／工具回执、Receipt／Inventory纯gate、受管理模型stage、Plan反馈和Team拒绝沿原Local／Temporal权威实现，提供SDK／Profile和安装后默认参考。最终源码7126 passed／605配置依赖跳过；独立核心522／SDK413零跳过，实际源码及安装Temporal各7项／各23条History重放；旧91默认及六类原Run双向兼容、旧Local／Worker业务I/O前拒绝、321产品模块一致和自有服务退出通过。一次fresh review及同一reviewer修复复验闭环五项Important，包括根Session写响应丢失后的原回执／真实结束证明恢复。原通用推荐版本1／2默认保持；真实模型质量、完整R10／H3／M1／R01–R26及外部采用继续开放。见[使用指南](parent-completion.md)及[本批验收](../architecture/reviews/2026-10-13-parent-completion.md)。
 
 Dev91 显式 Responses 推理续接子集已验收：保留原有序 output／密文／phase 和工具原参数，复用原 ModelContinuation／ModelHistory 与 Local／Temporal 执行权威，接通 SDK／Profile／四类评测 CLI。最终源码6792 passed／598配置依赖跳过（856.08s），独立核心安装494 passed／零跳过，实际源码Temporal5／安装Temporal17通过；311产品模块一致，旧90四类原Run及默认字节兼容。一次审查3个P2与1个CI Minor已修复，另5项公共边界回归通过；自有服务正常退出0并等待。原默认和历史发布不迁移；真实模型质量、完整R05／H3／M1／R01–R26及独立采用继续开放。见[使用指南](responses-reasoning.md)及[本批验收](../architecture/reviews/2026-10-13-responses-reasoning.md)。
 
@@ -84,7 +86,7 @@ PG Knowledge/Inbox/Outbox、Qdrant、HTTP Embedding、Hybrid/RRF／基础重排�
 | R07 Agent 能力包 | 原生循环、可定制 AgentSpec、规划／团队／RAG starter、dev47 显式 semantic-knowledge／memory-recall／Plan／Team 默认组合；dev85显式版本2规则DAG结果串接；dev86安装后RAG与Plan／Team完整有限任务执行器 | 更完整 Search／业务 Plan／Team 与 Coding 能力包；默认 verifier／上下文／工具、替换示例、诊断及业务验收。Coding 依赖环境／Runner | H3／H4：组件有基础，完整默认组合未交付 |
 | R08 静态 Workflow | 顺序、串行／有界并行 Graph、条件／映射、Agent/Transform/Tool 节点及嵌套 | 通用受管理异步自定义节点；HumanInput/Retrieve/Planner/Verifier 节点族；受限循环；first-success/quorum/reducer 合并和类型化工作流状态。复用审批、预算与恢复 | G1/G2／H5：子集已交付 |
 | R09 流式 Workflow | 模型完整 SSE 收集、耐久 Run 事件游标 | 逐记录 StreamChannel/Source/Operator/Sink、背压、关闭／失败传播、检查点／重放和 Sink 效果身份。事件订阅和模型 delta 展示均不等于节点数据流 | G5：未交付 |
-| R10 动态规划／验证 | Rule/Model Planner、Plan/Revision、动态 DAG/CAS 修订、受限 execute/verify/replan；CompleteVerifier 取最后结果；Local Agent 纯 CompletionVerifier 与持久回执／有界重试 | 受管理 async/model Verifier、计划级业务 oracle／停止条件；needs_input/send_input 续接；完整重复规划、依赖、参数、拒绝与停止实测。Schema 合法不等于业务计划正确 | H2／H3／A4：子集已交付，质量未验收 |
+| R10 动态规划／验证 | Rule/Model Planner、Plan/Revision、动态 DAG/CAS 修订、受限 execute/verify/replan；Local Agent纯CompletionVerifier；dev92父级原回执gate／库存默认、可替换受管理模型stage、真实Plan反馈／Team拒绝及Local／Temporal恢复 | 更多领域oracle和受管理非模型验证阶段、非literal来源证明；durable needs_input/send_input续接；复杂重规划、依赖、参数、拒绝与停止的真实模型实测。Schema合法不等于业务正确 | H2／H3／A4：子集已验收，质量未验收 |
 | R11 多 Agent | Sequential/Router/Supervisor、子Run、隔离Session、递归预算／取消和恢复；dev83 Local／Temporal六类实际Agent的十三角色成员绑定和节点回执完成验证；dev84新增独立artifacts成员存储／namespace | 其他角色／selector／受管理阶段；类型化交接／受控共享状态／reducer；按需Debate/Critic；跨权威关联、停止和未知远端效果；全局容量及团队质量验收。普通消息不能作为成功回执 | H1／H4／H5：基础团队已交付，完整范围未完成 |
 
 ### 工具、上下文、记忆与知识

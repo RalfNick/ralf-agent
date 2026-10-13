@@ -28,6 +28,7 @@ COMPONENT_KINDS = frozenset(
         "team_strategies",
         "planners",
         "plan_verifiers",
+        "parent_completion_policies",
         "verifier",
         "limits",
         "stage_policy",

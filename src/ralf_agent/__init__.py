@@ -158,6 +158,16 @@ from .orchestration_types import (
     TeamSpec,
     TeamStrategy,
 )
+from .parent_completion import (
+    PARENT_COMPLETION_VERDICT_SCHEMA,
+    ParentCompletionGate,
+    ParentCompletionPolicy,
+    ParentCompletionRequest,
+    ParentCompletionVerdict,
+    ParentVerificationStage,
+)
+from .parent_completion_rules import InventoryParentCompletionGate, ReceiptParentCompletionGate
+from .parent_verification_stage import ModelParentVerificationStage
 from .pdf_parsing import PdfDocumentParser
 from .planning import (
     CompleteVerifier,
@@ -342,7 +352,7 @@ from .workflow import (
     WorkflowSelection,
 )
 
-__version__ = "0.1.0.dev91"
+__version__ = "0.1.0.dev92"
 from .binding_artifacts import ArtifactBindingResource, ArtifactView
 from .binding_sandbox import SandboxBindingResource
 from .docker_sandbox import DockerSandbox
@@ -797,4 +807,16 @@ __all__ += [
     "OfflineOrchestrationProvider",
     "evaluate_orchestration",
     "load_orchestration_cases",
+]
+
+__all__ += [
+    "PARENT_COMPLETION_VERDICT_SCHEMA",
+    "ParentCompletionGate",
+    "ParentCompletionPolicy",
+    "ParentCompletionRequest",
+    "ParentCompletionVerdict",
+    "ParentVerificationStage",
+    "ReceiptParentCompletionGate",
+    "InventoryParentCompletionGate",
+    "ModelParentVerificationStage",
 ]

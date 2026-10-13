@@ -71,6 +71,11 @@ def arguments(argv):
     parser = argparse.ArgumentParser(description=__doc__)
     _common_arguments(parser, max_cases=5)
     parser.add_argument("--kind", choices=["plan-and-execute", "team"], default="plan-and-execute")
+    parser.add_argument(
+        "--completion-gate",
+        action="store_true",
+        help="Require declared inventory receipts before parent success",
+    )
     return parser.parse_args(argv)
 
 
@@ -106,6 +111,8 @@ def _own_client(owned, component):
 
 
 async def run(args):
+    if type(args.completion_gate) is not bool:
+        raise ValidationError("Parent completion gate enablement must be boolean")
     limits, prices = _configuration(args)
     cases = load_orchestration_cases(args.cases)
     async with AsyncExitStack() as owned:
@@ -126,6 +133,7 @@ async def run(args):
             prices=prices,
             model_continuation=args.provider
             in {"gemini-functions", "deepseek-thinking", "openai-responses-reasoning"},
+            completion_gate=args.completion_gate,
         )
         if reason:
             report["reason"] = reason
