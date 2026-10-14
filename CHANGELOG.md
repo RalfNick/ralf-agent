@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.0.dev118 — Original SDK deployment dispatch admission
+
+- Connect the internal selected Worker to original Run/Parent SDK admission before business Activities, selection or child dispatch. Validate actual namespace UUID, original execution epoch, Registry reservation and bounded original Parent ancestry; descendants share one root claim.
+- Publish the fixed policy, Registry address and source inventory. Guard every registered business Activity while preserving its original payload and digest; pin child metadata and SDK epochs in the original Parent History. Default releases remain compatible.
+- Verify selected Agent, sequence, graph, Team, Dynamic and nested dispatch, managed stage contracts, approval/restart/cancellation and replay: frozen source and independently installed builds each pass 814 affected checks and 17 actual Service cases. Final provenance is recorded in [the acceptance record](architecture/reviews/2026-10-14-temporal-deployment-dispatch.md).
+- Public Engine/Profile activation, uncertain-start recovery, Coding physical-close and Session-coordinator admission, original closure proofs and safe release remain mandatory next work. Phase-three batch 2 remains open; this batch adds no new model-quality claim.
+
 ## 0.1.0.dev117 — Temporal deployment admission History foundation
 
 - Extend the original CommandRegistry Workflow with an internal deployment mode: immutable policy and namespace, deployment-addressed Registry/root IDs, scoped command identity and atomic total/Scope root quota.

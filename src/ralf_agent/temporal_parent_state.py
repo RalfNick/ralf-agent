@@ -687,7 +687,17 @@ class TemporalParentState(TemporalRunState):
         if enabled(self.manifest):
             entry["request"] = project_child_link(self, entry, request)
             entry["child_request_digest"] = digest(entry["request"])
+        from .temporal_deployment_protocol import selected as deployment_selected
+
         self.children.append(entry)
+        try:
+            if deployment_selected(self.manifest):
+                from .temporal_deployment_execution_state import project_child
+
+                entry["deployment_admission"] = project_child(self, entry)
+        except BaseException:
+            self.children.remove(entry)
+            raise
         self.state = "running"
         if graph_node is not None:
             self.dag["nodes"][graph_node].update(state="running", call_id=identity)

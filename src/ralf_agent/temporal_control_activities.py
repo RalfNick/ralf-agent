@@ -66,6 +66,12 @@ async def select(runtime, value):
 
 
 async def control(runtime, client, value, info=None):
+    from .temporal_deployment_protocol import selected as deployment_selected
+
+    if deployment_selected(value["runtime_manifest"]):
+        from .temporal_deployment_execution import control as deployment_control
+
+        return await deployment_control(runtime, client, value, info)
     if value["runtime_manifest"].get("binding_protocol") in (13, 15, 17, 19, 21, 23):
         from .temporal_coding_composition_control import control as composition_control
 

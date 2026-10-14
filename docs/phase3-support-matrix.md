@@ -1,6 +1,6 @@
 # 第三阶段支持矩阵与收口门槛
 
-日期：2026-10-14。第二阶段在本地提交 `695175e`／`0.1.0.dev113` 冻结；第三阶段按本矩阵推进 R21–R24 服务化与治理。第一阶段 dev99 的业务质量、第二阶段的所选编排与执行证据继续按原范围引用。当前阶段尚未验收完成；下面的目标不能当成交付清单。
+日期：2026-10-15。第二阶段在本地提交 `695175e`／`0.1.0.dev113` 冻结；第三阶段按本矩阵推进 R21–R24 服务化与治理。第一阶段 dev99 的业务质量、第二阶段的所选编排与执行证据继续按原范围引用。当前阶段尚未验收完成；下面的目标不能当成交付清单。
 
 ## 所选部署与边界
 
@@ -23,7 +23,7 @@
 | 批次 | 必需行为与验收 | 当前状态 |
 | --- | --- | --- |
 | 1：期限配置 | Temporal 现有 `TemporalExecutionPolicy` 接入 Profile／SDK／JSON／TOML 和自定义工厂；省略保持原默认，非法内置配置在组件 I/O 前拒绝；实际服务验证审批重启、原到期时间、批准／过期、晚到证据和 owned 关闭；安装后复验 | dev114 已通过策略入口、默认兼容、配置／替换和 owned 清理；源码／安装各 4 项实际 Temporal／PG 场景及各 313 项受影响回归（2 项其他远程配置跳过）通过，见[策略配置](temporal-execution-policy.md)与[验收登记](../architecture/reviews/2026-10-14-temporal-policy-profiles.md) |
-| 2：Local 期限与容量 | 所选 Local 链路补 Run／审批期限；观察等待与业务期限分离；准入额度原子获取，关闭／恢复释放责任明确；活动、未知效果和实际未结束处理器不得被过期或清理释放 | dev115 已补 Local 持久期限与审批过期，见[指南](local-execution-policy.md)和[本批登记](../architecture/reviews/2026-10-14-local-deadlines.md)；dev116 已补 Local 全 DB／每 Scope 持久根准入，见[指南](deployment-admission.md)及[登记](../architecture/reviews/2026-10-14-local-admission.md)；dev117 已完成原 Registry History 的内部部署准入及身份登记基础；公共启用、原 Run／Parent 调度与子孙、未知及实际处理器保护、安全释放仍是必需下一交付，现有单 Run／Runner 限制不能替代，批次 2 未关闭 |
+| 2：Local 期限与容量 | 所选 Local 链路补 Run／审批期限；观察等待与业务期限分离；准入额度原子获取，关闭／恢复释放责任明确；活动、未知效果和实际未结束处理器不得被过期或清理释放 | dev115 已补 Local 持久期限与审批过期，见[指南](local-execution-policy.md)和[本批登记](../architecture/reviews/2026-10-14-local-deadlines.md)；dev116 已补 Local 全 DB／每 Scope 持久根准入，见[指南](deployment-admission.md)及[登记](../architecture/reviews/2026-10-14-local-admission.md)；dev117 原 Registry 基础之上，dev118 已接通内部 Worker 的原 Run／Parent SDK 门禁及 Agent／顺序／图／Team／Dynamic／嵌套后代共享根占位，受管理阶段保持原请求 SHA，见[登记](../architecture/reviews/2026-10-14-temporal-deployment-dispatch.md)；公共 Engine／Profile、不确定启动、Coding 物理关闭、Session coordinator、unknown／实际 handler 闭合和安全释放仍是必需下一交付，现有单 Run／Runner 限制不能替代，批次 2 未关闭 |
 | 3：观察与服务控制 | 持久 HTTP 事件游标与断连续接；审批、核验和恢复沿原身份与幂等命令；断连只结束观察；统一诊断和明确关闭／移交责任 | 原事件分页、订阅与 A2A polling 已有；完整 hosted 观察及管理链路待补齐 |
 | 4：身份、权限与保留 | 宿主认证结果形成可信调用者；资源 ACL、Scope 与每 Agent 能力绑定取交集；跨 Scope 控制／事件读取拒绝；审计脱敏；保留清理保护活动 Run、原效果与恢复所需证据 | 可信 Scope／工具授权及 namespace 保护已有；服务身份映射、完整资源 ACL、审计与保留尚未闭环 |
 | 5：恢复与升级 | 安装后备份／恢复所选服务组合；核对原业务身份、版本与效果证据；故障窗口、迁移失败与回退可诊断；依赖服务／Worker 的拥有与关闭分别检查 | 进程重启、原 Worker 恢复及私有证据保留已有；框架级备份恢复、迁移和恢复管理待补齐 |

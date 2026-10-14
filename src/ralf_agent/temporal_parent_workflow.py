@@ -20,8 +20,10 @@ with workflow.unsafe.imports_passed_through():
         temporal_context_read_protocol,
         temporal_context_read_state,
     )
+    from . import temporal_deployment_execution_state as deployment_state
     from .errors import RalfError
     from .orchestration_types import ChildCall
+    from .temporal_deployment_protocol import selected as deployment_selected
     from .temporal_parent_completion_state import ACTIVITY as PARENT_COMPLETION_ACTIVITY
     from .temporal_parent_session import ROOT_READ_ACTIVITY
     from .temporal_parent_state import (
@@ -53,8 +55,14 @@ class TemporalParentWorkflow(TemporalRunWorkflow):
         self.wake_revision = 0
         self._check_session_parent(info)
         self._check_composition_parent(info)
+        self._initialize_deployment(accepted, info)
 
     async def _activity(self, name, value, activity_timeout):
+        if deployment_selected(self.state.manifest):
+            value = {
+                "scope": self.state.scope,
+                "_deployment_activity_request": value,
+            }
         try:
             return await workflow.execute_activity(
                 name,
@@ -155,6 +163,7 @@ class TemporalParentWorkflow(TemporalRunWorkflow):
 
     @workflow.run
     async def run(self, accepted: dict) -> None:
+        self._check_deployment_initialization()
         from .temporal_coding_composition_state import (
             enabled,
             physical_stop_view,
@@ -195,6 +204,9 @@ class TemporalParentWorkflow(TemporalRunWorkflow):
         if deadline is not None:
             asyncio.create_task(self._deadline(deadline))
         while True:
+            if not await self._ensure_deployment_admission(timeout):
+                await self._wait_deployment_admission()
+                continue
             if (
                 composition
                 and self.state.composition_admission is None
@@ -356,12 +368,32 @@ class TemporalParentWorkflow(TemporalRunWorkflow):
                                 "manifest": self.state.manifest,
                                 "activity_timeout": accepted["activity_timeout"],
                                 "depth": call["depth"],
+                                **(
+                                    {"deployment_admission": call["deployment_admission"]}
+                                    if deployment_selected(self.state.manifest)
+                                    else {}
+                                ),
                             },
                             id=call["run_id"],
                             task_queue=workflow.info().task_queue,
                             parent_close_policy=workflow.ParentClosePolicy.ABANDON,
                             retry_policy=None,
                         )
+                        if deployment_selected(self.state.manifest):
+                            from .types import digest
+
+                            deployment_state.pin_child(
+                                self.state,
+                                {
+                                    "scope": self.state.scope,
+                                    "parent_run_id": self.state.run_id,
+                                    "parent_execution_epoch": self.state.epoch,
+                                    "child_run_id": call["run_id"],
+                                    "child_execution_epoch": handle.first_execution_run_id,
+                                    "child_request_digest": digest(call["request"]),
+                                    "metadata_digest": digest(call["deployment_admission"]),
+                                },
+                            )
                         if composition:
                             pin_child_execution(
                                 self.state,

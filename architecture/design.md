@@ -448,7 +448,7 @@ UsageLedger 区分预估、已确认与未知用量，外部 Harness 缺失用�
 
 Run deadline 约束子任务与 Action deadline。运行内错误由 Engine 决定重试；Adapter 单次尝试可处理明确的协议协商，但不隐式从头重跑业务请求。防止 SDK、工具和 Engine 分别叠加业务重试。
 
-dev116 的 DeploymentAdmissionPolicy 将部署容量与单 Run 的 ExecutionPolicy 分开。Local 原 Coordinator 先安装持久策略并纳入 legacy，原提交事务与 insert_run 门槛共同获取／校验根槽位；子 Run 沿原根继承。释放同时核对原 Run／子树、未知和零金额预留、辅助阶段及真实 handler，不能通过 TTL／关闭／配置省略腾位。原 Profile 配合宿主策略参数恢复 legacy，Schema 16 拒绝旧 Reader。所选 Local 交付见[契约](specs/deployment-admission-contract.md)及[指南](../docs/deployment-admission.md)，Temporal 原 History 部署准入仍是本批次的下一必需门槛，不引入第三业务权威。
+dev116 的 DeploymentAdmissionPolicy 将部署容量与单 Run 的 ExecutionPolicy 分开。Local 原 Coordinator 先安装持久策略并纳入 legacy，原提交事务与 insert_run 门槛共同获取／校验根槽位；子 Run 沿原根继承。释放同时核对原 Run／子树、未知和零金额预留、辅助阶段及真实 handler，不能通过 TTL／关闭／配置省略腾位。原 Profile 配合宿主策略参数恢复 legacy，Schema 16 拒绝旧 Reader。所选 Local 交付见[契约](specs/deployment-admission-contract.md)及[指南](../docs/deployment-admission.md)。Temporal dev118 已在原 Registry／Run／Parent History 接通内部 Worker 的实际 SDK 准入与后代共享根占位；公共装配、不确定启动、Coding 物理关闭、Session coordinator 和安全释放仍是必需门槛，不引入第三业务权威。
 
 dev115 的 LocalExecutionPolicy 固定原 Run 接受与第一次审批的绝对时间，计时任务仅唤醒原 Engine checkpoint。模型／工具／子 Run 提案和最终结果在采纳前复核，晚到回执仍由原 Action 结算，实际 handler 未结束不释放所有权。暂停、重启、节点投影与子 Run 传播沿同一执行权威；计时宿主失败通过诊断暴露，恢复须原绑定。可选 Store 端口与 opt-in Schema 15 拒绝旧 Reader，省略期限保持原默认。详见[契约](specs/local-deadline-contract.md)和[指南](../docs/local-execution-policy.md)。部署准入继续为本阶段下一门槛。
 
@@ -667,4 +667,6 @@ M1 退出条件是小任务闭环及故障窗口、质量基线通过；M2a／M2
 - [用户提供的架构 review](https://chatgpt.com/space/page_6ac325daccd4819190f4ac1ef3fa90f2)；合并取舍见 [review 合并说明](review-resolution.md)。
 - [LangGraph interrupt 恢复语义](https://docs.langchain.com/oss/python/langgraph/interrupts)。
 
-Temporal 部署准入以[原 History 契约](specs/temporal-deployment-admission-contract.md)继续落实。dev117 的内部 Registry 模式固定完整策略／namespace、跨 Scope 原子登记根额度并登记不可替代的根 epoch；登记本身不证明业务 SDK 执行。公共 Engine／Profile 仍拒绝启用，原 Run／Parent／子孙调度、不确定启动恢复与实际物理结束后的安全释放属于必需下一交付，第三阶段批次 2 未关闭。
+Temporal 部署准入沿[Registry 契约](specs/temporal-deployment-admission-contract.md)和[调度契约](specs/temporal-deployment-dispatch-contract.md)落实。dev117 固定完整策略／namespace 并原子持有根额度；dev118 内部 Worker 在业务前验证真实 SDK namespace UUID、原 epoch、held claim 和有界原 Parent 意图链，支持 Agent／顺序／图／Team／Dynamic／嵌套后代共享一个根槽位。准入 metadata 位于原请求旁，Activity carrier 在验证后还原 handler 请求，保持原 SHA 和受管理阶段契约；原 History 仍拥有业务、预算与子意图，Registry 不成为调度器。默认发布保持兼容，选定发布固定源码与 Worker。
+
+冻结源码受影响检查 814 项和实际源码 Service 17 项通过，独立安装及最终出处见[本批登记](reviews/2026-10-14-temporal-deployment-dispatch.md)。公共 Engine／Profile、不确定启动／重复回执恢复、Coding 物理关闭、Session coordinator 准入、完整树／unknown／辅助阶段／实际 handler 闭合证明及幂等安全释放仍为必需下一交付。没有新增 release 操作，第三阶段批次 2 未关闭；实际 SDK 派发证据不替代完整阶段验收或模型质量。

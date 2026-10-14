@@ -1,6 +1,6 @@
 # 部署内 root 准入与容量
 
-日期：2026-10-14。本批为第三阶段批次 2 提供 Local／SQLite 的持久部署准入，沿原命令、Run、预算和 Coordinator 管理占用。Temporal 部署准入仍是本批次必需的下一门槛；当前显式 Temporal 配置提前拒绝。最终冻结源码、独立安装与兼容证据见[本批验收登记](../architecture/reviews/2026-10-14-local-admission.md)，当前阶段范围见[支持矩阵](phase3-support-matrix.md)。
+日期：2026-10-15。Local／SQLite 已有持久部署准入，沿原命令、Run、预算和 Coordinator 管理占用，证据见[Local 验收登记](../architecture/reviews/2026-10-14-local-admission.md)。Temporal dev118 接通内部 Worker 的原 SDK 派发门禁；公共 Engine／Profile 与安全释放仍未启用，详见[Temporal 本批登记](../architecture/reviews/2026-10-14-temporal-deployment-dispatch.md)。当前阶段范围见[支持矩阵](phase3-support-matrix.md)，批次 2 未关闭。
 
 ## 策略与占用单位
 
@@ -187,8 +187,16 @@ admission = info.workflow["local_admission"]
 
 绑定故障先恢复原 Store 方法、后端、策略对象及匹配组件，再对原 Run 执行原恢复／核验。等待实际工作结束后，`await engine.wait_for_threads()` 会沿原事实刷新准入；新提交前也会刷新可安全释放的原 claims。未知效果需要原核验／停止证据或明确人工处置，不能删除 ledger、清零保留、重标未执行或重新派发业务。
 
-当前不提供 force release、TTL 逐出、队列或跨 SQLite 数据库共享额度。Temporal 的显式准入配置在组件 I/O 前拒绝；后续必须由原 CommandRegistry／Run／Parent History 接通部署准入、原 SDK epoch 和停止证据，EffectJournal 不能成为另一套执行权威。Local 交付不关闭第三阶段批次 2，更不代表 R21–R26、企业平台或真实模型质量已验收。
+当前不提供 force release、TTL 逐出、队列或跨 SQLite 数据库共享额度。Temporal 的公共 Engine／Profile 准入配置继续提前拒绝；内部 Worker 的原 SDK 门禁见下文，后续安全释放仍必须由原 CommandRegistry／Run／Parent History 核对停止及闭合证据，EffectJournal 不能成为另一套执行权威。Local 交付不关闭第三阶段批次 2，更不代表 R21–R26、企业平台或真实模型质量已验收。
 
 已结束验证子 Run 的父阶段可沿原 journal 退休；收到的不合法 evidence 提案仍保留，不采纳晚到 verdict。此 closed＋received 变体仅用于已安装治理的失败／取消根，旧未治理记录不新增该语义。未知验证请求、预算或实际工作未闭合时继续占位；原版本与原 Profile 恢复仍是必要条件。
 
-Temporal dev117 只交付原 CommandRegistry History 的内部部署准入与身份登记基础，详见[独立契约](../architecture/specs/temporal-deployment-admission-contract.md)。公共 Temporal Engine／Profile 仍拒绝启用；登记 epoch 不是业务 SDK 执行验证。原 Run／Parent／子孙调度、不确定启动恢复、未知义务与实际结束后的安全释放仍待实现，不能将本基础当作可用 Temporal 部署容量控制。
+## Temporal 内部 Worker 的原 SDK 门禁
+
+dev117 的[Registry 基础](../architecture/specs/temporal-deployment-admission-contract.md)继续在原 History 持有根占位。dev118 的[调度契约](../architecture/specs/temporal-deployment-dispatch-contract.md)通过内部 `TemporalRuntime(_deployment_admission_policy=policy)` 固定 exact 策略对象，发布完整策略、稳定 Registry 地址和固定源码清单。原 SDK 接受数据在 `request` 旁携带根预留及有界祖先链；原请求、命令和子投影 SHA 不改变。
+
+Worker 核对实际 Activity Workflow ID、namespace 名称／UUID、current 与 original epoch、原 Registry held claim 和每条原 Parent 子意图。Run／Parent 先采纳该证明，才允许业务 Activity、选择、预算产生操作及 SDK 子派发。子 Run 沿原 Parent 记录继承同一根，固定 metadata 和原子 SDK epoch；注册子意图不新增 Registry 槽位。所有业务 Activity 均经过门禁，机械 carrier 在验证后还原原 handler 请求，保留 managed Context、limits、completion 和 Session 写入的原 SHA 与阶段准入。
+
+内部所选范围覆盖普通 Agent、顺序、已注册 Agent 图、Team、Dynamic 与嵌套后代。实际源码 Service 17 项验证派发／祖先共享槽位、审批／取消保留 claim、Worker 缺席／重启、原 History 重放和身份拒绝；冻结源码受影响检查 814 项通过。独立安装与最终出处以[本批登记](../architecture/reviews/2026-10-14-temporal-deployment-dispatch.md)单独记录。省略内部策略保持默认发布兼容，旧实验发布仍须匹配其固定 Worker／源码。
+
+这不是公共装配入口。公共 Temporal Engine／Profile、所选 Coding 物理关闭路径及 Session coordinator Turns 继续拒绝。原不确定启动／重复回执恢复、完整树与零金额／unknown／辅助阶段／实际 handler 闭合证明、幂等安全释放均必须继续交付；当前不提供 Temporal release 操作。登记和 SDK 派发证据不能自行解除 claim，也不证明完整批次 2、阶段全量回归或新模型质量通过。

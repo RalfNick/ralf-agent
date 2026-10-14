@@ -161,7 +161,28 @@ class TemporalRuntime:
         user_input_policies=None,
         coding_execution=False,
         coding_composition=False,
+        _deployment_admission_policy=None,
     ):
+        from .governance import DeploymentAdmissionPolicy
+
+        if _deployment_admission_policy is not None:
+            if type(_deployment_admission_policy) is not DeploymentAdmissionPolicy:
+                raise ValidationError(
+                    "Internal deployment Worker requires an exact immutable policy"
+                )
+            DeploymentAdmissionPolicy.from_identity(_deployment_admission_policy.identity)
+            if coding_execution or coding_composition:
+                raise ValidationError(
+                    "Internal deployment Coding requires its physical-close integration"
+                )
+        self._deployment_admission_policy = self._deployment_admission_policy_pin = (
+            _deployment_admission_policy
+        )
+        self._deployment_admission_identity = (
+            None
+            if _deployment_admission_policy is None
+            else detached(_deployment_admission_policy.identity)
+        )
         if type(coding_execution) is not bool:
             raise ValidationError("Coding execution opt-in requires an ordinary boolean")
         if type(coding_composition) is not bool:
@@ -818,7 +839,9 @@ class TemporalRuntime:
             from .temporal_coding_composition_protocol import publish as publish_composition
 
             result = publish_composition(result, self)
-        return result
+        from .temporal_deployment_protocol import publish as publish_deployment
+
+        return publish_deployment(result, self._deployment_admission_identity)
 
     @property
     def capabilities(self):
@@ -839,6 +862,17 @@ class TemporalRuntime:
         from .binding_artifacts import _method_matches
         from .task_controls import _binding
         from .temporal_components import orchestration_identity
+
+        if (
+            self._deployment_admission_policy is not self._deployment_admission_policy_pin
+            or (
+                None
+                if self._deployment_admission_policy is None
+                else self._deployment_admission_policy.identity
+            )
+            != self._deployment_admission_identity
+        ):
+            raise DefinitionMismatch("Original deployment Worker policy changed")
 
         if (
             self.user_input_policies is not self._user_input_registry

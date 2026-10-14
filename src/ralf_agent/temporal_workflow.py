@@ -24,10 +24,13 @@ with workflow.unsafe.imports_passed_through():
         temporal_tool_execution_state,  # noqa: F401 -- preload original Tool gates
         temporal_user_input,  # noqa: F401 -- preload original pure input gates
     )
+    from . import temporal_deployment_execution_state as deployment_state
     from .temporal_bindings import ROLES as _binding_roles  # noqa: F401
     from .temporal_coding_state import CODING_STOP_ACTIVITY
     from .temporal_completion_state import ACTIVITY as COMPLETION_ACTIVITY
     from .temporal_context_read_protocol import owns_activity as owns_context_read
+    from .temporal_deployment_execution_state import ACTIVITY as DEPLOYMENT_ACTIVITY
+    from .temporal_deployment_protocol import selected as deployment_selected
     from .temporal_limits_state import ACTIVITY as LIMITS_ACTIVITY
     from .temporal_managed_context import ACTIVITY as MANAGED_CONTEXT_ACTIVITY
     from .temporal_memory import ACTIVITY as MEMORY_ACTIVITY
@@ -63,6 +66,101 @@ class TemporalRunWorkflow:
         self.wake_revision = 0
         self._check_session_parent(info)
         self._check_composition_parent(info)
+        self._initialize_deployment(accepted, info)
+
+    def _initialize_deployment(self, accepted, info):
+        from .errors import RalfError
+
+        self._deployment_initialization_error = None
+        try:
+            self._initialize_deployment_checked(accepted, info)
+        except (RalfError, ApplicationError) as exc:
+            self._deployment_initialization_error = getattr(exc, "code", None) or getattr(
+                exc, "type", "definition_mismatch"
+            )
+
+    def _initialize_deployment_checked(self, accepted, info):
+        if not deployment_selected(self.state.manifest):
+            if "deployment_admission" in accepted:
+                raise ApplicationError(
+                    "Deployment metadata requires its selected Worker",
+                    type="definition_mismatch",
+                    non_retryable=True,
+                )
+            return
+        parent = info.parent
+        deployment_state.initialize(
+            self.state,
+            accepted.get("deployment_admission"),
+            namespace=info.namespace,
+            epoch=info.run_id,
+            original_epoch=info.original_execution_run_id,
+            parent=None
+            if parent is None
+            else {
+                "namespace": parent.namespace,
+                "workflow_id": parent.workflow_id,
+                "run_id": parent.run_id,
+            },
+        )
+
+    def _check_deployment_initialization(self):
+        if getattr(self, "_deployment_initialization_error", None) is not None:
+            self.state.state = "failed"
+            self.state.error = {"code": self._deployment_initialization_error}
+            self.state._emit("deployment_initialization_refused", self.state.error)
+            raise ApplicationError(
+                "Original deployment initialization refused",
+                type=self._deployment_initialization_error,
+                non_retryable=True,
+            )
+
+    async def _execute_activity(self, name, request, **options):
+        if deployment_selected(self.state.manifest) and name != DEPLOYMENT_ACTIVITY:
+            request = {
+                "scope": self.state.scope,
+                "_deployment_activity_request": request,
+            }
+        return await workflow.execute_activity(name, request, **options)
+
+    async def _ensure_deployment_admission(self, activity_timeout):
+        if not deployment_selected(self.state.manifest) or deployment_state.admitted(self.state):
+            return True
+        try:
+            response = await self._execute_activity(
+                DEPLOYMENT_ACTIVITY,
+                deployment_state.activity_request(self.state),
+                start_to_close_timeout=activity_timeout,
+                schedule_to_close_timeout=activity_timeout * 2 + timedelta(seconds=5),
+                retry_policy=RetryPolicy(maximum_attempts=1),
+            )
+            if response.get("ok") is not True:
+                raise ApplicationError(
+                    "Original deployment admission unavailable",
+                    type=response.get("code", "deployment_admission_unavailable"),
+                    non_retryable=True,
+                )
+            deployment_state.adopt(self.state, response["result"])
+            self.state._emit("deployment_execution_admitted")
+            return True
+        except Exception as exc:
+            code = getattr(exc, "type", None) or getattr(
+                exc, "code", "deployment_admission_unavailable"
+            )
+            if getattr(self.state, "deployment_admission_error", None) != code:
+                self.state.deployment_admission_error = code
+                self.state._emit("deployment_admission_deferred", {"code": code})
+            return False
+
+    async def _wait_deployment_admission(self):
+        observed = self.wake_revision
+        try:
+            await workflow.wait_condition(
+                lambda: self.wake_revision != observed,
+                timeout=timedelta(seconds=1),
+            )
+        except TimeoutError:
+            pass
 
     def _check_session_parent(self, info):
         links = self.state.request.get("session_lineage", {}).get("links", [])
@@ -107,19 +205,23 @@ class TemporalRunWorkflow:
 
     @workflow.run
     async def run(self, accepted: dict) -> None:
+        self._check_deployment_initialization()
         policy = self.state.manifest.get("execution_policy", {})
         if policy.get("run_timeout_seconds") is not None:
             asyncio.create_task(self._deadline(policy["run_timeout_seconds"]))
         timeout = timedelta(seconds=accepted["activity_timeout"])
         total_timeout = timedelta(seconds=accepted["activity_timeout"] * 2 + 5)
         while True:
+            if not await self._ensure_deployment_admission(timeout):
+                await self._wait_deployment_admission()
+                continue
             await self._notify_session()
             observed_wake = self.wake_revision
             if self.state.pending_acks:
                 evidence = self.state.pending_acks.pop(0)
                 self.state.active_evidence_ack = evidence["action_id"]
                 try:
-                    result = await workflow.execute_activity(
+                    result = await self._execute_activity(
                         ACK_ACTIVITY,
                         evidence,
                         start_to_close_timeout=timeout,
@@ -149,7 +251,7 @@ class TemporalRunWorkflow:
                 self.state.active_reconciliation = action["id"]
                 envelope = self.state.envelope(action)
                 try:
-                    response = await workflow.execute_activity(
+                    response = await self._execute_activity(
                         RECONCILE_ACTIVITY,
                         envelope,
                         start_to_close_timeout=timeout,
@@ -222,7 +324,7 @@ class TemporalRunWorkflow:
                 continue
             action, request = operation
             try:
-                response = await workflow.execute_activity(
+                response = await self._execute_activity(
                     CODING_STOP_ACTIVITY
                     if action["kind"] == "coding_stop"
                     else COMPLETION_ACTIVITY
@@ -572,11 +674,24 @@ class TemporalRunWorkflow:
                 non_retryable=True,
             ) from None
 
+    @workflow.update(name="deployment_child_epoch")
+    async def deployment_child_epoch(self, payload: dict) -> dict:
+        try:
+            return deployment_state.pin_child(self.state, payload)
+        except Exception as exc:
+            raise ApplicationError(
+                "Original deployment child execution rejected",
+                type=getattr(exc, "code", "definition_mismatch"),
+                non_retryable=True,
+            ) from None
+
     @workflow.query(name="view")
     def view(self, request: dict) -> dict:
         try:
             self.state.authorize(request.get("scope"))
             kind = request["kind"]
+            if kind == "deployment_admission":
+                return deployment_state.view(self.state)
             if kind == "session_proof":
                 if "session_history" not in self.state.request:
                     return {"error": "validation_error"}

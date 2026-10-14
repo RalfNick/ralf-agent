@@ -97,6 +97,9 @@ def validate_schema_references(schema):
 
 
 def validate_manifest(manifest):
+    from .temporal_deployment_protocol import validate_protocol as validate_deployment
+
+    validate_deployment(manifest)
     if isinstance(manifest, dict) and "runtime_profile" in manifest:
         from .types import runtime_profile_identity
 

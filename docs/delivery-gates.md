@@ -127,7 +127,9 @@ R06／R09／R13／R15–R20，按场景分期，不自动进入当前第一阶�
 企业身份与资源权限、迁移／备份恢复／故障验证；结合 R25／R26 完成独立采用与正式质量验收。
 阶段开始时固定范围，核心 SDK 与企业运行时分别验收；接口预留不代表平台交付。
 
-当前执行按[第三阶段支持矩阵](phase3-support-matrix.md)的五批门槛推进。dev114 首批接通原 Temporal 期限策略配置，见[配置指南](temporal-execution-policy.md)与[验收登记](../architecture/reviews/2026-10-14-temporal-policy-profiles.md)。dev115 补 Local 持久期限与原链路恢复，见[本批登记](../architecture/reviews/2026-10-14-local-deadlines.md)。dev116 补 Local 原 Store 部署容量，Temporal 原 History 部署准入继续开放，见[本批登记](../architecture/reviews/2026-10-14-local-admission.md)。dev117 补原 Registry History 的内部部署准入基础，公共启用、原业务调度与安全释放尚未完成，见[登记](../architecture/reviews/2026-10-14-temporal-deployment-admission.md)。托管观察／服务控制、身份权限／保留及框架备份恢复继续开放；首批通过不代表阶段完成。
+当前执行按[第三阶段支持矩阵](phase3-support-matrix.md)的五批门槛推进。dev114 首批接通原 Temporal 期限策略配置，见[配置指南](temporal-execution-policy.md)与[验收登记](../architecture/reviews/2026-10-14-temporal-policy-profiles.md)。dev115 补 Local 持久期限与原链路恢复，见[本批登记](../architecture/reviews/2026-10-14-local-deadlines.md)。dev116 补 Local 原 Store 部署容量，见[本批登记](../architecture/reviews/2026-10-14-local-admission.md)；dev117 原 Registry History 基础之上，dev118 补内部 Worker 的真实 Run／Parent SDK 准入和后代共享根占位，见[登记](../architecture/reviews/2026-10-14-temporal-deployment-dispatch.md)。冻结源码与独立安装各通过 814 项受影响检查、17 项实际 Service，最终出处分别登记；本批不宣称新的阶段全量回归或模型质量。
+
+批次 2 继续要求公共 Temporal Engine／Profile、不确定启动／重复回执恢复、Coding 物理关闭与 Session coordinator 准入，以及原树／零金额／unknown／辅助阶段／实际 handler 闭合后的幂等安全释放。内部 SDK 门禁通过不能关闭这些必需项，现有 held claim 没有释放操作。后续托管观察／服务控制、身份权限／保留及框架备份恢复继续开放，第三阶段未完成。
 
 ## 范围与报告
 

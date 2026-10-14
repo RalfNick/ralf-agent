@@ -278,6 +278,8 @@ jobs:
         run: python -m pytest -q -W error tests/test_temporal_assembly_review.py tests/test_temporal_profiles.py tests/test_temporal_runtime_profile.py tests/test_temporal_assembly.py tests/test_temporal_assembly_lifetime.py tests/test_temporal_assembly_cleanup.py tests/test_temporal_worker_wrapping.py tests/test_temporal_profile_example.py tests/test_temporal_profile_service.py tests/test_temporal_profile_remote.py tests/test_temporal_profile_close_service.py
       - name: Declared Temporal policy and original expiry recovery
         run: python -m pytest -q -W error tests/test_temporal_policy_profiles.py tests/test_temporal_policy_profiles_service.py
+      - name: Original SDK deployment dispatch and managed stage digests
+        run: python -m pytest -q -W error tests/test_temporal_deployment_execution_state.py tests/test_temporal_deployment_protocol.py tests/test_temporal_deployment_execution.py tests/test_temporal_deployment_dispatch_integration.py tests/test_temporal_deployment_dispatch_recovery.py tests/test_temporal_deployment_managed_contracts.py tests/test_temporal_deployment_dispatch_service.py
       - name: Original Temporal deployment admission History foundation
         run: python -m pytest -q -W error tests/test_temporal_deployment_admission_state.py tests/test_temporal_deployment_admission_workflow.py tests/test_temporal_deployment_admission_service.py
       - name: Temporal multiversion Host and original queues
@@ -312,6 +314,10 @@ jobs:
         working-directory: ${{ runner.temp }}
         run: |
           python -m pytest -q -W error -p no:cacheprovider -c /dev/null "$RUNNER_TEMP/artifact-contracts/tests/test_temporal_policy_profiles.py" "$RUNNER_TEMP/artifact-contracts/tests/test_temporal_policy_profiles_service.py"
+      - name: Installed original SDK deployment dispatch outside checkout
+        working-directory: ${{ runner.temp }}
+        run: |
+          python -m pytest -q -W error -p no:cacheprovider -c /dev/null "$RUNNER_TEMP/artifact-contracts/tests/test_temporal_deployment_execution_state.py" "$RUNNER_TEMP/artifact-contracts/tests/test_temporal_deployment_protocol.py" "$RUNNER_TEMP/artifact-contracts/tests/test_temporal_deployment_execution.py" "$RUNNER_TEMP/artifact-contracts/tests/test_temporal_deployment_dispatch_integration.py" "$RUNNER_TEMP/artifact-contracts/tests/test_temporal_deployment_dispatch_recovery.py" "$RUNNER_TEMP/artifact-contracts/tests/test_temporal_deployment_managed_contracts.py" "$RUNNER_TEMP/artifact-contracts/tests/test_temporal_deployment_dispatch_service.py"
       - name: Installed Temporal deployment admission History foundation
         run: |
           cd "$RUNNER_TEMP"

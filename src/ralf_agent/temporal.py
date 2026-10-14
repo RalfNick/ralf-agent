@@ -119,6 +119,10 @@ class TemporalEngine:
             namespace or configured_namespace or "default",
         )
         self._release = validate_manifest(release)
+        if "deployment_admission_protocol" in self._release:
+            raise ValidationError(
+                "Temporal deployment public assembly requires safe-release integration"
+            )
         self.activity_timeout, self.drive_timeout = activity_timeout, drive_timeout
         self._closed = False
         self._registry = None
@@ -553,6 +557,12 @@ def build_temporal_worker(
         + registered_parent_activities(runtime, client)
         + registered_session_activities(runtime, client)
     )
+    if "deployment_admission_protocol" in manifest:
+        from .temporal_deployment_execution import registered_activity, wrap_activities
+
+        activities = wrap_activities(
+            runtime, client, activities + [registered_activity(runtime, client)]
+        )
     if activity_owner is not None:
         from .temporal_assembly_lifecycle import WorkerExecutionOwner
 

@@ -1,4 +1,8 @@
-# dev117：剩余能力与架构验收清单
+# dev118：剩余能力与架构验收清单
+
+Dev118 已接通内部所选 Worker 的原 Run／Parent SDK 部署准入：实际 namespace UUID／原 epoch／Registry claim 和有界原 Parent 链先于业务派发，Agent／顺序／图／Team／Dynamic／嵌套后代共享一个根槽位。Activity carrier 保留原 handler 请求 SHA，受管理 Context、limits、completion 和 Session 写入阶段已有契约回归；默认发布保持兼容。冻结源码与独立安装各通过 814 项受影响检查、17 项实际 Service；最终验收出处以[本批登记](../architecture/reviews/2026-10-14-temporal-deployment-dispatch.md)为准，不替代阶段全量回归或模型质量证据。
+
+批次 2 的必需下一项是公共 Engine／Profile 装配、不确定启动／重复回执恢复、Coding 物理关闭与 Session coordinator 准入，以及原树、零金额／unknown、辅助阶段和真实 handler 闭合后的幂等安全释放。当前公共入口与所选 Coding／coordinator 路径仍拒绝，held claim 没有释放操作；这些门槛不能因内部 SDK 派发通过而删去。完整所选矩阵验收、后续服务观察／控制、身份 ACL、保留与框架恢复继续开放。以下 dev 段落为历史范围。
 
 Dev117 在原 CommandRegistry History 增加部署准入基础：固定完整策略与 namespace、部署隔离地址、Scope 命令身份、原子根限额，以及原根执行 epoch 身份登记。实际服务覆盖并发、容量拒绝无回执、重复命令、队列固定、Worker 重启与 History 重放；这些是登记协议证据，尚未验证业务 Run 的 SDK 绑定。公共 Engine／Profile 继续拒绝部署策略；原 Run／Parent 调度、子孙传播、不确定启动与物理安全释放仍需下一批实现，批次 2 未关闭。见[契约](../architecture/specs/temporal-deployment-admission-contract.md)和[验收登记](../architecture/reviews/2026-10-14-temporal-deployment-admission.md)。
 
