@@ -66,7 +66,7 @@ async def select(runtime, value):
 
 
 async def control(runtime, client, value, info=None):
-    if value["runtime_manifest"].get("binding_protocol") in (13, 15, 17):
+    if value["runtime_manifest"].get("binding_protocol") in (13, 15, 17, 19):
         from .temporal_coding_composition_control import control as composition_control
 
         return await composition_control(runtime, client, value, info)
@@ -176,7 +176,7 @@ def registered_parent_activities(runtime, client):
         *([parent_completion] if runtime.parent_completion_policies else []),
         *(
             [composition_admission]
-            if runtime.orchestration_release.get("binding_protocol") in (13, 15, 17)
+            if runtime.orchestration_release.get("binding_protocol") in (13, 15, 17, 19)
             else []
         ),
     ]

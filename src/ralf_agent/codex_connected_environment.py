@@ -32,6 +32,7 @@ class ConnectedDockerCodingEnvironment(DockerCodingEnvironment):
         retire_on_stop: bool = True,
         expected_generation: str | None = None,
         configuration_readonly: bool = True,
+        create_recovery: bool = False,
     ):
         if (
             type(connection) is not CodexModelConnection
@@ -52,6 +53,7 @@ class ConnectedDockerCodingEnvironment(DockerCodingEnvironment):
             retire_on_stop=retire_on_stop,
             expected_generation=expected_generation,
             configuration_readonly=configuration_readonly,
+            create_recovery=create_recovery,
         )
         self._connection = connection
         self._connection_pin = _canonical(connection.identity)

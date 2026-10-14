@@ -82,6 +82,7 @@ class DockerCodingEnvironment:
         retire_on_stop: bool = False,
         expected_generation: str | None = None,
         configuration_readonly: bool = False,
+        create_recovery: bool = False,
     ):
         try:
             path = Path(root)
@@ -106,6 +107,8 @@ class DockerCodingEnvironment:
                 and 0 < command_timeout <= 60
                 and type(retire_on_stop) is bool
                 and type(configuration_readonly) is bool
+                and type(create_recovery) is bool
+                and (not create_recovery or retire_on_stop)
                 and (
                     expected_generation is None
                     or (
@@ -131,6 +134,7 @@ class DockerCodingEnvironment:
         self._host = docker_host
         self._timeout = command_timeout
         self._retire_on_stop = retire_on_stop
+        self._create_recovery = create_recovery
         self._expected_generation = expected_generation
         self._expected_container_id = None
         self._profile = CodexCodingProfile()
@@ -158,6 +162,8 @@ class DockerCodingEnvironment:
                 self._identity["expected_generation"] = expected_generation
         if configuration_readonly:
             self._identity["configuration_readonly"] = True
+        if create_recovery:
+            self._identity["create_operation_version"] = 1
         self._resource_id = resource_id
         self._name = "ralf-coding-" + _digest(_canonical(self._identity).encode())[:32]
         self._metadata = None
@@ -458,6 +464,8 @@ class DockerCodingEnvironment:
             keys = {"identity", "generation", "container_id", "files", "lease_pin", "last_state"}
             if self._retire_on_stop:
                 keys.add("retirement")
+            if self._create_recovery:
+                keys.add("create_operation")
             _require(type(value) is dict and set(value) == keys)
             _require(_canonical(value["identity"]) == _canonical(self._identity))
             _require(value["lease_pin"] == self._lease_pin)
@@ -483,6 +491,8 @@ class DockerCodingEnvironment:
             if self._retire_on_stop:
                 self._validate_retirement(value)
             self._metadata = value
+            if self._create_recovery:
+                self._validate_create_operation()
             self._check_files()
         except (OSError, ValueError, TypeError, KeyError):
             raise DefinitionMismatch("Coding metadata is unavailable or invalid") from None
@@ -557,6 +567,12 @@ class DockerCodingEnvironment:
         }
         if self._retire_on_stop:
             self._metadata["retirement"] = None
+        if self._create_recovery:
+            self._metadata["create_operation"] = {
+                "version": 1,
+                "phase": "intent",
+                "operation_digest": self._create_operation_digest(),
+            }
         self._write_metadata()
 
     def _check_files(self):
@@ -666,6 +682,30 @@ class DockerCodingEnvironment:
             self._prepared = True
             return result
         if self._metadata["container_id"] is None:
+            if self._create_recovery:
+                self._validate_create_operation()
+                if self._metadata["create_operation"]["phase"] == "intent":
+                    _require(not self._create_candidates())
+                    self._submit_create()
+                else:
+                    self._recover_create()
+            else:
+                self._prepare_legacy_locator()
+        if self._metadata["last_state"] is None:
+            # The locator may have been persisted immediately before a crash
+            # or failed validation. It remains an intent until this check and
+            # the first complete inspection have both succeeded.
+            state = self._inspect_raw()
+            _require(
+                state["State"]["Status"] == "created" and state["State"]["StartedAt"] == _ZERO_TIME
+            )
+        result = self._inspect()
+        self._prepared = True
+        return result
+
+    def _prepare_legacy_locator(self):
+        """Preserve the unselected retained-resource preparation contract."""
+        if self._metadata["container_id"] is None:
             # A persisted intent can recover only its exact generation-labelled,
             # never-started created container after a create/metadata crash.
             ids = (
@@ -694,17 +734,75 @@ class DockerCodingEnvironment:
             self._metadata["container_id"] = cid
             # Persist the locator before any exposure, even if validation fails.
             self._write_metadata()
-        if self._metadata["last_state"] is None:
-            # The locator may have been persisted immediately before a crash
-            # or failed validation. It remains an intent until this check and
-            # the first complete inspection have both succeeded.
-            state = self._inspect_raw()
-            _require(
-                state["State"]["Status"] == "created" and state["State"]["StartedAt"] == _ZERO_TIME
-            )
-        result = self._inspect()
-        self._prepared = True
-        return result
+
+    def _create_operation_digest(self):
+        return _digest(
+            _canonical(
+                {
+                    "identity": self.identity,
+                    "generation": self._metadata["generation"],
+                    "argv": self._create_argv(),
+                }
+            ).encode()
+        )
+
+    def _validate_create_operation(self):
+        operation = self._metadata["create_operation"]
+        _require(
+            type(operation) is dict
+            and set(operation) == {"version", "phase", "operation_digest"}
+            and type(operation["version"]) is int
+            and operation["version"] == 1
+            and operation["phase"] in {"intent", "submitted", "located"}
+            and operation["operation_digest"] == self._create_operation_digest()
+            and (operation["phase"] == "located") == (self._metadata["container_id"] is not None)
+        )
+
+    def _create_candidates(self):
+        """Query only the original exact namespace; an empty list is not a fence."""
+        args = ["ps", "-a", "--no-trunc", "--filter", "name=^/" + self._name + "$"]
+        for key, value in self._labels().items():
+            args.extend(("--filter", "label=" + key + "=" + value))
+        args.extend(("--format", "{{.ID}}"))
+        try:
+            ids = self._cli(args)[0].decode().split()
+        except UnicodeError:
+            raise ExecutionHostFailed("Original create inventory is invalid") from None
+        _require(len(ids) <= 1 and all(re.fullmatch(r"[a-f0-9]{64}", cid) for cid in ids))
+        return ids
+
+    def _submit_create(self):
+        self._validate_create_operation()
+        _require(self._metadata["create_operation"]["phase"] == "intent")
+        self._metadata["create_operation"]["phase"] = "submitted"
+        # A failed durable write cannot dispatch. Once this write succeeds,
+        # lost replies and empty inventory never permit another CREATE.
+        self._write_metadata()
+        cid = self._cli(self._create_argv())[0].decode().strip()
+        _require(bool(re.fullmatch(r"[a-f0-9]{64}", cid)))
+        self._metadata["container_id"] = cid
+        self._metadata["create_operation"]["phase"] = "located"
+        self._write_metadata()
+        self._expected_container_id = cid
+
+    def _recover_create(self):
+        """Control recovery obtains a validated original locator; never creates."""
+        self._validate_create_operation()
+        if self._metadata["create_operation"]["phase"] != "submitted":
+            raise ExecutionHostFailed("Original create has no submitted operation to recover")
+        ids = self._create_candidates()
+        if not ids:
+            raise ExecutionHostFailed("Original submitted create remains unknown")
+        original = copy.deepcopy(self._metadata)
+        try:
+            self._metadata["container_id"] = ids[0]
+            self._inspect_raw()
+            self._metadata["create_operation"]["phase"] = "located"
+            self._write_metadata()
+        except BaseException:
+            self._metadata = original
+            raise
+        self._expected_container_id = ids[0]
 
     def _inspect_raw(self):
         try:
@@ -915,7 +1013,10 @@ class DockerCodingEnvironment:
             return None
         self._read_metadata()
         if self._metadata["container_id"] is None:
-            raise ValidationError("Coding recovery has no original full container locator")
+            if self._create_recovery:
+                self._recover_create()
+            else:
+                raise ValidationError("Coding recovery has no original full container locator")
         return self._stop()
 
     def _validate_retirement(self, metadata):
@@ -1015,11 +1116,17 @@ class DockerCodingEnvironment:
             return
         # A failure keeps the lease and permits another aclose/stop attempt.
         if self._metadata is None or self._metadata["container_id"] is None:
-            if self._existing_only:
+            if self._create_recovery:
+                if self._metadata is None:
+                    raise ExecutionHostFailed("Coding recovery has no original create metadata")
+                self._existing_only = True
+                self._recover_create()
+            elif self._existing_only:
                 raise ExecutionHostFailed("Coding recovery has no confirmed original container")
-            self._closing = False
-            self._prepare()
-            self._closing = True
+            else:
+                self._closing = False
+                self._prepare()
+                self._closing = True
         self._stop()
         os.close(self._lease)
         self._lease = None

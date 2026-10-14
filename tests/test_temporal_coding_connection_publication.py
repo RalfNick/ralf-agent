@@ -12,8 +12,8 @@ from tests.test_temporal_coding_configuration import manifest
 
 def current_leaf():
     value = manifest()
-    value["binding_protocol"] = 16
-    value["coding_execution_protocol"]["version"] = 3
+    value["binding_protocol"] = 18
+    value["coding_execution_protocol"]["version"] = 4
     for resource in value["coding_execution_protocol"]["tools"].values():
         resource["implementation"]["_make_transport"] = "c" * 64
     return value
@@ -23,9 +23,9 @@ def current_composition():
     from tests.test_temporal_coding_composition_configuration import composition_manifest
 
     value = composition_manifest()
-    value["binding_protocol"] = 17
+    value["binding_protocol"] = 19
     value["coding_execution_protocol"] = current_leaf()["coding_execution_protocol"]
-    value["coding_composition_protocol"]["version"] = 4
+    value["coding_composition_protocol"]["version"] = 5
     return value
 
 
@@ -57,7 +57,7 @@ def test_current_publication_requires_transport_construction_hook_pin():
         native.validate_protocol(value)
 
 
-@pytest.mark.parametrize("version", [1, 2, 3, True, 5])
+@pytest.mark.parametrize("version", [1, 2, 3, 4, True, 6])
 def test_current_composition_refuses_foreign_version(version):
     value = current_composition()
     native.validate_protocol(value)
@@ -66,7 +66,7 @@ def test_current_composition_refuses_foreign_version(version):
         native.validate_protocol(value)
 
 
-@pytest.mark.parametrize("binding", [16, 17])
+@pytest.mark.parametrize("binding", [18, 19])
 @pytest.mark.parametrize(
     "kind", ["context", "tool", "artifacts", "continuation", "history", "parent", "input"]
 )
@@ -95,7 +95,7 @@ def test_current_joint_publication_retains_optional_capability_gates(binding, ki
     validators[kind](value)
 
 
-@pytest.mark.parametrize("binding", [16, 17])
+@pytest.mark.parametrize("binding", [18, 19])
 def test_current_joint_publication_keeps_sandbox_gate(registered, binding):
     from ralf_agent.binding_sandbox import validate_sandbox_protocol
     from tests.test_sandbox_temporal_protocol import runtime_for
@@ -179,10 +179,10 @@ def test_current_parent_records_an_explicit_version_four_history_marker(monkeypa
     monkeypatch.setattr(temporal_parent_workflow.workflow, "patched", unavailable)
     with pytest.raises(ApplicationError, match="History marker unavailable"):
         asyncio.run(instance.run({"activity_timeout": 1}))
-    assert markers == ["ralf-coding-composition-v4"]
+    assert markers == ["ralf-coding-composition-v5"]
 
 
-@pytest.mark.parametrize("binding", [12, 13, 14, 15, 16, 17])
+@pytest.mark.parametrize("binding", [12, 13, 14, 15, 16, 17, 18, 19])
 def test_joint_sdk_context_timeout_keeps_original_read_unknown(monkeypatch, binding):
     import asyncio
 
@@ -290,10 +290,10 @@ def test_actual_shared_postgres_publication_refuses_changed_connection_implement
             )
             runtime.validate_release()
             release = runtime.manifest
-            assert release["binding_protocol"] == (17 if composition else 16)
-            assert release["coding_execution_protocol"]["version"] == 3
+            assert release["binding_protocol"] == (19 if composition else 18)
+            assert release["coding_execution_protocol"]["version"] == 4
             if composition:
-                assert release["coding_composition_protocol"]["version"] == 4
+                assert release["coding_composition_protocol"]["version"] == 5
             assert (
                 "_make_transport"
                 in release["coding_execution_protocol"]["tools"]["coding"]["implementation"]

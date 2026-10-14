@@ -1,4 +1,6 @@
-# Implementation status — 0.1.0.dev110
+# Implementation status — 0.1.0.dev111
+
+Dev111 加入[物理 Runner 容量与 create 恢复](coding-resource-recovery.md)：同根容量一、原 invocation 等待、持久原义务、仅查询／验证／停止原 CID，以及所有权 CAS。选定 Temporal 升至18／19；旧16／17恢复需 immutable dev110 Worker，未选定默认发布保持。验收分层见[本批记录](../architecture/reviews/2026-10-14-coding-root-capacity.md)。负向 create 完成证明、CLI监督、持久队列、公平调度、跨宿主与复杂 Coding 质量保持开放，完整 R13／第二阶段未关闭。
 
 Dev110 已验收直接 Agent 成员子集：接通原 Temporal History 内的一层 Agent Team／Dynamic Coding、实际成员 Runner 背压、冻结 child revision、pending-only DAG patch 和完整停止门槛。当前 selected native v3／binding16、composition v4／binding17；未选定默认发布逐字节保持，旧选定 Run 使用匹配不可变 Worker。嵌套、sequence 成员、跨父容量、不确定 create／CID 与复杂真实质量仍开放，完整第二阶段未关闭。真实服务／安装与审查进度见[本批登记](../architecture/reviews/2026-10-14-temporal-coding-orchestration.md)，使用见[编排指南](temporal-coding-orchestration.md)。
 

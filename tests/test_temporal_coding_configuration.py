@@ -24,7 +24,7 @@ def manifest():
     choice = BindingSelection.ref("native", "1")
     value = {
         "kernel": "temporal-3",
-        "binding_protocol": 16,
+        "binding_protocol": 18,
         "dispatch_admission": "history-1",
         "tool_execution_protocol": {},
         "tools": {
@@ -52,7 +52,7 @@ def manifest():
         },
     }
     value["coding_execution_protocol"] = {
-        "version": 3,
+        "version": 4,
         "implementation": implementation(),
         "tools": {
             name: {

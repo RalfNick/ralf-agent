@@ -107,7 +107,7 @@ class TemporalRuntimeAssembly:
         self._engines = []
         self._calls = WorkerExecutionOwner(scope=scope, release=self.release)
         self._coding_submissions = None
-        if self.release.get("binding_protocol") in (13, 15, 17):
+        if self.release.get("binding_protocol") in (13, 15, 17, 19):
             from .temporal_coding_composition_submissions import CompositionSubmissionOwner
 
             self._coding_submissions = CompositionSubmissionOwner(scope=scope, release=self.release)
@@ -296,12 +296,12 @@ class TemporalRuntimeAssembly:
                     raise
         if getattr(self._runtime, "coding_execution", False):
             if (
-                self._runtime.orchestration_release.get("binding_protocol") in (13, 15, 17)
+                self._runtime.orchestration_release.get("binding_protocol") in (13, 15, 17, 19)
                 and self._client is None
             ):
                 await self._close_unused_composition()
             else:
-                if self._runtime.orchestration_release.get("binding_protocol") in (13, 15, 17):
+                if self._runtime.orchestration_release.get("binding_protocol") in (13, 15, 17, 19):
                     from .temporal_coding_composition_control import close as close_coding
                 else:
                     from .temporal_coding_runtime import close as close_coding

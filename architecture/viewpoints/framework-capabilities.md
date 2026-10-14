@@ -382,3 +382,8 @@ Dev74沿原MCPTransport提供[HTTP JSON／POST SSE](../../docs/mcp-http.md)，�
 ## dev75 只读Workspace（子集验收通过）
 
 沿原工具接入可替换WorkspacePort／POSIX文件／内存默认实现，有界路径与可信Scope、实际线程／FD拥有和原结果恢复。[指南](../../docs/workspace.md)／[子集验收](../reviews/2026-10-11-workspace-read.md)通过；Agent.workspace角色、写入租约、Skills／Sandbox／Runner和完整H4仍开放。
+
+
+## Dev111 物理资源边界
+
+沿原 Harness／Local／Temporal 执行权威增加同根容量一、原 invocation 等待与持久原义务；create 回复丢失只查询／校验／停止原 CID，不重授执行。新选定18／19与旧16／17 Worker隔离。规则与验收见[契约](../specs/coding-root-capacity-contract.md)和[本批记录](../reviews/2026-10-14-coding-root-capacity.md)。负向 create 屏障、CLI监督、持久排队、跨宿主、嵌套及复杂质量继续开放，不能用子集验收关闭完整 R13。

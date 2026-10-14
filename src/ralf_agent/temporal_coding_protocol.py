@@ -4,6 +4,7 @@ from .errors import DefinitionMismatch, ValidationError
 from .types import digest
 
 RUNNER_METHODS = (
+    "__init__",
     "execute_history",
     "reconcile_history",
     "stop_history",
@@ -32,6 +33,11 @@ RUNNER_METHODS = (
     "_settle",
     "_close_owner",
     "_make_transport",
+    "_acquire_capacity",
+    "_release_capacity",
+    "_release_unprepared_capacity",
+    "_wait_owner",
+    "_check_capacity",
 )
 JOURNAL_METHODS = (
     "begin_resource",
@@ -59,6 +65,76 @@ JOURNAL_METHODS = (
     "_submit",
     "_receipt",
     "_validate_metadata",
+)
+
+# Physical implementations are discovered only on a Worker. These are fixed,
+# reviewed inventories, never reflection over whatever a deployment exports.
+CAPACITY_FUNCTIONS = ("_require", "_hex", "_pin", "_private_file", "_pairs")
+CAPACITY_METHODS = (
+    "__init__",
+    "_check_root",
+    "_check_lock",
+    "_validate_state",
+    "_read",
+    "_write",
+    "_drop_lock",
+    "try_acquire",
+    "_owned",
+    "mark_native_intent",
+    "release",
+    "close",
+)
+CAPACITY_PROPERTIES = ("claim",)
+CAPACITY_CONSTANTS = ("_LOCK", "_RECORD", "_LIMIT")
+ENVIRONMENT_METHODS = (
+    "__init__",
+    "prepare",
+    "inspect",
+    "stop",
+    "stop_existing",
+    "observe_namespace_absence",
+    "_observe_namespace_absence",
+    "_namespace_query",
+    "aclose",
+    "_owned",
+    "_serialized_operation",
+    "_check_root",
+    "_acquire",
+    "_read_metadata",
+    "_write_metadata",
+    "_provision",
+    "_check_files",
+    "_labels",
+    "_create_argv",
+    "_prepare",
+    "_prepare_legacy_locator",
+    "_create_operation_digest",
+    "_validate_create_operation",
+    "_create_candidates",
+    "_submit_create",
+    "_recover_create",
+    "_inspect_raw",
+    "_validate_container",
+    "_inspect",
+    "_stop",
+    "_stop_existing",
+    "_validate_retirement",
+    "_container_present",
+    "_record_fenced",
+    "_close",
+    "_cli",
+)
+ENVIRONMENT_PROPERTIES = ("identity", "transport_env", "active_operations", "transport_argv")
+ENVIRONMENT_FUNCTIONS = ("_canonical", "_digest", "_require", "_pin")
+ENVIRONMENT_CONSTANTS = (
+    "_SECCOMP_DIGEST",
+    "_COMMAND",
+    "_ENTRYPOINT",
+    "_IMAGE_ENV",
+    "_REGISTRY",
+    "_REGISTRY_OPTIONS",
+    "_CAP",
+    "_ZERO_TIME",
 )
 
 
@@ -114,12 +190,35 @@ IMPLEMENTATION_FIELDS = {
     },
     "resource_rules": {"new_resource", "receive_resource", "validate_resource", "_receipt"},
     "environment": {
-        "observe_namespace_absence",
-        "_observe_namespace_absence",
-        "_namespace_query",
-        "__init__",
-        "_create_argv",
-        "_validate_container",
+        *ENVIRONMENT_METHODS,
+        *ENVIRONMENT_PROPERTIES,
+        *("module." + name for name in ENVIRONMENT_FUNCTIONS),
+        *ENVIRONMENT_CONSTANTS,
+    },
+    "capacity": {
+        *CAPACITY_FUNCTIONS,
+        *("RootCapacity." + name for name in CAPACITY_METHODS),
+        *("RootCapacity." + name + ".fget" for name in CAPACITY_PROPERTIES),
+        *CAPACITY_CONSTANTS,
+    },
+    "io_inventory": {
+        "implementation",
+        "_physical_digest",
+        "RUNNER_METHODS",
+        "CAPACITY_FUNCTIONS",
+        "CAPACITY_METHODS",
+        "CAPACITY_PROPERTIES",
+        "CAPACITY_CONSTANTS",
+        "ENVIRONMENT_METHODS",
+        "ENVIRONMENT_PROPERTIES",
+        "ENVIRONMENT_FUNCTIONS",
+        "ENVIRONMENT_CONSTANTS",
+    },
+    "runner_support": {
+        "_capacity_implementation",
+        "_environment_implementation",
+        "CodexCodingRunner.__init__",
+        "policy_value",
     },
     "rules": {"grant", "adopt"},
     "history": set(HISTORY_METHODS),
@@ -158,14 +257,27 @@ def validate_implementation(value):
         raise DefinitionMismatch("Original pure Coding History rules changed")
 
 
+def _physical_digest(owner, name):
+    """Fingerprint a listed callable/getter without constructing or invoking it."""
+    from .component_fingerprint import executable_digest
+
+    value = getattr(owner, name)
+    return executable_digest(value.fget if isinstance(value, property) else value)
+
+
 def implementation():
+    from . import codex_environment as environment
+    from . import codex_runner as runner
+    from . import codex_runner_capacity as capacity
     from . import coding_execution_rules as rules
+    from . import coding_resource_fingerprint as policy
     from . import postgres_coding_resources as resources
     from . import temporal_coding_runtime as runtime
     from . import temporal_coding_state as state
     from . import temporal_tool_execution_activities as callbacks
     from . import temporal_tool_execution_runtime as tools
     from .codex_environment import DockerCodingEnvironment
+    from .codex_runner_capacity import RootCapacity
     from .component_fingerprint import executable_digest
     from .temporal_activities import TemporalRuntime, registered_activities
     from .temporal_coding_authority import TemporalCodingAuthority
@@ -200,15 +312,57 @@ def implementation():
             for name in ("new_resource", "receive_resource", "validate_resource", "_receipt")
         },
         "environment": {
-            name: executable_digest(getattr(DockerCodingEnvironment, name))
-            for name in (
-                "__init__",
-                "_create_argv",
-                "_validate_container",
-                "observe_namespace_absence",
-                "_observe_namespace_absence",
-                "_namespace_query",
-            )
+            **{
+                name: _physical_digest(DockerCodingEnvironment, name)
+                for name in (*ENVIRONMENT_METHODS, *ENVIRONMENT_PROPERTIES)
+            },
+            **{
+                "module." + name: _physical_digest(environment, name)
+                for name in ENVIRONMENT_FUNCTIONS
+            },
+            **{
+                name: digest(policy.policy_value(getattr(environment, name)))
+                for name in ENVIRONMENT_CONSTANTS
+            },
+        },
+        "capacity": {
+            **{name: _physical_digest(capacity, name) for name in CAPACITY_FUNCTIONS},
+            **{
+                "RootCapacity." + name: _physical_digest(RootCapacity, name)
+                for name in CAPACITY_METHODS
+            },
+            **{
+                "RootCapacity." + name + ".fget": _physical_digest(RootCapacity, name)
+                for name in CAPACITY_PROPERTIES
+            },
+            **{
+                name: digest(policy.policy_value(getattr(capacity, name)))
+                for name in CAPACITY_CONSTANTS
+            },
+        },
+        "runner_support": {
+            "_capacity_implementation": _physical_digest(runner, "_capacity_implementation"),
+            "_environment_implementation": _physical_digest(runner, "_environment_implementation"),
+            "CodexCodingRunner.__init__": _physical_digest(runner.CodexCodingRunner, "__init__"),
+            "policy_value": _physical_digest(policy, "policy_value"),
+        },
+        "io_inventory": {
+            "implementation": executable_digest(implementation),
+            "_physical_digest": executable_digest(_physical_digest),
+            **{
+                name: digest(policy.policy_value(value))
+                for name, value in {
+                    "RUNNER_METHODS": RUNNER_METHODS,
+                    "CAPACITY_FUNCTIONS": CAPACITY_FUNCTIONS,
+                    "CAPACITY_METHODS": CAPACITY_METHODS,
+                    "CAPACITY_PROPERTIES": CAPACITY_PROPERTIES,
+                    "CAPACITY_CONSTANTS": CAPACITY_CONSTANTS,
+                    "ENVIRONMENT_METHODS": ENVIRONMENT_METHODS,
+                    "ENVIRONMENT_PROPERTIES": ENVIRONMENT_PROPERTIES,
+                    "ENVIRONMENT_FUNCTIONS": ENVIRONMENT_FUNCTIONS,
+                    "ENVIRONMENT_CONSTANTS": ENVIRONMENT_CONSTANTS,
+                }.items()
+            },
         },
         "rules": {name: executable_digest(getattr(rules, name)) for name in ("grant", "adopt")},
         "history": {name: executable_digest(getattr(state, name)) for name in HISTORY_METHODS},
@@ -232,6 +386,7 @@ def implementation():
 def registration(runtime):
     from .codex_connected_runner import ConnectedCodexCodingRunner
     from .codex_runner import CodexCodingRunner
+    from .coding_resource_fingerprint import policy_value
     from .component_fingerprint import executable_digest
     from .delegated_coding import registered_coding_tool
     from .postgres_runner_journal import PostgresRunnerJournal
@@ -267,7 +422,30 @@ def registration(runtime):
         }
     if not result:
         raise ValidationError("Temporal Coding requires at least one registered original Runner")
-    return {"version": 3, "tools": result, "implementation": implementation()}
+    metadata = implementation()
+    # Independently compare the inventory generator: a cached old inventory
+    # must not conceal a replaced physical body or a narrowed discovery list.
+    expected_inventory = {
+        "implementation": executable_digest(implementation),
+        "_physical_digest": executable_digest(_physical_digest),
+        **{
+            name: digest(policy_value(value))
+            for name, value in {
+                "RUNNER_METHODS": RUNNER_METHODS,
+                "CAPACITY_FUNCTIONS": CAPACITY_FUNCTIONS,
+                "CAPACITY_METHODS": CAPACITY_METHODS,
+                "CAPACITY_PROPERTIES": CAPACITY_PROPERTIES,
+                "CAPACITY_CONSTANTS": CAPACITY_CONSTANTS,
+                "ENVIRONMENT_METHODS": ENVIRONMENT_METHODS,
+                "ENVIRONMENT_PROPERTIES": ENVIRONMENT_PROPERTIES,
+                "ENVIRONMENT_FUNCTIONS": ENVIRONMENT_FUNCTIONS,
+                "ENVIRONMENT_CONSTANTS": ENVIRONMENT_CONSTANTS,
+            }.items()
+        },
+    }
+    if type(metadata) is not dict or metadata.get("io_inventory") != expected_inventory:
+        raise DefinitionMismatch("Coding physical implementation inventory changed")
+    return {"version": 4, "tools": result, "implementation": metadata}
 
 
 def validate_protocol(manifest):
@@ -275,20 +453,20 @@ def validate_protocol(manifest):
 
     validate_composition(manifest)
     if not enabled(manifest):
-        if manifest.get("binding_protocol") in (11, 12, 13, 14, 15, 16, 17):
+        if manifest.get("binding_protocol") in (11, 12, 13, 14, 15, 16, 17, 18, 19):
             raise DefinitionMismatch("Temporal Coding publication is missing")
         return
     value = manifest["coding_execution_protocol"]
     if (
         manifest.get("kernel") != "temporal-3"
         or type(manifest.get("binding_protocol")) is not int
-        or manifest["binding_protocol"] not in (16, 17)
+        or manifest["binding_protocol"] not in (18, 19)
         or manifest.get("dispatch_admission") != "history-1"
         or "tool_execution_protocol" not in manifest
         or type(value) is not dict
         or set(value) != {"version", "tools", "implementation"}
         or type(value["version"]) is not int
-        or value["version"] != 3
+        or value["version"] != 4
         or type(value["tools"]) is not dict
         or not 1 <= len(value["tools"]) <= 16
         or type(value["implementation"]) is not dict
@@ -333,7 +511,7 @@ def publish(manifest, runtime):
     result = detached(manifest)
     result.update(
         kernel="temporal-3",
-        binding_protocol=16,
+        binding_protocol=18,
         dispatch_admission="history-1",
         coding_execution_protocol=registration(runtime),
     )

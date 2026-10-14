@@ -16,17 +16,17 @@ def selected(manifest):
     return (
         manifest.get("binding_protocol") == 13 and "coding_composition_protocol" in manifest
     ) or (
-        manifest.get("binding_protocol") in (15, 17)
+        manifest.get("binding_protocol") in (15, 17, 19)
         and type(value) is dict
         and type(value.get("version")) is int
-        and value["version"] == {15: 3, 17: 4}[manifest["binding_protocol"]]
+        and value["version"] == {15: 3, 17: 4, 19: 5}[manifest["binding_protocol"]]
     )
 
 
 def _root_kind(manifest, kind):
     """Only the current publication admits the expanded original parent topology."""
     return kind in (
-        {"graph", "team", "dynamic"} if manifest.get("binding_protocol") == 17 else {"graph"}
+        {"graph", "team", "dynamic"} if manifest.get("binding_protocol") in (17, 19) else {"graph"}
     )
 
 
@@ -339,7 +339,7 @@ async def _child_proof(client, parent, call, manifest, namespace):
         or link["child_run_id"] != call["run_id"]
         or link["cap"] != call["cap"]
         or link["namespace"] != namespace
-        or manifest.get("binding_protocol") == 17
+        or manifest.get("binding_protocol") in (17, 19)
         and (
             link["scope"] != parent["scope"]
             or link["call_id"] != call.get("id")

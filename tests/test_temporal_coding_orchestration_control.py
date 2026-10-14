@@ -23,9 +23,9 @@ def namespace(monkeypatch):
 def application(monkeypatch, kind):
     manifest = {
         "kernel": "temporal-3",
-        "binding_protocol": 17,
+        "binding_protocol": 19,
         "coding_composition_protocol": {
-            "version": 4,
+            "version": 5,
             "topology": "bounded-agent-orchestration",
         },
     }

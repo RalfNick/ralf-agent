@@ -12,6 +12,8 @@ from .codex_coding_profile import CodexCodingProfile
 from .codex_environment import DockerCodingEnvironment
 from .codex_protocol import CodexCodingProtocol, CodexProtocol, _snapshot
 from .codex_rpc import CodexRPCClosed, CodexRPCError, CodexRPCTransport
+from .codex_runner_capacity import RootCapacity
+from .coding_resource_fingerprint import policy_value
 from .errors import (
     AuthorizationDenied,
     CloseIncomplete,
@@ -69,6 +71,122 @@ def _dispatch(envelope):
         "tool_manifest": envelope.tool_manifest,
         "arguments": envelope.arguments,
         "operation_digest": envelope.operation_digest,
+    }
+
+
+def _capacity_implementation():
+    from . import codex_runner_capacity as capacity
+    from .component_fingerprint import executable_digest
+
+    if RootCapacity is not capacity.RootCapacity:
+        raise DefinitionMismatch("Original physical capacity class changed")
+    methods = (
+        "__init__",
+        "_check_root",
+        "_check_lock",
+        "_validate_state",
+        "_read",
+        "_write",
+        "_drop_lock",
+        "try_acquire",
+        "claim",
+        "_owned",
+        "mark_native_intent",
+        "release",
+        "close",
+    )
+    return {
+        "methods": {
+            name: executable_digest(
+                RootCapacity.claim.fget if name == "claim" else getattr(RootCapacity, name)
+            )
+            for name in methods
+        },
+        "helpers": {
+            name: executable_digest(getattr(capacity, name))
+            for name in ("_require", "_hex", "_pin", "_private_file", "_pairs")
+        },
+        "constants": {
+            name: digest(policy_value(getattr(capacity, name)))
+            for name in ("_LOCK", "_RECORD", "_LIMIT")
+        },
+    }
+
+
+def _environment_implementation():
+    from . import codex_environment as environment
+    from .component_fingerprint import executable_digest
+
+    if DockerCodingEnvironment is not environment.DockerCodingEnvironment:
+        raise DefinitionMismatch("Original Coding environment class changed")
+    methods = (
+        "__init__",
+        "prepare",
+        "inspect",
+        "stop",
+        "stop_existing",
+        "observe_namespace_absence",
+        "_observe_namespace_absence",
+        "_namespace_query",
+        "aclose",
+        "_owned",
+        "_serialized_operation",
+        "_check_root",
+        "_acquire",
+        "_read_metadata",
+        "_write_metadata",
+        "_provision",
+        "_check_files",
+        "_labels",
+        "_create_argv",
+        "_prepare",
+        "_prepare_legacy_locator",
+        "_create_operation_digest",
+        "_validate_create_operation",
+        "_create_candidates",
+        "_submit_create",
+        "_recover_create",
+        "_inspect_raw",
+        "_validate_container",
+        "_inspect",
+        "_stop",
+        "_stop_existing",
+        "_validate_retirement",
+        "_container_present",
+        "_record_fenced",
+        "_close",
+        "_cli",
+        "identity",
+        "transport_env",
+        "active_operations",
+        "transport_argv",
+    )
+    return {
+        "methods": {
+            name: executable_digest(
+                getattr(DockerCodingEnvironment, name).fget
+                if isinstance(getattr(DockerCodingEnvironment, name), property)
+                else getattr(DockerCodingEnvironment, name)
+            )
+            for name in methods
+        },
+        "helpers": {
+            name: executable_digest(getattr(environment, name))
+            for name in ("_canonical", "_digest", "_require", "_pin")
+        },
+        "constants": {
+            name: digest(policy_value(getattr(environment, name)))
+            for name in (
+                "_SECCOMP_DIGEST",
+                "_COMMAND",
+                "_ENTRYPOINT",
+                "_IMAGE_ENV",
+                "_REGISTRY",
+                "_REGISTRY_OPTIONS",
+                "_CAP",
+                "_ZERO_TIME",
+            )
+        },
     }
 
 
@@ -137,6 +255,35 @@ class CodexCodingRunner:
             "resource_lifecycle_version": "2",
             "credentials": "unavailable",
             "usage_bound": "unknown",
+            "physical_capacity_version": "1",
+            "create_operation_version": 1,
+        }
+        from .component_fingerprint import executable_digest
+
+        self._capacity_inventory = _capacity_implementation()
+        self._capacity_inventory_pin = executable_digest(_capacity_implementation)
+        self._environment_inventory = _environment_implementation()
+        self._environment_inventory_pin = executable_digest(_environment_implementation)
+        self._resource_policy_pin = executable_digest(policy_value)
+        self._identity["resource_policy"] = self._resource_policy_pin
+        self._identity["physical_capacity"] = {
+            "version": 1,
+            "implementation_digest": digest(self._capacity_inventory),
+            "inventory_entry": self._capacity_inventory_pin,
+        }
+        self._identity["environment_implementation"] = {
+            "implementation_digest": digest(self._environment_inventory),
+            "inventory_entry": self._environment_inventory_pin,
+        }
+        self._capacity_runtime_methods = {
+            name: (getattr(self, name).__func__, executable_digest(getattr(self, name)))
+            for name in (
+                "_acquire_capacity",
+                "_release_capacity",
+                "_release_unprepared_capacity",
+                "_wait_owner",
+                "_check_capacity",
+            )
         }
         if type(journal) is PostgresRunnerJournal:
             self._identity["configuration_readonly"] = True
@@ -152,6 +299,8 @@ class CodexCodingRunner:
         return int(self._active is not None)
 
     def _check_root(self):
+        from .component_fingerprint import executable_digest
+
         try:
             if (
                 _pin(self._root) != self._root_pin
@@ -160,6 +309,28 @@ class CodexCodingRunner:
                 or _pin(Path(self._docker).resolve(strict=True))
                 != self._identity["docker_executable"]
                 or self._journal.identity != self._identity["journal"]
+                or executable_digest(_capacity_implementation) != self._capacity_inventory_pin
+                or _capacity_implementation() != self._capacity_inventory
+                or executable_digest(_environment_implementation) != self._environment_inventory_pin
+                or _environment_implementation() != self._environment_inventory
+                or executable_digest(policy_value) != self._resource_policy_pin
+                or self._identity["resource_policy"] != self._resource_policy_pin
+                or self._identity["environment_implementation"]
+                != {
+                    "implementation_digest": digest(self._environment_inventory),
+                    "inventory_entry": self._environment_inventory_pin,
+                }
+                or self._identity["physical_capacity"]
+                != {
+                    "version": 1,
+                    "implementation_digest": digest(self._capacity_inventory),
+                    "inventory_entry": self._capacity_inventory_pin,
+                }
+                or any(
+                    getattr(getattr(self, name), "__func__", None) is not method
+                    or executable_digest(getattr(self, name)) != fingerprint
+                    for name, (method, fingerprint) in self._capacity_runtime_methods.items()
+                )
             ):
                 raise DefinitionMismatch("Original Coding runner dependencies changed")
         except OSError:
@@ -200,7 +371,131 @@ class CodexCodingRunner:
             retire_on_stop=True,
             expected_generation=generation,
             configuration_readonly=type(self._journal) is PostgresRunnerJournal,
+            create_recovery=True,
         )
+
+    async def _acquire_capacity(self, owner, *, recovery=False, absent_original_ok=False):
+        self._check_root()
+        if owner.get("capacity") is not None:
+            self._check_capacity(owner)
+            return owner["capacity"].claim is not None
+        _, _, generation = self._location(owner["envelope"])
+        gate = RootCapacity(
+            Path(self._root_pin["path"]),
+            root_pin=self._root_pin,
+            dispatch_digest=digest(_dispatch(owner["envelope"])),
+            runner_digest=digest(self.identity),
+            generation=generation,
+        )
+        owner["capacity"] = gate
+        while True:
+            self._check_capacity(owner)
+            if not recovery:
+                await self._cancelled_owned(owner)
+                if self._closing:
+                    raise RunnerUnavailable("resource closing")
+            claim = gate.try_acquire(recovery=recovery, absent_original_ok=absent_original_ok)
+            if claim is not None:
+                return True
+            if recovery:
+                return False
+            await asyncio.sleep(0.05)
+
+    def _check_capacity(self, owner):
+        self._check_root()
+        gate = owner.get("capacity")
+        if type(gate) is not RootCapacity or any(
+            getattr(getattr(gate, name), "__func__", None) is not getattr(RootCapacity, name)
+            for name in (
+                "try_acquire",
+                "mark_native_intent",
+                "release",
+                "close",
+                "_check_root",
+                "_check_lock",
+                "_validate_state",
+                "_read",
+                "_write",
+                "_drop_lock",
+                "_owned",
+            )
+        ):
+            raise DefinitionMismatch("Original physical capacity instance changed")
+
+    async def _wait_owner(self, owner):
+        async with asyncio.timeout(self._timeout):
+            while self._active is not None:
+                if canonical(_dispatch(owner["envelope"])) == canonical(
+                    _dispatch(self._active["envelope"])
+                ):
+                    raise CoordinatorBusy("Original Coding execution is already owned")
+                if self._closing:
+                    raise RunnerUnavailable("resource closing")
+                await self._authority_owned(owner)
+                await self._cancelled_owned(owner)
+                await asyncio.sleep(0.05)
+
+    async def _release_capacity(self, owner):
+        gate = owner.get("capacity")
+        if gate is None:
+            return
+        self._check_capacity(owner)
+        claim = gate.claim
+        if claim is None:
+            gate.close()
+            owner["capacity"] = None
+            return
+        original = {key: claim[key] for key in ("dispatch_digest", "runner_digest", "generation")}
+        stop = owner.get("stop_evidence")
+        absent = owner.get("namespace_absence")
+        if stop is not None:
+            if stop.get("generation") != original["generation"]:
+                raise DefinitionMismatch("Capacity stop differs from the original generation")
+            gate.release(
+                claim["token"],
+                fenced_receipt={
+                    **original,
+                    **{
+                        key: stop[key]
+                        for key in (
+                            "container_id",
+                            "stopped",
+                            "fenced",
+                            "retired",
+                            "container_present",
+                            "pid",
+                        )
+                    },
+                },
+            )
+        elif absent is not None:
+            gate.release(
+                claim["token"],
+                namespace_absent_proof={
+                    **original,
+                    "namespace_absent": True,
+                    "metadata_present": False,
+                    "container_present": False,
+                    "process_present": False,
+                },
+            )
+        else:
+            gate.release(claim["token"], definitely_undispatched=True)
+        gate.close()
+        owner["capacity"] = None
+
+    async def _release_unprepared_capacity(self, owner):
+        try:
+            await self._acquire_capacity(owner, recovery=True, absent_original_ok=True)
+            await self._release_capacity(owner)
+        finally:
+            # A failed control cannot discard the durable original obligation.
+            # This branch has no executing owner or native cleanup task to hold
+            # an OS descriptor; another original control may retry its evidence.
+            gate = owner.get("capacity")
+            if gate is not None:
+                gate.close()
+                owner["capacity"] = None
 
     def _binding(self, envelope, intent, state):
         return {
@@ -263,7 +558,7 @@ class CodexCodingRunner:
         if self._closing:
             raise RunnerUnavailable("resource closing")
         if self._active is not None:
-            raise CoordinatorBusy("Another original Coding resource still owns execution")
+            await self._wait_owner({"envelope": envelope, "authority": authority})
         owner = {
             "envelope": envelope,
             "authority": authority,
@@ -284,6 +579,10 @@ class CodexCodingRunner:
             "ending": False,
             "original_state": authority.resource_state(envelope, self.identity),
         }
+        if self._closing:
+            raise RunnerUnavailable("resource closing")
+        if self._active is not None:
+            await self._wait_owner(owner)
         self._active = owner
         owner["task"] = asyncio.create_task(self._execute(owner))
         try:
@@ -294,7 +593,7 @@ class CodexCodingRunner:
             await self._cleanup(owner)
             raise
         finally:
-            if owner["stop"] is not None and owner["task"].done():
+            if self._active is owner and owner["stop"] is not None and owner["task"].done():
                 self._active = None
 
     async def _history_authority(self, envelope, authority):
@@ -448,7 +747,7 @@ class CodexCodingRunner:
         if self._closing:
             raise RunnerUnavailable("resource closing")
         if self._active is not None:
-            raise CoordinatorBusy("Another original Coding resource still owns execution")
+            await self._wait_owner({"envelope": envelope, "authority": authority, "history": True})
         original = await self._authority_method(
             {"history": True, "authority": authority}, "resource_state", envelope, self.identity
         )
@@ -490,7 +789,7 @@ class CodexCodingRunner:
         if self._closing:
             raise RunnerUnavailable("resource closing")
         if self._active is not None:
-            raise CoordinatorBusy("Another original Coding resource still owns execution")
+            await self._wait_owner(owner)
         self._active = owner
         owner["task"] = asyncio.create_task(self._execute(owner))
         try:
@@ -501,7 +800,7 @@ class CodexCodingRunner:
             await self._cleanup(owner)
             raise
         finally:
-            if owner["stop"] is not None and owner["task"].done():
+            if self._active is owner and owner["stop"] is not None and owner["task"].done():
                 self._active = None
 
     async def stop_history(self, envelope: DispatchEnvelope, authority):
@@ -548,6 +847,7 @@ class CodexCodingRunner:
                     evidence=evidence,
                 )
                 await self._authority_method(owner, "adopt", "unprepared", evidence)
+                await self._release_unprepared_capacity(owner)
                 return None
             prepared = resource["prepared"]
             original["prepared"] = prepared or original.get("prepared")
@@ -559,6 +859,7 @@ class CodexCodingRunner:
         known = resource is not None or any(value is not None for value in original.values())
         env = self._environment(envelope, create=False)
         if env is None and not known:
+            await self._release_unprepared_capacity(owner)
             return None
         owner.update(
             {
@@ -577,12 +878,23 @@ class CodexCodingRunner:
                 "resource_intent": resource,
             }
         )
+        if self._active is not None:
+            active = self._active
+            if not active.get("history") or canonical(_dispatch(envelope)) != canonical(
+                _dispatch(active["envelope"])
+            ):
+                raise CoordinatorBusy(
+                    "A different original Coding execution still owns its resource"
+                )
+            active["authority"] = authority
+            await self._close_owner(active)
+            return active.get("stop_evidence")
         self._active = owner
         try:
             await self._cleanup(owner)
             return owner.get("stop_evidence")
         finally:
-            if owner["stop"] is not None:
+            if self._active is owner and owner["stop"] is not None:
                 self._active = None
 
     async def reconcile_history(self, envelope: DispatchEnvelope, authority):
@@ -681,6 +993,7 @@ class CodexCodingRunner:
         try:
             async with asyncio.timeout(self._timeout):
                 await self._cancelled_owned(owner)
+                await self._acquire_capacity(owner)
                 env = self._environment(owner["envelope"], create=True)
                 owner["environment"] = env
                 prepare_binding = {
@@ -715,6 +1028,9 @@ class CodexCodingRunner:
                 owner["original_state"] = await self._authority_method(
                     owner, "resource_state", owner["envelope"], self.identity
                 )
+                capacity = owner["capacity"]
+                self._check_capacity(owner)
+                capacity.mark_native_intent(capacity.claim["token"])
                 prepared = await env.prepare()
                 owner["prepared"] = True
                 inspected = await env.inspect()
@@ -1037,6 +1353,7 @@ class CodexCodingRunner:
                 await self._observe_owned(owner, "stop", stop)
             elif owner.get("namespace_absence") is not None:
                 await self._observe_owned(owner, "namespace_absent", owner["namespace_absence"])
+            await self._release_capacity(owner)
             owner["stop"] = stop or {"container_id": None, "generation": None, "fenced": True}
             return
         env = owner["environment"]
@@ -1044,6 +1361,8 @@ class CodexCodingRunner:
         failure = None
         owner["ending"] = True
         try:
+            if owner["cold"] and owner.get("capacity") is None:
+                await self._acquire_capacity(owner, recovery=True)
             if (
                 owner["cold"]
                 and owner.get("known_resource")
@@ -1157,6 +1476,7 @@ class CodexCodingRunner:
             await self._observe_owned(owner, "stop", stop)
         elif owner.get("namespace_absence") is not None:
             await self._observe_owned(owner, "namespace_absent", owner["namespace_absence"])
+        await self._release_capacity(owner)
         owner["stop"] = stop or {"container_id": None, "generation": None, "fenced": True}
 
     @staticmethod
@@ -1200,12 +1520,14 @@ class CodexCodingRunner:
             owner["task"].cancel()
             await self._settle(owner["task"])
         if owner["stop"] is not None:
-            self._active = None
+            if self._active is owner:
+                self._active = None
             return
         if owner["cleanup"] is not None and owner["cleanup"].done():
             owner["cleanup"] = None
         await self._cleanup(owner)
-        self._active = None
+        if self._active is owner:
+            self._active = None
 
     async def stop_existing(self, envelope: DispatchEnvelope, authority):
         intent = self._authority(envelope, authority)
@@ -1234,6 +1556,7 @@ class CodexCodingRunner:
                 known = prior is not None
         env = self._environment(envelope, create=False)
         if env is None and not known:
+            await self._release_unprepared_capacity({"envelope": envelope, "authority": authority})
             return None
         owner = {
             "envelope": envelope,
@@ -1252,12 +1575,20 @@ class CodexCodingRunner:
             "original_state": original if known else {},
             "known_resource": known,
         }
+        if self._active is not None:
+            active = self._active
+            if canonical(_dispatch(envelope)) != canonical(_dispatch(active["envelope"])):
+                raise CoordinatorBusy(
+                    "A different original Coding execution still owns its resource"
+                )
+            await self._close_owner(active)
+            return active.get("stop_evidence")
         self._active = owner
         try:
             await self._cleanup(owner)
             return owner.get("stop_evidence")
         finally:
-            if owner["stop"] is not None:
+            if self._active is owner and owner["stop"] is not None:
                 self._active = None
 
     async def reconcile(self, envelope: DispatchEnvelope, authority):

@@ -108,6 +108,8 @@ def connection_implementation():
         codex_model_connection,
         codex_rpc,
         codex_runner,
+        codex_runner_capacity,
+        coding_resource_fingerprint,
     )
 
     result = {}
@@ -121,6 +123,8 @@ def connection_implementation():
         (codex_coding_profile, (codex_coding_profile.CodexCodingProfile,)),
         (codex_environment, (codex_environment.DockerCodingEnvironment,)),
         (codex_runner, (CodexCodingRunner,)),
+        (codex_runner_capacity, (codex_runner_capacity.RootCapacity,)),
+        (coding_resource_fingerprint, ()),
     ):
         result[module.__name__] = _module_group(module, classes)
         result[module.__name__]["policy_constants"] = digest(
@@ -246,6 +250,7 @@ class ConnectedCodexCodingRunner(CodexCodingRunner):
             retire_on_stop=True,
             expected_generation=generation,
             configuration_readonly=True,
+            create_recovery=True,
         )
 
     def _make_transport(self, owner, environment):

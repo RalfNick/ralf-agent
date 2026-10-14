@@ -67,10 +67,10 @@ def enabled(manifest):
 def orchestration_enabled(manifest):
     value = manifest.get("coding_composition_protocol")
     return (
-        manifest.get("binding_protocol") == 17
+        manifest.get("binding_protocol") in (17, 19)
         and type(value) is dict
         and type(value.get("version")) is int
-        and value["version"] == 4
+        and value["version"] == {17: 4, 19: 5}[manifest["binding_protocol"]]
     )
 
 

@@ -410,20 +410,20 @@ def validate_topology(request, manifest):
 
 def validate_protocol(manifest):
     if not enabled(manifest):
-        if manifest.get("binding_protocol") in (12, 13, 15, 17):
+        if manifest.get("binding_protocol") in (12, 13, 15, 17, 19):
             raise DefinitionMismatch("Original Coding composition publication is missing")
         return
     value = manifest["coding_composition_protocol"]
     if (
         manifest.get("kernel") != "temporal-3"
         or type(manifest.get("binding_protocol")) is not int
-        or manifest["binding_protocol"] != 17
+        or manifest["binding_protocol"] != 19
         or manifest.get("dispatch_admission") != "history-1"
         or "coding_execution_protocol" not in manifest
         or type(value) is not dict
         or set(value) != {"version", "topology", "implementation"}
         or type(value["version"]) is not int
-        or value["version"] != 4
+        or value["version"] != 5
         or value["topology"] != "bounded-agent-orchestration"
     ):
         raise DefinitionMismatch("Unsupported original Coding composition protocol")
@@ -505,9 +505,9 @@ def publish(manifest, runtime):
         raise DefinitionMismatch("Original Coding composition opt-in is missing")
     require_sdk()
     result = detached(manifest)
-    result["binding_protocol"] = 17
+    result["binding_protocol"] = 19
     result["coding_composition_protocol"] = {
-        "version": 4,
+        "version": 5,
         "topology": "bounded-agent-orchestration",
         "implementation": implementation(),
     }

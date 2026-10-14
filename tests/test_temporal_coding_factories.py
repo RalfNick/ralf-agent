@@ -293,8 +293,8 @@ def test_builtin_profile_publishes_original_journal_and_two_selected_agent_resou
         assembly = await TemporalRuntimeBuilder(base_dir=tmp_path).abuild(selected)
         try:
             runtime, release = assembly._runtime, assembly.release
-            assert release["binding_protocol"] == 16 and release["kernel"] == "temporal-3"
-            assert release["coding_execution_protocol"]["version"] == 3
+            assert release["binding_protocol"] == 18 and release["kernel"] == "temporal-3"
+            assert release["coding_execution_protocol"]["version"] == 4
             assert set(release["coding_execution_protocol"]["tools"]) == {"coding", "other"}
             assert runtime.tool_execution is not None
             assert runtime.tools.get("coding").handler.runner._journal._effect is runtime.journal

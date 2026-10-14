@@ -302,7 +302,7 @@ def catalog_registration(runtime):
 def effective_manifest(manifest, descriptor):
     choices = validate_descriptor(manifest, descriptor)
     result = detached(manifest)
-    if manifest.get("binding_protocol") in (8, 9, 10, 11, 12, 13, 14, 15, 16, 17):
+    if manifest.get("binding_protocol") in (8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19):
         if "model_history" in result:
             result["model_history_protocol"] = (
                 2 if result["model_history"]["identity"].get("scope") == "session" else 1
@@ -554,6 +554,8 @@ def capabilities(manifest):
         13,
         15,
         17,
+        18,
+        19,
     ):
         from .temporal_coding_composition_protocol import validate_protocol
 
@@ -586,10 +588,10 @@ def capabilities(manifest):
         **(
             {
                 "coding_composition": "bounded-agent-orchestration"
-                if manifest.get("binding_protocol") == 17
+                if manifest.get("binding_protocol") in (17, 19)
                 else "bounded-agent-graph"
             }
-            if manifest.get("binding_protocol") in (13, 15, 17)
+            if manifest.get("binding_protocol") in (13, 15, 17, 19)
             and "coding_composition_protocol" in manifest
             else {}
         ),

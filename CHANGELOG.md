@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.0.dev111 — Original Coding resource safety
+
+- Share capacity one across original invocations using the same physical Runner root, regardless of Scope, tool aliases, task arguments or journal client. Wait before native admission without repeating attempts or startup grants.
+- Retain durable original obligations across process exit; release only after definitely-undispatched completion or original validated physical retirement and actual cleanup. Waiting cancellation does not clear the holder.
+- Record opt-in create submission before Docker CREATE. Cold control can discover, fully validate and retire only the original CID after lost replies or locator persistence failure; empty queries remain unknown.
+- Fix cold stop owner replacement and stale cleanup races with identity checks. Pin transitive capacity, environment and typed policy helpers for both Local and selected Temporal execution.
+- Publish selected native v4/binding18 and composition v5/binding19. Keep unselected defaults unchanged; previous selected histories require immutable matching Workers. Retain negative create barriers, CLI supervision, persistent queues, cross-host recovery and complex Coding quality as open work.
+
 ## 0.1.0.dev110 — Temporal Coding orchestration
 
 - Extend selected Coding composition to bounded Team and Dynamic parents with direct Agent members; keep nested/sequence members explicitly unsupported.

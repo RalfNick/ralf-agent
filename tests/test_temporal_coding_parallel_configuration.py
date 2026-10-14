@@ -28,11 +28,11 @@ from tests.test_temporal_engine import Provider, registry
 def test_existing_boolean_composition_publishes_bounded_version_17():
     original = manifest()
     selected = publish(original, SimpleNamespace(coding_execution=True, coding_composition=True))
-    assert selected["binding_protocol"] == 17
-    assert selected["coding_composition_protocol"]["version"] == 4
+    assert selected["binding_protocol"] == 19
+    assert selected["coding_composition_protocol"]["version"] == 5
     assert selected["coding_composition_protocol"]["topology"] == "bounded-agent-orchestration"
     assert selected["coding_execution_protocol"] == original["coding_execution_protocol"]
-    assert original["binding_protocol"] == 16
+    assert original["binding_protocol"] == 18
 
 
 @pytest.mark.parametrize(
@@ -121,7 +121,7 @@ def test_registered_policy_still_limits_bounded_graph_capacity():
         execution_policy=TemporalExecutionPolicy(max_concurrency=2),
     )
     release = host.orchestration_release
-    release.update(kernel="temporal-3", binding_protocol=17)
+    release.update(kernel="temporal-3", binding_protocol=19)
     release["coding_composition_protocol"] = composition_manifest()["coding_composition_protocol"]
     graph = GraphWorkflowSpec(
         "bounded",
@@ -141,8 +141,8 @@ def test_registered_policy_still_limits_bounded_graph_capacity():
 @pytest.mark.parametrize("mutation", ["old_binding", "old_version", "old_topology", "missing"])
 def test_current_publication_refuses_serial_release_reinterpretation(mutation):
     release = composition_manifest()
-    release["binding_protocol"] = 17
-    release["coding_composition_protocol"].update(version=4, topology="bounded-agent-orchestration")
+    release["binding_protocol"] = 19
+    release["coding_composition_protocol"].update(version=5, topology="bounded-agent-orchestration")
     if mutation == "old_binding":
         release["binding_protocol"] = 12
     elif mutation == "old_version":
@@ -167,8 +167,8 @@ def test_current_root_guard_records_exact_bounded_graph_admission():
     engine._closed, engine._registry, engine.scope = False, Registry(), Scope()
     engine._release = {
         "kernel": "temporal-3",
-        "binding_protocol": 17,
-        "coding_composition_protocol": {"version": 4, "topology": "bounded-agent-orchestration"},
+        "binding_protocol": 19,
+        "coding_composition_protocol": {"version": 5, "topology": "bounded-agent-orchestration"},
     }
     request = graph_request(concurrency=2)
     asyncio.run(engine._guard("submit", "original", "root", request))
@@ -183,9 +183,9 @@ def test_current_root_guard_records_exact_bounded_graph_admission():
 def test_selected_capability_exposes_finite_orchestration():
     engine = object.__new__(TemporalEngine)
     engine._release = {**composition_manifest(), "orchestration": {"version": "1"}}
-    engine._release["binding_protocol"] = 17
+    engine._release["binding_protocol"] = 19
     engine._release["coding_composition_protocol"].update(
-        version=4, topology="bounded-agent-orchestration"
+        version=5, topology="bounded-agent-orchestration"
     )
     assert engine.capabilities["coding_composition"] == "bounded-agent-orchestration"
     assert engine.capabilities["graph"] is True
