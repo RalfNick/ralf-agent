@@ -208,9 +208,8 @@ def test_finite_gate_accepts_ref_and_projects_original_leaf_descriptor():
     assert child["agent_bindings"] == {"agent": choice.to_dict()}
 
 
-def test_finite_gate_refuses_parallel_even_with_no_selected_native_tool():
-    with pytest.raises(ValidationError, match="serial"):
-        protocol().validate_topology(graph_request(tools=("plain",), concurrency=2), manifest())
+def test_finite_gate_accepts_bounded_parallel_without_selected_native_tool():
+    protocol().validate_topology(graph_request(tools=("plain",), concurrency=2), manifest())
 
 
 def test_finite_gate_disabled_runner_never_grants_selected_coding():
@@ -221,11 +220,11 @@ def test_finite_gate_disabled_runner_never_grants_selected_coding():
         protocol().validate_topology(value, manifest())
 
 
-def test_coding_protocol_12_never_accepts_missing_composition_marker():
+def test_coding_protocol_13_never_accepts_missing_composition_marker():
     from ralf_agent.temporal_coding_protocol import validate_protocol
 
     value = manifest()
-    value["binding_protocol"] = 12
+    value["binding_protocol"] = 13
     with pytest.raises(DefinitionMismatch):
         validate_protocol(value)
 
@@ -233,8 +232,8 @@ def test_coding_protocol_12_never_accepts_missing_composition_marker():
 def test_composition_marker_is_refused_on_an_original_leaf_11_release():
     value = manifest()
     value["coding_composition_protocol"] = {
-        "version": 1,
-        "topology": "serial-agent-graph",
+        "version": 2,
+        "topology": "bounded-agent-graph",
         "implementation": {},
     }
     with pytest.raises(DefinitionMismatch):
@@ -244,10 +243,10 @@ def test_composition_marker_is_refused_on_an_original_leaf_11_release():
 @pytest.mark.parametrize(
     "version,kind,linked,expected",
     [
-        (12, "graph", False, True),
+        (13, "graph", False, True),
         (11, "graph", False, False),
-        (12, "agent", False, False),
-        (12, "graph", True, False),
+        (13, "agent", False, False),
+        (13, "graph", True, False),
     ],
 )
 def test_root_guard_only_records_selected_original_graph_admission(version, kind, linked, expected):
@@ -264,8 +263,8 @@ def test_root_guard_only_records_selected_original_graph_admission(version, kind
     engine._closed, engine._registry = False, Registry()
     engine.scope = Scope()
     engine._release = {"kernel": "temporal-3", "binding_protocol": version}
-    if version == 12:
-        engine._release["coding_composition_protocol"] = {"version": 1}
+    if version == 13:
+        engine._release["coding_composition_protocol"] = {"version": 2}
     request = {"definition": {"kind": kind}}
     if linked:
         request["coding_parent"] = {"original": "parent"}
@@ -315,7 +314,7 @@ def test_composition_joint_version_retains_original_optional_validation(kind, re
     value = copy.deepcopy(
         runtime_for(registered[0]).manifest if kind == "sandbox" else candidate(kind)
     )
-    value.update(kernel="temporal-3", binding_protocol=12, dispatch_admission="history-1")
+    value.update(kernel="temporal-3", binding_protocol=13, dispatch_admission="history-1")
     validators[kind](value)
 
 
@@ -323,7 +322,7 @@ def composition_manifest():
     """History fixture: actual pure pins; opaque Worker pins cannot execute business."""
     module = protocol()
     value = manifest()
-    value["binding_protocol"] = 12
+    value["binding_protocol"] = 13
     pins = module.implementation(history_only=True)
     pins.update(
         {
@@ -332,8 +331,8 @@ def composition_manifest():
         }
     )
     value["coding_composition_protocol"] = {
-        "version": 1,
-        "topology": "serial-agent-graph",
+        "version": 2,
+        "topology": "bounded-agent-graph",
         "implementation": pins,
     }
     return value
@@ -369,7 +368,7 @@ def test_composition_history_validation_refuses_incomplete_publication(mutation)
     elif mutation == "bad_sha":
         marker["implementation"]["control"]["close"] = "unknown"
     else:
-        marker["version"] = 2
+        marker["version"] = 3
     with pytest.raises(DefinitionMismatch):
         protocol().validate_protocol(value)
 
@@ -425,14 +424,14 @@ def test_composition_capability_requires_explicit_marker():
     from ralf_agent.temporal_bindings import capabilities
 
     assert "coding_composition" not in capabilities(manifest())
-    assert capabilities(composition_manifest())["coding_composition"] == "serial-agent-graph"
+    assert capabilities(composition_manifest())["coding_composition"] == "bounded-agent-graph"
 
 
 def test_composition_capability_refuses_an_unverified_publication():
     from ralf_agent.temporal_bindings import capabilities
 
     value = manifest()
-    value.update(binding_protocol=12, coding_composition_protocol={})
+    value.update(binding_protocol=13, coding_composition_protocol={})
     with pytest.raises(DefinitionMismatch):
         capabilities(value)
 
@@ -553,7 +552,7 @@ def test_excluded_coding_tools_never_acquire_runner_permission():
 
 @pytest.mark.parametrize("kind", ["team", "dynamic"])
 def test_selected_composition_refuses_later_parent_topologies(kind):
-    with pytest.raises(ValidationError, match="static serial Agent graph"):
+    with pytest.raises(ValidationError, match="static bounded Agent graph"):
         protocol().validate_topology({"definition": {"kind": kind}}, manifest())
 
 
@@ -604,7 +603,7 @@ def test_actual_factory_publication_keeps_leaf_group_and_pins_new_worker_helpers
                 coding_composition=True,
             )
             assert leaf.manifest["binding_protocol"] == 11
-            assert selected.manifest["binding_protocol"] == 12
+            assert selected.manifest["binding_protocol"] == 13
             assert (
                 selected.manifest["coding_execution_protocol"]
                 == leaf.manifest["coding_execution_protocol"]

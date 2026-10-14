@@ -6,6 +6,10 @@ PostgreSQL 上通过 11 条串行执行、审批重启、取消、故障恢复�
 原生进程对端是确定性测试 peer，未调用真实 Coding 模型。完整 R13、G1–G8 和
 第二阶段继续开放，证据与未验收项见[本批登记](../architecture/reviews/2026-10-14-temporal-coding-composition.md)。
 
+本文的 serial／协议12描述 dev107 历史已验收范围。dev108 的同一显式开关发布
+协议13／版本2，并提供[有界并行及共享资源背压](temporal-parallel-coding.md)。
+旧12 Run必须使用其原匹配Worker／wheel续接，不能由新发布静默替代。
+
 新入口复用 [dev106 原 ToolAction 的 Coding 委托](temporal-coding.md)：父图保留原
 History 调度与子预算，实际 Agent 子 Run 保留自己的审批、ToolAction、一次 attempt、
 原生 grant 和结果采纳。PostgreSQL 保存原资源证据；Runner 复用原执行循环。

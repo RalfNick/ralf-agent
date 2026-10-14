@@ -164,7 +164,11 @@ class TemporalParentWorkflow(TemporalRunWorkflow):
         from .types import digest
 
         composition = enabled(self.state.manifest)
-        if composition and not workflow.patched("ralf-coding-composition-v1"):
+        if composition and not workflow.patched(
+            "ralf-coding-composition-v2"
+            if self.state.manifest.get("binding_protocol") == 13
+            else "ralf-coding-composition-v1"
+        ):
             raise ApplicationError(
                 "Coding composition History marker unavailable",
                 type="definition_mismatch",

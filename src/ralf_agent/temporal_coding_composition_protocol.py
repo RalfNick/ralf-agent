@@ -28,6 +28,9 @@ def _pure_sources():
                 "_link_fields",
                 "_view_fields",
                 "enabled",
+                "child_capacity_released",
+                "coding_runner_keys",
+                "occupied_runner_keys",
                 "_require",
                 "_namespace",
                 "initialize",
@@ -61,6 +64,7 @@ def _pure_sources():
                 "TemporalRunState._apply",
                 "TemporalRunState.next_operation",
                 "TemporalRunState.diagnostics",
+                "TemporalRunState.retry_blocked",
                 "TemporalCommandRegistryState.__init__",
                 "TemporalCommandRegistryState.reserve",
                 "TemporalCommandRegistryState.composition_candidates",
@@ -173,6 +177,9 @@ def _worker_sources():
                 "_fence_leaf",
                 "_is_notfound",
                 "_resources",
+                "_leaf_requests",
+                "_resource_request",
+                "_close_child",
                 "close",
             ),
         ),
@@ -279,10 +286,17 @@ def validate_topology(request, manifest):
     if definition["kind"] in {"agent", "sequence"}:
         return
     if definition["kind"] != "graph":
-        raise ValidationError("Coding composition requires a static serial Agent graph")
+        raise ValidationError("Coding composition requires a static bounded Agent graph")
     concurrency = definition.get("max_concurrency", 1)
-    if type(concurrency) is not int or concurrency != 1:
-        raise ValidationError("Coding composition requires a serial Agent graph")
+    from .governance import TemporalExecutionPolicy
+
+    policy = (
+        TemporalExecutionPolicy.from_identity(manifest["execution_policy"])
+        if "execution_policy" in manifest
+        else TemporalExecutionPolicy()
+    )
+    if type(concurrency) is not int or not 1 <= concurrency <= policy.max_concurrency:
+        raise ValidationError("Coding composition concurrency exceeds original execution policy")
     graph = GraphWorkflowSpec.from_dict(definition)
     if any(node.agent is None for node in graph.nodes):
         raise ValidationError("Coding composition supports original Agent nodes only")
@@ -297,21 +311,21 @@ def validate_topology(request, manifest):
 
 def validate_protocol(manifest):
     if not enabled(manifest):
-        if manifest.get("binding_protocol") == 12:
+        if manifest.get("binding_protocol") in (12, 13):
             raise DefinitionMismatch("Original Coding composition publication is missing")
         return
     value = manifest["coding_composition_protocol"]
     if (
         manifest.get("kernel") != "temporal-3"
         or type(manifest.get("binding_protocol")) is not int
-        or manifest["binding_protocol"] != 12
+        or manifest["binding_protocol"] != 13
         or manifest.get("dispatch_admission") != "history-1"
         or "coding_execution_protocol" not in manifest
         or type(value) is not dict
         or set(value) != {"version", "topology", "implementation"}
         or type(value["version"]) is not int
-        or value["version"] != 1
-        or value["topology"] != "serial-agent-graph"
+        or value["version"] != 2
+        or value["topology"] != "bounded-agent-graph"
     ):
         raise DefinitionMismatch("Unsupported original Coding composition protocol")
     validate_implementation(value["implementation"])
@@ -392,10 +406,10 @@ def publish(manifest, runtime):
         raise DefinitionMismatch("Original Coding composition opt-in is missing")
     require_sdk()
     result = detached(manifest)
-    result["binding_protocol"] = 12
+    result["binding_protocol"] = 13
     result["coding_composition_protocol"] = {
-        "version": 1,
-        "topology": "serial-agent-graph",
+        "version": 2,
+        "topology": "bounded-agent-graph",
         "implementation": implementation(),
     }
     validate_protocol(result)

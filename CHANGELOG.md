@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.0.dev108 — Bounded Temporal Coding graphs
+
+- Extend explicit Coding composition to binding protocol13/version2 bounded static Agent graphs. Reuse original parent/child Histories, caps, bindings and native loop; distinct Runners overlap and shared Runners queue through effective-grant resource backpressure.
+- Attempt every independently verified descendant stop, match complete PG resources to original History requests, and require physical/ancestor proof on final scan. Recover failed original stops without reopening cancelling blocked business; retain unknown caps and resources on incomplete close.
+- Keep default/native protocol11 publication unchanged. Selected old12 releases need their matching dev107 Worker/wheel, while old Workers refuse13 before business I/O. Installed/real-service evidence and pending Team/Dynamic, global capacity, authentication and quality gates are recorded in [the batch record](architecture/reviews/2026-10-14-temporal-parallel-coding.md).
+
 ## 0.1.0.dev107 — Original Temporal serial Coding graph
 
 - Add explicit composition selection for serial static Agent graphs over existing parent/child Histories and the original Coding loop. Preserve protocol11 and default publication; protocol12 fixes original namespace, requests, child SDK epochs and complete helper fingerprints.

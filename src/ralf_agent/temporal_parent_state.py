@@ -652,7 +652,12 @@ class TemporalParentState(TemporalRunState):
         return detached(entry)
 
     def next_calls(self):
-        from .temporal_coding_composition_state import enabled
+        from .temporal_coding_composition_state import (
+            child_capacity_released,
+            coding_runner_keys,
+            enabled,
+            occupied_runner_keys,
+        )
 
         if enabled(self.manifest) and (
             getattr(self, "composition_namespace", {}).get("id") is None
@@ -667,7 +672,20 @@ class TemporalParentState(TemporalRunState):
             or self.root_aggregate is not None
         ):
             return []
-        pending = [call for call in self.children if not call.get("settled", False)]
+        resource_aware = (
+            enabled(self.manifest)
+            and self.manifest.get("binding_protocol") == 13
+            and self.kind == "graph"
+        )
+        pending = [
+            call
+            for call in self.children
+            if (
+                not child_capacity_released(call)
+                if resource_aware
+                else not call.get("settled", False)
+            )
+        ]
         slots = self.max_concurrency - len(pending)
         if self.stage == "execute" and slots > 0:
             if self.dag is not None:
@@ -678,7 +696,22 @@ class TemporalParentState(TemporalRunState):
                 for name in skipped:
                     self.dag["nodes"][name] = {"state": "skipped"}
                     self._emit("dag_node_skipped", {"node": name})
-                for node in ready[:slots]:
+                occupied = set(occupied_runner_keys(self)) if resource_aware else set()
+                for node in ready:
+                    if slots <= 0:
+                        break
+                    resources = frozenset()
+                    if resource_aware:
+                        from .temporal_bindings import project_child
+
+                        projected = project_child(
+                            self.request,
+                            node.id,
+                            submission_request(node.agent, None, budget=self.child_cap),
+                        )
+                        resources = coding_runner_keys(projected, self.manifest)
+                        if resources & occupied:
+                            continue
                     self.delegate(
                         ChildCall(
                             node.id,
@@ -693,6 +726,8 @@ class TemporalParentState(TemporalRunState):
                         ),
                         graph_node=node.id,
                     )
+                    occupied.update(resources)
+                    slots -= 1
                 if (
                     not ready
                     and not pending

@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "ralf-agent"
-version = "0.1.0.dev107"
+version = "0.1.0.dev108"
 description = "Reliable agent tasks with durable approvals and recovery"
 readme = "README.md"
 requires-python = ">=3.11"
@@ -43,6 +43,8 @@ testpaths = ["tests"]
 pythonpath = ["src"]
 
 [tool.ruff]
+# Keep Python checks stable when newer Ruff versions add Markdown formatting.
+extend-exclude = ["*.md"]
 target-version = "py311"
 line-length = 100
 

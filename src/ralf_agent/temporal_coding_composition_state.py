@@ -51,7 +51,44 @@ def _view_fields():
 
 
 def enabled(manifest):
-    return manifest.get("binding_protocol") == 12 and "coding_composition_protocol" in manifest
+    return (
+        manifest.get("binding_protocol") in (12, 13) and "coding_composition_protocol" in manifest
+    )
+
+
+def child_capacity_released(call):
+    return call.get("physical_no_start") is True or (
+        call.get("settled") is True
+        and call.get("physical_stop_proof", {}).get("physical_stopped") is True
+    )
+
+
+def coding_runner_keys(request, manifest):
+    """Deduplicate original Runner resources from actual effective Agent grants."""
+    from .binding_paths import agent_paths
+    from .binding_types import AgentBindingDescriptor
+    from .temporal_bindings import effective_step
+
+    resources = set()
+    for path, step in agent_paths(request["definition"]).items():
+        selected = effective_step(
+            step,
+            manifest,
+            request.get("agent_bindings", {}).get(path, AgentBindingDescriptor().to_dict()),
+        )
+        for name in selected["tools"]:
+            marker = manifest["tools"][name].get("config", {}).get("delegated_runner")
+            if marker is not None:
+                resources.add(digest(marker["runner"]))
+    return frozenset(resources)
+
+
+def occupied_runner_keys(state):
+    resources = set()
+    for call in state.children:
+        if not child_capacity_released(call):
+            resources.update(coding_runner_keys(call["request"], state.manifest))
+    return frozenset(resources)
 
 
 def _require(state):

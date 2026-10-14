@@ -1,5 +1,7 @@
 # RALF 通用框架能力与扩展验收
 
+Dev108 已验收有限 Temporal 有界静态 Agent 图 Coding：协议 13／组合版本 2，在原父 History 按有效 Runner 授权调度不同资源并行和共享资源背压；财务已结算但未证明物理结束的原子仍占槽。关闭尝试全部独立原叶、准确核对 PG／History 完整请求并重扫，失败保留资源；停止失败恢复不会重开取消中的业务。Team／Dynamic 的持久选择阶段、跨父全局 Runner 容量、嵌套／直接 Tool、专用认证和真实 Coding 质量仍开放，完整 R13／第二阶段未关闭。 见[并行指南](../../docs/temporal-parallel-coding.md)和[本批验收](../reviews/2026-10-14-temporal-parallel-coding.md)。
+
 Dev107 已验收有限 Temporal 串行 Agent 图 Coding：显式 `coding_composition=True` 依赖原 Coding 开关，协议 12 固定原父子请求、namespace UUID 和 SDK epoch；原 History 继续管理调度、审批、结果和预算，PG 只存证据。owned 关闭排空真实 SDK 提交、关闭已有提交准入，并采纳原后代的物理停止；未知效果与整个子 cap 保留。直接 Tool／并行／Team／Dynamic／嵌套 Temporal Coding、跨宿主、专用原生认证和真实 Coding 任务质量仍开放，完整 R01–R26／R13／第二阶段未关闭；dev99 四链路保持冻结。 见[组合指南](../../docs/temporal-coding-composition.md)和[本批验收](../reviews/2026-10-14-temporal-coding-composition.md)。
 
 Dev106 已验收原 Temporal Agent／顺序 Workflow 的有限 Coding 委托：显式 `coding_execution=True`、`tools/codex-coding-postgres` 与精确 `runner/registered-tool` 借用接通 SDK／JSON／TOML。所选发布使用 `temporal-3`／binding protocol 11／`coding_execution_protocol=1`；省略选项的默认 Local／Temporal 字节保持。原 History 独占阶段准入、结果与额度，原 PG EffectJournal 同事务记录资源意图及回执，实际 owner／原容器停止证据另行核对；关闭失败保留原资源账本供同循环重试。PG／History 原配置使用精确 readonly file bind，真实保护控制探针通过，原配置内容／inode、原 CID 移除与 History／PG 收尾已验证；此前未保护配置失败保留。复杂 Temporal Coding 仍拒绝，跨宿主、专用原生认证和真实 Coding 任务质量继续开放；固定 process-peer 协议验证不构成真实模型质量。源码全模块回归的旧协议断言已定向修订；独立安装2175项／418配置跳过、实际服务39项零跳过和旧Worker门禁已登记，完整 R01–R26／第二阶段与 dev99 冻结范围保持。见[使用指南](../../docs/temporal-coding.md)和[本批登记](../reviews/2026-10-14-temporal-coding-delegation.md)。

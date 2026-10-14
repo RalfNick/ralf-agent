@@ -18,7 +18,7 @@ async def namespace_id(client):
 
 async def validate_tree_activity(client, request, *, workflow_id):
     """Bind portable lineage to this actual Activity and namespace before I/O."""
-    if request.get("runtime_manifest", {}).get("binding_protocol") == 12:
+    if request.get("runtime_manifest", {}).get("binding_protocol") == 13:
         from .temporal_coding_composition_control import validate_activity
 
         await validate_activity(client, request, workflow_id=workflow_id)

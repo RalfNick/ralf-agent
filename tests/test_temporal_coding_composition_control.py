@@ -13,8 +13,8 @@ from ralf_agent.types import Scope, digest
 SCOPE = {"workspace": "composition", "principal": "original"}
 MANIFEST = {
     "kernel": "temporal-3",
-    "binding_protocol": 12,
-    "coding_composition_protocol": {"version": 1},
+    "binding_protocol": 13,
+    "coding_composition_protocol": {"version": 2, "topology": "bounded-agent-graph"},
 }
 NAMESPACE = {"name": "original", "id": "11111111-1111-1111-1111-111111111111"}
 
@@ -75,6 +75,8 @@ class Handle:
             return copy.deepcopy(self.client.children)
         if value["kind"] == "coding_composition_proof":
             return copy.deepcopy(self.client.proofs[self.run_id])
+        if value["kind"] == "coding_requests":
+            return copy.deepcopy(self.client.requests.get(self.run_id, []))
         return {"snapshot": {"run_id": self.run_id}, "workflow": {}}
 
     async def execute_update(self, name, value, **kwargs):
@@ -129,6 +131,7 @@ class Client:
             else root_request
         )
         self.calls, self.live_owner, self.children = [], False, []
+        self.requests = {}
         self.epochs = {"root": "root-epoch", "child": "child-epoch"}
         self.proofs = {"root": proof("root", request=root_request, epoch="root-epoch")}
         payload = root_request
@@ -516,16 +519,13 @@ def test_activity_refuses_foreign_saved_child_epoch_before_native_business(names
 
 
 def test_fenced_resource_survives_failed_ancestor_adoption_on_close_retry(namespace, monkeypatch):
-    from ralf_agent import delegated_coding
+    from ralf_agent import delegated_coding, temporal_bindings
+    from ralf_agent.postgres_coding_resources import receive_resource
 
     client, run_id = linked_client()
     client.fault = True
     original_update = Handle.execute_update
-    resource = {
-        "runner": {"original": "runner"},
-        "pending_stop": True,
-        "request": {"dispatch": {"run_id": run_id, "execution_epoch": "child-epoch"}},
-    }
+    resource = native_resource(client, run_id)
     scans = []
 
     async def resources(scope):
@@ -545,29 +545,81 @@ def test_fenced_resource_survives_failed_ancestor_adoption_on_close_retry(namesp
         return await original_update(handle, name, value, **kwargs)
 
     async def fence(runtime, sdk, leaf, namespace):
+        nonlocal resource
         assert leaf["run_id"] == run_id and leaf["execution_epoch"] == "child-epoch"
-        resource["pending_stop"] = False
+        resource = receive_resource(
+            resource,
+            "unprepared",
+            {
+                "namespace_binding": resource["namespace_binding"],
+                "prepare_granted": False,
+            },
+        )
 
     monkeypatch.setattr(Handle, "execute_update", update)
     monkeypatch.setattr(module(), "_fence_leaf", fence)
     journal = SimpleNamespace(composition_resources=resources)
-    handler = SimpleNamespace(
-        identity={"original": "runner"}, runner=SimpleNamespace(_journal=journal)
-    )
+    handler = SimpleNamespace(identity=resource["runner"], runner=SimpleNamespace(_journal=journal))
     monkeypatch.setattr(delegated_coding, "registered_coding_tool", lambda tool: handler)
+    monkeypatch.setattr(temporal_bindings, "selected_runtime", lambda runtime, request: runtime)
     worker_runtime = runtime()
     worker_runtime.tools = SimpleNamespace(_tools=["coding"], get=lambda name: object())
 
     async def run():
-        with pytest.raises(OSError, match="ancestor adoption"):
+        with pytest.raises(CloseIncomplete) as error:
             await module().close(worker_runtime, client=client, scope=Scope(**SCOPE))
         assert resource["pending_stop"] is False
+        assert any(item.get("child") == run_id for item in error.value.report["coding_composition"])
         client.fault = False
         await module().close(worker_runtime, client=client, scope=Scope(**SCOPE))
         assert client.proofs["root"]["physical_stopped"] is True
-        assert scans == [True, False]
+        assert scans == [True, False, False, False]
 
     asyncio.run(run())
+
+
+def native_resource(client, run_id, *, fenced=False):
+    """Complete legal PG row based on the actual History native-intent producer."""
+    from ralf_agent.postgres_coding_resources import (
+        new_resource,
+        receive_resource,
+        validate_resource,
+    )
+    from ralf_agent.types import canonical
+    from tests.test_temporal_coding_state import RUNNER, ready
+
+    _, _, request = ready()
+    request = copy.deepcopy(request)
+    epoch = client.proofs[run_id]["execution_epoch"]
+    request.update(scope=SCOPE, run_id=run_id, execution_epoch=epoch, runtime_manifest=MANIFEST)
+    native = request["coding_request"]
+    native["dispatch"].update(scope=SCOPE, run_id=run_id, execution_epoch=epoch)
+    native["release_digest"] = client.proofs[run_id]["release_digest"]
+    native["request_digest"] = digest({k: v for k, v in native.items() if k != "request_digest"})
+    client.requests[run_id] = [request]
+    binding = {
+        "request": native,
+        "runner": RUNNER,
+        "dispatch": native["dispatch"],
+        "environment": {
+            "version": "2",
+            "expected_generation": "a" * 32,
+            "resource_id": "original-resource",
+            "retire_on_stop": True,
+        },
+    }
+    key = (SCOPE["workspace"], SCOPE["principal"], native["dispatch"]["effect_key"])
+    record = new_resource(key, native, RUNNER, binding)
+    if fenced:
+        record = receive_resource(
+            record,
+            "unprepared",
+            {
+                "namespace_binding": binding,
+                "prepare_granted": False,
+            },
+        )
+    return validate_resource(canonical(record), key)
 
 
 def test_registry_absence_is_not_a_root_creation_permission(namespace, monkeypatch):
@@ -591,15 +643,16 @@ def test_registry_absence_with_fenced_native_rows_retains_original_obligation(
     from ralf_agent import delegated_coding
 
     client = Client()
+    resource = native_resource(client, "root", fenced=True)
 
     async def absent(handle, name, value, **kwargs):
         raise RPCError("original Registry not found", RPCStatusCode.NOT_FOUND, b"")
 
     async def rows(scope):
-        return ({"pending_stop": False},)
+        return (copy.deepcopy(resource),)
 
     handler = SimpleNamespace(
-        identity={"original": "runner"},
+        identity=resource["runner"],
         runner=SimpleNamespace(_journal=SimpleNamespace(composition_resources=rows)),
     )
     monkeypatch.setattr(Handle, "execute_update", absent)
@@ -688,7 +741,7 @@ def test_root_admission_consumes_actual_engine_guard_metadata(namespace):
     asyncio.run(run())
 
 
-def test_standalone_leaf12_initializes_uuid_at_original_epoch_without_parent_admission(namespace):
+def test_standalone_leaf13_initializes_uuid_at_original_epoch_without_parent_admission(namespace):
     request = {"definition": {"kind": "agent"}, "input": "original", "budget": 8}
     client = Client(root_request=request)
     client.proofs["root"]["namespace"] = {"name": "original", "id": None}

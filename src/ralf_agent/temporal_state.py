@@ -110,7 +110,7 @@ def validate_manifest(manifest):
     if manifest["kernel"] == "temporal-3":
         if (
             type(manifest.get("binding_protocol")) is not int
-            or manifest.get("binding_protocol") not in (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12)
+            or manifest.get("binding_protocol") not in (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13)
             or manifest.get("dispatch_admission") != "history-1"
         ):
             raise DefinitionMismatch("Unsupported Temporal binding/memory protocol")
@@ -135,7 +135,7 @@ def validate_manifest(manifest):
     from .temporal_coding_composition_protocol import validate_protocol as validate_composition
 
     validate_composition(manifest)
-    if "coding_execution_protocol" in manifest or manifest.get("binding_protocol") in (11, 12):
+    if "coding_execution_protocol" in manifest or manifest.get("binding_protocol") in (11, 12, 13):
         from .temporal_coding_protocol import validate_protocol as validate_coding_protocol
 
         validate_coding_protocol(manifest)
@@ -1558,8 +1558,8 @@ class TemporalRunState:
         retry_stops(self)
         self.pending_acks.extend(self.deferred_acks)
         self.deferred_acks = []
-        # Retrying a journal acknowledgement is safe after business terminal;
-        # dispatching a blocked operation is not. No control may reopen a Run.
+        # Stop and receipt recovery may proceed after business has closed;
+        # dispatching a blocked operation must never reopen a stopping Run.
         if self.manifest["kernel"] == "temporal-3":
             from .temporal_memory_state import request_recovery
 
@@ -1567,7 +1567,7 @@ class TemporalRunState:
             from .temporal_session_save_state import request_recovery as session_recovery
 
             session_recovery(self)
-        if self.state in TERMINAL:
+        if self.state in TERMINAL or self.state == "cancelling":
             return
         for action in self.actions:
             if action["status"] == "blocked":

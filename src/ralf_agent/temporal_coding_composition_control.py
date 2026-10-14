@@ -12,7 +12,7 @@ ACTIVITY = "ralf.temporal.coding-composition-admission.v1"
 
 
 def selected(manifest):
-    return manifest.get("binding_protocol") == 12 and "coding_composition_protocol" in manifest
+    return manifest.get("binding_protocol") == 13 and "coding_composition_protocol" in manifest
 
 
 def _registry(client, scope):
@@ -511,22 +511,61 @@ async def _initialize_root(client, scope, candidate, manifest, namespace):
     )
 
 
-async def _fence_leaf(runtime, client, leaf, namespace):
-    from .temporal_bindings import selected_runtime
-    from .temporal_coding_runtime import callbacks, stop
-
+async def _leaf_requests(runtime, client, leaf, namespace):
     handle = client.get_workflow_handle(leaf["run_id"], run_id=leaf["execution_epoch"])
     requests = await handle.query("view", {"scope": leaf["scope"], "kind": "coding_requests"})
-    if type(requests) is not list:
+    await _namespace(client, namespace)
+    if type(requests) is not list or len(requests) > 10000:
         raise CloseIncomplete({"coding_composition": "original native requests unavailable"})
     for request in requests:
         if (
-            request.get("run_id") != leaf["run_id"]
+            type(request) is not dict
+            or request.get("scope") != leaf["scope"]
+            or request.get("run_id") != leaf["run_id"]
             or request.get("execution_epoch") != leaf["execution_epoch"]
             or request.get("runtime_manifest") != leaf["manifest"]
         ):
             raise DefinitionMismatch("Composition native request replaced original leaf")
         runtime.validate_release(request["runtime_manifest"])
+    return detached(requests)
+
+
+def _resource_request(runtime, leaf, resource, requests):
+    from .delegated_coding import registered_coding_tool
+    from .temporal_bindings import selected_runtime
+
+    native = resource["request"]
+    dispatch = native["dispatch"]
+    if (
+        resource["scope"] != leaf["scope"]
+        or dispatch["scope"] != leaf["scope"]
+        or dispatch["run_id"] != leaf["run_id"]
+        or dispatch["execution_epoch"] != leaf["execution_epoch"]
+        or resource["effect_key"] != dispatch["effect_key"]
+    ):
+        raise DefinitionMismatch("Composition resource replaced original leaf dispatch")
+    matching = [
+        request
+        for request in requests
+        if request.get("action_id") == dispatch["action_id"]
+        and request.get("coding_request") == native
+    ]
+    if len(matching) != 1:
+        raise DefinitionMismatch("Composition resource lacks its exact original History request")
+    request = matching[0]
+    runtime.validate_release(request["runtime_manifest"])
+    selected_host = selected_runtime(runtime, request)
+    handler = registered_coding_tool(selected_host.tools.get(request["tool"]))
+    if handler is None or handler.identity != resource["runner"]:
+        raise DefinitionMismatch("Composition resource changed its original History Runner")
+    return request
+
+
+async def _fence_leaf(runtime, client, leaf, namespace):
+    from .temporal_bindings import selected_runtime
+    from .temporal_coding_runtime import callbacks, stop
+
+    for request in await _leaf_requests(runtime, client, leaf, namespace):
         info = SimpleNamespace(
             workflow_id=leaf["run_id"],
             workflow_run_id=leaf["execution_epoch"],
@@ -537,6 +576,49 @@ async def _fence_leaf(runtime, client, leaf, namespace):
         )
         await _namespace(client, namespace)
         runtime.validate_release(request["runtime_manifest"])
+
+
+async def _close_child(runtime, client, root, call, manifest, namespace):
+    leaf = await _child_proof(client, root, call, manifest, namespace)
+    await _adopt(client, root, leaf, epoch=True)
+    await _command(client, leaf, "cancel", owner_id=root["run_id"])
+    leaf = await _proof(
+        client,
+        root["scope"],
+        leaf["run_id"],
+        leaf["execution_epoch"],
+        manifest,
+        namespace,
+        request=call["request"],
+    )
+    if leaf["state"] not in {"cancelling", "cancelled", "failed", "succeeded"}:
+        raise DefinitionMismatch("Original leaf stop recovery requires business closure")
+    if not leaf["physical_stopped"]:
+        parent = await _proof(
+            client,
+            root["scope"],
+            root["run_id"],
+            root["execution_epoch"],
+            manifest,
+            namespace,
+            request=root["request"],
+        )
+        if parent["state"] not in {"cancelling", "cancelled", "failed", "succeeded"}:
+            raise DefinitionMismatch("Original child stop recovery requires its closed parent")
+        await _command(client, leaf, "drive", owner_id=root["run_id"])
+    await _fence_leaf(runtime, client, leaf, namespace)
+    leaf = await _proof(
+        client,
+        root["scope"],
+        leaf["run_id"],
+        leaf["execution_epoch"],
+        manifest,
+        namespace,
+        request=call["request"],
+    )
+    await _adopt(client, root, leaf)
+    if not leaf["physical_stopped"]:
+        raise CloseIncomplete({"coding_composition": "original leaf owner closure remains pending"})
 
 
 def _is_notfound(exc):
@@ -592,43 +674,68 @@ async def close(runtime, *, client, scope):
         raise DefinitionMismatch("Composition original admission close unavailable")
     await _namespace(client, namespace)
     roots = {}
+    obligations = []
     for candidate in receipt["candidates"]:
-        if (
-            candidate.get("manifest_digest") != digest(manifest)
-            or candidate.get("close_requested") is not True
-        ):
-            raise DefinitionMismatch("Composition close replaced original admission")
         try:
+            if (
+                candidate.get("manifest_digest") != digest(manifest)
+                or candidate.get("close_requested") is not True
+            ):
+                raise DefinitionMismatch("Composition close replaced original admission")
             root = await _initialize_root(client, scoped, candidate, manifest, namespace)
         except Exception as exc:
             if _is_notfound(exc):
                 continue  # Admission is durably closed; never create an absent root.
-            raise
-        await _command(client, root, "cancel", owner_id=root["run_id"])
-        roots[root["run_id"]] = root
-    runners, records = await _resources(runtime, scope)
-    for resource in records:
-        if digest(resource["runner"]) not in runners:
-            raise DefinitionMismatch("Composition close changed original Runner")
-        dispatch = resource["request"]["dispatch"]
-        leaf = await _proof(
-            client, scoped, dispatch["run_id"], dispatch["execution_epoch"], manifest, namespace
-        )
-        link = leaf["request"].get("coding_parent")
-        if link is not None and link["parent_run_id"] not in roots:
-            raise CloseIncomplete(
-                {"coding_composition": "original resource ancestor acceptance unavailable"}
+            obligations.append(
+                {"root": candidate.get("run_id"), "code": getattr(exc, "code", "root_unavailable")}
             )
-        if link is None:
-            await _fence_leaf(runtime, client, leaf, namespace)
-    for root in roots.values():
-        for call in await _children(client, root, namespace):
-            if not call.get("dispatch_started"):
-                continue
-            leaf = await _child_proof(client, root, call, manifest, namespace)
-            await _adopt(client, root, leaf, epoch=True)
-            await _command(client, leaf, "cancel", owner_id=root["run_id"])
-            await _fence_leaf(runtime, client, leaf, namespace)
+            continue
+        roots[root["run_id"]] = root
+        try:
+            await _command(client, root, "cancel", owner_id=root["run_id"])
+        except Exception as exc:
+            obligations.append(
+                {"root": root["run_id"], "code": getattr(exc, "code", "cancel_unavailable")}
+            )
+    standalone = {}
+    try:
+        runners, records = await _resources(runtime, scope)
+    except Exception as exc:
+        obligations.append(
+            {"resources": "original", "code": getattr(exc, "code", "resources_unavailable")}
+        )
+        records = ()
+    for resource in records:
+        try:
+            if digest(resource["runner"]) not in runners:
+                raise DefinitionMismatch("Composition close changed original Runner")
+            dispatch = resource["request"]["dispatch"]
+            leaf = await _proof(
+                client, scoped, dispatch["run_id"], dispatch["execution_epoch"], manifest, namespace
+            )
+            requests = await _leaf_requests(runtime, client, leaf, namespace)
+            _resource_request(runtime, leaf, resource, requests)
+            link = leaf["request"].get("coding_parent")
+            if link is not None and link["parent_run_id"] not in roots:
+                raise CloseIncomplete(
+                    {"coding_composition": "original resource ancestor acceptance unavailable"}
+                )
+            if link is None:
+                if leaf["request"]["definition"]["kind"] not in {"agent", "sequence"}:
+                    raise DefinitionMismatch(
+                        "Unlinked original resource requires a standalone Agent"
+                    )
+                standalone[leaf["run_id"]] = leaf
+        except Exception as exc:
+            obligations.append(
+                {
+                    "resource": resource.get("effect_key"),
+                    "code": getattr(exc, "code", "resource_unavailable"),
+                }
+            )
+    for leaf in standalone.values():
+        try:
+            await _command(client, leaf, "cancel", owner_id=leaf["run_id"])
             leaf = await _proof(
                 client,
                 scoped,
@@ -636,23 +743,157 @@ async def close(runtime, *, client, scope):
                 leaf["execution_epoch"],
                 manifest,
                 namespace,
-                request=call["request"],
+                request=leaf["request"],
             )
-            await _adopt(client, root, leaf)
-            if not leaf["physical_stopped"]:
-                raise CloseIncomplete(
-                    {"coding_composition": "original leaf owner closure remains pending"}
+            if leaf["state"] not in {"cancelling", "cancelled", "failed", "succeeded"}:
+                raise DefinitionMismatch(
+                    "Original standalone stop recovery requires business closure"
                 )
-        refreshed = await _proof(
-            client,
-            scoped,
-            root["run_id"],
-            root["execution_epoch"],
-            manifest,
-            namespace,
-            request=root["request"],
+            if not leaf["physical_stopped"]:
+                await _command(client, leaf, "drive", owner_id=leaf["run_id"])
+            await _fence_leaf(runtime, client, leaf, namespace)
+            refreshed = await _proof(
+                client,
+                scoped,
+                leaf["run_id"],
+                leaf["execution_epoch"],
+                manifest,
+                namespace,
+                request=leaf["request"],
+            )
+            if not refreshed["physical_stopped"]:
+                raise CloseIncomplete(
+                    {"coding_composition": "original standalone owner closure remains pending"}
+                )
+        except Exception as exc:
+            obligations.append(
+                {"leaf": leaf["run_id"], "code": getattr(exc, "code", "stop_unavailable")}
+            )
+    for root in roots.values():
+        try:
+            children = await _children(client, root, namespace)
+        except Exception as exc:
+            obligations.append(
+                {"root": root["run_id"], "code": getattr(exc, "code", "children_unavailable")}
+            )
+            continue
+        for call in children:
+            if not call.get("dispatch_started"):
+                continue
+            try:
+                await _close_child(runtime, client, root, call, manifest, namespace)
+            except Exception as exc:
+                obligations.append(
+                    {"child": call.get("run_id"), "code": getattr(exc, "code", "stop_unavailable")}
+                )
+        try:
+            refreshed = await _proof(
+                client,
+                scoped,
+                root["run_id"],
+                root["execution_epoch"],
+                manifest,
+                namespace,
+                request=root["request"],
+            )
+            if not refreshed["physical_stopped"]:
+                raise CloseIncomplete(
+                    {"coding_composition": "original parent closure remains pending"}
+                )
+        except Exception as exc:
+            obligations.append(
+                {"root": root["run_id"], "code": getattr(exc, "code", "proof_unavailable")}
+            )
+    try:
+        runners, records = await _resources(runtime, scope)
+        for resource in records:
+            try:
+                if digest(resource["runner"]) not in runners:
+                    raise DefinitionMismatch("Composition close changed original Runner")
+                dispatch = resource["request"]["dispatch"]
+                leaf = await _proof(
+                    client,
+                    scoped,
+                    dispatch["run_id"],
+                    dispatch["execution_epoch"],
+                    manifest,
+                    namespace,
+                )
+                _resource_request(
+                    runtime, leaf, resource, await _leaf_requests(runtime, client, leaf, namespace)
+                )
+                if resource["pending_stop"] is not False:
+                    raise CloseIncomplete(
+                        {"coding_composition": "original native intent remains active"}
+                    )
+                if not leaf["physical_stopped"]:
+                    raise CloseIncomplete(
+                        {"coding_composition": "original resource owner closure remains pending"}
+                    )
+                link = leaf["request"].get("coding_parent")
+                if link is None:
+                    if leaf["request"]["definition"]["kind"] not in {"agent", "sequence"}:
+                        raise DefinitionMismatch(
+                            "Unlinked original resource requires a standalone Agent"
+                        )
+                else:
+                    root = roots.get(link["parent_run_id"])
+                    if root is None:
+                        raise CloseIncomplete(
+                            {
+                                "coding_composition": "original resource ancestor acceptance unavailable"
+                            }
+                        )
+                    call = next(
+                        (
+                            call
+                            for call in await _children(client, root, namespace)
+                            if call["run_id"] == leaf["run_id"]
+                        ),
+                        None,
+                    )
+                    if call is None:
+                        raise DefinitionMismatch(
+                            "Original resource lacks its ancestor child intent"
+                        )
+                    original = await _child_proof(client, root, call, manifest, namespace)
+                    if (
+                        original["execution_epoch"] != leaf["execution_epoch"]
+                        or original["request"] != leaf["request"]
+                        or not original["physical_stopped"]
+                    ):
+                        raise DefinitionMismatch(
+                            "Original resource replaced its physically closed child"
+                        )
+                    await _adopt(client, root, original, epoch=True)
+                    await _adopt(client, root, original)
+                    refreshed = await _proof(
+                        client,
+                        scoped,
+                        root["run_id"],
+                        root["execution_epoch"],
+                        manifest,
+                        namespace,
+                        request=root["request"],
+                    )
+                    if not refreshed["physical_stopped"]:
+                        raise CloseIncomplete(
+                            {
+                                "coding_composition": "original resource ancestor closure remains pending"
+                            }
+                        )
+            except Exception as exc:
+                obligations.append(
+                    {
+                        "resource": resource.get("effect_key"),
+                        "code": getattr(exc, "code", "resource_unavailable"),
+                    }
+                )
+    except Exception as exc:
+        obligations.append(
+            {"resources": "original", "code": getattr(exc, "code", "resources_unavailable")}
         )
-        if not refreshed["physical_stopped"]:
-            raise CloseIncomplete({"coding_composition": "original parent closure remains pending"})
     runtime.validate_release(manifest)
     await _namespace(client, namespace)
+    if obligations:
+        raise CloseIncomplete({"coding_composition": obligations})

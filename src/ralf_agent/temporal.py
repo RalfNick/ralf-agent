@@ -128,7 +128,7 @@ class TemporalEngine:
         from .temporal_bindings import capabilities
 
         extended = "orchestration" in self._release
-        composition = self._release.get("binding_protocol") == 12
+        composition = self._release.get("binding_protocol") == 13
         return {
             **temporal_capabilities(),
             "shared_session": self._release.get("session_protocol") == 1,
@@ -144,7 +144,7 @@ class TemporalEngine:
 
         kinds = (
             ["graph"]
-            if self._release.get("binding_protocol") == 12
+            if self._release.get("binding_protocol") == 13
             else ["graph", "team", "dynamic"]
         )
         return {
@@ -242,7 +242,7 @@ class TemporalEngine:
             }
             if (
                 kind == "submit"
-                and self._release.get("binding_protocol") == 12
+                and self._release.get("binding_protocol") == 13
                 and "coding_composition_protocol" in self._release
                 and payload.get("definition", {}).get("kind") == "graph"
                 and "coding_parent" not in payload
