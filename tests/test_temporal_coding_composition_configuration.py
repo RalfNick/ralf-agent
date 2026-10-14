@@ -220,19 +220,19 @@ def test_finite_gate_disabled_runner_never_grants_selected_coding():
         protocol().validate_topology(value, manifest())
 
 
-def test_coding_protocol_17_never_accepts_missing_composition_marker():
+def test_coding_protocol_21_never_accepts_missing_composition_marker():
     from ralf_agent.temporal_coding_protocol import validate_protocol
 
     value = manifest()
-    value["binding_protocol"] = 19
+    value["binding_protocol"] = 21
     with pytest.raises(DefinitionMismatch):
         validate_protocol(value)
 
 
-def test_composition_marker_is_refused_on_current_leaf_16_release():
+def test_composition_marker_is_refused_on_current_leaf_20_release():
     value = manifest()
     value["coding_composition_protocol"] = {
-        "version": 5,
+        "version": 6,
         "topology": "bounded-agent-orchestration",
         "implementation": {},
     }
@@ -243,10 +243,10 @@ def test_composition_marker_is_refused_on_current_leaf_16_release():
 @pytest.mark.parametrize(
     "version,kind,linked,expected",
     [
-        (19, "graph", False, True),
-        (18, "graph", False, False),
-        (19, "agent", False, False),
-        (19, "graph", True, False),
+        (21, "graph", False, True),
+        (20, "graph", False, False),
+        (21, "agent", False, False),
+        (21, "graph", True, False),
     ],
 )
 def test_root_guard_only_records_selected_original_graph_admission(version, kind, linked, expected):
@@ -263,8 +263,8 @@ def test_root_guard_only_records_selected_original_graph_admission(version, kind
     engine._closed, engine._registry = False, Registry()
     engine.scope = Scope()
     engine._release = {"kernel": "temporal-3", "binding_protocol": version}
-    if version == 19:
-        engine._release["coding_composition_protocol"] = {"version": 5}
+    if version == 21:
+        engine._release["coding_composition_protocol"] = {"version": 6}
     request = {"definition": {"kind": kind}}
     if linked:
         request["coding_parent"] = {"original": "parent"}
@@ -314,7 +314,7 @@ def test_composition_joint_version_retains_original_optional_validation(kind, re
     value = copy.deepcopy(
         runtime_for(registered[0]).manifest if kind == "sandbox" else candidate(kind)
     )
-    value.update(kernel="temporal-3", binding_protocol=19, dispatch_admission="history-1")
+    value.update(kernel="temporal-3", binding_protocol=21, dispatch_admission="history-1")
     validators[kind](value)
 
 
@@ -322,7 +322,7 @@ def composition_manifest():
     """History fixture: actual pure pins; opaque Worker pins cannot execute business."""
     module = protocol()
     value = manifest()
-    value["binding_protocol"] = 19
+    value["binding_protocol"] = 21
     pins = module.implementation(history_only=True)
     pins.update(
         {
@@ -331,7 +331,7 @@ def composition_manifest():
         }
     )
     value["coding_composition_protocol"] = {
-        "version": 5,
+        "version": 6,
         "topology": "bounded-agent-orchestration",
         "implementation": pins,
     }
@@ -368,7 +368,7 @@ def test_composition_history_validation_refuses_incomplete_publication(mutation)
     elif mutation == "bad_sha":
         marker["implementation"]["control"]["close"] = "unknown"
     else:
-        marker["version"] = 6
+        marker["version"] = 7
     with pytest.raises(DefinitionMismatch):
         protocol().validate_protocol(value)
 
@@ -433,7 +433,7 @@ def test_composition_capability_refuses_an_unverified_publication():
     from ralf_agent.temporal_bindings import capabilities
 
     value = manifest()
-    value.update(binding_protocol=19, coding_composition_protocol={})
+    value.update(binding_protocol=21, coding_composition_protocol={})
     with pytest.raises(DefinitionMismatch):
         capabilities(value)
 
@@ -606,8 +606,8 @@ def test_actual_factory_publication_keeps_leaf_group_and_pins_new_worker_helpers
                 coding_execution=True,
                 coding_composition=True,
             )
-            assert leaf.manifest["binding_protocol"] == 18
-            assert selected.manifest["binding_protocol"] == 19
+            assert leaf.manifest["binding_protocol"] == 20
+            assert selected.manifest["binding_protocol"] == 21
             assert (
                 selected.manifest["coding_execution_protocol"]
                 == leaf.manifest["coding_execution_protocol"]

@@ -50,7 +50,7 @@ dev99 启用成员验证且开启 JSON mode 的第一次完整配置中，Plan�
 
 ## 第二阶段：环境与执行
 
-dev109 已补[专用模型连接](codex-model-connection.md)和三项有限 POSIX Coding 的真实三次重复基线（9/9、78 oracle 检查）。Local 原 Action 与真实 Temporal／PG 审批重启、取消、安装和旧 Worker 门禁分别验证；后者使用结构化原生 peer，不替代真实模型证据。dev110 一层 Agent Team／Dynamic Coding 的恢复验收见[本批记录](../architecture/reviews/2026-10-14-temporal-coding-orchestration.md)；嵌套／sequence 成员 Temporal Coding、跨父容量、不可确定 create／CID 和复杂 Coding 质量仍阻塞完整第二阶段。见[验收记录](../architecture/reviews/2026-10-14-codex-model-connection.md)，第一阶段 dev99 保持冻结。
+dev109 已补[专用模型连接](codex-model-connection.md)和三项有限 POSIX Coding 的真实三次重复基线（9/9、78 oracle 检查）。Local 原 Action 与真实 Temporal／PG 审批重启、取消、安装和旧 Worker 门禁分别验证；后者使用结构化原生 peer，不替代真实模型证据。dev110 一层 Agent Team／Dynamic Coding 的恢复验收见[本批记录](../architecture/reviews/2026-10-14-temporal-coding-orchestration.md)。dev111 已验收[同根跨父容量和原 CID 正向恢复](coding-resource-recovery.md)，该有限门槛不再列作未实现。dev112 按[监督契约](../architecture/specs/coding-create-supervision-contract.md)补原CLI监督与严格未发送证明，Local原Action、真实Docker正向恢复及Temporal／PG源码／安装原History验证见[本批验收](../architecture/reviews/2026-10-14-coding-create-supervision.md)，相应有限门槛已通过。嵌套／sequence 成员 Temporal Coding、可能已发送create但daemon终态丢失的负向恢复、跨宿主和复杂 Coding 质量仍阻塞完整第二阶段。第一阶段 dev99 保持冻结。
 
 进入阶段时固定所选部署组合；先核对已有实现，再补阻塞项。
 

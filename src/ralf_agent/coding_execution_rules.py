@@ -99,6 +99,8 @@ def grant(state, action, runner_identity, method, params, binding):
 
 def adopt(state, runner_identity, kind, evidence):
     canonical(evidence)
+    if state.get("create_not_dispatched") is not None and kind != "error":
+        raise DefinitionMismatch("Sealed original CREATE cannot adopt native execution receipts")
     if (
         kind
         not in {"prepared", "thread", "turn", "observation", "stop", "result_candidate", "error"}
@@ -203,3 +205,150 @@ def adopt(state, runner_identity, kind, evidence):
     else:
         state["error"] = copy.deepcopy(evidence)
     state["phase"] = kind
+
+
+def _create_not_dispatched_facts():
+    return {
+        "gate_sealed": True,
+        "cli_gate_accepted": False,
+        "cli_exec_started": False,
+        "helpers_ended": True,
+        "control_drained": True,
+        "metadata_present": True,
+        "namespace_query_succeeded": True,
+        "namespace_confirmed": True,
+        "container_present": False,
+    }
+
+
+def _create_not_dispatched_digests():
+    return (
+        "create_operation_digest",
+        "supervision_declaration_digest",
+        "supervision_receipt_digest",
+        "proof_digest",
+    )
+
+
+def _create_digest(value, size=64):
+    return type(value) is str and len(value) == size and not set(value) - set("0123456789abcdef")
+
+
+def validate_create_not_dispatched(evidence, environment):
+    """Check producer-verified original no-exec/end/query facts, without I/O."""
+    canonical(evidence)
+    facts = _create_not_dispatched_facts()
+    if (
+        type(environment) is not dict
+        or type(environment.get("create_operation_version")) is not int
+        or environment["create_operation_version"] != 2
+        or type(environment.get("create_supervision_version")) is not int
+        or environment["create_supervision_version"] != 1
+        or environment.get("retire_on_stop") is not True
+        or not _create_digest(environment.get("expected_generation"), 32)
+        or type(evidence) is not dict
+        or set(evidence)
+        != {"version", "identity", "generation", *_create_not_dispatched_digests(), *facts}
+        or type(evidence["version"]) is not int
+        or evidence["version"] != 1
+        or canonical(evidence["identity"]) != canonical(environment)
+        or evidence["generation"] != environment["expected_generation"]
+        or any(not _create_digest(evidence[key]) for key in _create_not_dispatched_digests())
+        or any(evidence[key] is not expected for key, expected in facts.items())
+        or evidence["proof_digest"]
+        != digest({k: v for k, v in evidence.items() if k != "proof_digest"})
+    ):
+        raise DefinitionMismatch(
+            "CREATE no-submit receipt requires exact original sealed supervision and namespace query"
+        )
+    return copy.deepcopy(evidence)
+
+
+def adopt_create_not_dispatched(state, runner_identity, evidence):
+    """End the one prepared grant mechanically; keep its financial/effect intent."""
+    preparation = state.get("grants", {}).get("prepare")
+    if (
+        preparation is None
+        or set(state["grants"]) != {"prepare"}
+        or preparation.get("method") != "prepare"
+        or preparation.get("params") != {}
+        or preparation.get("execute") is not False
+        or canonical(preparation.get("request")) != canonical(state["request"])
+        or canonical(preparation.get("binding", {}).get("runner")) != canonical(runner_identity)
+        or canonical(preparation["binding"].get("request")) != canonical(state["request"])
+        or canonical(preparation["binding"].get("dispatch"))
+        != canonical(state["request"]["dispatch"])
+        or any(
+            state.get(key) is not None
+            for key in (
+                "prepared",
+                "binding",
+                "thread",
+                "turn",
+                "stop",
+                "namespace_absent",
+                "unprepared",
+            )
+        )
+    ):
+        raise AuthorizationDenied(
+            "CREATE no-submit requires its sole original unprepared preparation grant"
+        )
+    value = validate_create_not_dispatched(evidence, preparation["binding"].get("environment"))
+    previous = state.get("create_not_dispatched")
+    if previous is not None and previous != value:
+        raise DefinitionMismatch("Original CREATE no-submit receipt is immutable")
+    state["create_not_dispatched"] = value
+    state["pending_stop"], state["fenced"] = False, True
+    state["phase"] = "create_not_dispatched"
+
+
+def create_not_dispatched_projection(
+    evidence, environment, *, token, dispatch_digest, runner_digest
+):
+    """Carry validated evidence into the original capacity obligation after adoption."""
+    value = validate_create_not_dispatched(evidence, environment)
+    if (
+        not _create_digest(token, 32)
+        or not _create_digest(dispatch_digest)
+        or not _create_digest(runner_digest)
+    ):
+        raise DefinitionMismatch(
+            "CREATE no-submit capacity projection requires exact original digests and token"
+        )
+    return {
+        "version": 1,
+        "token": token,
+        "dispatch_digest": dispatch_digest,
+        "runner_digest": runner_digest,
+        "generation": value["generation"],
+        **{
+            key: value[key]
+            for key in (*_create_not_dispatched_digests(), *_create_not_dispatched_facts())
+        },
+        "evidence": value,
+    }
+
+
+def validate_create_not_dispatched_projection(proof, original, token):
+    canonical(proof)
+    if type(proof) is not dict or type(proof.get("evidence")) is not dict:
+        raise DefinitionMismatch(
+            "CREATE no-submit capacity requires its complete validated evidence"
+        )
+    expected = create_not_dispatched_projection(
+        proof["evidence"],
+        proof["evidence"].get("identity"),
+        token=token,
+        dispatch_digest=original["dispatch_digest"],
+        runner_digest=original["runner_digest"],
+    )
+    if (
+        type(proof.get("version")) is not int
+        or proof != expected
+        or proof.get("generation") != original["generation"]
+        or any(proof.get(key) is not fact for key, fact in _create_not_dispatched_facts().items())
+    ):
+        raise DefinitionMismatch(
+            "CREATE no-submit projection changed its original capacity obligation"
+        )

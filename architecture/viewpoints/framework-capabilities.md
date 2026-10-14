@@ -1,5 +1,7 @@
 # RALF 通用框架能力与扩展验收
 
+Dev112 沿原 Harness／Local／Temporal 权威增加固定原 CREATE 的机械监督器、两层单次 gate、真实进程与控制处理器排空，以及专用未派发证明。broker 只持有原操作，不增加业务执行权威；原 grant／attempt／未知效果保留。选定20／21与旧18／19 Worker 隔离，未选定默认保持。契约见[原 CREATE 监督](../specs/coding-create-supervision-contract.md)，实际证据及未完成范围见[本批验收](../reviews/2026-10-14-coding-create-supervision.md)。已发送请求的 daemon 负向完成、跨宿主、嵌套与复杂质量仍未验收；以下历史段落记录对应批次。
+
 Dev110 已验收直接 Agent 成员子集：扩展显式 Temporal Coding 组合到一层 Agent Team／Dynamic；原父 History 继续拥有选择、计划修订、调度和预算，原子 Run 继续拥有 Action 与 native grant。实际成员有效授权与 Runner 背压、冻结 revision、旧 child 停止义务及 pending-only DAG patch 已实现；验收按[本批记录](../reviews/2026-10-14-temporal-coding-orchestration.md)登记。未选定默认字节保持，嵌套／sequence 成员、跨父容量与复杂真实质量仍开放。
 
 Dev109 接通固定 Responses 模型连接、延迟解析的可替换凭证源和 Local／Temporal 显式装配，继续复用原 Action／History 执行权威。dev109 当时选定 Temporal 发布为 native protocol 2／binding 14、静态组合 version 3／binding 15；旧选定发布需要匹配的 immutable Worker。安装包真实 DeepSeek 的三类有限 POSIX Coding 任务各重复三次，通过 9/9 次、78 项独立禁网容器检查；不代表通用 Coding 质量或 AgentScope 对齐。Temporal Team／Dynamic／嵌套 Coding、跨父全局容量、跨宿主和不可确定 create／CID 窗口仍开放，完整 R13／第二阶段未关闭。 见[连接指南](../../docs/codex-model-connection.md)和[本批验收](../reviews/2026-10-14-codex-model-connection.md)。

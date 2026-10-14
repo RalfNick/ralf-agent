@@ -1,0 +1,23 @@
+"""New original CREATE supervision cannot reinterpret dev111 resource records."""
+
+import pytest
+
+from ralf_agent.errors import DefinitionMismatch
+from ralf_agent.temporal_coding_protocol import validate_protocol
+from tests.test_temporal_coding_configuration import manifest
+
+
+def test_current_native_supervision_requires20_version5():
+    value = manifest()
+    value["binding_protocol"] = 20
+    value["coding_execution_protocol"]["version"] = 5
+    validate_protocol(value)
+
+
+@pytest.mark.parametrize("binding", [18, 19])
+def test_original_dev111_selection_requires_matching_immutable_worker(binding):
+    value = manifest()
+    value["binding_protocol"] = binding
+    value["coding_execution_protocol"]["version"] = 4
+    with pytest.raises(DefinitionMismatch):
+        validate_protocol(value)

@@ -93,9 +93,12 @@ class TemporalCodingAuthority:
     async def resource_state(self, envelope, runner_identity):
         await self.check(envelope, runner_identity)
         value = (await self._state())["state"]
-        return {"prepare_grant": value["grants"].get("prepare")} | {
+        result = {"prepare_grant": value["grants"].get("prepare")} | {
             name: value.get(name) for name in ("prepared", "binding", "thread", "turn")
         }
+        if value.get("create_not_dispatched") is not None:
+            result["create_not_dispatched"] = value["create_not_dispatched"]
+        return result
 
     async def cancelled(self):
         return (await self._state())["cancelled"]

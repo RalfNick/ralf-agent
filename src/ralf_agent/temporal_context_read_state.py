@@ -142,7 +142,7 @@ def observe(state, action_id, response, receiver):
     if (
         state.step_manifest.get("model_history_protocol") in (1, 2)
         and state.manifest.get("binding_protocol")
-        in (7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19)
+        in (7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21)
         and type(response) is dict
         and response.get("ok") is False
         and response.get("code") == "activity_outcome_unknown"
@@ -202,7 +202,7 @@ def recreate_unadmitted(state, action, response):
     phase = record.get("phase")
     if (
         state.manifest.get("binding_protocol")
-        not in (7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19)
+        not in (7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21)
         or state.step_manifest.get("model_history_protocol") not in (1, 2)
         or state.state in {"succeeded", "failed", "cancelled"}
         or response.get("ok") is not False

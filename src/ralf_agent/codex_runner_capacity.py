@@ -333,6 +333,7 @@ class RootCapacity:
         definitely_undispatched=False,
         fenced_receipt=None,
         namespace_absent_proof=None,
+        create_not_dispatched_proof=None,
     ):
         """Clear only with original caller-validated end/physical evidence."""
         value = self._owned(token)
@@ -343,6 +344,7 @@ class RootCapacity:
                     definitely_undispatched,
                     fenced_receipt is not None,
                     namespace_absent_proof is not None,
+                    create_not_dispatched_proof is not None,
                 )
             )
             == 1
@@ -373,6 +375,13 @@ class RootCapacity:
                 and proof["container_present"] is False
                 and type(proof["pid"]) is int
                 and proof["pid"] == 0
+            )
+        elif create_not_dispatched_proof is not None:
+            from .coding_execution_rules import validate_create_not_dispatched_projection
+
+            _require(value["phase"] == "native_intent")
+            validate_create_not_dispatched_projection(
+                create_not_dispatched_proof, self._original, token
             )
         else:
             proof = namespace_absent_proof

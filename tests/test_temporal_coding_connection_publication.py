@@ -12,8 +12,8 @@ from tests.test_temporal_coding_configuration import manifest
 
 def current_leaf():
     value = manifest()
-    value["binding_protocol"] = 18
-    value["coding_execution_protocol"]["version"] = 4
+    value["binding_protocol"] = 20
+    value["coding_execution_protocol"]["version"] = 5
     for resource in value["coding_execution_protocol"]["tools"].values():
         resource["implementation"]["_make_transport"] = "c" * 64
     return value
@@ -23,9 +23,9 @@ def current_composition():
     from tests.test_temporal_coding_composition_configuration import composition_manifest
 
     value = composition_manifest()
-    value["binding_protocol"] = 19
+    value["binding_protocol"] = 21
     value["coding_execution_protocol"] = current_leaf()["coding_execution_protocol"]
-    value["coding_composition_protocol"]["version"] = 5
+    value["coding_composition_protocol"]["version"] = 6
     return value
 
 
@@ -34,17 +34,22 @@ def test_current_publication_accepts_complete_current_metadata(release):
     native.validate_protocol(release())
 
 
-@pytest.mark.parametrize("binding", [11, 12, 13, 14, 15])
+@pytest.mark.parametrize("binding", [11, 12, 13, 14, 15, 16, 17, 18, 19])
 def test_current_worker_refuses_previous_selected_native_metadata(binding):
-    value = current_composition() if binding in (12, 13, 15) else current_leaf()
+    value = current_composition() if binding in (12, 13, 15, 17, 19) else current_leaf()
     value["binding_protocol"] = binding
     value["coding_execution_protocol"]["version"] = 2 if binding in (14, 15) else 1
-    for resource in value["coding_execution_protocol"]["tools"].values():
-        resource["implementation"].pop("_make_transport")
+    if binding in (11, 12, 13):
+        for resource in value["coding_execution_protocol"]["tools"].values():
+            resource["implementation"].pop("_make_transport")
     if binding in (12, 13, 15):
         value["coding_composition_protocol"]["version"] = (
             1 if binding == 12 else 3 if binding == 15 else 2
         )
+    elif binding in (16, 17, 18, 19):
+        value["coding_execution_protocol"]["version"] = 3 if binding in (16, 17) else 4
+        if binding in (17, 19):
+            value["coding_composition_protocol"]["version"] = 4 if binding == 17 else 5
     with pytest.raises(DefinitionMismatch):
         native.validate_protocol(value)
 
@@ -57,7 +62,7 @@ def test_current_publication_requires_transport_construction_hook_pin():
         native.validate_protocol(value)
 
 
-@pytest.mark.parametrize("version", [1, 2, 3, 4, True, 6])
+@pytest.mark.parametrize("version", [1, 2, 3, 4, 5, True, 7])
 def test_current_composition_refuses_foreign_version(version):
     value = current_composition()
     native.validate_protocol(value)
@@ -66,7 +71,7 @@ def test_current_composition_refuses_foreign_version(version):
         native.validate_protocol(value)
 
 
-@pytest.mark.parametrize("binding", [18, 19])
+@pytest.mark.parametrize("binding", [20, 21])
 @pytest.mark.parametrize(
     "kind", ["context", "tool", "artifacts", "continuation", "history", "parent", "input"]
 )
@@ -95,7 +100,7 @@ def test_current_joint_publication_retains_optional_capability_gates(binding, ki
     validators[kind](value)
 
 
-@pytest.mark.parametrize("binding", [18, 19])
+@pytest.mark.parametrize("binding", [20, 21])
 def test_current_joint_publication_keeps_sandbox_gate(registered, binding):
     from ralf_agent.binding_sandbox import validate_sandbox_protocol
     from tests.test_sandbox_temporal_protocol import runtime_for
@@ -115,7 +120,7 @@ def test_current_composition_keeps_shared_runner_capacity_until_physical_stop():
     assert len(state.children) == 1
 
 
-def test_current_composition_state_requires_explicit_version_four():
+def test_current_composition_state_requires_explicit_version_six():
     from ralf_agent.temporal_coding_composition_state import enabled
 
     assert enabled(current_composition())
@@ -151,7 +156,7 @@ def test_current_api_capabilities_refuse_missing_composition_publication():
         capabilities(value)
 
 
-def test_current_sdk_control_requires_explicit_version_four():
+def test_current_sdk_control_requires_explicit_version_six():
     from ralf_agent.temporal_coding_composition_control import selected
 
     assert selected(current_composition())
@@ -160,7 +165,7 @@ def test_current_sdk_control_requires_explicit_version_four():
     assert not selected(value)
 
 
-def test_current_parent_records_an_explicit_version_four_history_marker(monkeypatch):
+def test_current_parent_records_an_explicit_version_six_history_marker(monkeypatch):
     import asyncio
     from types import SimpleNamespace
 
@@ -179,10 +184,10 @@ def test_current_parent_records_an_explicit_version_four_history_marker(monkeypa
     monkeypatch.setattr(temporal_parent_workflow.workflow, "patched", unavailable)
     with pytest.raises(ApplicationError, match="History marker unavailable"):
         asyncio.run(instance.run({"activity_timeout": 1}))
-    assert markers == ["ralf-coding-composition-v5"]
+    assert markers == ["ralf-coding-composition-v6"]
 
 
-@pytest.mark.parametrize("binding", [12, 13, 14, 15, 16, 17, 18, 19])
+@pytest.mark.parametrize("binding", [12, 13, 14, 15, 16, 17, 18, 19, 20, 21])
 def test_joint_sdk_context_timeout_keeps_original_read_unknown(monkeypatch, binding):
     import asyncio
 
@@ -290,10 +295,10 @@ def test_actual_shared_postgres_publication_refuses_changed_connection_implement
             )
             runtime.validate_release()
             release = runtime.manifest
-            assert release["binding_protocol"] == (19 if composition else 18)
-            assert release["coding_execution_protocol"]["version"] == 4
+            assert release["binding_protocol"] == (21 if composition else 20)
+            assert release["coding_execution_protocol"]["version"] == 5
             if composition:
-                assert release["coding_composition_protocol"]["version"] == 5
+                assert release["coding_composition_protocol"]["version"] == 6
             assert (
                 "_make_transport"
                 in release["coding_execution_protocol"]["tools"]["coding"]["implementation"]

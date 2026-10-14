@@ -8,8 +8,12 @@ Dev111 在原 Local／Temporal Coding 执行链路增加根级容量保护。相
 
 新 Runner 使用明确版本的 create operation metadata。Docker CREATE 回复丢失或 CID 落盘失败后，冷恢复只查询并验证原对象：找回唯一原 CID，保存 locator，停止和移除它，再独立确认缺席。不会再次 CREATE／START，也不会重授 Thread／Turn。SDK 与工厂仍通过原 Run 的控制／恢复入口执行这些操作；不能绕开原审批与原执行权威直接恢复业务。
 
-如果没有候选，原义务继续保持未知。Docker inventory 为空、超时、CLI 被 reap 或原 Worker 退出，都不能证明 Docker daemon 不会稍后完成 create。本批未提供负向 create 完成屏障、CLI 监督器或跨宿主恢复；因此不能把所有 create 故障都视为自动可恢复。
+Dev112 增加原 CREATE 的机械监督器：持久化固定操作声明后，broker 和 CLI gate 分别登记原进程，再各接收一次执行许可。原 Worker 退出时，broker 继续持有原处理器及 namespace／operation 租约；冷恢复只能 query／abort／drain 原操作。进程结束观察发生在 reap 之前，输出 EOF 不代替实际退出。监督器不负责 Run、审批或业务调度。
 
-普通独立 `DockerCodingEnvironment` 默认 identity 与 metadata 保持旧形状；其新机制需显式 `retire_on_stop=True, create_recovery=True`。受管理 Coding Runner 默认组合自动选用该契约。选定 Temporal 发布为 native version 4／binding 18，composition version 5／binding 19；旧选定 16／17 History 使用 immutable dev110 Worker；旧 Local Coding Run 也须使用其原固定配置与匹配实现。未选定默认发布保持原字节。
+若原 CLI gate 从未接收许可、未 exec，且不可重开，原 helper 已实际结束、控制处理器排空，并且原 namespace 查询成功确认没有容器，可以采纳专用 `create_not_dispatched` 证明。它保留原 prepare grant、attempt、未知效果和费用；不能用来重新执行。原 Local／Temporal 采纳及实际关闭成功后才释放容量。
 
-支持边界、测试层次与实际服务证据见[本批验收](../architecture/reviews/2026-10-14-coding-root-capacity.md)，权威与释放规则见[契约](../architecture/specs/coding-root-capacity-contract.md)。本能力不代表通用 Coding 质量、恰好一次外部效果或完整 R13／第二阶段已验收。
+如果可能已经 exec 而没有原 CID，义务继续保持未知。Docker inventory 为空、超时、CLI 被 reap 或原 Worker 退出，都不能证明 Docker daemon 不会稍后完成 create。已发送请求的负向完成屏障与跨宿主恢复仍未提供，不能把所有 create 故障都视为自动可恢复。
+
+普通独立 `DockerCodingEnvironment` 默认 identity 与 metadata 保持旧形状；其监督机制需显式 `retire_on_stop=True, create_recovery=True, create_supervision=True` 及固定 generation。受管理 Coding Runner 默认组合自动选用该契约。声明固定完整 helper 源码及执行文件身份，实际导入别名被替换时拒绝执行，不能在旧 grant 下移动实现。选定 Temporal 发布为 native version 5／binding 20，composition version 6／binding 21；旧选定 18／19 History 使用 immutable dev111 Worker，16／17 使用 immutable dev110 Worker；旧 Local Coding Run 也须使用其原固定配置与匹配实现。未选定默认发布保持原字节。
+
+支持边界、测试层次与实际服务证据见[监督验收](../architecture/reviews/2026-10-14-coding-create-supervision.md)及[容量验收](../architecture/reviews/2026-10-14-coding-root-capacity.md)，权威与释放规则见[监督契约](../architecture/specs/coding-create-supervision-contract.md)与[容量契约](../architecture/specs/coding-root-capacity-contract.md)。本能力不代表通用 Coding 质量、恰好一次外部效果或完整 R13／第二阶段已验收。

@@ -93,6 +93,10 @@ ENVIRONMENT_METHODS = (
     "stop",
     "stop_existing",
     "observe_namespace_absence",
+    "observe_create_not_dispatched",
+    "_observe_create_not_dispatched",
+    "_submit_supervised_create",
+    "_control_supervised_create",
     "_observe_namespace_absence",
     "_namespace_query",
     "aclose",
@@ -170,6 +174,7 @@ HISTORY_METHODS = (
     "admit_dispatch",
 )
 IMPLEMENTATION_FIELDS = {
+    "create_supervision": set(),
     "glue": {
         "execute_tool",
         "_execute_tool",
@@ -239,12 +244,27 @@ IMPLEMENTATION_FIELDS = {
 def validate_implementation(value):
     from . import coding_execution_rules as rules
     from . import temporal_coding_state as state
+    from .coding_create_inventory import inventory_fields, validate_inventory
     from .component_fingerprint import executable_digest
     from .session_types import sha
 
     if type(value) is not dict or set(value) != set(IMPLEMENTATION_FIELDS):
         raise DefinitionMismatch("Coding requires complete fixed implementation metadata")
     for group, methods in IMPLEMENTATION_FIELDS.items():
+        if group == "create_supervision":
+            validate_inventory(value[group])
+            if value[group]["no_create_rules"] != {
+                name: executable_digest(getattr(rules, name))
+                for name in inventory_fields()["no_create_rules"]
+            } or any(
+                value[group]["inventory"][name] != executable_digest(function)
+                for name, function in (
+                    ("inventory_fields", inventory_fields),
+                    ("validate_inventory", validate_inventory),
+                )
+            ):
+                raise DefinitionMismatch("Original pure CREATE supervision rules changed")
+            continue
         if type(value[group]) is not dict or set(value[group]) != methods:
             raise DefinitionMismatch("Coding implementation method metadata changed")
         for fingerprint in value[group].values():
@@ -278,11 +298,13 @@ def implementation():
     from . import temporal_tool_execution_runtime as tools
     from .codex_environment import DockerCodingEnvironment
     from .codex_runner_capacity import RootCapacity
+    from .coding_create_inventory import inventory
     from .component_fingerprint import executable_digest
     from .temporal_activities import TemporalRuntime, registered_activities
     from .temporal_coding_authority import TemporalCodingAuthority
 
     return {
+        "create_supervision": inventory(),
         "glue": {
             name: executable_digest(method)
             for name, method in {
@@ -445,7 +467,7 @@ def registration(runtime):
     }
     if type(metadata) is not dict or metadata.get("io_inventory") != expected_inventory:
         raise DefinitionMismatch("Coding physical implementation inventory changed")
-    return {"version": 4, "tools": result, "implementation": metadata}
+    return {"version": 5, "tools": result, "implementation": metadata}
 
 
 def validate_protocol(manifest):
@@ -453,20 +475,20 @@ def validate_protocol(manifest):
 
     validate_composition(manifest)
     if not enabled(manifest):
-        if manifest.get("binding_protocol") in (11, 12, 13, 14, 15, 16, 17, 18, 19):
+        if manifest.get("binding_protocol") in (11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21):
             raise DefinitionMismatch("Temporal Coding publication is missing")
         return
     value = manifest["coding_execution_protocol"]
     if (
         manifest.get("kernel") != "temporal-3"
         or type(manifest.get("binding_protocol")) is not int
-        or manifest["binding_protocol"] not in (18, 19)
+        or manifest["binding_protocol"] not in (20, 21)
         or manifest.get("dispatch_admission") != "history-1"
         or "tool_execution_protocol" not in manifest
         or type(value) is not dict
         or set(value) != {"version", "tools", "implementation"}
         or type(value["version"]) is not int
-        or value["version"] != 4
+        or value["version"] != 5
         or type(value["tools"]) is not dict
         or not 1 <= len(value["tools"]) <= 16
         or type(value["implementation"]) is not dict
@@ -511,7 +533,7 @@ def publish(manifest, runtime):
     result = detached(manifest)
     result.update(
         kernel="temporal-3",
-        binding_protocol=18,
+        binding_protocol=20,
         dispatch_admission="history-1",
         coding_execution_protocol=registration(runtime),
     )

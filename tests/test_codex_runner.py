@@ -315,7 +315,9 @@ def test_real_native_fixture_runs_only_original_approved_action_and_fences_befor
     ],
 )
 def test_native_uncertainty_is_fenced_and_cold_reconcile_never_restarts(tmp_path, mode):
-    engine, run_id, resource, journal = original_engine(tmp_path, mode=mode, timeout=1.5)
+    # Allow both supervised gates and thread/start to finish before exercising
+    # the lost turn's deadline or the other modes' protocol violations.
+    engine, run_id, resource, journal = original_engine(tmp_path, mode=mode, timeout=10)
 
     async def scenario():
         waiting = await engine.drive(run_id)
@@ -339,7 +341,17 @@ def test_native_uncertainty_is_fenced_and_cold_reconcile_never_restarts(tmp_path
         assert len(records) == 1
         assert "must never enter journal" not in records[0][0]
         record = json.loads(records[0][0])
-        assert record["stage"] == ("turn_submitted" if mode == "lost_turn" else "turn_confirmed")
+        # late_auth can invalidate the pending transport response before its
+        # locator is durably adopted. Both windows must remain unknown/fenced;
+        # the read/close modes below exercise the later confirmed windows.
+        expected_stages = (
+            {"turn_submitted"}
+            if mode == "lost_turn"
+            else {"turn_submitted", "turn_confirmed"}
+            if mode == "late_auth"
+            else {"turn_confirmed"}
+        )
+        assert record["stage"] in expected_stages
         assert any(item["kind"] == "stop" and item["fenced"] for item in record["observations"])
         assert resource.active_operations == 0
         await resource.aclose()

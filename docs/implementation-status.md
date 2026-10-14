@@ -1,4 +1,6 @@
-# Implementation status — 0.1.0.dev111
+# Implementation status — 0.1.0.dev112
+
+Dev112 增加[原 CREATE 监督与未发送证明](coding-resource-recovery.md)：两层单次 gate、原 broker／CLI 租约、持久结构化回执、冷 query／abort／drain、reap 前进程结束观察和固定源码／导入别名校验。专用 `create_not_dispatched` 经原 Local／Temporal 采纳及实际排空后释放容量，保留原 grant、attempt、未知效果与费用。选定 Temporal 为 native5／binding20、composition6／binding21；旧18／19使用 immutable dev111 Worker，未选定默认字节保持。验收分层见[本批记录](../architecture/reviews/2026-10-14-coding-create-supervision.md)。已发送 create 的 daemon 负向完成、持久队列、公平调度、跨宿主、嵌套／sequence Coding 和复杂真实质量仍开放，完整 R13／第二阶段未关闭。以下各 dev 段落保留当时实现与验收范围。
 
 Dev111 加入[物理 Runner 容量与 create 恢复](coding-resource-recovery.md)：同根容量一、原 invocation 等待、持久原义务、仅查询／验证／停止原 CID，以及所有权 CAS。选定 Temporal 升至18／19；旧16／17恢复需 immutable dev110 Worker，未选定默认发布保持。验收分层见[本批记录](../architecture/reviews/2026-10-14-coding-root-capacity.md)。负向 create 完成证明、CLI监督、持久队列、公平调度、跨宿主与复杂 Coding 质量保持开放，完整 R13／第二阶段未关闭。
 

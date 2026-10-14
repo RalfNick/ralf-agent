@@ -14,7 +14,6 @@ import math
 import os
 import re
 import selectors
-import signal
 import stat
 import subprocess
 import tempfile
@@ -24,6 +23,7 @@ import uuid
 from pathlib import Path
 
 from .codex_coding_profile import CodexCodingProfile
+from .coding_process_wait import ChildExitMonitor, signal_unreaped_group
 from .errors import DefinitionMismatch, ExecutionHostFailed, ValidationError
 from .tools import ThreadExecutionTracker
 
@@ -83,6 +83,8 @@ class DockerCodingEnvironment:
         expected_generation: str | None = None,
         configuration_readonly: bool = False,
         create_recovery: bool = False,
+        create_supervision: bool = False,
+        supervision_sources: dict | None = None,
     ):
         try:
             path = Path(root)
@@ -109,6 +111,11 @@ class DockerCodingEnvironment:
                 and type(configuration_readonly) is bool
                 and type(create_recovery) is bool
                 and (not create_recovery or retire_on_stop)
+                and type(create_supervision) is bool
+                and (supervision_sources is None or create_supervision)
+                and (
+                    not create_supervision or (create_recovery and expected_generation is not None)
+                )
                 and (
                     expected_generation is None
                     or (
@@ -135,6 +142,17 @@ class DockerCodingEnvironment:
         self._timeout = command_timeout
         self._retire_on_stop = retire_on_stop
         self._create_recovery = create_recovery
+        self._create_supervision = create_supervision
+        self._create_supervisor = None
+        self._create_no_submit = None
+        self._supervision_sources = None
+        if create_supervision:
+            from .coding_create_inventory import check_source_inventory, source_inventory
+
+            self._supervision_sources = copy.deepcopy(
+                source_inventory() if supervision_sources is None else supervision_sources
+            )
+            check_source_inventory(self._supervision_sources)
         self._expected_generation = expected_generation
         self._expected_container_id = None
         self._profile = CodexCodingProfile()
@@ -163,7 +181,12 @@ class DockerCodingEnvironment:
         if configuration_readonly:
             self._identity["configuration_readonly"] = True
         if create_recovery:
-            self._identity["create_operation_version"] = 1
+            self._identity["create_operation_version"] = 2 if create_supervision else 1
+        if create_supervision:
+            self._identity["create_supervision_version"] = 1
+            self._identity["create_supervision_sources_digest"] = _digest(
+                _canonical(self._supervision_sources).encode()
+            )
         self._resource_id = resource_id
         self._name = "ralf-coding-" + _digest(_canonical(self._identity).encode())[:32]
         self._metadata = None
@@ -244,6 +267,10 @@ class DockerCodingEnvironment:
         """Query the original unprepared namespace; never provision or start it."""
         return await self._owned(self._observe_namespace_absence)
 
+    async def observe_create_not_dispatched(self) -> dict:
+        """Drain the original sealed CLI gate; never launch or repeat CREATE."""
+        return await self._owned(self._observe_create_not_dispatched)
+
     def _observe_namespace_absence(self):
         self._check_root()
         previous = getattr(self, "_namespace_absence", None)
@@ -322,10 +349,12 @@ class DockerCodingEnvironment:
     def _namespace_query(self, client, args):
         """Own/reap a bounded read-only Docker query before returning evidence."""
         process = None
+        monitor = None
         selector = selectors.DefaultSelector()
         output = {"stdout": bytearray(), "stderr": bytearray()}
         try:
             self._check_root()
+            monitor = ChildExitMonitor()
             process = subprocess.Popen(
                 [self._docker, "--config", str(client), "--host", self._host, *args],
                 env=self.transport_env,
@@ -335,13 +364,25 @@ class DockerCodingEnvironment:
                 close_fds=True,
                 start_new_session=True,
             )
+            monitor.register(process)
             for key in output:
                 selector.register(getattr(process, key), selectors.EVENT_READ, key)
             deadline = time.monotonic() + self._timeout
-            while selector.get_map():
+            ended = False
+            signalled = False
+            while selector.get_map() or not ended:
                 if time.monotonic() >= deadline:
                     raise ExecutionHostFailed("Docker namespace query deadline exceeded")
-                for key, _ in selector.select(min(0.05, max(0, deadline - time.monotonic()))):
+                ended = monitor.exited()
+                if ended and not signalled:
+                    signal_unreaped_group(process, monitor)
+                    signalled = True
+                interval = min(0.05, max(0, deadline - time.monotonic()))
+                if not selector.get_map():
+                    if not ended:
+                        ended = monitor.exited(timeout=interval)
+                    continue
+                for key, _ in selector.select(interval):
                     chunk = os.read(key.fd, 8192)
                     if not chunk:
                         selector.unregister(key.fileobj)
@@ -349,23 +390,31 @@ class DockerCodingEnvironment:
                     output[key.data].extend(chunk)
                     if sum(map(len, output.values())) > _CAP:
                         raise ExecutionHostFailed("Docker namespace query output bound exceeded")
+            if not signalled:
+                signal_unreaped_group(process, monitor)
             process.wait(timeout=max(0.001, deadline - time.monotonic()))
             if process.returncode != 0:
                 raise ExecutionHostFailed("Docker namespace query failed")
             self._check_root()
             return bytes(output["stdout"])
-        except (OSError, subprocess.TimeoutExpired):
+        except (OSError, subprocess.TimeoutExpired, RuntimeError):
             raise ExecutionHostFailed("Docker namespace query unavailable") from None
         finally:
-            if process is not None:
-                try:
-                    os.killpg(process.pid, signal.SIGKILL)
-                except ProcessLookupError:
-                    pass
-                process.wait()
-                process.stdout.close()
-                process.stderr.close()
-            selector.close()
+            try:
+                if process is not None:
+                    try:
+                        if process.returncode is None:
+                            signal_unreaped_group(process, monitor)
+                            process.wait()
+                    finally:
+                        process.stdout.close()
+                        process.stderr.close()
+            except (OSError, RuntimeError):
+                raise ExecutionHostFailed("Docker namespace query cleanup is unconfirmed") from None
+            finally:
+                if monitor is not None:
+                    monitor.close()
+                selector.close()
 
     async def aclose(self) -> None:
         await self._owned(self._close)
@@ -569,10 +618,12 @@ class DockerCodingEnvironment:
             self._metadata["retirement"] = None
         if self._create_recovery:
             self._metadata["create_operation"] = {
-                "version": 1,
+                "version": 2 if self._create_supervision else 1,
                 "phase": "intent",
                 "operation_digest": self._create_operation_digest(),
             }
+            if self._create_supervision:
+                self._metadata["create_operation"].update(declaration=None, no_submit=None)
         self._write_metadata()
 
     def _check_files(self):
@@ -748,6 +799,55 @@ class DockerCodingEnvironment:
 
     def _validate_create_operation(self):
         operation = self._metadata["create_operation"]
+        if self._create_supervision:
+            _require(
+                type(operation) is dict
+                and set(operation)
+                == {"version", "phase", "operation_digest", "declaration", "no_submit"}
+                and type(operation["version"]) is int
+                and operation["version"] == 2
+                and operation["phase"] in {"intent", "submitted", "located", "not_dispatched"}
+                and operation["operation_digest"] == self._create_operation_digest()
+                and (operation["phase"] == "located")
+                == (self._metadata["container_id"] is not None)
+                and (operation["declaration"] is not None or operation["phase"] == "intent")
+                and (operation["no_submit"] is not None) == (operation["phase"] == "not_dispatched")
+            )
+            declaration = operation["declaration"]
+            if declaration is not None:
+                _require(
+                    type(declaration) is dict
+                    and declaration.get("required_sources") == self._supervision_sources
+                    and declaration.get("binding")
+                    == {
+                        "environment": self.identity,
+                        "generation": self._metadata["generation"],
+                        "operation_digest": operation["operation_digest"],
+                    }
+                    and declaration.get("argv")
+                    == [
+                        self._docker,
+                        "--config",
+                        str(self._root / "docker-client"),
+                        "--host",
+                        self._host,
+                        *self._create_argv(),
+                    ]
+                    and declaration.get("cli_env") == self.transport_env
+                    and declaration.get("executable") == self._executable_pin
+                )
+            if operation["no_submit"] is not None:
+                from .coding_execution_rules import validate_create_not_dispatched
+                from .types import digest
+
+                validate_create_not_dispatched(operation["no_submit"], self.identity)
+                _require(
+                    operation["no_submit"]["create_operation_digest"]
+                    == operation["operation_digest"]
+                    and operation["no_submit"]["supervision_declaration_digest"]
+                    == digest(declaration)
+                )
+            return
         _require(
             type(operation) is dict
             and set(operation) == {"version", "phase", "operation_digest"}
@@ -772,6 +872,8 @@ class DockerCodingEnvironment:
         return ids
 
     def _submit_create(self):
+        if self._create_supervision:
+            return self._submit_supervised_create()
         self._validate_create_operation()
         _require(self._metadata["create_operation"]["phase"] == "intent")
         self._metadata["create_operation"]["phase"] = "submitted"
@@ -785,8 +887,156 @@ class DockerCodingEnvironment:
         self._write_metadata()
         self._expected_container_id = cid
 
+    def _submit_supervised_create(self):
+        from .codex_create_supervisor import CreateSupervisor
+        from .coding_create_inventory import check_source_inventory
+
+        self._validate_create_operation()
+        operation = self._metadata["create_operation"]
+        _require(operation["phase"] == "intent" and operation["declaration"] is None)
+        self._check_root()
+        self._check_files()
+        check_source_inventory(self._supervision_sources)
+        handle = CreateSupervisor.create(
+            self._root,
+            binding={
+                "environment": self.identity,
+                "generation": self._metadata["generation"],
+                "operation_digest": operation["operation_digest"],
+            },
+            argv=[
+                self._docker,
+                "--config",
+                str(self._root / "docker-client"),
+                "--host",
+                self._host,
+                *self._create_argv(),
+            ],
+            namespace_lease_fd=self._lease,
+            cli_env=self.transport_env,
+            timeout=self._timeout,
+            output_limit=_CAP,
+        )
+        self._create_supervisor = handle
+        _require(handle.declaration["required_sources"] == self._supervision_sources)
+        operation.update(declaration=handle.declaration, phase="submitted")
+        # The original declaration is durable before spawning either inert gate.
+        self._write_metadata()
+        handle.launch()
+        self._check_root()
+        self._check_files()
+        handle.start_once()
+        result = handle.drain(timeout=self._timeout + 5)
+        _require(
+            result.get("complete") is True
+            and result.get("helpers_ended") is True
+            and result.get("control_drained") is True
+        )
+        receipt = result.get("receipt")
+        cid = receipt.get("cid") if type(receipt) is dict else None
+        if type(cid) is not str or re.fullmatch(r"[a-f0-9]{64}", cid) is None:
+            raise ExecutionHostFailed("Original supervised CREATE has no confirmed locator")
+        self._metadata["container_id"] = cid
+        operation["phase"] = "located"
+        self._write_metadata()
+        self._expected_container_id = cid
+
+    def _control_supervised_create(self):
+        """Cold control drains the original broker before attempting its lease."""
+        from .codex_create_supervisor import CreateSupervisor
+        from .coding_create_inventory import check_source_inventory
+
+        self._check_root()
+        if not self._create_supervision or not (self._root / "environment.json").exists():
+            return None
+        check_source_inventory(self._supervision_sources)
+        if self._lease_pin is None:
+            self._lease_pin = _pin(self._root / "lease.lock")
+        self._read_metadata()
+        operation = self._metadata["create_operation"]
+        if operation["declaration"] is None:
+            raise ExecutionHostFailed("Original CREATE supervision declaration is unavailable")
+        handle = self._create_supervisor
+        if handle is None:
+            handle = CreateSupervisor.open(self._root, operation["declaration"])
+            self._create_supervisor = handle
+        handle.abort()
+        result = handle.drain(timeout=self._timeout + 5)
+        if not (
+            result.get("complete") is True
+            and result.get("helpers_ended") is True
+            and result.get("control_drained") is True
+        ):
+            raise ExecutionHostFailed("Original CREATE handlers have not drained")
+        return result
+
+    def _observe_create_not_dispatched(self):
+        from .coding_execution_rules import validate_create_not_dispatched
+        from .types import digest
+
+        _require(self._create_supervision and self._expected_generation is not None)
+        result = self._control_supervised_create()
+        _require(type(result) is dict)
+        self._acquire()
+        self._read_metadata()
+        operation = self._metadata["create_operation"]
+        _require(self._metadata["container_id"] is None and self._metadata["last_state"] is None)
+        receipt = result.get("receipt")
+        _require(
+            type(receipt) is dict
+            and receipt.get("gate_sealed") is True
+            and receipt.get("cli_gate_accepted") is False
+            and receipt.get("cli_exec_started") is False
+            and receipt.get("child_ended") is True
+        )
+        declaration = operation["declaration"]
+        _require(
+            result["declaration_digest"] == digest(declaration)
+            and result["receipt_digest"] == digest(receipt)
+            and receipt.get("declaration_digest") == result["declaration_digest"]
+        )
+        # Query both the exact name and the complete label namespace, including
+        # their intersection. Successful empty output is required in every view.
+        labels = ["label=" + key + "=" + value for key, value in self._labels().items()]
+        named = ["name=^/" + self._name + "$"]
+        for filters in (named + labels, named, labels):
+            args = ["ps", "-a", "--no-trunc"]
+            for value in filters:
+                args.extend(("--filter", value))
+            args.extend(("--format", "{{.ID}}"))
+            _require(not self._cli(args)[0].strip())
+        self._check_root()
+        self._check_files()
+        evidence = {
+            "version": 1,
+            "identity": self.identity,
+            "generation": self._metadata["generation"],
+            "create_operation_digest": operation["operation_digest"],
+            "supervision_declaration_digest": result["declaration_digest"],
+            "supervision_receipt_digest": result["receipt_digest"],
+            "gate_sealed": True,
+            "cli_gate_accepted": False,
+            "cli_exec_started": False,
+            "helpers_ended": True,
+            "control_drained": True,
+            "metadata_present": True,
+            "namespace_query_succeeded": True,
+            "namespace_confirmed": True,
+            "container_present": False,
+        }
+        evidence["proof_digest"] = digest(evidence)
+        validate_create_not_dispatched(evidence, self.identity)
+        previous = operation["no_submit"]
+        _require(previous is None or previous == evidence)
+        operation.update(phase="not_dispatched", no_submit=evidence)
+        self._write_metadata()
+        self._create_no_submit = copy.deepcopy(evidence)
+        return evidence
+
     def _recover_create(self):
         """Control recovery obtains a validated original locator; never creates."""
+        if self._create_supervision:
+            self._control_supervised_create()
         self._validate_create_operation()
         if self._metadata["create_operation"]["phase"] != "submitted":
             raise ExecutionHostFailed("Original create has no submitted operation to recover")
@@ -993,6 +1243,7 @@ class DockerCodingEnvironment:
             )
             self._expected_container_id = expected_container_id
         self._existing_only = True
+        supervised = self._control_supervised_create() if self._create_supervision else None
         self._acquire()
         try:
             (self._root / "environment.json").lstat()
@@ -1013,6 +1264,12 @@ class DockerCodingEnvironment:
             return None
         self._read_metadata()
         if self._metadata["container_id"] is None:
+            if supervised is not None and (
+                supervised.get("receipt", {}).get("cli_gate_accepted") is False
+                and supervised.get("receipt", {}).get("cli_exec_started") is False
+            ):
+                self._observe_create_not_dispatched()
+                return None
             if self._create_recovery:
                 self._recover_create()
             else:
@@ -1114,6 +1371,18 @@ class DockerCodingEnvironment:
         if self._lease is None:
             self._closed = True
             return
+        if self._create_no_submit is not None:
+            from .coding_execution_rules import validate_create_not_dispatched
+
+            validate_create_not_dispatched(self._create_no_submit, self.identity)
+            _require(self._metadata["create_operation"]["no_submit"] == self._create_no_submit)
+            result = self._control_supervised_create()
+            _require(result.get("complete") is True)
+            self._create_supervisor.close()
+            os.close(self._lease)
+            self._lease = None
+            self._closed = True
+            return
         # A failure keeps the lease and permits another aclose/stop attempt.
         if self._metadata is None or self._metadata["container_id"] is None:
             if self._create_recovery:
@@ -1128,6 +1397,8 @@ class DockerCodingEnvironment:
                 self._prepare()
                 self._closing = True
         self._stop()
+        if self._create_supervisor is not None:
+            self._create_supervisor.close()
         os.close(self._lease)
         self._lease = None
         self._closed = True
@@ -1137,9 +1408,11 @@ class DockerCodingEnvironment:
         self._check_root()
         self._check_files()
         process = None
+        monitor = None
         selector = selectors.DefaultSelector()
         output = {"stdout": bytearray(), "stderr": bytearray()}
         try:
+            monitor = ChildExitMonitor()
             process = subprocess.Popen(
                 [
                     self._docker,
@@ -1156,13 +1429,25 @@ class DockerCodingEnvironment:
                 close_fds=True,
                 start_new_session=True,
             )
+            monitor.register(process)
             for key in output:
                 selector.register(getattr(process, key), selectors.EVENT_READ, key)
             deadline = time.monotonic() + self._timeout
-            while selector.get_map():
+            ended = False
+            signalled = False
+            while selector.get_map() or not ended:
                 if time.monotonic() >= deadline:
                     raise ExecutionHostFailed("Docker CLI deadline exceeded")
-                for key, _ in selector.select(min(0.05, max(0, deadline - time.monotonic()))):
+                ended = monitor.exited()
+                if ended and not signalled:
+                    signal_unreaped_group(process, monitor)
+                    signalled = True
+                interval = min(0.05, max(0, deadline - time.monotonic()))
+                if not selector.get_map():
+                    if not ended:
+                        ended = monitor.exited(timeout=interval)
+                    continue
+                for key, _ in selector.select(interval):
                     chunk = os.read(key.fd, 8192)
                     if not chunk:
                         selector.unregister(key.fileobj)
@@ -1170,22 +1455,28 @@ class DockerCodingEnvironment:
                     output[key.data].extend(chunk)
                     if sum(map(len, output.values())) > _CAP:
                         raise ExecutionHostFailed("Docker CLI output bound exceeded")
+            if not signalled:
+                signal_unreaped_group(process, monitor)
             process.wait(timeout=max(0.001, deadline - time.monotonic()))
             if process.returncode != 0:
                 raise ExecutionHostFailed("Docker CLI operation failed")
             self._check_root()
             return bytes(output["stdout"]), bytes(output["stderr"])
-        except (OSError, subprocess.TimeoutExpired):
+        except (OSError, subprocess.TimeoutExpired, RuntimeError):
             raise ExecutionHostFailed("Docker CLI operation unavailable") from None
         finally:
-            if process is not None:
-                # Kill the group even after leader exit: descendants may retain
-                # inherited pipes. Never strand a subprocess on cancellation.
-                try:
-                    os.killpg(process.pid, signal.SIGKILL)
-                except ProcessLookupError:
-                    pass
-                process.wait()
-                process.stdout.close()
-                process.stderr.close()
-            selector.close()
+            try:
+                if process is not None:
+                    try:
+                        if process.returncode is None:
+                            signal_unreaped_group(process, monitor)
+                            process.wait()
+                    finally:
+                        process.stdout.close()
+                        process.stderr.close()
+            except (OSError, RuntimeError):
+                raise ExecutionHostFailed("Docker CLI cleanup is unconfirmed") from None
+            finally:
+                if monitor is not None:
+                    monitor.close()
+                selector.close()

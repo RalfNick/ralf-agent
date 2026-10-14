@@ -100,7 +100,7 @@ def validate_protocol(manifest):
         manifest.get("kernel") != "temporal-3"
         or type(manifest.get("binding_protocol")) is not int
         or manifest["binding_protocol"]
-        not in (5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19)
+        not in (5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21)
         or type(manifest.get("artifacts_binding_protocol")) is not int
         or manifest["artifacts_binding_protocol"] != 1
         or type(value) is not dict

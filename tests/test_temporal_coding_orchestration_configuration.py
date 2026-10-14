@@ -18,8 +18,8 @@ from tests.test_temporal_coding_configuration import manifest as leaf_manifest
 
 def manifest():
     value = leaf_manifest()
-    value["binding_protocol"] = 18
-    value["coding_execution_protocol"]["version"] = 4
+    value["binding_protocol"] = 20
+    value["coding_execution_protocol"]["version"] = 5
     value["context_builder"] = {"kind": "default", "version": "1"}
     value["orchestration"] = {
         "version": "1",
@@ -68,8 +68,8 @@ def test_hidden_agents_cannot_receive_original_coding_grants(member):
         validate_topology(request, value)
 
 
-@pytest.mark.parametrize("binding,version", [(14, 2), (15, 2)])
-def test_current_worker_refuses_original_dev109_selected_publication(binding, version):
+@pytest.mark.parametrize("binding,version", [(14, 2), (15, 2), (16, 3), (17, 3), (18, 4), (19, 4)])
+def test_current_worker_refuses_previous_selected_publication(binding, version):
     value = leaf_manifest()
     value["binding_protocol"] = binding
     value["coding_execution_protocol"]["version"] = version
@@ -77,19 +77,19 @@ def test_current_worker_refuses_original_dev109_selected_publication(binding, ve
         validate_protocol(value)
 
 
-def test_current_native_publication_accepts_only_18_version4():
+def test_current_native_publication_accepts_only_20_version5():
     validate_protocol(manifest())
 
 
-@pytest.mark.parametrize("version", [1, 2, True, 3])
-def test_current_native_requires_explicit_integer_version_four(version):
+@pytest.mark.parametrize("version", [1, 2, True, 3, 4, 6])
+def test_current_native_requires_explicit_integer_version_five(version):
     value = manifest()
     value["coding_execution_protocol"]["version"] = version
     with pytest.raises(DefinitionMismatch):
         validate_protocol(value)
 
 
-@pytest.mark.parametrize("binding", [18, 19])
+@pytest.mark.parametrize("binding", [20, 21])
 def test_new_selected_bindings_cannot_drop_native_publication(binding):
     value = manifest()
     value["binding_protocol"] = binding
@@ -301,8 +301,8 @@ def test_current_root_guard_records_all_finite_orchestration_kinds(kind):
     engine._closed, engine._registry, engine.scope = False, Registry(), Scope()
     engine._release = {
         "kernel": "temporal-3",
-        "binding_protocol": 19,
-        "coding_composition_protocol": {"version": 5},
+        "binding_protocol": 21,
+        "coding_composition_protocol": {"version": 6},
     }
     asyncio.run(engine._guard("submit", "original", "run", {"definition": {"kind": kind}}))
     assert reservations[0]["coding_composition"]["version"] == 1

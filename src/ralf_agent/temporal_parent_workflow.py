@@ -165,7 +165,9 @@ class TemporalParentWorkflow(TemporalRunWorkflow):
 
         composition = enabled(self.state.manifest)
         if composition and not workflow.patched(
-            "ralf-coding-composition-v5"
+            "ralf-coding-composition-v6"
+            if self.state.manifest.get("binding_protocol") == 21
+            else "ralf-coding-composition-v5"
             if self.state.manifest.get("binding_protocol") == 19
             else "ralf-coding-composition-v4"
             if self.state.manifest.get("binding_protocol") == 17

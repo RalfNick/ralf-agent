@@ -132,7 +132,8 @@ def validate_continuation_protocol(manifest):
     if (
         manifest.get("kernel") != "temporal-3"
         or type(manifest.get("binding_protocol")) is not int
-        or manifest["binding_protocol"] not in (6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19)
+        or manifest["binding_protocol"]
+        not in (6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21)
         or type(manifest.get("model_continuation_protocol")) is not int
         or manifest["model_continuation_protocol"] != 1
         or manifest.get("dispatch_admission") != "history-1"
@@ -378,11 +379,12 @@ def validate_model_history_protocol(manifest):
     if (
         manifest.get("kernel") != "temporal-3"
         or type(manifest.get("binding_protocol")) is not int
-        or manifest["binding_protocol"] not in (7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19)
+        or manifest["binding_protocol"]
+        not in (7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21)
         or type(manifest.get("model_history_protocol")) is not int
         or manifest["model_history_protocol"] not in (1, 2)
         or (
-            manifest["binding_protocol"] not in (9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19)
+            manifest["binding_protocol"] not in (9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21)
             and (manifest["model_history_protocol"] == 2) != (manifest["binding_protocol"] == 8)
         )
         or type(manifest.get("model_continuation_protocol")) is not int

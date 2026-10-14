@@ -61,7 +61,7 @@ def new_resource(key, request, runner, namespace_binding, *, owner_proof=None):
         raise ValidationError("Resource generation requires the original fixed digest")
     for label in ("release_digest", "definition_digest", "request_digest"):
         _text(request[label], label)
-    return {
+    record = {
         "version": "1",
         "scope": dispatch["scope"],
         "effect_key": key[2],
@@ -75,6 +75,19 @@ def new_resource(key, request, runner, namespace_binding, *, owner_proof=None):
         "unprepared": None,
         "namespace_absent": None,
     }
+    if "create_supervision_version" in namespace["environment"]:
+        environment = namespace["environment"]
+        if (
+            type(environment["create_supervision_version"]) is not int
+            or environment["create_supervision_version"] != 1
+            or type(environment.get("create_operation_version")) is not int
+            or environment["create_operation_version"] != 2
+        ):
+            raise ValidationError(
+                "Coding resource supervision requires its explicit original versions"
+            )
+        record.update(version="2", create_not_dispatched=None)
+    return record
 
 
 def _receipt(record, kind, evidence):
@@ -128,6 +141,29 @@ def _receipt(record, kind, evidence):
 
 def receive_resource(record, kind, evidence):
     record = copy.deepcopy(record)
+    if kind == "create_not_dispatched":
+        from .coding_execution_rules import validate_create_not_dispatched
+
+        if (
+            record.get("version") != "2"
+            or "create_not_dispatched" not in record
+            or any(
+                record.get(key) is not None
+                for key in ("prepared", "stop", "unprepared", "namespace_absent")
+            )
+        ):
+            raise IdempotencyConflict(
+                "CREATE no-submit receipt contradicts original resource intent"
+            )
+        value = validate_create_not_dispatched(evidence, record["namespace_binding"]["environment"])
+        if record["create_not_dispatched"] is not None and record["create_not_dispatched"] != value:
+            raise IdempotencyConflict("Original CREATE no-submit receipt is immutable")
+        record["create_not_dispatched"] = value
+        record["pending_stop"] = False
+        _json(record, "Coding resource record", limit=_MAX_RECORD)
+        return record
+    if record.get("create_not_dispatched") is not None:
+        raise IdempotencyConflict("Sealed original CREATE cannot receive other resource receipts")
     if kind == "unprepared":
         value = json.loads(_json(evidence, "Original ungranted resource receipt"))
         if (
@@ -200,7 +236,7 @@ def validate_resource(encoded, key, request=None):
             raise ValueError
         record = json.loads(encoded)
         _json(record, "Saved Coding resource", limit=_MAX_RECORD)
-        if set(record) != {
+        required = {
             "version",
             "scope",
             "effect_key",
@@ -213,7 +249,10 @@ def validate_resource(encoded, key, request=None):
             "owner",
             "unprepared",
             "namespace_absent",
-        }:
+        }
+        if record.get("version") == "2":
+            required.add("create_not_dispatched")
+        if set(record) != required:
             raise ValueError
         expected = new_resource(
             key,
@@ -225,6 +264,10 @@ def validate_resource(encoded, key, request=None):
         for kind in ("prepared", "stop", "unprepared", "namespace_absent"):
             if record[kind] is not None:
                 expected = receive_resource(expected, kind, record[kind])
+        if record.get("create_not_dispatched") is not None:
+            expected = receive_resource(
+                expected, "create_not_dispatched", record["create_not_dispatched"]
+            )
         if expected != record:
             raise ValueError
     except (ValueError, TypeError, KeyError, RecursionError, ValidationError, IdempotencyConflict):

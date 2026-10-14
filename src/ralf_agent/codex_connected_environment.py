@@ -33,6 +33,8 @@ class ConnectedDockerCodingEnvironment(DockerCodingEnvironment):
         expected_generation: str | None = None,
         configuration_readonly: bool = True,
         create_recovery: bool = False,
+        create_supervision: bool = False,
+        supervision_sources: dict | None = None,
     ):
         if (
             type(connection) is not CodexModelConnection
@@ -54,6 +56,8 @@ class ConnectedDockerCodingEnvironment(DockerCodingEnvironment):
             expected_generation=expected_generation,
             configuration_readonly=configuration_readonly,
             create_recovery=create_recovery,
+            create_supervision=create_supervision,
+            supervision_sources=supervision_sources,
         )
         self._connection = connection
         self._connection_pin = _canonical(connection.identity)

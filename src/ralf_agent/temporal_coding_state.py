@@ -204,6 +204,11 @@ def adopt(state, payload):
     tool, action, value, payload = _record(
         state, payload, extra=("kind", "evidence"), recovery=True
     )
+    if value.get("create_not_dispatched") is not None and payload["kind"] in {
+        "namespace_absent",
+        "unprepared",
+    }:
+        raise DefinitionMismatch("Sealed original CREATE cannot adopt older cleanup tombstones")
     if payload["kind"] == "owner":
         evidence = payload["evidence"]
         validate_owner(evidence, tool.get("invocation_id"))
@@ -217,6 +222,10 @@ def adopt(state, payload):
         ):
             raise AuthorizationDenied("Original process owner must precede native permission")
         value["owner"] = copy.deepcopy(evidence)
+    elif payload["kind"] == "create_not_dispatched":
+        from .coding_execution_rules import adopt_create_not_dispatched
+
+        adopt_create_not_dispatched(value, value["runner"], payload["evidence"])
     elif payload["kind"] == "namespace_absent":
         evidence = payload["evidence"]
         preparation = value["grants"].get("prepare")
@@ -510,7 +519,7 @@ def requests(state):
     if (
         not enabled(state.manifest)
         or type(state.manifest.get("binding_protocol")) is not int
-        or state.manifest["binding_protocol"] not in (11, 14, 16, 18)
+        or state.manifest["binding_protocol"] not in (11, 14, 16, 18, 20)
     ):
         raise DefinitionMismatch(
             "Original Coding cleanup requests require explicit native publication"

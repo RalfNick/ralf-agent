@@ -115,10 +115,23 @@ def _capacity_implementation():
 
 def _environment_implementation():
     from . import codex_environment as environment
+    from . import coding_create_inventory, coding_process_wait
     from .component_fingerprint import executable_digest
 
     if DockerCodingEnvironment is not environment.DockerCodingEnvironment:
         raise DefinitionMismatch("Original Coding environment class changed")
+    if (
+        environment.ChildExitMonitor is not coding_process_wait.ChildExitMonitor
+        or environment.signal_unreaped_group is not coding_process_wait.signal_unreaped_group
+    ):
+        raise DefinitionMismatch("Original direct child supervision implementation changed")
+    supervised = coding_create_inventory.inventory()
+    coding_create_inventory.validate_inventory(supervised)
+    if supervised["inventory"] != {
+        name: executable_digest(getattr(coding_create_inventory, name))
+        for name in coding_create_inventory.inventory_fields()["inventory"]
+    }:
+        raise DefinitionMismatch("Original CREATE supervision inventory generator changed")
     methods = (
         "__init__",
         "prepare",
@@ -126,6 +139,10 @@ def _environment_implementation():
         "stop",
         "stop_existing",
         "observe_namespace_absence",
+        "observe_create_not_dispatched",
+        "_observe_create_not_dispatched",
+        "_submit_supervised_create",
+        "_control_supervised_create",
         "_observe_namespace_absence",
         "_namespace_query",
         "aclose",
@@ -162,6 +179,7 @@ def _environment_implementation():
         "transport_argv",
     )
     return {
+        "create_supervision": supervised,
         "methods": {
             name: executable_digest(
                 getattr(DockerCodingEnvironment, name).fget
@@ -256,7 +274,8 @@ class CodexCodingRunner:
             "credentials": "unavailable",
             "usage_bound": "unknown",
             "physical_capacity_version": "1",
-            "create_operation_version": 1,
+            "create_operation_version": 2,
+            "create_supervision_version": 1,
         }
         from .component_fingerprint import executable_digest
 
@@ -372,6 +391,8 @@ class CodexCodingRunner:
             expected_generation=generation,
             configuration_readonly=type(self._journal) is PostgresRunnerJournal,
             create_recovery=True,
+            create_supervision=True,
+            supervision_sources=self._environment_inventory["create_supervision"]["module_sources"],
         )
 
     async def _acquire_capacity(self, owner, *, recovery=False, absent_original_ok=False):
@@ -448,7 +469,19 @@ class CodexCodingRunner:
         original = {key: claim[key] for key in ("dispatch_digest", "runner_digest", "generation")}
         stop = owner.get("stop_evidence")
         absent = owner.get("namespace_absence")
-        if stop is not None:
+        no_create = owner.get("create_not_dispatched")
+        if no_create is not None:
+            from .coding_execution_rules import create_not_dispatched_projection
+
+            proof = create_not_dispatched_projection(
+                no_create,
+                owner["environment"].identity,
+                token=claim["token"],
+                dispatch_digest=original["dispatch_digest"],
+                runner_digest=original["runner_digest"],
+            )
+            gate.release(claim["token"], create_not_dispatched_proof=proof)
+        elif stop is not None:
             if stop.get("generation") != original["generation"]:
                 raise DefinitionMismatch("Capacity stop differs from the original generation")
             gate.release(
@@ -704,12 +737,16 @@ class CodexCodingRunner:
 
     async def _observe_owned(self, owner, kind, evidence):
         if not owner.get("history"):
-            if kind == "prepared":
+            if kind in {"prepared", "create_not_dispatched"}:
                 return owner["authority"].adopt(kind, evidence)
             return self._observe(owner, kind, evidence)
         context = owner["envelope"].context
-        value = evidence if kind in {"prepared", "namespace_absent"} else {"kind": kind, **evidence}
-        if kind in {"prepared", "stop", "namespace_absent"}:
+        value = (
+            evidence
+            if kind in {"prepared", "namespace_absent", "create_not_dispatched"}
+            else {"kind": kind, **evidence}
+        )
+        if kind in {"prepared", "stop", "namespace_absent", "create_not_dispatched"}:
             saved = await self._journal_method(
                 owner,
                 "record_resource",
@@ -1351,6 +1388,10 @@ class CodexCodingRunner:
             stop = owner["stop_evidence"]
             if stop is not None:
                 await self._observe_owned(owner, "stop", stop)
+            elif owner.get("create_not_dispatched") is not None:
+                await self._observe_owned(
+                    owner, "create_not_dispatched", owner["create_not_dispatched"]
+                )
             elif owner.get("namespace_absence") is not None:
                 await self._observe_owned(owner, "namespace_absent", owner["namespace_absence"])
             await self._release_capacity(owner)
@@ -1395,6 +1436,8 @@ class CodexCodingRunner:
                         expected_container_id=locator,
                     )
                 )
+                if stop is None and getattr(env, "_create_no_submit", None) is not None:
+                    owner["create_not_dispatched"] = await env.observe_create_not_dispatched()
                 if stop is not None and not (
                     stop["fenced"] and stop["retired"] and not stop["container_present"]
                 ):
@@ -1404,7 +1447,7 @@ class CodexCodingRunner:
             known = owner.get("known_resource", False) or any(
                 value is not None for value in owner["original_state"].values()
             )
-            if stop is None and known:
+            if stop is None and known and owner.get("create_not_dispatched") is None:
                 original = owner["original_state"]
                 resource = owner.get("resource_intent")
                 if (
@@ -1474,6 +1517,10 @@ class CodexCodingRunner:
         # as namespace stop evidence or exposed by cold stop_existing.
         if stop is not None:
             await self._observe_owned(owner, "stop", stop)
+        elif owner.get("create_not_dispatched") is not None:
+            await self._observe_owned(
+                owner, "create_not_dispatched", owner["create_not_dispatched"]
+            )
         elif owner.get("namespace_absence") is not None:
             await self._observe_owned(owner, "namespace_absent", owner["namespace_absence"])
         await self._release_capacity(owner)

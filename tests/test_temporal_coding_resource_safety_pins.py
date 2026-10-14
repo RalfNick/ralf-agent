@@ -115,8 +115,8 @@ def registered(tmp_path, monkeypatch, request):
     )
     runtime.validate_release()
     original = runtime.manifest
-    assert original["binding_protocol"] == (19 if getattr(request, "param", False) else 18)
-    assert original["coding_execution_protocol"]["version"] == 4
+    assert original["binding_protocol"] == (21 if getattr(request, "param", False) else 20)
+    assert original["coding_execution_protocol"]["version"] == 5
     assert list((tmp_path / "runner").iterdir()) == []
     try:
         yield runtime, original, tmp_path / "runner"
@@ -431,7 +431,7 @@ def test_cached_policy_helper_cannot_hide_entry_mutation(monkeypatch):
     name = "ralf_agent.coding_resource_fingerprint"
     actual = policy()
     module = importlib.import_module(name)
-    before = protocol.implementation()
+    protocol.implementation()
     values = ("same", ["same"], ("same",), {"same": 1})
     saved = [actual(value) for value in values]
 
@@ -444,5 +444,6 @@ def test_cached_policy_helper_cannot_hide_entry_mutation(monkeypatch):
         return actual(value)
 
     monkeypatch.setattr(module, "policy_value", cached)
-    after = protocol.implementation()
-    assert before != after
+    # Rebound imported roles fail before stale policy bytes can be published.
+    with pytest.raises(DefinitionMismatch, match="alias"):
+        protocol.implementation()

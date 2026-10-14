@@ -9,6 +9,20 @@ Local 使用 `tools/codex-coding-connected`；Temporal 使用
 本地账户认证成功均不证明远端 Responses 兼容、配额可用或真实 Coding 任务质量通过。
 示例 `offline-echo` 只用于装配检查，不会提出 Coding 工具调用。
 
+### DeepSeek 协议兼容核验（2026-10-14）
+
+DeepSeek [官方 Responses 指南](https://api-docs.deepseek.com/guides/responses_api/)
+已声明原生支持该协议，endpoint 为 `https://api.deepseek.com`。本日独立有界
+真实请求使用 `deepseek-flash`／reasoning `low`：文本、SSE 终态与 `tool_choice=auto`
+函数调用均返回 HTTP 200；函数参数正确。两次显式指定函数的工具选择请求返回
+HTTP 400，服务端说明思考模式不支持该 `tool_choice`。该失败记录保留，不能将
+“兼容 Responses”理解为接受全部参数组合。
+
+本次是直接接口 smoke，没有运行新的 Codex Thread／Turn 或质量任务集；既有 dev109
+9/9 原生 Coding 质量证据保持其原版本范围。官方接口还不支持服务端
+`previous_response_id`／conversation 持久续接，因此恢复仍依赖原原生状态和 RALF
+执行权威。凭证通过禁止回显的 stdin 进入测试进程，仅保存非敏感报告，未改全局配置。
+
 ## 非敏感连接字段
 
 每个工具条目增加 `connection`，其余字段保持原 Local 或 Temporal 声明格式。

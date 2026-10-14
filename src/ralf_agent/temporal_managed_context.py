@@ -621,7 +621,7 @@ def accept_stage(state, action_id, response):
         and response.get("ok") is False
         and response.get("code") == "activity_outcome_unknown"
         and state.manifest.get("binding_protocol")
-        in (5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19)
+        in (5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21)
         and state.step_manifest["managed_context"]["policy"].get("artifact_binding", {}).get("mode")
         == "ref"
         and action_id in getattr(state, "context_read_stages", {})

@@ -349,10 +349,10 @@ def test_connected_original_action_approval_recovery_and_cancel(
             native = runtime.tools.get("coding").handler.runner
             journal = native._journal
             assert journal._effect is runtime.journal
-            assert assembly.release["binding_protocol"] == (19 if composition else 18)
-            assert assembly.release["coding_execution_protocol"]["version"] == 4
+            assert assembly.release["binding_protocol"] == (21 if composition else 20)
+            assert assembly.release["coding_execution_protocol"]["version"] == 5
             if composition:
-                assert assembly.release["coding_composition_protocol"]["version"] == 5
+                assert assembly.release["coding_composition_protocol"]["version"] == 6
             first = await start_worker()
             client = await Client.connect(os.environ["RALF_TEST_TEMPORAL_ADDRESS"])
             engine = assembly.create_engine(

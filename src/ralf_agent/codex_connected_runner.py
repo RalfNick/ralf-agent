@@ -251,6 +251,8 @@ class ConnectedCodexCodingRunner(CodexCodingRunner):
             expected_generation=generation,
             configuration_readonly=True,
             create_recovery=True,
+            create_supervision=True,
+            supervision_sources=self._environment_inventory["create_supervision"]["module_sources"],
         )
 
     def _make_transport(self, owner, environment):

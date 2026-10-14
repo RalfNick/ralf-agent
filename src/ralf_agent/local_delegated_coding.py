@@ -369,6 +369,11 @@ class LocalCodingAuthority:
             {
                 "prepare_grant": state["grants"].get("prepare"),
                 **{kind: state.get(kind) for kind in ("prepared", "binding", "thread", "turn")},
+                **(
+                    {"create_not_dispatched": state["create_not_dispatched"]}
+                    if "create_not_dispatched" in state
+                    else {}
+                ),
             }
         )
 
@@ -418,6 +423,7 @@ class LocalCodingAuthority:
                 "stop",
                 "result_candidate",
                 "error",
+                "create_not_dispatched",
             }
             or type(evidence) is not dict
         ):
@@ -427,7 +433,12 @@ class LocalCodingAuthority:
             self.check(_envelope(state), handler.identity)
             from .coding_execution_rules import adopt as adopt_native
 
-            adopt_native(state, handler.identity, kind, evidence)
+            if kind == "create_not_dispatched":
+                from .coding_execution_rules import adopt_create_not_dispatched
+
+                adopt_create_not_dispatched(state, handler.identity, evidence)
+            else:
+                adopt_native(state, handler.identity, kind, evidence)
             self._engine._commit(
                 run,
                 "delegated_receipt_adopted",

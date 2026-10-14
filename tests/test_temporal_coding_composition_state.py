@@ -487,11 +487,11 @@ def test_native_fence_waits_for_original_actual_owner_and_keeps_unknown_credits(
     child.operation_unknown(action["id"], "worker_lost")
     child.admit_coding_stop(admission(request, "c" * 32))
     native_stop(child, request)
-    child.manifest["binding_protocol"] = 19
+    child.manifest["binding_protocol"] = 21
     from ralf_agent.temporal_coding_composition_protocol import implementation
 
     child.manifest["coding_composition_protocol"] = {
-        "version": 5,
+        "version": 6,
         "topology": "bounded-agent-orchestration",
         "implementation": implementation(),
     }
