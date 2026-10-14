@@ -31,6 +31,7 @@ RUNNER_METHODS = (
     "_artifacts",
     "_settle",
     "_close_owner",
+    "_make_transport",
 )
 JOURNAL_METHODS = (
     "begin_resource",
@@ -229,6 +230,7 @@ def implementation():
 
 
 def registration(runtime):
+    from .codex_connected_runner import ConnectedCodexCodingRunner
     from .codex_runner import CodexCodingRunner
     from .component_fingerprint import executable_digest
     from .delegated_coding import registered_coding_tool
@@ -242,7 +244,7 @@ def registration(runtime):
             continue
         runner = handler.runner
         if (
-            type(runner) is not CodexCodingRunner
+            type(runner) not in (CodexCodingRunner, ConnectedCodexCodingRunner)
             or type(runner._journal) is not PostgresRunnerJournal
             or runner._journal._effect is not runtime.journal
             or runner.identity.get("configuration_readonly") is not True
@@ -250,6 +252,7 @@ def registration(runtime):
             raise ValidationError(
                 "Temporal Coding requires the exact shared PostgreSQL journal and concrete Runner"
             )
+        type(runner)._check_root(runner)
         CodexCodingRunner._check_root(runner)
         runner._journal._ready()
         result[name] = {
@@ -264,7 +267,7 @@ def registration(runtime):
         }
     if not result:
         raise ValidationError("Temporal Coding requires at least one registered original Runner")
-    return {"version": 1, "tools": result, "implementation": implementation()}
+    return {"version": 2, "tools": result, "implementation": implementation()}
 
 
 def validate_protocol(manifest):
@@ -272,20 +275,20 @@ def validate_protocol(manifest):
 
     validate_composition(manifest)
     if not enabled(manifest):
-        if manifest.get("binding_protocol") in (11, 12, 13):
+        if manifest.get("binding_protocol") in (11, 12, 13, 14, 15):
             raise DefinitionMismatch("Temporal Coding publication is missing")
         return
     value = manifest["coding_execution_protocol"]
     if (
         manifest.get("kernel") != "temporal-3"
         or type(manifest.get("binding_protocol")) is not int
-        or manifest["binding_protocol"] not in (11, 12, 13)
+        or manifest["binding_protocol"] not in (14, 15)
         or manifest.get("dispatch_admission") != "history-1"
         or "tool_execution_protocol" not in manifest
         or type(value) is not dict
         or set(value) != {"version", "tools", "implementation"}
         or type(value["version"]) is not int
-        or value["version"] != 1
+        or value["version"] != 2
         or type(value["tools"]) is not dict
         or not 1 <= len(value["tools"]) <= 16
         or type(value["implementation"]) is not dict
@@ -330,7 +333,7 @@ def publish(manifest, runtime):
     result = detached(manifest)
     result.update(
         kernel="temporal-3",
-        binding_protocol=11,
+        binding_protocol=14,
         dispatch_admission="history-1",
         coding_execution_protocol=registration(runtime),
     )

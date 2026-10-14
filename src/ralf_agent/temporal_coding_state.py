@@ -510,9 +510,11 @@ def requests(state):
     if (
         not enabled(state.manifest)
         or type(state.manifest.get("binding_protocol")) is not int
-        or state.manifest["binding_protocol"] != 11
+        or state.manifest["binding_protocol"] not in (11, 14)
     ):
-        raise DefinitionMismatch("Original Coding cleanup requests require explicit protocol 11")
+        raise DefinitionMismatch(
+            "Original Coding cleanup requests require explicit native publication"
+        )
     values = []
     for action in state.actions:
         native = action.get("delegated_execution")

@@ -1,5 +1,7 @@
 # Temporal 串行 Agent 图的有限 Coding 组合
 
+当前 dev109 的选定静态组合为 version 3／binding 15；本文旧 protocol 12／13 段落为历史范围。旧选定 Run 使用匹配旧 Worker；拓扑支持范围未扩大。见[连接指南](codex-model-connection.md)。
+
 本文记录 dev107 已通过有限验收的显式组合入口。最终 wheel 在真实 Temporal／
 PostgreSQL 上通过 11 条串行执行、审批重启、取消、故障恢复与 owned close 路径，
 原 History 均使用实际 namespace 重放；原协议 11 的两条安装后兼容路径另行通过。

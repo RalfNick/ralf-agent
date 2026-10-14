@@ -168,6 +168,10 @@ def preflight_coding_references(profile):
         if tools is not None and tools["adapter"] == "codex-coding"
         else None
     )
+    if tools is not None and tools["adapter"] == "codex-coding-connected":
+        from .connected_coding_factories import entries
+
+        names = {entry["name"] for entry in entries(tools["config"])}
     for declaration in profile.binding_components or ():
         component = declaration["component"]
         if declaration["role"] != "runner" or component["adapter"] != "registered-tool":
@@ -180,3 +184,6 @@ def preflight_coding_references(profile):
 def register_coding_factories(registry):
     registry.register_async("tools", "codex-coding", build, validator=validate)
     registry.register("runner", "registered-tool", binding, validator=validate_binding)
+    from .connected_coding_factories import register_local
+
+    register_local(registry)

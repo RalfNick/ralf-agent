@@ -51,8 +51,14 @@ def _view_fields():
 
 
 def enabled(manifest):
+    value = manifest.get("coding_composition_protocol")
     return (
         manifest.get("binding_protocol") in (12, 13) and "coding_composition_protocol" in manifest
+    ) or (
+        manifest.get("binding_protocol") == 15
+        and type(value) is dict
+        and type(value.get("version")) is int
+        and value["version"] == 3
     )
 
 

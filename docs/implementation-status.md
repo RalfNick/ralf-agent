@@ -1,4 +1,6 @@
-# Implementation status — 0.1.0.dev108
+# Implementation status — 0.1.0.dev109
+
+Dev109 接通固定 Responses 模型连接、延迟解析的可替换凭证源和 Local／Temporal 显式装配，继续复用原 Action／History 执行权威。当前选定 Temporal 发布为 native protocol 2／binding 14、静态组合 version 3／binding 15；旧选定发布需要匹配的 immutable Worker。安装包真实 DeepSeek 的三类有限 POSIX Coding 任务各重复三次，通过 9/9 次、78 项独立禁网容器检查；不代表通用 Coding 质量或 AgentScope 对齐。Temporal Team／Dynamic／嵌套 Coding、跨父全局容量、跨宿主和不可确定 create／CID 窗口仍开放，完整 R13／第二阶段未关闭。 见[连接指南](codex-model-connection.md)和[本批验收](../architecture/reviews/2026-10-14-codex-model-connection.md)。
 
 Dev108 已验收有限 Temporal 有界静态 Agent 图 Coding：协议 13／组合版本 2，在原父 History 按有效 Runner 授权调度不同资源并行和共享资源背压；财务已结算但未证明物理结束的原子仍占槽。关闭尝试全部独立原叶、准确核对 PG／History 完整请求并重扫，失败保留资源；停止失败恢复不会重开取消中的业务。Team／Dynamic 的持久选择阶段、跨父全局 Runner 容量、嵌套／直接 Tool、专用认证和真实 Coding 质量仍开放，完整 R13／第二阶段未关闭。 见[并行指南](temporal-parallel-coding.md)和[本批验收](../architecture/reviews/2026-10-14-temporal-parallel-coding.md)。
 

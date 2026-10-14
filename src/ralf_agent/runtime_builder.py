@@ -765,7 +765,7 @@ class RuntimeBuilder:
         tools = profile.components.get("tools")
         if (
             tools is not None
-            and tools["adapter"] == "codex-coding-postgres"
+            and tools["adapter"] in {"codex-coding-postgres", "codex-coding-connected-postgres"}
             and ("tools", tools["adapter"]) in self.registry._factories
         ):
             raise ValidationError("PostgreSQL Coding requires original Temporal History")

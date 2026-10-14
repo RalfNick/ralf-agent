@@ -661,6 +661,20 @@ class CodexCodingRunner:
                 await owner["transport"].notify("initialized")
         self._profile.validate_control(results)
 
+    def _make_transport(self, owner, environment):
+        """Construct one transport after the original preparation/journal grant.
+
+        A concrete, versioned Runner can specialize startup authentication while
+        retaining this execution loop and its original authority and cleanup.
+        This hook never resolves credentials or submits native business work.
+        """
+        return CodexRPCTransport(
+            environment.transport_argv(),
+            env=environment.transport_env,
+            request_timeout=self._timeout,
+            coding_mode=True,
+        )
+
     async def _execute(self, owner):
         candidate = None
         error = None
@@ -728,12 +742,7 @@ class CodexCodingRunner:
                 owner["journaled"] = True
                 if not record["execute"]:
                     raise RunnerOutcomeUnknown("original journal startup already exists")
-                transport = CodexRPCTransport(
-                    env.transport_argv(),
-                    env=env.transport_env,
-                    request_timeout=self._timeout,
-                    coding_mode=True,
-                )
+                transport = self._make_transport(owner, env)
                 owner["transport"] = transport
                 await transport.start()
                 await self._preflight(owner)

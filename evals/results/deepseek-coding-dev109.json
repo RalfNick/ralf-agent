@@ -1,0 +1,829 @@
+{
+  "scope": "bounded POSIX Coding baseline; not general coding benchmark",
+  "fixture_sha256": "4bcb3037efd1e744edb471fe4bd45a702c8282c551c489d50bb249b422b66e8b",
+  "target_runs": 9,
+  "model": "deepseek-flash",
+  "usage": {
+    "status": "unknown"
+  },
+  "reports": [
+    {
+      "case": "signed-add",
+      "repetition": 1,
+      "passed": true,
+      "model": "deepseek-flash",
+      "usage": {
+        "status": "unknown"
+      },
+      "state": "succeeded",
+      "attempts": 1,
+      "fenced": true,
+      "candidate": true,
+      "checks": [
+        {
+          "index": 0,
+          "passed": true,
+          "exit": 0,
+          "stdout_bytes": 2,
+          "stderr_bytes": 0,
+          "oracle_container_absent": true
+        },
+        {
+          "index": 1,
+          "passed": true,
+          "exit": 0,
+          "stdout_bytes": 2,
+          "stderr_bytes": 0,
+          "oracle_container_absent": true
+        },
+        {
+          "index": 2,
+          "passed": true,
+          "exit": 0,
+          "stdout_bytes": 3,
+          "stderr_bytes": 0,
+          "oracle_container_absent": true
+        },
+        {
+          "index": 3,
+          "passed": true,
+          "exit": 0,
+          "stdout_bytes": 2,
+          "stderr_bytes": 0,
+          "oracle_container_absent": true
+        },
+        {
+          "index": 4,
+          "passed": true,
+          "exit": 0,
+          "stdout_bytes": 2,
+          "stderr_bytes": 0,
+          "oracle_container_absent": true
+        },
+        {
+          "index": 5,
+          "passed": true,
+          "exit": 2,
+          "stdout_bytes": 0,
+          "stderr_bytes": 0,
+          "oracle_container_absent": true
+        },
+        {
+          "index": 6,
+          "passed": true,
+          "exit": 2,
+          "stdout_bytes": 0,
+          "stderr_bytes": 0,
+          "oracle_container_absent": true
+        },
+        {
+          "index": 7,
+          "passed": true,
+          "exit": 2,
+          "stdout_bytes": 0,
+          "stderr_bytes": 0,
+          "oracle_container_absent": true
+        },
+        {
+          "index": 8,
+          "passed": true,
+          "exit": 2,
+          "stdout_bytes": 0,
+          "stderr_bytes": 0,
+          "oracle_container_absent": true
+        },
+        {
+          "index": 9,
+          "passed": true,
+          "exit": 2,
+          "stdout_bytes": 0,
+          "stderr_bytes": 0,
+          "oracle_container_absent": true
+        }
+      ],
+      "runner_closed": true,
+      "engine_closed": true,
+      "journal_closed": true,
+      "credential_found_in_files": false,
+      "elapsed_seconds": 45.791
+    },
+    {
+      "case": "signed-add",
+      "repetition": 2,
+      "passed": true,
+      "model": "deepseek-flash",
+      "usage": {
+        "status": "unknown"
+      },
+      "state": "succeeded",
+      "attempts": 1,
+      "fenced": true,
+      "candidate": true,
+      "checks": [
+        {
+          "index": 0,
+          "passed": true,
+          "exit": 0,
+          "stdout_bytes": 2,
+          "stderr_bytes": 0,
+          "oracle_container_absent": true
+        },
+        {
+          "index": 1,
+          "passed": true,
+          "exit": 0,
+          "stdout_bytes": 2,
+          "stderr_bytes": 0,
+          "oracle_container_absent": true
+        },
+        {
+          "index": 2,
+          "passed": true,
+          "exit": 0,
+          "stdout_bytes": 3,
+          "stderr_bytes": 0,
+          "oracle_container_absent": true
+        },
+        {
+          "index": 3,
+          "passed": true,
+          "exit": 0,
+          "stdout_bytes": 2,
+          "stderr_bytes": 0,
+          "oracle_container_absent": true
+        },
+        {
+          "index": 4,
+          "passed": true,
+          "exit": 0,
+          "stdout_bytes": 2,
+          "stderr_bytes": 0,
+          "oracle_container_absent": true
+        },
+        {
+          "index": 5,
+          "passed": true,
+          "exit": 2,
+          "stdout_bytes": 0,
+          "stderr_bytes": 0,
+          "oracle_container_absent": true
+        },
+        {
+          "index": 6,
+          "passed": true,
+          "exit": 2,
+          "stdout_bytes": 0,
+          "stderr_bytes": 0,
+          "oracle_container_absent": true
+        },
+        {
+          "index": 7,
+          "passed": true,
+          "exit": 2,
+          "stdout_bytes": 0,
+          "stderr_bytes": 0,
+          "oracle_container_absent": true
+        },
+        {
+          "index": 8,
+          "passed": true,
+          "exit": 2,
+          "stdout_bytes": 0,
+          "stderr_bytes": 0,
+          "oracle_container_absent": true
+        },
+        {
+          "index": 9,
+          "passed": true,
+          "exit": 2,
+          "stdout_bytes": 0,
+          "stderr_bytes": 0,
+          "oracle_container_absent": true
+        }
+      ],
+      "runner_closed": true,
+      "engine_closed": true,
+      "journal_closed": true,
+      "credential_found_in_files": false,
+      "elapsed_seconds": 23.355
+    },
+    {
+      "case": "signed-add",
+      "repetition": 3,
+      "passed": true,
+      "model": "deepseek-flash",
+      "usage": {
+        "status": "unknown"
+      },
+      "state": "succeeded",
+      "attempts": 1,
+      "fenced": true,
+      "candidate": true,
+      "checks": [
+        {
+          "index": 0,
+          "passed": true,
+          "exit": 0,
+          "stdout_bytes": 2,
+          "stderr_bytes": 0,
+          "oracle_container_absent": true
+        },
+        {
+          "index": 1,
+          "passed": true,
+          "exit": 0,
+          "stdout_bytes": 2,
+          "stderr_bytes": 0,
+          "oracle_container_absent": true
+        },
+        {
+          "index": 2,
+          "passed": true,
+          "exit": 0,
+          "stdout_bytes": 3,
+          "stderr_bytes": 0,
+          "oracle_container_absent": true
+        },
+        {
+          "index": 3,
+          "passed": true,
+          "exit": 0,
+          "stdout_bytes": 2,
+          "stderr_bytes": 0,
+          "oracle_container_absent": true
+        },
+        {
+          "index": 4,
+          "passed": true,
+          "exit": 0,
+          "stdout_bytes": 2,
+          "stderr_bytes": 0,
+          "oracle_container_absent": true
+        },
+        {
+          "index": 5,
+          "passed": true,
+          "exit": 2,
+          "stdout_bytes": 0,
+          "stderr_bytes": 0,
+          "oracle_container_absent": true
+        },
+        {
+          "index": 6,
+          "passed": true,
+          "exit": 2,
+          "stdout_bytes": 0,
+          "stderr_bytes": 0,
+          "oracle_container_absent": true
+        },
+        {
+          "index": 7,
+          "passed": true,
+          "exit": 2,
+          "stdout_bytes": 0,
+          "stderr_bytes": 0,
+          "oracle_container_absent": true
+        },
+        {
+          "index": 8,
+          "passed": true,
+          "exit": 2,
+          "stdout_bytes": 0,
+          "stderr_bytes": 0,
+          "oracle_container_absent": true
+        },
+        {
+          "index": 9,
+          "passed": true,
+          "exit": 2,
+          "stdout_bytes": 0,
+          "stderr_bytes": 0,
+          "oracle_container_absent": true
+        }
+      ],
+      "runner_closed": true,
+      "engine_closed": true,
+      "journal_closed": true,
+      "credential_found_in_files": false,
+      "elapsed_seconds": 23.676
+    },
+    {
+      "case": "nonblank-count",
+      "repetition": 1,
+      "passed": true,
+      "model": "deepseek-flash",
+      "usage": {
+        "status": "unknown"
+      },
+      "state": "succeeded",
+      "attempts": 1,
+      "fenced": true,
+      "candidate": true,
+      "checks": [
+        {
+          "index": 0,
+          "passed": true,
+          "exit": 0,
+          "stdout_bytes": 2,
+          "stderr_bytes": 0,
+          "oracle_container_absent": true
+        },
+        {
+          "index": 1,
+          "passed": true,
+          "exit": 0,
+          "stdout_bytes": 2,
+          "stderr_bytes": 0,
+          "oracle_container_absent": true
+        },
+        {
+          "index": 2,
+          "passed": true,
+          "exit": 0,
+          "stdout_bytes": 2,
+          "stderr_bytes": 0,
+          "oracle_container_absent": true
+        },
+        {
+          "index": 3,
+          "passed": true,
+          "exit": 2,
+          "stdout_bytes": 0,
+          "stderr_bytes": 0,
+          "oracle_container_absent": true
+        },
+        {
+          "index": 4,
+          "passed": true,
+          "exit": 2,
+          "stdout_bytes": 0,
+          "stderr_bytes": 0,
+          "oracle_container_absent": true
+        },
+        {
+          "index": 5,
+          "passed": true,
+          "exit": 2,
+          "stdout_bytes": 0,
+          "stderr_bytes": 0,
+          "oracle_container_absent": true
+        }
+      ],
+      "runner_closed": true,
+      "engine_closed": true,
+      "journal_closed": true,
+      "credential_found_in_files": false,
+      "elapsed_seconds": 29.435
+    },
+    {
+      "case": "nonblank-count",
+      "repetition": 2,
+      "passed": true,
+      "model": "deepseek-flash",
+      "usage": {
+        "status": "unknown"
+      },
+      "state": "succeeded",
+      "attempts": 1,
+      "fenced": true,
+      "candidate": true,
+      "checks": [
+        {
+          "index": 0,
+          "passed": true,
+          "exit": 0,
+          "stdout_bytes": 2,
+          "stderr_bytes": 0,
+          "oracle_container_absent": true
+        },
+        {
+          "index": 1,
+          "passed": true,
+          "exit": 0,
+          "stdout_bytes": 2,
+          "stderr_bytes": 0,
+          "oracle_container_absent": true
+        },
+        {
+          "index": 2,
+          "passed": true,
+          "exit": 0,
+          "stdout_bytes": 2,
+          "stderr_bytes": 0,
+          "oracle_container_absent": true
+        },
+        {
+          "index": 3,
+          "passed": true,
+          "exit": 2,
+          "stdout_bytes": 0,
+          "stderr_bytes": 0,
+          "oracle_container_absent": true
+        },
+        {
+          "index": 4,
+          "passed": true,
+          "exit": 2,
+          "stdout_bytes": 0,
+          "stderr_bytes": 0,
+          "oracle_container_absent": true
+        },
+        {
+          "index": 5,
+          "passed": true,
+          "exit": 2,
+          "stdout_bytes": 0,
+          "stderr_bytes": 0,
+          "oracle_container_absent": true
+        }
+      ],
+      "runner_closed": true,
+      "engine_closed": true,
+      "journal_closed": true,
+      "credential_found_in_files": false,
+      "elapsed_seconds": 12.883
+    },
+    {
+      "case": "nonblank-count",
+      "repetition": 3,
+      "passed": true,
+      "model": "deepseek-flash",
+      "usage": {
+        "status": "unknown"
+      },
+      "state": "succeeded",
+      "attempts": 1,
+      "fenced": true,
+      "candidate": true,
+      "checks": [
+        {
+          "index": 0,
+          "passed": true,
+          "exit": 0,
+          "stdout_bytes": 2,
+          "stderr_bytes": 0,
+          "oracle_container_absent": true
+        },
+        {
+          "index": 1,
+          "passed": true,
+          "exit": 0,
+          "stdout_bytes": 2,
+          "stderr_bytes": 0,
+          "oracle_container_absent": true
+        },
+        {
+          "index": 2,
+          "passed": true,
+          "exit": 0,
+          "stdout_bytes": 2,
+          "stderr_bytes": 0,
+          "oracle_container_absent": true
+        },
+        {
+          "index": 3,
+          "passed": true,
+          "exit": 2,
+          "stdout_bytes": 0,
+          "stderr_bytes": 0,
+          "oracle_container_absent": true
+        },
+        {
+          "index": 4,
+          "passed": true,
+          "exit": 2,
+          "stdout_bytes": 0,
+          "stderr_bytes": 0,
+          "oracle_container_absent": true
+        },
+        {
+          "index": 5,
+          "passed": true,
+          "exit": 2,
+          "stdout_bytes": 0,
+          "stderr_bytes": 0,
+          "oracle_container_absent": true
+        }
+      ],
+      "runner_closed": true,
+      "engine_closed": true,
+      "journal_closed": true,
+      "credential_found_in_files": false,
+      "elapsed_seconds": 10.808
+    },
+    {
+      "case": "validated-csv-total",
+      "repetition": 1,
+      "passed": true,
+      "model": "deepseek-flash",
+      "usage": {
+        "status": "unknown"
+      },
+      "state": "succeeded",
+      "attempts": 1,
+      "fenced": true,
+      "candidate": true,
+      "checks": [
+        {
+          "index": 0,
+          "passed": true,
+          "exit": 0,
+          "stdout_bytes": 2,
+          "stderr_bytes": 0,
+          "oracle_container_absent": true
+        },
+        {
+          "index": 1,
+          "passed": true,
+          "exit": 0,
+          "stdout_bytes": 8,
+          "stderr_bytes": 0,
+          "oracle_container_absent": true
+        },
+        {
+          "index": 2,
+          "passed": true,
+          "exit": 0,
+          "stdout_bytes": 2,
+          "stderr_bytes": 0,
+          "oracle_container_absent": true
+        },
+        {
+          "index": 3,
+          "passed": true,
+          "exit": 2,
+          "stdout_bytes": 0,
+          "stderr_bytes": 0,
+          "oracle_container_absent": true
+        },
+        {
+          "index": 4,
+          "passed": true,
+          "exit": 2,
+          "stdout_bytes": 0,
+          "stderr_bytes": 0,
+          "oracle_container_absent": true
+        },
+        {
+          "index": 5,
+          "passed": true,
+          "exit": 2,
+          "stdout_bytes": 0,
+          "stderr_bytes": 0,
+          "oracle_container_absent": true
+        },
+        {
+          "index": 6,
+          "passed": true,
+          "exit": 2,
+          "stdout_bytes": 0,
+          "stderr_bytes": 0,
+          "oracle_container_absent": true
+        },
+        {
+          "index": 7,
+          "passed": true,
+          "exit": 2,
+          "stdout_bytes": 0,
+          "stderr_bytes": 0,
+          "oracle_container_absent": true
+        },
+        {
+          "index": 8,
+          "passed": true,
+          "exit": 2,
+          "stdout_bytes": 0,
+          "stderr_bytes": 0,
+          "oracle_container_absent": true
+        },
+        {
+          "index": 9,
+          "passed": true,
+          "exit": 2,
+          "stdout_bytes": 0,
+          "stderr_bytes": 0,
+          "oracle_container_absent": true
+        }
+      ],
+      "runner_closed": true,
+      "engine_closed": true,
+      "journal_closed": true,
+      "credential_found_in_files": false,
+      "elapsed_seconds": 21.476
+    },
+    {
+      "case": "validated-csv-total",
+      "repetition": 2,
+      "passed": true,
+      "model": "deepseek-flash",
+      "usage": {
+        "status": "unknown"
+      },
+      "state": "succeeded",
+      "attempts": 1,
+      "fenced": true,
+      "candidate": true,
+      "checks": [
+        {
+          "index": 0,
+          "passed": true,
+          "exit": 0,
+          "stdout_bytes": 2,
+          "stderr_bytes": 0,
+          "oracle_container_absent": true
+        },
+        {
+          "index": 1,
+          "passed": true,
+          "exit": 0,
+          "stdout_bytes": 8,
+          "stderr_bytes": 0,
+          "oracle_container_absent": true
+        },
+        {
+          "index": 2,
+          "passed": true,
+          "exit": 0,
+          "stdout_bytes": 2,
+          "stderr_bytes": 0,
+          "oracle_container_absent": true
+        },
+        {
+          "index": 3,
+          "passed": true,
+          "exit": 2,
+          "stdout_bytes": 0,
+          "stderr_bytes": 0,
+          "oracle_container_absent": true
+        },
+        {
+          "index": 4,
+          "passed": true,
+          "exit": 2,
+          "stdout_bytes": 0,
+          "stderr_bytes": 0,
+          "oracle_container_absent": true
+        },
+        {
+          "index": 5,
+          "passed": true,
+          "exit": 2,
+          "stdout_bytes": 0,
+          "stderr_bytes": 0,
+          "oracle_container_absent": true
+        },
+        {
+          "index": 6,
+          "passed": true,
+          "exit": 2,
+          "stdout_bytes": 0,
+          "stderr_bytes": 0,
+          "oracle_container_absent": true
+        },
+        {
+          "index": 7,
+          "passed": true,
+          "exit": 2,
+          "stdout_bytes": 0,
+          "stderr_bytes": 0,
+          "oracle_container_absent": true
+        },
+        {
+          "index": 8,
+          "passed": true,
+          "exit": 2,
+          "stdout_bytes": 0,
+          "stderr_bytes": 0,
+          "oracle_container_absent": true
+        },
+        {
+          "index": 9,
+          "passed": true,
+          "exit": 2,
+          "stdout_bytes": 0,
+          "stderr_bytes": 0,
+          "oracle_container_absent": true
+        }
+      ],
+      "runner_closed": true,
+      "engine_closed": true,
+      "journal_closed": true,
+      "credential_found_in_files": false,
+      "elapsed_seconds": 26.837
+    },
+    {
+      "case": "validated-csv-total",
+      "repetition": 3,
+      "passed": true,
+      "model": "deepseek-flash",
+      "usage": {
+        "status": "unknown"
+      },
+      "state": "succeeded",
+      "attempts": 1,
+      "fenced": true,
+      "candidate": true,
+      "checks": [
+        {
+          "index": 0,
+          "passed": true,
+          "exit": 0,
+          "stdout_bytes": 2,
+          "stderr_bytes": 0,
+          "oracle_container_absent": true
+        },
+        {
+          "index": 1,
+          "passed": true,
+          "exit": 0,
+          "stdout_bytes": 8,
+          "stderr_bytes": 0,
+          "oracle_container_absent": true
+        },
+        {
+          "index": 2,
+          "passed": true,
+          "exit": 0,
+          "stdout_bytes": 2,
+          "stderr_bytes": 0,
+          "oracle_container_absent": true
+        },
+        {
+          "index": 3,
+          "passed": true,
+          "exit": 2,
+          "stdout_bytes": 0,
+          "stderr_bytes": 0,
+          "oracle_container_absent": true
+        },
+        {
+          "index": 4,
+          "passed": true,
+          "exit": 2,
+          "stdout_bytes": 0,
+          "stderr_bytes": 0,
+          "oracle_container_absent": true
+        },
+        {
+          "index": 5,
+          "passed": true,
+          "exit": 2,
+          "stdout_bytes": 0,
+          "stderr_bytes": 0,
+          "oracle_container_absent": true
+        },
+        {
+          "index": 6,
+          "passed": true,
+          "exit": 2,
+          "stdout_bytes": 0,
+          "stderr_bytes": 0,
+          "oracle_container_absent": true
+        },
+        {
+          "index": 7,
+          "passed": true,
+          "exit": 2,
+          "stdout_bytes": 0,
+          "stderr_bytes": 0,
+          "oracle_container_absent": true
+        },
+        {
+          "index": 8,
+          "passed": true,
+          "exit": 2,
+          "stdout_bytes": 0,
+          "stderr_bytes": 0,
+          "oracle_container_absent": true
+        },
+        {
+          "index": 9,
+          "passed": true,
+          "exit": 2,
+          "stdout_bytes": 0,
+          "stderr_bytes": 0,
+          "oracle_container_absent": true
+        }
+      ],
+      "runner_closed": true,
+      "engine_closed": true,
+      "journal_closed": true,
+      "credential_found_in_files": false,
+      "elapsed_seconds": 23.527
+    }
+  ],
+  "passed_runs": 9,
+  "completed_runs": 9,
+  "distribution": "ralf-agent==0.1.0.dev109",
+  "native_version": "0.144.4",
+  "execution": "Local original approved Agent ToolAction",
+  "oracle": "fixed Docker image; isolated read-only mounts; no network; bounded process/time/output; exact container cleanup",
+  "claims": "Three finite POSIX tasks only; costs unknown; not framework parity, general coding quality, or a cross-framework benchmark.",
+  "tested_wheel_sha256": "8997483ac84d3916ebe13fba4a610852485a525d6022007e5669a75cccfcbbc1",
+  "credential_scan_coverage": {
+    "file_count": 893,
+    "max_file_bytes": 4363112,
+    "all_files_within_original_scan_bound": true
+  },
+  "image_id": "sha256:0a38a968acc4f11ab75cfd4b65a1c2f1982a18bfc27d9fb0dc1045bef5e79d43"
+}

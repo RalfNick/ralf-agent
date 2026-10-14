@@ -305,7 +305,7 @@ class TemporalRunWorkflow:
                     self.state.accept_tool(action["id"], response)
             except ActivityError as exc:
                 complete_history_read = (
-                    self.state.manifest.get("binding_protocol") in (7, 8, 9, 10, 11)
+                    self.state.manifest.get("binding_protocol") in (7, 8, 9, 10, 11, 12, 13, 14, 15)
                     and self.state.manifest.get("model_history_protocol") in (1, 2)
                     and owns_context_read(self.state.manifest, action)
                     and action.get("phase") in {"context", "plan"}

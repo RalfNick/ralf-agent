@@ -25,14 +25,14 @@ from tests.test_temporal_coding_composition_configuration import (
 from tests.test_temporal_engine import Provider, registry
 
 
-def test_existing_boolean_composition_publishes_bounded_version_13():
+def test_existing_boolean_composition_publishes_bounded_version_15():
     original = manifest()
     selected = publish(original, SimpleNamespace(coding_execution=True, coding_composition=True))
-    assert selected["binding_protocol"] == 13
-    assert selected["coding_composition_protocol"]["version"] == 2
+    assert selected["binding_protocol"] == 15
+    assert selected["coding_composition_protocol"]["version"] == 3
     assert selected["coding_composition_protocol"]["topology"] == "bounded-agent-graph"
     assert selected["coding_execution_protocol"] == original["coding_execution_protocol"]
-    assert original["binding_protocol"] == 11
+    assert original["binding_protocol"] == 14
 
 
 @pytest.mark.parametrize(
@@ -121,7 +121,7 @@ def test_registered_policy_still_limits_bounded_graph_capacity():
         execution_policy=TemporalExecutionPolicy(max_concurrency=2),
     )
     release = host.orchestration_release
-    release.update(kernel="temporal-3", binding_protocol=13)
+    release.update(kernel="temporal-3", binding_protocol=15)
     release["coding_composition_protocol"] = composition_manifest()["coding_composition_protocol"]
     graph = GraphWorkflowSpec(
         "bounded",
@@ -141,8 +141,8 @@ def test_registered_policy_still_limits_bounded_graph_capacity():
 @pytest.mark.parametrize("mutation", ["old_binding", "old_version", "old_topology", "missing"])
 def test_current_publication_refuses_serial_release_reinterpretation(mutation):
     release = composition_manifest()
-    release["binding_protocol"] = 13
-    release["coding_composition_protocol"].update(version=2, topology="bounded-agent-graph")
+    release["binding_protocol"] = 15
+    release["coding_composition_protocol"].update(version=3, topology="bounded-agent-graph")
     if mutation == "old_binding":
         release["binding_protocol"] = 12
     elif mutation == "old_version":
@@ -167,8 +167,8 @@ def test_current_root_guard_records_exact_bounded_graph_admission():
     engine._closed, engine._registry, engine.scope = False, Registry(), Scope()
     engine._release = {
         "kernel": "temporal-3",
-        "binding_protocol": 13,
-        "coding_composition_protocol": {"version": 2, "topology": "bounded-agent-graph"},
+        "binding_protocol": 15,
+        "coding_composition_protocol": {"version": 3, "topology": "bounded-agent-graph"},
     }
     request = graph_request(concurrency=2)
     asyncio.run(engine._guard("submit", "original", "root", request))
@@ -183,8 +183,8 @@ def test_current_root_guard_records_exact_bounded_graph_admission():
 def test_selected_capability_remains_static_graph_only():
     engine = object.__new__(TemporalEngine)
     engine._release = {**composition_manifest(), "orchestration": {"version": "1"}}
-    engine._release["binding_protocol"] = 13
-    engine._release["coding_composition_protocol"].update(version=2, topology="bounded-agent-graph")
+    engine._release["binding_protocol"] = 15
+    engine._release["coding_composition_protocol"].update(version=3, topology="bounded-agent-graph")
     assert engine.capabilities["coding_composition"] == "bounded-agent-graph"
     assert engine.capabilities["graph"] is True
     assert all(engine.capabilities[name] is False for name in ("team", "dag", "nesting"))

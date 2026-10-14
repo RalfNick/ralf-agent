@@ -75,12 +75,24 @@ def preflight_coding_references(profile):
         from .temporal_coding_composition_protocol import require_sdk
 
         require_sdk()
-    postgres = tool is not None and tool["adapter"] == "codex-coding-postgres"
+    postgres = tool is not None and tool["adapter"] in {
+        "codex-coding-postgres",
+        "codex-coding-connected-postgres",
+    }
     if postgres and not coding:
         raise ValidationError("PostgreSQL tools require explicit Coding execution")
-    if coding and tool is not None and tool["adapter"] == "codex-coding":
+    if (
+        coding
+        and tool is not None
+        and tool["adapter"] in {"codex-coding", "codex-coding-connected"}
+    ):
         raise ValidationError("Temporal Coding requires the original PostgreSQL effect journal")
-    names = {entry["name"] for entry in entries(tool["config"])} if postgres else None
+    if postgres and tool["adapter"] == "codex-coding-connected-postgres":
+        from .connected_coding_factories import entries as connected_entries
+
+        names = {entry["name"] for entry in connected_entries(tool["config"], temporal=True)}
+    else:
+        names = {entry["name"] for entry in entries(tool["config"])} if postgres else None
     if postgres and "effect_journal" not in profile.components:
         raise ValidationError("Temporal Coding requires a declared original effect journal")
     for declaration in profile.binding_components or ():
@@ -142,3 +154,6 @@ async def build(config, context):
 
 def register_temporal_coding_factories(registry):
     registry.register_async("tools", "codex-coding-postgres", build, validator=validate)
+    from .connected_coding_factories import register_postgres
+
+    register_postgres(registry)

@@ -12,7 +12,15 @@ ACTIVITY = "ralf.temporal.coding-composition-admission.v1"
 
 
 def selected(manifest):
-    return manifest.get("binding_protocol") == 13 and "coding_composition_protocol" in manifest
+    value = manifest.get("coding_composition_protocol")
+    return (
+        manifest.get("binding_protocol") == 13 and "coding_composition_protocol" in manifest
+    ) or (
+        manifest.get("binding_protocol") == 15
+        and type(value) is dict
+        and type(value.get("version")) is int
+        and value["version"] == 3
+    )
 
 
 def _registry(client, scope):

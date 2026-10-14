@@ -1,5 +1,7 @@
 # Temporal 原 ToolAction 的有限 Coding 委托
 
+当前 dev109 的选定发布为 native protocol 2／binding 14；原 protocol 11 的描述保留其历史范围。旧选定 Run 使用匹配旧 Worker。新的模型连接见[连接指南](codex-model-connection.md)。
+
 dev106 已验收原生 Agent／顺序 Workflow 的有限显式 Coding 委托，包括
 per-Agent Runner 选择、SDK／JSON／TOML 装配、原 History 阶段准入和共享 PostgreSQL
 资源证据。最终检查、安装、旧 Worker 与故障窗口以

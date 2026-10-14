@@ -1,4 +1,4 @@
-"""Explicit finite composition publication over the unchanged original Coding loop."""
+"""Explicit finite composition publication over the shared original Coding authority."""
 
 from .errors import DefinitionMismatch, ValidationError
 
@@ -311,20 +311,20 @@ def validate_topology(request, manifest):
 
 def validate_protocol(manifest):
     if not enabled(manifest):
-        if manifest.get("binding_protocol") in (12, 13):
+        if manifest.get("binding_protocol") in (12, 13, 15):
             raise DefinitionMismatch("Original Coding composition publication is missing")
         return
     value = manifest["coding_composition_protocol"]
     if (
         manifest.get("kernel") != "temporal-3"
         or type(manifest.get("binding_protocol")) is not int
-        or manifest["binding_protocol"] != 13
+        or manifest["binding_protocol"] != 15
         or manifest.get("dispatch_admission") != "history-1"
         or "coding_execution_protocol" not in manifest
         or type(value) is not dict
         or set(value) != {"version", "topology", "implementation"}
         or type(value["version"]) is not int
-        or value["version"] != 2
+        or value["version"] != 3
         or value["topology"] != "bounded-agent-graph"
     ):
         raise DefinitionMismatch("Unsupported original Coding composition protocol")
@@ -406,9 +406,9 @@ def publish(manifest, runtime):
         raise DefinitionMismatch("Original Coding composition opt-in is missing")
     require_sdk()
     result = detached(manifest)
-    result["binding_protocol"] = 13
+    result["binding_protocol"] = 15
     result["coding_composition_protocol"] = {
-        "version": 2,
+        "version": 3,
         "topology": "bounded-agent-graph",
         "implementation": implementation(),
     }

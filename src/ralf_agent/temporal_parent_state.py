@@ -674,7 +674,7 @@ class TemporalParentState(TemporalRunState):
             return []
         resource_aware = (
             enabled(self.manifest)
-            and self.manifest.get("binding_protocol") == 13
+            and self.manifest.get("binding_protocol") in (13, 15)
             and self.kind == "graph"
         )
         pending = [

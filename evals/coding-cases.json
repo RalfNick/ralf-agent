@@ -1,0 +1,54 @@
+{
+  "schema_version": 1,
+  "scope": "bounded POSIX Coding baseline; not general coding benchmark",
+  "repetitions": 3,
+  "cases": [
+    {
+      "id": "signed-add",
+      "artifact": "add.sh",
+      "task": "Use at most one tool call and do not test. Create /workspace/add.sh, a POSIX shell script taking exactly two signed base-10 integer arguments in the range -1000000 to 1000000 and printing their sum plus a newline. Accept optional plus/minus signs and leading zeroes as decimal. Reject invalid argument count, malformed integer or out-of-range values with exit code 2 and no stdout. Add no dependencies, keep work in /workspace, do not modify hidden metadata, then finish concisely.",
+      "checks": [
+        {"args": ["7", "-3"], "exit": 0, "stdout": "4\n"},
+        {"args": ["+8", "-2"], "exit": 0, "stdout": "6\n"},
+        {"args": ["008", "002"], "exit": 0, "stdout": "10\n"},
+        {"args": ["0", "0"], "exit": 0, "stdout": "0\n"},
+        {"args": ["-1000000", "1000000"], "exit": 0, "stdout": "0\n"},
+        {"args": [], "exit": 2, "stdout": ""},
+        {"args": ["1"], "exit": 2, "stdout": ""},
+        {"args": ["x", "2"], "exit": 2, "stdout": ""},
+        {"args": ["1.5", "2"], "exit": 2, "stdout": ""},
+        {"args": ["1000001", "0"], "exit": 2, "stdout": ""}
+      ]
+    },
+    {
+      "id": "nonblank-count",
+      "artifact": "count.sh",
+      "task": "Use at most one tool call and do not test. Create /workspace/count.sh, a POSIX shell script taking exactly one existing readable regular text file path. Print the number of nonblank lines plus a newline; lines containing only spaces or tabs are blank. Handle spaces in filenames and a last line without a newline. An empty file prints 0. Invalid argument count, missing file or directory path exits 2 with no stdout. Use only POSIX shell and standard awk/sed utilities, keep work in /workspace, do not modify hidden metadata, then finish concisely.",
+      "checks": [
+        {"file": "input.txt", "content": "one\n\n \t\ntwo\nlast", "args": ["@file"], "exit": 0, "stdout": "3\n"},
+        {"file": "has spaces.txt", "content": "甲\n \n乙\n", "args": ["@file"], "exit": 0, "stdout": "2\n"},
+        {"file": "empty.txt", "content": "", "args": ["@file"], "exit": 0, "stdout": "0\n"},
+        {"args": [], "exit": 2, "stdout": ""},
+        {"args": ["/fixture/missing"], "exit": 2, "stdout": ""},
+        {"args": ["/fixture"], "exit": 2, "stdout": ""}
+      ]
+    },
+    {
+      "id": "validated-csv-total",
+      "artifact": "total.sh",
+      "task": "Use at most one tool call and do not test. Create /workspace/total.sh, a POSIX shell script taking exactly one readable regular file path. Input has no header; every nonempty line is exactly name,amount with a nonempty name containing no comma and amount an unsigned decimal integer from 0 to 1000000. Quoting is unsupported, blank lines are invalid. Print the sum of all amounts plus a newline, including 0 for an empty file. Reject invalid rows, wrong argument count, missing file or directory with exit code 2 and no stdout; never emit a partial total. Handle spaces in filenames and a final line without newline. Use standard POSIX awk/shell utilities only, keep work in /workspace, do not modify hidden metadata, then finish concisely.",
+      "checks": [
+        {"file": "input.csv", "content": "a,2\nb,03\nc,0", "args": ["@file"], "exit": 0, "stdout": "5\n"},
+        {"file": "has spaces.csv", "content": "甲,1000000\n乙,1\n", "args": ["@file"], "exit": 0, "stdout": "1000001\n"},
+        {"file": "empty.csv", "content": "", "args": ["@file"], "exit": 0, "stdout": "0\n"},
+        {"file": "invalid.csv", "content": "a,2\nb,x\n", "args": ["@file"], "exit": 2, "stdout": ""},
+        {"file": "extra.csv", "content": "a,2,3\n", "args": ["@file"], "exit": 2, "stdout": ""},
+        {"file": "range.csv", "content": "a,1000001\n", "args": ["@file"], "exit": 2, "stdout": ""},
+        {"file": "blank.csv", "content": "a,2\n\n", "args": ["@file"], "exit": 2, "stdout": ""},
+        {"file": "name.csv", "content": ",2\n", "args": ["@file"], "exit": 2, "stdout": ""},
+        {"args": [], "exit": 2, "stdout": ""},
+        {"args": ["/fixture/missing"], "exit": 2, "stdout": ""}
+      ]
+    }
+  ]
+}

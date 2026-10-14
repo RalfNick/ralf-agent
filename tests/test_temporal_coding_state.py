@@ -46,7 +46,7 @@ def ready():
     from ralf_agent.temporal_coding_protocol import JOURNAL_METHODS, RUNNER_METHODS, implementation
 
     state.manifest["coding_execution_protocol"] = {
-        "version": 1,
+        "version": 2,
         "implementation": implementation(),
         "tools": {
             "read": {
@@ -57,7 +57,7 @@ def ready():
             }
         },
     }
-    state.manifest.update(kernel="temporal-3", binding_protocol=11, dispatch_admission="history-1")
+    state.manifest.update(kernel="temporal-3", binding_protocol=14, dispatch_admission="history-1")
     state.manifest["tools"]["read"]["config"]["delegated_runner"] = {"version": 1, "runner": RUNNER}
     state.manifest["tools"]["read"]["requires_approval"] = True
     assert state.next_operation() is None

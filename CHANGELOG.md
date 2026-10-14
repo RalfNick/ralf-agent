@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.0.dev109 — Managed native model connections
+
+- Add explicit nonsecret Responses connection data, lazy borrowed credential sources and connected Local/Temporal factories. Share the original approved Coding loop through a protected transport-construction hook; do not create another Run/Action authority.
+- Authenticate once on the original connection with exact API-key notification/readback barriers. Reject late auth-state traffic and sanitize remote errors; credentials stay out of configuration, Docker Env/argv, identity and journals.
+- Validate and discard finite native quota and pure progress notifications so token bursts cannot displace terminal evidence. Preserve original final thread/read and namespace retirement. Keep full per-helper checks on the Worker and pin a bounded public inventory digest within existing journal limits.
+- Publish selected native protocol2/binding14 and bounded static composition version3/binding15; unselected defaults remain byte compatible and older selected runs require their matching Worker. See [connection guide](docs/codex-model-connection.md), [finite real baseline](evals/results/deepseek-coding-dev109.json) and [acceptance boundaries](architecture/reviews/2026-10-14-codex-model-connection.md).
+
 ## 0.1.0.dev108 — Bounded Temporal Coding graphs
 
 - Extend explicit Coding composition to binding protocol13/version2 bounded static Agent graphs. Reuse original parent/child Histories, caps, bindings and native loop; distinct Runners overlap and shared Runners queue through effective-grant resource backpressure.
