@@ -110,6 +110,7 @@ class LocalEngine:
         model_history=None,
         user_input_policies=None,
         execution_policy=None,
+        admission_policy=None,
     ):
         # Python 3.12's Protocol isinstance check ignores proxy __getattr__.
         # Validate the declared public operations so delegating adapters work too.
@@ -135,6 +136,20 @@ class LocalEngine:
                 "Local execution policy requires the optional deadline Store port"
             )
         self._deadline_tasks, self._deadline_failures = {}, {}
+        from .governance import DeploymentAdmissionPolicy
+        from .local_admission import registration as admission_registration
+
+        if admission_policy is not None and type(admission_policy) is not DeploymentAdmissionPolicy:
+            raise ValidationError("Local admission requires DeploymentAdmissionPolicy")
+        self.admission_policy = self._admission_policy_pin = admission_policy
+        self._admission_policy_identity = (
+            None if admission_policy is None else copy.deepcopy(admission_policy.identity)
+        )
+        self._admission_store_pin = admission_registration(store)
+        if admission_policy is not None and self._admission_store_pin is None:
+            raise ValidationError("Local admission requires the optional admission Store port")
+        self._admission_failures = {}
+
         if type(model_continuation) is not bool:
             raise ValidationError("model_continuation must be boolean")
         self.model_continuation = model_continuation
@@ -331,6 +346,11 @@ class LocalEngine:
                 raise ValidationError("Context assembler requires identity and assemble")
             canonical(self.context.identity)
             self._bindings._pin_artifact_ports(self.context)
+            from .local_admission import initialize, refresh
+
+            initialize(self)
+            refresh(self)
+
         except BaseException:
             _invoke_sync_none(self.coordinator.release, "Coordinator.release")
             raise
@@ -377,6 +397,10 @@ class LocalEngine:
             if self._lifecycle == "open":
                 for run_id in tuple(self._quiescing_runs):
                     self._mark_workflow_quiescent(run_id)
+            if self._lifecycle == "open":
+                from .local_admission import refresh
+
+                refresh(self)
             self._lifecycle = "closing"
             from .local_deadlines import close_watches
 
@@ -397,6 +421,9 @@ class LocalEngine:
         await self._threads.drain()
         for run_id in tuple(self._quiescing_runs):
             self._mark_workflow_quiescent(run_id)
+        from .local_admission import refresh
+
+        refresh(self)
 
     def _begin_coding_cleanup(self):
         if self._lifecycle != "open":
@@ -554,6 +581,10 @@ class LocalEngine:
                         "host_failure": self._deadline_failures.get(run_id),
                     },
                 }
+            if self._admission_policy_identity is not None:
+                from .local_admission import diagnostic
+
+                workflow = {**(workflow or {}), "local_admission": diagnostic(self, run)}
             return RunDiagnostics(
                 RunSnapshot.from_record(run),
                 run["manifest"],
@@ -1055,6 +1086,9 @@ class LocalEngine:
         from .local_deadlines import accept as accept_deadlines
 
         accept_deadlines(self, data, payload.get("deadline_at"))
+        from .local_admission import accept as accept_admission
+
+        accept_admission(self, data)
         self.store.insert_run(data)
         self.store.create_budget(run_id, budget)
         self.store.emit(run_id, "run_submitted", {"release_digest": data["release_digest"]})
@@ -1100,6 +1134,9 @@ class LocalEngine:
                 "approval_applied",
                 {"action_id": action_id, "digest": target_digest, "approved": approved},
             )
+            from .local_admission import try_release
+
+            try_release(self, run_id)
             return {"state_revision": run["revision"]}
 
         return self.store.command(
@@ -1161,6 +1198,9 @@ class LocalEngine:
                     close_nodes(run)
             self.store.save_run(run)
             self.store.emit(run_id, "cancel_applied", {"state": run["state"]})
+            from .local_admission import try_release
+
+            try_release(self, run_id)
             return {"state_revision": run["revision"]}
 
         return self.store.command(
@@ -1227,6 +1267,9 @@ class LocalEngine:
             self.store.emit(
                 run_id, "effect_reconciled", {"action_id": action_id, "source": "local-owner"}
             )
+            from .local_admission import try_release
+
+            try_release(self, run_id)
             return {"state_revision": run["revision"]}
 
         return self.store.command(
@@ -1242,6 +1285,9 @@ class LocalEngine:
         from .local_deadlines import validate as validate_deadlines
 
         validate_deadlines(self, run)
+        from .local_admission import validate as validate_admission
+
+        validate_admission(self, run)
         from .local_delegated_coding import validate_journal as validate_coding_journal
 
         validate_coding_journal(self, run)
@@ -1302,6 +1348,9 @@ class LocalEngine:
         from .local_deadlines import publish
 
         publish(self, manifest, run)
+        from .local_admission import publish as publish_admission
+
+        publish_admission(self, manifest, run)
         if digest(manifest) != digest(run["manifest"]):
             raise DefinitionMismatch(
                 "Pinned tool, provider or memory backend differs from this Run"
@@ -1357,6 +1406,9 @@ class LocalEngine:
             publish_native_history(self, run)
         self.store.save_run(run)
         self.store.emit(run["id"], kind, data)
+        from .local_admission import try_release
+
+        try_release(self, run["id"])
 
     def _normalize_abandoned(self, run):
         changed = False
@@ -1439,6 +1491,9 @@ class LocalEngine:
             self._locks.pop(run_id, None)
         if run_id in self._quiescing_runs and self._lifecycle == "open":
             self._mark_workflow_quiescent(run_id)
+        from .local_admission import try_release
+
+        try_release(self, run_id)
 
     async def _drive_locked(self, run_id):
         # A queued caller may have passed the check between two Actions while
@@ -1484,6 +1539,9 @@ class LocalEngine:
                 from .composite_memory import recover_terminal_children
 
                 await self._guarded(run_id, recover_terminal_children(self, run_id))
+                from .local_parent_completion import recover_terminal_completion
+
+                recover_terminal_completion(self, run_id)
                 self._orchestration.terminal(run_id)
                 return self.status(run_id)
             with self.store.transaction():

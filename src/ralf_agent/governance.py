@@ -8,6 +8,40 @@ from .types import _require_text, canonical
 
 
 @dataclass(frozen=True)
+class DeploymentAdmissionPolicy:
+    deployment_id: str
+    version: str = "1"
+    max_active_root_runs: int = 32
+    max_active_root_runs_per_scope: int | None = None
+
+    def __post_init__(self):
+        _require_text(self.deployment_id, "Deployment identity")
+        _require_text(self.version, "Admission policy version")
+        for value in (self.max_active_root_runs, self.max_active_root_runs_per_scope):
+            if value is not None and (type(value) is not int or not 1 <= value <= 10000):
+                raise ValidationError("Deployment capacity requires exact counts from 1 to 10000")
+        if self.max_active_root_runs is None or (
+            self.max_active_root_runs_per_scope is not None
+            and self.max_active_root_runs_per_scope > self.max_active_root_runs
+        ):
+            raise ValidationError("Scope capacity cannot exceed deployment capacity")
+        canonical(self.identity)
+
+    @property
+    def identity(self):
+        return {"kind": "deployment-admission-policy", **asdict(self)}
+
+    @classmethod
+    def from_identity(cls, value):
+        if type(value) is not dict or value.get("kind") != "deployment-admission-policy":
+            raise ValidationError("Invalid deployment admission identity")
+        try:
+            return cls(**{k: v for k, v in value.items() if k != "kind"})
+        except TypeError:
+            raise ValidationError("Invalid deployment admission fields") from None
+
+
+@dataclass(frozen=True)
 class LocalExecutionPolicy:
     version: str = "1"
     run_timeout_seconds: float | None = None

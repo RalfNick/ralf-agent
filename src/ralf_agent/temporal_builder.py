@@ -124,6 +124,10 @@ class TemporalRuntimeBuilder:
     def _prepare(self, profile, *, data_path=None, scope=None):
         if not isinstance(profile, TemporalProfile):
             raise ValidationError("Build an immutable TemporalProfile")
+        if "admission_policy" in profile.components:
+            raise ValidationError(
+                "Temporal deployment admission requires its History implementation"
+            )
         scope = Scope() if scope is None else scope
         if not isinstance(scope, Scope):
             raise ValidationError("Temporal assembly requires a trusted Scope")

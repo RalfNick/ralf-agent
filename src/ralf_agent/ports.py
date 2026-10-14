@@ -37,6 +37,28 @@ class LocalDeadlineExecutionStore(Protocol):
     def prepare_local_deadlines(self) -> None: ...
 
 
+class LocalAdmissionExecutionStore(Protocol):
+    """Optional deployment policy and claims in the original execution authority.
+
+    All operations complete synchronously without external business I/O. Prepare,
+    acquire and release require the original transaction. Activation fixes one
+    immutable policy and seeds legacy occupied roots without changing releases.
+    Mandatory insert_run also enforces active policy/claims, so hiding this port
+    cannot bypass deployment governance. Release additionally requires the host
+    to prove its actual handlers and drive owners ended; no TTL grants release.
+    Holders returns detached unique root IDs for only the original Scope, at most
+    10000. None policy preserves the mandatory ExecutionStore version 1 default.
+    """
+
+    local_admission_version: int
+
+    def local_capacity_policy(self) -> dict | None: ...
+    def prepare_local_capacity(self, identity: dict) -> None: ...
+    def local_capacity_acquire(self, scope: Scope, root_run_id: str) -> None: ...
+    def local_capacity_release(self, scope: Scope, root_run_id: str) -> bool: ...
+    def local_capacity_holders(self, scope: Scope) -> tuple[str, ...]: ...
+
+
 class DelegatedExecutionStore(Protocol):
     """Optional Local coding authority; omission preserves ExecutionStore version 1.
 

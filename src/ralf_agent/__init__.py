@@ -100,7 +100,7 @@ from .facts_adapter_contract import (
 from .facts_adapter_contract_reference import offline_facts_fixture
 from .file_artifacts import FileArtifactStore
 from .gemini_functions import GeminiFunctionProvider
-from .governance import LocalExecutionPolicy, TemporalExecutionPolicy
+from .governance import DeploymentAdmissionPolicy, LocalExecutionPolicy, TemporalExecutionPolicy
 from .handoff import (
     AsyncCommandAdapter,
     AsyncInbox,
@@ -403,7 +403,7 @@ from .workflow import (
     WorkflowSelection,
 )
 
-__version__ = "0.1.0.dev115"
+__version__ = "0.1.0.dev116"
 from .binding_artifacts import ArtifactBindingResource, ArtifactView
 from .binding_sandbox import SandboxBindingResource
 from .docker_sandbox import DockerSandbox
@@ -680,6 +680,7 @@ __all__ += [
     "CompositeSessionTopology",
     "TemporalExecutionPolicy",
     "LocalExecutionPolicy",
+    "DeploymentAdmissionPolicy",
     "evaluate_business",
     "load_business_cases",
     "PostgresEffectJournal",

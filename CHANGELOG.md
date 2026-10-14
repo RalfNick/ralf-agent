@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.0.dev116 — Durable Local deployment admission
+
+- Add independent `DeploymentAdmissionPolicy`, Local `admission_policy/bounded` declaration and sync/async replacement. Builder host policy supports unchanged legacy Profiles; dual sources fail before resource I/O.
+- Fix policy under the original Coordinator before submission, atomically claim deployment/Scope root quota, seed legacy roots without rewriting releases, and prevent hidden-port insertion bypass. Children share the original root.
+- Preserve unknown, zero-credit reservations, auxiliary writes, original child accounting and actual handler ownership; no TTL or force release. Expose failed release hosts in original diagnostics.
+- Retire known finished verifier stages through the original journal, preserving received proposals and declining late verdict adoption; unknown verifier work remains held. Add opt-in Schema 16, crash recovery and installed checks.
+- Temporal deployment admission remains a required phase-three batch-2 continuation; per-Run and Runner limits do not close that gate.
+
 ## 0.1.0.dev115 — Persistent Local execution deadlines
 
 - Add immutable `LocalExecutionPolicy`, `execution_policy/local-bounded` profiles and caller UTC `deadline_at` for Local Engine and stateless Agent facade submissions; omitted defaults remain unchanged.

@@ -31,6 +31,7 @@ COMPONENT_KINDS = frozenset(
         "parent_completion_policies",
         "user_input_policies",
         "execution_policy",
+        "admission_policy",
         "verifier",
         "limits",
         "stage_policy",

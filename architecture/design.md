@@ -448,6 +448,8 @@ UsageLedger 区分预估、已确认与未知用量，外部 Harness 缺失用�
 
 Run deadline 约束子任务与 Action deadline。运行内错误由 Engine 决定重试；Adapter 单次尝试可处理明确的协议协商，但不隐式从头重跑业务请求。防止 SDK、工具和 Engine 分别叠加业务重试。
 
+dev116 的 DeploymentAdmissionPolicy 将部署容量与单 Run 的 ExecutionPolicy 分开。Local 原 Coordinator 先安装持久策略并纳入 legacy，原提交事务与 insert_run 门槛共同获取／校验根槽位；子 Run 沿原根继承。释放同时核对原 Run／子树、未知和零金额预留、辅助阶段及真实 handler，不能通过 TTL／关闭／配置省略腾位。原 Profile 配合宿主策略参数恢复 legacy，Schema 16 拒绝旧 Reader。所选 Local 交付见[契约](specs/deployment-admission-contract.md)及[指南](../docs/deployment-admission.md)，Temporal 原 History 部署准入仍是本批次的下一必需门槛，不引入第三业务权威。
+
 dev115 的 LocalExecutionPolicy 固定原 Run 接受与第一次审批的绝对时间，计时任务仅唤醒原 Engine checkpoint。模型／工具／子 Run 提案和最终结果在采纳前复核，晚到回执仍由原 Action 结算，实际 handler 未结束不释放所有权。暂停、重启、节点投影与子 Run 传播沿同一执行权威；计时宿主失败通过诊断暴露，恢复须原绑定。可选 Store 端口与 opt-in Schema 15 拒绝旧 Reader，省略期限保持原默认。详见[契约](specs/local-deadline-contract.md)和[指南](../docs/local-execution-policy.md)。部署准入继续为本阶段下一门槛。
 
 dev114 将现有 TemporalExecutionPolicy 接入 Profile 的 `components.execution_policy`，沿原 History 固定相对 Run／审批期限和容量策略；省略声明保持旧默认。它不引入第三个执行权威，也不等同于 Facade 已支持 `deadline_at` 或 Local 已支持期限。第三阶段按[固定矩阵](../docs/phase3-support-matrix.md)逐批补齐这些边界，配置与恢复责任见[策略指南](../docs/temporal-execution-policy.md)。

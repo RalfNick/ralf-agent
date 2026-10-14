@@ -182,10 +182,22 @@ def _validate_record(engine, run, key, value, policy, expected):
     received, adopted = value["received_proposal"], value["adopted_verdict"]
     if status == "prepared" and (linked or received is not None or adopted is not None):
         raise DefinitionMismatch("Prepared completion contains later stage evidence")
-    if status in {"child_pending", "closed"} and (
-        not linked or received is not None or adopted is not None
-    ):
+    if status in {"child_pending", "closed"} and (not linked or adopted is not None):
         raise DefinitionMismatch("Pending completion lacks its original managed child")
+    if status == "child_pending" and received is not None:
+        raise DefinitionMismatch("Pending completion contains an unadopted proposal")
+    if (
+        status == "closed"
+        and received is not None
+        and (
+            getattr(engine, "_admission_policy_identity", None) is None
+            or run["state"] not in {"failed", "cancelled"}
+            or child["state"] != "succeeded"
+            or not call["settled"]
+            or received != child["result"]
+        )
+    ):
+        raise DefinitionMismatch("Retired completion lost its original received proposal")
     if status in {"proposal_received", "adopted"}:
         if gate is None or received is None or model != linked:
             raise DefinitionMismatch("Completion proposal lacks its original source")
@@ -563,7 +575,13 @@ async def complete(orchestration, run_id, candidate):
                 raise DefinitionMismatch("The original parent verification child changed")
             if engine._authorized(run_id)["state"] in CLOSED:
                 return False
-            await orchestration._drive_children(run_id, [call])
+            from .orchestration import ChildRunFailed
+
+            try:
+                await orchestration._drive_children(run_id, [call])
+            except ChildRunFailed:
+                recover_terminal_completion(engine, run_id)
+                raise
             run = orchestration.observe(run_id)
             if run["state"] in CLOSED:
                 record["status"] = "closed"
@@ -630,3 +648,34 @@ async def complete(orchestration, run_id, candidate):
         return True
     await orchestration._finish(run_id, record["source"]["candidate"])
     return False
+
+
+def recover_terminal_completion(engine, run_id):
+    """Retire an ended original verifier; never adopt a late business verdict."""
+    from .capacity_rules import capacity_obligations
+
+    run = engine._authorized(run_id)
+    if run["state"] not in {"failed", "cancelled"} or "parent_completion_stages" not in run:
+        return
+    validate_journal(engine, run)
+    for record in run["parent_completion_stages"].values():
+        if record["status"] not in {"child_pending", "proposal_received"}:
+            continue
+        if record["status"] == "proposal_received" and (
+            getattr(engine, "_admission_policy_identity", None) is None
+            or record["child_run_id"] is None
+        ):
+            continue
+        child = engine._authorized(record["child_run_id"])
+        call = next(c for c in run["orchestration"]["children"] if c["id"] == record["child_key"])
+        if (
+            not call["settled"]
+            or capacity_obligations(child)
+            or child["id"] in engine._active
+            or child["id"] in engine._drive_users
+            or engine._operation_active(child["id"])
+        ):
+            continue
+        closed = copy.deepcopy(record)
+        closed["status"] = "closed"
+        _save(engine, run_id, closed, "parent_completion_closed")

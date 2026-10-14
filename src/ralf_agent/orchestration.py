@@ -250,6 +250,9 @@ class OrchestrationRuntime:
         from .local_deadlines import accept as accept_deadlines
 
         accept_deadlines(engine, data, deadline_at)
+        from .local_admission import accept as accept_admission
+
+        accept_admission(engine, data)
         engine.store.insert_run(data)
         engine.store.create_budget(run_id, budget)
         engine.store.emit(run_id, "run_submitted", {"release_digest": data["release_digest"]})

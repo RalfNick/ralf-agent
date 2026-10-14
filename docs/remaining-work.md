@@ -1,4 +1,6 @@
-# dev115：剩余能力与架构验收清单
+# dev116：剩余能力与架构验收清单
+
+Dev116 交付[Local 部署准入](deployment-admission.md)，在原 SQLite 权威固定全部署／每 Scope 根容量，原后代共用根占位；原 Profile 可通过 Builder 宿主参数继续恢复 legacy。槽位释放核对持久义务与真实工作，失败及恢复见[验收登记](../architecture/reviews/2026-10-14-local-admission.md)。下一必需门槛为 Temporal 原 History 部署准入与实际服务证明；其 command registry 累计记录容量、单 Run 并发和 Runner 容量均不能替代。批次 2、第三阶段与 R01–R26 仍开放。
 
 Dev115 补齐[Local 持久期限](local-execution-policy.md)与原编排的审批到期、宿主计时诊断、实际线程保留及冷恢复；[验收登记](../architecture/reviews/2026-10-14-local-deadlines.md)区分实现、源码、安装与历史兼容。批次 2 的部署原子准入／容量尚待交付，服务观察、身份 ACL、保留及框架恢复仍按第三阶段矩阵继续开发。
 

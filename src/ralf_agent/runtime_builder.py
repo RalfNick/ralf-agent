@@ -598,6 +598,9 @@ class ComponentRegistry:
         from .local_policy_factories import register_local_execution_policy
 
         register_local_execution_policy(self)
+        from .admission_factories import register_admission_policy
+
+        register_admission_policy(self)
         from .tool_execution_factories import register_tool_execution
 
         register_tool_execution(self)
@@ -828,7 +831,10 @@ class RuntimeBuilder:
         except Exception as exc:
             raise ValidationError("Execution authority could not be constructed") from exc
 
-    def build(self, profile, db_path, *, scope=None):
+    def build(self, profile, db_path, *, scope=None, admission_policy=None):
+        from .admission_factories import host_options
+
+        host_admission = host_options(profile, admission_policy)
         scope, path, providers, components, bindings = self._prepare(profile, db_path, scope)
         if any(
             not _synchronous(factory)
@@ -858,6 +864,10 @@ class RuntimeBuilder:
             from .local_policy_factories import validate_local_policy_result
 
             validate_local_policy_result(options)
+            from .admission_factories import validate_admission_result
+
+            validate_admission_result(options)
+            options.update(host_admission)
             if profile.binding_components is not None:
                 from .binding_catalog import BindingCatalog
 
@@ -904,7 +914,10 @@ class RuntimeBuilder:
                 raise
             raise RuntimeBuildError(cleanup) from exc
 
-    async def abuild(self, profile, db_path, *, scope=None):
+    async def abuild(self, profile, db_path, *, scope=None, admission_policy=None):
+        from .admission_factories import host_options
+
+        host_admission = host_options(profile, admission_policy)
         scope, path, providers, components, bindings = self._prepare(profile, db_path, scope)
         store = self._store(path)
         context = BuildContext(store, path, scope, self.base_dir, allow_async=True)
@@ -935,6 +948,10 @@ class RuntimeBuilder:
             from .local_policy_factories import validate_local_policy_result
 
             validate_local_policy_result(options)
+            from .admission_factories import validate_admission_result
+
+            validate_admission_result(options)
+            options.update(host_admission)
             if profile.binding_components is not None:
                 from .binding_catalog import BindingCatalog
 

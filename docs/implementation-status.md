@@ -1,6 +1,8 @@
-# Implementation status — 0.1.0.dev115
+# Implementation status — 0.1.0.dev116
 
-Dev115 在原 Local Run／Action 权威实现持久 Run／审批期限，接通 SDK、Profile／JSON／TOML、绝对 `deadline_at` 与同步／异步替换。时间在原接受／审批事务固定，图、Team、动态与嵌套沿原父级传播；观察超时不取消业务，到期保留实际 handler、未知效果与原预算。源码／安装及恢复证据见[本批登记](../architecture/reviews/2026-10-14-local-deadlines.md)，使用与原版本恢复见[指南](local-execution-policy.md)。第三阶段批次 2 的部署准入仍待完成，不能以已有 Runner 容量替代。
+Dev116 补齐[Local 部署根准入](deployment-admission.md)：独立 `DeploymentAdmissionPolicy`、SDK／Profile／JSON／TOML、同步／异步替换及原 Profile 的宿主策略恢复入口。原 Store 固定部署策略并纳入 legacy，根与所有子 Run 共用一份持久槽位；未知、零金额预留、辅助写入、实际线程与原子孙义务均保留。终态验证阶段仅按原证据退休，原提案不清除、不采纳晚到 verdict；公开诊断暴露释放宿主故障。[验收登记](../architecture/reviews/2026-10-14-local-admission.md)区分源码、安装与恢复证据。Temporal 部署准入仍是批次 2 的必需下一交付，不能以单 Run／Runner 限制替代；批次 2 与第三阶段未关闭。
+
+Dev115 在原 Local Run／Action 权威实现持久 Run／审批期限，接通 SDK、Profile／JSON／TOML、绝对 `deadline_at` 与同步／异步替换。时间在原接受／审批事务固定，图、Team、动态与嵌套沿原父级传播；观察超时不取消业务，到期保留实际 handler、未知效果与原预算。源码／安装及恢复证据见[本批登记](../architecture/reviews/2026-10-14-local-deadlines.md)，使用与原版本恢复见[指南](local-execution-policy.md)。当时部署准入未完成；当前 Local 准入与 Temporal 剩余门槛以 dev116 登记为准。
 
 当前开发依据为[第三阶段支持矩阵](phase3-support-matrix.md)。Dev114 接通原 `TemporalExecutionPolicy` 的 SDK／Profile／JSON／TOML 入口和同步／异步替换工厂；内置配置在组件 I/O 前校验，显式错误返回值拒绝并关闭 owned 资源。省略策略保持原默认 Profile 与完整 Manifest 字节；策略与期限仍由原 History 推进。本批恢复、安装及兼容证据见[验收登记](../architecture/reviews/2026-10-14-temporal-policy-profiles.md)。部署容量、HTTP 管理与观察、身份 ACL、保留及框架备份恢复仍是阶段必需后续项，首批不关闭 R21–R24。
 

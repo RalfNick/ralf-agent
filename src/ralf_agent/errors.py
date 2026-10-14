@@ -17,6 +17,10 @@ class BudgetExceeded(RalfError):
     code = "budget_exceeded"
 
 
+class CapacityExceeded(RalfError):
+    code = "capacity_exceeded"
+
+
 class CompletionRejected(RalfError):
     code = "completion_rejected"
 

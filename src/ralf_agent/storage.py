@@ -12,6 +12,7 @@ from .types import CommandReceipt, RunEvent, canonical, credits, digest
 
 
 class SQLiteStore:
+    local_admission_version = 1
     local_deadline_version = 1
     delegated_execution_version = 1
     native_history_version = 1
@@ -67,6 +68,7 @@ class SQLiteStore:
                     "13",
                     "14",
                     "15",
+                    "16",
                 }:
                     raise ValidationError("Unsupported execution database Schema")
             except (sqlite3.DatabaseError, ValidationError) as exc:
@@ -112,6 +114,7 @@ class SQLiteStore:
             "13",
             "14",
             "15",
+            "16",
         }:
             self.close()
             raise ValidationError("Unsupported execution database Schema")
@@ -150,6 +153,31 @@ class SQLiteStore:
         self.prepare_native_history()
         self.create_session_admission()._prepare(15)
 
+    def local_capacity_policy(self):
+        from .sqlite_capacity import policy
+
+        return policy(self)
+
+    def prepare_local_capacity(self, identity):
+        from .sqlite_capacity import prepare
+
+        return prepare(self, identity)
+
+    def local_capacity_acquire(self, scope, root_run_id):
+        from .sqlite_capacity import acquire
+
+        return acquire(self, scope, root_run_id)
+
+    def local_capacity_release(self, scope, root_run_id):
+        from .sqlite_capacity import release
+
+        return release(self, scope, root_run_id)
+
+    def local_capacity_holders(self, scope):
+        from .sqlite_capacity import holders
+
+        return holders(self, scope)
+
     def delegated_pending(self, scope):
         """Completed finite public read of scoped Runs retaining native stop work."""
         from .types import Scope
@@ -178,7 +206,7 @@ class SQLiteStore:
 
     def native_history_publications(self, scope, stream):
         row = self.conn.execute("SELECT value FROM metadata WHERE key='schema_version'").fetchone()
-        if row[0] not in {"13", "14", "15"}:
+        if row[0] not in {"13", "14", "15", "16"}:
             return []
         rows = self.conn.execute(
             "SELECT data FROM native_history_publications WHERE workspace=? AND principal=? AND stream=? ORDER BY seq LIMIT 129",
@@ -370,6 +398,9 @@ class SQLiteStore:
             return receipt
 
     def insert_run(self, data):
+        from .sqlite_capacity import validate_insert
+
+        validate_insert(self, data)
         self.conn.execute(
             "INSERT INTO runs VALUES (?,?,?)", (data["id"], data["revision"], canonical(data))
         )
@@ -426,7 +457,23 @@ class SQLiteStore:
         version = self.conn.execute(
             "SELECT value FROM metadata WHERE key='schema_version'"
         ).fetchone()[0]
-        if version in {"2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15"}:
+        if version in {
+            "2",
+            "3",
+            "4",
+            "5",
+            "6",
+            "7",
+            "8",
+            "9",
+            "10",
+            "11",
+            "12",
+            "13",
+            "14",
+            "15",
+            "16",
+        }:
             owner = self.create_session_admission().route_owner(scope, resource)
             if owner is not None:
                 return owner
