@@ -64,7 +64,7 @@ class TemporalProfile:
             temporal_components = {
                 key: component_declaration(value)
                 for key, value in components.items()
-                if key in {"effect_journal", "tool_execution"}
+                if key in {"effect_journal", "tool_execution", "execution_policy"}
             }
             components = {
                 key: value for key, value in components.items() if key not in temporal_components

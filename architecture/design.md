@@ -448,6 +448,8 @@ UsageLedger 区分预估、已确认与未知用量，外部 Harness 缺失用�
 
 Run deadline 约束子任务与 Action deadline。运行内错误由 Engine 决定重试；Adapter 单次尝试可处理明确的协议协商，但不隐式从头重跑业务请求。防止 SDK、工具和 Engine 分别叠加业务重试。
 
+dev114 将现有 TemporalExecutionPolicy 接入 Profile 的 `components.execution_policy`，沿原 History 固定相对 Run／审批期限和容量策略；省略声明保持旧默认。它不引入第三个执行权威，也不等同于 Facade 已支持 `deadline_at` 或 Local 已支持期限。第三阶段按[固定矩阵](../docs/phase3-support-matrix.md)逐批补齐这些边界，配置与恢复责任见[策略指南](../docs/temporal-execution-policy.md)。
+
 仅临时故障按效果契约重试。认证、配置和不支持能力明确失败；不确定写结果进入核验。队列等待、模型、工具和外部 Harness 都显式设置超时策略。
 
 ### 11.4 降级

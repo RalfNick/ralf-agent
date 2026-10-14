@@ -207,6 +207,13 @@ class TemporalRuntimeBuilder:
                 else ToolRegistry()
             )
             options = {name: await construct(value) for name, value in prepared_components.items()}
+            if "execution_policy" in options:
+                from .governance import TemporalExecutionPolicy
+
+                if not isinstance(options["execution_policy"], TemporalExecutionPolicy):
+                    raise ValidationError(
+                        "Declared execution policy factory must return TemporalExecutionPolicy"
+                    )
             if original_journal is not None:
                 options["effect_journal"] = original_journal
             if profile.binding_components is not None:

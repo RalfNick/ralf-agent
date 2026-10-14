@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.0.dev114 — Declared Temporal execution policies
+
+- Expose the existing immutable Temporal execution policy through Profile/SDK/JSON/TOML and synchronous or asynchronous registered factories. Validate built-in deadlines, capacities, allowlists and fields before component construction.
+- Reject invalid explicitly declared factory results, including `None`, and complete owned construction cleanup; preserve omitted default Profile and full Manifest bytes.
+- Retain the original History deadline, approval expiry, late evidence and Worker ownership. Record real-service/installed recovery and original selected Worker compatibility in [the batch acceptance](architecture/reviews/2026-10-14-temporal-policy-profiles.md).
+- Freeze the [phase-three support matrix](docs/phase3-support-matrix.md); Local deadlines, deployment capacity, hosted management, identity/ACL, retention and framework backup/restore remain required later batches.
+
 ## 0.1.0.dev111 — Original Coding resource safety
 
 - Share capacity one across original invocations using the same physical Runner root, regardless of Scope, tool aliases, task arguments or journal client. Wait before native admission without repeating attempts or startup grants.

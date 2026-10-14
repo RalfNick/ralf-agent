@@ -1,6 +1,8 @@
-# dev113：剩余能力与架构验收清单
+# dev114：剩余能力与架构验收清单
 
-当前执行按[第二阶段冻结支持矩阵](phase2-support-matrix.md)收口；R01–R26是长期路线图，安全拒绝的未选择组合不自动阻塞阶段。Dev113顺序／递归Temporal Coding的所选真实服务、安装、兼容与完整回归已通过，第二阶段随本地提交冻结；当前工作转入第三阶段服务化与企业治理。远程Facts联合索引／自动维护、其他Runner、跨宿主及完整daemon负向自动恢复继续保留，不能以历史批次未支持段落扩大当前必需项。
+当前执行依据为[第三阶段支持矩阵](phase3-support-matrix.md)。Dev114 首批补齐[Temporal 策略配置](temporal-execution-policy.md)：原期限／审批策略通过 SDK／JSON／TOML 与同步／异步工厂装配，内置非法配置提前拒绝，错误自定义返回值不得静默省略。本批[验收登记](../architecture/reviews/2026-10-14-temporal-policy-profiles.md)单独管理源码／安装、实际恢复与兼容；Local 期限、部署准入、服务控制／持久观察、身份／权限、保留与框架恢复仍待后续批次。
+
+第二阶段已按[冻结支持矩阵](phase2-support-matrix.md)收口；R01–R26是长期路线图，安全拒绝的未选择组合不自动阻塞阶段。Dev113顺序／递归Temporal Coding的所选真实服务、安装、兼容与完整回归已通过，第二阶段随本地提交冻结；当前工作转入第三阶段服务化与企业治理。远程Facts联合索引／自动维护、其他Runner、跨宿主及完整daemon负向自动恢复继续保留，不能以历史批次未支持段落扩大当前必需项。
 
 Dev112 补原 CREATE broker／两层单次 gate、真实处理器生命周期、固定源码与别名身份、持久回执和 `create_not_dispatched` 专用证明；原 Local／Temporal 采纳和实际排空后才释放容量。新选定20／21，旧18／19使用 immutable dev111 Worker，未选定默认保持。验收见[本批记录](../architecture/reviews/2026-10-14-coding-create-supervision.md)。CLI 监督与严格未发送窗口不再笼统列为未实现；可能已发送但 daemon 终态丢失、持久排队、公平性、跨宿主、嵌套／sequence Coding 及复杂真实质量仍开放，完整 R13／第二阶段未关闭。下述历史段落按各批次保留。
 
@@ -156,7 +158,7 @@ PG Knowledge/Inbox/Outbox、Qdrant、HTTP Embedding、Hybrid/RRF／基础重排�
 | --- | --- | --- | --- |
 | R19 执行模式／后端一致性 | Local 单 Coordinator/SQLite；Temporal 独立 History，原生 Agent/sequence 与显式发布的 Agent-node Graph/Team/Dynamic/嵌套、RAG；scoped Facts/Knowledge 与 opt-in History Sessions／原生顺序及显式高级根／成员外置数据保存 | 单 Coordinator 多 Process Worker；Temporal 其余环境绑定角色／selector、完整配置／数据迁移、其他受管理 Harness 阶段及直接 Tool/Transform 图节点等组合；共同能力／故障／升级门禁；Continue-As-New、部署版本及长期容量。PG Facts/Knowledge 不等于 PG ExecutionStore/分布式调度 | H5／C1：分布式子集已交付 |
 | R20 MQ／A2A | memory/SQLite/Redis Streams、Inbox/Outbox、PG 共享回执；A2A JSON-RPC0.3 文本/数据 polling、async controls；dev93显式输入扩展展示公共根Task原问题／ownerTaskId，回复并恢复原任务 | 保留／压缩／积压／重投递与 failover 认证；额外 Broker 按需；A2A SSE/push/files/通用Task continuation 及真实停止约定。ack 不等于效果确认，不承诺跨系统全局恰好一次 | H4／H5：子集已交付 |
-| R21 控制／审批／预算／容量 | 幂等命令与 DAG patch、local policy、固定动作、unknown holds／父子额度；每 Agent 固定决策／上下文／工具Action caps；Temporal timer/审批期限；dev93幂等send_input、无预算重置的原输入续接 | Local deadline／审批过期、鉴权续接；not-executed/in-progress 核验证据；业务资源别名规范化；真实费用／共享账户；独立并发／工作区额度／背压，真实调用未退出仍占容量 | H2／H5：基础已交付 |
+| R21 控制／审批／预算／容量 | 幂等命令与 DAG patch、local policy、固定动作、unknown holds／父子额度；每 Agent 固定决策／上下文／工具Action caps；Temporal timer/审批期限、dev114 Profile/SDK/JSON/TOML 与可替换执行策略工厂；dev93幂等send_input、无预算重置的原输入续接 | Local deadline／审批过期、鉴权续接；not-executed/in-progress 核验证据；业务资源别名规范化；真实费用／共享账户；独立并发／工作区额度／背压，真实调用未退出仍占容量 | H2／H5：基础已交付 |
 | R22 事件／展示／观察 | 耐久 Run 事件／游标／分页、pull 订阅、SSE 编码、只读 CLI、opt-in middleware | 托管 HTTP/SSE/WebSocket；类型化 Agent/model delta、结束／取消／重连；OTel trace/metrics、跨 Run/远端关联、审计／脱敏／保留。展示 hook 不得丢失业务证据 | H2／H5／B2：观察基础已交付 |
 | R23 Service／交互／作业 | packaged 本地 HTTP/A2A service、owned shutdown、remote CLI、二十八种已验收 wheel starter（含user-input、adapter-contracts、session-contracts、facts-contracts、model-contracts、memory-index） | 统一 Agent Service/sessions/资源库、默认托管／共享池、TUI/Web 基础控制台；渠道／定时／后台／唤醒／索引；审批／核验／恢复管理。现有模板不是完整应用平台 | H5／B1/B2：有限服务已交付 |
 | R24 企业身份／运维 | 宿主 Scope、本地授权、版本固定和部分容量保护 | OIDC/企业 actor、资源 ACL/SourceCatalog、凭据代理、工作区配额；保留／迁移／备份／恢复、升级回滚、健康／HA/故障演练、自部署文档和控制面。Scope 字段不是认证体系 | H5／C2：企业目标未交付 |

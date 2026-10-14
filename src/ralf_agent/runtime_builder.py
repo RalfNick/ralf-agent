@@ -592,6 +592,9 @@ class ComponentRegistry:
         from .temporal_journal_factories import register_effect_journal
 
         register_effect_journal(self)
+        from .temporal_policy_factories import register_execution_policy
+
+        register_execution_policy(self)
         from .tool_execution_factories import register_tool_execution
 
         register_tool_execution(self)
@@ -650,6 +653,7 @@ class ComponentRegistry:
                 "vector_index",
                 "fact_index_catalog",
                 "effect_journal",
+                "execution_policy",
                 "tool_execution",
                 "runner",
             }
