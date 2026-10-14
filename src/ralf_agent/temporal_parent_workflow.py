@@ -19,6 +19,7 @@ with workflow.unsafe.imports_passed_through():
         temporal_coding_composition_state,
         temporal_context_read_protocol,
         temporal_context_read_state,
+        temporal_deployment_release_state,
     )
     from . import temporal_deployment_execution_state as deployment_state
     from .errors import RalfError
@@ -483,6 +484,7 @@ class TemporalParentWorkflow(TemporalRunWorkflow):
                             )
                             self.state._emit("parent_failed")
                     changed = True
+            await self._ensure_deployment_retirement(timeout)
             # Quiescent waiting/terminal parents sleep without producing polling
             # Activities; unsettled children keep resource evidence observable.
             await self._notify_session()

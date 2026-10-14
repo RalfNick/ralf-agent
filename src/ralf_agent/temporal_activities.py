@@ -162,9 +162,17 @@ class TemporalRuntime:
         coding_execution=False,
         coding_composition=False,
         _deployment_admission_policy=None,
+        admission_policy=None,
     ):
         from .governance import DeploymentAdmissionPolicy
 
+        if admission_policy is not None and _deployment_admission_policy is not None:
+            raise ValidationError("Select one public or internal deployment admission policy")
+        self._deployment_public_execution = self._deployment_public_execution_pin = (
+            admission_policy is not None
+        )
+        if admission_policy is not None:
+            _deployment_admission_policy = admission_policy
         if _deployment_admission_policy is not None:
             if type(_deployment_admission_policy) is not DeploymentAdmissionPolicy:
                 raise ValidationError(
@@ -182,6 +190,25 @@ class TemporalRuntime:
             None
             if _deployment_admission_policy is None
             else detached(_deployment_admission_policy.identity)
+        )
+        from .task_controls import _binding
+        from .temporal_context_execution import ContextExecutionOwner
+
+        self._deployment_execution_owner = self._deployment_execution_owner_pin = (
+            ContextExecutionOwner(max_calls=256) if self._deployment_public_execution else None
+        )
+        self._deployment_execution_identity = (
+            detached(self._deployment_execution_owner.identity)
+            if self._deployment_execution_owner is not None
+            else None
+        )
+        self._deployment_execution_methods = (
+            {
+                name: _binding(getattr(self._deployment_execution_owner, name))
+                for name in ("execute", "wait", "aclose")
+            }
+            if self._deployment_public_execution
+            else {}
         )
         if type(coding_execution) is not bool:
             raise ValidationError("Coding execution opt-in requires an ordinary boolean")
@@ -841,7 +868,15 @@ class TemporalRuntime:
             result = publish_composition(result, self)
         from .temporal_deployment_protocol import publish as publish_deployment
 
-        return publish_deployment(result, self._deployment_admission_identity)
+        return publish_deployment(
+            result, self._deployment_admission_identity, public=self._deployment_public_execution
+        )
+
+    async def close_deployment_execution(self, *, wait_timeout=30):
+        """Drain actual public deployment calls and their original durable end ACKs."""
+        from .temporal_deployment_release import close_owner
+
+        await close_owner(self, wait_timeout=wait_timeout)
 
     @property
     def capabilities(self):
@@ -873,6 +908,22 @@ class TemporalRuntime:
             != self._deployment_admission_identity
         ):
             raise DefinitionMismatch("Original deployment Worker policy changed")
+
+        if (
+            self._deployment_public_execution is not self._deployment_public_execution_pin
+            or self._deployment_execution_owner is not self._deployment_execution_owner_pin
+            or (
+                None
+                if self._deployment_execution_owner is None
+                else self._deployment_execution_owner.identity
+            )
+            != self._deployment_execution_identity
+            or any(
+                _binding(getattr(self._deployment_execution_owner, name, None)) != pin
+                for name, pin in self._deployment_execution_methods.items()
+            )
+        ):
+            raise DefinitionMismatch("Original deployment actual execution owner changed")
 
         if (
             self.user_input_policies is not self._user_input_registry

@@ -288,7 +288,56 @@ async def _proof(runtime, client, policy, scope, run_id, epoch, *, required=Fals
         _reject()
     _receipt(value, required=required)
     await _namespace(client, value["admission"]["root"]["namespace"])
+    from .temporal_deployment_protocol import public_selected
+
+    if public_selected(value["manifest"]):
+        await _public_start_binding(client, policy, value, description)
     return value
+
+
+async def _public_start_binding(client, policy, proof, description):
+    root = proof["admission"]["root"]
+    response = detached(
+        await client.get_workflow_handle(root["registry_id"]).query(
+            "view",
+            {
+                "kind": "deployment_submission",
+                "scope": root["scope"],
+                "command_id": root["command_id"],
+                "payload_digest": root["request_digest"],
+                "admission_policy": policy,
+                "namespace": root["namespace"],
+            },
+        )
+    )
+    _exact(response, {"reservation", "submission", "run_receipt", "execution_epoch"})
+    envelope = response["submission"]
+    _exact(envelope, {"version", "request", "manifest", "activity_timeout", "task_queue"})
+    if (
+        response["reservation"].get("root_admission") != root
+        or digest(envelope["request"]) != root["request_digest"]
+        or envelope["manifest"] != proof["manifest"]
+        or description.task_queue != envelope["task_queue"]
+    ):
+        _reject()
+    started = await client.get_workflow_handle(
+        proof["run_id"], run_id=proof["execution_epoch"]
+    ).query(
+        "view",
+        {"kind": "deployment_start", "scope": proof["scope"]},
+    )
+    expected = {
+        "scope": proof["scope"],
+        "run_id": proof["run_id"],
+        "execution_epoch": proof["execution_epoch"],
+        "activity_timeout": envelope["activity_timeout"],
+        "task_queue": envelope["task_queue"],
+        "request_digest": proof["request_digest"],
+        "manifest_digest": proof["manifest_digest"],
+    }
+    if started != expected:
+        _reject()
+    await _namespace(client, root["namespace"])
 
 
 def _child(parent, child_id):
@@ -615,6 +664,15 @@ def wrap_activities(runtime, client, activities):
         definition = activity._Definition.from_callable(function)
         if definition is None:
             _reject()
+        from .temporal_deployment_protocol import public_selected
+        from .temporal_deployment_release import RELEASE_ACTIVITY, is_registered_activity
+
+        if definition.name == RELEASE_ACTIVITY:
+            if not public_selected(runtime.manifest) or not is_registered_activity(
+                runtime, client, function
+            ):
+                _reject()
+            return function
         if definition.name == ACTIVITY:
             if getattr(function, "__ralf_deployment_admission__", None) != (
                 _ADMISSION_MARKER,
@@ -630,7 +688,13 @@ def wrap_activities(runtime, client, activities):
             info = activity.info()
             proof = await validate_activity(runtime, client, request, info)
             body = _activity_body(request) if proof is not None else request
-            result = await function(body)
+            if proof is not None and public_selected(proof["manifest"]):
+                from .temporal_deployment_release import activity_context, wrap_activity
+
+                with activity_context(runtime, client, proof, request):
+                    result = await wrap_activity(runtime, client, function)(body)
+            else:
+                result = await function(body)
             if proof is not None:
                 _actual(client, info, run_id=proof["run_id"], epoch=proof["execution_epoch"])
                 await _namespace(client, proof["admission"]["root"]["namespace"])

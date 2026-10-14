@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.1.0.dev119 — Public ordinary Temporal deployment
+
+- Add public Runtime／Engine／Profile deployment admission with fixed protocol v2, reusing existing bounded policy factories. Preserve private worker-only v1 held-only behavior; refuse public activation against an existing v1 Registry.
+- Atomically retain the first logical request, Manifest, Activity timeout and queue in original Registry History. Recover original receipts after uncertain reserve/start replies and alias changes, with actual namespace UUID, SDK epoch, queue and accepted timeout checks. Canonicalize selected public requests at the SDK JSON boundary without changing their canonical digest or default codec.
+- Record actual Activity ownership in original Run／Parent History, seal the closed original tree, and retire root capacity only through the Registry's own SDK verification Activity. Preserve unknown effects, zero-cost obligations and failed end acknowledgements; retain retired commands and receipts.
+- Recover a sealed but held root through public `drive`: validate original acceptance and SDK identity, then wake original History with a fresh exact duplicate seal Update. Preserve the certificate and terminal business state; never release Registry quota from the Facade. A real stationary retirement-outage P2 reproducer passes its targeted retry and final public Service matrix. Parent cancellation can acknowledge before descendants stop; deferred completed-Action effect ACK resumes through original `drive`, not an effect-query retry.
+
+- Frozen source and independent installation each pass 953 checks from 46 affected modules, 27 public v2 actual Service cases and 17 private v1 cases, with zero failures／errors／skips. Verify 410 matching product files, 48 fixed test modules, original dev118 default publication／History compatibility and owned cleanup; [the batch record](architecture/reviews/2026-10-15-temporal-deployment-public.md) preserves earlier failures separately. Real zero-cost write／ACK recovery windows use a test-only SQLite effect-evidence adapter; other deterministic cases use default components. No model／PostgreSQL／Docker calls; the Temporal＋PG stage gate remains open.
+- Selected Coding physical close and SDK Session-coordinator admission remain explicitly unsupported and mandatory follow-up. Phase-three batch 2 and R01–R26 remain open; no new model-quality claim, delivered with a local commit, no push.
+
 ## 0.1.0.dev118 — Original SDK deployment dispatch admission
 
 - Connect the internal selected Worker to original Run/Parent SDK admission before business Activities, selection or child dispatch. Validate actual namespace UUID, original execution epoch, Registry reservation and bounded original Parent ancestry; descendants share one root claim.

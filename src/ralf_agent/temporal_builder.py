@@ -121,13 +121,17 @@ class TemporalRuntimeBuilder:
             raise ValidationError("Temporal construction requires an explicit ComponentRegistry")
         self.base_dir = Path.cwd().resolve() if base_dir is None else Path(base_dir).resolve()
 
-    def _prepare(self, profile, *, data_path=None, scope=None):
+    def _prepare(self, profile, *, data_path=None, scope=None, admission_policy=None):
         if not isinstance(profile, TemporalProfile):
             raise ValidationError("Build an immutable TemporalProfile")
-        if "admission_policy" in profile.components:
-            raise ValidationError(
-                "Temporal deployment admission requires its History implementation"
-            )
+        from .admission_factories import host_options
+
+        host_admission = host_options(profile, admission_policy)
+        if ("admission_policy" in profile.components or host_admission) and (
+            profile.execution.get("coding_execution", False)
+            or profile.execution.get("coding_composition", False)
+        ):
+            raise ValidationError("Deployment Coding requires its physical-close integration")
         scope = Scope() if scope is None else scope
         if not isinstance(scope, Scope):
             raise ValidationError("Temporal assembly requires a trusted Scope")
@@ -155,6 +159,11 @@ class TemporalRuntimeBuilder:
             kind: self.registry.prepare(kind, _paths(value, kind, data_path))
             for kind, value in profile.components.items()
         }
+        if host_admission:
+            prepared_components["admission_policy"] = (
+                lambda config, context: host_admission["admission_policy"],
+                {},
+            )
         prepared_bindings = []
         for value in profile.binding_components or []:
             kind = _BINDING_FACTORY_KINDS[value["role"]]
@@ -163,9 +172,11 @@ class TemporalRuntimeBuilder:
             )
         return profile, scope, data_path, prepared_providers, prepared_components, prepared_bindings
 
-    async def abuild(self, profile, *, data_path=None, scope=None):
+    async def abuild(self, profile, *, data_path=None, scope=None, admission_policy=None):
         return await self._construct_profile(
-            self._prepare(profile, data_path=data_path, scope=scope)
+            self._prepare(
+                profile, data_path=data_path, scope=scope, admission_policy=admission_policy
+            )
         )
 
     async def _construct_profile(self, prepared, *, resource_owner=None):
@@ -211,6 +222,9 @@ class TemporalRuntimeBuilder:
                 else ToolRegistry()
             )
             options = {name: await construct(value) for name, value in prepared_components.items()}
+            from .admission_factories import validate_admission_result
+
+            validate_admission_result(options)
             if "execution_policy" in options:
                 from .governance import TemporalExecutionPolicy
 
@@ -294,7 +308,7 @@ class TemporalRuntimeBuilder:
                 raise
             raise RuntimeBuildError(cleanup) from exc
 
-    async def abuild_catalog(self, catalog, *, data_path=None, scope=None):
+    async def abuild_catalog(self, catalog, *, data_path=None, scope=None, admission_policy=None):
         from .temporal_profile_host import CatalogConstructionCleanup, TemporalProfileHost
 
         if not isinstance(catalog, TemporalProfileCatalog):
@@ -305,7 +319,10 @@ class TemporalRuntimeBuilder:
         selected = catalog.default_profile.identity
         builder = TemporalRuntimeBuilder(self.registry, base_dir=catalog.base_dir)
         scope = Scope() if scope is None else scope
-        prepared = [builder._prepare(p, data_path=data_path, scope=scope) for p in profiles]
+        prepared = [
+            builder._prepare(p, data_path=data_path, scope=scope, admission_policy=admission_policy)
+            for p in profiles
+        ]
         root = BuildContext(
             None,
             builder.base_dir / "temporal-data.sqlite",

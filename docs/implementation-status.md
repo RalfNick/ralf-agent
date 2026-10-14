@@ -1,8 +1,16 @@
-# Implementation status — 0.1.0.dev118
+# Implementation status — 0.1.0.dev119
+
+Dev119 已实现普通 Temporal 部署的公共 v2 入口：`TemporalRuntime(admission_policy=...)`、Engine、Profile／JSON／TOML 与同步／异步策略工厂复用原 `DeploymentAdmissionPolicy`。原 Registry 原子保存首个完整请求、Manifest、Activity timeout 和队列；相同 Scope／命令／请求先查原接受记录，再校验新发布，不确定 reserve／start 回复不会换根、换 epoch 或释放占位。原 Run／Parent History 记录真实 Activity 开始／结束及不可逆闭合证书；Registry 自身的 SDK 校验 Activity 核对原树后幂等退休额度。所选普通 Agent、顺序、图、Team、Dynamic 与嵌套范围已完成冻结源码和独立安装验收：每套 46 个受影响模块的 953 项检查、27 项公共 v2 实际服务与 17 项私有 v1 实际服务均零失败／错误／跳过。410 产品文件在源码、wheel 与安装中一致，48 个测试模块固定；原 dev118 默认 Profile／Manifest／orchestration 等值，源码和安装分别重放并续接原 History，新增 Provider 调用为 0。owned 业务、Registry、Worker 与专用服务已关闭，最终出处见[本批验收记录](../architecture/reviews/2026-10-15-temporal-deployment-public.md)。
+
+内部 worker-only v1 保留只占位、不释放的旧语义；公共 Engine 明确拒绝 v1，已有同地址 v1 Registry 不会被替换或自动升级。未选择部署策略的默认发布及原请求／History 兼容已按原版本验证。所选部署模式的 Coding 物理关闭与 SDK Session-coordinator Turns 尚未接入，继续明确拒绝并保留为批次 2 必需项。批次 2、第三阶段与完整 R01–R26 未关闭；本批没有新增模型质量或独立采用结论，仅允许本地提交、不推送远端。见[公共契约](../architecture/specs/temporal-deployment-public-contract.md)与[支持矩阵](phase3-support-matrix.md)。以下 dev 段落保留各自当时的交付范围。
+
+Dev119 另补齐已封存、仍占位根的恢复：Registry 退休 RPC 恢复后，`await engine.drive(run_id)` 核对原信封与 SDK 身份，发送新的精确重复 seal Update 唤醒原 History 的释放重试。证书不变，不复活业务，也不由 Facade 直接释放 Registry；当前终态不代表额度已退休，须查看部署诊断。该 P2 已有真实 RED→目标 GREEN，并纳入最终公共服务矩阵。Parent 取消回执的 `remote_stop_confirmed=False` 要等待实际后代结束；已完成 Action 的 effect ACK 延后沿原 `drive` 恢复，不能把 `reconcile(query=True)` 当作重试 ACK 或业务工具。
+
+本批真实零费用写／ACK 恢复窗口使用测试专用 SQLite 效果证据适配器，其他确定性用例使用默认组件；没有模型、PostgreSQL 或 Docker 调用，不新增 PG 阶段验收或模型质量结论。无 SDK 边界检查最终为 53 passed／68 skipped；最终 sdist 字节／SHA 记录于私有 `final-acceptance.json`，由 root 最后核对；随本地提交交付，不推送远端。
 
 Dev118 将内部所选 Worker 的部署准入接入原 Run／Parent SDK 执行。业务 Activity、选择和子派发前核对原 Registry claim、实际 namespace UUID、原 SDK epoch 和有界原 Parent 祖先；Agent、顺序、图、Team、Dynamic 与嵌套后代共用一个根槽位。所有注册业务 Activity 均受门禁保护，原 handler 请求和 SHA 保持，受管理 Context／limits／completion／Session 写入继续沿原阶段契约。默认发布保持兼容。冻结源码与独立安装各通过 814 项受影响检查、17 项实际 Service；最终出处记录在[本批验收登记](../architecture/reviews/2026-10-14-temporal-deployment-dispatch.md)，不称为本批全量回归或新模型质量验收。
 
-公共 Temporal Engine／Profile 仍拒绝启用部署策略。不确定启动／重复回执恢复、Coding 物理关闭、Session coordinator 准入、原树／unknown／辅助阶段／真实 handler 闭合证明及安全释放均为必需下一交付；批次 2 与第三阶段未关闭。见[调度契约](../architecture/specs/temporal-deployment-dispatch-contract.md)、[准入指南](deployment-admission.md)和[支持矩阵](phase3-support-matrix.md)。以下 dev 段落保留各自当时的交付范围。
+Dev118 当时公共 Temporal Engine／Profile 仍拒绝启用部署策略。不确定启动／重复回执恢复、Coding 物理关闭、Session coordinator 准入、原树／unknown／辅助阶段／真实 handler 闭合证明及安全释放为当时的必需下一交付；当前公共普通 v2 进度以本页 dev119 和其验收记录为准。见[调度契约](../architecture/specs/temporal-deployment-dispatch-contract.md)与[准入指南](deployment-admission.md)。
 
 Dev117 在原 CommandRegistry History 增加部署准入基础：固定完整策略与 namespace、部署隔离地址、Scope 命令身份、原子根限额，以及原根执行 epoch 身份登记。实际服务覆盖并发、容量拒绝无回执、重复命令、队列固定、Worker 重启与 History 重放；这些是登记协议证据，尚未验证业务 Run 的 SDK 绑定。公共 Engine／Profile 继续拒绝部署策略；原 Run／Parent 调度、子孙传播、不确定启动与物理安全释放仍需下一批实现，批次 2 未关闭。见[契约](../architecture/specs/temporal-deployment-admission-contract.md)和[验收登记](../architecture/reviews/2026-10-14-temporal-deployment-admission.md)。
 

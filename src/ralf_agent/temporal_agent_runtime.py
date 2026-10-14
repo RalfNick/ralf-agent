@@ -135,7 +135,11 @@ class TemporalClientRuntime(Runtime):
 
     @property
     def capabilities(self):
-        sessions = self.engine.release.get("session_protocol") == 1
+        from .temporal_deployment_protocol import public_selected
+
+        sessions = self.engine.release.get("session_protocol") == 1 and not public_selected(
+            self.engine.release
+        )
         return {
             "schema_version": 1,
             "local_hosting": False,
@@ -164,6 +168,12 @@ class TemporalClientRuntime(Runtime):
 
     async def _session_client(self):
         self._check()
+        from .temporal_deployment_protocol import public_selected
+
+        if public_selected(self.engine.release):
+            raise ValidationError(
+                "Temporal deployment Session coordinator admission is unavailable"
+            )
         if self.engine.release.get("session_protocol") != 1:
             raise ValidationError(
                 "Temporal Sessions require an explicitly registered Session release"
@@ -220,6 +230,8 @@ class TemporalClientRuntime(Runtime):
         self._check()
         # A call owns its configuration. Default methods bind to this view so
         # internal awaits cannot switch their eventual server/Scope or release.
+        if self.engine.release.get("deployment_admission_protocol", {}).get("version") == 2:
+            vars(self.engine).setdefault("_deployment_namespace_binding", {"namespace": None})
         view = copy.copy(self.engine)
         for name, value in vars(self.engine).items():
             if inspect.ismethod(value) and value.__self__ is self.engine:
@@ -339,13 +351,19 @@ class TemporalClientRuntime(Runtime):
         declaration = json.loads(harness._definition_json)
         from .temporal_bindings import normalize_request
 
-        if declaration["kind"] in {"bound_agent", "bound_definition"}:
+        public_deployment = (
+            self.engine.release.get("deployment_admission_protocol", {}).get("version") == 2
+        )
+        if not public_deployment and declaration["kind"] in {"bound_agent", "bound_definition"}:
             if self.engine.release["kernel"] != "temporal-3":
                 raise ValidationError("Temporal bindings require their explicit registered release")
             declaration = normalize_request(
                 submission_request(harness.definition, None), self.engine.release
             )["definition"]
-        if declaration["kind"] not in self.capabilities["supported_definition_kinds"]:
+        if (
+            not public_deployment
+            and declaration["kind"] not in self.capabilities["supported_definition_kinds"]
+        ):
             raise ValidationError("Temporal definition requires its supported registered release")
         input = json.loads(canonical(input))
         text(command_id, "Command ID")

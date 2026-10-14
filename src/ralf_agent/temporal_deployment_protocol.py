@@ -21,6 +21,31 @@ SOURCE_FILES = (
 )
 
 
+PUBLIC_SOURCE_FILES = SOURCE_FILES + (
+    "temporal_deployment_admission.py",
+    "temporal_deployment_registry.py",
+    "temporal_deployment_release_state.py",
+    "temporal_deployment_release.py",
+    "temporal_deployment_submissions.py",
+    "temporal_context_execution.py",
+    "tools.py",
+    "temporal_assembly_lifecycle.py",
+    "temporal_builder.py",
+    "temporal_agent_runtime.py",
+    "temporal_host_runtime.py",
+    "temporal_profile_host.py",
+)
+
+
+def public_selected(manifest):
+    return (
+        selected(manifest)
+        and type(manifest["deployment_admission_protocol"]) is dict
+        and type(manifest["deployment_admission_protocol"].get("version")) is int
+        and manifest["deployment_admission_protocol"].get("version") == 2
+    )
+
+
 def selected(manifest):
     return type(manifest) is dict and "deployment_admission_protocol" in manifest
 
@@ -31,12 +56,15 @@ def validate_protocol(manifest):
     value = manifest["deployment_admission_protocol"]
     try:
         _exact(value, {"version", "policy", "registry_id", "implementation"})
-        if type(value["version"]) is not int or value["version"] != 1:
+        if type(value["version"]) is not int or value["version"] not in (1, 2):
             raise ValidationError("Invalid original deployment protocol version")
         policy = _policy(value["policy"])
         if value["registry_id"] != registry_id(policy["deployment_id"]):
             raise DefinitionMismatch("Original deployment Registry address changed")
-        _exact(value["implementation"], set(SOURCE_FILES))
+        _exact(
+            value["implementation"],
+            set(PUBLIC_SOURCE_FILES if value["version"] == 2 else SOURCE_FILES),
+        )
         for fingerprint in value["implementation"].values():
             _sha(fingerprint)
         if manifest.get("kernel") not in {"temporal-1", "temporal-2", "temporal-3"}:
@@ -56,19 +84,19 @@ def validate_protocol(manifest):
         raise DefinitionMismatch("Invalid fixed deployment admission publication") from None
 
 
-def publish(manifest, policy_identity):
+def publish(manifest, policy_identity, *, public=False):
     result = copy.deepcopy(manifest)
     if policy_identity is None:
         return result
     policy = _policy(policy_identity)
     directory = Path(__file__).parent
     result["deployment_admission_protocol"] = {
-        "version": 1,
+        "version": 2 if public else 1,
         "policy": policy,
         "registry_id": registry_id(policy["deployment_id"]),
         "implementation": {
             name: hashlib.sha256((directory / name).read_bytes()).hexdigest()
-            for name in SOURCE_FILES
+            for name in (PUBLIC_SOURCE_FILES if public else SOURCE_FILES)
         },
     }
     validate_protocol(result)

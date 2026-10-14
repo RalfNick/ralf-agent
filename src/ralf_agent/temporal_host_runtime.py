@@ -87,7 +87,7 @@ class HostedHandle:
         await self.transport.check()
         kinds = (
             {COMMAND_REGISTRY_NAME}
-            if self.identity.startswith("ralf-temporal-commands-")
+            if self.identity.startswith(("ralf-temporal-commands-", "ralf-temporal-deployment-"))
             else {SESSION_WORKFLOW}
             if self.identity.startswith("ralf-temporal-session-")
             else {WORKFLOW_NAME, PARENT_WORKFLOW_NAME}

@@ -555,6 +555,9 @@ class TemporalRunState:
             if identity != self.command_digests[command_id]:
                 raise IdempotencyConflict("Command ID already identifies different content")
             return detached(self.receipts[command_id])
+        from .temporal_deployment_release_state import check_unsealed
+
+        check_unsealed(self)
         kind = payload.get("kind")
         if kind not in {"approve", "cancel", "reconcile", "drive", "send_input"}:
             raise ValidationError("Unknown Temporal command")
@@ -826,6 +829,8 @@ class TemporalRunState:
         }
 
     def next_operation(self):
+        if getattr(self, "deployment_seal", None) is not None:
+            return None
         if self.active_action is not None:
             return None
         from .temporal_coding_state import next_stop
@@ -1134,6 +1139,9 @@ class TemporalRunState:
         accept_stage(self, action_id, response)
 
     def admit_context_dispatch(self, payload):
+        from .temporal_deployment_release_state import check_unsealed
+
+        check_unsealed(self)
         from .temporal_managed_context import admit_history
 
         return admit_history(self, payload)
@@ -1159,6 +1167,9 @@ class TemporalRunState:
         self._emit("action_outcome_unknown", {"action_id": action_id, "code": code})
 
     def admit_tool_dispatch(self, payload):
+        from .temporal_deployment_release_state import check_unsealed
+
+        check_unsealed(self)
         action = (
             next((a for a in self.actions if a["id"] == payload.get("action_id")), None)
             if type(payload) is dict
@@ -1634,18 +1645,29 @@ class TemporalCommandRegistryState:
         admission_policy=None,
         namespace=None,
         capacity=COMMAND_REGISTRY_CAPACITY,
+        admission_protocol=1,
     ):
         if type(capacity) is not int or not 1 <= capacity <= COMMAND_REGISTRY_CAPACITY:
             raise ValidationError("Invalid Temporal command registry capacity")
+        if type(admission_protocol) is not int or admission_protocol not in (1, 2):
+            raise ValidationError("Invalid deployment Registry protocol")
+        self.admission_protocol = admission_protocol
         self.deployment = None
         if admission_policy is not None or namespace is not None:
             from .temporal_deployment_admission import DeploymentAdmissionState
 
             if scope is not None:
                 raise ValidationError("Deployment Registry cannot select a single scope")
-            self.deployment = DeploymentAdmissionState(
-                admission_policy, namespace, capacity=capacity
-            )
+            if admission_protocol == 2:
+                from .temporal_deployment_registry import PublicDeploymentAdmissionState
+
+                self.deployment = PublicDeploymentAdmissionState(
+                    admission_policy, namespace, capacity=capacity
+                )
+            else:
+                self.deployment = DeploymentAdmissionState(
+                    admission_policy, namespace, capacity=capacity
+                )
             self.scope = None
             return
         self.scope, self.capacity, self.identities = detached(scope), capacity, {}
@@ -1769,6 +1791,44 @@ class TemporalCommandRegistryState:
         if self.deployment is None:
             raise DefinitionMismatch("Original deployment Registry admission is required")
         return self.deployment.bind_deployment_root(request)
+
+    def deployment_configuration(self, request):
+        from .temporal_deployment_admission import _exact
+
+        if self.deployment is None:
+            raise DefinitionMismatch("Original deployment Registry is required")
+        _exact(request, {"kind", "scope", "admission_policy", "namespace"})
+        if request["kind"] != "deployment_configuration":
+            raise ValidationError("Invalid deployment configuration query")
+        self.deployment._authority(request)
+        return detached(
+            {
+                "version": self.admission_protocol,
+                "registry_id": self.deployment.registry_id,
+                "policy": self.deployment.policy,
+                "namespace": self.deployment.namespace,
+            }
+        )
+
+    def _public_deployment(self):
+        if self.admission_protocol != 2 or self.deployment is None:
+            raise DefinitionMismatch("Original public deployment Registry is required")
+        return self.deployment
+
+    def deployment_submission(self, request):
+        return self._public_deployment().deployment_submission(request)
+
+    def record_deployment_submission(self, request):
+        return self._public_deployment().record_deployment_submission(request)
+
+    def prepare_deployment_release(self, request):
+        return self._public_deployment().prepare_deployment_release(request)
+
+    def deployment_retirement(self, request):
+        return self._public_deployment().deployment_retirement(request)
+
+    def commit_deployment_release(self, request, verification):
+        return self._public_deployment().commit_deployment_release(request, verification)
 
     def deployment_admission(self, request):
         if self.deployment is None:

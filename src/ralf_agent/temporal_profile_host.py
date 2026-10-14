@@ -149,23 +149,26 @@ class TemporalProfileHost:
                 self._engines[digest(assembly.profile.identity)] = assembly.create_engine(
                     client, task_queue=queue, **engine_options
                 )
-            registry_id = "ralf-temporal-commands-" + digest(asdict(self.scope))
-            try:
-                original = await client.get_workflow_handle(registry_id).describe()
-            except sdk[6] as exc:
-                if exc.status != sdk[7].NOT_FOUND:
-                    raise
-            else:
-                self._check()
-                if (
-                    original.id != registry_id
-                    or original.namespace != client.namespace
-                    or original.workflow_type != COMMAND_REGISTRY_NAME
-                    or original.task_queue not in self._queues
-                ):
-                    raise DefinitionMismatch(
-                        "Original command Registry queue or type is unavailable"
-                    )
+            registry_ids = dict.fromkeys(
+                engine.command_registry_id for engine in self._engines.values()
+            )
+            for registry_id in registry_ids:
+                try:
+                    original = await client.get_workflow_handle(registry_id).describe()
+                except sdk[6] as exc:
+                    if exc.status != sdk[7].NOT_FOUND:
+                        raise
+                else:
+                    self._check()
+                    if (
+                        original.id != registry_id
+                        or original.namespace != client.namespace
+                        or original.workflow_type != COMMAND_REGISTRY_NAME
+                        or original.task_queue not in self._queues
+                    ):
+                        raise DefinitionMismatch(
+                            "Original command Registry queue or type is unavailable"
+                        )
             await self._check_namespace()
             for queue, assembly in self._queues.items():
                 self._check()

@@ -1,6 +1,6 @@
 # 部署内 root 准入与容量
 
-日期：2026-10-15。Local／SQLite 已有持久部署准入，沿原命令、Run、预算和 Coordinator 管理占用，证据见[Local 验收登记](../architecture/reviews/2026-10-14-local-admission.md)。Temporal dev118 接通内部 Worker 的原 SDK 派发门禁；公共 Engine／Profile 与安全释放仍未启用，详见[Temporal 本批登记](../architecture/reviews/2026-10-14-temporal-deployment-dispatch.md)。当前阶段范围见[支持矩阵](phase3-support-matrix.md)，批次 2 未关闭。
+日期：2026-10-15。Local／SQLite 已有持久部署准入，沿原命令、Run、预算和 Coordinator 管理占用，证据见[Local 验收登记](../architecture/reviews/2026-10-14-local-admission.md)。Temporal dev118 的内部 Worker SDK 门禁保留为私有 v1，只持有占位；dev119 已实现普通公共 v2 Engine／Profile、原接受信封恢复及原树校验后安全退休，冻结源码与独立安装均已通过受影响、实际服务及原版本兼容验收，见[公共验收记录](../architecture/reviews/2026-10-15-temporal-deployment-public.md)。所选 Coding 与 SDK Session coordinator 尚未接入，仍明确拒绝。当前阶段范围见[支持矩阵](phase3-support-matrix.md)，批次 2 未关闭。
 
 ## 策略与占用单位
 
@@ -187,9 +187,15 @@ admission = info.workflow["local_admission"]
 
 绑定故障先恢复原 Store 方法、后端、策略对象及匹配组件，再对原 Run 执行原恢复／核验。等待实际工作结束后，`await engine.wait_for_threads()` 会沿原事实刷新准入；新提交前也会刷新可安全释放的原 claims。未知效果需要原核验／停止证据或明确人工处置，不能删除 ledger、清零保留、重标未执行或重新派发业务。
 
-当前不提供 force release、TTL 逐出、队列或跨 SQLite 数据库共享额度。Temporal 的公共 Engine／Profile 准入配置继续提前拒绝；内部 Worker 的原 SDK 门禁见下文，后续安全释放仍必须由原 CommandRegistry／Run／Parent History 核对停止及闭合证据，EffectJournal 不能成为另一套执行权威。Local 交付不关闭第三阶段批次 2，更不代表 R21–R26、企业平台或真实模型质量已验收。
+当前不提供 force release、TTL 逐出、队列或跨 SQLite 数据库共享额度。Temporal 普通公共 v2 的安全退休由原 CommandRegistry／Run／Parent History 管理：真实 Activity 结束与持久 end ACK、原树义务闭合及 SDK 固定身份核对缺一不可，EffectJournal 不能成为另一套执行权威；私有 v1 登记或 SDK 派发证明本身仍不能释放占位。Local 与本批有限 Temporal 已交付范围不关闭第三阶段批次 2，也不代表 R21–R26、企业平台或真实模型质量已验收。
 
 已结束验证子 Run 的父阶段可沿原 journal 退休；收到的不合法 evidence 提案仍保留，不采纳晚到 verdict。此 closed＋received 变体仅用于已安装治理的失败／取消根，旧未治理记录不新增该语义。未知验证请求、预算或实际工作未闭合时继续占位；原版本与原 Profile 恢复仍是必要条件。
+
+## Temporal 公共 v2 的原恢复入口
+
+已终态或已 seal 不等于额度已退休。若原 History 因 Registry 退休 RPC 不可用登记 `deployment_retirement_deferred` 后静止，先恢复原服务／Worker 路由，再调用 `await engine.drive(run_id)`。Engine 核对原 Scope、namespace UUID、Registry v2 策略、首个完整接受信封、原 SDK epoch 与原证书；已有退休记录时只读返回，否则向固定 epoch 的原 root 发送精确重复 seal payload 的新 SDK Update，唤醒原 History 重试释放。该 Update 不改变证书、不复活业务、不发送新的业务 drive command，也不由 Facade 直接退休 Registry。别名变化仍沿首个接受信封恢复；内部恢复 helper 不作为公共 API 暴露。
+
+`drive` 可以先返回原终态，释放验证仍异步进行；用 `await engine.deployment_diagnostics()` 查看原 held／retired 根。Parent 的 `cancel` 回执中 `remote_stop_confirmed=False` 表示尚未确认真实后代停止，不能根据取消回执或父终态认定容量已释放；等待原后代及当前诊断确认结束。若 Action 已完成但 effect ACK 延后，修复原 journal 路由后用原 `drive` 继续 ACK。`reconcile(query=True)` 用于未知效果证据，不是已完成 Action 的 ACK 重试或再次执行工具。该恢复 P2 的实际失败、目标重试和最终公共矩阵通过证据见[验收登记](../architecture/reviews/2026-10-15-temporal-deployment-public.md)。本批真实零费用写／ACK 恢复窗口使用测试专用 SQLite 效果证据适配器，其他确定性用例使用默认组件，未调用 PostgreSQL；第三阶段所选 Temporal＋PG 服务组合仍需另行验收。
 
 ## Temporal 内部 Worker 的原 SDK 门禁
 
@@ -199,4 +205,4 @@ Worker 核对实际 Activity Workflow ID、namespace 名称／UUID、current 与
 
 内部所选范围覆盖普通 Agent、顺序、已注册 Agent 图、Team、Dynamic 与嵌套后代。实际源码 Service 17 项验证派发／祖先共享槽位、审批／取消保留 claim、Worker 缺席／重启、原 History 重放和身份拒绝；冻结源码受影响检查 814 项通过。独立安装与最终出处以[本批登记](../architecture/reviews/2026-10-14-temporal-deployment-dispatch.md)单独记录。省略内部策略保持默认发布兼容，旧实验发布仍须匹配其固定 Worker／源码。
 
-这不是公共装配入口。公共 Temporal Engine／Profile、所选 Coding 物理关闭路径及 Session coordinator Turns 继续拒绝。原不确定启动／重复回执恢复、完整树与零金额／unknown／辅助阶段／实际 handler 闭合证明、幂等安全释放均必须继续交付；当前不提供 Temporal release 操作。登记和 SDK 派发证据不能自行解除 claim，也不证明完整批次 2、阶段全量回归或新模型质量通过。
+上述内部参数不是公共装配入口，仍发布 v1 且不提供退休。dev119 普通公共入口使用 `TemporalRuntime(admission_policy=policy)`，或 Profile 的 `components.admission_policy`／`bounded`，再把所选 Runtime 发布传给 Engine；同步／异步工厂与 Builder 宿主策略复用原 exact DTO，宿主与 Profile 策略不能共存。公共 Engine 只接受 v2，遇到已有同地址 v1 Registry 明确拒绝，不替换或自动升级。原接受信封／回执先于当前发布检查恢复，原树物理义务闭合后由 Registry 自身 SDK 校验 Activity 幂等退休，详见[公共契约](../architecture/specs/temporal-deployment-public-contract.md)与[执行指南](temporal-execution.md)。冻结源码与独立安装各通过 953 项受影响检查、27 项公共实际服务与 17 项私有 v1 服务，零失败／错误／跳过；默认发布和原 dev118 History 重放／续接兼容通过，owned 资源已清理。所选 Coding 物理关闭及 SDK Session coordinator Turns 继续拒绝且保留为必需后续项。登记和 SDK 派发证据不能自行解除 claim，也不证明完整批次 2、阶段全量回归或新模型质量通过。随本地提交交付，不推送远端。

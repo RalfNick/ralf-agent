@@ -23,10 +23,14 @@
 | 批次 | 必需行为与验收 | 当前状态 |
 | --- | --- | --- |
 | 1：期限配置 | Temporal 现有 `TemporalExecutionPolicy` 接入 Profile／SDK／JSON／TOML 和自定义工厂；省略保持原默认，非法内置配置在组件 I/O 前拒绝；实际服务验证审批重启、原到期时间、批准／过期、晚到证据和 owned 关闭；安装后复验 | dev114 已通过策略入口、默认兼容、配置／替换和 owned 清理；源码／安装各 4 项实际 Temporal／PG 场景及各 313 项受影响回归（2 项其他远程配置跳过）通过，见[策略配置](temporal-execution-policy.md)与[验收登记](../architecture/reviews/2026-10-14-temporal-policy-profiles.md) |
-| 2：Local 期限与容量 | 所选 Local 链路补 Run／审批期限；观察等待与业务期限分离；准入额度原子获取，关闭／恢复释放责任明确；活动、未知效果和实际未结束处理器不得被过期或清理释放 | dev115 已补 Local 持久期限与审批过期，见[指南](local-execution-policy.md)和[本批登记](../architecture/reviews/2026-10-14-local-deadlines.md)；dev116 已补 Local 全 DB／每 Scope 持久根准入，见[指南](deployment-admission.md)及[登记](../architecture/reviews/2026-10-14-local-admission.md)；dev117 原 Registry 基础之上，dev118 已接通内部 Worker 的原 Run／Parent SDK 门禁及 Agent／顺序／图／Team／Dynamic／嵌套后代共享根占位，受管理阶段保持原请求 SHA，见[登记](../architecture/reviews/2026-10-14-temporal-deployment-dispatch.md)；公共 Engine／Profile、不确定启动、Coding 物理关闭、Session coordinator、unknown／实际 handler 闭合和安全释放仍是必需下一交付，现有单 Run／Runner 限制不能替代，批次 2 未关闭 |
+| 2：Local 期限与容量 | 所选 Local 链路补 Run／审批期限；观察等待与业务期限分离；准入额度原子获取，关闭／恢复释放责任明确；活动、未知效果和实际未结束处理器不得被过期或清理释放 | dev115 已补 Local 持久期限与审批过期，见[指南](local-execution-policy.md)和[本批登记](../architecture/reviews/2026-10-14-local-deadlines.md)；dev116 已补 Local 全 DB／每 Scope 持久根准入，见[指南](deployment-admission.md)及[登记](../architecture/reviews/2026-10-14-local-admission.md)；dev117／dev118 已接通原 Registry 与内部 Worker SDK 门禁，见[登记](../architecture/reviews/2026-10-14-temporal-deployment-dispatch.md)。dev119 已实现普通公共 v2 Engine／Profile、原接受信封与不确定启动恢复、真实 Activity 义务及原树校验后安全退休；源码与独立安装各 953 项受影响、27 项公共实际服务及 17 项私有 v1 服务零失败／错误／跳过；默认发布、原 History 兼容和 owned 清理通过，见[验收记录](../architecture/reviews/2026-10-15-temporal-deployment-public.md)。内部 v1 继续只占位；所选 Coding 物理关闭和 SDK Session coordinator 尚未接入，明确拒绝且仍为必需项。现有单 Run／Runner 限制不能替代部署准入；批次 2 未关闭 |
 | 3：观察与服务控制 | 持久 HTTP 事件游标与断连续接；审批、核验和恢复沿原身份与幂等命令；断连只结束观察；统一诊断和明确关闭／移交责任 | 原事件分页、订阅与 A2A polling 已有；完整 hosted 观察及管理链路待补齐 |
 | 4：身份、权限与保留 | 宿主认证结果形成可信调用者；资源 ACL、Scope 与每 Agent 能力绑定取交集；跨 Scope 控制／事件读取拒绝；审计脱敏；保留清理保护活动 Run、原效果与恢复所需证据 | 可信 Scope／工具授权及 namespace 保护已有；服务身份映射、完整资源 ACL、审计与保留尚未闭环 |
 | 5：恢复与升级 | 安装后备份／恢复所选服务组合；核对原业务身份、版本与效果证据；故障窗口、迁移失败与回退可诊断；依赖服务／Worker 的拥有与关闭分别检查 | 进程重启、原 Worker 恢复及私有证据保留已有；框架级备份恢复、迁移和恢复管理待补齐 |
+
+dev119 已封存根的退休恢复仍由原 History 推进：恢复 Registry 通路后，公共 `drive` 通过精确重复 seal Update 只唤醒原释放重试，不复活业务或直接替 Registry 释放。该 P2 的实际 RED→目标 GREEN 已保留，并纳入最终冻结公共矩阵。异步 Parent 取消必须等实际后代停止；已完成 Action 的延后 effect ACK 沿原 `drive` 恢复，不能用业务终态或 `reconcile(query=True)` 代替物理闭合／ACK。
+
+dev119 真实零费用写／ACK 恢复窗口使用测试专用 SQLite 效果证据适配器，其他确定性用例使用默认组件；没有 PostgreSQL／模型／Docker 调用；上表所选 Temporal＋PG 阶段链路尚需独立验收，不能以本批 27 项公共服务通过替代。Coding／SDK Session coordinator 仍为批次 2 必需项。
 
 批次可以并行开发互不冲突的组件和测试，但依赖项按原契约接入。每批关闭需要默认实现、公开入口、配置／替换、生命周期、必要恢复、安装应用与能力文档的共同证据。批次 1 完成不关闭 R21–R24，也不表示企业平台已完成。
 

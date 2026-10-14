@@ -383,6 +383,9 @@ class TemporalParentState(TemporalRunState):
                 if identity != self.command_digests[command_id]:
                     raise IdempotencyConflict("Patch command identity conflict")
                 return detached(self.receipts[command_id])
+            from .temporal_deployment_release_state import check_unsealed
+
+            check_unsealed(self)
             self._emit("command_recorded", {"command_id": command_id, "kind": "patch"})
             try:
                 receipt = self._receipt(
@@ -582,6 +585,9 @@ class TemporalParentState(TemporalRunState):
         return coding_runner_keys(self._project_call_request(call, self.child_cap), self.manifest)
 
     def delegate(self, call, *, graph_node=None, verifier=False):
+        from .temporal_deployment_release_state import check_unsealed
+
+        check_unsealed(self)
         from .temporal_coding_composition_state import orchestration_enabled
 
         if getattr(self, "composition_stop_intent", None) is not None or self.state in TERMINAL:
@@ -708,6 +714,8 @@ class TemporalParentState(TemporalRunState):
         return detached(entry)
 
     def next_calls(self):
+        if getattr(self, "deployment_seal", None) is not None:
+            return []
         from .temporal_coding_composition_state import (
             child_capacity_released,
             enabled,

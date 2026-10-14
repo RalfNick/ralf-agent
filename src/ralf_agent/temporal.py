@@ -7,6 +7,7 @@ from datetime import timedelta
 
 from .errors import (
     AuthorizationDenied,
+    CapacityExceeded,
     DefinitionMismatch,
     IdempotencyConflict,
     NotFound,
@@ -40,6 +41,7 @@ _ERRORS = {
     cls.code: cls
     for cls in (
         AuthorizationDenied,
+        CapacityExceeded,
         DefinitionMismatch,
         IdempotencyConflict,
         NotFound,
@@ -84,8 +86,9 @@ class TemporalEngine:
     """Trusted-scope facade; all network controls are async.
 
     The runtime manifest is a published, non-secret immutable release identity.
-    The borrowed Client remains caller-owned. Agents and sequential Workflows
-    are supported; Graph/Team/Dynamic/nested definitions are refused preflight.
+    The borrowed Client remains caller-owned. The fixed orchestration release
+    selects Agent, sequence, graph, Team, dynamic and nested definition support.
+    Public deployment v2 shares one original root claim across its descendants.
     """
 
     def __init__(
@@ -119,13 +122,16 @@ class TemporalEngine:
             namespace or configured_namespace or "default",
         )
         self._release = validate_manifest(release)
-        if "deployment_admission_protocol" in self._release:
+        from .temporal_deployment_protocol import public_selected
+
+        if "deployment_admission_protocol" in self._release and not public_selected(self._release):
             raise ValidationError(
                 "Temporal deployment public assembly requires safe-release integration"
             )
         self.activity_timeout, self.drive_timeout = activity_timeout, drive_timeout
         self._closed = False
         self._registry = None
+        self._deployment_namespace_binding = {"namespace": None}
 
     @property
     def capabilities(self):
@@ -220,9 +226,19 @@ class TemporalEngine:
 
     @property
     def command_registry_id(self):
+        from .temporal_deployment_protocol import public_selected
+
+        if public_selected(self._release):
+            return self._release["deployment_admission_protocol"]["registry_id"]
         return "ralf-temporal-commands-" + digest(asdict(self.scope))
 
     async def _guard(self, kind, command_id, target, payload):
+        from .temporal_deployment_protocol import public_selected
+
+        if public_selected(self._release):
+            from .temporal_deployment_submissions import guard
+
+            return await guard(self, kind, command_id, target, payload)
         sdk = _sdk()
         if self._closed:
             raise ValidationError("TemporalEngine is closed")
@@ -300,6 +316,14 @@ class TemporalEngine:
         )
 
     async def _submit(self, spec, input, *, command_id, budget=32, session_id=None):
+        from .temporal_deployment_protocol import public_selected
+
+        if public_selected(self._release):
+            from .temporal_deployment_submissions import submit
+
+            return await submit(
+                self, spec, input, command_id=command_id, budget=budget, session_id=session_id
+            )
         from .binding_definitions import AgentDefinition, BoundDefinition
         from .temporal_managed_context import check_scope
 
@@ -397,6 +421,14 @@ class TemporalEngine:
             value["budget"],
             value["workflow"],
         )
+
+    async def deployment_diagnostics(self):
+        from .temporal_deployment_protocol import public_selected
+        from .temporal_deployment_submissions import diagnostics
+
+        if not public_selected(self._release):
+            raise ValidationError("Public deployment diagnostics require protocol 2")
+        return await diagnostics(self)
 
     async def memory_stages(self, run_id):
         """Pure History evidence; no backend reads or implicit recovery."""
@@ -503,6 +535,15 @@ class TemporalEngine:
         )
 
     async def drive(self, run_id, *, wait_seconds=None):
+        from .temporal_deployment_protocol import public_selected
+
+        if public_selected(self._release):
+            closure = await self._view(run_id, "deployment_closure")
+            if closure.get("seal") is not None:
+                from .temporal_deployment_submissions import recover_retirement
+
+                await recover_retirement(self, run_id, closure)
+                return await self.status(run_id)
         await self._command(run_id, "drive", "drive:" + uuid.uuid4().hex)
         deadline = asyncio.get_running_loop().time() + (
             self.drive_timeout if wait_seconds is None else wait_seconds
@@ -560,9 +601,14 @@ def build_temporal_worker(
     if "deployment_admission_protocol" in manifest:
         from .temporal_deployment_execution import registered_activity, wrap_activities
 
-        activities = wrap_activities(
-            runtime, client, activities + [registered_activity(runtime, client)]
-        )
+        activities = activities + [registered_activity(runtime, client)]
+        from .temporal_deployment_protocol import public_selected
+
+        if public_selected(manifest):
+            from .temporal_deployment_release import registered_activity as registered_release
+
+            activities.append(registered_release(runtime, client))
+        activities = wrap_activities(runtime, client, activities)
     if activity_owner is not None:
         from .temporal_assembly_lifecycle import WorkerExecutionOwner
 

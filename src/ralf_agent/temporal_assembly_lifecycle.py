@@ -107,7 +107,9 @@ class TemporalRuntimeAssembly:
         self._engines = []
         self._calls = WorkerExecutionOwner(scope=scope, release=self.release)
         self._coding_submissions = None
-        if self.release.get("binding_protocol") in (13, 15, 17, 19, 21, 23):
+        if self.release.get("binding_protocol") in (13, 15, 17, 19, 21, 23) or (
+            self.release.get("deployment_admission_protocol", {}).get("version") == 2
+        ):
             from .temporal_coding_composition_submissions import CompositionSubmissionOwner
 
             self._coding_submissions = CompositionSubmissionOwner(scope=scope, release=self.release)
@@ -326,6 +328,8 @@ class TemporalRuntimeAssembly:
                         self._coding_stop_task = None
                     raise
         await self._calls.aclose(wait_timeout=wait_timeout)
+        if getattr(self._runtime, "_deployment_public_execution", False):
+            await self._runtime.close_deployment_execution(wait_timeout=wait_timeout)
         await self._runtime.close_context_execution(wait_timeout=wait_timeout)
         await self._runtime.close_session_execution(wait_timeout=wait_timeout)
 
