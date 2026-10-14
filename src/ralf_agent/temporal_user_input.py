@@ -32,7 +32,8 @@ def validate_protocol(manifest):
     if (
         manifest.get("kernel") != "temporal-3"
         or type(manifest.get("binding_protocol")) is not int
-        or manifest["binding_protocol"] not in (10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21)
+        or manifest["binding_protocol"]
+        not in (10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23)
         or type(manifest.get("user_input_protocol")) is not int
         or manifest["user_input_protocol"] != 1
         or manifest.get("dispatch_admission") != "history-1"

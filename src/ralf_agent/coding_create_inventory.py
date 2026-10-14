@@ -72,6 +72,8 @@ def inventory_fields():
             "_code",
             "_super_capture",
             "_function",
+            "_plain_digest",
+            "_cache_helpers",
             "executable_digest",
         ),
         "inventory": (

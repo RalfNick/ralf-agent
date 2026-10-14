@@ -467,28 +467,30 @@ def registration(runtime):
     }
     if type(metadata) is not dict or metadata.get("io_inventory") != expected_inventory:
         raise DefinitionMismatch("Coding physical implementation inventory changed")
-    return {"version": 5, "tools": result, "implementation": metadata}
+    return {"version": 6, "tools": result, "implementation": metadata}
 
 
 def validate_protocol(manifest):
     from .temporal_coding_composition_protocol import validate_protocol as validate_composition
 
+    if manifest.get("binding_protocol") in (20, 21):
+        raise DefinitionMismatch("Temporal Coding 20/21 requires the immutable dev112 Worker")
     validate_composition(manifest)
     if not enabled(manifest):
-        if manifest.get("binding_protocol") in (11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21):
+        if manifest.get("binding_protocol") in (11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23):
             raise DefinitionMismatch("Temporal Coding publication is missing")
         return
     value = manifest["coding_execution_protocol"]
     if (
         manifest.get("kernel") != "temporal-3"
         or type(manifest.get("binding_protocol")) is not int
-        or manifest["binding_protocol"] not in (20, 21)
+        or manifest["binding_protocol"] not in (22, 23)
         or manifest.get("dispatch_admission") != "history-1"
         or "tool_execution_protocol" not in manifest
         or type(value) is not dict
         or set(value) != {"version", "tools", "implementation"}
         or type(value["version"]) is not int
-        or value["version"] != 5
+        or value["version"] != 6
         or type(value["tools"]) is not dict
         or not 1 <= len(value["tools"]) <= 16
         or type(value["implementation"]) is not dict
@@ -533,7 +535,7 @@ def publish(manifest, runtime):
     result = detached(manifest)
     result.update(
         kernel="temporal-3",
-        binding_protocol=20,
+        binding_protocol=22,
         dispatch_admission="history-1",
         coding_execution_protocol=registration(runtime),
     )

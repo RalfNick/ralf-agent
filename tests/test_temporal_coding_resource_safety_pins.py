@@ -115,8 +115,8 @@ def registered(tmp_path, monkeypatch, request):
     )
     runtime.validate_release()
     original = runtime.manifest
-    assert original["binding_protocol"] == (21 if getattr(request, "param", False) else 20)
-    assert original["coding_execution_protocol"]["version"] == 5
+    assert original["binding_protocol"] == (23 if getattr(request, "param", False) else 22)
+    assert original["coding_execution_protocol"]["version"] == 6
     assert list((tmp_path / "runner").iterdir()) == []
     try:
         yield runtime, original, tmp_path / "runner"

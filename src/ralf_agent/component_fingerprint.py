@@ -7,6 +7,7 @@ must be JSON and immutable; other deployment dependencies belong in identity.
 import dis
 import inspect
 import types
+from functools import lru_cache
 
 from .errors import ValidationError
 from .types import canonical, digest
@@ -132,8 +133,65 @@ def _function(method, seen, depth=0):
         seen.remove(id(target))
 
 
+def _plain_digest(code):
+    """Reuse only immutable, uncaptured code; return no mutable cache value."""
+    return digest(
+        {
+            "algorithm": "python-code-v1",
+            "function": {
+                "code": _code(code),
+                "defaults": None,
+                "keyword_defaults": None,
+                "captured": [],
+                "wrapped": None,
+            },
+        }
+    )
+
+
+_cached_plain_digest = lru_cache(maxsize=1024)(_plain_digest)
+
+
+def _cache_helpers():
+    return tuple(
+        (
+            method,
+            getattr(method, "__code__", None),
+            getattr(method, "__defaults__", None),
+            getattr(method, "__kwdefaults__", None),
+            getattr(method, "__closure__", None),
+        )
+        for method in (
+            _constant,
+            _code,
+            _function,
+            canonical,
+            digest,
+            inspect.isfunction,
+            _plain_digest,
+            _cached_plain_digest,
+            getattr(_cached_plain_digest, "__wrapped__", None),
+        )
+    ) + ((types, types.CodeType),)
+
+
+_CACHE_HELPERS = _cache_helpers()
+_CACHE_GUARD = (_cache_helpers, _cache_helpers.__code__)
+
+
 def executable_digest(method):
     try:
+        target = getattr(method, "__func__", method)
+        if (
+            (_cache_helpers, getattr(_cache_helpers, "__code__", None)) == _CACHE_GUARD
+            and _cache_helpers() == _CACHE_HELPERS
+            and inspect.isfunction(target)
+            and target.__closure__ is None
+            and target.__defaults__ is None
+            and target.__kwdefaults__ is None
+            and getattr(target, "__wrapped__", None) is None
+        ):
+            return _cached_plain_digest(target.__code__)
         return digest({"algorithm": "python-code-v1", "function": _function(method, set())})
     except (TypeError, ValueError, RecursionError):
         raise ValidationError("Custom context captured configuration must be JSON") from None

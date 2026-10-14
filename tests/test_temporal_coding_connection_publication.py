@@ -12,8 +12,8 @@ from tests.test_temporal_coding_configuration import manifest
 
 def current_leaf():
     value = manifest()
-    value["binding_protocol"] = 20
-    value["coding_execution_protocol"]["version"] = 5
+    value["binding_protocol"] = 22
+    value["coding_execution_protocol"]["version"] = 6
     for resource in value["coding_execution_protocol"]["tools"].values():
         resource["implementation"]["_make_transport"] = "c" * 64
     return value
@@ -23,10 +23,28 @@ def current_composition():
     from tests.test_temporal_coding_composition_configuration import composition_manifest
 
     value = composition_manifest()
-    value["binding_protocol"] = 21
+    value["binding_protocol"] = 23
     value["coding_execution_protocol"] = current_leaf()["coding_execution_protocol"]
-    value["coding_composition_protocol"]["version"] = 6
+    value["coding_composition_protocol"]["version"] = 7
     return value
+
+
+@pytest.mark.parametrize("binding", [20, 21])
+@pytest.mark.parametrize("native_version", [5, 6])
+def test_current_worker_refuses_immutable_dev112_selected_publication(binding, native_version):
+    """Original 20/21 Histories require their matching dev112 Worker."""
+    value = current_leaf() if binding == 20 else current_composition()
+    value["binding_protocol"] = binding
+    value["coding_execution_protocol"]["version"] = native_version
+    if binding == 21:
+        value["coding_composition_protocol"].update(
+            version=6 if native_version == 5 else 7,
+            topology="bounded-agent-orchestration"
+            if native_version == 5
+            else "bounded-recursive-orchestration",
+        )
+    with pytest.raises(DefinitionMismatch):
+        native.validate_protocol(value)
 
 
 @pytest.mark.parametrize("release", [current_leaf, current_composition])
@@ -62,7 +80,7 @@ def test_current_publication_requires_transport_construction_hook_pin():
         native.validate_protocol(value)
 
 
-@pytest.mark.parametrize("version", [1, 2, 3, 4, 5, True, 7])
+@pytest.mark.parametrize("version", [1, 2, 3, 4, 5, 6, True, 8])
 def test_current_composition_refuses_foreign_version(version):
     value = current_composition()
     native.validate_protocol(value)
@@ -71,7 +89,7 @@ def test_current_composition_refuses_foreign_version(version):
         native.validate_protocol(value)
 
 
-@pytest.mark.parametrize("binding", [20, 21])
+@pytest.mark.parametrize("binding", [22, 23])
 @pytest.mark.parametrize(
     "kind", ["context", "tool", "artifacts", "continuation", "history", "parent", "input"]
 )
@@ -100,7 +118,7 @@ def test_current_joint_publication_retains_optional_capability_gates(binding, ki
     validators[kind](value)
 
 
-@pytest.mark.parametrize("binding", [20, 21])
+@pytest.mark.parametrize("binding", [22, 23])
 def test_current_joint_publication_keeps_sandbox_gate(registered, binding):
     from ralf_agent.binding_sandbox import validate_sandbox_protocol
     from tests.test_sandbox_temporal_protocol import runtime_for
@@ -120,7 +138,7 @@ def test_current_composition_keeps_shared_runner_capacity_until_physical_stop():
     assert len(state.children) == 1
 
 
-def test_current_composition_state_requires_explicit_version_six():
+def test_current_composition_state_requires_explicit_version_seven():
     from ralf_agent.temporal_coding_composition_state import enabled
 
     assert enabled(current_composition())
@@ -129,15 +147,15 @@ def test_current_composition_state_requires_explicit_version_six():
     assert not enabled(value)
 
 
-def test_current_api_capabilities_admit_team_dynamic_and_refuse_nesting():
+def test_current_api_capabilities_admit_team_dynamic_and_recursive_nesting():
     from ralf_agent.temporal import TemporalEngine
 
     engine = object.__new__(TemporalEngine)
     engine._release = {**current_composition(), "orchestration": {"version": "1"}}
-    assert engine.capabilities["coding_composition"] == "bounded-agent-orchestration"
+    assert engine.capabilities["coding_composition"] == "bounded-recursive-orchestration"
     assert engine.capabilities["graph"]
     assert engine.capabilities["team"] and engine.capabilities["dag"]
-    assert not engine.capabilities["nesting"]
+    assert engine.capabilities["nesting"]
     assert engine.binding_capabilities["supported_definition_kinds"] == [
         "agent",
         "sequence",
@@ -156,7 +174,7 @@ def test_current_api_capabilities_refuse_missing_composition_publication():
         capabilities(value)
 
 
-def test_current_sdk_control_requires_explicit_version_six():
+def test_current_sdk_control_requires_explicit_version_seven():
     from ralf_agent.temporal_coding_composition_control import selected
 
     assert selected(current_composition())
@@ -165,7 +183,7 @@ def test_current_sdk_control_requires_explicit_version_six():
     assert not selected(value)
 
 
-def test_current_parent_records_an_explicit_version_six_history_marker(monkeypatch):
+def test_current_parent_records_an_explicit_version_seven_history_marker(monkeypatch):
     import asyncio
     from types import SimpleNamespace
 
@@ -184,10 +202,10 @@ def test_current_parent_records_an_explicit_version_six_history_marker(monkeypat
     monkeypatch.setattr(temporal_parent_workflow.workflow, "patched", unavailable)
     with pytest.raises(ApplicationError, match="History marker unavailable"):
         asyncio.run(instance.run({"activity_timeout": 1}))
-    assert markers == ["ralf-coding-composition-v6"]
+    assert markers == ["ralf-coding-composition-v7"]
 
 
-@pytest.mark.parametrize("binding", [12, 13, 14, 15, 16, 17, 18, 19, 20, 21])
+@pytest.mark.parametrize("binding", [12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23])
 def test_joint_sdk_context_timeout_keeps_original_read_unknown(monkeypatch, binding):
     import asyncio
 
@@ -295,10 +313,10 @@ def test_actual_shared_postgres_publication_refuses_changed_connection_implement
             )
             runtime.validate_release()
             release = runtime.manifest
-            assert release["binding_protocol"] == (21 if composition else 20)
-            assert release["coding_execution_protocol"]["version"] == 5
+            assert release["binding_protocol"] == (23 if composition else 22)
+            assert release["coding_execution_protocol"]["version"] == 6
             if composition:
-                assert release["coding_composition_protocol"]["version"] == 6
+                assert release["coding_composition_protocol"]["version"] == 7
             assert (
                 "_make_transport"
                 in release["coding_execution_protocol"]["tools"]["coding"]["implementation"]

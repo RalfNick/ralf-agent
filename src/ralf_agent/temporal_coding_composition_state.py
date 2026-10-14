@@ -67,10 +67,20 @@ def enabled(manifest):
 def orchestration_enabled(manifest):
     value = manifest.get("coding_composition_protocol")
     return (
-        manifest.get("binding_protocol") in (17, 19, 21)
+        manifest.get("binding_protocol") in (17, 19, 21, 23)
         and type(value) is dict
         and type(value.get("version")) is int
-        and value["version"] == {17: 4, 19: 5, 21: 6}[manifest["binding_protocol"]]
+        and value["version"] == {17: 4, 19: 5, 21: 6, 23: 7}[manifest["binding_protocol"]]
+    )
+
+
+def recursive_enabled(manifest):
+    value = manifest.get("coding_composition_protocol")
+    return (
+        manifest.get("binding_protocol") == 23
+        and type(value) is dict
+        and type(value.get("version")) is int
+        and value["version"] == 7
     )
 
 
@@ -179,9 +189,22 @@ def project_child_link(parent, call, request):
     _require(parent)
     namespace = _namespace(parent.composition_namespace)
     kinds = {"graph", "team", "dynamic"} if orchestration_enabled(parent.manifest) else {"graph"}
-    if parent.depth != 0 or call["depth"] != 1 or parent.kind not in kinds:
+    recursive = recursive_enabled(parent.manifest)
+    if recursive:
+        source_depth = _link(parent.request)["depth"] if "coding_parent" in parent.request else 0
+        if (
+            type(parent.depth) is not int
+            or parent.depth != source_depth
+            or type(call["depth"]) is not int
+            or call["depth"] != parent.depth + 1
+            or call["depth"] >= parent.policy.max_depth
+            or parent.kind not in kinds
+        ):
+            raise DefinitionMismatch("Original Coding child depth differs from its parent policy")
+    elif parent.depth != 0 or call["depth"] != 1 or parent.kind not in kinds:
         raise DefinitionMismatch("Coding composition permits one original Agent child level")
-    if request["definition"]["kind"] != "agent" or "coding_parent" in request:
+    child_kinds = {"agent", "sequence", "graph", "team", "dynamic"} if recursive else {"agent"}
+    if request["definition"]["kind"] not in child_kinds or "coding_parent" in request:
         raise DefinitionMismatch("Coding child requires its original Agent projection")
     if orchestration_enabled(parent.manifest) and call["member"] in {"@planner", "@verifier"}:
         planner = call["member"] == "@planner"
@@ -244,13 +267,13 @@ def _link(request):
     if (
         value["child_projection_digest"] != digest(base)
         or type(value["depth"]) is not int
-        or value["depth"] != 1
+        or not 1 <= value["depth"] <= 8
         or type(value["planning_revision"]) is not int
         or value["planning_revision"] < 0
         or type(value["cap"]) is not int
         or value["cap"] != request["budget"]
         or value["child_run_id"] != child_run_id(value["scope"], value["command_id"])
-        or request["definition"]["kind"] != "agent"
+        or request["definition"]["kind"] not in {"agent", "sequence", "graph", "team", "dynamic"}
     ):
         raise DefinitionMismatch("Original Coding child projection changed")
     return value
@@ -266,8 +289,24 @@ def validate_child_link(
     if "coding_parent" not in state.request:
         if parent_run_id is not None:
             raise DefinitionMismatch("Unlinked Coding execution cannot be a child")
+        if recursive_enabled(state.manifest) and getattr(state, "depth", 0) != 0:
+            raise DefinitionMismatch("Original Coding root SDK depth changed")
         return
     link = _link(state.request)
+    if recursive_enabled(state.manifest):
+        from .governance import TemporalExecutionPolicy
+
+        policy = (
+            TemporalExecutionPolicy.from_identity(state.manifest["execution_policy"])
+            if "execution_policy" in state.manifest
+            else TemporalExecutionPolicy()
+        )
+        if link["depth"] >= policy.max_depth or (
+            hasattr(state, "depth") and state.depth != link["depth"]
+        ):
+            raise DefinitionMismatch("Original Coding SDK child depth changed")
+    elif link["depth"] != 1 or state.request["definition"]["kind"] != "agent":
+        raise DefinitionMismatch("Coding composition permits one original Agent child level")
     if (
         link["scope"] != state.scope
         or link["child_run_id"] != state.run_id
@@ -360,6 +399,16 @@ def _child(state, run_id, evidence):
     ):
         raise DefinitionMismatch("Physical evidence differs from original child intent")
     link = _link(evidence["request"])
+    if recursive_enabled(state.manifest):
+        if (
+            type(call.get("depth")) is not int
+            or link["depth"] != call["depth"]
+            or link["depth"] != state.depth + 1
+            or link["depth"] >= state.policy.max_depth
+        ):
+            raise DefinitionMismatch("Original child physical depth differs from its parent")
+    elif link["depth"] != 1 or evidence["request"]["definition"]["kind"] != "agent":
+        raise DefinitionMismatch("Coding composition permits one original Agent child level")
     if (
         link["parent_run_id"] != state.run_id
         or link["parent_execution_epoch"] != state.epoch

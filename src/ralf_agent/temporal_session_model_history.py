@@ -89,7 +89,7 @@ def validate_native_request(request, manifest):
         return
     if (
         manifest.get("binding_protocol")
-        not in (8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21)
+        not in (8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23)
         or manifest.get("model_history_protocol") != 2
     ):
         raise DefinitionMismatch("Native Session snapshot requires its original History protocol")

@@ -235,8 +235,8 @@ def test_actual_no_submit_original_receipt_survives_cold_worker(tmp_path, monkey
 
         try:
             assembly, _, _ = await _application(tmp_path)
-            assert assembly.release["binding_protocol"] == (21 if composition else 20)
-            assert assembly.release["coding_execution_protocol"]["version"] == 5
+            assert assembly.release["binding_protocol"] == (23 if composition else 22)
+            assert assembly.release["coding_execution_protocol"]["version"] == 6
             first = await start_worker()
             worker_release = json.loads(
                 (tmp_path / ("no-submit-worker-" + str(first.pid) + ".release.json")).read_text()
@@ -415,7 +415,7 @@ def test_actual_no_submit_original_receipt_survives_cold_worker(tmp_path, monkey
             (tmp_path / "evidence.json").write_text(
                 json.dumps(
                     {
-                        "binding": 21 if composition else 20,
+                        "binding": 23 if composition else 22,
                         "mode": "original_no_submit_cold_recovery",
                         "run_id": child_id,
                         "execution_epoch": epoch,

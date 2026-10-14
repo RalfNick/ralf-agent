@@ -16,10 +16,10 @@ def selected(manifest):
     return (
         manifest.get("binding_protocol") == 13 and "coding_composition_protocol" in manifest
     ) or (
-        manifest.get("binding_protocol") in (15, 17, 19, 21)
+        manifest.get("binding_protocol") in (15, 17, 19, 21, 23)
         and type(value) is dict
         and type(value.get("version")) is int
-        and value["version"] == {15: 3, 17: 4, 19: 5, 21: 6}[manifest["binding_protocol"]]
+        and value["version"] == {15: 3, 17: 4, 19: 5, 21: 6, 23: 7}[manifest["binding_protocol"]]
     )
 
 
@@ -27,7 +27,7 @@ def _root_kind(manifest, kind):
     """Only the current publication admits the expanded original parent topology."""
     return kind in (
         {"graph", "team", "dynamic"}
-        if manifest.get("binding_protocol") in (17, 19, 21)
+        if manifest.get("binding_protocol") in (17, 19, 21, 23)
         else {"graph"}
     )
 
@@ -171,11 +171,31 @@ async def _bind_submission(client, scope, expected, epoch, namespace):
 async def root_admission(runtime, client, value, info):
     _actual(client, value, info)
     runtime.validate_release(value["runtime_manifest"])
-    if not _root_kind(value["runtime_manifest"], value["request"]["definition"]["kind"]) or (
-        "coding_parent" in value["request"]
-    ):
+    if not _root_kind(value["runtime_manifest"], value["request"]["definition"]["kind"]):
         raise DefinitionMismatch("Composition admission requires its original bounded parent")
     namespace = await _namespace(client)
+    if "coding_parent" in value["request"]:
+        if value["runtime_manifest"].get("binding_protocol") != 23:
+            raise DefinitionMismatch("Nested Coding requires its original recursive publication")
+        original = await _proof(
+            client,
+            value["scope"],
+            value["run_id"],
+            value["execution_epoch"],
+            value["runtime_manifest"],
+            namespace,
+            request=value["request"],
+        )
+        _, admitted = await _ancestry_admission(
+            client, original, value["runtime_manifest"], namespace
+        )
+        _actual(client, value, info)
+        runtime.validate_release(value["runtime_manifest"])
+        return {
+            "namespace": namespace,
+            "admitted": admitted,
+            "execution_epoch": value["execution_epoch"],
+        }
     expected = {
         "command_id": value["command_id"],
         "run_id": value["run_id"],
@@ -231,6 +251,14 @@ async def validate_activity(client, request, *, workflow_id):
         allow_unlinked=True,
     )
     link = original["request"].get("coding_parent")
+    if manifest.get("binding_protocol") == 23 and link is not None:
+        if request.get("coding_parent", link) != link:
+            raise DefinitionMismatch("Composition Activity changed its original parent link")
+        chain, admitted = await _ancestry_admission(client, original, manifest, namespace)
+        if not admitted:
+            await _command(client, original, "cancel", owner_id=chain[0][0]["run_id"])
+        await _namespace(client, namespace)
+        return
     if link is not None:
         if request.get("coding_parent", link) != link or link["namespace"] != namespace:
             raise DefinitionMismatch("Composition Activity changed its original parent link")
@@ -327,7 +355,7 @@ async def _adopt(client, parent, child, *, epoch=False):
         raise DefinitionMismatch("Composition parent lacks original adoption acknowledgement")
 
 
-async def _child_proof(client, parent, call, manifest, namespace):
+def _validate_child_intent(parent, call, manifest, namespace):
     from .temporal_coding_composition_state import _link
 
     request = call["request"]
@@ -341,7 +369,7 @@ async def _child_proof(client, parent, call, manifest, namespace):
         or link["child_run_id"] != call["run_id"]
         or link["cap"] != call["cap"]
         or link["namespace"] != namespace
-        or manifest.get("binding_protocol") in (17, 19, 21)
+        or manifest.get("binding_protocol") in (17, 19, 21, 23)
         and (
             link["scope"] != parent["scope"]
             or link["call_id"] != call.get("id")
@@ -349,9 +377,19 @@ async def _child_proof(client, parent, call, manifest, namespace):
             or link["command_id"] != call.get("command_id")
             or link["planning_revision"] != call.get("planning_revision")
             or call.get("child_request_digest") != digest(request)
+            or manifest.get("binding_protocol") == 23
+            and (
+                link["depth"] != call.get("depth")
+                or link["depth"] != parent["request"].get("coding_parent", {}).get("depth", 0) + 1
+            )
         )
     ):
         raise DefinitionMismatch("Composition child original ownership changed")
+
+
+async def _child_proof(client, parent, call, manifest, namespace):
+    _validate_child_intent(parent, call, manifest, namespace)
+    request = call["request"]
     execution = call.get("child_execution")
     if execution is None:
         result = await _discover(
@@ -395,6 +433,134 @@ async def _children(client, parent, namespace):
     if len({item.get("run_id") for item in value}) != len(value):
         raise DefinitionMismatch("Composition original child obligations are duplicated")
     return detached(value)
+
+
+async def _ancestry(client, original, manifest, namespace):
+    """Verify each original immediate edge; no latest-epoch ancestor lookup."""
+    from .governance import TemporalExecutionPolicy
+    from .temporal_coding_composition_state import _link
+
+    policy = (
+        TemporalExecutionPolicy.from_identity(manifest["execution_policy"])
+        if "execution_policy" in manifest
+        else TemporalExecutionPolicy()
+    )
+    chain, seen = [], set()
+    current = original
+    while "coding_parent" in current["request"]:
+        if current["run_id"] in seen or len(chain) >= policy.max_depth - 1:
+            raise DefinitionMismatch("Original Coding ancestry is cyclic or too deep")
+        seen.add(current["run_id"])
+        link = _link(current["request"])
+        if link["scope"] != current["scope"] or link["namespace"] != namespace:
+            raise DefinitionMismatch("Original Coding ancestry changed Scope or namespace")
+        parent = await _proof(
+            client,
+            current["scope"],
+            link["parent_run_id"],
+            link["parent_execution_epoch"],
+            manifest,
+            namespace,
+        )
+        parent_depth = parent["request"].get("coding_parent", {}).get("depth", 0)
+        if (
+            parent["run_id"] in seen
+            or not _root_kind(manifest, parent["request"]["definition"]["kind"])
+            or link["depth"] != parent_depth + 1
+            or link["depth"] >= policy.max_depth
+            or parent["request_digest"] != link["parent_request_digest"]
+            or parent["release_digest"] != link["parent_release_digest"]
+        ):
+            raise DefinitionMismatch("Original Coding ancestor identity or depth changed")
+        calls = await _children(client, parent, namespace)
+        call = next((c for c in calls if c.get("run_id") == current["run_id"]), None)
+        if (
+            call is None
+            or call.get("dispatch_started") is not True
+            or call.get("depth") != link["depth"]
+        ):
+            raise DefinitionMismatch("Original Coding ancestor lacks its dispatched child intent")
+        _validate_child_intent(parent, call, manifest, namespace)
+        execution = call.get("child_execution")
+        if execution is None:
+            # The cold unpinned window still uses SDK parent discovery and
+            # fixed-epoch History before pinning. No authority cache is kept.
+            child = await _child_proof(client, parent, call, manifest, namespace)
+        else:
+            # current was read and validated in this walk. Its immutable
+            # original identity can be checked against this freshly read edge
+            # without querying the same child again. Mutable ancestor states,
+            # root admission and future native grants are never reused.
+            child = _validate_proof(
+                current,
+                scope=parent["scope"],
+                run_id=call["run_id"],
+                epoch=execution["execution_epoch"],
+                manifest=manifest,
+                namespace=namespace,
+                request=call["request"],
+            )
+        if (
+            child["execution_epoch"] != current["execution_epoch"]
+            or child["request"] != current["request"]
+        ):
+            raise DefinitionMismatch("Original Coding ancestor replaced its child execution")
+        if call.get("child_execution") is None:
+            await _adopt(client, parent, child, epoch=True)
+            calls = await _children(client, parent, namespace)
+            call = next((c for c in calls if c.get("run_id") == current["run_id"]), None)
+        actual = {k: child[k] for k in ("namespace", "execution_epoch", "original_execution_epoch")}
+        if call is None or call.get("child_execution") != actual:
+            raise DefinitionMismatch("Original Coding ancestor lost its fixed child epoch")
+        chain.append((parent, call))
+        current = parent
+    return chain
+
+
+async def _ancestry_admission(client, original, manifest, namespace):
+    """Observe the one accepted root; never register nested parents as roots."""
+    chain = await _ancestry(client, original, manifest, namespace)
+    root = chain[-1][0] if chain else original
+    candidates = await _registry(client, root["scope"]).query(
+        "view",
+        {
+            "scope": root["scope"],
+            "kind": "coding_composition_candidates",
+            "manifest_digest": digest(manifest),
+        },
+    )
+    if type(candidates) is not list or len(candidates) > 4096:
+        raise DefinitionMismatch("Original Coding root acceptance unavailable")
+    matching = [c for c in candidates if type(c) is dict and c.get("run_id") == root["run_id"]]
+    if len(matching) != 1:
+        raise DefinitionMismatch("Original Coding ancestor lacks unique root acceptance")
+    candidate = matching[0]
+    expected = {
+        "command_id": candidate["command_id"],
+        "run_id": root["run_id"],
+        "request_digest": root["request_digest"],
+        "manifest_digest": digest(manifest),
+    }
+    if (
+        any(candidate.get(k) != v for k, v in expected.items())
+        or candidate.get("execution_epoch") != root["execution_epoch"]
+        or candidate.get("namespace") != namespace
+    ):
+        raise DefinitionMismatch("Original Coding root acceptance changed")
+    receipt = await _registry(client, root["scope"]).query(
+        "view",
+        {
+            "scope": root["scope"],
+            "kind": "coding_composition_admission",
+            **expected,
+        },
+    )
+    _validate_admission(receipt, expected, root["execution_epoch"], namespace)
+    await _namespace(client, namespace)
+    closed = {"cancelling", "cancelled", "failed"}
+    return chain, receipt["admitted"] and original["state"] not in closed and all(
+        parent["state"] not in closed for parent, _ in chain
+    )
 
 
 async def control(runtime, client, value, info=None):
@@ -449,6 +615,13 @@ async def control(runtime, client, value, info=None):
         from .temporal import TemporalEngine
         from .temporal_state import validate_request
 
+        if value["runtime_manifest"].get("binding_protocol") == 23:
+            _, admitted = await _ancestry_admission(
+                client, parent, value["runtime_manifest"], namespace
+            )
+            if not admitted:
+                await _command(client, parent, "cancel", owner_id=parent["run_id"])
+                raise DefinitionMismatch("Original Coding ancestor admission is closed")
         validate_request(call["request"], value["runtime_manifest"])
         engine = TemporalEngine(
             client,
@@ -457,6 +630,24 @@ async def control(runtime, client, value, info=None):
             scope=Scope(**value["scope"]),
         )
         await engine._guard("submit", call["command_id"], call["run_id"], call["request"])
+        if value["runtime_manifest"].get("binding_protocol") == 23:
+            current = await _proof(
+                client,
+                parent["scope"],
+                parent["run_id"],
+                parent["execution_epoch"],
+                value["runtime_manifest"],
+                namespace,
+                request=parent["request"],
+            )
+            _, admitted = await _ancestry_admission(
+                client, current, value["runtime_manifest"], namespace
+            )
+            if not admitted:
+                await _command(client, current, "cancel", owner_id=current["run_id"])
+                raise DefinitionMismatch(
+                    "Original Coding ancestor closed during child registration"
+                )
         result = {"run_id": call["run_id"], "registered": True}
     else:
         child = await _child_proof(client, parent, call, value["runtime_manifest"], namespace)
@@ -606,10 +797,86 @@ async def _fence_leaf(runtime, client, leaf, namespace):
         runtime.validate_release(request["runtime_manifest"])
 
 
+async def _close_subtree(runtime, client, parent, manifest, namespace):
+    """Cancel an original parent, then attempt every direct edge postorder."""
+    await _ancestry(client, parent, manifest, namespace)
+    pending = []
+    try:
+        await _command(client, parent, "cancel", owner_id=parent["run_id"])
+    except Exception as exc:
+        pending.append(
+            {"parent": parent["run_id"], "code": getattr(exc, "code", "cancel_unavailable")}
+        )
+    for call in await _children(client, parent, namespace):
+        if call.get("dispatch_started") is not True:
+            continue  # Original History owns and closes undelivered intents.
+        try:
+            await _close_child(runtime, client, parent, call, manifest, namespace)
+        except Exception as exc:
+            pending.append(
+                {"child": call.get("run_id"), "code": getattr(exc, "code", "stop_unavailable")}
+            )
+    refreshed = await _proof(
+        client,
+        parent["scope"],
+        parent["run_id"],
+        parent["execution_epoch"],
+        manifest,
+        namespace,
+        request=parent["request"],
+    )
+    if pending or not refreshed["physical_stopped"]:
+        raise CloseIncomplete({"coding_composition": pending or "original subtree closure pending"})
+    return refreshed
+
+
+async def _adopt_resource_ancestry(client, leaf, roots, manifest, namespace):
+    """Close evidence climbs only verified immediate edges to an accepted root."""
+    chain = await _ancestry(client, leaf, manifest, namespace)
+    if not chain:
+        raise DefinitionMismatch("Linked original resource requires its ancestor chain")
+    root = chain[-1][0]
+    accepted = roots.get(root["run_id"])
+    if (
+        accepted is None
+        or accepted["execution_epoch"] != root["execution_epoch"]
+        or accepted["request"] != root["request"]
+    ):
+        raise CloseIncomplete(
+            {"coding_composition": "original resource root acceptance unavailable"}
+        )
+    current = leaf
+    for parent, call in chain:
+        current = await _child_proof(client, parent, call, manifest, namespace)
+        if not current["physical_stopped"]:
+            raise CloseIncomplete(
+                {"coding_composition": "original resource descendant closure pending"}
+            )
+        await _adopt(client, parent, current, epoch=True)
+        await _adopt(client, parent, current)
+        current = await _proof(
+            client,
+            parent["scope"],
+            parent["run_id"],
+            parent["execution_epoch"],
+            manifest,
+            namespace,
+            request=parent["request"],
+        )
+        if not current["physical_stopped"]:
+            raise CloseIncomplete(
+                {"coding_composition": "original resource ancestor closure pending"}
+            )
+
+
 async def _close_child(runtime, client, root, call, manifest, namespace):
     leaf = await _child_proof(client, root, call, manifest, namespace)
     await _adopt(client, root, leaf, epoch=True)
-    await _command(client, leaf, "cancel", owner_id=root["run_id"])
+    nested = manifest.get("binding_protocol") == 23 and _root_kind(
+        manifest, leaf["request"]["definition"]["kind"]
+    )
+    if not nested:
+        await _command(client, leaf, "cancel", owner_id=root["run_id"])
     leaf = await _proof(
         client,
         root["scope"],
@@ -619,9 +886,11 @@ async def _close_child(runtime, client, root, call, manifest, namespace):
         namespace,
         request=call["request"],
     )
-    if leaf["state"] not in {"cancelling", "cancelled", "failed", "succeeded"}:
+    if not nested and leaf["state"] not in {"cancelling", "cancelled", "failed", "succeeded"}:
         raise DefinitionMismatch("Original leaf stop recovery requires business closure")
-    if not leaf["physical_stopped"]:
+    if nested:
+        leaf = await _close_subtree(runtime, client, leaf, manifest, namespace)
+    elif not leaf["physical_stopped"]:
         parent = await _proof(
             client,
             root["scope"],
@@ -634,7 +903,8 @@ async def _close_child(runtime, client, root, call, manifest, namespace):
         if parent["state"] not in {"cancelling", "cancelled", "failed", "succeeded"}:
             raise DefinitionMismatch("Original child stop recovery requires its closed parent")
         await _command(client, leaf, "drive", owner_id=root["run_id"])
-    await _fence_leaf(runtime, client, leaf, namespace)
+    if leaf["request"]["definition"]["kind"] in {"agent", "sequence"}:
+        await _fence_leaf(runtime, client, leaf, namespace)
     leaf = await _proof(
         client,
         root["scope"],
@@ -744,10 +1014,23 @@ async def close(runtime, *, client, scope):
             requests = await _leaf_requests(runtime, client, leaf, namespace)
             _resource_request(runtime, leaf, resource, requests)
             link = leaf["request"].get("coding_parent")
-            if link is not None and link["parent_run_id"] not in roots:
-                raise CloseIncomplete(
-                    {"coding_composition": "original resource ancestor acceptance unavailable"}
-                )
+            if link is not None:
+                if manifest.get("binding_protocol") == 23:
+                    chain = await _ancestry(client, leaf, manifest, namespace)
+                    root = chain[-1][0]
+                    accepted = roots.get(root["run_id"])
+                    if (
+                        accepted is None
+                        or accepted["execution_epoch"] != root["execution_epoch"]
+                        or accepted["request"] != root["request"]
+                    ):
+                        raise CloseIncomplete(
+                            {"coding_composition": "original resource root acceptance unavailable"}
+                        )
+                elif link["parent_run_id"] not in roots:
+                    raise CloseIncomplete(
+                        {"coding_composition": "original resource ancestor acceptance unavailable"}
+                    )
             if link is None:
                 if leaf["request"]["definition"]["kind"] not in {"agent", "sequence"}:
                     raise DefinitionMismatch(
@@ -798,6 +1081,14 @@ async def close(runtime, *, client, scope):
                 {"leaf": leaf["run_id"], "code": getattr(exc, "code", "stop_unavailable")}
             )
     for root in roots.values():
+        if manifest.get("binding_protocol") == 23:
+            try:
+                await _close_subtree(runtime, client, root, manifest, namespace)
+            except Exception as exc:
+                obligations.append(
+                    {"root": root["run_id"], "code": getattr(exc, "code", "stop_unavailable")}
+                )
+            continue
         try:
             children = await _children(client, root, namespace)
         except Exception as exc:
@@ -864,6 +1155,8 @@ async def close(runtime, *, client, scope):
                         raise DefinitionMismatch(
                             "Unlinked original resource requires a standalone Agent"
                         )
+                elif manifest.get("binding_protocol") == 23:
+                    await _adopt_resource_ancestry(client, leaf, roots, manifest, namespace)
                 else:
                     root = roots.get(link["parent_run_id"])
                     if root is None:

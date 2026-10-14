@@ -13,6 +13,7 @@ def _pure_sources():
                 "enabled",
                 "validate_topology",
                 "_direct_agents",
+                "_recursive_definitions",
                 "_validate_hidden_agents",
                 "validate_protocol",
                 "validate_implementation",
@@ -31,6 +32,7 @@ def _pure_sources():
                 "_view_fields",
                 "enabled",
                 "orchestration_enabled",
+                "recursive_enabled",
                 "child_capacity_released",
                 "coding_runner_keys",
                 "occupied_runner_keys",
@@ -198,7 +200,10 @@ def _worker_sources():
                 "_child_update",
                 "_adopt",
                 "_child_proof",
+                "_validate_child_intent",
                 "_children",
+                "_ancestry",
+                "_ancestry_admission",
                 "control",
                 "_initialize_root",
                 "_fence_leaf",
@@ -207,6 +212,8 @@ def _worker_sources():
                 "_leaf_requests",
                 "_resource_request",
                 "_close_child",
+                "_close_subtree",
+                "_adopt_resource_ancestry",
                 "close",
             ),
         ),
@@ -378,6 +385,36 @@ def _validate_hidden_agents(definition, manifest):
             raise ValidationError("Hidden planner/verifier cannot receive Coding grants")
 
 
+def _recursive_definitions(definition, policy):
+    """Validate the fixed tree at the same depths as original SDK child Runs."""
+    from .spec_codec import decode_spec, validate_definition_tree
+
+    source = validate_definition_tree(definition)
+    decode_spec(source)
+    stack, composites = [(source, 0)], []
+    while stack:
+        current, depth = stack.pop()
+        if depth >= policy.max_depth:
+            raise ValidationError("Coding composition definition exceeds original depth policy")
+        kind = current.get("kind", "agent")
+        if kind in {"agent", "sequence"}:
+            continue  # Native sequence steps share this original SDK execution.
+        concurrency = current.get("max_concurrency", 1)
+        if type(concurrency) is not int or not 1 <= concurrency <= policy.max_concurrency:
+            raise ValidationError(
+                "Coding composition concurrency exceeds original execution policy"
+            )
+        composites.append(current)
+        if kind == "graph":
+            _direct_agents(current)
+            stack.extend((node["agent"], depth + 1) for node in current["nodes"])
+        elif kind in {"team", "dynamic"}:
+            stack.extend((member, depth + 1) for member in current["members"].values())
+        else:
+            raise ValidationError("Coding composition requires a registered definition kind")
+    return composites
+
+
 def validate_topology(request, manifest):
     """Check effective grants for every actual leaf before any child permission."""
     from .binding_paths import agent_paths
@@ -397,7 +434,13 @@ def validate_topology(request, manifest):
     )
     if type(concurrency) is not int or not 1 <= concurrency <= policy.max_concurrency:
         raise ValidationError("Coding composition concurrency exceeds original execution policy")
-    _direct_agents(definition)
+    from .temporal_coding_composition_state import recursive_enabled
+
+    if recursive_enabled(manifest):
+        composites = _recursive_definitions(definition, policy)
+    else:
+        _direct_agents(definition)
+        composites = [definition]
     validate_bindings(request, manifest)
     for path, step in agent_paths(definition).items():
         effective_step(
@@ -405,26 +448,27 @@ def validate_topology(request, manifest):
             manifest,
             request.get("agent_bindings", {}).get(path, AgentBindingDescriptor().to_dict()),
         )
-    _validate_hidden_agents(definition, manifest)
+    for composite in composites:
+        _validate_hidden_agents(composite, manifest)
 
 
 def validate_protocol(manifest):
     if not enabled(manifest):
-        if manifest.get("binding_protocol") in (12, 13, 15, 17, 19, 21):
+        if manifest.get("binding_protocol") in (12, 13, 15, 17, 19, 21, 23):
             raise DefinitionMismatch("Original Coding composition publication is missing")
         return
     value = manifest["coding_composition_protocol"]
     if (
         manifest.get("kernel") != "temporal-3"
         or type(manifest.get("binding_protocol")) is not int
-        or manifest["binding_protocol"] != 21
+        or manifest["binding_protocol"] != 23
         or manifest.get("dispatch_admission") != "history-1"
         or "coding_execution_protocol" not in manifest
         or type(value) is not dict
         or set(value) != {"version", "topology", "implementation"}
         or type(value["version"]) is not int
-        or value["version"] != 6
-        or value["topology"] != "bounded-agent-orchestration"
+        or value["version"] != 7
+        or value["topology"] != "bounded-recursive-orchestration"
     ):
         raise DefinitionMismatch("Unsupported original Coding composition protocol")
     validate_implementation(value["implementation"])
@@ -505,10 +549,10 @@ def publish(manifest, runtime):
         raise DefinitionMismatch("Original Coding composition opt-in is missing")
     require_sdk()
     result = detached(manifest)
-    result["binding_protocol"] = 21
+    result["binding_protocol"] = 23
     result["coding_composition_protocol"] = {
-        "version": 6,
-        "topology": "bounded-agent-orchestration",
+        "version": 7,
+        "topology": "bounded-recursive-orchestration",
         "implementation": implementation(),
     }
     validate_protocol(result)

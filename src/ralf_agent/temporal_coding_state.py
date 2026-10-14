@@ -519,7 +519,7 @@ def requests(state):
     if (
         not enabled(state.manifest)
         or type(state.manifest.get("binding_protocol")) is not int
-        or state.manifest["binding_protocol"] not in (11, 14, 16, 18, 20)
+        or state.manifest["binding_protocol"] not in (11, 14, 16, 18, 20, 22)
     ):
         raise DefinitionMismatch(
             "Original Coding cleanup requests require explicit native publication"

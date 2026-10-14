@@ -128,16 +128,17 @@ class TemporalEngine:
         from .temporal_bindings import capabilities
 
         extended = "orchestration" in self._release
-        composition = self._release.get("binding_protocol") in (13, 15, 17, 19, 21)
+        composition = self._release.get("binding_protocol") in (13, 15, 17, 19, 21, 23)
         return {
             **temporal_capabilities(),
             "shared_session": self._release.get("session_protocol") == 1,
             "graph": extended,
             "team": extended
-            and (not composition or self._release.get("binding_protocol") in (17, 19, 21)),
+            and (not composition or self._release.get("binding_protocol") in (17, 19, 21, 23)),
             "dag": extended
-            and (not composition or self._release.get("binding_protocol") in (17, 19, 21)),
-            "nesting": extended and not composition,
+            and (not composition or self._release.get("binding_protocol") in (17, 19, 21, 23)),
+            "nesting": extended
+            and (not composition or self._release.get("binding_protocol") == 23),
             "rag": "knowledge_context" in self._release,
             **capabilities(self._release),
         }
@@ -246,12 +247,12 @@ class TemporalEngine:
             }
             if (
                 kind == "submit"
-                and self._release.get("binding_protocol") in (13, 15, 17, 19, 21)
+                and self._release.get("binding_protocol") in (13, 15, 17, 19, 21, 23)
                 and "coding_composition_protocol" in self._release
                 and payload.get("definition", {}).get("kind")
                 in (
                     {"graph", "team", "dynamic"}
-                    if self._release.get("binding_protocol") in (17, 19, 21)
+                    if self._release.get("binding_protocol") in (17, 19, 21, 23)
                     else {"graph"}
                 )
                 and "coding_parent" not in payload

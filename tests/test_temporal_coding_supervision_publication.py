@@ -7,10 +7,10 @@ from ralf_agent.temporal_coding_protocol import validate_protocol
 from tests.test_temporal_coding_configuration import manifest
 
 
-def test_current_native_supervision_requires20_version5():
+def test_current_native_supervision_requires22_version6():
     value = manifest()
-    value["binding_protocol"] = 20
-    value["coding_execution_protocol"]["version"] = 5
+    value["binding_protocol"] = 22
+    value["coding_execution_protocol"]["version"] = 6
     validate_protocol(value)
 
 

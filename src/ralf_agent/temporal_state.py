@@ -111,7 +111,31 @@ def validate_manifest(manifest):
         if (
             type(manifest.get("binding_protocol")) is not int
             or manifest.get("binding_protocol")
-            not in (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21)
+            not in (
+                1,
+                2,
+                3,
+                4,
+                5,
+                6,
+                7,
+                8,
+                9,
+                10,
+                11,
+                12,
+                13,
+                14,
+                15,
+                16,
+                17,
+                18,
+                19,
+                20,
+                21,
+                22,
+                23,
+            )
             or manifest.get("dispatch_admission") != "history-1"
         ):
             raise DefinitionMismatch("Unsupported Temporal binding/memory protocol")
@@ -148,6 +172,8 @@ def validate_manifest(manifest):
         19,
         20,
         21,
+        22,
+        23,
     ):
         from .temporal_coding_protocol import validate_protocol as validate_coding_protocol
 

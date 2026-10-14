@@ -1,6 +1,6 @@
 # 分阶段交付门槛
 
-日期：2026-10-14；第一阶段已冻结在本地提交 `7e530f8`／`0.1.0.dev99`，第二阶段当前批次为 `0.1.0.dev111`（同物理根容量与原CID恢复，验收按本批登记，阶段未关闭）。
+日期：2026-10-14；第一阶段已冻结在本地提交 `7e530f8`／`0.1.0.dev99`，第二阶段当前批次为 `0.1.0.dev113`（所选环境／执行门槛已通过，随本地提交冻结）。已验收的dev112原CREATE监督保持，当前状态以[支持矩阵](phase2-support-matrix.md)及本批证据为准。
 按用户修订后的目标管理交付，R01–R26 保留完整目标；适配器数量、测试数和 dev 版本数作为辅助信息。
 
 ## 第一阶段：四条参考业务链路
@@ -50,7 +50,9 @@ dev99 启用成员验证且开启 JSON mode 的第一次完整配置中，Plan�
 
 ## 第二阶段：环境与执行
 
-dev109 已补[专用模型连接](codex-model-connection.md)和三项有限 POSIX Coding 的真实三次重复基线（9/9、78 oracle 检查）。Local 原 Action 与真实 Temporal／PG 审批重启、取消、安装和旧 Worker 门禁分别验证；后者使用结构化原生 peer，不替代真实模型证据。dev110 一层 Agent Team／Dynamic Coding 的恢复验收见[本批记录](../architecture/reviews/2026-10-14-temporal-coding-orchestration.md)。dev111 已验收[同根跨父容量和原 CID 正向恢复](coding-resource-recovery.md)，该有限门槛不再列作未实现。dev112 按[监督契约](../architecture/specs/coding-create-supervision-contract.md)补原CLI监督与严格未发送证明，Local原Action、真实Docker正向恢复及Temporal／PG源码／安装原History验证见[本批验收](../architecture/reviews/2026-10-14-coding-create-supervision.md)，相应有限门槛已通过。嵌套／sequence 成员 Temporal Coding、可能已发送create但daemon终态丢失的负向恢复、跨宿主和复杂 Coding 质量仍阻塞完整第二阶段。第一阶段 dev99 保持冻结。
+当前执行依据为[固定支持矩阵](phase2-support-matrix.md)。其所选组合、必需门槛和明确不支持项优先于下面各dev历史段落；安全拒绝的未选择组合及后续适配器不自动阻塞阶段收口。dev113按既定公共组合门槛补顺序／递归成员，其他新增范围须说明具体所选阻塞。
+
+dev109 已补[专用模型连接](codex-model-connection.md)和三项有限 POSIX Coding 的真实三次重复基线（9/9、78 oracle 检查）。Local 原 Action 与真实 Temporal／PG 审批重启、取消、安装和旧 Worker 门禁分别验证；后者使用结构化原生 peer，不替代真实模型证据。dev110 一层 Agent Team／Dynamic Coding 的恢复验收见[本批记录](../architecture/reviews/2026-10-14-temporal-coding-orchestration.md)。dev111 已验收[同根跨父容量和原 CID 正向恢复](coding-resource-recovery.md)，该有限门槛不再列作未实现。dev112 按[监督契约](../architecture/specs/coding-create-supervision-contract.md)补原CLI监督与严格未发送证明，Local原Action、真实Docker正向恢复及Temporal／PG源码／安装原History验证见[本批验收](../architecture/reviews/2026-10-14-coding-create-supervision.md)，相应有限门槛已通过。dev113补所选嵌套／sequence成员：源码／安装各六个实际场景、36份原History重放、完整回归10234 passed／704配置跳过及独立安装214项通过；自建服务实际退出，第二阶段所选门槛关闭，见[本批登记](../architecture/reviews/2026-10-14-temporal-coding-nested.md)。daemon已发送请求的自动负向恢复、跨宿主和复杂Coding质量为当前矩阵明确的后续范围；所选故障必须保留unknown、原义务及安全诊断／处置，不因未能自动恢复而危险重试。第一阶段 dev99保持冻结。
 
 进入阶段时固定所选部署组合；先核对已有实现，再补阻塞项。
 

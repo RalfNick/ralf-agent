@@ -1,4 +1,6 @@
-# Implementation status — 0.1.0.dev112
+# Implementation status — 0.1.0.dev113
+
+当前范围以[第二阶段支持矩阵](phase2-support-matrix.md)为准。Dev113 顺序／递归 Temporal Coding 已完成所选源码／安装各六场景、36份原History重放和完整回归（10234 passed／704配置依赖跳过）；395产品与独立wheel／安装一致，第二阶段随本地提交冻结。当前进入第三阶段服务化与治理；跨宿主、额外Runner和daemon已发送请求的自动负向恢复为后续范围，unknown义务继续保留。历史各dev段落不覆盖当前矩阵，有限阶段通过不等于完整R01–R26或企业正式可用。
 
 Dev112 增加[原 CREATE 监督与未发送证明](coding-resource-recovery.md)：两层单次 gate、原 broker／CLI 租约、持久结构化回执、冷 query／abort／drain、reap 前进程结束观察和固定源码／导入别名校验。专用 `create_not_dispatched` 经原 Local／Temporal 采纳及实际排空后释放容量，保留原 grant、attempt、未知效果与费用。选定 Temporal 为 native5／binding20、composition6／binding21；旧18／19使用 immutable dev111 Worker，未选定默认字节保持。验收分层见[本批记录](../architecture/reviews/2026-10-14-coding-create-supervision.md)。已发送 create 的 daemon 负向完成、持久队列、公平调度、跨宿主、嵌套／sequence Coding 和复杂真实质量仍开放，完整 R13／第二阶段未关闭。以下各 dev 段落保留当时实现与验收范围。
 
