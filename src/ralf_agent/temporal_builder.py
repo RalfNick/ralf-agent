@@ -178,6 +178,7 @@ class TemporalRuntimeBuilder:
         )
         cleanup = _ConstructionCleanup(context)
         context.coding_execution = profile.execution.get("coding_execution", False)
+        context.coding_composition = profile.execution.get("coding_composition", False)
         context.effect_journal = None
 
         async def construct(prepared):

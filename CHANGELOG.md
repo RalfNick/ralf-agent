@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.0.dev107 — Original Temporal serial Coding graph
+
+- Add explicit composition selection for serial static Agent graphs over existing parent/child Histories and the original Coding loop. Preserve protocol11 and default publication; protocol12 fixes original namespace, requests, child SDK epochs and complete helper fingerprints.
+- Separate physical descendant closure from financial settlement; unknown effects and child caps remain held. Own real SDK submissions through observer cancellation, close accepted root admissions before resource fencing, and retain original receivers and resource ledgers for retry.
+- Fix canonical SDK wire comparisons, root request identity and repeated same-Profile shutdown admission. Provide explicit namespace for History replay and SDK/JSON/TOML configuration. Final integration status and open authentication, quality, parallel/Team/Dynamic/nested and cross-host gates are recorded in [the batch record](architecture/reviews/2026-10-14-temporal-coding-composition.md).
+
 ## 0.1.0.dev106 — Original Temporal Coding delegation
 
 - Add explicit Agent/sequence Coding selection, Runner bindings and asynchronous SDK/JSON/TOML PostgreSQL factories. Publish binding protocol 11 with fixed Coding protocol 1; default Local/Temporal releases preserve their bytes.

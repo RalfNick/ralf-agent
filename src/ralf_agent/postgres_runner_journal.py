@@ -572,6 +572,30 @@ class PostgresRunnerJournal:
             )
             return updated
 
+    async def composition_resources(self, scope):
+        """Read every original scoped native intent, including already fenced rows."""
+        if type(scope) is not Scope:
+            raise ValidationError("Composition resources require original Scope")
+        self._ready()
+        prefix = (_text(scope.workspace, "Workspace"), _text(scope.principal, "Principal"))
+        async with self._effect._transaction():
+            await self._check()
+            rows = await self._effect._execute(
+                "SELECT effect_key,record FROM ralf_temporal_coding_resources "
+                "WHERE workspace=%s AND principal=%s ORDER BY effect_key LIMIT %s",
+                (*prefix, self._capacity + 1),
+                fetch="all",
+            )
+            if len(rows) > self._capacity:
+                raise DefinitionMismatch("Original Coding resource capacity changed")
+            records = []
+            for effect_key, encoded in rows:
+                key = (*prefix, effect_key)
+                resource = validate_resource(encoded, key)
+                await self._validate_resource_effect(key, resource)
+                records.append(resource)
+            return tuple(records)
+
     async def pending_resources(self, scope):
         if type(scope) is not Scope:
             raise ValidationError("Pending Coding resources require original Scope")

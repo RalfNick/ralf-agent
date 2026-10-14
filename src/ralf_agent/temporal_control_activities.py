@@ -65,7 +65,11 @@ async def select(runtime, value):
     return detached(result.to_dict())
 
 
-async def control(runtime, client, value):
+async def control(runtime, client, value, info=None):
+    if value["runtime_manifest"].get("binding_protocol") == 12:
+        from .temporal_coding_composition_control import control as composition_control
+
+        return await composition_control(runtime, client, value, info)
     from .temporal import TemporalEngine
 
     runtime.validate_release(value["runtime_manifest"])
@@ -111,11 +115,28 @@ def registered_parent_activities(runtime, client):
     @activity.defn(name=CONTROL_ACTIVITY)
     async def child_control(value: dict) -> dict:
         try:
-            return {"ok": True, "result": await control(runtime, client, value)}
+            return {"ok": True, "result": await control(runtime, client, value, activity.info())}
         except Exception as exc:
             return {
                 "ok": False,
                 "code": exc.code if isinstance(exc, RalfError) else "child_control_failed",
+            }
+
+    from .temporal_coding_composition_control import ACTIVITY as COMPOSITION_ADMISSION_ACTIVITY
+
+    @activity.defn(name=COMPOSITION_ADMISSION_ACTIVITY)
+    async def composition_admission(value: dict) -> dict:
+        from .temporal_coding_composition_control import root_admission
+
+        try:
+            return {
+                "ok": True,
+                "result": await root_admission(runtime, client, value, activity.info()),
+            }
+        except Exception as exc:
+            return {
+                "ok": False,
+                "code": exc.code if isinstance(exc, RalfError) else "composition_admission_failed",
             }
 
     @activity.defn(name=SELECTION_ACTIVITY)
@@ -153,4 +174,9 @@ def registered_parent_activities(runtime, client):
         selection,
         context,
         *([parent_completion] if runtime.parent_completion_policies else []),
+        *(
+            [composition_admission]
+            if runtime.orchestration_release.get("binding_protocol") == 12
+            else []
+        ),
     ]

@@ -28,6 +28,7 @@ EXECUTION_FLAGS = frozenset(
         "artifact_bindings",
         "model_continuation",
         "coding_execution",
+        "coding_composition",
     }
 )
 MAX_DECLARATION_BYTES = 1_000_000
@@ -81,9 +82,17 @@ class TemporalProfile:
         flags = {
             name: execution.get(name, False)
             for name in sorted(EXECUTION_FLAGS)
-            if name not in {"artifact_bindings", "model_continuation", "coding_execution"}
+            if name
+            not in {
+                "artifact_bindings",
+                "model_continuation",
+                "coding_execution",
+                "coding_composition",
+            }
             or execution.get(name, False)
         }
+        if flags.get("coding_composition") and not flags.get("coding_execution"):
+            raise ValidationError("Coding composition requires explicit Coding execution")
         from .runtime_builder import (
             model_history_declarations,
             validate_session_history_declarations,

@@ -268,15 +268,18 @@ def registration(runtime):
 
 
 def validate_protocol(manifest):
+    from .temporal_coding_composition_protocol import validate_protocol as validate_composition
+
+    validate_composition(manifest)
     if not enabled(manifest):
-        if manifest.get("binding_protocol") == 11:
+        if manifest.get("binding_protocol") in (11, 12):
             raise DefinitionMismatch("Temporal Coding publication is missing")
         return
     value = manifest["coding_execution_protocol"]
     if (
         manifest.get("kernel") != "temporal-3"
         or type(manifest.get("binding_protocol")) is not int
-        or manifest["binding_protocol"] != 11
+        or manifest["binding_protocol"] not in (11, 12)
         or manifest.get("dispatch_admission") != "history-1"
         or "tool_execution_protocol" not in manifest
         or type(value) is not dict

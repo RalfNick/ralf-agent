@@ -69,6 +69,12 @@ def validate(config):
 def preflight_coding_references(profile):
     tool = profile.components.get("tools")
     coding = profile.execution.get("coding_execution", False)
+    if profile.execution.get("coding_composition", False) and not coding:
+        raise ValidationError("Coding composition requires explicit Coding execution")
+    if profile.execution.get("coding_composition", False):
+        from .temporal_coding_composition_protocol import require_sdk
+
+        require_sdk()
     postgres = tool is not None and tool["adapter"] == "codex-coding-postgres"
     if postgres and not coding:
         raise ValidationError("PostgreSQL tools require explicit Coding execution")

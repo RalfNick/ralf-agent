@@ -16,9 +16,11 @@ with workflow.unsafe.imports_passed_through():
     from . import (  # noqa: F401 -- preload frozen pure DTO/adoption  # noqa: F401
         parent_completion,
         parent_completion_protocol,
+        temporal_coding_composition_state,
         temporal_context_read_protocol,
         temporal_context_read_state,
     )
+    from .errors import RalfError
     from .orchestration_types import ChildCall
     from .temporal_parent_completion_state import ACTIVITY as PARENT_COMPLETION_ACTIVITY
     from .temporal_parent_session import ROOT_READ_ACTIVITY
@@ -50,6 +52,7 @@ class TemporalParentWorkflow(TemporalRunWorkflow):
         )
         self.wake_revision = 0
         self._check_session_parent(info)
+        self._check_composition_parent(info)
 
     async def _activity(self, name, value, activity_timeout):
         try:
@@ -64,22 +67,85 @@ class TemporalParentWorkflow(TemporalRunWorkflow):
             return {"ok": False, "code": "parent_activity_unavailable"}
 
     async def _control(self, mode, call, activity_timeout):
-        return await self._activity(
-            CONTROL_ACTIVITY,
+        from .temporal_coding_composition_state import enabled
+        from .types import digest
+
+        value = {
+            "mode": mode,
+            "child": detached(call),
+            "parent_id": self.state.run_id,
+            "scope": self.state.scope,
+            "task_queue": workflow.info().task_queue,
+            "runtime_manifest": self.state.manifest,
+        }
+        if enabled(self.state.manifest):
+            value.update(
+                parent_execution_epoch=self.state.epoch,
+                parent_request_digest=digest(self.state.request),
+                parent_release_digest=self.state.release_digest,
+                namespace=detached(self.state.composition_namespace),
+            )
+        return await self._activity(CONTROL_ACTIVITY, value, activity_timeout)
+
+    async def _admit_composition(self, accepted, activity_timeout):
+        from .temporal_coding_composition_state import ACTIVITY, adopt_admission
+
+        response = await self._activity(
+            ACTIVITY,
             {
-                "mode": mode,
-                "child": detached(call),
-                "parent_id": self.state.run_id,
                 "scope": self.state.scope,
-                "task_queue": workflow.info().task_queue,
+                "run_id": self.state.run_id,
+                "execution_epoch": self.state.epoch,
+                "command_id": accepted["command_id"],
+                "request": self.state.request,
                 "runtime_manifest": self.state.manifest,
             },
             activity_timeout,
         )
+        if not response.get("ok"):
+            return False
+        try:
+            adopt_admission(self.state, response["result"])
+        except (RalfError, KeyError, TypeError):
+            self.state._emit("coding_composition_admission_refused")
+            return False
+        return True
+
+    def _observe_composition(self, run_id, value):
+        from .temporal_coding_composition_state import (
+            adopt_child_stop,
+            pin_child_execution,
+            request_parent_stop,
+        )
+
+        try:
+            proof = value["coding_composition_proof"]
+            pin_child_execution(self.state, run_id, proof)
+            adopt_child_stop(self.state, run_id, proof)
+            self.state.observe(run_id, value)
+            call = next(c for c in self.state.children if c["run_id"] == run_id)
+            call["physical_recovered_revision"] = self.state.memory_recovery_revision
+        except (RalfError, KeyError, TypeError) as exc:
+            request_parent_stop(
+                self.state,
+                terminal_state="failed",
+                reason={"code": getattr(exc, "code", "child_evidence_refused")},
+            )
+            self.state._emit("child_evidence_refused")
+            return False
+        return True
 
     async def _deadline(self, seconds):
         await workflow.sleep(seconds)
         if self.state.state not in TERMINAL:
+            from .temporal_coding_composition_state import enabled, request_parent_stop
+
+            if enabled(self.state.manifest):
+                request_parent_stop(
+                    self.state, terminal_state="cancelled", reason={"code": "deadline_exceeded"}
+                )
+                self.wake_revision += 1
+                return
             self.state.state, self.state.error = "cancelled", {"code": "deadline_exceeded"}
             from .temporal_user_input import close_pending
 
@@ -89,6 +155,21 @@ class TemporalParentWorkflow(TemporalRunWorkflow):
 
     @workflow.run
     async def run(self, accepted: dict) -> None:
+        from .temporal_coding_composition_state import (
+            enabled,
+            physical_stop_view,
+            pin_child_execution,
+            refresh_parent_stop,
+        )
+        from .types import digest
+
+        composition = enabled(self.state.manifest)
+        if composition and not workflow.patched("ralf-coding-composition-v1"):
+            raise ApplicationError(
+                "Coding composition History marker unavailable",
+                type="definition_mismatch",
+                non_retryable=True,
+            )
         self.state.observation_version = (
             2 if workflow.patched("ralf-parent-control-evidence-v2") else 1
         )
@@ -100,11 +181,40 @@ class TemporalParentWorkflow(TemporalRunWorkflow):
         if deadline is not None:
             asyncio.create_task(self._deadline(deadline))
         while True:
+            if (
+                composition
+                and self.state.composition_admission is None
+                and self.state.composition_stop_intent is None
+            ):
+                if not await self._admit_composition(accepted, timeout):
+                    try:
+                        observed = self.wake_revision
+                        await workflow.wait_condition(
+                            lambda wake=observed: self.wake_revision != wake,
+                            timeout=timedelta(seconds=0.5),
+                        )
+                    except TimeoutError:
+                        pass
+                    continue
+            if composition:
+                refresh_parent_stop(self.state)
             await self._notify_session()
             observed_wake = self.wake_revision
             changed = False
             for call in tuple(self.state.children):
-                if call.get("settled"):
+                if call.get("settled") and (
+                    not composition
+                    or call.get("physical_no_start")
+                    or call.get("physical_stop_proof", {}).get("physical_stopped")
+                ):
+                    continue
+                if (
+                    composition
+                    and self.state.composition_stop_intent is not None
+                    and call.get("physical_stop_proof", {}).get("physical_stopped")
+                    and self.state.memory_recovery_revision
+                    <= call.get("physical_recovered_revision", 0)
+                ):
                     continue
                 recovery = getattr(self.state, "memory_recovery_revision", 0)
                 if (
@@ -116,7 +226,9 @@ class TemporalParentWorkflow(TemporalRunWorkflow):
                     result = await self._control("recover", call, timeout)
                     if result["ok"]:
                         call["memory_recovered_revision"] = recovery
-                if self.state.state in TERMINAL:
+                if self.state.state in TERMINAL or (
+                    composition and self.state.composition_stop_intent is not None
+                ):
                     if not call.get("dispatch_started"):
                         call.update(state="cancelled", settled=True, spent=0)
                         self.state._emit("undispatched_child_released", {"run_id": call["run_id"]})
@@ -130,7 +242,11 @@ class TemporalParentWorkflow(TemporalRunWorkflow):
                     result = await self._control("observe", call, timeout)
                     if result["ok"]:
                         try:
-                            self.state.observe(call["run_id"], result["result"])
+                            value = result["result"]
+                            if composition:
+                                self._observe_composition(call["run_id"], value)
+                            else:
+                                self.state.observe(call["run_id"], value)
                         except ValidationError as exc:
                             if self.state.state not in TERMINAL:
                                 self.state.state, self.state.error = "failed", {"code": exc.code}
@@ -166,7 +282,9 @@ class TemporalParentWorkflow(TemporalRunWorkflow):
                 else:
                     self.state.accept_session(action["id"], response)
                 continue
-            if self.state.state not in TERMINAL:
+            if self.state.state not in TERMINAL and (
+                not composition or self.state.composition_stop_intent is None
+            ):
                 try:
                     completion = self.state.next_parent_completion_operation()
                     if completion is not None:
@@ -204,14 +322,16 @@ class TemporalParentWorkflow(TemporalRunWorkflow):
                             {"run_id": call["run_id"], "code": registered["code"]},
                         )
                         continue
-                    if self.state.state in TERMINAL:
+                    if self.state.state in TERMINAL or (
+                        composition and self.state.composition_stop_intent is not None
+                    ):
                         break
                     current = next(c for c in self.state.children if c["run_id"] == call["run_id"])
                     current["dispatch_started"] = True
                     self.state._emit("child_start_intent", {"run_id": call["run_id"]})
                     kind = call["request"]["definition"]["kind"]
                     try:
-                        await workflow.start_child_workflow(
+                        handle = await workflow.start_child_workflow(
                             PARENT_WORKFLOW_NAME
                             if kind in {"graph", "team", "dynamic"}
                             else WORKFLOW_NAME,
@@ -228,6 +348,19 @@ class TemporalParentWorkflow(TemporalRunWorkflow):
                             parent_close_policy=workflow.ParentClosePolicy.ABANDON,
                             retry_policy=None,
                         )
+                        if composition:
+                            pin_child_execution(
+                                self.state,
+                                call["run_id"],
+                                {
+                                    "namespace": detached(self.state.composition_namespace),
+                                    "execution_epoch": handle.first_execution_run_id,
+                                    "original_execution_epoch": handle.first_execution_run_id,
+                                    "request_digest": digest(call["request"]),
+                                    "parent_run_id": self.state.run_id,
+                                    "parent_execution_epoch": self.state.epoch,
+                                },
+                            )
                     except (WorkflowAlreadyStartedError, ChildWorkflowError):
                         # Original stable identity is observed, never replaced.
                         self.state._emit("child_start_reply_uncertain", {"run_id": call["run_id"]})
@@ -273,13 +406,21 @@ class TemporalParentWorkflow(TemporalRunWorkflow):
                         else None,
                         "planner_snapshot": snapshot,
                     }
+                    if composition:
+                        request.update(
+                            scope=self.state.scope,
+                            run_id=self.state.run_id,
+                            execution_epoch=self.state.epoch,
+                        )
                     if "runtime_profile" in self.state.manifest:
                         # Explicit managed Profile Workers validate the original
                         # Scope on every Activity, including pure selection.
                         # Historical unprofiled payloads retain their exact shape.
                         request["scope"] = self.state.scope
                     response = await self._activity(SELECTION_ACTIVITY, request, timeout)
-                    if self.state.state not in TERMINAL:
+                    if self.state.state not in TERMINAL and (
+                        not composition or self.state.composition_stop_intent is None
+                    ):
                         try:
                             if not response["ok"]:
                                 raise ValidationError("Registered selection failed")
@@ -297,9 +438,11 @@ class TemporalParentWorkflow(TemporalRunWorkflow):
             # Quiescent waiting/terminal parents sleep without producing polling
             # Activities; unsettled children keep resource evidence observable.
             await self._notify_session()
-            if (
-                self.state.state in TERMINAL or self.state.stage == "waiting_input"
-            ) and self.state.quiescent:
+            if (self.state.state in TERMINAL or self.state.stage == "waiting_input") and (
+                physical_stop_view(self.state)["physical_stopped"]
+                if composition and self.state.state in TERMINAL
+                else self.state.quiescent
+            ):
                 await workflow.wait_condition(lambda wake=observed_wake: self.wake_revision != wake)
             elif changed:
                 continue

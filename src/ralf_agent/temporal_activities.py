@@ -160,10 +160,20 @@ class TemporalRuntime:
         model_history=None,
         user_input_policies=None,
         coding_execution=False,
+        coding_composition=False,
     ):
         if type(coding_execution) is not bool:
             raise ValidationError("Coding execution opt-in requires an ordinary boolean")
+        if type(coding_composition) is not bool:
+            raise ValidationError("Coding composition opt-in requires an ordinary boolean")
+        if coding_composition and not coding_execution:
+            raise ValidationError("Coding composition requires explicit Coding execution")
+        if coding_composition:
+            from .temporal_coding_composition_protocol import require_sdk
+
+            require_sdk()
         self.coding_execution = self._coding_execution_pin = coding_execution
+        self.coding_composition = self._coding_composition_pin = coding_composition
         from .user_input import UserInputPolicy
 
         if user_input_policies is not None and type(user_input_policies) is not dict:
@@ -535,6 +545,10 @@ class TemporalRuntime:
         self._manifest = validate_manifest(self._current_manifest())
 
     def _current_manifest(self):
+        if self.coding_composition:
+            from .temporal_coding_composition_protocol import require_sdk
+
+            require_sdk()
         # The registry is deliberately snapshotted in full. Worker queue/release
         # registrations must change when any executable definition changes.
         names = sorted(self.tools._tools)
@@ -798,6 +812,12 @@ class TemporalRuntime:
             from .temporal_coding_protocol import publish
 
             result = publish(result, self)
+        if self.coding_composition is not self._coding_composition_pin:
+            raise DefinitionMismatch("Coding composition opt-in changed")
+        if self.coding_composition:
+            from .temporal_coding_composition_protocol import publish as publish_composition
+
+            result = publish_composition(result, self)
         return result
 
     @property

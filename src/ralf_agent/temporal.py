@@ -128,10 +128,12 @@ class TemporalEngine:
         from .temporal_bindings import capabilities
 
         extended = "orchestration" in self._release
+        composition = self._release.get("binding_protocol") == 12
         return {
             **temporal_capabilities(),
             "shared_session": self._release.get("session_protocol") == 1,
-            **{name: extended for name in ("graph", "team", "dag", "nesting")},
+            "graph": extended,
+            **{name: extended and not composition for name in ("team", "dag", "nesting")},
             "rag": "knowledge_context" in self._release,
             **capabilities(self._release),
         }
@@ -140,10 +142,15 @@ class TemporalEngine:
     def binding_capabilities(self):
         from .temporal_bindings import ROLES
 
+        kinds = (
+            ["graph"]
+            if self._release.get("binding_protocol") == 12
+            else ["graph", "team", "dynamic"]
+        )
         return {
             "schema_version": 1,
             "supported_definition_kinds": ["agent", "sequence"]
-            + (["graph", "team", "dynamic"] if "orchestration" in self._release else [])
+            + (kinds if "orchestration" in self._release else [])
             if self._release["kernel"] == "temporal-3"
             else [],
             "supported_binding_roles": sorted(
@@ -226,15 +233,28 @@ class TemporalEngine:
             # History; a later facade configuration cannot move the registry.
             self._registry = self.client.get_workflow_handle(self.command_registry_id)
         try:
+            reservation = {
+                "scope": asdict(self.scope),
+                "command_id": command_id,
+                "kind": kind,
+                "target": target,
+                "payload_digest": digest(payload),
+            }
+            if (
+                kind == "submit"
+                and self._release.get("binding_protocol") == 12
+                and "coding_composition_protocol" in self._release
+                and payload.get("definition", {}).get("kind") == "graph"
+                and "coding_parent" not in payload
+            ):
+                reservation["coding_composition"] = {
+                    "version": 1,
+                    "manifest_digest": digest(self.release),
+                    "request_digest": digest(payload),
+                }
             await self._registry.execute_update(
                 "reserve",
-                {
-                    "scope": asdict(self.scope),
-                    "command_id": command_id,
-                    "kind": kind,
-                    "target": target,
-                    "payload_digest": digest(payload),
-                },
+                reservation,
             )
         except sdk[1] as exc:
             cause = exc.cause
@@ -244,6 +264,28 @@ class TemporalEngine:
         # Registry acceptance is deliberately not returned as a Run receipt.
 
     async def submit(self, spec, input, *, command_id, budget=32, session_id=None):
+        owner = getattr(self, "_coding_submission_owner", None)
+        if owner is None:
+            return await self._submit(
+                spec, input, command_id=command_id, budget=budget, session_id=session_id
+            )
+        if self._closed:
+            raise ValidationError("TemporalEngine is closed")
+        request = submission_request(spec, input, budget=budget, session_id=session_id)
+
+        async def operation():
+            return await self._submit(
+                spec, input, command_id=command_id, budget=budget, session_id=session_id
+            )
+
+        return await owner.execute(
+            operation,
+            scope=asdict(self.scope),
+            release_digest=digest(self._release),
+            request_digest=digest(request),
+        )
+
+    async def _submit(self, spec, input, *, command_id, budget=32, session_id=None):
         from .binding_definitions import AgentDefinition, BoundDefinition
         from .temporal_managed_context import check_scope
 
@@ -523,7 +565,7 @@ def build_temporal_worker(
     )
 
 
-async def replay_temporal_history(history):
+async def replay_temporal_history(history, *, namespace=None):
     """Replay actual service History against this fixed Workflow implementation."""
     _sdk()
     from temporalio.worker import Replayer
@@ -532,6 +574,10 @@ async def replay_temporal_history(history):
     from .temporal_session_workflow import TemporalSessionWorkflow
     from .temporal_workflow import TemporalCommandRegistryWorkflow, TemporalRunWorkflow
 
+    options = {}
+    if namespace is not None:
+        text(namespace, "Original Temporal namespace")
+        options["namespace"] = namespace
     await Replayer(
         workflows=[
             TemporalRunWorkflow,
@@ -540,6 +586,7 @@ async def replay_temporal_history(history):
             TemporalSessionWorkflow,
         ],
         workflow_runner=_workflow_runner(),
+        **options,
     ).replay_workflow(history)
 
 
@@ -566,6 +613,8 @@ def _workflow_runner():
             "ralf_agent.coding_execution_rules",
             "ralf_agent.temporal_coding_state",
             "ralf_agent.temporal_coding_protocol",
+            "ralf_agent.temporal_coding_composition_state",
+            "ralf_agent.temporal_coding_composition_protocol",
             "ralf_agent.temporal_memory_state",
             "ralf_agent.temporal_facts_state",
             "ralf_agent.temporal_knowledge_state",

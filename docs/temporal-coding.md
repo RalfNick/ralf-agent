@@ -4,8 +4,17 @@ dev106 已验收原生 Agent／顺序 Workflow 的有限显式 Coding 委托，�
 per-Agent Runner 选择、SDK／JSON／TOML 装配、原 History 阶段准入和共享 PostgreSQL
 资源证据。最终检查、安装、旧 Worker 与故障窗口以
 [本批登记](../architecture/reviews/2026-10-14-temporal-coding-delegation.md)为准。
-图／并行／Team／Dynamic／嵌套 Coding 仍拒绝；完整 R13、G1–G8 与第二阶段未关闭。
+本页协议 11 拒绝图／并行／Team／Dynamic／嵌套 Coding；完整 R13、G1–G8 与第二阶段未关闭。
 专用原生认证不可用，未执行真实 Coding 模型任务，不声明任务质量通过。
+
+## dev107 可选组合入口（有限验收通过）
+
+本页保留 dev106／协议 11 的验收范围与示例。另一个显式入口
+`coding_execution=True, coding_composition=True` 发布协议 12，用于一层原 Agent 子 Run
+的静态串行图；配置、实际子 Run 审批和 owned close 说明见
+[Temporal Coding 组合指南](temporal-coding-composition.md)。原 History 重放、取消、关闭与有限故障门槛已分别通过，
+见[dev107 验收记录](../architecture/reviews/2026-10-14-temporal-coding-composition.md)。
+这不改变本页协议 11 的范围，也不代表原生认证／真实 Coding 质量通过。
 
 ## 权威与发布
 

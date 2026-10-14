@@ -66,7 +66,7 @@ class FaultClient:
         return Handle()
 
 
-async def runtime():
+async def runtime(*, request_timeout=5):
     import psycopg
     from psycopg import sql
 
@@ -86,7 +86,7 @@ async def runtime():
         journal=journal,
         docker_executable=os.environ["RALF_CODING_DOCKER"],
         docker_host=os.environ["RALF_CODING_HOST"],
-        request_timeout=5,
+        request_timeout=request_timeout,
     )
     tools = ToolRegistry()
     register_coding_tool(tools, native)

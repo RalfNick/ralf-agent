@@ -111,6 +111,20 @@ class TemporalParentState(TemporalRunState):
                 raise ValidationError("Temporal graph supports Agent nodes only")
             self._adopt_graph(graph)
 
+    def _emit(self, kind, data=None, *, bump=True):
+        from .temporal_coding_composition_state import enabled, request_parent_stop
+
+        if (
+            enabled(self.manifest)
+            and hasattr(self, "composition_stop_intent")
+            and self.composition_stop_intent is None
+            and self.state in {"failed", "cancelled"}
+        ):
+            request_parent_stop(
+                self, terminal_state=self.state, reason=self.error or {"code": kind}
+            )
+        return super()._emit(kind, data, bump=bump)
+
     @property
     def quiescent(self):
         return (
@@ -129,9 +143,23 @@ class TemporalParentState(TemporalRunState):
         return all(call.get("settled", False) for call in self.children)
 
     def next_session_operation(self):
+        if getattr(self, "composition_stop_intent", None) is not None:
+            return None
         from .temporal_parent_session import next_operation
 
-        return next_operation(self)
+        operation = next_operation(self)
+        from .temporal_coding_composition_state import enabled
+
+        if (
+            operation is not None
+            and enabled(self.manifest)
+            and operation[0]["kind"] == "session_root_read"
+        ):
+            action, request = operation
+            request["execution_epoch"] = self.epoch
+            action["request_digest"] = digest(request)
+            self.root_read_request = detached(request)
+        return operation
 
     def accept_session_root(self, action_id, response):
         from .temporal_parent_session import accept_read
@@ -380,6 +408,16 @@ class TemporalParentState(TemporalRunState):
             request_recovery(self)
             return {"state_revision": self.revision}
         if kind == "cancel":
+            from .temporal_coding_composition_state import enabled, request_parent_stop
+
+            if enabled(self.manifest):
+                if self.state == "succeeded" or (
+                    self.state == "failed" and self.composition_stop_intent is None
+                ):
+                    return {"rejected": True, "reason": "too_late"}
+                return request_parent_stop(
+                    self, terminal_state="cancelled", reason={"code": "cancel_requested"}
+                )
             if self.state in {"succeeded", "failed"}:
                 return {"rejected": True, "reason": "too_late"}
             if self.state != "cancelled":
@@ -408,7 +446,7 @@ class TemporalParentState(TemporalRunState):
         self._emit("plan_revision_adopted", {"plan_revision": self.plan_revision})
 
     def accept_selection(self, value):
-        if self.state in TERMINAL:
+        if getattr(self, "composition_stop_intent", None) is not None or self.state in TERMINAL:
             raise ValidationError("Closed parent cannot adopt new selection")
         detached(value)
         if self.kind == "team":
@@ -501,7 +539,7 @@ class TemporalParentState(TemporalRunState):
         return self.definition["members"][member]
 
     def delegate(self, call, *, graph_node=None, verifier=False):
-        if self.state in TERMINAL:
+        if getattr(self, "composition_stop_intent", None) is not None or self.state in TERMINAL:
             return None
         if verifier and (
             call.member != "@verifier"
@@ -598,6 +636,11 @@ class TemporalParentState(TemporalRunState):
                 else {}
             ),
         }
+        from .temporal_coding_composition_state import enabled, project_child_link
+
+        if enabled(self.manifest):
+            entry["request"] = project_child_link(self, entry, request)
+            entry["child_request_digest"] = digest(entry["request"])
         self.children.append(entry)
         self.state = "running"
         if graph_node is not None:
@@ -609,6 +652,13 @@ class TemporalParentState(TemporalRunState):
         return detached(entry)
 
     def next_calls(self):
+        from .temporal_coding_composition_state import enabled
+
+        if enabled(self.manifest) and (
+            getattr(self, "composition_namespace", {}).get("id") is None
+            or getattr(self, "composition_stop_intent", None) is not None
+        ):
+            return []
         if (
             self.state in TERMINAL
             or self.stage == "waiting_input"
@@ -812,7 +862,10 @@ class TemporalParentState(TemporalRunState):
                 from .temporal_parent_completion_state import observe_verifier
 
                 observe_verifier(self, call)
-            if self.state not in TERMINAL:
+            if (
+                self.state not in TERMINAL
+                and getattr(self, "composition_stop_intent", None) is None
+            ):
                 if call["state"] in {"failed", "cancelled"}:
                     self.state, self.error = (
                         "failed",
@@ -849,6 +902,10 @@ class TemporalParentState(TemporalRunState):
             raise ValidationError("Malformed child observation") from exc
 
     def patch(self, value, expected_revision):
+        from .temporal_coding_composition_state import enabled
+
+        if enabled(self.manifest):
+            raise DefinitionMismatch("Coding composition static graph patches are refused")
         if (
             self.kind != "dynamic"
             or self.definition.get("plan_mode") != "dag"

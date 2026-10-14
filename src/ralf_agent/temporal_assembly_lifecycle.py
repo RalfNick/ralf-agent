@@ -106,6 +106,11 @@ class TemporalRuntimeAssembly:
         self._client, self._queue = None, None
         self._engines = []
         self._calls = WorkerExecutionOwner(scope=scope, release=self.release)
+        self._coding_submissions = None
+        if self.release.get("binding_protocol") == 12:
+            from .temporal_coding_composition_submissions import CompositionSubmissionOwner
+
+            self._coding_submissions = CompositionSubmissionOwner(scope=scope, release=self.release)
 
     @property
     def profile(self):
@@ -185,6 +190,8 @@ class TemporalRuntimeAssembly:
         if not self._worker_lifetime.is_set():
             self._closing = True
             self._calls.stop_admission()
+            if self._coding_submissions is not None:
+                self._coding_submissions.stop_admission()
             for engine in self._engines:
                 # TemporalEngine.aclose only marks this local facade closed;
                 # neither path closes its borrowed SDK client.
@@ -202,6 +209,8 @@ class TemporalRuntimeAssembly:
         engine = TemporalEngine(
             client, task_queue=task_queue, release=self.release, scope=self.scope, **options
         )
+        if self._coding_submissions is not None:
+            engine._coding_submission_owner = self._coding_submissions
         self._engines.append(engine)
         return engine
 
@@ -233,11 +242,52 @@ class TemporalRuntimeAssembly:
 
     def _begin_close(self):
         self._closing = True
+        if self._coding_submissions is not None:
+            self._coding_submissions.stop_admission()
         self._calls.stop_admission()
         for engine in self._engines:
             engine._closed = True
 
+    async def _close_unused_composition(self):
+        """Release never-attached owned objects; this makes no History stop claim."""
+        from .delegated_coding import registered_coding_tool
+        from .temporal_tool_execution_runtime import wait as wait_tools
+
+        if (
+            self._client is not None
+            or self._worker is not None
+            or self._engines
+            or self._coding_submissions is None
+            or not await self._coding_submissions.wait(wait_timeout=0)
+            or not await self._calls.wait(wait_timeout=0)
+            or not await wait_tools(self._runtime, wait_timeout=0)
+        ):
+            raise CloseIncomplete({"coding_composition": "original SDK ownership unavailable"})
+        self._runtime._tool_execution_closing = True
+        self._runtime.validate_release()
+        journals = {}
+        for name in self._runtime.tools._tools:
+            handler = registered_coding_tool(self._runtime.tools.get(name))
+            if handler is not None:
+                if (
+                    type(handler.runner.active_operations) is not int
+                    or handler.runner.active_operations != 0
+                ):
+                    raise CloseIncomplete(
+                        {"coding_composition": "original native handler remains owned"}
+                    )
+                journals[id(handler.runner._journal)] = handler.runner._journal
+        for journal in journals.values():
+            if await journal.composition_resources(self._scope):
+                raise CloseIncomplete(
+                    {"coding_composition": "original records require their SDK client"}
+                )
+        self._runtime.validate_release()
+
     async def _drain_execution(self, wait_timeout):
+        submissions = getattr(self, "_coding_submissions", None)
+        if submissions is not None:
+            await submissions.aclose(wait_timeout=wait_timeout)
         if self._worker_start is not None:
             try:
                 await _bounded_task(self._worker_ready, wait_timeout)
@@ -245,19 +295,28 @@ class TemporalRuntimeAssembly:
                 if not self._worker_ready.done():
                     raise
         if getattr(self._runtime, "coding_execution", False):
-            from .temporal_coding_runtime import close as close_coding
+            if (
+                self._runtime.orchestration_release.get("binding_protocol") == 12
+                and self._client is None
+            ):
+                await self._close_unused_composition()
+            else:
+                if self._runtime.orchestration_release.get("binding_protocol") == 12:
+                    from .temporal_coding_composition_control import close as close_coding
+                else:
+                    from .temporal_coding_runtime import close as close_coding
 
-            if self._coding_stop_task is None:
-                self._coding_stop_task = asyncio.create_task(
-                    close_coding(self._runtime, client=self._client, scope=self._scope)
-                )
-                self._coding_stop_task.add_done_callback(_observe)
-            try:
-                await _bounded_task(self._coding_stop_task, wait_timeout)
-            except BaseException:
-                if self._coding_stop_task.done():
-                    self._coding_stop_task = None
-                raise
+                if self._coding_stop_task is None:
+                    self._coding_stop_task = asyncio.create_task(
+                        close_coding(self._runtime, client=self._client, scope=self._scope)
+                    )
+                    self._coding_stop_task.add_done_callback(_observe)
+                try:
+                    await _bounded_task(self._coding_stop_task, wait_timeout)
+                except BaseException:
+                    if self._coding_stop_task.done():
+                        self._coding_stop_task = None
+                    raise
         await self._calls.aclose(wait_timeout=wait_timeout)
         await self._runtime.close_context_execution(wait_timeout=wait_timeout)
         await self._runtime.close_session_execution(wait_timeout=wait_timeout)

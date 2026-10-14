@@ -302,7 +302,7 @@ def catalog_registration(runtime):
 def effective_manifest(manifest, descriptor):
     choices = validate_descriptor(manifest, descriptor)
     result = detached(manifest)
-    if manifest.get("binding_protocol") in (8, 9, 10, 11):
+    if manifest.get("binding_protocol") in (8, 9, 10, 11, 12):
         if "model_history" in result:
             result["model_history_protocol"] = (
                 2 if result["model_history"]["identity"].get("scope") == "session" else 1
@@ -549,6 +549,10 @@ def request_release_digest(request, manifest):
 
 
 def capabilities(manifest):
+    if "coding_composition_protocol" in manifest or manifest.get("binding_protocol") == 12:
+        from .temporal_coding_composition_protocol import validate_protocol
+
+        validate_protocol(manifest)
     configurations = [manifest] + [
         r["configuration"] for r in manifest.get("binding_catalog", {}).get("records", {}).values()
     ]
@@ -574,6 +578,11 @@ def capabilities(manifest):
         "session_data_reads": manifest.get("session_data_protocol") == 1,
         "session_data_writes": "session_save_protocol" in manifest,
         "external_session_store": False,
+        **(
+            {"coding_composition": "serial-agent-graph"}
+            if manifest.get("binding_protocol") == 12 and "coding_composition_protocol" in manifest
+            else {}
+        ),
     }
 
 

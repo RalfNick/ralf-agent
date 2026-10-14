@@ -110,7 +110,7 @@ def validate_manifest(manifest):
     if manifest["kernel"] == "temporal-3":
         if (
             type(manifest.get("binding_protocol")) is not int
-            or manifest.get("binding_protocol") not in (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11)
+            or manifest.get("binding_protocol") not in (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12)
             or manifest.get("dispatch_admission") != "history-1"
         ):
             raise DefinitionMismatch("Unsupported Temporal binding/memory protocol")
@@ -132,7 +132,10 @@ def validate_manifest(manifest):
     from .temporal_tool_execution import validate_protocol as validate_tool_execution
 
     validate_tool_execution(manifest)
-    if "coding_execution_protocol" in manifest or manifest.get("binding_protocol") == 11:
+    from .temporal_coding_composition_protocol import validate_protocol as validate_composition
+
+    validate_composition(manifest)
+    if "coding_execution_protocol" in manifest or manifest.get("binding_protocol") in (11, 12):
         from .temporal_coding_protocol import validate_protocol as validate_coding_protocol
 
         validate_coding_protocol(manifest)
@@ -320,10 +323,19 @@ def validate_request(request, manifest):
             )
             for path, value in agent_paths(definition).items()
         ] + (planner_agents if definition["kind"] in {"graph", "team", "dynamic"} else [])
-    if definition.get("kind") not in {"agent", "sequence"} and any(
-        "delegated_runner" in manifest.get("tools", {}).get(name, {}).get("config", {})
-        for value in steps
-        for name in value.get("tools", ())
+    from .temporal_coding_composition_protocol import enabled as composition_enabled
+    from .temporal_coding_composition_protocol import validate_topology
+
+    if composition_enabled(manifest):
+        validate_topology(request, manifest)
+    if (
+        not composition_enabled(manifest)
+        and definition.get("kind") not in {"agent", "sequence"}
+        and any(
+            "delegated_runner" in manifest.get("tools", {}).get(name, {}).get("config", {})
+            for value in steps
+            for name in value.get("tools", ())
+        )
     ):
         raise DefinitionMismatch("Temporal Coding requires original Agent or sequence topology")
     for value in steps:
@@ -1577,6 +1589,7 @@ class TemporalCommandRegistryState:
         if type(capacity) is not int or not 1 <= capacity <= COMMAND_REGISTRY_CAPACITY:
             raise ValidationError("Invalid Temporal command registry capacity")
         self.scope, self.capacity, self.identities = detached(scope), capacity, {}
+        self.composition_submissions = {}
 
     def reserve(self, request):
         if request.get("scope") != self.scope:
@@ -1593,6 +1606,30 @@ class TemporalCommandRegistryState:
         if previous is None:
             if len(self.identities) >= self.capacity:
                 raise ValidationError("Temporal scoped command registry capacity exhausted")
+            metadata = request.get("coding_composition")
+            if metadata is not None:
+                from .session_types import sha
+
+                if (
+                    type(metadata) is not dict
+                    or set(metadata) != {"version", "manifest_digest", "request_digest"}
+                    or type(metadata["version"]) is not int
+                    or metadata["version"] != 1
+                    or identity["kind"] != "submit"
+                    or metadata["request_digest"] != identity["payload_digest"]
+                ):
+                    raise DefinitionMismatch("Invalid original Coding composition submission")
+                sha(metadata["manifest_digest"])
+                sha(metadata["request_digest"])
+                self.composition_submissions[command_id] = {
+                    "command_id": command_id,
+                    "run_id": identity["target"],
+                    "request_digest": metadata["request_digest"],
+                    "manifest_digest": metadata["manifest_digest"],
+                    "close_requested": False,
+                    "execution_epoch": None,
+                    "namespace": None,
+                }
             self.identities[command_id] = identity
         return {
             "command_id": command_id,
@@ -1600,6 +1637,61 @@ class TemporalCommandRegistryState:
             "record_state": "durably_recorded",
             "apply_state": "not_applied",
         }
+
+    def composition_candidates(self, manifest_digest):
+        from .session_types import sha
+
+        sha(manifest_digest)
+        return detached(
+            [
+                item
+                for item in self.composition_submissions.values()
+                if item["manifest_digest"] == manifest_digest
+            ]
+        )
+
+    def close_composition_submissions(self, manifest_digest):
+        from .session_types import sha
+
+        sha(manifest_digest)
+        for item in self.composition_submissions.values():
+            if item["manifest_digest"] == manifest_digest:
+                item["close_requested"] = True
+        return {
+            "manifest_digest": manifest_digest,
+            "close_requested": True,
+            "candidates": self.composition_candidates(manifest_digest),
+        }
+
+    def composition_admission(self, command_id, run_id, request_digest, manifest_digest):
+        item = self.composition_submissions.get(command_id)
+        if (
+            item is None
+            or item["run_id"] != run_id
+            or item["request_digest"] != request_digest
+            or item["manifest_digest"] != manifest_digest
+        ):
+            raise DefinitionMismatch("Original Coding composition submission was not accepted")
+        return {**detached(item), "admitted": not item["close_requested"]}
+
+    def bind_composition_submission(
+        self, command_id, run_id, request_digest, manifest_digest, execution_epoch, namespace
+    ):
+        from .temporal_coding_composition_state import _namespace
+
+        self.composition_admission(command_id, run_id, request_digest, manifest_digest)
+        text(execution_epoch, "Original SDK execution epoch")
+        if len(execution_epoch) > 1024:
+            raise DefinitionMismatch("Original SDK execution epoch exceeds its allowance")
+        namespace = _namespace(namespace)
+        item = self.composition_submissions[command_id]
+        if item["execution_epoch"] is not None and (
+            item["execution_epoch"] != execution_epoch or item["namespace"] != namespace
+        ):
+            raise DefinitionMismatch("Original root SDK execution cannot be replaced")
+        if item["execution_epoch"] is None:
+            item.update(execution_epoch=execution_epoch, namespace=detached(namespace))
+        return self.composition_admission(command_id, run_id, request_digest, manifest_digest)
 
 
 def temporal_capabilities():

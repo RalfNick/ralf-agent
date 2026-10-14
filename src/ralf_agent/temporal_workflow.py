@@ -15,6 +15,7 @@ from temporalio.exceptions import TimeoutError as ActivityTimeoutError
 
 with workflow.unsafe.imports_passed_through():
     from . import (
+        temporal_coding_composition_state,  # noqa: F401 -- original selected physical proof
         temporal_coding_state,  # noqa: F401 -- preload original pure native gates
         temporal_context_read_state,  # noqa: F401 -- preload original pure read gates
         temporal_parent_completion_state,  # noqa: F401 -- preload pure parent release gates
@@ -61,6 +62,7 @@ class TemporalRunWorkflow:
         )
         self.wake_revision = 0
         self._check_session_parent(info)
+        self._check_composition_parent(info)
 
     def _check_session_parent(self, info):
         links = self.state.request.get("session_lineage", {}).get("links", [])
@@ -79,6 +81,29 @@ class TemporalRunWorkflow:
                 type="definition_mismatch",
                 non_retryable=True,
             )
+
+    def _check_composition_parent(self, info):
+        from .temporal_coding_composition_state import enabled, initialize, validate_child_link
+
+        if not enabled(self.state.manifest):
+            return
+        try:
+            initialize(self.state, namespace=info.namespace)
+            parent = info.parent
+            validate_child_link(
+                self.state,
+                namespace=info.namespace,
+                parent_namespace=None if parent is None else parent.namespace,
+                parent_run_id=None if parent is None else parent.workflow_id,
+                parent_epoch=None if parent is None else parent.run_id,
+                original_epoch=info.original_execution_run_id,
+            )
+        except Exception as exc:
+            raise ApplicationError(
+                "Original Coding composition ownership rejected",
+                type=getattr(exc, "code", "definition_mismatch"),
+                non_retryable=True,
+            ) from None
 
     @workflow.run
     async def run(self, accepted: dict) -> None:
@@ -499,6 +524,53 @@ class TemporalRunWorkflow:
                 non_retryable=True,
             ) from None
 
+    @workflow.update(name="coding_composition_namespace")
+    async def coding_composition_namespace(self, payload: dict) -> dict:
+        from .temporal_coding_composition_state import initialize_namespace
+
+        try:
+            result = initialize_namespace(self.state, payload)
+            self.wake_revision += 1
+            return result
+        except Exception as exc:
+            raise ApplicationError(
+                "Original namespace binding rejected",
+                type=getattr(exc, "code", "definition_mismatch"),
+                non_retryable=True,
+            ) from None
+
+    @workflow.update(name="coding_composition_child_epoch")
+    async def coding_composition_child_epoch(self, payload: dict) -> dict:
+        from .temporal_coding_composition_state import pin_child_execution, validate_parent_update
+
+        try:
+            run_id, evidence = validate_parent_update(self.state, payload)
+            result = pin_child_execution(self.state, run_id, evidence)
+            self.wake_revision += 1
+            return result
+        except Exception as exc:
+            raise ApplicationError(
+                "Original child execution binding rejected",
+                type=getattr(exc, "code", "definition_mismatch"),
+                non_retryable=True,
+            ) from None
+
+    @workflow.update(name="coding_composition_child_stopped")
+    async def coding_composition_child_stopped(self, payload: dict) -> dict:
+        from .temporal_coding_composition_state import adopt_child_stop, validate_parent_update
+
+        try:
+            run_id, evidence = validate_parent_update(self.state, payload)
+            result = adopt_child_stop(self.state, run_id, evidence)
+            self.wake_revision += 1
+            return result
+        except Exception as exc:
+            raise ApplicationError(
+                "Original child physical receipt rejected",
+                type=getattr(exc, "code", "definition_mismatch"),
+                non_retryable=True,
+            ) from None
+
     @workflow.query(name="view")
     def view(self, request: dict) -> dict:
         try:
@@ -512,7 +584,19 @@ class TemporalRunWorkflow:
                     "request": self.state.request,
                     **self.state.diagnostics(),
                 }
+            if kind == "coding_composition_proof":
+                from .temporal_coding_composition_state import physical_stop_view
+
+                return physical_stop_view(self.state)
+            if kind == "coding_composition_children":
+                from .temporal_coding_composition_state import original_children
+
+                return original_children(self.state)
             if kind == "coding_requests":
+                from .temporal_coding_composition_state import coding_requests, enabled
+
+                if enabled(self.state.manifest):
+                    return coding_requests(self.state)
                 from .temporal_coding_state import requests
 
                 return requests(self.state)
@@ -600,10 +684,77 @@ class TemporalCommandRegistryWorkflow:
                 non_retryable=True,
             ) from None
 
+    @workflow.update(name="admit_coding_composition_submission")
+    async def admit_coding_composition_submission(self, request: dict) -> dict:
+        try:
+            if request.get("scope") != self.commands.scope:
+                from .errors import AuthorizationDenied
+
+                raise AuthorizationDenied("Command registry belongs to another trusted scope")
+            if set(request) != {
+                "scope",
+                "command_id",
+                "run_id",
+                "request_digest",
+                "manifest_digest",
+                "execution_epoch",
+                "namespace",
+            }:
+                from .errors import DefinitionMismatch
+
+                raise DefinitionMismatch(
+                    "Original composition admission requires complete SDK identity"
+                )
+            return self.commands.bind_composition_submission(
+                request["command_id"],
+                request["run_id"],
+                request["request_digest"],
+                request["manifest_digest"],
+                request["execution_epoch"],
+                request["namespace"],
+            )
+        except Exception as exc:
+            raise ApplicationError(
+                "Original composition admission rejected",
+                type=getattr(exc, "code", "validation_error"),
+                non_retryable=True,
+            ) from None
+
+    @workflow.update(name="close_coding_composition_submissions")
+    async def close_coding_composition_submissions(self, request: dict) -> dict:
+        try:
+            if request.get("scope") != self.commands.scope:
+                from .errors import AuthorizationDenied
+
+                raise AuthorizationDenied("Command registry belongs to another trusted scope")
+            if set(request) != {"scope", "manifest_digest"}:
+                from .errors import DefinitionMismatch
+
+                raise DefinitionMismatch("Original composition close requires exact scope/release")
+            return self.commands.close_composition_submissions(request["manifest_digest"])
+        except Exception as exc:
+            raise ApplicationError(
+                "Original composition admission close rejected",
+                type=getattr(exc, "code", "validation_error"),
+                non_retryable=True,
+            ) from None
+
     @workflow.query(name="view")
     def view(self, request: dict) -> dict:
         if request.get("scope") != self.commands.scope:
             return {"error": "authorization_denied"}
+        try:
+            if request.get("kind") == "coding_composition_candidates":
+                return self.commands.composition_candidates(request["manifest_digest"])
+            if request.get("kind") == "coding_composition_admission":
+                return self.commands.composition_admission(
+                    request["command_id"],
+                    request["run_id"],
+                    request["request_digest"],
+                    request["manifest_digest"],
+                )
+        except Exception as exc:
+            return {"error": getattr(exc, "code", "validation_error")}
         return {
             "scope": detached(self.commands.scope),
             "capacity": self.commands.capacity,

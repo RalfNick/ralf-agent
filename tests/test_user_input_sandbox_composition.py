@@ -149,7 +149,7 @@ def test_unselected_native_sandbox_keeps_original_closed_protocol(registered):
     assert all(port.calls == [] for port in ports)
 
 
-@pytest.mark.parametrize("protocol", [1, 2, 3, 12, True])
+@pytest.mark.parametrize("protocol", [1, 2, 3, 13, True])
 def test_sandbox_refuses_unrelated_old_and_future_binding_protocols(registered, protocol):
     registry, ports = registered
     manifest = copy.deepcopy(execution(registry, input_selected=False).manifest)
