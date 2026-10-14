@@ -1,6 +1,6 @@
 # Ralf-Agent
 
-dev109 提供[显式 Codex 模型连接](docs/codex-model-connection.md)：复用原审批、恢复和执行权威，默认从宿主环境延迟解析凭证，可替换凭证源并通过 SDK／JSON／TOML 配置。当前仍为预览；完整支持范围和验收证据见[能力清单](docs/implementation-status.md)。
+dev110 提供[Temporal Team／动态 Coding 组合](docs/temporal-coding-orchestration.md)，复用原父 History 的选择、计划修订和子 Run 恢复；[显式模型连接](docs/codex-model-connection.md)从宿主环境延迟解析凭证，可通过 SDK／JSON／TOML 配置。当前仍为预览；完整支持范围和验收证据见[能力清单](docs/implementation-status.md)。
 
 dev98 已验收[自动 Facts 索引维护](docs/fact-index-maintenance.md)：原 Graph／Session 中先刷新索引再执行 Agent，提供 SDK／JSON／TOML、可编辑 `memory-index` 模板和原进程恢复。完整冻结源码 8298 passed／617 配置依赖跳过，两套安装各 163 项通过；[验收记录](architecture/reviews/2026-10-13-fact-index-maintenance.md)区分首期 SQLite／Hash 链路与未验收的语义质量、远程维护及完整能力。
 

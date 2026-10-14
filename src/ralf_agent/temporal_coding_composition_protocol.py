@@ -12,6 +12,8 @@ def _pure_sources():
             (
                 "enabled",
                 "validate_topology",
+                "_direct_agents",
+                "_validate_hidden_agents",
                 "validate_protocol",
                 "validate_implementation",
                 "_fingerprints",
@@ -28,6 +30,7 @@ def _pure_sources():
                 "_link_fields",
                 "_view_fields",
                 "enabled",
+                "orchestration_enabled",
                 "child_capacity_released",
                 "coding_runner_keys",
                 "occupied_runner_keys",
@@ -97,6 +100,9 @@ def _pure_sources():
                 "TemporalParentState._adopt_graph",
                 "TemporalParentState.accept_selection",
                 "TemporalParentState._member",
+                "TemporalParentState._project_call_request",
+                "TemporalParentState._call_runner_keys",
+                "TemporalParentState._adopt_child_result",
                 "TemporalParentState.delegate",
                 "TemporalParentState.next_calls",
                 "TemporalParentState.mark_started",
@@ -132,6 +138,26 @@ def _pure_sources():
             ("validate_continuation_protocol", "validate_model_history_protocol"),
         ),
         "joint_parent_completion": ("temporal_parent_completion_state", ("validate_protocol",)),
+        "parent_completion_history": (
+            "temporal_parent_completion_state",
+            (
+                "initialize",
+                "_actual_messages",
+                "_input_consumed",
+                "_current_messages",
+                "_worker_path",
+                "_source_children",
+                "source",
+                "_business_plan",
+                "_restore_root_session_budget",
+                "check_source",
+                "prepare",
+                "next_operation",
+                "observe_verifier",
+                "adopt",
+                "accept",
+            ),
+        ),
         "joint_user_input": ("temporal_user_input", ("validate_protocol",)),
         "context_history": ("temporal_context_read_state", ("observe", "recreate_unadmitted")),
         "session_model_history": ("temporal_session_model_history", ("validate_native_request",)),
@@ -157,6 +183,7 @@ def _worker_sources():
             "temporal_coding_composition_control",
             (
                 "selected",
+                "_root_kind",
                 "_registry",
                 "_actual",
                 "_validate_admission",
@@ -183,7 +210,16 @@ def _worker_sources():
                 "close",
             ),
         ),
-        "activities": ("temporal_control_activities", ("control", "registered_parent_activities")),
+        "activities": (
+            "temporal_control_activities",
+            (
+                "control",
+                "registered_parent_activities",
+                "select",
+                "_RecordedCaller.__init__",
+                "_RecordedCaller.call",
+            ),
+        ),
         "tree_activity": ("temporal_session_activities", ("validate_tree_activity",)),
         "lifecycle": (
             "temporal_assembly_lifecycle",
@@ -275,18 +311,82 @@ def enabled(manifest):
     return isinstance(manifest, dict) and "coding_composition_protocol" in manifest
 
 
+def _direct_agents(definition):
+    from .orchestration_types import DynamicWorkflowSpec, TeamSpec
+    from .workflow import GraphWorkflowSpec
+
+    kind = definition["kind"]
+    if kind == "graph":
+        graph = GraphWorkflowSpec.from_dict(definition)
+        if any(node.agent is None for node in graph.nodes):
+            raise ValidationError("Coding composition supports original Agent nodes only")
+    elif kind in {"team", "dynamic"}:
+        members = definition.get("members")
+        if not isinstance(members, dict) or any(
+            not isinstance(member, dict) or member.get("kind", "agent") != "agent"
+            for member in members.values()
+        ):
+            raise ValidationError("Coding composition requires direct Agent members")
+        (TeamSpec if kind == "team" else DynamicWorkflowSpec).from_dict(definition)
+    else:
+        raise ValidationError("Coding composition requires bounded Agent orchestration")
+
+
+def _validate_hidden_agents(definition, manifest):
+    from .binding_types import AgentBindingDescriptor
+    from .temporal_bindings import effective_step
+    from .types import AgentSpec
+
+    hidden = []
+    if definition["kind"] == "dynamic":
+        planner = (
+            manifest.get("orchestration", {}).get("planners", {}).get(definition["planner"], {})
+        )
+        if planner.get("agent") is not None:
+            hidden.append((planner["agent"], AgentBindingDescriptor().to_dict()))
+    policy = definition.get("completion_policy")
+    if policy is not None:
+        stage = (
+            manifest.get("parent_completion_policies", {})
+            .get(policy, {})
+            .get("effective_agent_release")
+        )
+        if stage is not None:
+            declaration = stage.get("definition", {})
+            if declaration.get("kind") != "agent" or len(declaration.get("steps", [])) != 1:
+                raise ValidationError("Hidden verifier requires one fixed Agent")
+            hidden.append(
+                (
+                    declaration["steps"][0],
+                    stage.get("agent_bindings", {}).get(
+                        "agent", AgentBindingDescriptor().to_dict()
+                    ),
+                )
+            )
+    for step, descriptor in hidden:
+        if not isinstance(step, dict) or step.get("kind", "agent") != "agent":
+            raise ValidationError("Hidden planner/verifier requires one fixed Agent")
+        try:
+            AgentSpec(**step)
+        except TypeError:
+            raise ValidationError("Hidden planner/verifier requires one fixed Agent") from None
+        selected = effective_step(step, manifest, descriptor)
+        if any(
+            "delegated_runner" in manifest.get("tools", {}).get(name, {}).get("config", {})
+            for name in selected["tools"]
+        ):
+            raise ValidationError("Hidden planner/verifier cannot receive Coding grants")
+
+
 def validate_topology(request, manifest):
     """Check effective grants for every actual leaf before any child permission."""
     from .binding_paths import agent_paths
     from .binding_types import AgentBindingDescriptor
     from .temporal_bindings import effective_step, validate_bindings
-    from .workflow import GraphWorkflowSpec
 
     definition = request["definition"]
     if definition["kind"] in {"agent", "sequence"}:
         return
-    if definition["kind"] != "graph":
-        raise ValidationError("Coding composition requires a static bounded Agent graph")
     concurrency = definition.get("max_concurrency", 1)
     from .governance import TemporalExecutionPolicy
 
@@ -297,9 +397,7 @@ def validate_topology(request, manifest):
     )
     if type(concurrency) is not int or not 1 <= concurrency <= policy.max_concurrency:
         raise ValidationError("Coding composition concurrency exceeds original execution policy")
-    graph = GraphWorkflowSpec.from_dict(definition)
-    if any(node.agent is None for node in graph.nodes):
-        raise ValidationError("Coding composition supports original Agent nodes only")
+    _direct_agents(definition)
     validate_bindings(request, manifest)
     for path, step in agent_paths(definition).items():
         effective_step(
@@ -307,25 +405,26 @@ def validate_topology(request, manifest):
             manifest,
             request.get("agent_bindings", {}).get(path, AgentBindingDescriptor().to_dict()),
         )
+    _validate_hidden_agents(definition, manifest)
 
 
 def validate_protocol(manifest):
     if not enabled(manifest):
-        if manifest.get("binding_protocol") in (12, 13, 15):
+        if manifest.get("binding_protocol") in (12, 13, 15, 17):
             raise DefinitionMismatch("Original Coding composition publication is missing")
         return
     value = manifest["coding_composition_protocol"]
     if (
         manifest.get("kernel") != "temporal-3"
         or type(manifest.get("binding_protocol")) is not int
-        or manifest["binding_protocol"] != 15
+        or manifest["binding_protocol"] != 17
         or manifest.get("dispatch_admission") != "history-1"
         or "coding_execution_protocol" not in manifest
         or type(value) is not dict
         or set(value) != {"version", "topology", "implementation"}
         or type(value["version"]) is not int
-        or value["version"] != 3
-        or value["topology"] != "bounded-agent-graph"
+        or value["version"] != 4
+        or value["topology"] != "bounded-agent-orchestration"
     ):
         raise DefinitionMismatch("Unsupported original Coding composition protocol")
     validate_implementation(value["implementation"])
@@ -406,10 +505,10 @@ def publish(manifest, runtime):
         raise DefinitionMismatch("Original Coding composition opt-in is missing")
     require_sdk()
     result = detached(manifest)
-    result["binding_protocol"] = 15
+    result["binding_protocol"] = 17
     result["coding_composition_protocol"] = {
-        "version": 3,
-        "topology": "bounded-agent-graph",
+        "version": 4,
+        "topology": "bounded-agent-orchestration",
         "implementation": implementation(),
     }
     validate_protocol(result)

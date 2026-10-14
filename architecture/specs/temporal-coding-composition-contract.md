@@ -1,3 +1,5 @@
+> 本文保留 dev107 的历史契约；当前 dev110 扩展及取代的限制见[编排契约](temporal-coding-orchestration-contract.md)。历史 Run 继续使用其匹配 Worker。
+
 # dev107 shared contract — original Temporal serial Agent graph Coding
 
 Baseline accepted106 fda257bb77465aac744825efd40a4278cd792493; immutable old106 interpreter /private/tmp/ralf-agent-dev106-root/installed-venv/bin/python. Root final integration/real service/compat/build/commit owner. User explicitly authorizes sustained parallel implementation and local commits, never push. R01–R26/full phase2 remains open; this closes original distributed descendant-lifecycle gap using existing authorities.

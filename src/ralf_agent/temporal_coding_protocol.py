@@ -267,7 +267,7 @@ def registration(runtime):
         }
     if not result:
         raise ValidationError("Temporal Coding requires at least one registered original Runner")
-    return {"version": 2, "tools": result, "implementation": implementation()}
+    return {"version": 3, "tools": result, "implementation": implementation()}
 
 
 def validate_protocol(manifest):
@@ -275,20 +275,20 @@ def validate_protocol(manifest):
 
     validate_composition(manifest)
     if not enabled(manifest):
-        if manifest.get("binding_protocol") in (11, 12, 13, 14, 15):
+        if manifest.get("binding_protocol") in (11, 12, 13, 14, 15, 16, 17):
             raise DefinitionMismatch("Temporal Coding publication is missing")
         return
     value = manifest["coding_execution_protocol"]
     if (
         manifest.get("kernel") != "temporal-3"
         or type(manifest.get("binding_protocol")) is not int
-        or manifest["binding_protocol"] not in (14, 15)
+        or manifest["binding_protocol"] not in (16, 17)
         or manifest.get("dispatch_admission") != "history-1"
         or "tool_execution_protocol" not in manifest
         or type(value) is not dict
         or set(value) != {"version", "tools", "implementation"}
         or type(value["version"]) is not int
-        or value["version"] != 2
+        or value["version"] != 3
         or type(value["tools"]) is not dict
         or not 1 <= len(value["tools"]) <= 16
         or type(value["implementation"]) is not dict
@@ -333,7 +333,7 @@ def publish(manifest, runtime):
     result = detached(manifest)
     result.update(
         kernel="temporal-3",
-        binding_protocol=14,
+        binding_protocol=16,
         dispatch_admission="history-1",
         coding_execution_protocol=registration(runtime),
     )

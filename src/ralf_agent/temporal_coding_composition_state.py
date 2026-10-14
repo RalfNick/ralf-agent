@@ -53,12 +53,24 @@ def _view_fields():
 def enabled(manifest):
     value = manifest.get("coding_composition_protocol")
     return (
-        manifest.get("binding_protocol") in (12, 13) and "coding_composition_protocol" in manifest
-    ) or (
-        manifest.get("binding_protocol") == 15
+        (manifest.get("binding_protocol") in (12, 13) and "coding_composition_protocol" in manifest)
+        or (
+            manifest.get("binding_protocol") == 15
+            and type(value) is dict
+            and type(value.get("version")) is int
+            and value["version"] == 3
+        )
+        or orchestration_enabled(manifest)
+    )
+
+
+def orchestration_enabled(manifest):
+    value = manifest.get("coding_composition_protocol")
+    return (
+        manifest.get("binding_protocol") == 17
         and type(value) is dict
         and type(value.get("version")) is int
-        and value["version"] == 3
+        and value["version"] == 4
     )
 
 
@@ -166,10 +178,32 @@ def initialize_namespace(state, payload):
 def project_child_link(parent, call, request):
     _require(parent)
     namespace = _namespace(parent.composition_namespace)
-    if parent.depth != 0 or call["depth"] != 1 or parent.kind != "graph":
+    kinds = {"graph", "team", "dynamic"} if orchestration_enabled(parent.manifest) else {"graph"}
+    if parent.depth != 0 or call["depth"] != 1 or parent.kind not in kinds:
         raise DefinitionMismatch("Coding composition permits one original Agent child level")
     if request["definition"]["kind"] != "agent" or "coding_parent" in request:
         raise DefinitionMismatch("Coding child requires its original Agent projection")
+    if orchestration_enabled(parent.manifest) and call["member"] in {"@planner", "@verifier"}:
+        planner = call["member"] == "@planner"
+        if (
+            planner
+            and (parent.kind != "dynamic" or parent.stage != "plan" or call["call_id"] != "planner")
+            or not planner
+            and (
+                not parent.parent_completion_enabled
+                or parent.parent_completion_pending is None
+                or call["call_id"] != "verdict"
+            )
+        ):
+            raise DefinitionMismatch("Hidden child differs from its original parent policy slot")
+        from .spec_codec import decode_spec
+        from .types import submission_request
+
+        expected = submission_request(
+            decode_spec(parent._member(call["member"])), call["input"], budget=call["cap"]
+        )
+        if canonical(request["definition"]) != canonical(expected["definition"]):
+            raise DefinitionMismatch("Hidden child changed its original fixed Agent")
     result = copy.deepcopy(request)
     result["coding_parent"] = {
         "version": 1,
@@ -182,7 +216,7 @@ def project_child_link(parent, call, request):
         "call_id": call["id"],
         "command_id": call["command_id"],
         "member": call["member"],
-        "planning_revision": parent.planning_revision,
+        "planning_revision": call.get("planning_revision", parent.planning_revision),
         "child_run_id": call["run_id"],
         "child_projection_digest": digest(request),
         "cap": call["cap"],
@@ -212,7 +246,7 @@ def _link(request):
         or type(value["depth"]) is not int
         or value["depth"] != 1
         or type(value["planning_revision"]) is not int
-        or value["planning_revision"] != 0
+        or value["planning_revision"] < 0
         or type(value["cap"]) is not int
         or value["cap"] != request["budget"]
         or value["child_run_id"] != child_run_id(value["scope"], value["command_id"])
@@ -332,6 +366,10 @@ def _child(state, run_id, evidence):
         or link["parent_request_digest"] != digest(state.request)
         or link["parent_release_digest"] != state.release_digest
         or link["cap"] != call["cap"]
+        or link["call_id"] != call["id"]
+        or link["command_id"] != call["command_id"]
+        or link["member"] != call["member"]
+        or link["planning_revision"] != call.get("planning_revision", 0)
     ):
         raise DefinitionMismatch("Physical evidence belongs to another original parent")
     return call
@@ -526,6 +564,8 @@ def adopt_child_stop(state, run_id, evidence):
         if evidence == previous:
             return {"run_id": run_id, "recorded": True}
     call["physical_stop_proof"] = copy.deepcopy(evidence)
+    if orchestration_enabled(state.manifest) and hasattr(state, "_adopt_child_result"):
+        state._adopt_child_result(call)
     state._emit(
         "coding_composition_child_stop_observed",
         {"run_id": run_id, "physical_stopped": evidence["physical_stopped"]},

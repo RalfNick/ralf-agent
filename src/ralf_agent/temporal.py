@@ -128,12 +128,14 @@ class TemporalEngine:
         from .temporal_bindings import capabilities
 
         extended = "orchestration" in self._release
-        composition = self._release.get("binding_protocol") in (13, 15)
+        composition = self._release.get("binding_protocol") in (13, 15, 17)
         return {
             **temporal_capabilities(),
             "shared_session": self._release.get("session_protocol") == 1,
             "graph": extended,
-            **{name: extended and not composition for name in ("team", "dag", "nesting")},
+            "team": extended and (not composition or self._release.get("binding_protocol") == 17),
+            "dag": extended and (not composition or self._release.get("binding_protocol") == 17),
+            "nesting": extended and not composition,
             "rag": "knowledge_context" in self._release,
             **capabilities(self._release),
         }
@@ -242,9 +244,14 @@ class TemporalEngine:
             }
             if (
                 kind == "submit"
-                and self._release.get("binding_protocol") in (13, 15)
+                and self._release.get("binding_protocol") in (13, 15, 17)
                 and "coding_composition_protocol" in self._release
-                and payload.get("definition", {}).get("kind") == "graph"
+                and payload.get("definition", {}).get("kind")
+                in (
+                    {"graph", "team", "dynamic"}
+                    if self._release.get("binding_protocol") == 17
+                    else {"graph"}
+                )
                 and "coding_parent" not in payload
             ):
                 reservation["coding_composition"] = {

@@ -1,6 +1,6 @@
 # Temporal 有界并行 Coding 图
 
-当前 dev109 的选定静态组合为 version 3／binding 15；下文 dev108／protocol 13 是历史验收范围。旧选定 Run 使用匹配旧 Worker，拓扑边界保持。见[连接指南](codex-model-connection.md)。
+当前 dev110 选定组合为 version 4／binding 17，并扩展一层 Agent Team／Dynamic；见[当前编排指南](temporal-coding-orchestration.md)。下文 dev108／protocol 13 和 dev109 version 3／binding 15 保留历史范围。旧选定 Run 使用匹配旧 Worker，见[连接指南](codex-model-connection.md)。
 
 dev108 已验收有限协议 13／组合版本 2 的有界静态 Agent 图。源码、固定安装、
 实际服务和兼容证据见[本批验收](../architecture/reviews/2026-10-14-temporal-parallel-coding.md)，

@@ -16,10 +16,17 @@ def selected(manifest):
     return (
         manifest.get("binding_protocol") == 13 and "coding_composition_protocol" in manifest
     ) or (
-        manifest.get("binding_protocol") == 15
+        manifest.get("binding_protocol") in (15, 17)
         and type(value) is dict
         and type(value.get("version")) is int
-        and value["version"] == 3
+        and value["version"] == {15: 3, 17: 4}[manifest["binding_protocol"]]
+    )
+
+
+def _root_kind(manifest, kind):
+    """Only the current publication admits the expanded original parent topology."""
+    return kind in (
+        {"graph", "team", "dynamic"} if manifest.get("binding_protocol") == 17 else {"graph"}
     )
 
 
@@ -162,8 +169,10 @@ async def _bind_submission(client, scope, expected, epoch, namespace):
 async def root_admission(runtime, client, value, info):
     _actual(client, value, info)
     runtime.validate_release(value["runtime_manifest"])
-    if value["request"]["definition"]["kind"] != "graph" or "coding_parent" in value["request"]:
-        raise DefinitionMismatch("Composition admission requires its original root graph")
+    if not _root_kind(value["runtime_manifest"], value["request"]["definition"]["kind"]) or (
+        "coding_parent" in value["request"]
+    ):
+        raise DefinitionMismatch("Composition admission requires its original bounded parent")
     namespace = await _namespace(client)
     expected = {
         "command_id": value["command_id"],
@@ -330,6 +339,15 @@ async def _child_proof(client, parent, call, manifest, namespace):
         or link["child_run_id"] != call["run_id"]
         or link["cap"] != call["cap"]
         or link["namespace"] != namespace
+        or manifest.get("binding_protocol") == 17
+        and (
+            link["scope"] != parent["scope"]
+            or link["call_id"] != call.get("id")
+            or link["member"] != call.get("member")
+            or link["command_id"] != call.get("command_id")
+            or link["planning_revision"] != call.get("planning_revision")
+            or call.get("child_request_digest") != digest(request)
+        )
     ):
         raise DefinitionMismatch("Composition child original ownership changed")
     execution = call.get("child_execution")
@@ -492,7 +510,7 @@ async def _initialize_root(client, scope, candidate, manifest, namespace):
     )
     if (
         "coding_parent" in root["request"]
-        or root["request"]["definition"]["kind"] != "graph"
+        or not _root_kind(manifest, root["request"]["definition"]["kind"])
         or candidate["request_digest"] != digest(root["request"])
     ):
         raise DefinitionMismatch("Composition root lost original submission acceptance")

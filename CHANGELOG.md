@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.0.dev110 — Temporal Coding orchestration
+
+- Extend selected Coding composition to bounded Team and Dynamic parents with direct Agent members; keep nested/sequence members explicitly unsupported.
+- Resolve actual member bindings for DAG/Team Runner backpressure; require financial settlement and original physical stop before advancing selection, verification or dependencies.
+- Freeze child planning revisions, retain earlier stop obligations through replan, and permit only pending-node dynamic DAG patches. Late receipts cannot replace current results.
+- Publish native v3/binding16 and composition v4/binding17 with explicit helper inventories. Preserve unselected default publication; historical selections require their matching immutable Worker.
+- Add structural recovery tests and usage guidance. Model quality remains separately recorded; no new general Coding or autonomous planning quality claim.
+
 ## 0.1.0.dev109 — Managed native model connections
 
 - Add explicit nonsecret Responses connection data, lazy borrowed credential sources and connected Local/Temporal factories. Share the original approved Coding loop through a protected transport-construction hook; do not create another Run/Action authority.

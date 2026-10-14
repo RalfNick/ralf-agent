@@ -19,15 +19,21 @@ import pytest
 from ralf_agent import (
     AgentSpec,
     ComponentRegistry,
+    DynamicWorkflowSpec,
     GraphNode,
     GraphWorkflowSpec,
+    ModelParentVerificationStage,
+    ModelResponse,
+    ParentCompletionPolicy,
+    ParentCompletionVerdict,
     Scope,
+    TeamSpec,
     TemporalProfile,
     TemporalRuntimeBuilder,
 )
 from ralf_agent.codex_model_connection import CodexModelConnection
 from ralf_agent.errors import DefinitionMismatch
-from ralf_agent.temporal import replay_temporal_history
+from ralf_agent.temporal import TemporalEngine, replay_temporal_history
 from tests.connected_coding_fixture import connected_native_fixture
 from tests.temporal_coding_worker_fixture import Provider
 from tests.test_temporal_coding_owned_service import completed_updates
@@ -39,10 +45,55 @@ pytestmark = pytest.mark.skipif(
 )
 
 
+class StructuralProvider(Provider):
+    """Fixed proposal for the hidden managed planner; no model quality claim."""
+
+    identity = {"kind": "coding-orchestration-structural-peer", "version": "110"}
+
+    async def complete(self, messages, tools):
+        if not tools:
+            if any("structural-verdict" in str(message.get("content", "")) for message in messages):
+                return ModelResponse(
+                    output={"status": "accept", "feedback": None, "evidence_ids": []}
+                )
+            return ModelResponse(
+                output={
+                    "steps": [
+                        {"id": "proposal-node", "member": "actual-member", "input": "fixed task"},
+                    ]
+                }
+            )
+        return await super().complete(messages, tools)
+
+
+class StructuralCompletionGate:
+    identity = {"kind": "coding-structural-completion-gate", "version": "110"}
+
+    def verify(self, request):
+        return ParentCompletionVerdict(
+            "accept", evidence_ids=[child["id"] for child in request.children]
+        )
+
+
 async def _application(directory):
     data = json.loads((directory / "application.json").read_text())
     registry = ComponentRegistry()
-    registry.register("provider", "connected-structural-peer", lambda config, context: Provider())
+    registry.register(
+        "provider", "connected-structural-peer", lambda config, context: StructuralProvider()
+    )
+    registry.register(
+        "parent_completion_policies",
+        "connected-structural-check",
+        lambda config, context: {
+            "checked": ParentCompletionPolicy(
+                StructuralCompletionGate(),
+                model_stage=ModelParentVerificationStage(
+                    instructions="Return fixed structural-verdict."
+                ),
+                verifier_budget=2,
+            ),
+        },
+    )
     scope = Scope(**data["scope"])
     assembly = await TemporalRuntimeBuilder(registry, base_dir=directory).abuild(
         TemporalProfile(**data["profile"]), scope=scope
@@ -102,11 +153,74 @@ def test_current_worker_refuses_actual_previous_selected_metadata_before_resourc
     assert list(tmp_path.iterdir()) == []
 
 
-@pytest.mark.parametrize("composition", [False, True], ids=["native14", "composition15"])
-@pytest.mark.parametrize("mode", ["approval_cold_restart", "running_cancel"])
+def test_current_worker_refuses_actual_dev109_and_relabelled_selection_before_resources(tmp_path):
+    from copy import deepcopy
+
+    from ralf_agent.temporal import TemporalEngine
+    from ralf_agent.temporal_coding_protocol import check
+
+    path = os.getenv("RALF_TEST_PREVIOUS109_CODING_MANIFEST")
+    if not path:
+        pytest.skip("Requires actual selected15 captured from the immutable dev109 Worker")
+    previous = json.loads(Path(path).read_text())
+    assert previous["binding_protocol"] == 15
+    assert previous["coding_execution_protocol"]["version"] == 2
+    assert previous["coding_composition_protocol"]["version"] == 3
+
+    class Client:
+        namespace = "default"
+
+        def __getattr__(self, name):
+            raise AssertionError("Old selection reached business SDK I/O")
+
+    class Runtime:
+        coding_execution = True
+
+        def __getattr__(self, name):
+            raise AssertionError("Relabelled selection reached actual resources")
+
+    with pytest.raises(DefinitionMismatch):
+        TemporalEngine(Client(), task_queue="old-before-resources", release=previous)
+    for binding in (15, 16, 17):
+        candidate = deepcopy(previous)
+        candidate["binding_protocol"] = binding
+        if binding == 16:
+            candidate.pop("coding_composition_protocol")
+            candidate["coding_execution_protocol"]["version"] = 3
+        elif binding == 17:
+            candidate["coding_execution_protocol"]["version"] = 3
+            candidate["coding_composition_protocol"].update(
+                version=4, topology="bounded-agent-orchestration"
+            )
+        with pytest.raises(DefinitionMismatch):
+            check(Runtime(), candidate)
+    assert list(tmp_path.iterdir()) == []
+
+
+@pytest.mark.parametrize(
+    "parent_kind,mode",
+    [
+        (kind, mode)
+        for kind in (
+            "native",
+            "graph",
+            "team",
+            "router",
+            "supervisor",
+            "dynamic-flat",
+            "dynamic-dag",
+            "dynamic-model",
+            "checked-team",
+        )
+        for mode in ("approval_cold_restart", "running_cancel")
+    ]
+    + [(kind, "owned_close") for kind in ("team", "dynamic-dag")],
+)
 def test_connected_original_action_approval_recovery_and_cancel(
-    tmp_path, monkeypatch, composition, mode
+    tmp_path, monkeypatch, parent_kind, mode
 ):
+    composition = parent_kind != "native"
+
     async def run():
         import psycopg
         from psycopg import sql
@@ -133,7 +247,7 @@ def test_connected_original_action_approval_recovery_and_cancel(
             "1",
         )
         cli = connected_native_fixture(
-            tmp_path, connection, "hang_turn" if mode == "running_cancel" else "completed"
+            tmp_path, connection, "completed" if mode == "approval_cold_restart" else "hang_turn"
         )
         sock = socket.socket(socket.AF_UNIX)
         sock_path = Path("/private/tmp") / ("ralf-connected-" + uuid.uuid4().hex[:12] + ".sock")
@@ -173,6 +287,12 @@ def test_connected_original_action_approval_recovery_and_cancel(
             },
             execution={"coding_execution": True, "coding_composition": composition},
         )
+        if parent_kind == "checked-team":
+            data = profile.to_dict()
+            data["components"]["parent_completion_policies"] = {
+                "adapter": "connected-structural-check"
+            }
+            profile = TemporalProfile(**data)
         (tmp_path / "application.json").write_text(
             json.dumps(
                 {
@@ -225,27 +345,53 @@ def test_connected_original_action_approval_recovery_and_cancel(
         try:
             assembly, _, _ = await _application(tmp_path)
             runtime = assembly._runtime
+            published_release = assembly.release
             native = runtime.tools.get("coding").handler.runner
             journal = native._journal
             assert journal._effect is runtime.journal
-            assert assembly.release["binding_protocol"] == (15 if composition else 14)
-            assert assembly.release["coding_execution_protocol"]["version"] == 2
+            assert assembly.release["binding_protocol"] == (17 if composition else 16)
+            assert assembly.release["coding_execution_protocol"]["version"] == 3
             if composition:
-                assert assembly.release["coding_composition_protocol"]["version"] == 3
+                assert assembly.release["coding_composition_protocol"]["version"] == 4
             first = await start_worker()
             client = await Client.connect(os.environ["RALF_TEST_TEMPORAL_ADDRESS"])
             engine = assembly.create_engine(
                 client, task_queue=queue, activity_timeout=40, drive_timeout=40
             )
             spec = AgentSpec("connected", "Perform approved connected Coding", tools=("coding",))
-            definition = (
-                GraphWorkflowSpec(
+            task = "fixed task"
+            if parent_kind == "graph":
+                definition = GraphWorkflowSpec(
                     "connected-graph", [GraphNode("only", agent=spec)], max_concurrency=2
                 )
-                if composition
-                else spec
-            )
-            handle = await engine.submit(definition, "fixed task", command_id="submit", budget=16)
+            elif parent_kind in {"team", "router", "supervisor", "checked-team"}:
+                config = {}
+                if parent_kind == "router":
+                    config = {"routes": {"code": "actual-member"}}
+                    task = {"route": "code", "task": "fixed task"}
+                elif parent_kind == "supervisor":
+                    config = {"supervisor": "actual-member"}
+                definition = TeamSpec(
+                    "connected-team",
+                    {"actual-member": spec},
+                    strategy="sequential"
+                    if parent_kind in {"team", "checked-team"}
+                    else parent_kind,
+                    strategy_config=config,
+                    max_concurrency=2,
+                    completion_policy="checked" if parent_kind == "checked-team" else None,
+                )
+            elif parent_kind.startswith("dynamic-"):
+                definition = DynamicWorkflowSpec(
+                    "connected-plan",
+                    {"actual-member": spec},
+                    planner="model" if parent_kind == "dynamic-model" else "rule",
+                    plan_mode="dag" if parent_kind == "dynamic-dag" else "flat",
+                    max_concurrency=2,
+                )
+            else:
+                definition = spec
+            handle = await engine.submit(definition, task, command_id="submit", budget=16)
             waiting = await wait_until(
                 lambda: engine.status(handle.run_id),
                 lambda value: value.state == "waiting_approval",
@@ -261,8 +407,7 @@ def test_connected_original_action_approval_recovery_and_cancel(
                 await asyncio.to_thread(first.wait, timeout=5)
                 await start_worker()
                 assert (
-                    await engine.submit(definition, "fixed task", command_id="submit", budget=16)
-                    == handle
+                    await engine.submit(definition, task, command_id="submit", budget=16) == handle
                 )
                 recovered = await engine.status(handle.run_id)
                 assert recovered.pending[0]["action_id"] == pending["action_id"]
@@ -272,18 +417,31 @@ def test_connected_original_action_approval_recovery_and_cancel(
                 child_id, pending["action_id"], pending["digest"], command_id="approve"
             )
             counter = tmp_path / "native-submissions.jsonl"
-            if mode == "running_cancel":
+            if mode in {"running_cancel", "owned_close"}:
                 await wait_until(
                     lambda: asyncio.to_thread(
                         lambda: counter.read_text() if counter.exists() else ""
                     ),
                     lambda value: len(value.splitlines()) == 2,
                 )
-                await engine.cancel(handle.run_id, command_id="cancel")
+                if mode == "owned_close":
+                    await assembly.aclose(wait_timeout=40)
+                    with pytest.raises(Exception, match="TemporalEngine is closed"):
+                        await engine.status(handle.run_id)
+                    # A closed owned facade cannot observe. The original
+                    # borrowed SDK connection can reconnect to the same Run.
+                    engine = TemporalEngine(
+                        client,
+                        task_queue=queue,
+                        release=published_release,
+                        scope=scope,
+                    )
+                else:
+                    await engine.cancel(handle.run_id, command_id="cancel")
             final = await wait_until(
                 lambda: engine.status(handle.run_id),
                 lambda value: (
-                    value.state == ("cancelled" if mode == "running_cancel" else "succeeded")
+                    value.state == ("succeeded" if mode == "approval_cold_restart" else "cancelled")
                 ),
                 wait_seconds=90,
             )
@@ -310,7 +468,8 @@ def test_connected_original_action_approval_recovery_and_cancel(
             assert docker["containers"] == {} and docker["removed"] == [
                 original["prepared"]["container_id"]
             ]
-            assert await journal.pending_resources(scope) == ()
+            if mode != "owned_close":
+                assert await journal.pending_resources(scope) == ()
             rows = await admin.execute(
                 sql.SQL("SELECT record FROM {}.ralf_temporal_coding_resources").format(
                     sql.Identifier(schema)
@@ -325,7 +484,7 @@ def test_connected_original_action_approval_recovery_and_cancel(
             )
             effect_rows = await effect.fetchall()
             assert len(effect_rows) == 1
-            assert (effect_rows[0][0] == "adopted") is (mode != "running_cancel")
+            assert (effect_rows[0][0] == "adopted") is (mode == "approval_cold_restart")
             if composition:
                 proof = await wait_until(
                     lambda: client.get_workflow_handle(handle.run_id).query(
@@ -334,7 +493,24 @@ def test_connected_original_action_approval_recovery_and_cancel(
                     lambda value: value["physical_stopped"] is True,
                 )
                 assert proof["execution_epoch"] == proof["original_execution_epoch"]
-            for run_id in {handle.run_id, child_id}:
+            histories = {handle.run_id, child_id}
+            if composition:
+                children = await client.get_workflow_handle(handle.run_id).query(
+                    "view", {"scope": asdict(scope), "kind": "coding_composition_children"}
+                )
+                histories.update(call["run_id"] for call in children)
+                assert all(call["planning_revision"] == 0 for call in children)
+                if parent_kind == "dynamic-model":
+                    planners = [call for call in children if call["member"] == "@planner"]
+                    assert len(planners) == 1
+                    assert planners[0]["physical_stop_proof"]["physical_stopped"] is True
+                    assert planners[0]["request"]["definition"]["steps"][0]["tools"] == []
+                if parent_kind == "checked-team" and mode == "approval_cold_restart":
+                    verifiers = [call for call in children if call["member"] == "@verifier"]
+                    assert len(verifiers) == 1
+                    assert verifiers[0]["physical_stop_proof"]["physical_stopped"] is True
+                    assert verifiers[0]["request"]["definition"]["steps"][0]["tools"] == []
+            for run_id in histories:
                 history = await client.get_workflow_handle(run_id).fetch_history()
                 assert canary not in history.to_json()
                 updates = await completed_updates(history)
@@ -361,7 +537,8 @@ def test_connected_original_action_approval_recovery_and_cancel(
             (tmp_path / "evidence.json").write_text(
                 json.dumps(
                     {
-                        "binding": 15 if composition else 14,
+                        "binding": 17 if composition else 16,
+                        "parent_kind": parent_kind,
                         "mode": mode,
                         "state": final.state,
                         "action_id": action["id"],
@@ -401,4 +578,8 @@ def test_connected_original_action_approval_recovery_and_cancel(
 
 
 if __name__ == "__main__":
-    asyncio.run(_worker())
+    # Registry implementation identity includes the defining module. Use the
+    # same canonical fixture module in both host and separate Worker process.
+    from tests.test_temporal_connected_coding_integration import _worker as canonical_worker
+
+    asyncio.run(canonical_worker())

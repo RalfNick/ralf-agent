@@ -165,7 +165,9 @@ class TemporalParentWorkflow(TemporalRunWorkflow):
 
         composition = enabled(self.state.manifest)
         if composition and not workflow.patched(
-            "ralf-coding-composition-v3"
+            "ralf-coding-composition-v4"
+            if self.state.manifest.get("binding_protocol") == 17
+            else "ralf-coding-composition-v3"
             if self.state.manifest.get("binding_protocol") == 15
             else "ralf-coding-composition-v2"
             if self.state.manifest.get("binding_protocol") == 13
@@ -372,9 +374,11 @@ class TemporalParentWorkflow(TemporalRunWorkflow):
                         self.state._emit("child_start_reply_uncertain", {"run_id": call["run_id"]})
                     self.state.mark_started(call["run_id"])
                     changed = True
-                if not any(
-                    not c.get("settled") for c in self.state.children
-                ) and self.state.stage in {"select", "plan", "verify"}:
+                if self.state.children_quiescent and self.state.stage in {
+                    "select",
+                    "plan",
+                    "verify",
+                }:
                     if self.state.stage == "plan":
                         planner = self.state.manifest["orchestration"]["planners"][
                             self.state.definition["planner"]

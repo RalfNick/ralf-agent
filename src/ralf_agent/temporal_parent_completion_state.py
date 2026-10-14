@@ -17,7 +17,7 @@ def validate_protocol(manifest):
     if (
         manifest.get("kernel") != "temporal-3"
         or type(manifest.get("binding_protocol")) is not int
-        or manifest["binding_protocol"] not in (9, 10, 11, 12, 13, 14, 15)
+        or manifest["binding_protocol"] not in (9, 10, 11, 12, 13, 14, 15, 16, 17)
         or type(manifest.get("parent_completion_protocol")) is not int
         or manifest["parent_completion_protocol"] != 1
         or type(registry) is not dict
@@ -131,10 +131,12 @@ def _source_children(state):
 def source(state, candidate):
     from .parent_completion import ParentCompletionRequest
     from .temporal_bindings import request_release_digest
+    from .temporal_coding_composition_state import orchestration_enabled
     from .temporal_parent_state import child_run_id
     from .temporal_state import detached
 
     children, receipts, seen, input_replies = [], [], set(), []
+    fixed_results = orchestration_enabled(state.manifest)
     policy = state.manifest["parent_completion_policies"][state.definition["completion_policy"]]
 
     def visit(
@@ -238,6 +240,9 @@ def source(state, candidate):
                 )
         native = kind == "agent"
         final = final_models[-1] if native else None
+        if fixed_results and "adopted_result" not in call:
+            raise DefinitionMismatch("Parent source lacks original adopted business result")
+        business_result = call["adopted_result"] if fixed_results else snapshot["result"]
         children.append(
             {
                 "id": "child:" + digest([run_id, release]),
@@ -251,8 +256,8 @@ def source(state, candidate):
                 "input": detached(call["input"]),
                 "input_digest": digest(call["input"]),
                 "input_consumed": final["input_consumed"] if final else None,
-                "result": detached(snapshot["result"]),
-                "result_digest": digest(snapshot["result"]),
+                "result": detached(business_result),
+                "result_digest": digest(business_result),
                 "final_action_id": final["action_id"] if final else None,
                 "final_snapshot_digest": final["snapshot_digest"] if final else None,
                 "final_models": final_models,
@@ -565,10 +570,15 @@ def prepare(state, candidate):
 
 
 def next_operation(state):
+    from .temporal_coding_composition_state import orchestration_enabled
     from .temporal_state import TERMINAL, detached
 
     key = state.parent_completion_pending
     if key is None or state.state in TERMINAL:
+        return None
+    if orchestration_enabled(state.manifest) and (
+        not state.children_quiescent or getattr(state, "composition_stop_intent", None) is not None
+    ):
         return None
     stage = state.parent_completion_stages[key]
     if stage["status"] not in {"prepared", "proposal_received"}:

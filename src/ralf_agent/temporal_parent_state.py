@@ -140,6 +140,16 @@ class TemporalParentState(TemporalRunState):
 
     @property
     def children_quiescent(self):
+        from .temporal_coding_composition_state import (
+            child_capacity_released,
+            orchestration_enabled,
+        )
+
+        if orchestration_enabled(self.manifest):
+            return all(
+                call.get("settled") is True and child_capacity_released(call)
+                for call in self.children
+            )
         return all(call.get("settled", False) for call in self.children)
 
     def next_session_operation(self):
@@ -446,8 +456,12 @@ class TemporalParentState(TemporalRunState):
         self._emit("plan_revision_adopted", {"plan_revision": self.plan_revision})
 
     def accept_selection(self, value):
+        from .temporal_coding_composition_state import orchestration_enabled
+
         if getattr(self, "composition_stop_intent", None) is not None or self.state in TERMINAL:
             raise ValidationError("Closed parent cannot adopt new selection")
+        if orchestration_enabled(self.manifest) and not self.children_quiescent:
+            raise ValidationError("Original children still own physical execution capacity")
         detached(value)
         if self.kind == "team":
             try:
@@ -538,9 +552,54 @@ class TemporalParentState(TemporalRunState):
             return self.manifest["orchestration"]["planners"][self.definition["planner"]]["agent"]
         return self.definition["members"][member]
 
+    def _project_call_request(self, call, cap, *, verifier=False):
+        """Project the actual declared member before any child cap admission."""
+        if call.member in {"@planner", "@verifier"}:
+            member = decode_spec(self._member(call.member))
+        elif self.kind == "graph":
+            node = next(
+                node
+                for node in [GraphNode.from_dict(n) for n in self.dag["plan"]["nodes"]]
+                if node.id == call.member
+            )
+            member = node.agent
+        else:
+            member = decode_spec(self._member(call.member))
+        request = submission_request(member, call.input, budget=cap)
+        if verifier:
+            request["agent_bindings"] = detached(
+                self.manifest["parent_completion_policies"][self.definition["completion_policy"]][
+                    "effective_agent_release"
+                ]["agent_bindings"]
+            )
+        from .temporal_bindings import project_child
+
+        return project_child(self.request, call.member, request)
+
+    def _call_runner_keys(self, call):
+        from .temporal_coding_composition_state import coding_runner_keys
+
+        return coding_runner_keys(self._project_call_request(call, self.child_cap), self.manifest)
+
     def delegate(self, call, *, graph_node=None, verifier=False):
+        from .temporal_coding_composition_state import orchestration_enabled
+
         if getattr(self, "composition_stop_intent", None) is not None or self.state in TERMINAL:
             return None
+        if (
+            orchestration_enabled(self.manifest)
+            and call.member == "@planner"
+            and (
+                self.kind != "dynamic"
+                or call.id != "planner"
+                or self.stage != "plan"
+                or self.manifest["orchestration"]["planners"]
+                .get(self.definition.get("planner"), {})
+                .get("agent")
+                is None
+            )
+        ):
+            raise ValidationError("Planner child requires its original Dynamic planning slot")
         if verifier and (
             call.member != "@verifier"
             or call.id != "verdict"
@@ -573,26 +632,7 @@ class TemporalParentState(TemporalRunState):
                 raise IdempotencyConflict("Original child intent changed")
             return detached(prior)
         command_id = "ralf-child:" + digest([self.scope, self.run_id, identity])
-        if self.kind == "graph":
-            node = next(
-                node
-                for node in [GraphNode.from_dict(n) for n in self.dag["plan"]["nodes"]]
-                if node.id == call.member
-            )
-            member = node.agent
-        else:
-            member = decode_spec(self._member(call.member))
-        request = submission_request(member, call.input, budget=cap)
-        from .temporal_bindings import project_child
-
-        if verifier:
-            request["agent_bindings"] = detached(
-                self.manifest["parent_completion_policies"][self.definition["completion_policy"]][
-                    "effective_agent_release"
-                ]["agent_bindings"]
-            )
-
-        request = project_child(self.request, call.member, request)
+        request = self._project_call_request(call, cap, verifier=verifier)
         if "session_lineage" in self.request:
             from .temporal_session_tree import project_lineage
 
@@ -636,8 +676,14 @@ class TemporalParentState(TemporalRunState):
                 else {}
             ),
         }
-        from .temporal_coding_composition_state import enabled, project_child_link
+        from .temporal_coding_composition_state import (
+            enabled,
+            orchestration_enabled,
+            project_child_link,
+        )
 
+        if orchestration_enabled(self.manifest):
+            entry["planning_revision"] = self.planning_revision
         if enabled(self.manifest):
             entry["request"] = project_child_link(self, entry, request)
             entry["child_request_digest"] = digest(entry["request"])
@@ -654,9 +700,9 @@ class TemporalParentState(TemporalRunState):
     def next_calls(self):
         from .temporal_coding_composition_state import (
             child_capacity_released,
-            coding_runner_keys,
             enabled,
             occupied_runner_keys,
+            orchestration_enabled,
         )
 
         if enabled(self.manifest) and (
@@ -672,10 +718,10 @@ class TemporalParentState(TemporalRunState):
             or self.root_aggregate is not None
         ):
             return []
-        resource_aware = (
-            enabled(self.manifest)
-            and self.manifest.get("binding_protocol") in (13, 15)
+        resource_aware = enabled(self.manifest) and (
+            self.manifest.get("binding_protocol") in (13, 15)
             and self.kind == "graph"
+            or orchestration_enabled(self.manifest)
         )
         pending = [
             call
@@ -700,32 +746,21 @@ class TemporalParentState(TemporalRunState):
                 for node in ready:
                     if slots <= 0:
                         break
+                    call = ChildCall(
+                        node.id,
+                        node.id
+                        if self.kind == "graph"
+                        else next(
+                            n["member"] for n in self.dag["proposal"]["nodes"] if n["id"] == node.id
+                        ),
+                        _resolve(node.input, self.request["input"], settled),
+                    )
                     resources = frozenset()
                     if resource_aware:
-                        from .temporal_bindings import project_child
-
-                        projected = project_child(
-                            self.request,
-                            node.id,
-                            submission_request(node.agent, None, budget=self.child_cap),
-                        )
-                        resources = coding_runner_keys(projected, self.manifest)
+                        resources = self._call_runner_keys(call)
                         if resources & occupied:
                             continue
-                    self.delegate(
-                        ChildCall(
-                            node.id,
-                            node.id
-                            if self.kind == "graph"
-                            else next(
-                                n["member"]
-                                for n in self.dag["proposal"]["nodes"]
-                                if n["id"] == node.id
-                            ),
-                            _resolve(node.input, self.request["input"], settled),
-                        ),
-                        graph_node=node.id,
-                    )
+                    self.delegate(call, graph_node=node.id)
                     occupied.update(resources)
                     slots -= 1
                 if (
@@ -741,9 +776,21 @@ class TemporalParentState(TemporalRunState):
                         self.stage = "verify"
                         self.dag["result"] = result
             else:
-                for _ in range(min(slots, len(self.queue))):
-                    call = self.queue.pop(0)
-                    self.delegate(ChildCall(**call))
+                occupied = set(occupied_runner_keys(self)) if resource_aware else set()
+                waiting = []
+                for value in self.queue:
+                    if slots <= 0:
+                        waiting.append(value)
+                        continue
+                    call = ChildCall(**value)
+                    resources = self._call_runner_keys(call) if resource_aware else frozenset()
+                    if resources & occupied:
+                        waiting.append(value)
+                        continue
+                    self.delegate(call)
+                    occupied.update(resources)
+                    slots -= 1
+                self.queue = waiting
                 if not self.queue and not pending:
                     self.stage = "select"
         return detached(
@@ -756,7 +803,64 @@ class TemporalParentState(TemporalRunState):
             call["started"] = True
             self._emit("child_started", {"run_id": run_id})
 
+    def _adopt_child_result(self, call):
+        """Promote one original settled result after its selected physical stop."""
+        from .temporal_coding_composition_state import (
+            child_capacity_released,
+            orchestration_enabled,
+        )
+
+        if (
+            call["member"] in {"@planner", "@verifier"}
+            or call["state"] != "succeeded"
+            or not call.get("settled")
+        ):
+            return
+        current = orchestration_enabled(self.manifest)
+        if current and (
+            not child_capacity_released(call)
+            or call["planning_revision"] != self.planning_revision
+            or getattr(self, "composition_stop_intent", None) is not None
+        ):
+            return
+        node = (
+            next((n for n in self.dag["nodes"].values() if n.get("call_id") == call["id"]), None)
+            if self.dag
+            else None
+        )
+        if current and self.kind == "dynamic" and node is None:
+            return
+        result = call.get("snapshot", {}).get("result")
+        if node is not None:
+            declared = next(
+                n
+                for n in [GraphNode.from_dict(n) for n in self.dag["plan"]["nodes"]]
+                if self.dag["nodes"][n.id] is node
+            )
+            result = validate_output(result, declared.output_schema)
+        if current:
+            # Later diagnostics still update financial/physical evidence, but
+            # cannot rewrite the original result already used by this parent.
+            if "adopted_result" not in call:
+                call["adopted_result"] = detached(result)
+            result = call["adopted_result"]
+        if node is not None:
+            node.update(state="completed", result=detached(result))
+        latest = next(
+            (
+                c
+                for c in reversed(self.children)
+                if c["member"] == call["member"]
+                and c.get("planning_revision", 0) == self.planning_revision
+            ),
+            None,
+        )
+        if not current or latest is call:
+            self.results[call["member"]] = detached(result)
+
     def observe(self, run_id, value):
+        from .temporal_coding_composition_state import orchestration_enabled
+
         detached(value)
         call = next((c for c in self.children if c["run_id"] == run_id), None)
         if call is None:
@@ -846,7 +950,7 @@ class TemporalParentState(TemporalRunState):
             if call.get("observation_digest") == fingerprint:
                 return
             # Validate the output before adopting evidence or releasing capacity.
-            node, normalized = None, snapshot["result"]
+            node = None
             if (
                 call["member"] not in {"@planner", "@verifier"}
                 and snapshot["state"] == "succeeded"
@@ -861,7 +965,7 @@ class TemporalParentState(TemporalRunState):
                         for n in [GraphNode.from_dict(n) for n in self.dag["plan"]["nodes"]]
                         if self.dag["nodes"][n.id] is node
                     )
-                    normalized = validate_output(snapshot["result"], declared.output_schema)
+                    validate_output(snapshot["result"], declared.output_schema)
             call.update(
                 **native,
                 snapshot=detached(snapshot),
@@ -885,14 +989,7 @@ class TemporalParentState(TemporalRunState):
                 and not snapshot["pending"]
             ):
                 call["settled"] = True
-            if (
-                call["member"] not in {"@planner", "@verifier"}
-                and call["state"] == "succeeded"
-                and call["settled"]
-            ):
-                self.results[call["member"]] = detached(normalized)
-                if node is not None:
-                    node.update(state="completed", result=detached(normalized))
+            self._adopt_child_result(call)
             if call.get("role") == "verifier":
                 from .temporal_parent_completion_state import observe_verifier
 
@@ -900,6 +997,10 @@ class TemporalParentState(TemporalRunState):
             if (
                 self.state not in TERMINAL
                 and getattr(self, "composition_stop_intent", None) is None
+                and (
+                    not orchestration_enabled(self.manifest)
+                    or call["planning_revision"] == self.planning_revision
+                )
             ):
                 if call["state"] in {"failed", "cancelled"}:
                     self.state, self.error = (
@@ -937,15 +1038,18 @@ class TemporalParentState(TemporalRunState):
             raise ValidationError("Malformed child observation") from exc
 
     def patch(self, value, expected_revision):
-        from .temporal_coding_composition_state import enabled
+        from .temporal_coding_composition_state import enabled, orchestration_enabled
 
-        if enabled(self.manifest):
+        if enabled(self.manifest) and (
+            not orchestration_enabled(self.manifest) or self.kind != "dynamic"
+        ):
             raise DefinitionMismatch("Coding composition static graph patches are refused")
         if (
             self.kind != "dynamic"
             or self.definition.get("plan_mode") != "dag"
             or self.dag is None
             or self.state in TERMINAL
+            or getattr(self, "composition_stop_intent", None) is not None
             or self.parent_completion_enabled
             and self.stage != "execute"
         ):
@@ -978,12 +1082,20 @@ class TemporalParentState(TemporalRunState):
         return {"plan_revision": self.plan_revision, "state_revision": self.revision}
 
     def planning_request(self):
+        from .temporal_coding_composition_state import orchestration_enabled
         from .temporal_user_input import clarifications
 
+        fixed_results = orchestration_enabled(self.manifest)
         results = [
-            {"id": c["id"], "member": c["member"], "result": c["snapshot"]["result"]}
+            {
+                "id": c["id"],
+                "member": c["member"],
+                "result": c["adopted_result"] if fixed_results else c["snapshot"]["result"],
+            }
             for c in self.children
-            if c["state"] == "succeeded" and c["member"] not in {"@planner", "@verifier"}
+            if c["state"] == "succeeded"
+            and c["member"] not in {"@planner", "@verifier"}
+            and (not fixed_results or "adopted_result" in c)
         ]
         return PlanningRequest(
             self.request["input"],
@@ -1015,7 +1127,15 @@ class TemporalParentState(TemporalRunState):
 
     def accept_verification(self, value):
         from .planning import Verification
+        from .temporal_coding_composition_state import orchestration_enabled
 
+        if orchestration_enabled(self.manifest) and (
+            getattr(self, "composition_stop_intent", None) is not None
+            or self.state in TERMINAL
+            or self.stage != "verify"
+            or not self.children_quiescent
+        ):
+            raise ValidationError("Original verification requires physically closed children")
         verification = Verification(**value)
         self._emit("verification_received", verification.to_dict())
         if verification.status == "replan":
