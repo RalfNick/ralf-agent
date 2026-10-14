@@ -1624,13 +1624,33 @@ COMMAND_REGISTRY_CAPACITY = 4096
 class TemporalCommandRegistryState:
     """Scoped identity guard only. It never stores Run state or applied outcomes."""
 
-    def __init__(self, scope, *, capacity=COMMAND_REGISTRY_CAPACITY):
+    def __init__(
+        self,
+        scope=None,
+        *,
+        admission_policy=None,
+        namespace=None,
+        capacity=COMMAND_REGISTRY_CAPACITY,
+    ):
         if type(capacity) is not int or not 1 <= capacity <= COMMAND_REGISTRY_CAPACITY:
             raise ValidationError("Invalid Temporal command registry capacity")
+        self.deployment = None
+        if admission_policy is not None or namespace is not None:
+            from .temporal_deployment_admission import DeploymentAdmissionState
+
+            if scope is not None:
+                raise ValidationError("Deployment Registry cannot select a single scope")
+            self.deployment = DeploymentAdmissionState(
+                admission_policy, namespace, capacity=capacity
+            )
+            self.scope = None
+            return
         self.scope, self.capacity, self.identities = detached(scope), capacity, {}
         self.composition_submissions = {}
 
     def reserve(self, request):
+        if self.deployment is not None:
+            return self.deployment.reserve(request)
         if request.get("scope") != self.scope:
             raise AuthorizationDenied("Command registry belongs to another trusted scope")
         for key in ("command_id", "kind", "target", "payload_digest"):
@@ -1678,6 +1698,7 @@ class TemporalCommandRegistryState:
         }
 
     def composition_candidates(self, manifest_digest):
+        self._require_scoped_mode()
         from .session_types import sha
 
         sha(manifest_digest)
@@ -1690,6 +1711,7 @@ class TemporalCommandRegistryState:
         )
 
     def close_composition_submissions(self, manifest_digest):
+        self._require_scoped_mode()
         from .session_types import sha
 
         sha(manifest_digest)
@@ -1703,6 +1725,7 @@ class TemporalCommandRegistryState:
         }
 
     def composition_admission(self, command_id, run_id, request_digest, manifest_digest):
+        self._require_scoped_mode()
         item = self.composition_submissions.get(command_id)
         if (
             item is None
@@ -1716,6 +1739,7 @@ class TemporalCommandRegistryState:
     def bind_composition_submission(
         self, command_id, run_id, request_digest, manifest_digest, execution_epoch, namespace
     ):
+        self._require_scoped_mode()
         from .temporal_coding_composition_state import _namespace
 
         self.composition_admission(command_id, run_id, request_digest, manifest_digest)
@@ -1731,6 +1755,22 @@ class TemporalCommandRegistryState:
         if item["execution_epoch"] is None:
             item.update(execution_epoch=execution_epoch, namespace=detached(namespace))
         return self.composition_admission(command_id, run_id, request_digest, manifest_digest)
+
+    def _require_scoped_mode(self):
+        if self.deployment is not None:
+            raise DefinitionMismatch(
+                "Deployment Registry does not accept Coding composition updates"
+            )
+
+    def bind_deployment_root(self, request):
+        if self.deployment is None:
+            raise DefinitionMismatch("Original deployment Registry admission is required")
+        return self.deployment.bind_deployment_root(request)
+
+    def deployment_admission(self, request):
+        if self.deployment is None:
+            raise DefinitionMismatch("Original deployment Registry admission is required")
+        return self.deployment.deployment_admission(request)
 
 
 def temporal_capabilities():

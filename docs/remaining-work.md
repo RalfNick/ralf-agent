@@ -1,4 +1,6 @@
-# dev116：剩余能力与架构验收清单
+# dev117：剩余能力与架构验收清单
+
+Dev117 在原 CommandRegistry History 增加部署准入基础：固定完整策略与 namespace、部署隔离地址、Scope 命令身份、原子根限额，以及原根执行 epoch 身份登记。实际服务覆盖并发、容量拒绝无回执、重复命令、队列固定、Worker 重启与 History 重放；这些是登记协议证据，尚未验证业务 Run 的 SDK 绑定。公共 Engine／Profile 继续拒绝部署策略；原 Run／Parent 调度、子孙传播、不确定启动与物理安全释放仍需下一批实现，批次 2 未关闭。见[契约](../architecture/specs/temporal-deployment-admission-contract.md)和[验收登记](../architecture/reviews/2026-10-14-temporal-deployment-admission.md)。
 
 Dev116 交付[Local 部署准入](deployment-admission.md)，在原 SQLite 权威固定全部署／每 Scope 根容量，原后代共用根占位；原 Profile 可通过 Builder 宿主参数继续恢复 legacy。槽位释放核对持久义务与真实工作，失败及恢复见[验收登记](../architecture/reviews/2026-10-14-local-admission.md)。下一必需门槛为 Temporal 原 History 部署准入与实际服务证明；其 command registry 累计记录容量、单 Run 并发和 Runner 容量均不能替代。批次 2、第三阶段与 R01–R26 仍开放。
 

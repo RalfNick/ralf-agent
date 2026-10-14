@@ -190,3 +190,5 @@ admission = info.workflow["local_admission"]
 当前不提供 force release、TTL 逐出、队列或跨 SQLite 数据库共享额度。Temporal 的显式准入配置在组件 I/O 前拒绝；后续必须由原 CommandRegistry／Run／Parent History 接通部署准入、原 SDK epoch 和停止证据，EffectJournal 不能成为另一套执行权威。Local 交付不关闭第三阶段批次 2，更不代表 R21–R26、企业平台或真实模型质量已验收。
 
 已结束验证子 Run 的父阶段可沿原 journal 退休；收到的不合法 evidence 提案仍保留，不采纳晚到 verdict。此 closed＋received 变体仅用于已安装治理的失败／取消根，旧未治理记录不新增该语义。未知验证请求、预算或实际工作未闭合时继续占位；原版本与原 Profile 恢复仍是必要条件。
+
+Temporal dev117 只交付原 CommandRegistry History 的内部部署准入与身份登记基础，详见[独立契约](../architecture/specs/temporal-deployment-admission-contract.md)。公共 Temporal Engine／Profile 仍拒绝启用；登记 epoch 不是业务 SDK 执行验证。原 Run／Parent／子孙调度、不确定启动恢复、未知义务与实际结束后的安全释放仍待实现，不能将本基础当作可用 Temporal 部署容量控制。

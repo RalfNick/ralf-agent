@@ -666,3 +666,5 @@ M1 退出条件是小任务闭环及故障窗口、质量基线通过；M2a／M2
 - [用户提供的 AweGen 参考文档](https://bytedance.larkoffice.com/docx/H7rAd2RbKo6OiFxI0PBcZsyanxf)。
 - [用户提供的架构 review](https://chatgpt.com/space/page_6ac325daccd4819190f4ac1ef3fa90f2)；合并取舍见 [review 合并说明](review-resolution.md)。
 - [LangGraph interrupt 恢复语义](https://docs.langchain.com/oss/python/langgraph/interrupts)。
+
+Temporal 部署准入以[原 History 契约](specs/temporal-deployment-admission-contract.md)继续落实。dev117 的内部 Registry 模式固定完整策略／namespace、跨 Scope 原子登记根额度并登记不可替代的根 epoch；登记本身不证明业务 SDK 执行。公共 Engine／Profile 仍拒绝启用，原 Run／Parent／子孙调度、不确定启动恢复与实际物理结束后的安全释放属于必需下一交付，第三阶段批次 2 未关闭。

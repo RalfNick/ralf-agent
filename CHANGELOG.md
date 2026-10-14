@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.0.dev117 — Temporal deployment admission History foundation
+
+- Extend the original CommandRegistry Workflow with an internal deployment mode: immutable policy and namespace, deployment-addressed Registry/root IDs, scoped command identity and atomic total/Scope root quota.
+- Preserve original duplicate reservations while full, retain first manifest selection, admit controls without a new root slot, and refuse capacity without creating a command. Pin caller-supplied SDK epoch identity without treating it as verified business execution.
+- Add detached scoped observation, strict envelopes, safe Worker imports, actual concurrent service and Worker restart/History replay coverage; default scoped mode stays compatible.
+- Public Engine/Profile selection, original Run/Parent dispatch and descendants, uncertain-start recovery and safe physical release remain required next work. No release or public activation is added by this foundation; phase-three batch 2 remains open.
+
 ## 0.1.0.dev116 — Durable Local deployment admission
 
 - Add independent `DeploymentAdmissionPolicy`, Local `admission_policy/bounded` declaration and sync/async replacement. Builder host policy supports unchanged legacy Profiles; dual sources fail before resource I/O.

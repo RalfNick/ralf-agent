@@ -1,4 +1,6 @@
-# Implementation status — 0.1.0.dev116
+# Implementation status — 0.1.0.dev117
+
+Dev117 在原 CommandRegistry History 增加部署准入基础：固定完整策略与 namespace、部署隔离地址、Scope 命令身份、原子根限额，以及原根执行 epoch 身份登记。实际服务覆盖并发、容量拒绝无回执、重复命令、队列固定、Worker 重启与 History 重放；这些是登记协议证据，尚未验证业务 Run 的 SDK 绑定。公共 Engine／Profile 继续拒绝部署策略；原 Run／Parent 调度、子孙传播、不确定启动与物理安全释放仍需下一批实现，批次 2 未关闭。见[契约](../architecture/specs/temporal-deployment-admission-contract.md)和[验收登记](../architecture/reviews/2026-10-14-temporal-deployment-admission.md)。
 
 Dev116 补齐[Local 部署根准入](deployment-admission.md)：独立 `DeploymentAdmissionPolicy`、SDK／Profile／JSON／TOML、同步／异步替换及原 Profile 的宿主策略恢复入口。原 Store 固定部署策略并纳入 legacy，根与所有子 Run 共用一份持久槽位；未知、零金额预留、辅助写入、实际线程与原子孙义务均保留。终态验证阶段仅按原证据退休，原提案不清除、不采纳晚到 verdict；公开诊断暴露释放宿主故障。[验收登记](../architecture/reviews/2026-10-14-local-admission.md)区分源码、安装与恢复证据。Temporal 部署准入仍是批次 2 的必需下一交付，不能以单 Run／Runner 限制替代；批次 2 与第三阶段未关闭。
 

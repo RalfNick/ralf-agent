@@ -278,6 +278,8 @@ jobs:
         run: python -m pytest -q -W error tests/test_temporal_assembly_review.py tests/test_temporal_profiles.py tests/test_temporal_runtime_profile.py tests/test_temporal_assembly.py tests/test_temporal_assembly_lifetime.py tests/test_temporal_assembly_cleanup.py tests/test_temporal_worker_wrapping.py tests/test_temporal_profile_example.py tests/test_temporal_profile_service.py tests/test_temporal_profile_remote.py tests/test_temporal_profile_close_service.py
       - name: Declared Temporal policy and original expiry recovery
         run: python -m pytest -q -W error tests/test_temporal_policy_profiles.py tests/test_temporal_policy_profiles_service.py
+      - name: Original Temporal deployment admission History foundation
+        run: python -m pytest -q -W error tests/test_temporal_deployment_admission_state.py tests/test_temporal_deployment_admission_workflow.py tests/test_temporal_deployment_admission_service.py
       - name: Temporal multiversion Host and original queues
         run: python -m pytest -q -W error tests/test_temporal_catalog_assembly.py tests/test_temporal_catalog_lifetime.py tests/test_temporal_profile_host.py tests/test_temporal_host_lifetime.py tests/test_temporal_host_routing.py tests/test_temporal_host_sessions.py tests/test_temporal_journal_configuration.py tests/test_temporal_catalog_example.py tests/test_temporal_profile_host_service.py tests/test_temporal_host_close_service.py tests/test_temporal_host_review.py tests/test_temporal_startup_options.py tests/test_temporal_host_preflight.py tests/test_temporal_host_preflight_service.py tests/test_cli_temporal_service.py tests/test_http_temporal_service.py tests/test_mcp_http_temporal_service.py tests/test_workspace_temporal_service.py tests/test_workspace_binding_temporal.py tests/test_workspace_binding_review.py tests/test_workspace_binding_temporal_service.py tests/test_workspace_write_execution.py tests/test_workspace_write_temporal_service.py tests/test_skill_execution.py tests/test_skill_temporal_service.py tests/test_skill_binding_temporal.py tests/test_skill_binding_temporal_service.py tests/test_skill_document_temporal_service.py tests/test_workspace_write_lifetime_service.py
       - name: Actual Temporal Artifact bindings and independent Worker recovery
@@ -310,6 +312,10 @@ jobs:
         working-directory: ${{ runner.temp }}
         run: |
           python -m pytest -q -W error -p no:cacheprovider -c /dev/null "$RUNNER_TEMP/artifact-contracts/tests/test_temporal_policy_profiles.py" "$RUNNER_TEMP/artifact-contracts/tests/test_temporal_policy_profiles_service.py"
+      - name: Installed Temporal deployment admission History foundation
+        run: |
+          cd "$RUNNER_TEMP"
+          python -m pytest -q -W error -p no:cacheprovider -c /dev/null "$RUNNER_TEMP/artifact-contracts/tests/test_temporal_deployment_admission_state.py" "$RUNNER_TEMP/artifact-contracts/tests/test_temporal_deployment_admission_workflow.py" "$RUNNER_TEMP/artifact-contracts/tests/test_temporal_deployment_admission_service.py"
       - name: Installed complete final history and Worker recovery outside checkout
         working-directory: ${{ runner.temp }}
         run: |

@@ -658,6 +658,7 @@ class TemporalRunWorkflow:
 
 
 with workflow.unsafe.imports_passed_through():
+    from .temporal_deployment_admission import registry_id as deployment_registry_id
     from .temporal_state import COMMAND_REGISTRY_NAME, TemporalCommandRegistryState
 
 
@@ -667,7 +668,34 @@ class TemporalCommandRegistryWorkflow:
 
     @workflow.init
     def __init__(self, accepted: dict):
-        self.commands = TemporalCommandRegistryState(accepted["scope"])
+        from .errors import DefinitionMismatch
+
+        if type(accepted) is not dict:
+            raise DefinitionMismatch("Command registry requires a plain initialization envelope")
+        if "deployment_admission" not in accepted:
+            self.commands = TemporalCommandRegistryState(accepted["scope"])
+            return
+
+        selected = accepted["deployment_admission"]
+        if (
+            set(accepted) != {"deployment_admission"}
+            or type(selected) is not dict
+            or set(selected) != {"version", "policy", "namespace"}
+            or type(selected["version"]) is not int
+            or selected["version"] != 1
+            or selected["policy"] is None
+            or selected["namespace"] is None
+        ):
+            raise DefinitionMismatch("Invalid original deployment admission envelope")
+        commands = TemporalCommandRegistryState(
+            admission_policy=selected["policy"], namespace=selected["namespace"]
+        )
+        info = workflow.info()
+        if info.namespace != selected["namespace"][
+            "name"
+        ] or info.workflow_id != deployment_registry_id(selected["policy"]["deployment_id"]):
+            raise DefinitionMismatch("Deployment admission requires its original SDK address")
+        self.commands = commands
 
     @workflow.run
     async def run(self, accepted: dict) -> None:
@@ -688,6 +716,10 @@ class TemporalCommandRegistryWorkflow:
     @workflow.update(name="admit_coding_composition_submission")
     async def admit_coding_composition_submission(self, request: dict) -> dict:
         try:
+            if self.commands.deployment is not None:
+                from .errors import DefinitionMismatch
+
+                raise DefinitionMismatch("Deployment composition admission is not integrated")
             if request.get("scope") != self.commands.scope:
                 from .errors import AuthorizationDenied
 
@@ -724,6 +756,10 @@ class TemporalCommandRegistryWorkflow:
     @workflow.update(name="close_coding_composition_submissions")
     async def close_coding_composition_submissions(self, request: dict) -> dict:
         try:
+            if self.commands.deployment is not None:
+                from .errors import DefinitionMismatch
+
+                raise DefinitionMismatch("Deployment composition admission is not integrated")
             if request.get("scope") != self.commands.scope:
                 from .errors import AuthorizationDenied
 
@@ -740,8 +776,25 @@ class TemporalCommandRegistryWorkflow:
                 non_retryable=True,
             ) from None
 
+    @workflow.update(name="bind_deployment_root")
+    async def bind_deployment_root(self, request: dict) -> dict:
+        # This pins SDK identity only; it does not adopt outcomes or free quota.
+        try:
+            return self.commands.bind_deployment_root(request)
+        except Exception as exc:
+            raise ApplicationError(
+                "Original deployment root binding rejected",
+                type=getattr(exc, "code", "validation_error"),
+                non_retryable=True,
+            ) from None
+
     @workflow.query(name="view")
     def view(self, request: dict) -> dict:
+        if self.commands.deployment is not None:
+            try:
+                return self.commands.deployment_admission(request)
+            except Exception as exc:
+                return {"error": getattr(exc, "code", "validation_error")}
         if request.get("scope") != self.commands.scope:
             return {"error": "authorization_denied"}
         try:
