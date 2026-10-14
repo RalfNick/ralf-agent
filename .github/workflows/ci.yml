@@ -298,6 +298,10 @@ jobs:
           mkdir -p "$RUNNER_TEMP/artifact-contracts"
           cp -R "$GITHUB_WORKSPACE/tests" "$RUNNER_TEMP/artifact-contracts/tests"
           python -m pytest -q -W error -p no:cacheprovider -c /dev/null "$RUNNER_TEMP/artifact-contracts/tests/test_artifact_binding_temporal.py" "$RUNNER_TEMP/artifact-contracts/tests/test_artifact_binding_temporal_review.py" "$RUNNER_TEMP/artifact-contracts/tests/test_artifact_binding_temporal_service.py" "$RUNNER_TEMP/artifact-contracts/tests/test_artifact_binding_lifetime_service.py"
+      - name: Installed persistent Local deadlines outside checkout
+        working-directory: ${{ runner.temp }}
+        run: |
+          python -m pytest -q -W error -p no:cacheprovider -c /dev/null "$RUNNER_TEMP/session-contracts/tests/test_local_deadline_facade.py" "$RUNNER_TEMP/session-contracts/tests/test_local_deadline_policy.py" "$RUNNER_TEMP/session-contracts/tests/test_local_deadline_process.py" "$RUNNER_TEMP/session-contracts/tests/test_local_deadline_profiles.py" "$RUNNER_TEMP/session-contracts/tests/test_local_deadline_review.py" "$RUNNER_TEMP/session-contracts/tests/test_local_deadline_storage.py" "$RUNNER_TEMP/session-contracts/tests/test_local_deadline_store_contract.py" "$RUNNER_TEMP/session-contracts/tests/test_local_deadlines.py"
       - name: Installed declared Temporal policy recovery outside checkout
         working-directory: ${{ runner.temp }}
         run: |

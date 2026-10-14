@@ -185,7 +185,9 @@ class OrchestrationRuntime:
             "quiescent": True,
         }
 
-    def accept(self, run_id, definition, input, budget, session_id, parent_call=None):
+    def accept(
+        self, run_id, definition, input, budget, session_id, parent_call=None, *, deadline_at=None
+    ):
         from .spec_codec import agent_steps
 
         engine = self.engine
@@ -245,6 +247,9 @@ class OrchestrationRuntime:
                 else {}
             ),
         }
+        from .local_deadlines import accept as accept_deadlines
+
+        accept_deadlines(engine, data, deadline_at)
         engine.store.insert_run(data)
         engine.store.create_budget(run_id, budget)
         engine.store.emit(run_id, "run_submitted", {"release_digest": data["release_digest"]})
@@ -259,111 +264,123 @@ class OrchestrationRuntime:
 
     def delegate(self, run_id, call, *, planning=False, verification=False):
         engine = self.engine
+        engine._checkpoint_deadline(run_id)
         with engine.store.transaction():
-            run = engine._authorized(run_id)
-            engine._check_release(run)
-            if run["state"] in TERMINAL or run["state"] == "cancelling":
-                raise ValidationError("A stopped parent cannot dispatch a child")
-            state, definition = run["orchestration"], run["definition"]
-            if planning and state["stage"] != "select":
-                raise ValidationError("Managed planning calls require the planning stage")
-            if verification and (
-                state["stage"] != "verify"
-                or call.member != "@verifier"
-                or call.id != "verdict"
-                or run["manifest"].get("parent_completion_protocol") != 1
-            ):
-                raise ValidationError("Managed verification requires the original declared stage")
-            key = self._key(run, call, planning=planning, verification=verification)
-            existing = next((c for c in state["children"] if c["id"] == key), None)
-            if existing is not None:
-                if (
-                    existing["proposal"] != call.to_dict()
-                    or existing["planning"] != planning
-                    or (verification and existing.get("role") != "verifier")
-                ):
-                    raise DefinitionMismatch("The stable child call changed")
-                return existing
-            member = definition["members"].get(call.member)
-            if planning and call.member == "@planner":
-                planner = self.component(self.planners, definition["planner"])
-                agent = getattr(planner, "agent", None)
-                member = None if agent is None else asdict(agent)
-            if verification:
-                from .local_parent_completion import selected
-
-                completion_policy = selected(engine, definition)
-                if completion_policy.model_stage is None:
-                    raise ValidationError("No model verifier Agent is declared")
-                member = completion_policy.model_stage.agent
-            if member is None:
-                raise ValidationError("Delegation must name a registered member")
-            self._check_depth(run)
-            if (planning or verification) and sum(
-                engine._authorized(c["run_id"])["state"] not in TERMINAL for c in state["children"]
-            ) >= definition["max_concurrency"]:
-                raise ValidationError("Pending children occupy the managed planning capacity")
-            limit = (
-                len(definition["members"]) + (1 if verification else 0)
-                if definition["kind"] == "team"
-                else definition["max_steps"]
-            )
-            if len(state["children"]) >= limit:
-                raise ValidationError("The child step limit was exhausted")
-            reservation = f"child:{run_id}:{key}"
-            allowance = (
-                completion_policy.verifier_budget if verification else definition["child_budget"]
-            )
-            engine.store.reserve(run_id, reservation, allowance)
-            from .binding_paths import has_disabled_session, member_spec
-            from .spec_codec import decode_spec
-
-            child_spec = (
-                member
-                if verification
-                else decode_spec(member)
-                if planning
-                else member_spec(definition, call.member)
-            )
-            child_session = (
-                None if has_disabled_session(child_spec) else f"{run['session_id']}:child:{key}"
-            )
-            from .agent_limits import has_agent_limits
-
-            parent_binding = {"parent_id": run_id, "call_id": key, "reservation": reservation}
-            if has_agent_limits(run["manifest"]):
-                parent_binding["limits_member"] = call.member
-
-            handle = engine.submit(
-                child_spec,
-                call.input,
-                command_id=f"child-submit:{run_id}:{key}",
-                budget=allowance,
-                session_id=child_session,
-                _parent_call=parent_binding,
-            )
-            child = engine._authorized(handle.run_id)
-            child.update(parent_id=run_id, call_id=key)
-            engine._commit(child, "child_linked", {"parent_id": run_id, "call_id": key})
-            record = {
-                "id": key,
-                "member": call.member,
-                "run_id": handle.run_id,
-                "proposal": call.to_dict(),
-                "reservation": reservation,
-                "planning": planning,
-                "settled": False,
-                "state": "queued",
-            }
-            if run["manifest"].get("parent_completion_protocol") == 1:
-                record.update(
-                    role="verifier" if verification else "planner" if planning else "worker",
-                    planning_revision=state["revision"],
+            # Acquiring a writer may cross the cutoff. Adopt expiry inside the
+            # original transaction, and report refusal after it has committed.
+            expired = engine._checkpoint_deadline(run_id)
+            if not expired:
+                return self._delegate_locked(
+                    run_id, call, planning=planning, verification=verification
                 )
-            state["children"].append(record)
-            state["quiescent"] = False
-            engine._commit(run, "child_submitted", {"call_id": key, "run_id": handle.run_id})
-            return copy.deepcopy(record)
+        raise ValidationError("An expired parent cannot dispatch a child")
+
+    def _delegate_locked(self, run_id, call, *, planning=False, verification=False):
+        engine = self.engine
+        run = engine._authorized(run_id)
+        engine._check_release(run)
+        if run["state"] in TERMINAL or run["state"] == "cancelling":
+            raise ValidationError("A stopped parent cannot dispatch a child")
+        state, definition = run["orchestration"], run["definition"]
+        if planning and state["stage"] != "select":
+            raise ValidationError("Managed planning calls require the planning stage")
+        if verification and (
+            state["stage"] != "verify"
+            or call.member != "@verifier"
+            or call.id != "verdict"
+            or run["manifest"].get("parent_completion_protocol") != 1
+        ):
+            raise ValidationError("Managed verification requires the original declared stage")
+        key = self._key(run, call, planning=planning, verification=verification)
+        existing = next((c for c in state["children"] if c["id"] == key), None)
+        if existing is not None:
+            if (
+                existing["proposal"] != call.to_dict()
+                or existing["planning"] != planning
+                or (verification and existing.get("role") != "verifier")
+            ):
+                raise DefinitionMismatch("The stable child call changed")
+            return existing
+        member = definition["members"].get(call.member)
+        if planning and call.member == "@planner":
+            planner = self.component(self.planners, definition["planner"])
+            agent = getattr(planner, "agent", None)
+            member = None if agent is None else asdict(agent)
+        if verification:
+            from .local_parent_completion import selected
+
+            completion_policy = selected(engine, definition)
+            if completion_policy.model_stage is None:
+                raise ValidationError("No model verifier Agent is declared")
+            member = completion_policy.model_stage.agent
+        if member is None:
+            raise ValidationError("Delegation must name a registered member")
+        self._check_depth(run)
+        if (planning or verification) and sum(
+            engine._authorized(c["run_id"])["state"] not in TERMINAL for c in state["children"]
+        ) >= definition["max_concurrency"]:
+            raise ValidationError("Pending children occupy the managed planning capacity")
+        limit = (
+            len(definition["members"]) + (1 if verification else 0)
+            if definition["kind"] == "team"
+            else definition["max_steps"]
+        )
+        if len(state["children"]) >= limit:
+            raise ValidationError("The child step limit was exhausted")
+        reservation = f"child:{run_id}:{key}"
+        allowance = (
+            completion_policy.verifier_budget if verification else definition["child_budget"]
+        )
+        engine.store.reserve(run_id, reservation, allowance)
+        from .binding_paths import has_disabled_session, member_spec
+        from .spec_codec import decode_spec
+
+        child_spec = (
+            member
+            if verification
+            else decode_spec(member)
+            if planning
+            else member_spec(definition, call.member)
+        )
+        child_session = (
+            None if has_disabled_session(child_spec) else f"{run['session_id']}:child:{key}"
+        )
+        from .agent_limits import has_agent_limits
+
+        parent_binding = {"parent_id": run_id, "call_id": key, "reservation": reservation}
+        if has_agent_limits(run["manifest"]):
+            parent_binding["limits_member"] = call.member
+
+        handle = engine.submit(
+            child_spec,
+            call.input,
+            command_id=f"child-submit:{run_id}:{key}",
+            budget=allowance,
+            session_id=child_session,
+            _parent_call=parent_binding,
+        )
+        child = engine._authorized(handle.run_id)
+        child.update(parent_id=run_id, call_id=key)
+        engine._commit(child, "child_linked", {"parent_id": run_id, "call_id": key})
+        record = {
+            "id": key,
+            "member": call.member,
+            "run_id": handle.run_id,
+            "proposal": call.to_dict(),
+            "reservation": reservation,
+            "planning": planning,
+            "settled": False,
+            "state": "queued",
+        }
+        if run["manifest"].get("parent_completion_protocol") == 1:
+            record.update(
+                role="verifier" if verification else "planner" if planning else "worker",
+                planning_revision=state["revision"],
+            )
+        state["children"].append(record)
+        state["quiescent"] = False
+        engine._commit(run, "child_submitted", {"call_id": key, "run_id": handle.run_id})
+        return copy.deepcopy(record)
 
     def _check_depth(self, run):
         depth, seen, current, limit = 1, {run["id"]}, run, run["definition"].get("max_depth", 8)
@@ -479,6 +496,7 @@ class OrchestrationRuntime:
     async def _queue(self, run_id):
         engine = self.engine
         while True:
+            engine._checkpoint_deadline(run_id)
             run = self.observe(run_id)
             state = run["orchestration"]
             if run["state"] in TERMINAL or run["state"] == "cancelling":
@@ -568,6 +586,8 @@ class OrchestrationRuntime:
             run["definition"]["strategy_config"],
         )
         selection = engine._component_result(strategy.select(request), TeamSelection, "Team.select")
+        if engine._checkpoint_deadline(run_id):
+            return True
         engine._check_release(engine._authorized(run_id))
         if selection.done:
             return await self._complete(run_id, selection.result)
@@ -635,6 +655,8 @@ class OrchestrationRuntime:
                 Verification,
                 "Verifier.verify",
             )
+            if engine._checkpoint_deadline(run_id):
+                return True
             engine._check_release(engine._authorized(run_id))
             with engine.store.transaction():
                 latest = engine._authorized(run_id)
@@ -664,6 +686,8 @@ class OrchestrationRuntime:
             proposal = await planner.plan(
                 PlanningRequest(**state["request"]), _Caller(self, run_id)
             )
+            if engine._checkpoint_deadline(run_id):
+                return True
             engine._check_release(engine._authorized(run_id))
             if proposal is None:
                 latest = self.observe(run_id)
@@ -742,6 +766,7 @@ class OrchestrationRuntime:
         engine = self.engine
         try:
             while True:
+                engine._checkpoint_deadline(run_id)
                 run = engine._authorized(run_id)
                 if run["state"] in TERMINAL or run["state"] == "cancelling":
                     self.cancel_children(run)

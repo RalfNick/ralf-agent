@@ -595,6 +595,9 @@ class ComponentRegistry:
         from .temporal_policy_factories import register_execution_policy
 
         register_execution_policy(self)
+        from .local_policy_factories import register_local_execution_policy
+
+        register_local_execution_policy(self)
         from .tool_execution_factories import register_tool_execution
 
         register_tool_execution(self)
@@ -852,6 +855,9 @@ class RuntimeBuilder:
                 construct(components.pop("tools")) if "tools" in components else ToolRegistry()
             )
             options = {kind: construct(prepared) for kind, prepared in components.items()}
+            from .local_policy_factories import validate_local_policy_result
+
+            validate_local_policy_result(options)
             if profile.binding_components is not None:
                 from .binding_catalog import BindingCatalog
 
@@ -926,6 +932,9 @@ class RuntimeBuilder:
                 else ToolRegistry()
             )
             options = {kind: await construct(prepared) for kind, prepared in components.items()}
+            from .local_policy_factories import validate_local_policy_result
+
+            validate_local_policy_result(options)
             if profile.binding_components is not None:
                 from .binding_catalog import BindingCatalog
 

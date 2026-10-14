@@ -1,6 +1,8 @@
-# dev114：剩余能力与架构验收清单
+# dev115：剩余能力与架构验收清单
 
-当前执行依据为[第三阶段支持矩阵](phase3-support-matrix.md)。Dev114 首批补齐[Temporal 策略配置](temporal-execution-policy.md)：原期限／审批策略通过 SDK／JSON／TOML 与同步／异步工厂装配，内置非法配置提前拒绝，错误自定义返回值不得静默省略。本批[验收登记](../architecture/reviews/2026-10-14-temporal-policy-profiles.md)单独管理源码／安装、实际恢复与兼容；Local 期限、部署准入、服务控制／持久观察、身份／权限、保留与框架恢复仍待后续批次。
+Dev115 补齐[Local 持久期限](local-execution-policy.md)与原编排的审批到期、宿主计时诊断、实际线程保留及冷恢复；[验收登记](../architecture/reviews/2026-10-14-local-deadlines.md)区分实现、源码、安装与历史兼容。批次 2 的部署原子准入／容量尚待交付，服务观察、身份 ACL、保留及框架恢复仍按第三阶段矩阵继续开发。
+
+当前执行依据为[第三阶段支持矩阵](phase3-support-matrix.md)。Dev114 首批补齐[Temporal 策略配置](temporal-execution-policy.md)：原期限／审批策略通过 SDK／JSON／TOML 与同步／异步工厂装配，内置非法配置提前拒绝，错误自定义返回值不得静默省略。本批[验收登记](../architecture/reviews/2026-10-14-temporal-policy-profiles.md)单独管理源码／安装、实际恢复与兼容；部署准入、服务控制／持久观察、身份／权限、保留与框架恢复仍待后续批次。
 
 第二阶段已按[冻结支持矩阵](phase2-support-matrix.md)收口；R01–R26是长期路线图，安全拒绝的未选择组合不自动阻塞阶段。Dev113顺序／递归Temporal Coding的所选真实服务、安装、兼容与完整回归已通过，第二阶段随本地提交冻结；当前工作转入第三阶段服务化与企业治理。远程Facts联合索引／自动维护、其他Runner、跨宿主及完整daemon负向自动恢复继续保留，不能以历史批次未支持段落扩大当前必需项。
 

@@ -22,6 +22,21 @@ class SessionResourceAdmission(Protocol):
     def session_resource_owner(self, scope: Scope, resource: dict) -> str | None: ...
 
 
+class LocalDeadlineExecutionStore(Protocol):
+    """Optional persistent Local deadlines in the original execution authority.
+
+    Preparation is a completed synchronous operation returning None. It activates
+    the old-reader refusal gate atomically with the original submission command,
+    preserving existing Session/Turn and native history facts. It performs no
+    external business I/O and never creates a separate scheduling authority.
+    Omission preserves the mandatory version 1 ExecutionStore contract.
+    """
+
+    local_deadline_version: int
+
+    def prepare_local_deadlines(self) -> None: ...
+
+
 class DelegatedExecutionStore(Protocol):
     """Optional Local coding authority; omission preserves ExecutionStore version 1.
 

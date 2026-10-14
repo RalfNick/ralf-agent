@@ -109,6 +109,7 @@ class LocalEngine:
         model_continuation=False,
         model_history=None,
         user_input_policies=None,
+        execution_policy=None,
     ):
         # Python 3.12's Protocol isinstance check ignores proxy __getattr__.
         # Validate the declared public operations so delegating adapters work too.
@@ -119,6 +120,21 @@ class LocalEngine:
         ):
             raise ValidationError("Store must implement the version 1 ExecutionStore port")
         self._validate_policy(policy)
+        from .governance import LocalExecutionPolicy
+        from .local_deadlines import registration as deadline_registration
+
+        if execution_policy is not None and type(execution_policy) is not LocalExecutionPolicy:
+            raise ValidationError("Local execution requires LocalExecutionPolicy")
+        self.execution_policy = self._execution_policy_pin = execution_policy
+        self._execution_policy_identity = (
+            None if execution_policy is None else copy.deepcopy(execution_policy.identity)
+        )
+        self._deadline_store_pin = deadline_registration(store)
+        if execution_policy is not None and self._deadline_store_pin is None:
+            raise ValidationError(
+                "Local execution policy requires the optional deadline Store port"
+            )
+        self._deadline_tasks, self._deadline_failures = {}, {}
         if type(model_continuation) is not bool:
             raise ValidationError("model_continuation must be boolean")
         self.model_continuation = model_continuation
@@ -362,6 +378,9 @@ class LocalEngine:
                 for run_id in tuple(self._quiescing_runs):
                     self._mark_workflow_quiescent(run_id)
             self._lifecycle = "closing"
+            from .local_deadlines import close_watches
+
+            close_watches(self)
             try:
                 _invoke_sync_none(self.store.close, "ExecutionStore.close")
             except BaseException:
@@ -526,12 +545,21 @@ class LocalEngine:
     def diagnostics(self, run_id):
         with self.store.transaction():
             run = self._authorized(run_id)
+            workflow = workflow_details(run, self.store)
+            if "local_deadlines" in run:
+                workflow = {
+                    **(workflow or {}),
+                    "local_deadlines": {
+                        **copy.deepcopy(run["local_deadlines"]),
+                        "host_failure": self._deadline_failures.get(run_id),
+                    },
+                }
             return RunDiagnostics(
                 RunSnapshot.from_record(run),
                 run["manifest"],
                 run["release_digest"],
                 self.store.budget(run_id),
-                workflow_details(run, self.store),
+                workflow,
             )
 
     def parent_run_id(self, run_id):
@@ -720,7 +748,9 @@ class LocalEngine:
             manifest.update(
                 kernel="local-10", delegated_execution_protocol=1, delegated_coding_tools=coding
             )
-        return manifest
+        from .local_deadlines import publish
+
+        return publish(self, manifest)
 
     def _history_registration(self, components=None):
         from .model_history import model_history_registration
@@ -839,9 +869,23 @@ class LocalEngine:
         canonical(manifest)
         return messages, manifest
 
-    def submit(self, spec, input, *, command_id, budget=32, session_id=None, _parent_call=None):
+    def submit(
+        self,
+        spec,
+        input,
+        *,
+        command_id,
+        budget=32,
+        session_id=None,
+        deadline_at=None,
+        _parent_call=None,
+    ):
         self._ensure_open()
         payload = submission_request(spec, input, budget=budget, session_id=session_id)
+        if deadline_at is not None:
+            from .local_deadlines import epoch
+
+            payload["deadline_at"] = epoch(deadline_at)
         definition = payload["definition"]
         if definition["kind"] in {"bound_agent", "bound_definition"}:
             from .binding_runtime import unwrap_definition
@@ -882,7 +926,13 @@ class LocalEngine:
         budget, session_id = payload["budget"], payload["session_id"]
         if definition["kind"] in {"team", "dynamic"}:
             return self._orchestration.accept(
-                run_id, definition, payload["input"], budget, session_id, _parent_call
+                run_id,
+                definition,
+                payload["input"],
+                budget,
+                session_id,
+                _parent_call,
+                deadline_at=payload.get("deadline_at"),
             )
         bound = "binding_definition" in definition
         graph = definition["kind"] == "graph"
@@ -1002,6 +1052,9 @@ class LocalEngine:
                 "current": None,
                 "nodes": {node["id"]: {"state": "pending"} for node in plan["nodes"]},
             }
+        from .local_deadlines import accept as accept_deadlines
+
+        accept_deadlines(self, data, payload.get("deadline_at"))
         self.store.insert_run(data)
         self.store.create_budget(run_id, budget)
         self.store.emit(run_id, "run_submitted", {"release_digest": data["release_digest"]})
@@ -1018,6 +1071,9 @@ class LocalEngine:
         self._authorized(run_id)
 
         def apply():
+            if "local_deadlines" in self._authorized(run_id):
+                self._check_release(self._authorized(run_id))
+            self._checkpoint_deadline(run_id)
             run = self._authorized(run_id)
             if run["state"] in TERMINAL or run["state"] == "cancelling":
                 return {"rejected": True, "reason": "target_closed"}
@@ -1183,6 +1239,9 @@ class LocalEngine:
         )
 
     def _check_release(self, run):
+        from .local_deadlines import validate as validate_deadlines
+
+        validate_deadlines(self, run)
         from .local_delegated_coding import validate_journal as validate_coding_journal
 
         validate_coding_journal(self, run)
@@ -1240,6 +1299,9 @@ class LocalEngine:
         from .local_coding_composition import mark_composition
 
         mark_composition(self, manifest, run["definition"], run.get("parent_call"))
+        from .local_deadlines import publish
+
+        publish(self, manifest, run)
         if digest(manifest) != digest(run["manifest"]):
             raise DefinitionMismatch(
                 "Pinned tool, provider or memory backend differs from this Run"
@@ -1277,6 +1339,14 @@ class LocalEngine:
         validate_inherited_limits(manifest, source)
 
     def _commit(self, run, kind, data=None):
+        if kind == "run_succeeded" and self._checkpoint_deadline(run["id"]):
+            return
+        if (
+            "local_deadlines" in run
+            and run["state"] == "cancelled"
+            and (run.get("error") or {}).get("code") == "approval_expired"
+        ):
+            run["state"] = "failed"
         from .local_delegated_coding import stops_settled
 
         if run["state"] in TERMINAL and not stops_settled(self, run):
@@ -1302,9 +1372,15 @@ class LocalEngine:
         return changed
 
     def _fail(self, run_id, code):
+        self._checkpoint_deadline(run_id)
         with self.store.transaction():
             run = self._authorized(run_id)
             if run["state"] not in TERMINAL:
+                cause = (run.get("error") or {}).get("code")
+                if "local_deadlines" in run and cause in {"deadline_exceeded", "approval_expired"}:
+                    if code != cause:
+                        self.store.emit(run_id, "late_execution_error", {"code": code})
+                    code = cause
                 from .local_delegated_coding import request_cancel, stops_settled
 
                 if not stops_settled(self, run):
@@ -1371,6 +1447,13 @@ class LocalEngine:
         if self._operation_active(run_id):
             raise CoordinatorBusy("The previous Action is still running; wait for its result")
         run = self._authorized(run_id)
+        if "local_deadlines" in run:
+            self._check_release(run)
+            self._checkpoint_deadline(run_id)
+            from .local_deadlines import start_watch
+
+            start_watch(self, run_id)
+            run = self._authorized(run_id)
         from .local_delegated_coding import stops_settled
 
         if run["state"] in TERMINAL and not stops_settled(self, run):
@@ -1437,12 +1520,17 @@ class LocalEngine:
                 await self._guarded(run_id, resume_result(self, run_id))
                 return self.status(run_id)
             if run.get("orchestration") is not None:
-                return await self._guarded(run_id, self._orchestration.drive(run_id))
+                await self._guarded(run_id, self._orchestration.drive(run_id))
+                await self._settle_deadline_completion(run_id)
+                return self.status(run_id)
             if run.get("plan", {}).get("schema_version") == 3:
                 from .workflow_parallel import ParallelWorkflowRuntime
 
-                return await self._guarded(run_id, ParallelWorkflowRuntime(self).drive(run_id))
+                await self._guarded(run_id, ParallelWorkflowRuntime(self).drive(run_id))
+                await self._settle_deadline_completion(run_id)
+                return self.status(run_id)
             while True:
+                self._checkpoint_deadline(run_id)
                 run = self._authorized(run_id)
                 if run["state"] in TERMINAL:
                     self._adopt_received_evidence(run_id)
@@ -1557,7 +1645,33 @@ class LocalEngine:
             self.cancel(run_id, command_id=f"drive-cancel:{uuid.uuid4().hex}")
             raise
 
+    def _checkpoint_deadline(self, run_id):
+        from .local_deadlines import checkpoint
+
+        return checkpoint(self, run_id)
+
+    async def _settle_deadline_completion(self, run_id):
+        run = self._authorized(run_id)
+        if (
+            "local_deadlines" not in run
+            or run["state"] != "cancelling"
+            or self._operation_active(run_id)
+        ):
+            return
+        from .local_delegated_coding import stop_work
+
+        if not await self._guarded(run_id, stop_work(self, run_id)):
+            return
+        with self.store.transaction():
+            run = self._authorized(run_id)
+            if run["state"] == "cancelling":
+                run["state"] = run.get("delegated_failure", {}).get("terminal", "cancelled")
+                self._commit(run, "run_cancelled")
+        if run.get("orchestration") is not None:
+            self._orchestration.terminal(run_id)
+
     async def _finish_node(self, run_id, result):
+        self._checkpoint_deadline(run_id)
         from .local_delegated_coding import delegated_stop_settled
 
         if not delegated_stop_settled(self._authorized(run_id)):
@@ -1596,6 +1710,7 @@ class LocalEngine:
             else (0, [])
         )
 
+        self._checkpoint_deadline(run_id)
         current = self._authorized(run_id)
         if current["state"] in TERMINAL or current["state"] == "cancelling":
             return
@@ -1624,6 +1739,7 @@ class LocalEngine:
         from .managed_memory_stage import finish_memory_stage
 
         await finish_memory_stage(self, run_id, result)
+        self._checkpoint_deadline(run_id)
         with self.store.transaction():
             run = self._authorized(run_id)
             if run["state"] in TERMINAL or run["state"] == "cancelling":
@@ -1752,6 +1868,7 @@ class LocalEngine:
             )
 
     def _adopt_model_response(self, run_id, action_id):
+        self._checkpoint_deadline(run_id)
         run = self._authorized(run_id)
         action = next(item for item in run["actions"] if item["id"] == action_id)
         if action["status"] != "response_received":
@@ -1806,6 +1923,7 @@ class LocalEngine:
                     DecisionProposal(proposed.output, tuple(effective_calls)),
                     self.tools.manifests(step["tools"]),
                 )
+                self._checkpoint_deadline(run_id)
                 current = self._authorized(run_id)
                 self._check_release(current)
                 if digest(
@@ -2159,6 +2277,7 @@ class LocalEngine:
         self._check_reference_expiry(action.get("knowledge_references", []), knowledge=True)
 
     async def _model(self, run_id):
+        self._checkpoint_deadline(run_id)
         run = self._authorized(run_id)
         if run["state"] in TERMINAL or run["state"] == "cancelling":
             return True
@@ -2245,6 +2364,7 @@ class LocalEngine:
             self._preflight_provider_request(
                 run_id, provider, step["provider"], messages, descriptions
             )
+            self._checkpoint_deadline(run_id)
             current = self._authorized(run_id)
             if current["state"] in TERMINAL or current["state"] == "cancelling":
                 self._record_not_dispatched(run_id, action["id"], attempt_id, "cancelled")
@@ -2274,9 +2394,29 @@ class LocalEngine:
                 action["status"] = "outcome_unknown"
                 action["attempts"][-1]["status"] = "unknown"
                 self.store.mark_unknown(attempt_id)
-                run["error"] = {
-                    "code": exc.code if isinstance(exc, RalfError) else "model_call_unknown"
-                }
+                from .node_coding_projection import original_engine
+
+                original = original_engine(self)._authorized(run_id)
+                cause = original.get("error") or {}
+                if "local_deadlines" in original and cause.get("code") in {
+                    "deadline_exceeded",
+                    "approval_expired",
+                }:
+                    run["error"] = copy.deepcopy(cause)
+                    self.store.emit(
+                        run_id,
+                        "late_model_error",
+                        {
+                            "action_id": action["id"],
+                            "code": exc.code
+                            if isinstance(exc, RalfError)
+                            else "model_call_unknown",
+                        },
+                    )
+                else:
+                    run["error"] = {
+                        "code": exc.code if isinstance(exc, RalfError) else "model_call_unknown"
+                    }
                 if run["state"] not in TERMINAL:
                     run["state"] = (
                         "cancelled"
@@ -2479,6 +2619,7 @@ class LocalEngine:
         )
 
     async def _tool(self, run_id, action_id):
+        self._checkpoint_deadline(run_id)
         run = self._authorized(run_id)
         if run["state"] in TERMINAL or run["state"] == "cancelling":
             return True
@@ -2537,9 +2678,15 @@ class LocalEngine:
             with self.store.transaction():
                 action["status"] = "waiting_approval"
                 run["state"] = "waiting_approval"
+                from .local_deadlines import approval
+
+                approval(self, run, action)
                 self._commit(
                     run, "approval_requested", {"action_id": action_id, "digest": action["digest"]}
                 )
+            from .local_deadlines import start_watch
+
+            start_watch(self, run_id)
             return False
         from .delegated_coding import registered_coding_tool
 
@@ -2624,6 +2771,8 @@ class LocalEngine:
             envelope = DispatchEnvelope(context, manifest, action["arguments"], action["digest"])
             current = self._authorized(run_id)
             self._check_executor_release(current, executor)
+            self._checkpoint_deadline(run_id)
+            current = self._authorized(run_id)
             if current["state"] in TERMINAL or current["state"] == "cancelling":
                 self._record_not_dispatched(run_id, action_id, attempt_id, "cancelled")
                 return True

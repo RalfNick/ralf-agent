@@ -127,7 +127,7 @@ R06／R09／R13／R15–R20，按场景分期，不自动进入当前第一阶�
 企业身份与资源权限、迁移／备份恢复／故障验证；结合 R25／R26 完成独立采用与正式质量验收。
 阶段开始时固定范围，核心 SDK 与企业运行时分别验收；接口预留不代表平台交付。
 
-当前执行按[第三阶段支持矩阵](phase3-support-matrix.md)的五批门槛推进。dev114 首批接通原 Temporal 期限策略配置，见[配置指南](temporal-execution-policy.md)与[验收登记](../architecture/reviews/2026-10-14-temporal-policy-profiles.md)。Local 期限／容量、托管观察／服务控制、身份权限／保留及框架备份恢复继续开放；首批通过不代表阶段完成。
+当前执行按[第三阶段支持矩阵](phase3-support-matrix.md)的五批门槛推进。dev114 首批接通原 Temporal 期限策略配置，见[配置指南](temporal-execution-policy.md)与[验收登记](../architecture/reviews/2026-10-14-temporal-policy-profiles.md)。dev115 补 Local 持久期限与原链路恢复，见[本批登记](../architecture/reviews/2026-10-14-local-deadlines.md)。部署容量、托管观察／服务控制、身份权限／保留及框架备份恢复继续开放；首批通过不代表阶段完成。
 
 ## 范围与报告
 

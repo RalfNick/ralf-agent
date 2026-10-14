@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.0.dev115 — Persistent Local execution deadlines
+
+- Add immutable `LocalExecutionPolicy`, `execution_policy/local-bounded` profiles and caller UTC `deadline_at` for Local Engine and stateless Agent facade submissions; omitted defaults remain unchanged.
+- Persist acceptance and first approval deadlines in the original Run/Action transaction, inherit original parent deadlines, and reject late proposal, child admission and final success across selected Local orchestration.
+- Keep actual handlers, unknown effects and original accounting owned after expiry; observe waits remain separate from business cancellation. Expose failed deadline observers and resume only with restored original bindings.
+- Add opt-in SQLite Schema 15 and an optional deadline Store port, process recovery and installed contract checks; old readers reject the new schema. Deployment admission and the remaining phase-three governance gates remain open.
+
 ## 0.1.0.dev114 — Declared Temporal execution policies
 
 - Expose the existing immutable Temporal execution policy through Profile/SDK/JSON/TOML and synchronous or asynchronous registered factories. Validate built-in deadlines, capacities, allowlists and fields before component construction.

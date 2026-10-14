@@ -35,6 +35,12 @@ class RunTaskSupervisor:
                     self.refs.pop(run_id, None)
 
     def start(self, ref):
+        failures = getattr(self.engine, "_deadline_failures", {})
+        if ref.run_id in failures:
+            # Clear a failed observer only after its original release and
+            # capability bindings have been restored, before wait can run.
+            self.engine._check_release(self.engine._authorized(ref.run_id))
+            failures.pop(ref.run_id, None)
         self.prune()
         if self.engine.status(ref.run_id).state in TERMINAL:
             flow = self.engine.diagnostics(ref.run_id).workflow or {}
@@ -78,9 +84,9 @@ class RunTaskSupervisor:
                     self.errors[run_id] = getattr(error, "code", "execution_host_failed")
 
     def check_error(self, run_id):
-        if run_id in self.errors:
+        if run_id in self.errors or run_id in getattr(self.engine, "_deadline_failures", {}):
             raise ExecutionHostFailed(
-                "Hosted execution stopped; inspect original Run and explicitly resume"
+                "Hosted execution or deadline observation stopped; inspect the original Run and resume"
             )
 
     @property
@@ -91,7 +97,12 @@ class RunTaskSupervisor:
             "paused": sum(
                 run_id not in self.tasks and run_id not in self.errors for run_id in self.refs
             ),
-            "failed": len(self.errors),
+            "failed": len(self.errors)
+            + sum(
+                run_id not in self.errors
+                for run_id in self.refs
+                if run_id in getattr(self.engine, "_deadline_failures", {})
+            ),
         }
 
     async def drain(self):

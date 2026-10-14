@@ -139,7 +139,7 @@ class Runtime:
             and self._local.store.session_admission_version in {4, 5}
             else [],
             "queue": False,
-            "deadline": False,
+            "deadline": self._local._deadline_store_pin is not None,
             "handoff": False,
             "temporal_facade": False,
         }
@@ -397,13 +397,14 @@ class Runtime:
         queue=False,
     ):
         self._check(accepting=True)
-        if session_id is not None or deadline_at is not None or queue is not False:
+        if session_id is not None or queue is not False:
             raise ValidationError(
-                "H2a supports stateless Local runs; Session/Turn/queue/deadline are unsupported"
+                "H2a supports stateless Local runs; Session/Turn/queue are unsupported"
             )
         harness = harness if isinstance(harness, AgentHarness) else AgentHarness(harness)
+        options = {} if deadline_at is None else {"deadline_at": deadline_at}
         receipt = self.engine.submit(
-            harness.definition, input, command_id=command_id, budget=budget
+            harness.definition, input, command_id=command_id, budget=budget, **options
         )
         ref = self.reference(receipt.run_id)
         self._supervisor.start(ref)

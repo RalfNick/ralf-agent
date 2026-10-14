@@ -8,6 +8,38 @@ from .types import _require_text, canonical
 
 
 @dataclass(frozen=True)
+class LocalExecutionPolicy:
+    version: str = "1"
+    run_timeout_seconds: float | None = None
+    approval_timeout_seconds: float | None = None
+
+    def __post_init__(self):
+        _require_text(self.version, "Execution policy version")
+        for name in ("run_timeout_seconds", "approval_timeout_seconds"):
+            value = getattr(self, name)
+            if value is not None and (
+                type(value) not in (int, float)
+                or not 0 < value <= 86400
+                or not math.isfinite(value)
+            ):
+                raise ValidationError("Local deadlines must be finite positive seconds up to 86400")
+        canonical(self.identity)
+
+    @property
+    def identity(self):
+        return {"kind": "local-execution-policy", **asdict(self)}
+
+    @classmethod
+    def from_identity(cls, value):
+        if type(value) is not dict or value.get("kind") != "local-execution-policy":
+            raise ValidationError("Invalid Local execution policy identity")
+        try:
+            return cls(**{k: v for k, v in value.items() if k != "kind"})
+        except TypeError:
+            raise ValidationError("Invalid Local execution policy fields") from None
+
+
+@dataclass(frozen=True)
 class TemporalExecutionPolicy:
     version: str = "1"
     max_children: int = 256

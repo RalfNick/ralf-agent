@@ -213,14 +213,17 @@ def test_custom_synchronous_policy_factory_can_replace_builtin(tmp_path):
     asyncio.run(run())
 
 
-def test_local_profile_refuses_temporal_policy():
+def test_local_assembly_refuses_temporal_policy(tmp_path):
+    from ralf_agent.runtime_builder import RuntimeBuilder
+
+    declaration = RuntimeProfile(
+        "assistant",
+        "1",
+        {"default": {"adapter": "offline-echo"}},
+        {"execution_policy": {"adapter": "bounded"}},
+    )
     with pytest.raises(ValidationError):
-        RuntimeProfile(
-            "assistant",
-            "1",
-            {"default": {"adapter": "offline-echo"}},
-            {"execution_policy": {"adapter": "bounded"}},
-        )
+        RuntimeBuilder().build(declaration, tmp_path / "runs.sqlite")
 
 
 INVALID_CONFIGS = [

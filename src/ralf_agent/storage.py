@@ -12,6 +12,7 @@ from .types import CommandReceipt, RunEvent, canonical, credits, digest
 
 
 class SQLiteStore:
+    local_deadline_version = 1
     delegated_execution_version = 1
     native_history_version = 1
     session_admission_version = 5
@@ -65,6 +66,7 @@ class SQLiteStore:
                     "12",
                     "13",
                     "14",
+                    "15",
                 }:
                     raise ValidationError("Unsupported execution database Schema")
             except (sqlite3.DatabaseError, ValidationError) as exc:
@@ -109,6 +111,7 @@ class SQLiteStore:
             "12",
             "13",
             "14",
+            "15",
         }:
             self.close()
             raise ValidationError("Unsupported execution database Schema")
@@ -138,6 +141,15 @@ class SQLiteStore:
         self.prepare_native_history()
         self.create_session_admission()._prepare(14)
 
+    def prepare_local_deadlines(self):
+        """Opt in only within the original deadline Run acceptance transaction."""
+        if self.readonly or not self.conn.in_transaction:
+            raise ValidationError("Local deadlines require their original execution transaction")
+        # Higher schema versions retain all inherited readers, including a fresh
+        # database activated directly from schema 1 without a native Turn.
+        self.prepare_native_history()
+        self.create_session_admission()._prepare(15)
+
     def delegated_pending(self, scope):
         """Completed finite public read of scoped Runs retaining native stop work."""
         from .types import Scope
@@ -166,7 +178,7 @@ class SQLiteStore:
 
     def native_history_publications(self, scope, stream):
         row = self.conn.execute("SELECT value FROM metadata WHERE key='schema_version'").fetchone()
-        if row[0] not in {"13", "14"}:
+        if row[0] not in {"13", "14", "15"}:
             return []
         rows = self.conn.execute(
             "SELECT data FROM native_history_publications WHERE workspace=? AND principal=? AND stream=? ORDER BY seq LIMIT 129",
@@ -414,7 +426,7 @@ class SQLiteStore:
         version = self.conn.execute(
             "SELECT value FROM metadata WHERE key='schema_version'"
         ).fetchone()[0]
-        if version in {"2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14"}:
+        if version in {"2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15"}:
             owner = self.create_session_admission().route_owner(scope, resource)
             if owner is not None:
                 return owner

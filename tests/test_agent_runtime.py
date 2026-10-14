@@ -96,7 +96,9 @@ def test_existing_local_compositions_execute_through_new_entry(kind, tmp_path):
     asyncio.run(scenario())
 
 
-@pytest.mark.parametrize("option", [{"session_id": "shared"}, {"deadline_at": 1}, {"queue": True}])
+@pytest.mark.parametrize(
+    "option", [{"session_id": "shared"}, {"deadline_at": True}, {"queue": True}]
+)
 def test_unsupported_business_semantics_refuse_before_acceptance(option, tmp_path):
     async def scenario():
         raw = engine(tmp_path / "unsupported.sqlite", ScriptedProvider([]))
