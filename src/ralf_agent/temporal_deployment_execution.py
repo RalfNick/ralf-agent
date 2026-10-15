@@ -653,6 +653,11 @@ async def validate_activity(runtime, client, request, info):
             _reject()
         if "runtime_manifest" in payload:
             runtime.validate_release(payload["runtime_manifest"])
+    from .temporal_session_activity_reads import read_activity
+
+    collected = await read_activity(runtime, client, policy, request, info)
+    if collected is not None:
+        return collected
     proof = await _proof(
         runtime, client, policy, scope, info.workflow_id, info.workflow_run_id, required=True
     )

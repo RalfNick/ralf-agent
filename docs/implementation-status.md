@@ -1,5 +1,9 @@
 # Implementation status — 0.1.0.dev120
 
+2026-10-16 当前唯一阻塞仍为 P3-2/S2 原图两 Turn 的 360 秒验收。末段完整入口已定位：Context／Model 在实际 call-start 正 ACK 前分别已耗 1.917／3.252 秒；深度一的入口重复三组 Session 七事实，不能用离线一次 Runtime 校验解释整段耗时。当前限定候选只收集 actual Model／Context 的只读入口，保留全部原 Run／Registry／Start、父刷新、held-root 及末独立 raw Session 七事实；缺初始祖先 pin 丢弃后走原完整路径，原生工具权限、后续 tree guards 和 call ledger 不变。候选已实现并经独立审查，新增31项恢复／漂移／回退检查；全部269个Temporal模块3738 passed／589配置依赖skipped，独立安装13模块270 passed、默认完整canonical及保存History离线兼容通过。425产品／860测试无漂移；原图真实单项仍1 failed／391.197秒，四Tool、效果采纳与物理停止成功，第二轮最终Model成功后join登记与整体期限关闭交错而未启动。两root退休、两Turn完整ACK、owned关闭及安全清理通过，仍不满足原两Turn业务门槛。其余十二正常／五故障不解锁，P3-3／4／5／A 不扩展。此前约 5% 的文本扫描候选已撤回，不再为零散微优化重跑服务。
+
+以下为各冻结快照的历史证据；以本段及最新验收记录为当前执行依据。
+
 2026-10-16 当前拓扑归并候选：仅exact Coding4普通JSON完整请求，Coding拓扑复用首次已完整解析的全部叶绑定；公开拓扑、隐藏Agent、原结构／并发、末轮独立全组和Scope验证保留。新增18项通过，完整请求冷包CPU下降32.2%，独立绑定／Runtime基本不变；未据此宣称业务提速。424产品／859测试已冻结，全部Temporal回归3707 passed／589配置依赖skipped，独立安装212 passed及默认canonical／保存History离线兼容通过；原360秒首项本候选正常复验仍1 failed／392.537秒：四Tool最终成功及效果采纳、两root退休、两Turn完整ACK和owned关闭／安全清理均成立，但第二Turn为期限取消而非成功；S2／P3-2保持开放。下一步仅定位最后工具之后的实际未完成步骤，不将完整尾部猜测为observer成本。其他十二正常／五故障未运行。详见[当前验收记录](../architecture/reviews/2026-10-15-temporal-deployment-sessions.md)；下方为各快照历史证据。
 
 2026-10-16 当前候选：已归并exact Coding4普通JSON输入的同步绑定验证，保留原Scope完整校验、默认／旧协议／自定义输入回退及native逐请求fresh事实；无跨请求缓存。冷包完整绑定链CPU约下降23.7%，完整Runtime基本不变，不外推业务性能。全部Temporal回归3689 passed／589配置依赖skipped，独立安装194 passed，默认完整canonical及默认保存History离线兼容通过；424产品／858测试前后无漂移。唯一原360秒图首项正常复验1 failed／435.464秒；四Tool最终成功且效果全部adopted、两root退休，但整体期限已取消业务，第二Turn缺末end／Advance，owned关闭失败，schema依原Session义务保留。其他十二正常／五故障未运行，S2／P3-2仍开放。详见[本批验收记录](../architecture/reviews/2026-10-15-temporal-deployment-sessions.md)。下方各checkpoint为历史证据，不覆盖本段当前状态。

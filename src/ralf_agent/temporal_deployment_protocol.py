@@ -70,6 +70,7 @@ SESSION_SOURCE_FILES = CODING_SOURCE_FILES + (
     "temporal_deployment_session_updates.py",
     "temporal_session_deployment_client.py",
     "temporal_session_deployment_close.py",
+    "temporal_session_activity_reads.py",
 )
 
 

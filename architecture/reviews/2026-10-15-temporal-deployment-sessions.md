@@ -1,5 +1,29 @@
 # 部署 Session 集成与收尾验证
 
+## Model／Context 完整入口归并（2026-10-16，原场景仍超时）
+
+当前唯一集成阻塞仍是 P3-2/S2 的原 `graph-sequential-sdk` 两 Turn 在 360 秒内完成；不重开已成功的工具执行和取消清理。原 c4 History 中，末 Context 的 5.129344 秒里，Activity 开始至实际 call-start 正 Completed 已占 1.916502 秒；末 Model 的 5.300220 秒里，该前置区间为 3.251893 秒。它们来自同一运行的 SDK 时间界限，不是函数 CPU、纯网络时间或两个可相加的独占成本。Model 在 close／cancel 交错之后返回 `dispatched:false`，不因此认定模型或独立校验缺陷。
+
+完整调用链与离线单次 Runtime 校验不同：universal `validate_activity` 在深度一、已固定 child epoch 的路径读取子节点、父节点、父节点刷新，各自执行独立 Session 七事实验证，共三组。Context 本体另有前后两个 composition tree guard；正常 Model 则有入口和 dispatch guard。本次失败 Model 不保证走满后者。`selected_runtime` 只构造浅拷贝的选择视图，没有重建 Runner 或连接池。实际 History 未记录 Query 耗时，不能从静态调用次数分摊上述秒数；原 normal 运行也没有 SDK spans。12 项输入哈希核对不变，私有证据 `c4-context-model-wrapper-reading/summary.json`，SHA256 `3c5e651ba310e4047b247740274973198f6f15ebbac7e9dc9912b01a52f2c414`。
+
+此前逐字符正则候选已撤回：四个冷进程 ABBA 完整 Runtime CPU 18.4020→17.4833ms，仅下降 4.9924%，未达到预先约定的 10%；完整请求和独立绑定链分别约 0.27%／1.10%。完整结果和拒绝行为一致，但没有据此进入真实服务复验。产品恢复 c4 原字节，候选和失败决策仅保留私有目录；不把 32 项候选检查当作当前产品新增能力。同线程同步 Runtime profile 仅用于离线成本定位，不能外推真实 Worker 或解释完整尾部。
+
+下一最小候选限定在 actual Model／Context 的 Coding4 universal 入口：复用既有 node 的纯关联，保留 Run／Registry／Start／namespace、父初读与刷新及 held-root 读取；组内节点是不可采纳 proposal，末端新建独立 raw Session verifier 完整读取七事实，身份和 Runtime／source／ports 全部通过后才返回 proof。缺祖先 pin 必须丢弃本组并从 raw client 走原完整路径，不在 proposal 上 pin 或发 Update。原生 Tool／permission、其他 Activity、后续 tree guards 与 call ledger 保持原路径。该窄采样边界须先 RED→GREEN、恢复与漂移检查及审查，安装／兼容和原场景真实复验未通过前不称交付；不再为小函数微调重跑服务，也不修改原期限。
+
+上述候选已完成源码与离线检查，真实单项仍未通过：新增私有 Activity reader 纳入 publication4 的完整文件库存。首个祖先读缺 pin 才回原路径；父刷新缺／错 pin 继续拒绝。入口即固定独立 SCV 及其完整依赖，逐 await 固定原 checker、代理实例／service／已创建 handle 与 raw SDK 端口，避免末构造 SCV 重建变更后的基线。轻 checker 不调用完整 `_policy`；完整 Runtime 保留在组入口／出口及原节点读取边界。审查发现的代理实例端口替换 P2 已修，复核未发现其他 P1／P2。
+
+原核心 RED 为 Model／Context 两项实际入口形状分别观察三组而非一组 Session 验证；修正后 proof、原非 Session 读取 Counter／顺序和输入保持，完整 Session 验证三组变一组。新增31项覆盖 carrier／Scope、默认与旧路径、初始缺 pin、父刷新、原 Session／Runtime／source／端口漂移、取消后 fresh 重试及重复调用无跨请求复用。代理实例端口三项首次运行已在修复后通过，没有补造其 RED。首次扩大回归保留1 failed／536 passed／21 skipped：旧 CONTROL info 缺 `activity_type` 时门禁误抛 AttributeError；改为回原路径并补缺字段检查，相关两模块39 passed／16.02秒。修正版全部269个 Temporal 模块同次3738 passed／589 skipped／206.65秒，零失败／错误；skip 不作为服务证据。Ruff、格式和 Git 空白检查通过。
+
+冻结 `activity-read-release-v2/snapshot`：1761项目文件／425产品／860测试，source及tests的1285项与工作区核对无漂移。新模块SHA256 `ee40c1db35a160503fe9a1dcf082f6e2a96d83291070f10cc6d0c215c79f62dd`，测试SHA256 `50937817a7dec157a7191c63f431ccf099022859512ce23e163725c738ea9545`。独立安装13模块270 passed／31.010秒，零失败／错误／跳过，425项 source／sdist／wheel／site逐字相同，860测试副本前后相同。完整默认 Profile／Manifest／orchestration canonical 仍为 `9df90a99df2c298ab2b2bf8aad0b7d907d2670e2c5247055c81cfe1afa475fbd`，原及 continued 默认保存History离线重放通过，Provider／服务0；不代表 live continuation 或旧 Coding History 兼容。wheel SHA256 `10e18433f4c9a33562d4a2a53bec40b123ba569e7bce74a261de3e33b3da1657`，sdist SHA256 `5ac4eabefc140f357415fde1da5df455e1f513931503766f24bb24d8cc1802fb`，安装证据 `default-compat-s2-activity-reads-v2/final-summary.json` SHA256 `558f3ae6af9d43c8b3ae02ad8263cd3cdf6e3b885692d6241b77686d88c9a3c7`。旧修正前安装269 passed单独保留，不作为本候选证据。
+
+唯一原 `graph-sequential-sdk` 正常复验已终态exit1：1 failed／391.197秒（testcase390.683秒），零错误／跳过，425产品／860测试无漂移；原body在approve.sleep处被scenario360取消。四Tool均SDKCompleted成功，耗时38.144950／35.503391／38.842755／37.731461秒，均有SQL candidate、adopted效果及正physical-stop证据。两root均退休（accepted2／retired2／retained0），两Turn各有6组start／end和全部Completed正ACK；首Advance为succeeded，次Advance为cancelled，均released:true。owned assembly关闭和Worker退出成功，原门槛允许安全删除schema，reasons为空；没有两Turn全部成功的业务结果文件。34项原输入哈希不变，证据 `activity-read-v2-normal-terminal-evidence/summary.json` SHA256 `cb0f9c7e6e720f91b84855d6398251095422b3fd54fc079b3ebf72691c745291`。
+
+本次尾部比前次走到了更后步骤，但不因此宣称稳定提速：最后Model于UTC23:12:10.714434开始、15.688740正完成；Registry coding-close在15.890912 Accepted／15.890928正Completed。parent observe在17.013192见child=succeeded，join登记17.117455开始、21.075810返回definition_mismatch；root取消在20.577200正Completed。join登记开始已在原关闭正记录之后，返回又晚于root取消，不能把该拒绝当作独立验证缺陷。原Advance的最终children也确认a／b succeeded而join cancelled且started:false，无join SDK Start。body-error文件mtime14.917037仅为异常后的代理，不冒充精确取消时点。尾部证据 `tail-summary.json` SHA256 `248f7feac4b2377d7d648ee245559db15b66a60de7a9561ba7673b02c3649c1e`。
+
+正常runner SHA256 `b032ec38edac086f45570de901a5f88d3375e048697493494b1a7d63901da34e`，完整审计 SHA256 `e312e51e9822c39959760d6888ced142b4f228be0c906ef59304b1b8bb01f554`。原80／60／180／360／60／40秒与空诊断flags保持，其他十二正常／五故障未解锁，600秒诊断未执行。S2／P3-2及第三阶段仍开放；当前候选只证明只读协议与减少重复读取的契约行为，没有解决实际期限，也未证明端到端改善。下一步只定位剩余原编排交接与SDK验证的累计开销，不重开成功的工具／关闭，不围绕整体取消后的拒绝继续补丁，也不重复运行同一正常版本。
+
+同一History的入口界限另存 `entry-boundaries.json`（SHA256 `ed560e57230b69c699cbb69bbb21f84c6dbc7550fffee6311d489c83d491e59a`）：末Context ActivityStarted→call-start正Completed为1.709857秒，末Model为2.004045秒；前次c4为1.916502／3.251893秒。只有两个独立实际样本且没有分支marker，不能据此直接证明新分支命中、稳定收益或CPU归因；更不能用这两个局部区间关闭原360秒验收。
+
 ## 请求内拓扑绑定复用（2026-10-16，原场景仍超时）
 
 原360秒正常首项仍由本地`90da97c`的435.464秒失败记录定义；本批只处理该P3-2阻塞，不增加范围或改期限。同一`validate_request`原来在初始步骤、Coding拓扑及末尾三处重复整组绑定验证。现仅exact Coding4、普通JSON完整request／manifest、非空显式绑定且已遍历全部实际Agent路径时，拓扑阶段复用首次已经完成的叶绑定解析；未显式绑定的叶也已用原默认descriptor检查。私有`_topology_definitions`只拆出原并发／递归结构检查，隐藏planner／completion Agent继续逐一验证；公开`validate_topology`保持独立完整入口，末尾原完整`validate_bindings`／`effective_step`及构造器Scope检查保留。无bindings、旧协议、自定义容器／共享引用及扫描回退沿原路径。原native逐请求fresh SDK、效果／预算／停止ACK和执行权威均未改。
