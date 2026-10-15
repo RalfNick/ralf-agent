@@ -278,6 +278,22 @@ class CodingSystem:
                     try:
                         await self.assembly.aclose(wait_timeout=60)
                     except BaseException as error:
+                        try:
+                            from tests.temporal_coding_primary_failure import save_primary_failure
+
+                            save_primary_failure(
+                                self.directory,
+                                error,
+                                owned_tasks=(
+                                    getattr(self.assembly, "_coding_stop_task", None),
+                                    getattr(self.assembly, "_session_stop_task", None),
+                                ),
+                            )
+                            (self.directory / "primary-failure.json").replace(
+                                self.directory / "initial-close-wait.json"
+                            )
+                        except BaseException:
+                            pass  # Preserve the original close failure and live owned tasks.
                         path = self.directory / "initial-close-error.json"
                         path.write_text(
                             json.dumps(

@@ -1,6 +1,8 @@
 # 部署 Session 集成与收尾验证
 
-## v19 CONTROL 只读冷验证候选（2026-10-16，待安装／实际复验）
+## v19 CONTROL 只读冷验证候选（2026-10-16，安装通过／实际首项失败）
+
+源码本地提交 `4d72895`，metadata仍dev120；冻结1746个公共文件，inventory SHA256为 `a5717970302584b7aedb31d90c8027349f8a6f15dc5a3b0044d41ad6d8e452da`。安装后八模块143 passed／29.94秒、零失败／错误／跳过，424产品文件源码／wheel／site及847测试副本前后相同，所有导入来自安装目录。wheel SHA256为 `5913d9a324413dbea7ffcbc5a54691a758883e57630b44d35130e2700d5e42ff`。默认完整canonical仍为 `9df90a99df2c298ab2b2bf8aad0b7d907d2670e2c5247055c81cfe1afa475fbd`，原／continued保存History离线重放通过，Provider0／服务0，不代live continuation。所有离线进程退出后只运行一次原图首门槛，结果1 failed／466.580秒，零错误／跳过，424产品和测试副本前后无漂移；验收文档后续另行同步，不称与冻结公共文档逐字相同。
 
 v18剩余阻塞的离线定位分开记录：原native22工厂的单个只读方法，在单／双Runner SDK形状fixture分别约69.82／107.83毫秒process CPU，4次Runtime full、2组完整Session七事实、27次SDK事实读取；实际composition23深度1与更大Manifest不同，不能外推实际45–58秒Tool耗时。原完整双Runner Runtime的3次full带cProfile约0.155秒，实际保存Session的intent／command查询各30次CPU均低于0.1秒，也不支持单靠JSON／复制解释整体期限。未据此修改权限、缓存或数据库。
 
@@ -8,7 +10,15 @@ v18剩余阻塞的离线定位分开记录：原native22工厂的单个只读方
 
 修复仅在原完整Activity证明后、exact Coding4、固定child namespace／first／current epoch及实际 `ralf.temporal.control.v1` 时选择私有 `_ObservationValidation`。复用原bootstrap／fresh所有SDK读取与纯关联，专用入口自身直接完整Runtime固定Manifest入／出口，中间执行原local/source/claim/port/request pins；不使用调用者的假validate作完整出口。base与派生类／方法固定，委托前锚定base class和原checker code，权限与原生readset入口拒绝，任何错误／取消清snapshot／digest。原末轮parent proof、child describe、Activity／namespace／Runtime保持；缺type／非CONTROL、未pin、其他mode及旧3沿原类。该边界不宣称所有cold bootstrap仍逐await重建Runtime，也没有通用skip开关、mode token或permission缓存。
 
-有效主RED的全部SDK Counter和返回结果已先通过，仅full76不小于76失败；修复后full37，所有原SDK Counter、六组Session事实和原pack结果相同。15项新增检查涵盖Runtime出口、source／base class／checker替换、Activity／client漂移、取消清snapshot、unexpected Update、普通public validate／permission完整检查、未pin与非CONTROL回退。独立源码审阅通过。同次132模块回归1956 passed／289 skipped／93.30秒（-Werror），1271产品／测试文件前后相同，Ruff／格式／空白检查通过。安装与原图实际复验尚未完成，S2／P3-2保持开放；下方v18保留最新已结束的实际证据。
+有效主RED的全部SDK Counter和返回结果已先通过，仅full76不小于76失败；修复后full37，所有原SDK Counter、六组Session事实和原pack结果相同。15项新增检查涵盖Runtime出口、source／base class／checker替换、Activity／client漂移、取消清snapshot、unexpected Update、普通public validate／permission完整检查、未pin与非CONTROL回退。独立源码审阅通过。同次132模块回归1956 passed／289 skipped／93.30秒（-Werror），1271产品／测试文件前后相同，Ruff／格式／空白检查通过。安装已通过，原图实际首项失败，S2／P3-2保持开放；以下按快照记录失败，不拼接为通过。
+
+实际主错误为scenario→approve→sleep的CancelledError，由原整体360秒取消触发，非approve180超时。首root16:43:31.505343Z→16:46:37.099455Z成功seal，185.594112秒；两Tool46.705303／46.799534秒成功，交接29.795237秒。Session携带正Advance的UpdateAccepted为e200，真正UpdateCompleted正ACK为e201 16:46:58.954866Z，seal后21.855411秒；Activity203与消费WFT206随后完成。第二root16:47:12.534714Z开始，第三Tool44.210528秒成功；第四Tool16:49:07.866628Z实际启动，root取消16:49:24.046948Z先到，最终46.581249秒完成、ok:false／runner_outcome_unknown，没有thread／turn／result_candidate。第三→第四Tool交接41.747054秒，第二root保存窗口内未seal。三笔native提交不代替完整业务成功。
+
+37个CONTROL scheduled均匹配原owned call-start的实际activity_name `ralf.temporal.control.v1`，0缺失；保存History没有构造器、Query返回或Runtime计数，不能宣称专用分支实际命中或实际76→37。首root较v18单样本更快，不能推断稳定性能或归因；seal→ACK仍约21.86秒。
+
+两次关闭超时（原60秒、cleanup40秒）均由 `_drain_execution` 等待同一 `_coding_stop_task` 的 `_bounded_task` 产生。通用“Original Worker startup or shutdown remains owned”文案不能证明Worker shutdown失败；此时Session close和 `_finish_worker` 尚未执行。保存的顶层pending为bridge.close、Runner._retire及SCV.read，无法确定嵌套SDK操作。四native资源均pending_stop:false、stopped／fenced／retired／transport_closed:true，但effects为3 adopted＋1 dispatched；第四leaf原handler结束ACK已存在，随后ralf_coding_stop的call_start在保存窗口没有call_end ACK。physical正证据不能清除原effect／mechanical／end义务。cleanup为assembly_close_succeeded:false、accepted2／retired1／retained1、schema_retained:true，拒绝原因root_retirement_unconfirmed／scoped_session_close_unconfirmed／session_evidence_invalid／unadopted_write；workers_exited:true只覆盖fixture子进程poll，不证明assembly shutdown或原调用fence。不删除资源，不推断typed-pending回归。
+
+本轮后续仅改fixture诊断：首次close异常、Worker退出前，对原coding／Session stop task优先保存最多16层内建coroutine／generator静态await帧，总任务上限32；只含basename／function／line，不读取locals、任务名或载荷，不恢复／取消原任务或查询SDK。现有控制流审阅未证实自等待环；不得在未定位SDK等待点前继续叠加性能修复。该诊断不改424产品文件、默认发布、原80／60／180／360及关闭60／40秒期限，不作为新的实际验收。 首次缺嵌套帧／缺边界快照均先复现RED，修复后四个直接受影响模块37 passed／61 skipped／4.80秒（-Werror）；61项实际服务条件未配置而跳过，不计验收。独立审阅无P1／P2，Ruff、格式与空白检查通过；424产品逐文件SHA与原v19冻结安装源码相同。本批未再次调用实际服务或模型，也未删除保留资源。
 
 ## v18 收尾候选（2026-10-16，实际首项仍超时／关闭通过）
 
@@ -32,7 +42,7 @@ Session retention History离线逐command／begin_call／end_call／recover_depl
 
 ## 当前结论
 
-S2 已实现并交叉审阅，既往 Agent／sequence 两Turn有通过证据；最新 v17（本地 `a4cfc38`）原图第一Turn成功发布，第二Turn受360秒整体期限取消，第四Tool未调度。两root已正退休，但physical close未完成、Session尾ACK未清，schema按规则保留，整项仍失败。其余十二项正常组合及五项故障未运行；P3-2、Temporal＋PostgreSQL与第三阶段继续开放。以下快照不相加，不把单次耗时差异归因于特定优化。
+当前以顶部v19为准：S1普通Session功能子集已验收；S2首图仍因整体360秒未完成两Turn，第四Tool为unknown，Coding close未排空、第二root未退休、schema保留。其余十二项正常组合与五项故障未运行，P3-2及第三阶段开放。下方v17及更早结果为历史证据，不覆盖当前状态，不把单次耗时差异归因于特定优化。
 
 v17 `frozen-candidate121-s2-read-groups`：1743文件／424产品，inventory `0ebe1405a0340979d46c8b77c037466989939502de8b94fa17255a118218186e`，wheel SHA256 `8dba36a020238553d6037c51ee56dae1cb3fd1db32eff2692e6543b1495f774f`。独立安装五模块91 passed／11.39秒（-Werror、零失败／错误／跳过），424产品及844测试副本前后一致，导入来自安装。默认完整canonical与原值相等，原／continued保存History离线Replay通过，Provider0／服务0，不代表live continuation。
 

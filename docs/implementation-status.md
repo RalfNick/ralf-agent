@@ -1,8 +1,12 @@
 # Implementation status — 0.1.0.dev120
 
-2026-10-16 v19源码收尾候选：仅已完成原Activity完整验证、child namespace／原始与当前epoch全固定的Coding4 CONTROL只读observe，使用私有验证入口归并冷初始化中的Runtime重建。原SDK形状完整控制链的Runtime full端口76→37；全部原SDK读取Counter、六组Session七事实及返回结果相同。专用入口自身使用真实Runtime固定Manifest完整入／出口，逐await原身份／源码pins不变；权限／原生readset拒绝，错误或取消清除snapshot。缺type／非CONTROL、其他mode／未pin及旧3仍走原类。新增15项纳入同次132模块回归：1956 passed／289 skipped／93.30秒（-Werror），1271产品／测试文件前后相同；独立审阅、Ruff、格式与空白检查通过。安装及原图实际复验待做，下方v18仍是最新已结束的实际证据，S2／P3-2未关闭。
+2026-10-16 v19源码收尾候选：仅已完成原Activity完整验证、child namespace／原始与当前epoch全固定的Coding4 CONTROL只读observe，使用私有验证入口归并冷初始化中的Runtime重建。原SDK形状完整控制链的Runtime full端口76→37；全部原SDK读取Counter、六组Session七事实及返回结果相同。专用入口自身使用真实Runtime固定Manifest完整入／出口，逐await原身份／源码pins不变；权限／原生readset拒绝，错误或取消清除snapshot。缺type／非CONTROL、其他mode／未pin及旧3仍走原类。新增15项纳入同次132模块回归：1956 passed／289 skipped／93.30秒（-Werror），1271产品／测试文件前后相同；独立审阅、Ruff、格式与空白检查通过。安装八模块143 passed／29.94秒、默认完整canonical及原／continued保存History离线重放通过。最新实际为下段v19，S2／P3-2未关闭。
 
-当前验收checkpoint（2026-10-16，v18／本地 `85dce98`，metadata仍dev120）：Coding4 Session封闭整树读取与同次关闭末轮纯physical-pending消解已实现并经独立审阅。131个受影响模块1941 passed／289 skipped／88.74秒（-Werror），1270产品／测试文件前后相同；安装七模块128 passed／22.33秒、零失败／错误／跳过，424产品及846测试副本前后相同、所有导入来自安装。默认完整canonical与原／continued保存History离线重放通过，Provider0／服务0，不代表live continuation；跳过不作实际服务验收。
+v19实际checkpoint（本地 `4d72895`，原冻结安装）：原图首项1 failed／466.580秒，零错误／跳过，424产品无漂移。第一Turn成功，root start→seal185.594112秒，seal→Session UpdateCompleted正ACK约21.855秒；前三Tool均成功，46.705303／46.799534／44.210528秒。第二Turn第四Tool已启动，整体360秒取消先到，最终runner_outcome_unknown且无结果候选；第二root未seal，不能将三笔native提交当作两Turn成功。其余十二项正常组合及五项故障未运行。
+
+v19两次关闭超时均在原 `_coding_stop_task`，尚未到Session close／Worker shutdown；通用错误文案不能定位Worker故障。四条native资源已物理停止／fence，但一条write仍dispatched、原stop call缺end ACK；仅1／2 root退休，assembly关闭失败，schema按证据门槛保留。fixture的workers_exited仅指其子进程退出，不证明assembly Worker关闭或原调用fence。v18关闭通过属于另一快照，不覆盖本次失败。现有保存堆栈不能区分原stop Update、后置fresh与Parent adoption，本批已补原失败边界的静态await链诊断，四个直接受影响模块37 passed／61配置依赖跳过；产品424文件与v19冻结源码相同。下一步据该诊断定位；不盲目重复全图或放宽期限。
+
+历史验收checkpoint（2026-10-16，v18／本地 `85dce98`，metadata仍dev120）：Coding4 Session封闭整树读取与同次关闭末轮纯physical-pending消解已实现并经独立审阅。131个受影响模块1941 passed／289 skipped／88.74秒（-Werror），1270产品／测试文件前后相同；安装七模块128 passed／22.33秒、零失败／错误／跳过，424产品及846测试副本前后相同、所有导入来自安装。默认完整canonical与原／continued保存History离线重放通过，Provider0／服务0，不代表live continuation；跳过不作实际服务验收。
 
 v18原图首门槛仍1失败／390.395秒、零错误／跳过。第一Turn成功发布，首root start→seal203.202694秒、seal→Session end记录接受21.812938秒。三个Tool均成功并保存候选，耗时45.936381／49.222193／57.774631秒；第四child注册与原360秒取消交错，未成功启动、无第四Tool。owned关闭本轮成功，两root正退休、Session与原树／资源证据通过，schema按原规则安全删除；不能据此宣称内部typed-pending分支实际命中。仍未满足整体期限，其余十二项正常组合及五项故障未运行，S2／P3-2与第三阶段保持开放。下方v17及更早记录保留各自历史范围。
 

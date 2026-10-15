@@ -5,6 +5,7 @@ import json
 import os
 import re
 from pathlib import Path
+from types import AsyncGeneratorType, CoroutineType, GeneratorType
 
 
 def _frame(frame, line):
@@ -15,7 +16,25 @@ def _frame(frame, line):
     }
 
 
-def save_primary_failure(directory, error):
+def _await_frames(task):
+    # Inspect built-in suspended frames only. Never resume an awaitable, inspect
+    # its locals, or evaluate user-defined attributes/repr for diagnostics.
+    current, frames = task.get_coro(), []
+    for _ in range(16):
+        if type(current) is CoroutineType:
+            frame, current = current.cr_frame, current.cr_await
+        elif type(current) is GeneratorType:
+            frame, current = current.gi_frame, current.gi_yieldfrom
+        elif type(current) is AsyncGeneratorType:
+            frame, current = current.ag_frame, current.ag_await
+        else:
+            break
+        if frame is not None:
+            frames.append(_frame(frame, frame.f_lineno))
+    return frames
+
+
+def save_primary_failure(directory, error, *, owned_tasks=()):
     try:
         # Read a declared error code only, never instance attributes/messages.
         code = next((vars(cls)["code"] for cls in type(error).__mro__ if "code" in vars(cls)), None)
@@ -30,13 +49,18 @@ def save_primary_failure(directory, error):
             tasks = asyncio.all_tasks()
         except RuntimeError:
             tasks = ()
-        for task in tasks:
+        seen = set()
+        for task in (*owned_tasks, *tasks):
+            if task is None or task in seen:
+                continue
+            seen.add(task)
             if task.done():
                 continue
             pending.append(
                 {
                     "cancelling": task.cancelling(),
                     "frames": [_frame(frame, frame.f_lineno) for frame in task.get_stack(limit=16)],
+                    "await_frames": _await_frames(task),
                 }
             )
             if len(pending) == 32:

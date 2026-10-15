@@ -1007,6 +1007,11 @@ def test_worker_context_preserves_body_failure_and_original_close_failure(
             return self
 
         async def __aexit__(self, *args):
+            if close_fails:
+                snapshot = json.loads((tmp_path / "initial-close-wait.json").read_text())
+                assert snapshot["error"]["type"] == "CloseIncomplete"
+                assert "original_native_owner" not in json.dumps(snapshot)
+                assert all("await_frames" in item for item in snapshot["pending_tasks"])
             events.append("worker-stop")
 
     class Assembly:
