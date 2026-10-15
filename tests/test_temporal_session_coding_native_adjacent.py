@@ -86,9 +86,11 @@ def test_session_coding_adjacent_query_retains_fresh_original_origin_validation(
     request["coding_request"] = native
     validation = CodingValidation(runtime, client, request, info)
     reset_on_query = False
+    query_origins = []
 
     async def query(name, proof):
         calls.append("query")
+        query_origins.append(client.origin_reads)
         if reset_on_query:
             client.session_reset = True
         return {"request": native, "runner": {}, "state": {}, "cancelled": False}
@@ -108,7 +110,8 @@ def test_session_coding_adjacent_query_retains_fresh_original_origin_validation(
         nonlocal reset_on_query
         await runner._request(owner, "configRequirements/read", None, control=True)
         assert calls == ["schema", "query", "native"]
-        assert client.origin_reads >= 4
+        # Bootstrap plus the read-set before the actual query, then its exit.
+        assert query_origins == [2] and client.origin_reads == 3
         reset_on_query = during_query
         client.session_reset = not during_query
         calls.clear()

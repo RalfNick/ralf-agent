@@ -4,7 +4,7 @@
 
 ## 当前结论
 
-S2 已实现并交叉审阅，首个真实安装 Agent 两 Turn 验收通过；其余矩阵两个首项仍失败，故障门槛尚未执行，不能标为完成。Temporal＋PostgreSQL、P3-2、第三阶段整体验收继续开放。以下结果来自不同快照，不相加、不称为最终全量；跳过不构成服务或模型验收。
+S2 已实现并交叉审阅，既往 Agent／sequence 两 Turn 有通过证据；最新 v9 安装候选的 graph-sequential 首门槛仍失败，其余十二项未运行，故障门槛尚未执行，不能标为完成。当前仅为本地预览，Temporal＋PostgreSQL、P3-2、第三阶段整体验收继续开放。以下结果来自不同快照，不相加、不称为最终全量；跳过不构成服务或模型验收。
 
 ## 实现边界
 
@@ -42,7 +42,20 @@ S2 已实现并交叉审阅，首个真实安装 Agent 两 Turn 验收通过；�
 | v6 组合矩阵 | 两进程各首项失败：sequence-json 363.42秒、dynamic-flat-toml 510.42秒，后续十项未运行。原生业务提交分别4／2次，但后一个动作缺最终结果候选；原Activity完成返回tool_error，无ActivityTimedOut。关闭失败及原未知效果／schema保留，不计完整Turn通过 |
 | v6 隔离计时复现 | 相同安装产品，sequence单项281.95秒失败。测试native响应毫秒级，重复SDK校验在请求之间占用较多时间。第二个native执行的首个SDK读取至取消相隔60.0069秒，吻合原Runner60秒期限，取消发生在原adopt的fresh校验内；此证据属于该计时复现，不反推其他运行的具体异常。诊断不作正常验收，未修改产品期限或放宽授权 |
 | 同步 selector 复制定位 | 原真实167KB intent：selector重复6次完整复制，command／intent查询各8次；每同步方法复用一次隔离快照后分别1／2／2次，CPU中位约4.64→1.03、5.95→1.65、6.04→1.53毫秒。此为局部CPU测量，不等于服务延迟或完整链路通过；全部字段校验、隔离语义及SDK读取保持 |
-| v7 安装验收 | 原失败sequence-json优先复验：1 passed／306.23秒，零失败／错误／跳过。两Turn、四次业务写、原结果采纳、退休／会话发布和安全清理通过；424产品文件前后一致、340已加载安装模块来源已核验；原80／60秒期限不变。其余十二项并行运行 |
+| v7 安装验收 | 原失败sequence-json优先复验：1 passed／306.23秒，零失败／错误／跳过。两Turn、四次业务写、原结果采纳、退休／会话发布和安全清理通过；424产品文件前后一致、340已加载安装模块来源已核验；原80／60秒期限不变。其余矩阵Agent单项通过；graph-sequential失败、dynamic-flat失败，后续九项未运行 |
+| v7 图失败定位 | first child原Tool在80.004秒发生真实SDK超时；thread／turn／terminal观察已记录，原final-read／candidate缺失、effect仍dispatched，后续approve180秒是下游等待失败。未知效果与schema保留 |
+| v7 动态失败定位 | 两Turn的Tool均成功、两effect已adopted、两root已退休；第二次首次Session observer持久返回session_control_failed且ACK完整，未发布。原身份显式重试得到正Advance／发布并安全清理；不是native预算／2MiB拒绝。底层异常未保存，继续定向诊断 |
+| v7 observer 诊断尝试 | 相同安装产品的单项脱敏PY_UNWIND探针505.07秒失败，停在approve，未取得目标observer底层异常；不作正常验收，不据此判新根因 |
+| 原启动握手优化 | 仅selected Coding4在initialize／initialized后并发固定8项独立只读请求，每请求保留原fresh校验；全部成功后才校验完整profile／进入业务，失败／取消先排空。RED→265项相关检查通过，原3／普通4／Local仍串行；实际性能与组合待验 |
+| observer可诊断性 | 原错误返回与ACK不变，增加有界脱敏异常类型／RPC状态／静态位置日志；不记录消息、参数、locals、payload。71项相关检查通过，日志handler失败不改变原业务／ACK，实际异常仍待捕获 |
+| v8 安装首门槛 | `installed-s2-preflight-sdk`：graph-sequential 1 failed／369.12秒，零错误／跳过；其余十二项未运行。424产品文件前后一致、340已加载模块来自独立安装；失败与原恢复资料保留 |
+| v8 图失败定位 | 原Tool发生80.002秒真实SDK Activity超时，turn receipt距执行开始77.20秒；无terminal observation／result candidate，effect仍dispatched、根额度保留。prepared→thread grant为21.686秒，未显示相较v7加速，不能据此宣称并发握手改善实际性能 |
+| v8 安装定向与离线兼容 | 安装后两个新增测试模块14 passed／1.87秒，-Werror。默认发布canonical SHA256为`9df90a99df2c298ab2b2bf8aad0b7d907d2670e2c5247055c81cfe1afa475fbd`，与原快照相等；原／continued History离线重放通过，Provider0／服务0，不代表live continuation或组合验收 |
+| v9 最小origin合并 | 仅删除`CodingValidation._fresh`首轮重复origin校验两行，保留bootstrap、集合末尾完整七项事实及实际Query／Update／SQL／native I/O双边验证，无缓存。RED为3 failed／5 passed；相关检查93 passed／4.24秒，另一次独立复核84 passed／5.04秒，不相加为全量或服务通过 |
+| v9 安装首门槛 | graph-sequential 1 failed／365.94秒；其余十二项未运行，故障场景未执行。424产品文件前后无漂移、340已加载安装模块来源已核验；原Tool在80.002156秒真实SDK Activity超时，terminal observation为75.92秒，无result candidate，effect仍dispatched、额度及恢复资料保留。局部时间变化不代表完整链路通过 |
+| v9 observer日志 | 脱敏日志捕获`RPCError／CANCELLED`，位置为`control.operation:113`：begin之后、body之前的第二次validate，经verification早期gather进入_namespace。此为独立observer读取失败证据，不是主Tool超时的已证根因，也不是成功Advance采用失败 |
+| v9 安装定向与离线兼容 | 安装检查22 passed／2.57秒，-Werror；默认canonical等值，原／continued History离线重放通过，Provider0／服务0。各项与真实首门槛失败分别记录，不称v9已验收 |
+| v9 受影响回归 | 245个Temporal模块：3355 passed／589 skipped／2 failed，143.94秒，冻结产品源码前后不变。两项失败为相邻native测试保留了旧的内部origin次数预期；测试修订为明确断言bootstrap加实际Query前后验证，并与新origin测试同次22 passed／3.33秒。产品未因此改动，不将两次运行拼为一次完整绿色回归；589跳过不作实际服务验收 |
 | v7 安装相关回归与兼容 | 八模块155 passed／6.52秒，-Werror、零跳过；完整默认发布相等，原／continued History离线重放通过，Provider0／服务0 |
 | v6 默认兼容 | 完整默认Profile／identity／Manifest／orchestration等值、原／continued保存History重放通过；Provider0／服务0，无live continuation |
 | 测试清理与诊断 | retention32项、Worker异常保留32项分别通过，交叉审阅无阻塞；body与close原异常均保留 |
@@ -51,7 +64,11 @@ S2 已实现并交叉审阅，首个真实安装 Agent 两 Turn 验收通过；�
 
 v5 `s2-advance` 快照1727文件／424产品文件，inventory SHA256：`d530c203d8d4f7826cc915b2184c1be48937934966bafca380aa1bf17ce6ee53`。v6 `s2-origin-reads` 快照1729文件／424产品文件，inventory SHA256：`b935d23c2abae7a156662f0e5c447b2b8f9751a0bf65e02f37875e1e06eaea74`，首个安装 Agent 通过，矩阵首两项失败。v7 `s2-selector-snapshot` 快照1730文件／424产品文件，inventory SHA256：`ef3fc59506253032671f0660a6fbe761d3a4ad93cf40ca0448afa345e67d7826`；155项相关测试通过，安装后优先复验失败的sequence已通过，原十三项集合及原期限保持。源码、wheel、独立安装424产品文件一致；metadata 仍为未发布 `0.1.0.dev120`。
 
-- v5 首个 Agent 两 Turn 已通过；v7 原失败sequence已通过，其余十二项正在两个隔离进程验收；v6 两次首项失败及未运行十项的旧记录保留。
+v8 `frozen-candidate121-s2-preflight-observer` 快照1732文件／424产品文件，inventory SHA256：`ee5f60a4930791029e44c84af770ad0effa87580ac930ec152052726025be093`。该快照的安装失败、定向测试及离线兼容分别记录如上，不与旧快照结果相加；其记录时最小origin合并尚未验证。
+
+v9 `frozen-candidate121-s2-terminal-origin` 快照1733文件／424产品文件，inventory SHA256：`bf084f2053d67a26dafd82d1f4a0b8a8717f0ac099c4dd7755115c860c8ecda7`。最小origin合并的单测、安装兼容与真实Graph失败证据分别如上，不能拼接不同快照为通过。
+
+- 最新v9 graph-sequential首门槛失败，其余十二项未运行；v5／v7已通过的独立Agent／sequence与各版失败记录均保留，不推导当前十三项集合已通过。下一步针对同步CPU与SDK排队测量定位，不增加协议或放宽原期限。
 - 验证原审批冷交接、退休回复丢失、显式取消及 effect／native-stop／deployment-end 独立 ACK。
 - CONTROL 真正进程死亡后保留原 Turn busy、占位及恢复数据，不制造通用 fence。
 - 完成最终安装、约定默认／History 兼容和受影响复验，才判断 S2／P3-2 能否关闭。

@@ -119,6 +119,39 @@ async def owned_control_body(validation, body):
                 "ok": False,
                 "code": exc.code if isinstance(exc, RalfError) else "session_control_failed",
             }
+            if not isinstance(exc, RalfError):
+                try:
+                    import logging
+                    from enum import Enum
+
+                    kind = type(exc)
+                    frames, trace = [], exc.__traceback__
+                    while trace is not None and len(frames) < 16:
+                        code = trace.tb_frame.f_code
+                        frames.append(
+                            {
+                                "file": code.co_filename.replace("\\", "/").rsplit("/", 1)[-1][
+                                    :128
+                                ],
+                                "function": code.co_name[:128],
+                                "line": trace.tb_lineno,
+                            }
+                        )
+                        trace = trace.tb_next
+                    status = getattr(exc, "status", None)
+                    detail = {
+                        "exception_module": kind.__module__[:128],
+                        "exception_type": kind.__name__[:128],
+                        "rpc_status": status.name[:128] if isinstance(status, Enum) else None,
+                        "frames": frames,
+                    }
+                    logging.getLogger(__name__).warning(
+                        "Session control body failed: " + repr(detail),
+                        extra={"session_control_failure": detail},
+                    )
+                except BaseException:
+                    # Diagnostics cannot change the original response or its end ACK.
+                    pass
         progress["body"] = response
         return response
 

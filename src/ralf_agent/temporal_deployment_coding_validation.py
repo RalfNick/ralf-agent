@@ -615,8 +615,6 @@ class CodingValidation:
         if _binding(check) != self._check_pin:
             _reject()
         check(full=not steady)
-        if s["session"] is not None:
-            await self._session_origin(s["session"])
         reads = []
         for node in s["nodes"]:
             handle = client.get_workflow_handle(node["id"], run_id=node["epoch"])

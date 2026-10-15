@@ -352,7 +352,7 @@ def sdk_session_environment(monkeypatch):
     return runtime, client, request, info
 
 
-def test_compact_session_native_checks_original_coordinator_before_and_after_fresh_reads(
+def test_compact_session_native_checks_original_coordinator_after_each_fresh_readset(
     monkeypatch,
 ):
     import asyncio
@@ -367,7 +367,7 @@ def test_compact_session_native_checks_original_coordinator_before_and_after_fre
         before = client.origin_reads
         assert client.session_root_reads == 1
         assert await validator.permission() is True
-        assert client.origin_reads >= before + 2 and client.session_root_reads == 1
+        assert client.origin_reads == before + 1 and client.session_root_reads == 1
         client.session_reset = True
         with pytest.raises(DefinitionMismatch):
             await validator.permission()

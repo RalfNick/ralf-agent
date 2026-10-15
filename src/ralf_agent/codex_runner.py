@@ -1090,10 +1090,48 @@ class CodexCodingRunner:
             ("plugin/installed", {"cwds": ["/workspace"]}),
         )
         results = {}
-        for method, params in queries:
+        authority = owner.get("authority") if owner.get("history") else None
+        request = authority._request if type(authority) is TemporalCodingAuthority else None
+        manifest = request.get("runtime_manifest") if type(request) is dict else None
+        deployment = (
+            manifest.get("deployment_admission_protocol") if type(manifest) is dict else None
+        )
+        batch = (
+            type(deployment) is dict
+            and type(deployment.get("version")) is int
+            and deployment["version"] == 4
+            and "coding_execution_protocol" in manifest
+        )
+        for method, params in queries[:1] if batch else queries:
             results[method] = await self._request(owner, method, params, control=True)
             if method == "initialize":
                 await owner["transport"].notify("initialized")
+        if batch:
+            readers = asyncio.gather(
+                *(
+                    self._request(owner, method, params, control=True)
+                    for method, params in queries[1:]
+                ),
+                return_exceptions=True,
+            )
+            try:
+                completed = await asyncio.shield(readers)
+            except asyncio.CancelledError:
+                readers.cancel()
+                while not readers.done():
+                    try:
+                        await asyncio.shield(readers)
+                    except asyncio.CancelledError:
+                        pass
+                if not readers.cancelled():
+                    readers.exception()
+                raise
+            for value in completed:
+                if isinstance(value, BaseException):
+                    raise value
+            results.update(
+                (method, value) for (method, _), value in zip(queries[1:], completed, strict=True)
+            )
         self._profile.validate_control(results)
 
     def _make_transport(self, owner, environment):

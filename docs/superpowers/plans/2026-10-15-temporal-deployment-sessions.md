@@ -102,6 +102,8 @@ The independent source review established these three required boundaries. The c
 
 **Files:** the S1 helpers plus the existing Coding state/composition control/compact validation bridge and their focused tests. No Codex protocol expansion, new scheduler, alternate effects authority, or independent quota counter is planned.
 
+当前源码预览已在 `ff58574` 本地提交，metadata 保持未发布 `0.1.0.dev120`。后续 v7 sequence 实际复验通过，但图和动态仍失败；最新 v8 优先复验图编排仍发生原 80 秒 Activity 超时，其余十二项与故障门槛未运行。只读握手并发未显示实际加速，不能据此关闭门槛。当前沿同一权限与恢复契约处理重复校验阻塞，不延长原期限、不新增协议；各候选的准确证据及剩余项以[验收记录](../../../architecture/reviews/2026-10-15-temporal-deployment-sessions.md)为准。
+
 ## Review focus for delivery closure
 
 - Actual Session SDK parent must be verified separately from business ancestry, including after every relevant await and after reset/replacement.
