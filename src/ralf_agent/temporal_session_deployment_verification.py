@@ -794,6 +794,8 @@ async def _verify_receipt(runtime, client, value, *, info):
 
 def source_bindings():
     """Pin executable verifier ports, including in-memory source replacements."""
+    from . import temporal_session_deployment_dto as dto
+
     return tuple(
         _binding(function)
         for function in (
@@ -804,6 +806,10 @@ def source_bindings():
             verify_registry_request,
             _verify_receipt,
             validate_session_origin,
+            dto.encode_control_body,
+            dto.decode_control_body,
+            dto._coded_control_body,
+            dto._body_reject,
             SessionControlValidation.__init__,
             SessionControlValidation._check,
             SessionControlValidation.validate,

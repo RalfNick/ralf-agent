@@ -32,7 +32,11 @@ async def owned_control_body(validation, body):
     from uuid import uuid4
 
     from .errors import RalfError
-    from .temporal_session_deployment_dto import validate_call_end, validate_call_identity
+    from .temporal_session_deployment_dto import (
+        encode_control_body,
+        validate_call_end,
+        validate_call_identity,
+    )
 
     await validation.validate()
     i, info = validation.intent, validation.info
@@ -185,7 +189,7 @@ async def owned_control_body(validation, body):
             {
                 "identity": identity,
                 "body_result_digest": digest(progress["body"]),
-                "body_result": detached(progress["body"]),
+                "body_result": encode_control_body(progress["body"], i["submission"]["manifest"]),
                 "body_stopped": True,
             },
             id="ralf-session-call-end:" + digest([identity, progress["body"]]),
@@ -199,7 +203,7 @@ async def owned_control_body(validation, body):
     response = await owner.execute(operation, proof=proof, on_end=ended)
     result = await asyncio.shield(ack)
     validation._check()
-    return {**response, "call_end": result}
+    return {**encode_control_body(response, i["submission"]["manifest"]), "call_end": result}
 
 
 _REGISTRATIONS = {}

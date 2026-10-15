@@ -20,7 +20,7 @@ with workflow.unsafe.imports_passed_through():
         temporal_session_identity,  # noqa: F401 -- preload pure Session addressing
     )
     from .temporal_parent_state import PARENT_WORKFLOW_NAME
-    from .temporal_session_deployment_dto import ORIGIN_FIELDS
+    from .temporal_session_deployment_dto import ORIGIN_FIELDS, decode_control_body
     from .temporal_session_deployment_state import START_SELECTOR_FIELDS, selected
     from .temporal_session_state import (
         SESSION_ACTIVITY,
@@ -107,11 +107,12 @@ class TemporalSessionWorkflow:
         if ack is None:
             entry.record_error("session_control_unavailable")
             return None
+        body = decode_control_body(body, entry.intent["submission"]["manifest"])
         entry.call_ended(ack, body)
-        if response.get("ok") is not True:
+        if body.get("ok") is not True:
             from .temporal_session_deployment_state import PERMANENT_REFUSALS
 
-            code = response.get("code", "session_control_unavailable")
+            code = body.get("code", "session_control_unavailable")
             entry.record_error(code)
             if (
                 code in PERMANENT_REFUSALS

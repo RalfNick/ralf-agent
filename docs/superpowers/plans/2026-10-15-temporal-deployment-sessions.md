@@ -94,6 +94,8 @@ The independent source review established these three required boundaries. The c
 
 ## S2 — existing Coding scope through the same Session origin
 
+2026-10-15 本次有限收尾：先修复v13恢复路径的2MiB载荷拒绝，完成Coding4有界无损编码及State／Workflow两端接线，保留原semantic digest、Update ID、ACK、8MiB语义限制和逐请求fresh。相关八模块同次191项通过，含两处wire、冷恢复、Scope拒绝和sandbox激活；仅为源码证据，安装／真实服务复验待做。180秒主流程超时独立未解，其余十二项正常组合和五项故障未运行。本轮结束后不自动重跑耗时矩阵或扩展功能，先交付这项本地修复；S2仍开放。
+
 源码已接通并完成交叉审阅，实际安装验收仍待通过。首轮全受影响 Temporal 回归 3226 passed／584 skipped；两个正常 Agent 安装候选分别命中沙箱激活与原生握手期限，另一次计时诊断复现握手问题，失败及原恢复资源均保留。后续分流及 Advance 修复后，v5 首个实际安装 Agent 两 Turn 通过，其余矩阵两个首项分别因顺序工具超时和动态子调用旧 metadata 校验失败，后续十项未运行。已补齐完整 Session origin 校验；仅 Coding4 的首批四项独立读取并发，保留全部七项 fresh 事实与最终校验。v6 首个Agent通过，但矩阵首两项仍失败；隔离计时显示一次原Runner60秒预算耗尽。v7仅减少三个同步方法的重复完整intent复制，安装相关155项通过，原失败sequence两Turn／四次业务写通过（306.23秒），其余十二项并行验收。全部修复保持原超时、原事实读取及执行权威；不得因源码／模拟验证通过勾选下方交付门槛。参见[验收记录](../../../architecture/reviews/2026-10-15-temporal-deployment-sessions.md)。
 
 - [ ] Extend original Coding root-parent validation to the verified Session origin. Keep native22 and composition23 request/inventory shapes; retain original business Parent ancestry and shared Registry root identity.

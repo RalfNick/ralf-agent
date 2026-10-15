@@ -274,7 +274,9 @@ class TemporalSessionDeploymentState:
         original = self.calls.get(key)
         if original is None or original["identity"] != identity:
             _reject()
-        body = detached(payload["body_result"])
+        body = dto.decode_control_body(
+            payload["body_result"], self.intent["submission"]["manifest"]
+        )
         if digest(body) != payload["body_result_digest"]:
             _reject()
         self._validate_body(identity, body)

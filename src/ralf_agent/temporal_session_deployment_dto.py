@@ -1,11 +1,9 @@
-"""Pure proposed Session deployment DTO correlation; never admission or SDK proof.
+"""Pure Session deployment DTO correlation; never admission or SDK proof."""
 
-Private prototype only. This module is not imported by a publication, Workflow,
-Registry or Facade and does not authorize a future manifest or business request.
-"""
-
+import base64
 import json
 import re
+import zlib
 
 from .errors import AuthorizationDenied, DefinitionMismatch, ValidationError
 from .session_types import SessionRef, integer
@@ -32,6 +30,106 @@ from .temporal_session_state import (
 )
 from .temporal_startup_options import validate_seconds
 from .types import canonical, credits, digest
+
+_BODY_TAG = "_ralf_session_control_body"
+_BODY_THRESHOLD = 512 * 1024
+_BODY_WIRE_LIMIT = SUBMISSION_CAPACITY
+_BODY_LIMIT = SUBMISSION_CAPACITY * 8
+
+
+def _coded_control_body(manifest):
+    from .temporal_deployment_coding_state import selected
+
+    protocol = manifest.get("deployment_admission_protocol") if type(manifest) is dict else None
+    return (
+        type(protocol) is dict
+        and type(protocol.get("version")) is int
+        and protocol["version"] == 4
+        and selected(manifest)
+    )
+
+
+def _body_reject():
+    raise DefinitionMismatch("Original Session control body encoding is invalid")
+
+
+def encode_control_body(body, manifest):
+    """Bounded, lossless Coding4 wire representation; never a new body authority."""
+    from .temporal_state import detached
+
+    if type(body) is not dict or _BODY_TAG in body:
+        _body_reject()
+    value = detached(body)
+    raw = canonical(value).encode()
+    if len(raw) > _BODY_LIMIT:
+        raise ValidationError("Original Session control result exceeds its bounded allowance")
+    if not _coded_control_body(manifest) or len(raw) <= _BODY_THRESHOLD:
+        return value
+    wire = {
+        _BODY_TAG: {
+            "version": 1,
+            "encoding": "zlib-json-base64",
+            "raw_size": len(raw),
+            "digest": digest(value),
+            "data": base64.b64encode(zlib.compress(raw)).decode("ascii"),
+        }
+    }
+    if len(canonical(wire).encode()) > _BODY_WIRE_LIMIT:
+        raise ValidationError("Original Session encoded result exceeds its wire allowance")
+    return wire
+
+
+def decode_control_body(body, manifest):
+    """Decode before semantic validation or ledger mutation, with bounded output."""
+    from .temporal_state import detached
+
+    if type(body) is not dict:
+        _body_reject()
+    if _BODY_TAG not in body:
+        value = detached(body)
+        if len(canonical(value).encode()) > _BODY_LIMIT:
+            raise ValidationError("Original Session control result exceeds its bounded allowance")
+        return value
+    if not _coded_control_body(manifest):
+        _body_reject()
+    _exact(body, {_BODY_TAG})
+    wire = body[_BODY_TAG]
+    _exact(wire, {"version", "encoding", "raw_size", "digest", "data"})
+    if (
+        type(wire["version"]) is not int
+        or wire["version"] != 1
+        or wire["encoding"] != "zlib-json-base64"
+        or type(wire["raw_size"]) is not int
+        or not _BODY_THRESHOLD < wire["raw_size"] <= _BODY_LIMIT
+        or type(wire["data"]) is not str
+        or len(wire["data"]) > _BODY_WIRE_LIMIT
+    ):
+        _body_reject()
+    _sha(wire["digest"])
+    if len(canonical(body).encode()) > _BODY_WIRE_LIMIT:
+        _body_reject()
+    try:
+        compressed = base64.b64decode(wire["data"], validate=True)
+        decoder = zlib.decompressobj()
+        raw = decoder.decompress(compressed, _BODY_LIMIT + 1)
+        if (
+            len(raw) != wire["raw_size"]
+            or not decoder.eof
+            or decoder.unused_data
+            or decoder.unconsumed_tail
+        ):
+            _body_reject()
+        value = json.loads(raw)
+        if (
+            type(value) is not dict
+            or canonical(value).encode() != raw
+            or digest(value) != wire["digest"]
+        ):
+            _body_reject()
+    except (ValueError, UnicodeError, RecursionError, zlib.error) as exc:
+        raise DefinitionMismatch("Original Session control body decoding failed") from exc
+    return value
+
 
 INTENT_FIELDS = frozenset(
     {
