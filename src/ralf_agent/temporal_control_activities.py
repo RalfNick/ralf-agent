@@ -66,9 +66,17 @@ async def select(runtime, value):
 
 
 async def control(runtime, client, value, info=None):
+    from .temporal_deployment_control_transport import REQUEST_FIELDS, execute
     from .temporal_deployment_protocol import selected as deployment_selected
 
+    if type(value) is dict and set(value) == REQUEST_FIELDS:
+        return await execute(runtime, client, value, info)
+
     if deployment_selected(value["runtime_manifest"]):
+        if value["runtime_manifest"]["deployment_admission_protocol"]["version"] == 3:
+            from .temporal_deployment_coding_bridge import control as coding_control
+
+            return await coding_control(runtime, client, value, info)
         from .temporal_deployment_execution import control as deployment_control
 
         return await deployment_control(runtime, client, value, info)

@@ -1,5 +1,9 @@
 # RALF 通用框架能力与扩展验收
 
+Dev120 在原 History 权威内接通公共 deployment3 的既定 Temporal Coding Agent／sequence、有限图、Team／Dynamic 与递归范围，与 ordinary2 共用同地址 Registry。native grant、准确效果／费用、物理结束和独立 ACK 是不同事实，unknown 继续占位并保留恢复资料。原子事实通知、紧凑验证和 publication 优化保留原 SDK 门禁、最终完整验证及原期限；所选稳态 read-set 边界不提供即时 read-auth 撤销。范围与限制见[本批验收](../reviews/2026-10-15-temporal-deployment-coding.md)。
+
+v30 全部12651项重新执行，11847 passed／804配置依赖跳过，独立安装416产品字节及dev119原History兼容通过；后4个测试文件的92项定向检查另记。实际安装normal原13通过／1失败保留，修订后并行关闭normal单项1 passed／152.70秒，真实故障、前后pins与unknown预期保留验证通过；两次记录不能称为同次14项全绿，也不证明原失败的精确根因。历史13拓扑与真实Docker窗口按各自冻结版本记录，结构peer不增加模型质量结论，dev109质量记录仍限原范围。公共Session S1／S2仍为下一必需项，完整R13／R01–R26与第三阶段未完成；以下旧批次段落保留其历史范围。
+
 Dev112 沿原 Harness／Local／Temporal 权威增加固定原 CREATE 的机械监督器、两层单次 gate、真实进程与控制处理器排空，以及专用未派发证明。broker 只持有原操作，不增加业务执行权威；原 grant／attempt／未知效果保留。选定20／21与旧18／19 Worker 隔离，未选定默认保持。契约见[原 CREATE 监督](../specs/coding-create-supervision-contract.md)，实际证据及未完成范围见[本批验收](../reviews/2026-10-14-coding-create-supervision.md)。已发送请求的 daemon 负向完成、跨宿主、嵌套与复杂质量仍未验收；以下历史段落记录对应批次。
 
 Dev110 已验收直接 Agent 成员子集：扩展显式 Temporal Coding 组合到一层 Agent Team／Dynamic；原父 History 继续拥有选择、计划修订、调度和预算，原子 Run 继续拥有 Action 与 native grant。实际成员有效授权与 Runner 背压、冻结 revision、旧 child 停止义务及 pending-only DAG patch 已实现；验收按[本批记录](../reviews/2026-10-14-temporal-coding-orchestration.md)登记。未选定默认字节保持，嵌套／sequence 成员、跨父容量与复杂真实质量仍开放。

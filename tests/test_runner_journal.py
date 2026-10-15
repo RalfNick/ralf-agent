@@ -127,9 +127,13 @@ time.sleep(60)
         finally:
             j.close()
     finally:
-        if child.poll() is None:
-            child.kill()
-            child.wait(timeout=5)
+        try:
+            if child.poll() is None:
+                child.kill()
+                child.wait(timeout=5)
+        finally:
+            child.stdout.close()
+            child.stderr.close()
 
 
 def test_second_owner_refused_in_same_and_real_process(tmp_path):

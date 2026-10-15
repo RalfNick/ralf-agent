@@ -127,11 +127,6 @@ class TemporalRuntimeBuilder:
         from .admission_factories import host_options
 
         host_admission = host_options(profile, admission_policy)
-        if ("admission_policy" in profile.components or host_admission) and (
-            profile.execution.get("coding_execution", False)
-            or profile.execution.get("coding_composition", False)
-        ):
-            raise ValidationError("Deployment Coding requires its physical-close integration")
         scope = Scope() if scope is None else scope
         if not isinstance(scope, Scope):
             raise ValidationError("Temporal assembly requires a trusted Scope")

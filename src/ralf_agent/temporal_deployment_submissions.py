@@ -32,7 +32,7 @@ def _policy(engine):
     if (
         type(protocol) is not dict
         or type(protocol.get("version")) is not int
-        or protocol["version"] != 2
+        or protocol["version"] not in (2, 3)
     ):
         _reject()
     policy = DeploymentAdmissionPolicy.from_identity(protocol["policy"]).identity
@@ -110,11 +110,26 @@ async def _registry(engine, client, scope, namespace, policy, *, start=True):
 
     sdk = _sdk()
     identity = registry_id(policy["deployment_id"])
+    publication = engine.release["deployment_admission_protocol"]["version"]
+    registry_protocol = getattr(engine, "_deployment_registry_protocol", publication)
+    if (
+        type(registry_protocol) is not int
+        or registry_protocol not in (2, 3)
+        or publication == 3
+        and registry_protocol != 3
+    ):
+        _reject()
     if start:
         try:
             await client.start_workflow(
                 COMMAND_REGISTRY_NAME,
-                {"deployment_admission": {"version": 2, "policy": policy, "namespace": namespace}},
+                {
+                    "deployment_admission": {
+                        "version": registry_protocol,
+                        "policy": policy,
+                        "namespace": namespace,
+                    }
+                },
                 id=identity,
                 task_queue=engine.task_queue,
                 id_reuse_policy=sdk[3].REJECT_DUPLICATE,
@@ -130,8 +145,13 @@ async def _registry(engine, client, scope, namespace, policy, *, start=True):
         description.id != identity
         or description.namespace != namespace["name"]
         or description.workflow_type != COMMAND_REGISTRY_NAME
+        or type(description.run_id) is not str
+        or not description.run_id
+        or description.run_id
+        != getattr(getattr(description, "raw_info", None), "first_run_id", None)
     ):
         _reject()
+    handle = client.get_workflow_handle(identity, run_id=description.run_id)
     await _recheck(engine, client, scope, namespace, policy)
     configuration = await _query(
         handle,
@@ -142,8 +162,12 @@ async def _registry(engine, client, scope, namespace, policy, *, start=True):
             "namespace": namespace,
         },
     )
+    if type(configuration) is not dict or type(configuration.get("version")) is not int:
+        _reject()
+    if configuration["version"] not in ({2, 3} if publication == 2 else {3}):
+        _reject()
     if configuration != {
-        "version": 2,
+        "version": configuration["version"],
         "registry_id": identity,
         "policy": policy,
         "namespace": namespace,
@@ -198,7 +222,7 @@ def _record(value, *, request, command_id, scope, namespace, policy):
         _reject()
     protocol = submission["manifest"].get("deployment_admission_protocol", {})
     if (
-        protocol.get("version") != 2
+        protocol.get("version") not in (2, 3)
         or protocol.get("policy") != policy
         or protocol.get("registry_id") != root["registry_id"]
     ):
@@ -351,13 +375,18 @@ async def submit(engine, spec, input, *, command_id, budget=32, session_id=None)
     text(command_id, "Command ID")
     # SDK JSON payloads turn tuple arrays into lists. Keep the logical request
     # in that same representation before comparing original History envelopes.
-    request = json.loads(
-        canonical(
-            normalize_request(
-                submission_request(spec, input, budget=budget, session_id=session_id), None
+    if engine.release.get("deployment_admission_protocol", {}).get("version") == 3:
+        from .temporal_deployment_coding_bridge import logical_request
+
+        request = logical_request(spec, input, budget=budget, session_id=session_id)
+    else:
+        request = json.loads(
+            canonical(
+                normalize_request(
+                    submission_request(spec, input, budget=budget, session_id=session_id), None
+                )
             )
         )
-    )
     if session_id is not None:
         raise ValidationError("Temporal shared sessions are not supported")
     policy, client, scope = _policy(engine), engine.client, asdict(engine.scope)
@@ -559,37 +588,146 @@ async def recover_retirement(engine, run_id, closure):
     return detached(certificate)
 
 
-async def guard(engine, kind, command_id, target, payload):
-    policy, client, scope = _policy(engine), engine.client, asdict(engine.scope)
-    namespace = await _namespace(engine, client, scope, policy)
-    handle = await _registry(engine, client, scope, namespace, policy)
-    result = await _update(
-        handle,
-        "reserve",
-        {
-            "scope": scope,
-            "command_id": command_id,
-            "kind": kind,
-            "target": target,
-            "payload_digest": digest(detached(payload)),
-            "admission_policy": policy,
-            "namespace": namespace,
-        },
-    )
-    if result != {
+def _control_result(value, command_id, target, scope, namespace, *, expected=None):
+    fields = {"command_id", "target", "record_state", "apply_state"}
+    if type(value) is not dict or set(value) not in (fields, fields | {"control_binding"}):
+        _reject()
+    if {name: value[name] for name in fields} != {
         "command_id": command_id,
         "target": target,
         "record_state": "durably_recorded",
         "apply_state": "not_applied",
     }:
         _reject()
+    if "control_binding" not in value:
+        if expected is not None:
+            _reject()
+        return None
+    binding = value["control_binding"]
+    _exact(
+        binding,
+        {
+            "version",
+            "scope",
+            "namespace",
+            "target",
+            "target_execution_epoch",
+            "root_run_id",
+            "root_execution_epoch",
+        },
+    )
+    if (
+        type(binding["version"]) is not int
+        or binding["version"] != 1
+        or binding["scope"] != scope
+        or binding["namespace"] != namespace
+        or binding["target"] != target
+        or binding["root_run_id"] == target
+    ):
+        _reject()
+    from .temporal_deployment_execution import _text
+
+    for name in ("target", "target_execution_epoch", "root_run_id", "root_execution_epoch"):
+        _text(binding[name])
+    if expected is not None and any(binding[name] != item for name, item in expected.items()):
+        _reject()
+    return detached(binding)
+
+
+async def guard(engine, kind, command_id, target, payload):
+    from . import temporal_deployment_execution as execution
+
+    payload = detached(payload)
+    payload_digest = digest(payload)
+    policy, client, scope = _policy(engine), engine.client, asdict(engine.scope)
+    namespace = await _namespace(engine, client, scope, policy)
+    handle = await _registry(engine, client, scope, namespace, policy, start=False)
+    request = {
+        "scope": scope,
+        "command_id": command_id,
+        "kind": kind,
+        "target": target,
+        "payload_digest": payload_digest,
+        "admission_policy": policy,
+        "namespace": namespace,
+    }
+    previous = await _query(
+        handle,
+        {
+            **request,
+            "kind": "deployment_control",
+            "command_kind": kind,
+        },
+    )
     await _recheck(engine, client, scope, namespace, policy)
+    if previous is not None:
+        return _control_result(previous, command_id, target, scope, namespace)
+    description = await client.get_workflow_handle(target).describe()
+    epoch = description.run_id
+    execution._text(epoch)
+    if (
+        description.id != target
+        or description.namespace != namespace["name"]
+        or getattr(getattr(description, "raw_info", None), "first_run_id", None) != epoch
+    ):
+        _reject()
+    await _recheck(engine, client, scope, namespace, policy)
+    proof = await _query(
+        client.get_workflow_handle(target, run_id=epoch),
+        {
+            "scope": scope,
+            "kind": "deployment_admission",
+        },
+    )
+    execution._exact(proof, execution._PROOF_FIELDS)
+    execution._sealed(proof)
+    if (
+        type(proof["version"]) is not int
+        or proof["version"] != 1
+        or proof["scope"] != scope
+        or proof["run_id"] != target
+        or proof["execution_epoch"] != epoch
+        or proof["original_execution_epoch"] != epoch
+        or proof["namespace"] != namespace
+        or proof["request_digest"] != digest(proof["request"])
+        or proof["manifest_digest"] != digest(proof["manifest"])
+    ):
+        _reject()
+    execution._metadata(
+        proof["admission"],
+        policy,
+        scope=scope,
+        run_id=target,
+        command_id=proof["command_id"],
+        request_digest=proof["request_digest"],
+        manifest_digest=proof["manifest_digest"],
+        manifest=proof["manifest"],
+    )
+    expected = None
+    if proof["admission"]["lineage"]:
+        request["descendant"] = {
+            "root_command_id": proof["admission"]["root"]["command_id"],
+            "execution_epoch": epoch,
+        }
+        expected = {
+            "target_execution_epoch": epoch,
+            "root_run_id": proof["admission"]["root"]["run_id"],
+            "root_execution_epoch": proof["admission"]["lineage"][0]["parent_execution_epoch"],
+        }
+    await _recheck(engine, client, scope, namespace, policy)
+    result = await _update(
+        handle,
+        "reserve",
+        request,
+    )
+    await _recheck(engine, client, scope, namespace, policy)
+    return _control_result(result, command_id, target, scope, namespace, expected=expected)
 
 
 async def diagnostics(engine):
     policy, client, scope = _policy(engine), engine.client, asdict(engine.scope)
     namespace = await _namespace(engine, client, scope, policy)
-    handle = await _registry(engine, client, scope, namespace, policy)
+    handle = await _registry(engine, client, scope, namespace, policy, start=False)
     result = await _query(
         handle,
         {

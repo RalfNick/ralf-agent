@@ -149,6 +149,17 @@ class TemporalProfileHost:
                 self._engines[digest(assembly.profile.identity)] = assembly.create_engine(
                     client, task_queue=queue, **engine_options
                 )
+            registry_versions = {}
+            for engine in self._engines.values():
+                version = engine.release.get("deployment_admission_protocol", {}).get("version")
+                if version in (2, 3):
+                    identity = engine.command_registry_id
+                    registry_versions[identity] = max(version, registry_versions.get(identity, 2))
+            for engine in self._engines.values():
+                if engine.command_registry_id in registry_versions:
+                    engine._deployment_registry_protocol = registry_versions[
+                        engine.command_registry_id
+                    ]
             registry_ids = dict.fromkeys(
                 engine.command_registry_id for engine in self._engines.values()
             )

@@ -1,6 +1,6 @@
 # 部署内 root 准入与容量
 
-日期：2026-10-15。Local／SQLite 已有持久部署准入，沿原命令、Run、预算和 Coordinator 管理占用，证据见[Local 验收登记](../architecture/reviews/2026-10-14-local-admission.md)。Temporal dev118 的内部 Worker SDK 门禁保留为私有 v1，只持有占位；dev119 已实现普通公共 v2 Engine／Profile、原接受信封恢复及原树校验后安全退休，冻结源码与独立安装均已通过受影响、实际服务及原版本兼容验收，见[公共验收记录](../architecture/reviews/2026-10-15-temporal-deployment-public.md)。所选 Coding 与 SDK Session coordinator 尚未接入，仍明确拒绝。当前阶段范围见[支持矩阵](phase3-support-matrix.md)，批次 2 未关闭。
+日期：2026-10-15。Local／SQLite 已有持久部署准入，沿原命令、Run、预算和 Coordinator 管理占用，证据见[Local 验收登记](../architecture/reviews/2026-10-14-local-admission.md)。Temporal 内部 Worker 门禁保留为私有 v1，只持有占位；dev119 已交付普通公共 v2 Engine／Profile、原接受信封恢复及原树校验后安全退休，证据见[公共验收记录](../architecture/reviews/2026-10-15-temporal-deployment-public.md)。dev120已验收所选公共Coding v3，使用同一 Registry 管理根额度，配置与恢复见[Temporal Coding 部署准入](temporal-deployment-coding.md)，恢复与安装证据见[本批验收](../architecture/reviews/2026-10-15-temporal-deployment-coding.md)。SDK Session coordinator 尚未接入，继续明确拒绝。当前阶段范围见[支持矩阵](phase3-support-matrix.md)，批次 2 未关闭。
 
 ## 策略与占用单位
 
@@ -187,15 +187,17 @@ admission = info.workflow["local_admission"]
 
 绑定故障先恢复原 Store 方法、后端、策略对象及匹配组件，再对原 Run 执行原恢复／核验。等待实际工作结束后，`await engine.wait_for_threads()` 会沿原事实刷新准入；新提交前也会刷新可安全释放的原 claims。未知效果需要原核验／停止证据或明确人工处置，不能删除 ledger、清零保留、重标未执行或重新派发业务。
 
-当前不提供 force release、TTL 逐出、队列或跨 SQLite 数据库共享额度。Temporal 普通公共 v2 的安全退休由原 CommandRegistry／Run／Parent History 管理：真实 Activity 结束与持久 end ACK、原树义务闭合及 SDK 固定身份核对缺一不可，EffectJournal 不能成为另一套执行权威；私有 v1 登记或 SDK 派发证明本身仍不能释放占位。Local 与本批有限 Temporal 已交付范围不关闭第三阶段批次 2，也不代表 R21–R26、企业平台或真实模型质量已验收。
+当前不提供 force release、TTL 逐出、队列或跨 SQLite 数据库共享额度。Temporal 普通公共 v2，以及候选 Coding v3，均由原 CommandRegistry／Run／Parent History 管理安全退休：真实 Activity 结束与持久 end ACK、原树义务闭合及 SDK 固定身份核对缺一不可。Coding v3 还核对原 native／后代物理停止证明；EffectJournal 保存证据，不成为另一套执行权威。私有 v1 登记或 SDK 派发证明本身仍不能释放占位。Local 与已登记的有限 Temporal 范围不关闭第三阶段批次 2，也不代表 R21–R26、企业平台或真实模型质量已验收。
 
 已结束验证子 Run 的父阶段可沿原 journal 退休；收到的不合法 evidence 提案仍保留，不采纳晚到 verdict。此 closed＋received 变体仅用于已安装治理的失败／取消根，旧未治理记录不新增该语义。未知验证请求、预算或实际工作未闭合时继续占位；原版本与原 Profile 恢复仍是必要条件。
 
-## Temporal 公共 v2 的原恢复入口
+## Temporal 公共部署的原恢复入口
 
-已终态或已 seal 不等于额度已退休。若原 History 因 Registry 退休 RPC 不可用登记 `deployment_retirement_deferred` 后静止，先恢复原服务／Worker 路由，再调用 `await engine.drive(run_id)`。Engine 核对原 Scope、namespace UUID、Registry v2 策略、首个完整接受信封、原 SDK epoch 与原证书；已有退休记录时只读返回，否则向固定 epoch 的原 root 发送精确重复 seal payload 的新 SDK Update，唤醒原 History 重试释放。该 Update 不改变证书、不复活业务、不发送新的业务 drive command，也不由 Facade 直接退休 Registry。别名变化仍沿首个接受信封恢复；内部恢复 helper 不作为公共 API 暴露。
+已终态或已 seal 不等于额度已退休。若原 History 因 Registry 退休 RPC 不可用登记 `deployment_retirement_deferred` 后静止，先恢复原服务／Worker 路由，再调用 `await engine.drive(run_id)`。Engine 核对原 Scope、namespace UUID、原发布所接受的 Registry 协议与完整策略、首个完整接受信封、原 SDK epoch 与原证书；已有退休记录时只读返回，否则向固定 epoch 的原 root 发送精确重复 seal payload 的新 SDK Update，唤醒原 History 重试释放。该 Update 不改变证书、不复活业务、不发送新的业务 drive command，也不由 Facade 直接退休 Registry。别名变化仍沿首个接受信封恢复；内部恢复 helper 不作为公共 API 暴露。
 
-`drive` 可以先返回原终态，释放验证仍异步进行；用 `await engine.deployment_diagnostics()` 查看原 held／retired 根。Parent 的 `cancel` 回执中 `remote_stop_confirmed=False` 表示尚未确认真实后代停止，不能根据取消回执或父终态认定容量已释放；等待原后代及当前诊断确认结束。若 Action 已完成但 effect ACK 延后，修复原 journal 路由后用原 `drive` 继续 ACK。`reconcile(query=True)` 用于未知效果证据，不是已完成 Action 的 ACK 重试或再次执行工具。该恢复 P2 的实际失败、目标重试和最终公共矩阵通过证据见[验收登记](../architecture/reviews/2026-10-15-temporal-deployment-public.md)。本批真实零费用写／ACK 恢复窗口使用测试专用 SQLite 效果证据适配器，其他确定性用例使用默认组件，未调用 PostgreSQL；第三阶段所选 Temporal＋PG 服务组合仍需另行验收。
+dev119 的 v2 验收记录保持原历史范围。候选 Coding v3 同样沿原 seal／Registry 退休路径恢复，并增加原 Coding 物理义务校验；不能把 v2 的通过数字用于证明 Coding 已验收。当前 ordinary v2 可以使用 Registry2 或 Registry3，Coding v3 必须使用 Registry3；现有 Registry1／2 不会被替换或自动升级。
+
+`drive` 可以先返回原终态，释放验证仍异步进行；用 `await engine.deployment_diagnostics()` 查看原 held／retired 根。Parent 的 `cancel` 回执中 `remote_stop_confirmed=False` 表示尚未确认真实后代停止，不能根据取消回执或父终态认定容量已释放；等待原后代及当前诊断确认结束。若 Action 已完成但 effect ACK 延后，修复原 journal 路由后用原 `drive` 继续 ACK。`reconcile(query=True)` 用于未知效果证据，不是已完成 Action 的 ACK 重试或再次执行工具。该恢复 P2 的实际失败、目标重试和最终公共矩阵通过证据见[验收登记](../architecture/reviews/2026-10-15-temporal-deployment-public.md)。dev119 真实零费用写／ACK 恢复窗口使用测试专用 SQLite 效果证据适配器，其他确定性用例使用默认组件；该批没有 PostgreSQL 调用。这是 dev119 的证据范围，不是 dev120 的存储要求；候选 Coding 使用原具体 PostgresEffectJournal 与借用它的 PostgresRunnerJournal，最终服务验收另行登记。
 
 ## Temporal 内部 Worker 的原 SDK 门禁
 
@@ -205,4 +207,8 @@ Worker 核对实际 Activity Workflow ID、namespace 名称／UUID、current 与
 
 内部所选范围覆盖普通 Agent、顺序、已注册 Agent 图、Team、Dynamic 与嵌套后代。实际源码 Service 17 项验证派发／祖先共享槽位、审批／取消保留 claim、Worker 缺席／重启、原 History 重放和身份拒绝；冻结源码受影响检查 814 项通过。独立安装与最终出处以[本批登记](../architecture/reviews/2026-10-14-temporal-deployment-dispatch.md)单独记录。省略内部策略保持默认发布兼容，旧实验发布仍须匹配其固定 Worker／源码。
 
-上述内部参数不是公共装配入口，仍发布 v1 且不提供退休。dev119 普通公共入口使用 `TemporalRuntime(admission_policy=policy)`，或 Profile 的 `components.admission_policy`／`bounded`，再把所选 Runtime 发布传给 Engine；同步／异步工厂与 Builder 宿主策略复用原 exact DTO，宿主与 Profile 策略不能共存。公共 Engine 只接受 v2，遇到已有同地址 v1 Registry 明确拒绝，不替换或自动升级。原接受信封／回执先于当前发布检查恢复，原树物理义务闭合后由 Registry 自身 SDK 校验 Activity 幂等退休，详见[公共契约](../architecture/specs/temporal-deployment-public-contract.md)与[执行指南](temporal-execution.md)。冻结源码与独立安装各通过 953 项受影响检查、27 项公共实际服务与 17 项私有 v1 服务，零失败／错误／跳过；默认发布和原 dev118 History 重放／续接兼容通过，owned 资源已清理。所选 Coding 物理关闭及 SDK Session coordinator Turns 继续拒绝且保留为必需后续项。登记和 SDK 派发证据不能自行解除 claim，也不证明完整批次 2、阶段全量回归或新模型质量通过。随本地提交交付，不推送远端。
+上述内部参数不是公共装配入口，仍发布 v1 且不提供退休。公共入口使用 `TemporalRuntime(admission_policy=policy)`，或 Profile 的 `components.admission_policy`／`bounded`，再把所选 Runtime 发布传给 Engine。同步／异步工厂与 Builder 宿主策略复用原 exact DTO；宿主与 Profile 策略不能共存。普通执行选择 v2；候选中与显式 `coding_execution=True` 组合时选择 v3，所选编排再显式开启 `coding_composition=True`。无需在 Profile 中手写协议或 Registry 版本。
+
+当前 Engine 接受 v2／v3：v2 正向核对 Registry2／3，v3 只接受 Registry3。已有同地址 v1／不兼容 Registry 明确拒绝，不替换、重置或自动升级；恢复原任务不能换 deployment／Registry，宿主另建部署不解除原占用。重复提交先按原命令和请求找回首次信封／回执，再按原发布恢复，仍须宿主授权与实际身份核对；原树义务闭合后由 Registry 自身 SDK 校验 Activity 幂等退休，详见[公共契约](../architecture/specs/temporal-deployment-public-contract.md)、[Coding 部署指南](temporal-deployment-coding.md)与[执行指南](temporal-execution.md)。
+
+dev119 冻结源码与独立安装各通过 953 项受影响检查、27 项公共实际服务与 17 项私有 v1 服务，零失败／错误／跳过；其默认发布和原 dev118 History 重放／续接兼容及 owned 清理已登记。候选 dev120 的 Coding／恢复／安装／兼容结果另行登记，当前未提交或发布。SDK Session coordinator Turns 继续拒绝且仍为必需后续项；普通受管理 Session 写入不等同于该 coordinator 准入。登记或 SDK 派发证明不能自行解除 claim，也不证明完整批次 2、阶段全量回归或新模型质量通过。本地交付不推送远端。

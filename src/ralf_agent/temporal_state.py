@@ -1649,7 +1649,7 @@ class TemporalCommandRegistryState:
     ):
         if type(capacity) is not int or not 1 <= capacity <= COMMAND_REGISTRY_CAPACITY:
             raise ValidationError("Invalid Temporal command registry capacity")
-        if type(admission_protocol) is not int or admission_protocol not in (1, 2):
+        if type(admission_protocol) is not int or admission_protocol not in (1, 2, 3):
             raise ValidationError("Invalid deployment Registry protocol")
         self.admission_protocol = admission_protocol
         self.deployment = None
@@ -1658,7 +1658,13 @@ class TemporalCommandRegistryState:
 
             if scope is not None:
                 raise ValidationError("Deployment Registry cannot select a single scope")
-            if admission_protocol == 2:
+            if admission_protocol == 3:
+                from .temporal_deployment_coding_registry import CodingDeploymentAdmissionState
+
+                self.deployment = CodingDeploymentAdmissionState(
+                    admission_policy, namespace, capacity=capacity
+                )
+            elif admission_protocol == 2:
                 from .temporal_deployment_registry import PublicDeploymentAdmissionState
 
                 self.deployment = PublicDeploymentAdmissionState(
@@ -1811,12 +1817,38 @@ class TemporalCommandRegistryState:
         )
 
     def _public_deployment(self):
-        if self.admission_protocol != 2 or self.deployment is None:
+        if self.admission_protocol not in (2, 3) or self.deployment is None:
             raise DefinitionMismatch("Original public deployment Registry is required")
         return self.deployment
 
+    def _coding_deployment(self):
+        if self.admission_protocol != 3 or self.deployment is None:
+            raise DefinitionMismatch("Original Coding deployment Registry3 is required")
+        return self.deployment
+
+    def coding_candidates(self, request):
+        return self._coding_deployment().coding_candidates(request)
+
+    def coding_admission(self, request):
+        return self._coding_deployment().coding_admission(request)
+
+    def bind_coding_submission(self, request):
+        return self._coding_deployment().bind_coding_submission(request)
+
+    def close_coding_submissions(self, request):
+        return self._coding_deployment().close_coding_submissions(request)
+
     def deployment_submission(self, request):
         return self._public_deployment().deployment_submission(request)
+
+    def deployment_control(self, request):
+        return self._public_deployment().deployment_control(request)
+
+    def prepare_deployment_control(self, request):
+        return self._public_deployment().prepare_deployment_control(request)
+
+    def commit_deployment_control(self, request, verification):
+        return self._public_deployment().commit_deployment_control(request, verification)
 
     def record_deployment_submission(self, request):
         return self._public_deployment().record_deployment_submission(request)

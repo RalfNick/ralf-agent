@@ -230,7 +230,7 @@ class TemporalClientRuntime(Runtime):
         self._check()
         # A call owns its configuration. Default methods bind to this view so
         # internal awaits cannot switch their eventual server/Scope or release.
-        if self.engine.release.get("deployment_admission_protocol", {}).get("version") == 2:
+        if self.engine.release.get("deployment_admission_protocol", {}).get("version") in (2, 3):
             vars(self.engine).setdefault("_deployment_namespace_binding", {"namespace": None})
         view = copy.copy(self.engine)
         for name, value in vars(self.engine).items():
@@ -351,9 +351,9 @@ class TemporalClientRuntime(Runtime):
         declaration = json.loads(harness._definition_json)
         from .temporal_bindings import normalize_request
 
-        public_deployment = (
-            self.engine.release.get("deployment_admission_protocol", {}).get("version") == 2
-        )
+        public_deployment = self.engine.release.get("deployment_admission_protocol", {}).get(
+            "version"
+        ) in (2, 3)
         if not public_deployment and declaration["kind"] in {"bound_agent", "bound_definition"}:
             if self.engine.release["kernel"] != "temporal-3":
                 raise ValidationError("Temporal bindings require their explicit registered release")

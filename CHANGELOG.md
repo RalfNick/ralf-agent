@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.1.0.dev120 — Public Temporal Coding deployment
+
+- Admit the existing bounded native Agent/sequence, graph, Team, Dynamic and recursive Coding scope through deployment3 and the original shared Registry. Preserve History grants, effects, budgets, physical closure and independent native/tool/deployment/effect ACK obligations.
+- Use original child-fact notifications, compact identity/CONTROL transport and the documented steady read-set boundary. Remove duplicate fresh-owned publication work while retaining final coupled validation, actual SDK identity checks and original business deadlines.
+- Keep exact original Tool cold fencing and trusted observation/native-stop/retirement maintenance through owned close. Unknown work retains its original claim and recovery resources; no timeout or missing process forces release.
+- Re-execute all 12,651 offline cases: 11,847 passed, 804 skipped, no failures/errors; four later test-only changes pass 92 focused checks against unchanged 416 product files. Verify independent installation and immutable dev119 default History replay/continuation with zero new Provider calls.
+- Retain the installed normal matrix's 13 passes/1 failure, then verify the corrected parallel-close normal single case separately: 1 passed in 152.70s with actual fault, unchanged pins and expected unknown retention. This is not one 14-case green run. Bound the test's recovery to two public close calls with unchanged 300s total/80s per-call limits; keep the diagnostic pass and earlier failure separate. See [the batch record](architecture/reviews/2026-10-15-temporal-deployment-coding.md).
+- Structural native peers and historical Docker/topology cases add no new model-quality or latency-SLO claim. Public SDK Session-coordinator admission remains unavailable; S1/S2, phase-three batch 2 and complete R01–R26/R13 remain required follow-up.
+
 ## 0.1.0.dev119 — Public ordinary Temporal deployment
 
 - Add public Runtime／Engine／Profile deployment admission with fixed protocol v2, reusing existing bounded policy factories. Preserve private worker-only v1 held-only behavior; refuse public activation against an existing v1 Registry.

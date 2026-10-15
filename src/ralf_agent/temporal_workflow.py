@@ -15,17 +15,23 @@ from temporalio.exceptions import TimeoutError as ActivityTimeoutError
 
 with workflow.unsafe.imports_passed_through():
     from . import (
+        coding_create_inventory,  # noqa: F401 -- preload fixed pure native inventory
         temporal_coding_composition_state,  # noqa: F401 -- original selected physical proof
         temporal_coding_state,  # noqa: F401 -- preload original pure native gates
         temporal_context_read_state,  # noqa: F401 -- preload original pure read gates
+        temporal_deployment_coding_registry,  # noqa: F401 -- original scoped close index
+        temporal_deployment_coding_state,  # noqa: F401 -- original pure call fencing
+        temporal_deployment_control_projection,  # noqa: F401 -- fixed compact Query projector
         temporal_deployment_registry,  # noqa: F401 -- preload pure acceptance
         temporal_parent_completion_state,  # noqa: F401 -- preload pure parent release gates
+        temporal_parent_state,  # noqa: F401 -- fixed original child addressing
         temporal_session_identity,  # noqa: F401 -- preload pure Session addressing
         temporal_startup_options,  # noqa: F401 -- preload pure public acceptance validation
         temporal_tool_execution,  # noqa: F401 -- preload fixed Tool protocol
         temporal_tool_execution_state,  # noqa: F401 -- preload original Tool gates
         temporal_user_input,  # noqa: F401 -- preload original pure input gates
     )
+    from . import temporal_deployment_coding_state as deployment_coding_state
     from . import temporal_deployment_execution_state as deployment_state
     from . import temporal_deployment_release_state as deployment_release_state
     from .temporal_bindings import ROLES as _binding_roles  # noqa: F401
@@ -83,6 +89,277 @@ class TemporalRunWorkflow:
             self._deployment_initialization_error = getattr(exc, "code", None) or getattr(
                 exc, "type", "definition_mismatch"
             )
+        self._deployment_dirty = {}
+        self._deployment_observed = {}
+        self._deployment_observing = set()
+        self._deployment_hint_tokens = {}
+        self._deployment_read_failures = {}
+        self._deployment_parent_pending = None
+        self._deployment_parent_notified = None
+        self._deployment_parent_notification_error = None
+        self._deployment_parent_notification_retry = False
+        self._deployment_parent_notification_attempts = 0
+        self._deployment_notification_revisions = 0
+
+    def _deployment_notifications_selected(self):
+        return deployment_coding_state.selected(self.state.manifest) and hasattr(
+            self.state, "deployment_admission"
+        )
+
+    def _deployment_query_epoch(self):
+        from .errors import DefinitionMismatch
+
+        info = workflow.info()
+        if (
+            not self._deployment_notifications_selected()
+            or getattr(self, "_deployment_initialization_error", None) is not None
+            or info.workflow_id != self.state.run_id
+            or info.namespace != self.state.deployment_admission["root"]["namespace"]["name"]
+            or any(
+                getattr(info, name, None) != self.state.epoch
+                for name in ("run_id", "first_execution_run_id", "original_execution_run_id")
+            )
+            or self.state.deployment_original_epoch != self.state.epoch
+        ):
+            raise DefinitionMismatch("Coding node requires its original SDK History")
+        return info
+
+    @workflow.query(name="deployment_coding_validation")
+    def deployment_coding_validation(self, request: dict) -> dict:
+        try:
+            self._deployment_query_epoch()
+            self.state.authorize(request.get("scope"))
+            from .temporal_deployment_control_projection import node
+
+            return node(self.state, request)
+        except Exception as exc:
+            return {"error": getattr(exc, "code", "definition_mismatch")}
+
+    def _deployment_child_generation(self, call):
+        if not hasattr(self, "_deployment_dirty"):
+            self._deployment_dirty, self._deployment_observed, self._deployment_hint_tokens = (
+                {},
+                {},
+                {},
+            )
+        return self._deployment_dirty.setdefault(call["run_id"], 1)
+
+    def _deployment_child_is_dirty(self, call):
+        return self._deployment_child_generation(call) != self._deployment_observed.get(
+            call["run_id"], 0
+        )
+
+    def _deployment_child_observed(self, call, generation):
+        if self._deployment_child_generation(call) != generation:
+            return False
+        self._deployment_observed[call["run_id"]] = generation
+        getattr(self, "_deployment_read_failures", {}).pop(call["run_id"], None)
+        return True
+
+    def _deployment_child_read_ready(self, call, generation):
+        failed = getattr(self, "_deployment_read_failures", {}).get(call["run_id"])
+        return failed is None or failed["generation"] != generation or failed["ready"]
+
+    def _deployment_child_read_failed(self, call, generation, code):
+        if not hasattr(self, "_deployment_read_failures"):
+            self._deployment_read_failures = {}
+        previous = self._deployment_read_failures.get(call["run_id"])
+        attempts = previous["attempts"] if previous and previous["generation"] == generation else 0
+        transient = code in {
+            "parent_activity_unavailable",
+            "unavailable",
+            "temporal_rpc_unavailable",
+            "deadline_exceeded",
+            "timeout",
+            "activity_failed",
+            "deployment_control_unavailable",
+        }
+        failed = {
+            "generation": generation,
+            "attempts": attempts + 1,
+            "retry": transient and attempts + 1 < 3,
+            "ready": False,
+        }
+        self._deployment_read_failures[call["run_id"]] = failed
+        emit = getattr(self.state, "_emit", None)
+        if emit is not None:
+            emit(
+                "deployment_child_observation_deferred",
+                {
+                    "run_id": call["run_id"],
+                    "attempts": failed["attempts"],
+                    "retryable": failed["retry"],
+                    "code": code,
+                },
+            )
+
+    def _deployment_child_retry_pending(self):
+        return any(
+            failed["retry"]
+            and not failed["ready"]
+            and self._deployment_dirty.get(run_id) == failed["generation"]
+            for run_id, failed in getattr(self, "_deployment_read_failures", {}).items()
+        )
+
+    def _deployment_child_retry_tick(self):
+        for run_id, failed in getattr(self, "_deployment_read_failures", {}).items():
+            if failed["retry"] and self._deployment_dirty.get(run_id) == failed["generation"]:
+                failed["ready"] = True
+
+    def _deployment_force_child_reads(self):
+        if self._deployment_notifications_selected():
+            for call in getattr(self.state, "children", ()):
+                self._deployment_dirty[call["run_id"]] = self._deployment_child_generation(call) + 1
+
+    @workflow.signal(name="deployment_child_wake")
+    async def deployment_child_wake(self, request: dict) -> None:
+        # Signals are bounded hints, never source identity or permission proof.
+        # Invalid signals cannot poison the Workflow task or adopt caller data.
+        try:
+            self._deployment_query_epoch()
+            if type(request) is not dict or set(request) != {
+                "version",
+                "scope",
+                "parent_run_id",
+                "parent_execution_epoch",
+                "child_run_id",
+                "child_execution_epoch",
+                "token",
+            }:
+                return
+            if (
+                type(request["version"]) is not int
+                or request["version"] != 1
+                or request["scope"] != self.state.scope
+                or request["parent_run_id"] != self.state.run_id
+                or request["parent_execution_epoch"] != self.state.epoch
+                or type(request["token"]) is not str
+                or len(request["token"]) != 64
+                or set(request["token"]) - set("0123456789abcdef")
+                or any(
+                    type(request[key]) is not str or not 0 < len(request[key]) <= 1024
+                    for key in ("child_run_id", "child_execution_epoch")
+                )
+            ):
+                return
+            call = next(
+                (
+                    c
+                    for c in getattr(self.state, "children", ())
+                    if c["run_id"] == request["child_run_id"] and c.get("dispatch_started")
+                ),
+                None,
+            )
+            if call is None:
+                return
+            pinned = (
+                call.get("child_execution", {}).get("execution_epoch")
+                if call.get("child_execution")
+                else call.get("deployment_execution_epoch")
+            )
+            if pinned is not None and pinned != request["child_execution_epoch"]:
+                return
+            generation = self._deployment_child_generation(call)
+            if (
+                self._deployment_hint_tokens.get(call["run_id"]) == request["token"]
+                and self._deployment_child_is_dirty(call)
+                and call["run_id"] not in getattr(self, "_deployment_observing", ())
+            ):
+                return
+            self._deployment_hint_tokens[call["run_id"]] = request["token"]
+            self._deployment_dirty[call["run_id"]] = generation + 1
+            self.wake_revision += 1
+        except Exception:
+            return
+
+    def _deployment_notification_token(self):
+        calls = getattr(self.state, "deployment_calls", {})
+        tools = getattr(self.state, "tool_executions", {})
+        return digest(
+            [
+                self.state.epoch,
+                self.state.revision - getattr(self, "_deployment_notification_revisions", 0),
+                [
+                    (key, call["stopped"], digest(call.get("fence_proof")))
+                    for key, call in sorted(calls.items())
+                ],
+                [
+                    (
+                        key,
+                        tool.get("execution_stopped"),
+                        digest(tool.get("end_proof")),
+                        digest(tool.get("coding_owner_stop_proof")),
+                    )
+                    for key, tool in sorted(tools.items())
+                ],
+                digest(getattr(self.state, "deployment_seal", None)),
+            ]
+        )
+
+    async def _notify_deployment_parent(self):
+        if not self._deployment_notifications_selected():
+            return True
+        info = self._deployment_query_epoch()
+        if info.parent is None:
+            return True
+        if info.parent.namespace != info.namespace:
+            return True
+        if getattr(self, "_deployment_parent_notification_error", None) is not None and not getattr(
+            self, "_deployment_parent_notification_retry", False
+        ):
+            return False
+        token = self._deployment_notification_token()
+        pending = getattr(self, "_deployment_parent_pending", None)
+        if pending is None:
+            if token == getattr(self, "_deployment_parent_notified", None):
+                return True
+            pending = {
+                "version": 1,
+                "scope": detached(self.state.scope),
+                "parent_run_id": info.parent.workflow_id,
+                "parent_execution_epoch": info.parent.run_id,
+                "child_run_id": self.state.run_id,
+                "child_execution_epoch": self.state.epoch,
+                "token": token,
+            }
+            self._deployment_parent_pending = pending
+        try:
+            self._deployment_parent_notification_attempts = (
+                getattr(self, "_deployment_parent_notification_attempts", 0) + 1
+            )
+            await workflow.get_external_workflow_handle(
+                info.parent.workflow_id, run_id=info.parent.run_id
+            ).signal("deployment_child_wake", pending)
+        except Exception as exc:
+            transient = self._deployment_parent_notification_attempts < 3 and (
+                isinstance(exc, TimeoutError)
+                or getattr(exc, "type", None)
+                in {
+                    "unavailable",
+                    "deadline_exceeded",
+                    "timeout",
+                }
+            )
+            error = {"type": type(exc).__name__, "retryable": transient}
+            if error != getattr(self, "_deployment_parent_notification_error", None):
+                before = self.state.revision
+                emit = getattr(self.state, "_emit", None)
+                if emit is not None:
+                    emit("deployment_parent_notification_deferred", error)
+                self._deployment_notification_revisions = (
+                    getattr(self, "_deployment_notification_revisions", 0)
+                    + self.state.revision
+                    - before
+                )
+            self._deployment_parent_notification_error = error
+            self._deployment_parent_notification_retry = transient
+            return False
+        self._deployment_parent_notified = pending["token"]
+        self._deployment_parent_pending = None
+        self._deployment_parent_notification_error = None
+        self._deployment_parent_notification_retry = False
+        self._deployment_parent_notification_attempts = 0
+        return True
 
     def _initialize_deployment_checked(self, accepted, info):
         if not deployment_selected(self.state.manifest):
@@ -129,6 +406,7 @@ class TemporalRunWorkflow:
         if deployment_selected(self.state.manifest) and name not in (
             DEPLOYMENT_ACTIVITY,
             DEPLOYMENT_RELEASE_ACTIVITY,
+            "ralf.temporal.deployment-coding-stop.v3",
         ):
             request = {
                 "scope": self.state.scope,
@@ -137,6 +415,8 @@ class TemporalRunWorkflow:
         return await workflow.execute_activity(name, request, **options)
 
     async def _ensure_deployment_retirement(self, activity_timeout):
+        if deployment_coding_state.selected(self.state.manifest):
+            await self._recover_deployment_coding_calls()
         if (
             not public_deployment(self.state.manifest)
             or self.state.state not in {"succeeded", "failed", "cancelled"}
@@ -186,6 +466,38 @@ class TemporalRunWorkflow:
                     type=response.get("code", "deployment_admission_unavailable"),
                     non_retryable=True,
                 )
+            if deployment_coding_state.selected(self.state.manifest):
+                sideband = response.get("coding_admission")
+                from .errors import DefinitionMismatch
+                from .temporal_deployment_admission import _exact
+
+                _exact(sideband, {"namespace", "execution_epoch", "admitted"})
+                if (
+                    sideband["namespace"] != self.state.deployment_admission["root"]["namespace"]
+                    or sideband["execution_epoch"] != self.state.epoch
+                    or type(sideband["admitted"]) is not bool
+                ):
+                    raise DefinitionMismatch("Original Coding admission sideband changed")
+                if hasattr(self.state, "children"):
+                    temporal_coding_composition_state.adopt_admission(self.state, sideband)
+                else:
+                    if temporal_coding_composition_state.enabled(self.state.manifest):
+                        temporal_coding_composition_state.initialize_namespace(
+                            self.state,
+                            {
+                                "scope": self.state.scope,
+                                "run_id": self.state.run_id,
+                                "execution_epoch": self.state.epoch,
+                                "manifest_digest": digest(self.state.manifest),
+                                "namespace": sideband["namespace"],
+                            },
+                        )
+                    if not sideband["admitted"]:
+                        self.state.command(
+                            "ralf-deployment-admission-closed:"
+                            + digest([self.state.run_id, self.state.epoch]),
+                            {"kind": "cancel", "scope": self.state.scope},
+                        )
             deployment_state.adopt(self.state, response["result"])
             self.state._emit("deployment_execution_admitted")
             return True
@@ -261,6 +573,7 @@ class TemporalRunWorkflow:
             if not await self._ensure_deployment_admission(timeout):
                 await self._wait_deployment_admission()
                 continue
+            await self._notify_deployment_parent()
             await self._notify_session()
             observed_wake = self.wake_revision
             if self.state.pending_acks:
@@ -323,6 +636,7 @@ class TemporalRunWorkflow:
             operation = self.state.next_operation()
             if operation is None:
                 await self._ensure_deployment_retirement(timeout)
+                await self._notify_deployment_parent()
                 expiry = policy.get("approval_timeout_seconds")
                 pending = next(
                     (
@@ -350,14 +664,21 @@ class TemporalRunWorkflow:
                     try:
                         await workflow.wait_condition(
                             lambda wake=observed_wake: self.wake_revision != wake,
-                            timeout=timedelta(seconds=remaining),
+                            timeout=timedelta(seconds=min(remaining, 1))
+                            if getattr(self, "_deployment_parent_notification_retry", False)
+                            else timedelta(seconds=remaining),
                         )
                     except TimeoutError:
-                        if pending["status"] == "waiting_approval" and self.state.state not in {
-                            "cancelled",
-                            "failed",
-                            "succeeded",
-                        }:
+                        if (
+                            workflow.now().timestamp() >= pending["approval_expires_at"]
+                            and pending["status"] == "waiting_approval"
+                            and self.state.state
+                            not in {
+                                "cancelled",
+                                "failed",
+                                "succeeded",
+                            }
+                        ):
                             pending["status"] = "failed"
                             self.state.state, self.state.error = (
                                 "failed",
@@ -365,9 +686,17 @@ class TemporalRunWorkflow:
                             )
                             self.state._emit("approval_expired", {"action_id": pending["id"]})
                 else:
-                    await workflow.wait_condition(
-                        lambda wake=observed_wake: self.wake_revision != wake
-                    )
+                    try:
+                        await workflow.wait_condition(
+                            lambda wake=observed_wake: self.wake_revision != wake,
+                            **(
+                                {"timeout": timedelta(seconds=1)}
+                                if getattr(self, "_deployment_parent_notification_retry", False)
+                                else {}
+                            ),
+                        )
+                    except TimeoutError:
+                        pass
                 continue
             action, request = operation
             try:
@@ -539,11 +868,16 @@ class TemporalRunWorkflow:
             close_pending(self.state)
             self.state._emit("deadline_exceeded")
             self.wake_revision += 1
+            await self._notify_deployment_parent()
 
     @workflow.update(name="command")
     async def command(self, request: dict) -> dict:
         try:
             receipt = self.state.command(request["command_id"], request["payload"])
+            if request["payload"]["kind"] == "drive":
+                self._deployment_parent_notification_error = None
+                self._deployment_parent_notification_retry = False
+                self._deployment_parent_notification_attempts = 0
             if (
                 request["payload"]["kind"] == "drive"
                 and getattr(self.state, "deployment_seal", None) is None
@@ -750,6 +1084,67 @@ class TemporalRunWorkflow:
                 non_retryable=True,
             ) from None
 
+    async def _recover_deployment_coding_calls(self):
+        if getattr(self.state, "deployment_seal", None) is not None:
+            return
+        for record in tuple(getattr(self.state, "deployment_calls", {}).values()):
+            if record["stopped"]:
+                continue
+            try:
+                deployment_coding_state.coding_call_candidate(self.state, record["identity"])
+            except Exception:
+                continue  # Other/missing owners remain independent unknown obligations.
+            try:
+                await self.deployment_coding_call_stopped(
+                    {"scope": self.state.scope, "identity": record["identity"]}
+                )
+            except ApplicationError:
+                self.state._emit(
+                    "deployment_coding_call_stop_deferred",
+                    {"activity_id": record["identity"]["activity_id"]},
+                )
+
+    @workflow.update(name="deployment_coding_call_stopped")
+    async def deployment_coding_call_stopped(self, payload: dict) -> dict:
+        from .errors import DefinitionMismatch
+        from .temporal_deployment_admission import _exact
+
+        try:
+            _exact(payload, {"scope", "identity"})
+            if payload["scope"] != self.state.scope:
+                raise DefinitionMismatch("Original Coding stop scope changed")
+            deployment_coding_state.coding_call_candidate(self.state, payload["identity"])
+            key = deployment_release_state._identity(self.state, payload["identity"])
+            stored = self.state.deployment_calls[key]["fence_proof"]
+            if stored is None:
+                response = await self._execute_activity(
+                    "ralf.temporal.deployment-coding-stop.v3",
+                    detached(payload),
+                    task_queue=self.state.deployment_task_queue,
+                    start_to_close_timeout=timedelta(
+                        seconds=self.state.deployment_activity_timeout
+                    ),
+                    schedule_to_close_timeout=timedelta(
+                        seconds=self.state.deployment_activity_timeout * 2 + 5
+                    ),
+                    retry_policy=RetryPolicy(maximum_attempts=1),
+                )
+                if response.get("ok") is not True:
+                    raise ApplicationError(
+                        "Original Coding stop remains unverified",
+                        type=response.get("code", "deployment_coding_stop_failed"),
+                    )
+                stored = response["result"]
+            result = deployment_coding_state.adopt_call_fence(self.state, payload, stored)
+            self.wake_revision += 1
+            return result
+        except Exception as exc:
+            raise ApplicationError(
+                "Original SDK-owned Coding call stop refused",
+                type=getattr(exc, "code", None) or getattr(exc, "type", "definition_mismatch"),
+                non_retryable=True,
+            ) from None
+
     @workflow.update(name="deployment_seal")
     async def deployment_seal(self, payload: dict) -> dict:
         try:
@@ -780,10 +1175,19 @@ class TemporalRunWorkflow:
         try:
             self.state.authorize(request.get("scope"))
             kind = request["kind"]
+            if kind == "deployment_coding_validation":
+                return self.deployment_coding_validation(request)
             if kind == "deployment_admission":
                 return deployment_state.view(self.state)
             if kind == "deployment_closure":
                 return deployment_release_state.view(self.state)
+            if kind == "deployment_coding_call_candidate":
+                from .temporal_deployment_admission import _exact
+
+                _exact(request, {"kind", "scope", "identity"})
+                return deployment_coding_state.coding_call_candidate(
+                    self.state, request["identity"]
+                )
             if kind == "deployment_start" and public_deployment(self.state.manifest):
                 return {
                     "scope": detached(self.state.scope),
@@ -887,6 +1291,8 @@ class TemporalCommandRegistryWorkflow:
     def __init__(self, accepted: dict):
         from .errors import DefinitionMismatch
 
+        self._deployment_registry_epoch = None
+        self._deployment_registry_initialization_error = None
         if type(accepted) is not dict:
             raise DefinitionMismatch("Command registry requires a plain initialization envelope")
         if "deployment_admission" not in accepted:
@@ -899,7 +1305,7 @@ class TemporalCommandRegistryWorkflow:
             or type(selected) is not dict
             or set(selected) != {"version", "policy", "namespace"}
             or type(selected["version"]) is not int
-            or selected["version"] not in (1, 2)
+            or selected["version"] not in (1, 2, 3)
             or selected["policy"] is None
             or selected["namespace"] is None
         ):
@@ -915,26 +1321,106 @@ class TemporalCommandRegistryWorkflow:
         ] or info.workflow_id != deployment_registry_id(selected["policy"]["deployment_id"]):
             raise DefinitionMismatch("Deployment admission requires its original SDK address")
         self.commands = commands
+        if selected["version"] in (2, 3):
+            # Defer refusal until an SDK-owned entry point. Raising from init
+            # can leave the SDK's already-prepared run coroutine unawaited.
+            epoch = getattr(info, "run_id", None)
+            if (
+                type(epoch) is not str
+                or not epoch
+                or getattr(info, "original_execution_run_id", None) != epoch
+                or getattr(info, "first_execution_run_id", None) != epoch
+            ):
+                self._deployment_registry_initialization_error = "definition_mismatch"
+            else:
+                self._deployment_registry_epoch = epoch
+                if selected["version"] == 3:
+                    self.commands.deployment.deployment_registry_execution_epoch = epoch
+
+    def _check_deployment_registry_epoch(self):
+        from .errors import DefinitionMismatch
+
+        if self._deployment_registry_initialization_error is not None:
+            raise DefinitionMismatch("Public Registry requires its original SDK History")
+        epoch = self._deployment_registry_epoch
+        if epoch is None:
+            return
+        info = workflow.info()
+        if any(
+            getattr(info, field, None) != epoch
+            for field in ("run_id", "original_execution_run_id", "first_execution_run_id")
+        ):
+            raise DefinitionMismatch("Public Registry requires its original SDK History")
 
     @workflow.run
     async def run(self, accepted: dict) -> None:
+        try:
+            self._check_deployment_registry_epoch()
+        except Exception as exc:
+            raise ApplicationError(
+                "Original deployment Registry initialization refused",
+                type=getattr(exc, "code", "definition_mismatch"),
+                non_retryable=True,
+            ) from None
         await workflow.wait_condition(lambda: False)
 
     @workflow.update(name="reserve")
     async def reserve(self, request: dict) -> dict:
-        # No await or external I/O: one Update atomically pins identity/target.
         try:
+            self._check_deployment_registry_epoch()
+            if (
+                self.commands.deployment is not None
+                and self.commands.admission_protocol in (2, 3)
+                and type(request) is dict
+                and "descendant" in request
+            ):
+                prepared = self.commands.prepare_deployment_control(request)
+                if "receipt" in prepared:
+                    return prepared["receipt"]
+                envelope = prepared["submission"]
+                response = await workflow.execute_activity(
+                    DEPLOYMENT_RELEASE_ACTIVITY,
+                    {
+                        "mode": "control",
+                        "scope": prepared["request"]["scope"],
+                        "root": prepared["root"],
+                        "target": prepared["request"]["target"],
+                        "target_execution_epoch": prepared["target_execution_epoch"],
+                        "manifest": envelope["manifest"],
+                        "registry_execution_epoch": workflow.info().run_id,
+                    },
+                    task_queue=envelope["task_queue"],
+                    start_to_close_timeout=timedelta(seconds=envelope["activity_timeout"]),
+                    schedule_to_close_timeout=timedelta(
+                        seconds=envelope["activity_timeout"] * 2 + 5
+                    ),
+                    retry_policy=RetryPolicy(maximum_attempts=1),
+                )
+                self._check_deployment_registry_epoch()
+                if (
+                    type(response) is not dict
+                    or response.get("ok") is not True
+                    or set(response) != {"ok", "result"}
+                ):
+                    raise ApplicationError(
+                        "Original SDK descendant proof unavailable",
+                        type=response.get("code", "definition_mismatch")
+                        if type(response) is dict
+                        else "definition_mismatch",
+                    )
+                return self.commands.commit_deployment_control(request, response["result"])
             return self.commands.reserve(request)
         except Exception as exc:
             raise ApplicationError(
                 "Temporal command identity was rejected",
-                type=getattr(exc, "code", "validation_error"),
+                type=getattr(exc, "code", None) or getattr(exc, "type", "validation_error"),
                 non_retryable=True,
             ) from None
 
     @workflow.update(name="record_deployment_submission")
     async def record_deployment_submission(self, request: dict) -> dict:
         try:
+            self._check_deployment_registry_epoch()
             return self.commands.record_deployment_submission(request)
         except Exception as exc:
             raise ApplicationError(
@@ -946,6 +1432,7 @@ class TemporalCommandRegistryWorkflow:
     @workflow.update(name="release_deployment_root")
     async def release_deployment_root(self, request: dict) -> dict:
         try:
+            self._check_deployment_registry_epoch()
             previous = self.commands.deployment_retirement(request)
             if previous is not None:
                 return previous
@@ -965,6 +1452,7 @@ class TemporalCommandRegistryWorkflow:
                 schedule_to_close_timeout=timedelta(seconds=prepared["activity_timeout"] * 2 + 5),
                 retry_policy=RetryPolicy(maximum_attempts=1),
             )
+            self._check_deployment_registry_epoch()
             if not response.get("ok"):
                 raise ApplicationError(
                     "Original SDK closure proof unavailable",
@@ -982,10 +1470,9 @@ class TemporalCommandRegistryWorkflow:
     @workflow.update(name="admit_coding_composition_submission")
     async def admit_coding_composition_submission(self, request: dict) -> dict:
         try:
+            self._check_deployment_registry_epoch()
             if self.commands.deployment is not None:
-                from .errors import DefinitionMismatch
-
-                raise DefinitionMismatch("Deployment composition admission is not integrated")
+                return self.commands.bind_coding_submission(request)
             if request.get("scope") != self.commands.scope:
                 from .errors import AuthorizationDenied
 
@@ -1022,6 +1509,7 @@ class TemporalCommandRegistryWorkflow:
     @workflow.update(name="close_coding_composition_submissions")
     async def close_coding_composition_submissions(self, request: dict) -> dict:
         try:
+            self._check_deployment_registry_epoch()
             if self.commands.deployment is not None:
                 from .errors import DefinitionMismatch
 
@@ -1042,10 +1530,23 @@ class TemporalCommandRegistryWorkflow:
                 non_retryable=True,
             ) from None
 
+    @workflow.update(name="close_deployment_coding_submissions")
+    async def close_deployment_coding_submissions(self, request: dict) -> dict:
+        try:
+            self._check_deployment_registry_epoch()
+            return self.commands.close_coding_submissions(request)
+        except Exception as exc:
+            raise ApplicationError(
+                "Original scoped deployment Coding close refused",
+                type=getattr(exc, "code", "definition_mismatch"),
+                non_retryable=True,
+            ) from None
+
     @workflow.update(name="bind_deployment_root")
     async def bind_deployment_root(self, request: dict) -> dict:
         # This pins SDK identity only; it does not adopt outcomes or free quota.
         try:
+            self._check_deployment_registry_epoch()
             return self.commands.bind_deployment_root(request)
         except Exception as exc:
             raise ApplicationError(
@@ -1056,8 +1557,20 @@ class TemporalCommandRegistryWorkflow:
 
     @workflow.query(name="view")
     def view(self, request: dict) -> dict:
+        try:
+            self._check_deployment_registry_epoch()
+        except Exception as exc:
+            return {"error": getattr(exc, "code", "definition_mismatch")}
         if self.commands.deployment is not None:
             try:
+                if request.get("kind") == "deployment_coding_validation":
+                    return self.deployment_coding_validation(request)
+                if request.get("kind") == "deployment_control":
+                    return self.commands.deployment_control(request)
+                if request.get("kind") == "coding_composition_candidates":
+                    return self.commands.coding_candidates(request)
+                if request.get("kind") == "coding_composition_admission":
+                    return self.commands.coding_admission(request)
                 if request.get("kind") == "deployment_configuration":
                     return self.commands.deployment_configuration(request)
                 if request.get("kind") == "deployment_submission":
@@ -1088,3 +1601,19 @@ class TemporalCommandRegistryWorkflow:
             "capacity": self.commands.capacity,
             "accepted_commands": len(self.commands.identities),
         }
+
+    @workflow.query(name="deployment_coding_validation")
+    def deployment_coding_validation(self, request: dict) -> dict:
+        try:
+            self._check_deployment_registry_epoch()
+            if self.commands.admission_protocol != 3 or self.commands.deployment is None:
+                raise ValueError("Original Registry3 required")
+            info = workflow.info()
+            if (
+                info.workflow_id != self.commands.deployment.registry_id
+                or info.namespace != self.commands.deployment.namespace["name"]
+            ):
+                raise ValueError("Registry3 SDK address changed")
+            return self.commands.deployment.deployment_coding_validation(request)
+        except Exception as exc:
+            return {"error": getattr(exc, "code", "definition_mismatch")}

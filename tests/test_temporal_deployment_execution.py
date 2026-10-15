@@ -314,6 +314,36 @@ def test_child_admission_inherits_one_root_and_pins_actual_parent_history():
     asyncio.run(run())
 
 
+@pytest.mark.parametrize("pin", ["original", "missing", "foreign"])
+def test_read_only_ancestry_requires_existing_original_epoch_without_any_update(pin):
+    async def run():
+        runtime, client, parent_value, _ = await admitted_setup()
+        value, info, _ = child_setup(runtime, client, parent_value)
+        receipt = await module().admit(runtime, client, value, info)
+        child = client.proofs[value["run_id"]]
+        client.proofs[value["run_id"]] = sealed({**child, "admission_receipt": receipt})
+        parent = client.proofs[parent_value["run_id"]]
+        if pin != "original":
+            parent["children"][0]["deployment_execution_epoch"] = (
+                None if pin == "missing" else "foreign-epoch"
+            )
+            client.proofs[parent["run_id"]] = sealed(parent)
+        before = copy.deepcopy((client.proofs, client.updates, client.registry.roots))
+        if pin == "original":
+            result = await module()._ancestry(
+                runtime, client, POLICY.identity, client.proofs[value["run_id"]], read_only=True
+            )
+            assert result == client.proofs[parent_value["run_id"]]
+        else:
+            with pytest.raises(DefinitionMismatch):
+                await module()._ancestry(
+                    runtime, client, POLICY.identity, client.proofs[value["run_id"]], read_only=True
+                )
+        assert (client.proofs, client.updates, client.registry.roots) == before
+
+    asyncio.run(run())
+
+
 @pytest.mark.parametrize(
     "changed",
     ["sdk_parent", "parent_intent", "parent_metadata", "parent_unadmitted", "pinned_epoch"],

@@ -1,5 +1,6 @@
 """Original SDK composition transport and owned stop; no business authority."""
 
+import asyncio
 import uuid
 from dataclasses import asdict
 from types import SimpleNamespace
@@ -32,7 +33,14 @@ def _root_kind(manifest, kind):
     )
 
 
-def _registry(client, scope):
+def _registry(client, scope, manifest=None):
+    if (
+        manifest is not None
+        and manifest.get("deployment_admission_protocol", {}).get("version") == 3
+    ):
+        from .temporal_deployment_coding_bridge import registry
+
+        return registry(client, scope, manifest)
     return client.get_workflow_handle("ralf-temporal-commands-" + digest(scope))
 
 
@@ -156,9 +164,9 @@ def _validate_admission(receipt, expected, epoch, namespace):
         raise DefinitionMismatch("Composition admission lost its original registry acceptance")
 
 
-async def _bind_submission(client, scope, expected, epoch, namespace):
+async def _bind_submission(client, scope, expected, epoch, namespace, manifest=None):
     payload = {"scope": scope, **expected, "execution_epoch": epoch, "namespace": namespace}
-    receipt = await _registry(client, scope).execute_update(
+    receipt = await _registry(client, scope, manifest).execute_update(
         "admit_coding_composition_submission",
         payload,
         id="ralf-composition-admission:" + digest(payload),
@@ -169,6 +177,10 @@ async def _bind_submission(client, scope, expected, epoch, namespace):
 
 
 async def root_admission(runtime, client, value, info):
+    if value["runtime_manifest"].get("deployment_admission_protocol", {}).get("version") == 3:
+        from .temporal_deployment_coding_bridge import root_admission as deployment_root_admission
+
+        return await deployment_root_admission(runtime, client, value, info)
     _actual(client, value, info)
     runtime.validate_release(value["runtime_manifest"])
     if not _root_kind(value["runtime_manifest"], value["request"]["definition"]["kind"]):
@@ -202,8 +214,15 @@ async def root_admission(runtime, client, value, info):
         "request_digest": digest(value["request"]),
         "manifest_digest": digest(value["runtime_manifest"]),
     }
-    await _bind_submission(client, value["scope"], expected, value["execution_epoch"], namespace)
-    receipt = await _registry(client, value["scope"]).query(
+    await _bind_submission(
+        client,
+        value["scope"],
+        expected,
+        value["execution_epoch"],
+        namespace,
+        value["runtime_manifest"],
+    )
+    receipt = await _registry(client, value["scope"], value["runtime_manifest"]).query(
         "view", {"scope": value["scope"], "kind": "coding_composition_admission", **expected}
     )
     _validate_admission(receipt, expected, value["execution_epoch"], namespace)
@@ -445,6 +464,32 @@ async def _ancestry(client, original, manifest, namespace):
         if "execution_policy" in manifest
         else TemporalExecutionPolicy()
     )
+
+    async def parent_snapshot(scope, run_id, epoch):
+        handle = client.get_workflow_handle(run_id, run_id=epoch)
+        parent, calls = await asyncio.gather(
+            handle.query("view", {"scope": scope, "kind": "coding_composition_proof"}),
+            handle.query("view", {"scope": scope, "kind": "coding_composition_children"}),
+            return_exceptions=True,
+        )
+        for result in (parent, calls):
+            if isinstance(result, BaseException):
+                raise result
+        # Both reads use the same original epoch; namespace is fresh after
+        # both complete. No mutable parent state survives this walk.
+        await _namespace(client, namespace)
+        parent = _validate_proof(
+            parent, scope=scope, run_id=run_id, epoch=epoch, manifest=manifest, namespace=namespace
+        )
+        if (
+            type(calls) is not list
+            or len(calls) > 4096
+            or any(type(item) is not dict for item in calls)
+            or len({item.get("run_id") for item in calls}) != len(calls)
+        ):
+            raise DefinitionMismatch("Composition original child obligations unavailable")
+        return parent, detached(calls)
+
     chain, seen = [], set()
     current = original
     while "coding_parent" in current["request"]:
@@ -454,13 +499,10 @@ async def _ancestry(client, original, manifest, namespace):
         link = _link(current["request"])
         if link["scope"] != current["scope"] or link["namespace"] != namespace:
             raise DefinitionMismatch("Original Coding ancestry changed Scope or namespace")
-        parent = await _proof(
-            client,
+        parent, calls = await parent_snapshot(
             current["scope"],
             link["parent_run_id"],
             link["parent_execution_epoch"],
-            manifest,
-            namespace,
         )
         parent_depth = parent["request"].get("coding_parent", {}).get("depth", 0)
         if (
@@ -472,7 +514,6 @@ async def _ancestry(client, original, manifest, namespace):
             or parent["release_digest"] != link["parent_release_digest"]
         ):
             raise DefinitionMismatch("Original Coding ancestor identity or depth changed")
-        calls = await _children(client, parent, namespace)
         call = next((c for c in calls if c.get("run_id") == current["run_id"]), None)
         if (
             call is None
@@ -521,7 +562,7 @@ async def _ancestry_admission(client, original, manifest, namespace):
     """Observe the one accepted root; never register nested parents as roots."""
     chain = await _ancestry(client, original, manifest, namespace)
     root = chain[-1][0] if chain else original
-    candidates = await _registry(client, root["scope"]).query(
+    candidates = await _registry(client, root["scope"], manifest).query(
         "view",
         {
             "scope": root["scope"],
@@ -547,7 +588,7 @@ async def _ancestry_admission(client, original, manifest, namespace):
         or candidate.get("namespace") != namespace
     ):
         raise DefinitionMismatch("Original Coding root acceptance changed")
-    receipt = await _registry(client, root["scope"]).query(
+    receipt = await _registry(client, root["scope"], manifest).query(
         "view",
         {
             "scope": root["scope"],
@@ -629,7 +670,8 @@ async def control(runtime, client, value, info=None):
             release=value["runtime_manifest"],
             scope=Scope(**value["scope"]),
         )
-        await engine._guard("submit", call["command_id"], call["run_id"], call["request"])
+        if value["runtime_manifest"].get("deployment_admission_protocol", {}).get("version") != 3:
+            await engine._guard("submit", call["command_id"], call["run_id"], call["request"])
         if value["runtime_manifest"].get("binding_protocol") == 23:
             current = await _proof(
                 client,
@@ -711,7 +753,7 @@ async def _initialize_root(client, scope, candidate, manifest, namespace):
         name: candidate[name]
         for name in ("command_id", "run_id", "request_digest", "manifest_digest")
     }
-    await _bind_submission(client, scope, expected, epoch, namespace)
+    await _bind_submission(client, scope, expected, epoch, namespace, manifest)
     if partial != namespace:
         await handle.execute_update(
             "coding_composition_namespace",
@@ -780,9 +822,20 @@ def _resource_request(runtime, leaf, resource, requests):
     return request
 
 
+async def _deployment_sealed(runtime, client, original, namespace):
+    if original["manifest"].get("deployment_admission_protocol", {}).get("version") != 3:
+        return False
+    from .temporal_deployment_coding_bridge import sealed
+
+    return await sealed(runtime, client, original, namespace)
+
+
 async def _fence_leaf(runtime, client, leaf, namespace):
     from .temporal_bindings import selected_runtime
     from .temporal_coding_runtime import callbacks, stop
+
+    if await _deployment_sealed(runtime, client, leaf, namespace):
+        return
 
     for request in await _leaf_requests(runtime, client, leaf, namespace):
         info = SimpleNamespace(
@@ -799,6 +852,8 @@ async def _fence_leaf(runtime, client, leaf, namespace):
 
 async def _close_subtree(runtime, client, parent, manifest, namespace):
     """Cancel an original parent, then attempt every direct edge postorder."""
+    if await _deployment_sealed(runtime, client, parent, namespace):
+        return parent
     await _ancestry(client, parent, manifest, namespace)
     pending = []
     try:
@@ -875,7 +930,7 @@ async def _close_child(runtime, client, root, call, manifest, namespace):
     nested = manifest.get("binding_protocol") == 23 and _root_kind(
         manifest, leaf["request"]["definition"]["kind"]
     )
-    if not nested:
+    if not nested and not await _deployment_sealed(runtime, client, leaf, namespace):
         await _command(client, leaf, "cancel", owner_id=root["run_id"])
     leaf = await _proof(
         client,
@@ -939,7 +994,7 @@ async def _resources(runtime, scope):
     return runners, tuple(resources)
 
 
-async def close(runtime, *, client, scope):
+async def close(runtime, *, client, scope, candidates=None):
     manifest, scoped = runtime.orchestration_release, asdict(scope)
     runtime._tool_execution_closing = True
     runtime.validate_release(manifest)
@@ -947,10 +1002,14 @@ async def close(runtime, *, client, scope):
         raise CloseIncomplete({"coding_composition": "original client unavailable"})
     namespace = await _namespace(client)
     try:
-        receipt = await _registry(client, scoped).execute_update(
-            "close_coding_composition_submissions",
-            {"scope": scoped, "manifest_digest": digest(manifest)},
-            id="ralf-composition-close:" + digest([scoped, manifest, uuid.uuid4().hex]),
+        receipt = (
+            {"manifest_digest": digest(manifest), "close_requested": True, "candidates": candidates}
+            if candidates is not None
+            else await _registry(client, scoped, manifest).execute_update(
+                "close_coding_composition_submissions",
+                {"scope": scoped, "manifest_digest": digest(manifest)},
+                id="ralf-composition-close:" + digest([scoped, manifest, uuid.uuid4().hex]),
+            )
         )
     except Exception as exc:
         if not _is_notfound(exc):
@@ -990,7 +1049,8 @@ async def close(runtime, *, client, scope):
             continue
         roots[root["run_id"]] = root
         try:
-            await _command(client, root, "cancel", owner_id=root["run_id"])
+            if not await _deployment_sealed(runtime, client, root, namespace):
+                await _command(client, root, "cancel", owner_id=root["run_id"])
         except Exception as exc:
             obligations.append(
                 {"root": root["run_id"], "code": getattr(exc, "code", "cancel_unavailable")}
@@ -1046,6 +1106,8 @@ async def close(runtime, *, client, scope):
             )
     for leaf in standalone.values():
         try:
+            if await _deployment_sealed(runtime, client, leaf, namespace):
+                continue
             await _command(client, leaf, "cancel", owner_id=leaf["run_id"])
             leaf = await _proof(
                 client,

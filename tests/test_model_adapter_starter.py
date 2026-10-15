@@ -11,6 +11,20 @@ from pathlib import Path
 import pytest
 
 
+@pytest.fixture(autouse=True)
+def isolated_generated_application_modules():
+    def clear():
+        for name in list(sys.modules):
+            if name == "agent_app" or name.startswith("agent_app."):
+                sys.modules.pop(name)
+
+    clear()
+    try:
+        yield
+    finally:
+        clear()
+
+
 def application(tmp_path):
     try:
         module = importlib.import_module("ralf_agent.model_adapter_contract_starter")

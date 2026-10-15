@@ -20,25 +20,114 @@ class WorkerExecutionOwner:
         self.release_digest = digest(release)
         self._execution = ContextExecutionOwner(max_calls=256)
         self._closing = False
+        self._maintenance = {}
 
     def stop_admission(self):
         self._closing = True
 
-    def wrap_activities(self, activities, *, client):
+    def wrap_activities(self, activities, *, client, runtime=None, maintenance=()):
         from temporalio import activity
 
         namespace = getattr(client, "namespace", None)
         if type(namespace) is not str or not namespace.strip():
             raise DefinitionMismatch("Worker requires its original client namespace")
+        from .temporal_state import detached
+
+        manifest = None if runtime is None else detached(runtime.orchestration_release)
 
         def wrap(function):
+            selected = [kind for original, kind in maintenance if function is original]
+            token = None
+            if selected:
+                from .temporal_deployment_coding_bridge import is_registered_stop_activity
+                from .temporal_deployment_release import is_registered_activity
+
+                kind = selected[0]
+                control = (
+                    kind == "control"
+                    and manifest.get("deployment_admission_protocol", {}).get("version") == 3
+                    and activity._Definition.from_callable(function).name
+                    == "ralf.temporal.control.v1"
+                )
+                native_stop = (
+                    kind == "native-stop"
+                    and manifest.get("deployment_admission_protocol", {}).get("version") == 3
+                    and activity._Definition.from_callable(function).name == "ralf_coding_stop"
+                    and _native_stop_registration(runtime, client, function)
+                )
+                if (
+                    len(selected) != 1
+                    or runtime is None
+                    or kind not in {"release", "stop", "control", "native-stop"}
+                    or not (
+                        control
+                        or native_stop
+                        or kind == "release"
+                        and is_registered_activity(runtime, client, function)
+                        or kind == "stop"
+                        and is_registered_stop_activity(runtime, client, function)
+                    )
+                ):
+                    raise DefinitionMismatch("Worker maintenance registration changed")
+                binding = _maintenance_binding(function)
+                validator = _maintenance_binding(runtime.validate_release)
+                native_registration = _maintenance_binding(_native_stop_registration)
+                name = activity._Definition.from_callable(function).name
+
+                def maintenance_check(request):
+                    from .temporal_deployment_execution import _activity_body
+
+                    if (
+                        _maintenance_binding(function) != binding
+                        or _maintenance_binding(runtime.validate_release) != validator
+                        or kind == "native-stop"
+                        and (
+                            _maintenance_binding(_native_stop_registration) != native_registration
+                            or _native_stop_registration(runtime, client, function) != native_stop
+                        )
+                        or digest(runtime.orchestration_release) != self.release_digest
+                        or activity._Definition.from_callable(function).name != name
+                        or activity.info().activity_type != name
+                        or self._closing
+                        and kind == "release"
+                        and request.get("mode") not in {"release", "verify"}
+                        or self._closing
+                        and kind == "control"
+                        and _activity_body(request).get("mode") not in {"observe", "cancel"}
+                    ):
+                        raise DefinitionMismatch("Worker original maintenance identity changed")
+                    runtime.validate_release(manifest)
+
+                token = object()
+                self._maintenance[token] = maintenance_check
+
             @wraps(function)
             async def wrapped(request):
                 info = activity.info()
+                original_info = (
+                    info.workflow_namespace,
+                    info.workflow_id,
+                    info.workflow_run_id,
+                    info.activity_id,
+                    info.attempt,
+                )
 
                 def check():
-                    if client.namespace != namespace or info.workflow_namespace != namespace:
+                    if (
+                        client.namespace != namespace
+                        or info.workflow_namespace != namespace
+                        or original_info
+                        != (
+                            info.workflow_namespace,
+                            info.workflow_id,
+                            info.workflow_run_id,
+                            info.activity_id,
+                            info.attempt,
+                        )
+                    ):
                         raise DefinitionMismatch("Worker Activity namespace changed")
+                    if token is not None:
+                        self._maintenance[token](request)
 
                 check()
                 from .temporal_state import detached
@@ -51,14 +140,14 @@ class WorkerExecutionOwner:
                     check()
                     return result
 
-                return await self.execute(operation, info=info, request=request)
+                return await self.execute(operation, info=info, request=request, _maintenance=token)
 
             return wrapped
 
         return [wrap(function) for function in activities]
 
-    async def execute(self, operation, *, info, request):
-        if self._closing:
+    async def execute(self, operation, *, info, request, _maintenance=None):
+        if self._closing and _maintenance not in self._maintenance:
             raise ValidationError("Worker call admission is closed")
         if type(request) is not dict or request.get("scope") != self.scope:
             raise DefinitionMismatch("Worker call differs from its trusted assembly Scope")
@@ -87,6 +176,88 @@ class WorkerExecutionOwner:
         return await self._execution.aclose(wait_timeout=wait_timeout)
 
 
+def _maintenance_binding(function):
+    layers, seen = [], set()
+    while hasattr(function, "__wrapped__"):
+        if id(function) in seen:
+            raise DefinitionMismatch("Worker maintenance wrapper identity changed")
+        seen.add(id(function))
+        layers.append(_maintenance_leaf(function))
+        function = function.__wrapped__
+    return (*layers, _maintenance_leaf(function))
+
+
+def _native_stop_registration(runtime, client, function):
+    """Recognize the fixed factory body behind its universal admission wrapper."""
+    from types import CodeType
+
+    from . import temporal_activities as activities
+    from . import temporal_deployment_execution as execution
+    from . import temporal_session_activities as sessions
+
+    def nested(code, name):
+        return next(
+            (
+                item
+                for item in code.co_consts
+                if isinstance(item, CodeType) and item.co_name == name
+            ),
+            None,
+        )
+
+    def captures(value):
+        return dict(
+            zip(
+                value.__code__.co_freevars,
+                (cell.cell_contents for cell in value.__closure__ or ()),
+                strict=True,
+            )
+        )
+
+    factory_code = activities.registered_activities.__code__
+    wrap_code = nested(execution.wrap_activities.__code__, "wrap")
+    original = getattr(function, "__wrapped__", None)
+    if (
+        wrap_code is None
+        or getattr(function, "__code__", None) is not nested(wrap_code, "wrapped")
+        or getattr(function, "__globals__", None) is not execution.__dict__
+        or getattr(original, "__code__", None) is not nested(factory_code, "coding_stop")
+        or getattr(original, "__globals__", None) is not activities.__dict__
+    ):
+        return False
+    wrapper = captures(function)
+    body = captures(original)
+    tree = body.get("tree_guard")
+    if not (
+        wrapper.get("function") is original
+        and wrapper.get("runtime") is runtime
+        and wrapper.get("client") is client
+        and body.get("runtime") is runtime
+        and body.get("client") is client
+        and getattr(tree, "__code__", None) is nested(factory_code, "tree_guard")
+        and getattr(tree, "__globals__", None) is activities.__dict__
+        and captures(tree).get("client") is client
+        and captures(tree).get("validate_tree_activity") is sessions.validate_tree_activity
+    ):
+        return False
+    return (
+        _maintenance_binding(tree),
+        _maintenance_binding(sessions.validate_tree_activity),
+    )
+
+
+def _maintenance_leaf(function):
+    target = getattr(function, "__func__", function)
+    return (
+        target,
+        getattr(function, "__self__", None),
+        target.__code__,
+        target.__defaults__,
+        None if target.__kwdefaults__ is None else tuple(target.__kwdefaults__.items()),
+        tuple(id(cell.cell_contents) for cell in (target.__closure__ or ())),
+    )
+
+
 class TemporalRuntimeAssembly:
     """Factory resource ownership; advanced hosts explicitly take that ownership."""
 
@@ -108,7 +279,7 @@ class TemporalRuntimeAssembly:
         self._calls = WorkerExecutionOwner(scope=scope, release=self.release)
         self._coding_submissions = None
         if self.release.get("binding_protocol") in (13, 15, 17, 19, 21, 23) or (
-            self.release.get("deployment_admission_protocol", {}).get("version") == 2
+            self.release.get("deployment_admission_protocol", {}).get("version") in (2, 3)
         ):
             from .temporal_coding_composition_submissions import CompositionSubmissionOwner
 
@@ -300,11 +471,24 @@ class TemporalRuntimeAssembly:
             if (
                 self._runtime.orchestration_release.get("binding_protocol")
                 in (13, 15, 17, 19, 21, 23)
-                and self._client is None
-            ):
+                or (
+                    self._runtime.orchestration_release.get("binding_protocol") == 22
+                    and self._runtime.orchestration_release.get(
+                        "deployment_admission_protocol", {}
+                    ).get("version")
+                    == 3
+                )
+            ) and self._client is None:
                 await self._close_unused_composition()
             else:
-                if self._runtime.orchestration_release.get("binding_protocol") in (
+                if (
+                    self._runtime.orchestration_release.get(
+                        "deployment_admission_protocol", {}
+                    ).get("version")
+                    == 3
+                ):
+                    from .temporal_deployment_coding_bridge import close as close_coding
+                elif self._runtime.orchestration_release.get("binding_protocol") in (
                     13,
                     15,
                     17,
@@ -317,8 +501,16 @@ class TemporalRuntimeAssembly:
                     from .temporal_coding_runtime import close as close_coding
 
                 if self._coding_stop_task is None:
+                    close_options = {"client": self._client, "scope": self._scope}
+                    if (
+                        self._runtime.orchestration_release.get(
+                            "deployment_admission_protocol", {}
+                        ).get("version")
+                        == 3
+                    ):
+                        close_options["task_queue"] = self._queue
                     self._coding_stop_task = asyncio.create_task(
-                        close_coding(self._runtime, client=self._client, scope=self._scope)
+                        close_coding(self._runtime, **close_options)
                     )
                     self._coding_stop_task.add_done_callback(_observe)
                 try:
@@ -327,11 +519,32 @@ class TemporalRuntimeAssembly:
                     if self._coding_stop_task.done():
                         self._coding_stop_task = None
                     raise
-        await self._calls.aclose(wait_timeout=wait_timeout)
-        if getattr(self._runtime, "_deployment_public_execution", False):
+        # Keep the actual-call tracker and the original poller open while
+        # original Histories finish their release/Registry verification chain.
+        if not await self._calls.wait(wait_timeout=wait_timeout):
+            raise CloseIncomplete("Original Worker calls remain owned")
+        hosted_deployment = (
+            self._worker is not None
+            and self.release.get("deployment_admission_protocol", {}).get("version") == 3
+        )
+        if hosted_deployment:
+            from .temporal_deployment_release import check_owner
+
+            owner = check_owner(self._runtime)
+            if owner is not None and not await owner.wait(wait_timeout=wait_timeout):
+                raise CloseIncomplete("Original public deployment calls remain owned")
+        elif getattr(self._runtime, "_deployment_public_execution", False):
             await self._runtime.close_deployment_execution(wait_timeout=wait_timeout)
         await self._runtime.close_context_execution(wait_timeout=wait_timeout)
         await self._runtime.close_session_execution(wait_timeout=wait_timeout)
+        if hosted_deployment:
+            from .temporal_deployment_coding_bridge import wait_retirement
+
+            await wait_retirement(
+                self._runtime, client=self._client, scope=self._scope, wait_timeout=wait_timeout
+            )
+            await self._runtime.close_deployment_execution(wait_timeout=wait_timeout)
+        await self._calls.aclose(wait_timeout=wait_timeout)
 
     async def _finish_worker(self, wait_timeout):
         if self._worker is None:

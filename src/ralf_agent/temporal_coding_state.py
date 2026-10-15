@@ -7,6 +7,8 @@ owns new native permission; recovery invocations can only read/adopt and stop.
 import copy
 
 from .errors import AuthorizationDenied, DefinitionMismatch
+from .temporal_deployment_coding_state import guard_mutation
+from .temporal_deployment_coding_state import selected as deployment_coding_selected
 from .temporal_tool_execution import ordinary
 from .types import digest
 
@@ -172,6 +174,7 @@ def query(state, proof):
 
 def grant(state, payload):
     tool, action, value, payload = _record(state, payload, extra=("method", "params", "binding"))
+    guard_mutation(state, None, payload)
     if (
         state.state != "running"
         or state.active_action != action["id"]
@@ -204,6 +207,14 @@ def adopt(state, payload):
     tool, action, value, payload = _record(
         state, payload, extra=("kind", "evidence"), recovery=True
     )
+    previous = value.get(payload["kind"])
+    if payload["kind"] == "result_candidate" and previous is not None:
+        previous = {"result": previous}
+        evidence = payload["evidence"]
+        if type(evidence) is dict and evidence.get("kind") == "result_candidate":
+            previous["kind"] = "result_candidate"
+    if guard_mutation(state, previous, payload["evidence"]):
+        return {"action_id": action["id"], "recorded": True}
     if value.get("create_not_dispatched") is not None and payload["kind"] in {
         "namespace_absent",
         "unprepared",
@@ -339,6 +350,16 @@ def admit_stop(state, proof):
     # Validate immutable request/reservation through the same gate after recording
     # only this bounded read/stop identity; it never replaces the business claim.
     invocation = proof["invocation_id"]
+    previous = proof if invocation in value["stop_invocations"] else None
+    if guard_mutation(state, previous, proof):
+        _record(state, proof, recovery=True)
+        return {
+            "action_id": action["id"],
+            "admitted": True,
+            "original_invocation_id": tool.get("invocation_id"),
+            "request": copy.deepcopy(value["request"]),
+            "runner": copy.deepcopy(value["runner"]),
+        }
     if invocation not in value["stop_invocations"]:
         if len(value["stop_invocations"]) >= 256:
             raise AuthorizationDenied("Original Coding stop admission capacity exhausted")
@@ -501,9 +522,14 @@ def owner_stopped(state, payload):
         raise AuthorizationDenied(
             "Original process death requires admitted stop and exact native fencing"
         )
-    if not tool["execution_stopped"]:
+    previous = tool.get("coding_owner_stop_proof")
+    if guard_mutation(state, previous, payload):
+        return {"action_id": action["id"], "recorded": True}
+    first_proof = deployment_coding_selected(state.manifest) and previous is None
+    if not tool["execution_stopped"] or first_proof:
         tool["execution_stopped"] = True
-        tool["coding_owner_stop_proof"] = copy.deepcopy(payload)
+        if previous is None:
+            tool["coding_owner_stop_proof"] = copy.deepcopy(payload)
         state._emit(
             "coding_original_owner_stopped",
             {"action_id": action["id"], "owner_digest": digest(value["owner"])},

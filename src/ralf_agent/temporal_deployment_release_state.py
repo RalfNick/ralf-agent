@@ -52,7 +52,7 @@ TERMINAL = {"succeeded", "failed", "cancelled"}
 
 def public(manifest):
     value = manifest.get("deployment_admission_protocol") if type(manifest) is dict else None
-    return type(value) is dict and type(value.get("version")) is int and value["version"] == 2
+    return type(value) is dict and type(value.get("version")) is int and value["version"] in (2, 3)
 
 
 def _detached(value):
@@ -151,6 +151,10 @@ def begin_activity(state, payload):
         "stopped": False,
         "end_proof": None,
     }
+    from .temporal_deployment_coding_state import selected as coding_selected
+
+    if coding_selected(state.manifest):
+        state.deployment_calls[key]["fence_proof"] = None
     return _ack(payload, "allowed", True)
 
 
@@ -208,6 +212,11 @@ def _obligations(state):
         "root_aggregate",
         "children",
     )
+    from .temporal_deployment_coding_state import COMPOSITION_FIELDS
+    from .temporal_deployment_coding_state import selected as coding_selected
+
+    if coding_selected(state.manifest):
+        fields += COMPOSITION_FIELDS
     return {field: _detached(getattr(state, field, None)) for field in fields}
 
 
@@ -323,6 +332,9 @@ def closure(state):
         ):
             reasons.append("child_unfinished")
             break
+    from .temporal_deployment_coding_state import closure_reasons
+
+    reasons.extend(closure_reasons(state))
     return not reasons, sorted(set(reasons))
 
 

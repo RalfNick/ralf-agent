@@ -19,6 +19,67 @@ MANIFEST = {
 NAMESPACE = {"name": "original", "id": "11111111-1111-1111-1111-111111111111"}
 
 
+def test_close_adopts_sealed_child_without_sending_new_cancel(monkeypatch):
+    from tests.test_temporal_deployment_coding_guards import sealed_native
+
+    state, _, _ = sealed_native(monkeypatch)
+    leaf = {
+        "scope": state.scope,
+        "run_id": state.run_id,
+        "execution_epoch": state.epoch,
+        "request": copy.deepcopy(state.request),
+        "state": state.state,
+        "physical_stopped": True,
+        "manifest": state.manifest,
+        "namespace": NAMESPACE,
+    }
+    root = {
+        "scope": state.scope,
+        "run_id": "unsealed-parent",
+        "request": {"definition": {"kind": "graph"}},
+        "execution_epoch": "parent-epoch",
+    }
+    call = {"request": copy.deepcopy(state.request), "run_id": state.run_id}
+    events = []
+    before = copy.deepcopy((state.deployment_seal, state.event_log, state.revision))
+
+    async def read(*args, **kwargs):
+        return copy.deepcopy(leaf)
+
+    async def adopt(*args, **kwargs):
+        events.append("epoch" if kwargs.get("epoch") else "physical")
+
+    async def namespace(*args):
+        pass
+
+    async def sealed(*args):
+        events.append("positive-seal")
+        return True
+
+    class OriginalHandle:
+        async def execute_update(self, name, value, **kwargs):
+            events.append("new-command")
+            return state.command(value["command_id"], value["payload"])
+
+    class OriginalClient:
+        def get_workflow_handle(self, *args, **kwargs):
+            return OriginalHandle()
+
+    control = module()
+    monkeypatch.setattr(control, "_child_proof", read)
+    monkeypatch.setattr(control, "_proof", read)
+    monkeypatch.setattr(control, "_adopt", adopt)
+    monkeypatch.setattr(control, "_namespace", namespace)
+    monkeypatch.setattr(control, "_deployment_sealed", sealed)
+    asyncio.run(
+        control._close_child(
+            object(), OriginalClient(), root, call, {"binding_protocol": 23}, NAMESPACE
+        )
+    )
+    assert events == ["epoch", "positive-seal", "positive-seal", "physical"]
+    assert (state.deployment_seal, state.event_log, state.revision) == before
+
+
 def module():
     name = "ralf_agent.temporal_coding_composition_control"
     assert importlib.util.find_spec(name), "Missing original composition control"
@@ -280,7 +341,7 @@ def test_tree_validator_checks_composition_without_session_lineage(namespace):
 
 def test_selected_assembly_drain_uses_composition_close_not_native_only(monkeypatch):
     from ralf_agent import temporal_coding_runtime
-    from ralf_agent.temporal_assembly_lifecycle import TemporalRuntimeAssembly
+    from ralf_agent.temporal_assembly_lifecycle import TemporalRuntimeAssembly, WorkerExecutionOwner
 
     calls = []
 
@@ -297,6 +358,7 @@ def test_selected_assembly_drain_uses_composition_close_not_native_only(monkeypa
     monkeypatch.setattr(temporal_coding_runtime, "close", old_close)
     owner = SimpleNamespace(
         _worker_start=None,
+        _worker=None,
         _runtime=SimpleNamespace(
             coding_execution=True,
             orchestration_release=MANIFEST,
@@ -306,7 +368,7 @@ def test_selected_assembly_drain_uses_composition_close_not_native_only(monkeypa
         _coding_stop_task=None,
         _client=Client(),
         _scope=Scope(**SCOPE),
-        _calls=SimpleNamespace(aclose=end),
+        _calls=WorkerExecutionOwner(scope=Scope(**SCOPE), release=MANIFEST),
     )
 
     async def run():

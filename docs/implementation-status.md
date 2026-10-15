@@ -1,4 +1,12 @@
-# Implementation status — 0.1.0.dev119
+# Implementation status — 0.1.0.dev120
+
+Dev120 已将显式公共 deployment3 接入既定 Temporal Coding Agent／sequence、有界图、Team／Dynamic 与递归组合，和 ordinary2 共用同地址 Registry 容量。原 Run／Parent History 继续拥有审批、native grant、效果与预算；原树闭合和独立 ACK 证明控制退休，unknown、零费用占用与实际 handler 责任保持。子事实通知、紧凑身份／CONTROL 和 fresh-owned publication 减少重复工作；最终完整验证及 SDK 身份门禁保留，稳态只读 read-set 的明确边界见[本批验收](../architecture/reviews/2026-10-15-temporal-deployment-coding.md)，不新增权限缓存或即时 read-auth 撤销能力。
+
+v30 完整离线重新执行全部12651个唯一节点：11847 passed／804 skipped／0 failed／0 errors，430.21秒，无通过复用或未执行项；804跳过不代实际验收。之后4个测试文件修订另有92项定向检查通过，产品416文件未改，不相加为新全量。独立安装416产品字节一致，209个已加载模块全来自安装；dev119默认完整发布、原History重放／续接与新增Provider调用0通过。原安装normal矩阵13项通过／1项失败保留，修订后并行owned-close的独立normal单项1 passed／152.70秒，前后pins、真实故障回执和保留门槛通过；这是两次运行，不是同次14项全绿。测试仅按公开aclose契约允许最多2次恢复调用，原300秒总界／每次80秒保持，不宣称已证明v30的精确根因。原Assembly和Workers结束，unknown Root仍按原占位与恢复资料保留。
+
+历史拓扑、真实Docker及失败记录按对应冻结版本分别保留；结构native peer不新增模型质量或延迟SLO结论。公共SDK Session-coordinator准入仍未实现并保持拒绝，S1设计／私有纯DTO不启用publication4，Coding Session仍为S2必需工作。批次2、第三阶段、完整R01–R26／R13及跨宿主／通用质量门槛未关闭。最终文档与metadata须另行打包记录新出处，不能冒称与v30完整public快照逐字相同。
+
+## Dev119 与此前批次记录（历史范围）
 
 Dev119 已实现普通 Temporal 部署的公共 v2 入口：`TemporalRuntime(admission_policy=...)`、Engine、Profile／JSON／TOML 与同步／异步策略工厂复用原 `DeploymentAdmissionPolicy`。原 Registry 原子保存首个完整请求、Manifest、Activity timeout 和队列；相同 Scope／命令／请求先查原接受记录，再校验新发布，不确定 reserve／start 回复不会换根、换 epoch 或释放占位。原 Run／Parent History 记录真实 Activity 开始／结束及不可逆闭合证书；Registry 自身的 SDK 校验 Activity 核对原树后幂等退休额度。所选普通 Agent、顺序、图、Team、Dynamic 与嵌套范围已完成冻结源码和独立安装验收：每套 46 个受影响模块的 953 项检查、27 项公共 v2 实际服务与 17 项私有 v1 实际服务均零失败／错误／跳过。410 产品文件在源码、wheel 与安装中一致，48 个测试模块固定；原 dev118 默认 Profile／Manifest／orchestration 等值，源码和安装分别重放并续接原 History，新增 Provider 调用为 0。owned 业务、Registry、Worker 与专用服务已关闭，最终出处见[本批验收记录](../architecture/reviews/2026-10-15-temporal-deployment-public.md)。
 

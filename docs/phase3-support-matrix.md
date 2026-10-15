@@ -23,14 +23,290 @@
 | 批次 | 必需行为与验收 | 当前状态 |
 | --- | --- | --- |
 | 1：期限配置 | Temporal 现有 `TemporalExecutionPolicy` 接入 Profile／SDK／JSON／TOML 和自定义工厂；省略保持原默认，非法内置配置在组件 I/O 前拒绝；实际服务验证审批重启、原到期时间、批准／过期、晚到证据和 owned 关闭；安装后复验 | dev114 已通过策略入口、默认兼容、配置／替换和 owned 清理；源码／安装各 4 项实际 Temporal／PG 场景及各 313 项受影响回归（2 项其他远程配置跳过）通过，见[策略配置](temporal-execution-policy.md)与[验收登记](../architecture/reviews/2026-10-14-temporal-policy-profiles.md) |
-| 2：Local 期限与容量 | 所选 Local 链路补 Run／审批期限；观察等待与业务期限分离；准入额度原子获取，关闭／恢复释放责任明确；活动、未知效果和实际未结束处理器不得被过期或清理释放 | dev115 已补 Local 持久期限与审批过期，见[指南](local-execution-policy.md)和[本批登记](../architecture/reviews/2026-10-14-local-deadlines.md)；dev116 已补 Local 全 DB／每 Scope 持久根准入，见[指南](deployment-admission.md)及[登记](../architecture/reviews/2026-10-14-local-admission.md)；dev117／dev118 已接通原 Registry 与内部 Worker SDK 门禁，见[登记](../architecture/reviews/2026-10-14-temporal-deployment-dispatch.md)。dev119 已实现普通公共 v2 Engine／Profile、原接受信封与不确定启动恢复、真实 Activity 义务及原树校验后安全退休；源码与独立安装各 953 项受影响、27 项公共实际服务及 17 项私有 v1 服务零失败／错误／跳过；默认发布、原 History 兼容和 owned 清理通过，见[验收记录](../architecture/reviews/2026-10-15-temporal-deployment-public.md)。内部 v1 继续只占位；所选 Coding 物理关闭和 SDK Session coordinator 尚未接入，明确拒绝且仍为必需项。现有单 Run／Runner 限制不能替代部署准入；批次 2 未关闭 |
+| 2：Local 期限与容量 | 所选 Local 链路补 Run／审批期限；观察等待与业务期限分离；准入额度原子获取，关闭／恢复释放责任明确；活动、未知效果和实际未结束处理器不得被过期或清理释放 | dev115 已补 Local 持久期限与审批过期，见[指南](local-execution-policy.md)和[本批登记](../architecture/reviews/2026-10-14-local-deadlines.md)；dev116 已补 Local 全 DB／每 Scope 持久根准入，见[指南](deployment-admission.md)及[登记](../architecture/reviews/2026-10-14-local-admission.md)；dev117／dev118 已接通原 Registry 与内部 Worker SDK 门禁，见[登记](../architecture/reviews/2026-10-14-temporal-deployment-dispatch.md)。dev119 已实现普通公共 v2 Engine／Profile、原接受信封与不确定启动恢复、真实 Activity 义务及原树校验后安全退休；源码与独立安装各 953 项受影响、27 项公共实际服务及 17 项私有 v1 服务零失败／错误／跳过；默认发布、原 History 兼容和 owned 清理通过，见[验收记录](../architecture/reviews/2026-10-15-temporal-deployment-public.md)。内部 v1 继续只占位；dev120已接通所选Coding准入与物理关闭；SDK Session coordinator尚未接入，明确拒绝且仍为必需项。现有单 Run／Runner 限制不能替代部署准入；批次 2 未关闭 |
 | 3：观察与服务控制 | 持久 HTTP 事件游标与断连续接；审批、核验和恢复沿原身份与幂等命令；断连只结束观察；统一诊断和明确关闭／移交责任 | 原事件分页、订阅与 A2A polling 已有；完整 hosted 观察及管理链路待补齐 |
 | 4：身份、权限与保留 | 宿主认证结果形成可信调用者；资源 ACL、Scope 与每 Agent 能力绑定取交集；跨 Scope 控制／事件读取拒绝；审计脱敏；保留清理保护活动 Run、原效果与恢复所需证据 | 可信 Scope／工具授权及 namespace 保护已有；服务身份映射、完整资源 ACL、审计与保留尚未闭环 |
 | 5：恢复与升级 | 安装后备份／恢复所选服务组合；核对原业务身份、版本与效果证据；故障窗口、迁移失败与回退可诊断；依赖服务／Worker 的拥有与关闭分别检查 | 进程重启、原 Worker 恢复及私有证据保留已有；框架级备份恢复、迁移和恢复管理待补齐 |
 
+**当前 checkpoint（dev120）：** 所选公共Coding准入门槛已完成，见[本批验收](../architecture/reviews/2026-10-15-temporal-deployment-coding.md)。同一416产品字节的v30完整离线11847 passed／804 skipped、安装／dev119默认原History兼容通过；后测试修订另有92项定向通过。实际normal原矩阵13通过／1失败保留，修订后的并行owned-close normal单项复验1通过（152.70秒）；是两次运行，不称同次14全绿。目标停止故障实际命中，原未知效果／额度及恢复资料继续保留。公共SDK Session coordinator仍未接入，S1／S2为下一必需工作；批次2、第三阶段与完整R01–R26未关闭。以下追加记录是各版本历史。
+
 dev119 已封存根的退休恢复仍由原 History 推进：恢复 Registry 通路后，公共 `drive` 通过精确重复 seal Update 只唤醒原释放重试，不复活业务或直接替 Registry 释放。该 P2 的实际 RED→目标 GREEN 已保留，并纳入最终冻结公共矩阵。异步 Parent 取消必须等实际后代停止；已完成 Action 的延后 effect ACK 沿原 `drive` 恢复，不能用业务终态或 `reconcile(query=True)` 代替物理闭合／ACK。
 
 dev119 真实零费用写／ACK 恢复窗口使用测试专用 SQLite 效果证据适配器，其他确定性用例使用默认组件；没有 PostgreSQL／模型／Docker 调用；上表所选 Temporal＋PG 阶段链路尚需独立验收，不能以本批 27 项公共服务通过替代。Coding／SDK Session coordinator 仍为批次 2 必需项。
+
+以下为dev120候选开发历史；最终所选范围以本页顶部及验收记录为准。候选实现了公共部署准入与所选Coding链路的组合。实现采用
+Registry3 保存同一首次接受记录及按 Scope／Manifest 隔离的关闭索引；原 Run／Parent
+继续拥有原生权限、实际调用、子执行和效果证据。冷停止证明仅覆盖精确关联的原 Coding
+Tool Activity 第一 SDK attempt，不能借用旧 Worker 的死亡证明释放另一 Worker 的停止
+Activity、模型调用或未知效果。具体约束见[组合契约](../architecture/specs/temporal-deployment-coding-contract.md)。
+
+本批额外核验了用户授权 DeepSeek 端点的一次最小 Responses 连接：HTTP200、completed、
+预期文本，40 输入／36 输出，共76 tokens；凭据不写入仓库、发布包或全局配置。
+该检查没有运行受管理 Coding 任务，不改变 dev109 的有限质量结论。
+首次实际 Temporal／PG 试跑执行了一次 Coding 业务写入，随后 Registry 查询／关闭失败，
+且试跑期间源码变化造成发布身份漂移；原 History、PG schema 和失败日志保留，结果不计
+为验收通过。后续必须冻结实现后复验，完成安装、兼容与 owned 清理门槛；SDK Session
+coordinator 仍为下一项必需工作。
+
+开发检查已复现并修复 SDK sandbox 的纯规则模块重复加载、SDK JSON 与本地元组的关闭比较、
+已封存子 Run 被重复取消三个边界；Registry 的原 SDK epoch 约束也已补齐。首个冻结的
+Agent SDK 实际 Temporal／PG 场景通过审批、重复回执、两次业务执行、容量退休和 owned
+关闭（1 passed），不代表图／Team／Dynamic 或安装后矩阵已通过。后续审查还在补齐
+从未提交任务的 owned Worker 关闭以及实际 Docker 故障夹具；两者候选已补实现，
+仍需最终冻结版本的实际矩阵，当前没有本批提交或发布。
+
+公共子 Run 控制缺口已补实现：由原 Registry 在首次队列上验证实际 SDK ancestry，
+复核后登记同根关系，最终控制固定到原目标 epoch，不增加根额度。普通 v2 的实际子审批
+场景通过；Coding v3 并行图仍失败，不能标为交付。两次原生提交之后，首次 Tool 返回
+`runner_outcome_unknown`；保留记录显示 Parent 被自己的调用开始／结束回执唤醒，持续
+轮询使原 History 超过服务上限。该自唤醒问题已进入修复，Runner 整体期限内的授权耗时
+仍需定位。失败 History、PG 记录和匹配源码保留，不提高上限掩盖问题或重发业务。
+冻结 v3 的受影响检查为805 passed／93配置依赖跳过；完整服务、安装、最终兼容与发布
+验收仍待完成。dev119→冻结 v2 候选源码的默认字节与原 History 兼容通过，不能替代
+修复后最终版本的复验。
+
+Parent 自唤醒与 ancestry 读取延迟已补针对性修复：机械登记保留原实际调用义务，
+终态首次结束仍能唤醒退休；独立 SDK 读取并发且失败时全部收拢，不缓存取消或准入。
+冻结 v4 的受影响检查为836 passed／93配置依赖跳过／0 failed，默认发布与原
+History 的 dev119→v4 源码兼容复验通过。实际并行图仍失败：两次 Thread start
+之后未进入 Turn，重复完整观察载荷继续使 History 增长；已有16个0.5秒 Timer，
+不能把自唤醒修复当作这两个门槛已关闭。接下来设计只读身份投影与子事实变化唤醒，
+详见[修复与待验收记录](../architecture/reviews/2026-10-15-temporal-coding-wake-latency.md)。
+
+只读身份投影、每次调用独立校验、CONTROL 紧凑载荷和子事实变化通知已补实现与针对性测试。
+v5 实际服务试跑在业务启动前暴露 SDK sandbox 运行中导入问题，已补预加载及激活期回归。
+v6 的受影响开发检查为705 passed／46配置依赖跳过；范围不等同完整阶段回归。
+Trial09 实际 Temporal／PG 试跑仍失败（92.64秒）：准入成功，两次 register 返回
+`definition_mismatch`；Parent 为60个事件、330,722字节，无 observe／Timer，也未发出
+Thread／Turn 或业务写入。当前正在定位新校验路径的拒绝原因；这一结果不能作为载荷、
+延迟或编排门槛通过。
+
+后续 SDK importer 激活期执行查询已复现 Parent 启动参数模块的运行中导入拒绝，
+v7 补显式预加载并通过查询回归。Trial10 实际注册不再拒绝，但两个 Tool 均80秒
+超时，关闭仍返回 `CloseIncomplete`；Parent 为350事件／2,134,239字节，
+无 Thread／Turn grant、receipt 或原生业务提交。查询等待中位数0.560秒，
+下一步定位重复纯计算与 SDK 排队成本，不能以载荷缩小宣布执行验收通过。
+v7 全部 Temporal 开发检查合并为2700通过／552配置依赖跳过（首次Redis沙箱环境
+错误仅单项复核通过，非同次完整绿色回归）；dev119安装版→v7源码的默认发布字节
+和原 History 兼容复验通过。最终服务矩阵、独立安装与本地提交仍待验收。
+
+后续诊断确认 Worker 事件循环存在延迟：只增加分段计时的 Trial11 仍失败，两个 Tool
+与两个 stop Activity 达到原80秒期限；prepared已耗63.209／74.856秒，尚无原生
+Thread／Turn。零网络声明夹具也可复现一次校验约640ms CPU工作，对应24次完整
+Manifest重建。v9已合并重复校验到12次，保留策略读取前后、真实await和最终检查，
+保留全部实时身份／权限读取。针对性恢复／篡改测试、独立审查及同夹具性能复测通过；
+实际业务阻塞尚未关闭，不能标该组合完成。
+
+v9完整Temporal开发检查同次为2710通过／552外部服务配置跳过／0失败或错误
+（`-W error`，112.18秒）；552项未运行，不等于全部Temporal或阶段验收通过。固定声明夹具的
+重建次数24→12、校验成本约下降52%。实际Trial12仍未进入Thread／Turn：两个Tool
+达到80秒期限，stop完成且Assembly关闭返回成功，但缺少Root seal／Registry退休
+证据。Trial12曾仅凭Assembly close删除schema，不能声称其PG恢复数据仍保留。
+候选已补测试专用删除门槛：匹配原Registry成功接受与完成退休的原Scope／SDK epoch／
+请求及Manifest摘要／certificate；缺失、pending、reset、读取失败或未adopted写effect
+（含zero credits）均保留原资料。成功Assembly close独立记录，不扩大产品close语义，
+不以终止History强制退租。预期unknown用例精确断言保留，其他保留单独诊断。
+
+该门槛离线检查及原fixture同次37通过，整合focused检查114通过；原45项实际用例仅
+完整collect。冻结v10共1207文件，Trial13在新Scope复验graph-parallel／TOML：
+1失败／0错误、271.667秒，无Thread／Turn或业务commit。Assembly close成功、owned
+Workers退出，测试删除门槛正确保留schema：1 accepted／1 retained，原因是原根未退休
+和写effect未adopted，证据读取错误为0。这只关闭测试清理误删的具体缺陷，不是业务或
+恢复验收通过。peer1九项preflight操作本身中位4.343ms／最大10.175ms，操作间隔
+2.527–4.477秒、整体29.858秒；peer2只到experimentalFeature/list，阻塞尚未关闭。
+selected3控制去重／纯fingerprint缓存随后已完成实现与审查，见下述v11记录。DeepSeek smoke
+已取得一次Local bounded结果：冻结v10源码、deepseek-flash、17.484秒、succeeded，native前
+审批、attempt1、原action fenced、native candidate及add.sh存在；runner／engine／
+journal已关闭，diagnostic codes为空，持久文件未发现凭据，凭据未写仓库／发布包／全局
+配置。usage unknown、无独立oracle，仅引用脱敏摘要，不是dev109的3×3质量重评、
+质量优势或Temporal验收。13种拓扑及SDK／Profile／JSON／TOML／工厂、
+首次接受与队列别名恢复、独立native／tool／deployment／effect ACK、零费用unknown、
+Worker重启／冷fence、hidden／旧revision／无PG行子树及owned关闭保留均仍属本批实际
+验收范围；真实长审批idle期间History／Activity／ledger不增长也不能由单次载荷缩小
+代替。真实Docker／CLI窗口、完整源码与安装服务矩阵、最终默认／旧History兼容及本地
+提交仍待完成，见[证据与门槛](../architecture/reviews/2026-10-15-temporal-coding-wake-latency.md)。
+
+Trial13为诊断计时模式：SDK elapsed包含started同步日志及Query响应摘要，不含计时前
+origin栈扫描和elapsed取值后的finished写入；peer计时也增加同步I/O，不能归因于纯RPC
+或全部框架耗时。正常模式无TimedWorkflowService代理／LoopTiming插件及后台任务，
+业务DTO／控制响应保持，CLI字节差异单列。计划固定v11以`run-selected-services.py source`
+在fresh Scope／case、无timing env／marker时复验graph；失败后另开独立计时定位。
+原Trial13失败与数字保持，正常模式复验尚未取得结果。
+
+dev109冻结的有限模型质量沿原任务范围引用；本批未改业务模型路径，不要求无理由重跑
+完整模型质量评测。受影响业务链路的真实结构／物理证据仍需补齐，开发检查和声明CPU
+profiling不能替代。SDK Session coordinator及阶段身份、观察、保留和框架恢复仍为
+既定必需后续工作；本批测试夹具保留资料不等于产品数据保留／备份恢复能力已交付。
+
+冻结v11共1209文件：selected3只读CONTROL在同一验证边界去除重复完整walk；纯primitive
+defaults fingerprint缓存保持原python-code-v1字节，以不可变snapshot和canonical标签
+区分Python相等但JSON不同的值，1024项、8192 canonical字符以内才入缓存，复杂配置
+和超限值保留原serializer。JSON decoder污染已修复。可变权限／取消／准入不缓存，
+原API、期限、协议inventory及默认调用顺序不变。根组合focused113通过、CONTROL
+受影响71通过（含34新项）、fingerprint作者124／独立44通过，均`-W error`且范围
+重叠不能相加，Ruff／格式／空白检查通过。整体性能与完整实际graph仍待验收。
+
+不可变dev119 installed→v11 source默认兼容实际通过：完整默认Profile／Manifest／
+orchestration字节、原History replay／continue的epoch／回执／结果一致，old Provider2／
+current0，仅探针自己的只读Histories关闭，Worker退出、共享服务未停。私有证据在
+default-compat119120-v11；这不是最终dev120安装或Coding3服务矩阵验收。
+
+正常Trial14／v11为1失败、181.621秒，Root因definition_mismatch失败。两个child各
+198事件、953506／953078字节，Parent366事件／2063666字节；无Tool Activity超时或
+ActivityFailed，Thread／Turn／commit为0。Assembly close成功，但原根未退休和写入
+未adopted，测试删除门槛正确保留schema；这不是业务或恢复验收通过。
+
+full-repo共12399项，停止时disjoint计数4400通过／75跳过／2失败／7922未执行，整批
+尚未全绿。2项失败已证实为旧blanket Temporal admission refusal测试过时，仅修测试
+并补2项正向检查，85项focused通过；不能与其余结果拼算完整通过。此前fixed v12
+续跑收集12415项，4331项精确复用、8084项选中执行，此前通过但变化的69项强制
+重跑。截至下一次失败，选中项2714通过／178跳过／1失败，含4331精确复用共7045
+有效通过、5191未执行。该失败为测试Popen管道未关闭，test-only修复后相关67项
+通过；不能拼成同次全绿，最新离线基线见下。
+
+Trial15全局sys.settrace诊断为1失败、233.44秒，出现执行扰动、Query buffer full、
+BadUpdate及nondeterminism，未定位Trial14主拒绝。Assembly close报RPCError，Worker
+退出，Thread／Turn／commit为0，schema及原证据保留；不能用于性能／业务验收或
+归因新的产品缺陷。冻结v13替代为默认关闭、独立marker／env的Python3.12
+[`sys.monitoring` RAISE-only诊断](https://docs.python.org/3.12/library/sys.monitoring.html)，
+仅保留产品源码路径内所有异常的静态类型／位置及pid，0600私有日志最多64个唯一
+类型与位置，不记录消息／locals／参数／请求／凭据，不启用call／line／start／unwind
+或sys／threading trace。Python3.11明确不安装且无fallback；监控前／期间／后
+co_code及函数摘要不变，63项focused独立复核通过。诊断独立于SDK timing，v11至v13
+产品源码不变，不改协议／权限／期限。Trial16诊断定位主拒绝到
+temporal_coding_runtime.update第167行Thread授权permission=False；独立SDK时间线中
+两leaf自动denial cancel分别早于首次Tool timeout 5.678／6.448秒，Registry scoped
+close及Parent stop更晚。根因是正常prepare grant产生的pending_stop资源义务被compact
+projection当作stop_requested。冻结v14仅修该投影区分：pending_stop严格bool校验、
+物理闭合／退休阻断仍保留；实际cancel、stop_needed／active、Parent stop、终态、seal
+仍拒新grant，不改原权限／关闭／退休规则。315项focused通过，Root独立113项与之
+重叠不相加。
+
+正常Trial17为1失败、257.36秒，2Thread、0Turn／commit，审批观察达到180秒期限。
+两Tool各80.002秒，Thread grant时已用68.335／67.556秒；两stop Activity在47.098／
+48.541秒返回effect_outcome_unknown，不是stop超时。原Tool授权Def消失，但Parent
+release仍因unknown不能闭合而Def拒绝，不能称全部消失。两PG物理stopped／fenced／
+retired／transport closed且pending_stop=False，effects仍2dispatched／0adopted，Root
+未退休，schema保留。SDK无BAD_UPDATE／nondeterminism，仅两Tool timeout及cleanup
+shutdown，本次仍未通过业务／恢复验收。
+
+冻结v15合并纯段重复检查，fresh稳态6check／12发布重建降为4／8；公开callback在
+await fresh返回后立即保留完整outer check，伪造fresh和端口／身份漂移仍拒绝。
+SDK Query3／Describe3／Namespace2均保留，无权限缓存或期限调整。作者111与Root138
+focused通过且重叠不相加；正常Trial18最终1失败、255.98秒，2Thread／1Turn／1文件
+commit，详细时间线待审计。v16将相邻注册合并仅扩到selected3的thread/start、turn/start、
+thread/read，仍business Schema、独立原grant／PG execute、最后取消Query两侧校验，旧
+Local／legacy不变。Trial19／v16为1失败、257.57秒，2Thread／2Turn／2结构化peer文件
+commit；Turn receipt在Tool启动后73.989／76.304秒，两Tool均80.002秒SDK超时。
+handler end ACK在超时后5.692／7.364秒、tool_execution_ended ACK在超时后6.559／
+9.447秒完成。无observation／candidate／effect ACK；physical_stopped=True，但effect
+仍2dispatched／0adopted，Root未退休、schema保留，Assembly close成功不代替效果闭合。
+Parent466事件／2959082字节，children各248事件／1090272及1089321字节，Timer0；无
+BAD_UPDATE／nondeterminism／WFTfailure。文件commit仅结构化peer效果；1秒OS采样
+不能称零observer性能验收。本轮额外pure fingerprint负收益尝试已撤回，无当前增量。
+
+selected3稳态原Scope只读read-set边界已实现，Root220项focused及独立审查通过。这明确
+改变旧“每await full Manifest校验”语义：首I/O前和公开callback出口完整校验，保留独立
+外层Runtime.validate_release防假_check／_fresh；中间namespace／gather边界仍验client／
+service、既有_ports函数／源码及传输绑定、live claim、request／snapshot及actual SDK，
+所有Query／Describe／双UUID读取不减。中间不重建全部Runtime组件，其配置／身份／
+嵌套代码仅在full入口／出口检查。组件或capacity／policy漂移可完成已固定原Scope取证，但出口
+必须拒绝且无权限使用／证据采纳／Update／PG写／native I/O；传输或身份漂移仍在既有
+中间边界拒绝。此例外不提供即时read-auth撤销，需要该契约的部署不能使用。默认／
+legacy／bootstrap／grant／native／写边界均不合并，无权限或SDK缓存、期限变化及新
+authority。冻结v17的Trial20 graph-parallel-toml实际1通过、269.63秒，两个连续Run均
+succeeded／Registry count0／下一提交accepted；Tool80／Runner60／整体360秒不改，
+无trace／OS sampling。独立保留证据审计确认4Tool成功完成（71.240／78.126／77.031／
+73.678秒）、4effects adopted／4evidence、45actual calls全end ACK、8业务Histories
+sealed、2原Root退休证书及单额度周转；关闭、Worker退出、删除门槛和schema清理成功，
+retained0，无timeout／nondeterminism。耗时仍接近Tool80上限；一次正确性通过不能作为
+延迟SLO、性能改善幅度或稳定性基线。当前offline全回归与Trial21单Agent独立进程
+并发（14 CPU宿主），Trial21不是受控性能样本。仅Trial20该实际组合通过，
+其余编排／恢复矩阵、真实Docker、SDK Session、
+分布式真实模型质量、独立安装及最终默认兼容仍待验；
+不能由此宣称整体能力或完整矩阵通过。
+
+源码当前通过graph-parallel-toml与agent-sdk两个拓扑组合；后者Trial21为1通过、
+48.91秒，与offline并行，非性能样本。基础A组Trial22为8通过／37 deselected、172.96秒，
+覆盖never-used owned close、sync／async／host工厂、reserve／start丢回复恢复原alias／
+queue／epoch、普通2与Coding3混合quota、closed acceptance下late start仅stop-only。
+私有证据在`/private/tmp/ralf-agent-dev120-root/selected-service-21.log`／`.xml`与
+`selected-service-22.log`／`.xml`；Trial20审计见同目录`trial20-normal-summary.json`／`.md`。
+deselected不算通过，其余拓扑Trial23运行中；完整矩阵及其他待验门槛未关闭。
+
+v17源码离线基线已完成exit0：本轮6828通过／801跳过／4941 deselected、777.78秒；
+严格复用4941项后，去重当前12570节点为11769通过／801跳过，执行后1672个public
+files changed0。证据在`/private/tmp/ralf-agent-dev120-root/development-v17-resume-3lio006m/`
+的pytest.log／pytest.xml／collection.json／post-byte-check.json／run.json。不是一次连续
+全绿，严格复用不能等同本轮执行，服务配置skip仍不代实际验收。
+
+实际D组Trial24首个never-GO agent-False在业务断言后因Werror的Unix socket retained
+owner GC泄漏失败（1失败／20.03秒），其余8项未执行；原selected-service-24.log／.xml
+保留。仅fixture根因TDD处理中，不删除未知状态或过滤warning，不能将该负例记为通过。
+Trial23拓扑组仍运行中，其余实际门槛保持待验。
+
+native-stop ACK的原UNAVAILABLE预写错误会在candidate持久化前结束原执行栈；恢复
+物理停止／end ACK不代表恢复业务结果。无持久candidate的自动结果恢复未交付，unknown
+效果、额度及恢复资料继续保留，不泛化fence。原栈活跃的有界hold／release正例与
+UNAVAILABLE保留负例已在测试中分开，实际复验待完成；原Trial30失败不改算成功。
+
+截至Trial38的续验补记（替代以上当时“运行中／待复验”的状态，不改写原失败）：
+源码13种拓扑已各有通过记录：Trial20的graph-parallel-toml、21的agent-sdk、23前5项
+sequence／graph-sequential／team-sequential／router／supervisor，以及28后6项
+动态flat／dag／model、checked-team、team-sequence与recursive。Trial23的dynamic-flat
+原失败保留，28在新Scope复验通过；这些是分次、跨冻结候选的证据，不是当前候选同次完整矩阵。
+真实Docker／CLI四项已有通过：27前三项never-GO agent-True、CREATE hold、reply-loss，
+以及38的unreachable复验（1通过、102.01秒）；27原unreachable失败仍保留。
+
+Trial33跨Scope关闭隔离1通过、28.63秒。Trial35为2通过、196.45秒：审批重启正例
+明确先停原pollers、drain handlers与end ACK，再冷启动并续接原epoch／pending／receipt；
+活跃CONTROL硬杀负例验证原unended call、held quota与恢复资料保留。它不证明任意CONTROL
+硬杀可回收，原Trial25失败保留；现有cold fence仍只接受精确原Coding Tool及其物理证据。
+
+Trial36为4通过／1失败、134.07秒：native-stop、tool-end、deployment-end及effect四个
+独立ACK正例通过；无candidate负例在读取PG TEXT `record`的observations时TypeError，
+不能算通过。仅该解码及正例unknown分支同类读取已修，实际复验待Root39／40，原失败保留。
+Trial37的15秒deadline独立用例1通过、30.06秒，正证据覆盖Action已dispatched、零额度
+unknown、原截止后无新business grants、原回执／held quota及资料保留；commit_observed=false，
+缺日志不是no-dispatch证明，也不宣称deadline-after-commit。Trial29原commit前置失败保留；
+已通过cancel参数的commit-alive／fail-stop证据独立，不放宽deadline。
+
+原D34记录的产品阻塞：owned-close无PG资源行的approval child之agent项1失败、74.27秒，
+关闭后出现`Worker call admission is closed`，原Root未退休；同组后续项未执行。没有以
+quota清理、强制fence或组件退出代替该门槛。上述33–38结果逐项核对私有
+`/private/tmp/ralf-agent-dev120-root/selected-service-{33…38}.log`／`.xml`，deselected不计通过。
+v17的11769通过／801跳过仍仅是严格续验基线，后续产品／测试变化不据此称当前全绿。
+当前dev120未发布；最终受影响回归、独立安装／默认兼容、产品owned-close及剩余恢复门槛
+继续待验，不关闭完整batch2、SDK Session coordinator或第三阶段范围。
+
+截至Trial45的续验补记（更新以上当时状态，原失败仍保留）：Trial39的Tool Worker在turn／
+candidate窗口死亡恢复2通过、192.92秒；Trial40的同Runner压力、sealed原根drive、释放
+回执丢失与动态修订恢复4通过、334.21秒。Trial41单Agent owned-close通过，但递归关闭
+暴露proof字段及清理CONTROL门禁问题（1通过／1失败、106.05秒）。修复后的Trial43为
+3通过／1失败、271.76秒：零额度cancel、无candidate的unknown保留负例、单Agent关闭
+通过；递归关闭仍被未settled child阻断，后续parallel未执行。诊断确认物理停止后的
+第二skip挡住合法dirty结算通知，关闭门槛没有被放宽。
+
+Trial42及隔离Trial44的10秒审批idle子断言均成立；Trial44三个原epoch前后均为236事件、
+1594152 JSON字节、8条调用记录，ledger一致。但随后Tool约80秒超时，Trial44整个用例
+1失败、267.91秒（42为1失败、271.54秒）。不能把idle子断言当完整业务或性能验收通过，
+Tool80／Runner60与后续成功断言保持原值。
+
+冻结v23的Trial45单Agent／recursive owned-close分别通过（13.25／113.60秒）；parallel
+项因fixture换用SDK Client而被原Assembly客户端／queue固定校验拒绝，整组2通过／1失败、
+134.57秒。仅fixture已修，等待Trial46复验；parallel、完整服务矩阵、最终安装／兼容与
+dev120总体验收仍不能记为通过。分项证据在私有`selected-service-{39…45}.xml`／`.log`，
+详见[修复与待验收记录](../architecture/reviews/2026-10-15-temporal-coding-wake-latency.md)。
+这些结构化peer与真实SDK／PostgreSQL证据不代表真实模型质量；batch2及SDK Session
+coordinator继续未关闭。
+
+Trial47 的冻结 v24 完整 idle graph 用例现已通过（1 passed／0 skipped，151.12秒）：
+10秒审批 idle 前后三个原 epoch 的220个事件、1,574,051 JSON字节及7条调用记录完全相等；
+批准后4次原生提交、2次结构化peer commit，成功状态、2个effects adopted、Registry count0、
+seal及physical stopped断言均通过。这关闭该实际用例的失败门槛，不是性能或dev120总体验收。
+Trial46未形成JUnit，Root核对原pytest PID后以SIGTERM（-15）结束，primary原因未知；
+2条未end原调用及PG资料已归档保留，不计通过。v25产品416份源码与v24完全相同，
+仅增加测试诊断；Trial48同一parallel owned-close为1 failed、123.37秒，primary为fixture对closing Engine查询diagnostics触发ValidationError。仅测试修正进行中；日志另有原stop Activity关闭门禁拒绝，时序／影响待定位，不计该项通过。
 
 批次可以并行开发互不冲突的组件和测试，但依赖项按原契约接入。每批关闭需要默认实现、公开入口、配置／替换、生命周期、必要恢复、安装应用与能力文档的共同证据。批次 1 完成不关闭 R21–R24，也不表示企业平台已完成。
 

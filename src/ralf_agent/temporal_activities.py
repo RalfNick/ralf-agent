@@ -179,7 +179,7 @@ class TemporalRuntime:
                     "Internal deployment Worker requires an exact immutable policy"
                 )
             DeploymentAdmissionPolicy.from_identity(_deployment_admission_policy.identity)
-            if coding_execution or coding_composition:
+            if not self._deployment_public_execution and (coding_execution or coding_composition):
                 raise ValidationError(
                     "Internal deployment Coding requires its physical-close integration"
                 )
@@ -856,20 +856,36 @@ class TemporalRuntime:
             )
         if self.coding_execution != self._coding_execution_pin:
             raise DefinitionMismatch("Coding execution opt-in changed")
+        owned_publication = (
+            self.coding_execution is True
+            and self._deployment_public_execution is True
+            and self._deployment_admission_identity is not None
+        )
         if self.coding_execution:
             from .temporal_coding_protocol import publish
 
-            result = publish(result, self)
+            result = (
+                publish(result, self, _validate=False, _copy=False)
+                if owned_publication
+                else publish(result, self)
+            )
         if self.coding_composition is not self._coding_composition_pin:
             raise DefinitionMismatch("Coding composition opt-in changed")
         if self.coding_composition:
             from .temporal_coding_composition_protocol import publish as publish_composition
 
-            result = publish_composition(result, self)
+            result = (
+                publish_composition(result, self, _validate=False, _copy=False)
+                if owned_publication
+                else publish_composition(result, self)
+            )
         from .temporal_deployment_protocol import publish as publish_deployment
 
         return publish_deployment(
-            result, self._deployment_admission_identity, public=self._deployment_public_execution
+            result,
+            self._deployment_admission_identity,
+            public=self._deployment_public_execution,
+            **({"_copy": False} if owned_publication else {}),
         )
 
     async def close_deployment_execution(self, *, wait_timeout=30):

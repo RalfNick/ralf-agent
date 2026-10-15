@@ -14,12 +14,16 @@ from temporalio.exceptions import (
 
 with workflow.unsafe.imports_passed_through():
     from . import (  # noqa: F401 -- preload frozen pure DTO/adoption  # noqa: F401
+        coding_create_inventory,
         parent_completion,
         parent_completion_protocol,
         temporal_coding_composition_state,
         temporal_context_read_protocol,
         temporal_context_read_state,
+        temporal_deployment_control_projection,
+        temporal_deployment_control_transport,
         temporal_deployment_release_state,
+        temporal_startup_options,
     )
     from . import temporal_deployment_execution_state as deployment_state
     from .errors import RalfError
@@ -94,6 +98,15 @@ class TemporalParentWorkflow(TemporalRunWorkflow):
                 parent_release_digest=self.state.release_digest,
                 namespace=detached(self.state.composition_namespace),
             )
+        if self._deployment_notifications_selected():
+            from .temporal_deployment_control_transport import expand_response, request
+
+            try:
+                value = request(self.state, call, mode)
+                response = await self._activity(CONTROL_ACTIVITY, value, activity_timeout)
+                return expand_response(self.state, call, response)
+            except RalfError as exc:
+                return {"ok": False, "code": exc.code}
         return await self._activity(CONTROL_ACTIVITY, value, activity_timeout)
 
     async def _admit_composition(self, accepted, activity_timeout):
@@ -153,14 +166,67 @@ class TemporalParentWorkflow(TemporalRunWorkflow):
                 request_parent_stop(
                     self.state, terminal_state="cancelled", reason={"code": "deadline_exceeded"}
                 )
+                self._deployment_force_child_reads()
                 self.wake_revision += 1
+                await self._notify_deployment_parent()
                 return
             self.state.state, self.state.error = "cancelled", {"code": "deadline_exceeded"}
             from .temporal_user_input import close_pending
 
             close_pending(self.state)
             self.state._emit("deadline_exceeded")
+            self._deployment_force_child_reads()
             self.wake_revision += 1
+            await self._notify_deployment_parent()
+
+    def _deployment_retirement_wait_ready(self):
+        if self.state.state not in TERMINAL:
+            return False
+        from .temporal_coding_composition_state import enabled, physical_stop_view
+
+        return (
+            physical_stop_view(self.state)["physical_stopped"]
+            if enabled(self.state.manifest)
+            else self.state.quiescent
+        )
+
+    @workflow.update(name="deployment_call_started")
+    async def deployment_call_started(self, payload: dict) -> dict:
+        if not temporal_deployment_release_state.public(self.state.manifest):
+            return await super().deployment_call_started(payload)
+        try:
+            # An awaited parent's own mechanical begin does not change its
+            # child/business evidence. Wake-producing business Updates remain
+            # independent, so the loop's pre-await observation stays valid.
+            return temporal_deployment_release_state.begin_activity(self.state, payload)
+        except Exception as exc:
+            raise ApplicationError(
+                "Original actual call refused",
+                type=getattr(exc, "code", "definition_mismatch"),
+                non_retryable=True,
+            ) from None
+
+    @workflow.update(name="deployment_call_ended")
+    async def deployment_call_ended(self, payload: dict) -> dict:
+        if not temporal_deployment_release_state.public(self.state.manifest):
+            return await super().deployment_call_ended(payload)
+        try:
+            key = temporal_deployment_release_state._identity(self.state, payload)
+            previous = self.state.deployment_calls.get(key)
+            stopped = previous is not None and previous["stopped"]
+            result = temporal_deployment_release_state.end_activity(self.state, payload)
+            # A quiescent terminal parent can otherwise wait indefinitely. A
+            # first late end must wake retirement even during its verifier
+            # await; duplicate ends and ordinary polling need no extra wake.
+            if not stopped and self._deployment_retirement_wait_ready():
+                self.wake_revision += 1
+            return result
+        except Exception as exc:
+            raise ApplicationError(
+                "Original actual call end refused",
+                type=getattr(exc, "code", "definition_mismatch"),
+                non_retryable=True,
+            ) from None
 
     @workflow.run
     async def run(self, accepted: dict) -> None:
@@ -225,6 +291,7 @@ class TemporalParentWorkflow(TemporalRunWorkflow):
                     continue
             if composition:
                 refresh_parent_stop(self.state)
+            await self._notify_deployment_parent()
             await self._notify_session()
             observed_wake = self.wake_revision
             changed = False
@@ -241,6 +308,10 @@ class TemporalParentWorkflow(TemporalRunWorkflow):
                     and call.get("physical_stop_proof", {}).get("physical_stopped")
                     and self.state.memory_recovery_revision
                     <= call.get("physical_recovered_revision", 0)
+                    and not (
+                        self._deployment_notifications_selected()
+                        and self._deployment_child_is_dirty(call)
+                    )
                 ):
                     continue
                 recovery = getattr(self.state, "memory_recovery_revision", 0)
@@ -265,19 +336,46 @@ class TemporalParentWorkflow(TemporalRunWorkflow):
                         if receipt["ok"]:
                             call["cancel_confirmed"] = True
                 if call.get("dispatch_started"):
+                    notifications = self._deployment_notifications_selected()
+                    if notifications and not self._deployment_child_is_dirty(call):
+                        continue
+                    generation = self._deployment_child_generation(call) if notifications else None
+                    if notifications and not self._deployment_child_read_ready(call, generation):
+                        continue
                     before = self.state.revision
-                    result = await self._control("observe", call, timeout)
+                    if notifications:
+                        if not hasattr(self, "_deployment_observing"):
+                            self._deployment_observing = set()
+                        self._deployment_observing.add(call["run_id"])
+                    try:
+                        result = await self._control("observe", call, timeout)
+                    finally:
+                        if notifications:
+                            self._deployment_observing.discard(call["run_id"])
                     if result["ok"]:
                         try:
                             value = result["result"]
                             if composition:
-                                self._observe_composition(call["run_id"], value)
+                                adopted = self._observe_composition(call["run_id"], value)
                             else:
                                 self.state.observe(call["run_id"], value)
+                                adopted = True
+                            if notifications and adopted:
+                                self._deployment_child_observed(call, generation)
+                            elif notifications:
+                                self._deployment_child_read_failed(
+                                    call, generation, "definition_mismatch"
+                                )
                         except ValidationError as exc:
                             if self.state.state not in TERMINAL:
                                 self.state.state, self.state.error = "failed", {"code": exc.code}
                             self.state._emit("child_evidence_refused")
+                            if notifications:
+                                self._deployment_child_read_failed(call, generation, exc.code)
+                    elif notifications:
+                        self._deployment_child_read_failed(
+                            call, generation, result.get("code", "definition_mismatch")
+                        )
                     changed |= before != self.state.revision
             operation = self.state.next_session_operation()
             if operation is not None:
@@ -485,6 +583,7 @@ class TemporalParentWorkflow(TemporalRunWorkflow):
                             self.state._emit("parent_failed")
                     changed = True
             await self._ensure_deployment_retirement(timeout)
+            await self._notify_deployment_parent()
             # Quiescent waiting/terminal parents sleep without producing polling
             # Activities; unsettled children keep resource evidence observable.
             await self._notify_session()
@@ -493,9 +592,33 @@ class TemporalParentWorkflow(TemporalRunWorkflow):
                 if composition and self.state.state in TERMINAL
                 else self.state.quiescent
             ):
-                await workflow.wait_condition(lambda wake=observed_wake: self.wake_revision != wake)
+                try:
+                    await workflow.wait_condition(
+                        lambda wake=observed_wake: self.wake_revision != wake,
+                        **(
+                            {"timeout": timedelta(seconds=1)}
+                            if getattr(self, "_deployment_parent_notification_retry", False)
+                            else {}
+                        ),
+                    )
+                except TimeoutError:
+                    pass
             elif changed:
                 continue
+            elif self._deployment_notifications_selected():
+                try:
+                    await workflow.wait_condition(
+                        lambda wake=observed_wake: self.wake_revision != wake,
+                        **(
+                            {"timeout": timedelta(seconds=1)}
+                            if getattr(self, "_deployment_parent_notification_retry", False)
+                            or self._deployment_child_retry_pending()
+                            else {}
+                        ),
+                    )
+                except TimeoutError:
+                    self._deployment_child_retry_tick()
+                    pass
             else:
                 try:
                     await workflow.wait_condition(
@@ -508,7 +631,15 @@ class TemporalParentWorkflow(TemporalRunWorkflow):
     @workflow.update(name="command")
     async def command(self, request: dict) -> dict:
         try:
+            before = self.state.revision
             receipt = self.state.command(request["command_id"], request["payload"])
+            if request["payload"]["kind"] in {"cancel", "drive", "patch"}:
+                if before != self.state.revision:
+                    self._deployment_force_child_reads()
+                if request["payload"]["kind"] == "drive":
+                    self._deployment_parent_notification_error = None
+                    self._deployment_parent_notification_retry = False
+                    self._deployment_parent_notification_attempts = 0
             self.wake_revision += 1
             return receipt
         except Exception as exc:

@@ -256,8 +256,13 @@ async def _closure(runtime, client, policy, proof):
         _reject()
     if not value["ready"] or value["reasons"]:
         _reject()
+    coding = original["manifest"].get("deployment_admission_protocol", {}).get("version") == 3
     for call in value["calls"].values():
-        _exact(call, {"identity", "allowed", "stopped", "end_proof"})
+        _exact(
+            call,
+            {"identity", "allowed", "stopped", "end_proof"}
+            | ({"fence_proof"} if coding else set()),
+        )
         _exact(call["identity"], state.CALL_FIELDS)
         if (
             type(call["allowed"]) is not bool
@@ -266,6 +271,45 @@ async def _closure(runtime, client, policy, proof):
             and (call["stopped"] is not True or call["end_proof"] != call["identity"])
         ):
             _reject()
+        if coding and call["fence_proof"] is not None:
+            from .temporal_deployment_coding_state import ATTESTATION_FIELDS, CANDIDATE_FIELDS
+            from .temporal_state import TOOL_ACTIVITY
+
+            fence = call["fence_proof"]
+            if type(fence) is not dict or set(fence) != ATTESTATION_FIELDS:
+                _reject()
+            if (
+                type(fence["version"]) is not int
+                or fence["version"] != 1
+                or call["allowed"] is not True
+                or call["stopped"] is not True
+                or call["end_proof"] != call["identity"]
+                or call["identity"]["activity_name"] != TOOL_ACTIVITY
+                or fence["identity"] != call["identity"]
+                or fence["namespace"] != proof["namespace"]
+                or fence["execution_epoch"] != proof["execution_epoch"]
+                or fence["process_present"] is not False
+                or fence["native_fenced"] is not True
+            ):
+                _reject()
+            candidate = detached(
+                await client.get_workflow_handle(
+                    proof["run_id"], run_id=proof["execution_epoch"]
+                ).query(
+                    "view",
+                    {
+                        "scope": proof["scope"],
+                        "kind": "deployment_coding_call_candidate",
+                        "identity": call["identity"],
+                    },
+                )
+            )
+            if (
+                type(candidate) is not dict
+                or set(candidate) != CANDIDATE_FIELDS
+                or candidate != {name: fence[name] for name in CANDIDATE_FIELDS}
+            ):
+                _reject()
     runtime.validate_release(original["manifest"])
     await execution._namespace(client, proof["namespace"])
     return value
@@ -409,6 +453,8 @@ async def execute(runtime, client, value, info):
             id="ralf-deployment-release:" + digest(certificate),
         )
         execution._actual(client, info, run_id=proof["run_id"], epoch=proof["execution_epoch"])
+    elif mode == "control":
+        proof, result = await _verify_control(runtime, client, policy, value, info)
     elif mode == "verify":
         _exact(
             value, {"mode", "scope", "root", "certificate", "manifest", "registry_execution_epoch"}
@@ -445,8 +491,15 @@ async def execute(runtime, client, value, info):
                 "namespace": root["namespace"],
             },
         )
+        publication = value["manifest"]["deployment_admission_protocol"]["version"]
+        if (
+            type(configuration) is not dict
+            or type(configuration.get("version")) is not int
+            or configuration["version"] not in ({2, 3} if publication == 2 else {3})
+        ):
+            _reject()
         if configuration != {
-            "version": 2,
+            "version": configuration["version"],
             "registry_id": registry,
             "policy": policy,
             "namespace": root["namespace"],
@@ -475,6 +528,130 @@ async def execute(runtime, client, value, info):
     execution._policy(runtime)
     runtime.validate_release(proof["manifest"])
     return detached(result)
+
+
+async def _control_epoch(client, namespace, run_id, epoch, *, registry=False):
+    from temporalio.client import WorkflowExecutionStatus
+
+    from .temporal_state import COMMAND_REGISTRY_NAME
+
+    execution._text(run_id)
+    execution._text(epoch)
+    description = await client.get_workflow_handle(run_id, run_id=epoch).describe()
+    if (
+        description.id != run_id
+        or description.run_id != epoch
+        or description.namespace != namespace["name"]
+        or getattr(getattr(description, "raw_info", None), "first_run_id", None) != epoch
+        or registry
+        and (
+            description.status is not WorkflowExecutionStatus.RUNNING
+            or description.workflow_type != COMMAND_REGISTRY_NAME
+            or description.parent_id is not None
+            or description.parent_run_id is not None
+        )
+    ):
+        _reject()
+
+
+async def _verify_control(runtime, client, policy, value, info):
+    from .temporal_deployment_execution_state import _root
+
+    execution._exact(
+        value,
+        {
+            "mode",
+            "scope",
+            "root",
+            "target",
+            "target_execution_epoch",
+            "manifest",
+            "registry_execution_epoch",
+        },
+    )
+    runtime.validate_release(value["manifest"])
+    root = value["root"]
+    _root(root, bound=True)
+    registry = registry_id(policy["deployment_id"])
+    if (
+        root["registry_id"] != registry
+        or root["scope"] != value["scope"]
+        or root["manifest_digest"] != digest(value["manifest"])
+        or root["run_id"] == value["target"]
+    ):
+        _reject()
+    execution._actual(client, info, run_id=registry, epoch=value["registry_execution_epoch"])
+    await execution._namespace(client, root["namespace"])
+    await _control_epoch(
+        client, root["namespace"], registry, value["registry_execution_epoch"], registry=True
+    )
+    configuration = await client.get_workflow_handle(
+        registry, run_id=value["registry_execution_epoch"]
+    ).query(
+        "view",
+        {
+            "kind": "deployment_configuration",
+            "scope": value["scope"],
+            "admission_policy": policy,
+            "namespace": root["namespace"],
+        },
+    )
+    publication = value["manifest"]["deployment_admission_protocol"]["version"]
+    if (
+        type(configuration) is not dict
+        or type(configuration.get("version")) is not int
+        or configuration["version"] not in ({2, 3} if publication == 2 else {3})
+        or configuration
+        != {
+            "version": configuration["version"],
+            "registry_id": registry,
+            "policy": policy,
+            "namespace": root["namespace"],
+        }
+    ):
+        _reject()
+    proof = await execution._proof(
+        runtime,
+        client,
+        policy,
+        value["scope"],
+        value["target"],
+        value["target_execution_epoch"],
+        required=True,
+    )
+    if not proof["admission"]["lineage"] or proof["admission_receipt"]["root"] != root:
+        _reject()
+    original = await execution._ancestry(runtime, client, policy, proof, read_only=True)
+    if (
+        original["run_id"] != root["run_id"]
+        or original["execution_epoch"] != root["execution_epoch"]
+        or original["admission"]["lineage"]
+        or original["admission_receipt"]["root"] != root
+        or original["manifest_digest"] != root["manifest_digest"]
+        or original["request_digest"] != root["request_digest"]
+        or original["namespace"] != root["namespace"]
+    ):
+        _reject()
+    epochs = [(proof["run_id"], proof["execution_epoch"])] + [
+        (link["parent_run_id"], link["parent_execution_epoch"])
+        for link in proof["admission"]["lineage"]
+    ]
+    for run_id, epoch in epochs:
+        await _control_epoch(client, root["namespace"], run_id, epoch)
+    await _control_epoch(
+        client, root["namespace"], registry, value["registry_execution_epoch"], registry=True
+    )
+    execution._actual(client, info, run_id=registry, epoch=value["registry_execution_epoch"])
+    result = {
+        "version": 1,
+        "scope": value["scope"],
+        "namespace": root["namespace"],
+        "target": proof["run_id"],
+        "target_execution_epoch": proof["execution_epoch"],
+        "root_run_id": original["run_id"],
+        "root_execution_epoch": original["execution_epoch"],
+    }
+    return proof, result
 
 
 def registered_activity(runtime, client):

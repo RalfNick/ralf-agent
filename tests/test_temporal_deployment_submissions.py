@@ -44,7 +44,16 @@ class Registry:
     def __init__(self, version=2):
         from ralf_agent.temporal_deployment_registry import PublicDeploymentAdmissionState
 
-        state_type = PublicDeploymentAdmissionState if version == 2 else DeploymentAdmissionState
+        if version == 3:
+            from ralf_agent.temporal_deployment_coding_registry import (
+                CodingDeploymentAdmissionState,
+            )
+
+            state_type = CodingDeploymentAdmissionState
+        else:
+            state_type = (
+                PublicDeploymentAdmissionState if version == 2 else DeploymentAdmissionState
+            )
         self.state = state_type(POLICY.identity, NAMESPACE, capacity=4096)
         self.version = version
 
@@ -82,7 +91,8 @@ class Handle:
         if self.id == self.client.registry_id and self.client.registry is not None:
             return SimpleNamespace(
                 id=self.id,
-                run_id="registry-epoch",
+                run_id=getattr(self.client, "registry_epoch", "registry-epoch"),
+                raw_info=SimpleNamespace(first_run_id="registry-epoch"),
                 namespace=self.client.namespace,
                 workflow_type=COMMAND_REGISTRY_NAME,
                 task_queue=self.client.registry_queue,
@@ -99,6 +109,7 @@ class Handle:
         return SimpleNamespace(
             id=self.id,
             run_id=run["epoch"],
+            raw_info=SimpleNamespace(first_run_id=run.get("original_epoch", run["epoch"])),
             namespace=self.client.namespace,
             workflow_type=run["workflow"],
             task_queue=run["queue"],
@@ -109,6 +120,8 @@ class Handle:
     async def query(self, name, value):
         assert name == "view"
         if self.id == self.client.registry_id:
+            if value["kind"] == "deployment_control":
+                return self.client.registry.state.deployment_control(value)
             if value["kind"] == "deployment_configuration":
                 return self.client.registry.configuration(value)
             if value["kind"] == "deployment_submission":
@@ -198,8 +211,8 @@ class Client:
         if workflow == COMMAND_REGISTRY_NAME:
             if self.registry is not None:
                 raise WorkflowAlreadyStartedError(options["id"], workflow)
-            assert accepted["deployment_admission"]["version"] == 2
-            self.registry = Registry()
+            assert accepted["deployment_admission"]["version"] in (2, 3)
+            self.registry = Registry(accepted["deployment_admission"]["version"])
             self.registry_queue = options["task_queue"]
         else:
             if options["id"] in self.runs:
@@ -255,6 +268,100 @@ class Engine:
 
 def spec():
     return AgentSpec("answer", "Answer")
+
+
+@pytest.mark.parametrize(
+    "publication,registry_version,allowed",
+    [(2, 2, True), (2, 3, True), (3, 3, True), (3, 2, False)],
+)
+def test_public_registry_version_negotiation_is_positive_and_shares_address(
+    publication, registry_version, allowed
+):
+    async def run():
+        api, client = module(), Client()
+        client.registry, client.registry_queue = Registry(registry_version), "first-queue"
+        engine = Engine(client)
+        engine.release["deployment_admission_protocol"]["version"] = publication
+        if publication == 3:
+            engine.release["coding_execution_protocol"] = {"version": 6}
+        if allowed:
+            policy = api._policy(engine)
+            handle = await api._registry(engine, client, asdict(SCOPE), NAMESPACE, policy)
+            assert handle.id == client.registry_id
+        else:
+            with pytest.raises(DefinitionMismatch):
+                await api._registry(engine, client, asdict(SCOPE), NAMESPACE, api._policy(engine))
+        assert not client.updates and not client.runs
+
+    asyncio.run(run())
+
+
+def test_public_diagnostics_are_read_only_and_never_create_missing_registry():
+    from temporalio.service import RPCError, RPCStatusCode
+
+    async def run():
+        engine = Engine()
+        with pytest.raises(RPCError) as error:
+            await module().diagnostics(engine)
+        assert error.value.status == RPCStatusCode.NOT_FOUND
+        assert engine.client.starts == [] and engine.client.registry is None
+
+    asyncio.run(run())
+
+
+def test_mixed_host_can_start_registry_three_from_ordinary_two_first():
+    async def run():
+        engine = Engine()
+        engine._deployment_registry_protocol = 3
+        await module().submit(engine, spec(), "task", command_id="ordinary-first")
+        assert engine.client.starts[0][1]["deployment_admission"]["version"] == 3
+        assert engine.client.registry.version == 3
+        assert len(engine.client.registry.state.roots) == 1
+
+    asyncio.run(run())
+
+
+@pytest.mark.parametrize("lost", ["reserve", "start"])
+def test_bound_coding_first_acceptance_recovers_original_runner_after_alias_move(lost):
+    from ralf_agent.binding_definitions import AgentDefinition
+    from ralf_agent.binding_types import AgentBindingDescriptor, BindingSelection
+
+    from .test_temporal_deployment_coding_registry import coding_request
+
+    async def run():
+        engine = Engine()
+        engine.client.registry, engine.client.registry_queue = Registry(3), "first-queue"
+        release = copy.deepcopy(coding_request()["root_admission"]["submission"]["manifest"])
+        release["deployment_admission_protocol"].update(
+            policy=POLICY.identity, registry_id=engine.client.registry_id
+        )
+        for record in release["binding_catalog"]["records"].values():
+            record["scope"] = asdict(SCOPE)
+        engine.release = release
+        bound = AgentDefinition(
+            AgentSpec("answer", "Answer", tools=("coding",)),
+            AgentBindingDescriptor(runner=BindingSelection.ref("native", "1")),
+        )
+        setattr(engine.client, "lose_" + lost, True)
+        with pytest.raises(TimeoutError):
+            await module().submit(engine, bound, {"items": (1, 2)}, command_id="coding-original")
+        engine.release = {
+            **release,
+            "providers": {"moved": {"kind": "other"}},
+            "binding_catalog": {"records": {}},
+        }
+        engine.task_queue, engine.activity_timeout = "moved-queue", 99
+        handle = await module().submit(
+            engine, bound, {"items": (1, 2)}, command_id="coding-original"
+        )
+        accepted = engine.client.runs[handle.run_id]["accepted"]
+        assert accepted["manifest"] == release
+        assert accepted["request"]["agent_bindings"]["agent"]["runner"]["component_id"] == "native"
+        assert engine.client.runs[handle.run_id]["queue"] == "first-queue"
+        assert len(engine.client.registry.state.roots) == 1
+        assert len(engine.client.registry.state.coding_index) == 1
+
+    asyncio.run(run())
 
 
 class RecoveryHandle(Handle):
@@ -772,7 +879,7 @@ def test_host_start_checks_each_selected_registry_and_allows_shared_original_que
                         task_queue=task_queue,
                     ),
                 )
-                return SimpleNamespace(command_registry_id=self.identity)
+                return SimpleNamespace(command_registry_id=self.identity, release=self.release)
 
             async def start_worker(self, *args, **kwargs):
                 return self
@@ -890,5 +997,35 @@ def test_fresh_invalid_release_does_not_reserve_root_or_business_command():
         assert not engine.client.registry.submissions
         assert not engine.client.registry.state.roots
         assert not engine.client.runs
+
+    asyncio.run(run())
+
+
+@pytest.mark.parametrize("publication", [2, 3])
+def test_reset_registry_refuses_before_reserve_or_business_start(publication):
+    async def run():
+        api = module()
+        engine = Engine()
+        engine.release["deployment_admission_protocol"]["version"] = publication
+        engine.client.registry = Registry(publication)
+        engine.client.registry_queue = engine.task_queue
+        engine.client.registry_epoch = "reset-epoch"
+        with pytest.raises(DefinitionMismatch):
+            await api.submit(engine, spec(), "task", command_id="fresh", budget=8, session_id=None)
+        assert not engine.client.registry.state.roots
+        assert not engine.client.runs
+        assert not engine.client.updates
+
+    asyncio.run(run())
+
+
+def test_submission_registry_handle_is_pinned_to_original_sdk_epoch():
+    async def run():
+        api = module()
+        engine = Engine()
+        handle = await api._registry(
+            engine, engine.client, asdict(SCOPE), NAMESPACE, POLICY.identity
+        )
+        assert handle.epoch == "registry-epoch"
 
     asyncio.run(run())

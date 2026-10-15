@@ -204,16 +204,24 @@ class TemporalEngine:
         client = await Client.connect(address, namespace=namespace)
         return cls(client, namespace=namespace, **kwargs)
 
-    def _handle(self, run_id):
+    def _handle(self, run_id, *, execution_epoch=None):
         if self._closed:
             raise ValidationError("TemporalEngine is closed")
         text(run_id, "Run ID")
+        if execution_epoch is not None:
+            text(execution_epoch, "Execution epoch")
+            return self.client.get_workflow_handle(run_id, run_id=execution_epoch)
         return self.client.get_workflow_handle(run_id)
 
-    async def _view(self, run_id, kind, **values):
+    async def _view(self, run_id, kind, *, _execution_epoch=None, **values):
         sdk = _sdk()
         try:
-            result = await self._handle(run_id).query(
+            handle = (
+                self._handle(run_id)
+                if _execution_epoch is None
+                else self._handle(run_id, execution_epoch=_execution_epoch)
+            )
+            result = await handle.query(
                 "view", {"scope": asdict(self.scope), "kind": kind, **values}
             )
         except sdk[6] as exc:
@@ -460,10 +468,43 @@ class TemporalEngine:
         payload = {"kind": kind, "scope": asdict(self.scope), **values}
         if kind == "send_input":
             payload["run_id"] = run_id
-        await self._view(run_id, "status")
-        await self._guard(kind, command_id, run_id, payload)
+        from .temporal_deployment_protocol import public_selected
+
+        binding = None
+        if public_selected(self._release):
+            from .temporal_deployment_submissions import _policy, _recheck
+
+            client, scope, policy = self.client, asdict(self.scope), _policy(self)
+            binding = await self._guard(kind, command_id, run_id, payload)
+            if binding is not None:
+                from .temporal_deployment_registry import CONTROL_BINDING_FIELDS
+
+                if (
+                    type(binding) is not dict
+                    or set(binding) != CONTROL_BINDING_FIELDS
+                    or type(binding["version"]) is not int
+                    or binding["version"] != 1
+                    or binding["scope"] != scope
+                    or binding["target"] != run_id
+                ):
+                    raise DefinitionMismatch("Original descendant control binding changed")
+                text(binding["target_execution_epoch"], "Execution epoch")
+                await self._view(
+                    run_id, "status", _execution_epoch=binding["target_execution_epoch"]
+                )
+                await _recheck(self, client, scope, binding["namespace"], policy)
+            else:
+                await self._view(run_id, "status")
+        else:
+            await self._view(run_id, "status")
+            await self._guard(kind, command_id, run_id, payload)
         try:
-            receipt = await self._handle(run_id).execute_update(
+            handle = (
+                self._handle(run_id)
+                if binding is None
+                else self._handle(run_id, execution_epoch=binding["target_execution_epoch"])
+            )
+            receipt = await handle.execute_update(
                 "command", {"command_id": command_id, "payload": payload}
             )
         except sdk[1] as exc:
@@ -593,11 +634,11 @@ def build_temporal_worker(
     worker_options.setdefault("build_id", digest(manifest))
     worker_options.setdefault("sticky_queue_schedule_to_start_timeout", timedelta(seconds=1))
     worker_options.setdefault("disable_eager_activity_execution", True)
-    activities = (
-        registered_activities(runtime, client)
-        + registered_parent_activities(runtime, client)
-        + registered_session_activities(runtime, client)
-    )
+    activities = registered_activities(runtime, client)
+    native_activities = tuple(activities)
+    parent_activities = registered_parent_activities(runtime, client)
+    activities = activities + parent_activities + registered_session_activities(runtime, client)
+    maintenance = []
     if "deployment_admission_protocol" in manifest:
         from .temporal_deployment_execution import registered_activity, wrap_activities
 
@@ -607,8 +648,36 @@ def build_temporal_worker(
         if public_selected(manifest):
             from .temporal_deployment_release import registered_activity as registered_release
 
-            activities.append(registered_release(runtime, client))
-        activities = wrap_activities(runtime, client, activities)
+            release_activity = registered_release(runtime, client)
+            activities.append(release_activity)
+            maintenance.append((release_activity, "release"))
+        if manifest["deployment_admission_protocol"]["version"] == 3:
+            from temporalio import activity
+
+            from .temporal_coding_state import CODING_STOP_ACTIVITY
+            from .temporal_deployment_coding_bridge import registered_stop_activity
+
+            stop_activity = registered_stop_activity(runtime, client)
+            activities.append(stop_activity)
+            maintenance.append((stop_activity, "stop"))
+            # Only objects returned by this build's original fixed factory
+            # are candidates; the owner verifies their full wrapper provenance.
+            maintenance.extend(
+                (function, "native-stop")
+                for function in native_activities
+                if activity._Definition.from_callable(function).name == CODING_STOP_ACTIVITY
+            )
+            # This exact factory-produced control retains both universal SDK
+            # admission and original actual-call/end-ACK wrappers.
+            maintenance.append((parent_activities[0], "control"))
+        originals = activities
+        activities = wrap_activities(runtime, client, originals)
+        maintenance = [
+            (wrapped, kind)
+            for original, wrapped in zip(originals, activities, strict=True)
+            for fixed, kind in maintenance
+            if original is fixed
+        ]
     if activity_owner is not None:
         from .temporal_assembly_lifecycle import WorkerExecutionOwner
 
@@ -616,7 +685,9 @@ def build_temporal_worker(
             raise ValidationError("Worker requires its original mechanical Activity owner")
         if activity_owner.release_digest != digest(runtime.orchestration_release):
             raise DefinitionMismatch("Worker owner must retain the original release")
-        activities = activity_owner.wrap_activities(activities, client=client)
+        activities = activity_owner.wrap_activities(
+            activities, client=client, runtime=runtime, maintenance=maintenance
+        )
     return Worker(
         client,
         task_queue=task_queue,
@@ -681,6 +752,7 @@ def _workflow_runner():
             "ralf_agent.temporal_coding_protocol",
             "ralf_agent.temporal_coding_composition_state",
             "ralf_agent.temporal_coding_composition_protocol",
+            "ralf_agent.temporal_deployment_coding_state",
             "ralf_agent.temporal_memory_state",
             "ralf_agent.temporal_facts_state",
             "ralf_agent.temporal_knowledge_state",

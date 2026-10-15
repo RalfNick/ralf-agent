@@ -458,7 +458,7 @@ def test_explicit_policy_with_legacy_store_refuses_and_closes_owned_resources(tm
 
 
 @pytest.mark.parametrize("adapter", ["bounded", "custom"])
-def test_temporal_admission_configuration_refuses_before_any_component_io(tmp_path, adapter):
+def test_temporal_dual_admission_sources_refuse_before_any_component_io(tmp_path, adapter):
     events = []
     registry = r.ComponentRegistry()
     registry.register("provider", "observed", lambda config, context: events.append("provider-io"))
@@ -475,8 +475,64 @@ def test_temporal_admission_configuration_refuses_before_any_component_io(tmp_pa
                 {"default": {"adapter": "observed"}},
                 {"admission_policy": {"adapter": adapter, "config": {"deployment_id": "business"}}},
             )
-            await TemporalRuntimeBuilder(registry, base_dir=tmp_path).abuild(selected)
+            await TemporalRuntimeBuilder(registry, base_dir=tmp_path).abuild(
+                selected, admission_policy=policy_type()("host")
+            )
         assert events == [] and not any(tmp_path.iterdir())
+
+    asyncio.run(scenario())
+
+
+@pytest.mark.parametrize("adapter", ["bounded", "custom"])
+def test_temporal_admission_declaration_publishes_and_closes_unused_assembly(tmp_path, adapter):
+    events = []
+    config = {"deployment_id": "business", "max_active_root_runs": 2}
+    expected = policy_type()(**config)
+    registry = r.ComponentRegistry()
+
+    class OwnedClient:
+        async def aclose(self):
+            await asyncio.sleep(0)
+            events.append("client-closed")
+
+    def provider(config, context):
+        events.append("provider-created")
+        context.own_async(OwnedClient())
+        return EchoProvider("temporal")
+
+    def policy(declaration, context):
+        assert declaration == config
+        events.append("policy-created")
+        return expected
+
+    registry.register("provider", "observed", provider)
+    if adapter == "custom":
+        registry.register("admission_policy", "custom", policy)
+    selected = r.TemporalProfile(
+        "assistant",
+        "1",
+        {"default": {"adapter": "observed"}},
+        {"admission_policy": {"adapter": adapter, "config": config}},
+    )
+    original_profile = canonical(selected.identity)
+
+    async def scenario():
+        assembly = await TemporalRuntimeBuilder(registry, base_dir=tmp_path).abuild(selected)
+        try:
+            publication = assembly.release["deployment_admission_protocol"]
+            assert publication["version"] == 2 and publication["policy"] == expected.identity
+            assert canonical(assembly.release["runtime_profile"]) == original_profile
+            assert canonical(selected.identity) == original_profile
+            assert events == ["provider-created"] + (
+                ["policy-created"] if adapter == "custom" else []
+            )
+            assert assembly._client is assembly._worker is None and assembly._engines == []
+        finally:
+            await assembly.aclose()
+        assert assembly._closed and assembly._context._resources == []
+        assert events[-1] == "client-closed"
+        assert canonical(selected.identity) == original_profile
+        assert not any(tmp_path.iterdir())
 
     asyncio.run(scenario())
 

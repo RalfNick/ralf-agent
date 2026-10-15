@@ -152,13 +152,51 @@ def _plain_digest(code):
 _cached_plain_digest = lru_cache(maxsize=1024)(_plain_digest)
 
 
+def _defaults_digest(code, defaults_snapshot, keyword_defaults_snapshot):
+    """Reuse code with immutable snapshots of primitive JSON defaults only."""
+    return digest(
+        {
+            "algorithm": "python-code-v1",
+            "function": {
+                "code": _code(code),
+                "defaults": defaults_snapshot[1],
+                "keyword_defaults": None
+                if keyword_defaults_snapshot[1] is None
+                else dict(keyword_defaults_snapshot[1]),
+                "captured": [],
+                "wrapped": None,
+            },
+        }
+    )
+
+
+_cached_defaults_digest = lru_cache(maxsize=1024)(_defaults_digest)
+_DEFAULT_PRIMITIVES = (str, int, float, bool, type(None))
+_DEFAULT_CACHE_CHARS = 8192
+
+
+def _simple_defaults(defaults, keyword_defaults):
+    # Complex JSON remains on the original path, including numeric dictionary keys.
+    if type(defaults) not in (tuple, type(None)) or type(keyword_defaults) not in (
+        dict,
+        type(None),
+    ):
+        return False
+    return all(type(value) in _DEFAULT_PRIMITIVES for value in defaults or ()) and all(
+        type(key) is str and type(value) in _DEFAULT_PRIMITIVES
+        for key, value in (keyword_defaults or {}).items()
+    )
+
+
 def _cache_helpers():
     return tuple(
         (
             method,
             getattr(method, "__code__", None),
             getattr(method, "__defaults__", None),
-            getattr(method, "__kwdefaults__", None),
+            None
+            if getattr(method, "__kwdefaults__", None) is None
+            else dict(method.__kwdefaults__),
             getattr(method, "__closure__", None),
         )
         for method in (
@@ -171,8 +209,12 @@ def _cache_helpers():
             _plain_digest,
             _cached_plain_digest,
             getattr(_cached_plain_digest, "__wrapped__", None),
+            _defaults_digest,
+            _cached_defaults_digest,
+            getattr(_cached_defaults_digest, "__wrapped__", None),
+            _simple_defaults,
         )
-    ) + ((types, types.CodeType),)
+    ) + ((types, types.CodeType), _DEFAULT_PRIMITIVES, _DEFAULT_CACHE_CHARS)
 
 
 _CACHE_HELPERS = _cache_helpers()
@@ -187,11 +229,24 @@ def executable_digest(method):
             and _cache_helpers() == _CACHE_HELPERS
             and inspect.isfunction(target)
             and target.__closure__ is None
-            and target.__defaults__ is None
-            and target.__kwdefaults__ is None
             and getattr(target, "__wrapped__", None) is None
         ):
-            return _cached_plain_digest(target.__code__)
+            if target.__defaults__ is None and target.__kwdefaults__ is None:
+                return _cached_plain_digest(target.__code__)
+            if _simple_defaults(target.__defaults__, target.__kwdefaults__):
+                # JSON strings distinguish equal Python primitives such as True/1
+                # and positive/negative zero; snapshots retain no mutable defaults.
+                defaults, keywords = target.__defaults__, target.__kwdefaults__
+                defaults_json, keywords_json = canonical(defaults), canonical(keywords)
+                if len(defaults_json) + len(keywords_json) <= _DEFAULT_CACHE_CHARS:
+                    return _cached_defaults_digest(
+                        target.__code__,
+                        (defaults_json, defaults),
+                        (
+                            keywords_json,
+                            None if keywords is None else tuple(sorted(keywords.items())),
+                        ),
+                    )
         return digest({"algorithm": "python-code-v1", "function": _function(method, set())})
     except (TypeError, ValueError, RecursionError):
         raise ValidationError("Custom context captured configuration must be JSON") from None

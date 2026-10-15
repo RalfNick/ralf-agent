@@ -92,26 +92,83 @@ def callbacks(client, request, info, runtime):
         raise DefinitionMismatch("Coding lost its original Workflow epoch or namespace")
     handle = client.get_workflow_handle(workflow_id, run_id=epoch)
 
-    async def validate():
-        from .temporal_session_activities import validate_tree_activity
+    async def authority(invocation, runner, *, recovery=False):
+        from .task_controls import _binding
+        from .temporal_deployment_coding_state import selected as deployment_coding_selected
 
-        runtime.validate_release(fixed["runtime_manifest"])
-        if client.namespace != namespace:
-            raise DefinitionMismatch("Coding original namespace changed")
-        await validate_tree_activity(client, fixed, workflow_id=workflow_id)
-        if client.namespace != namespace:
-            raise DefinitionMismatch("Coding namespace changed during validation")
-        runtime.validate_release(fixed["runtime_manifest"])
+        validation = None
+        if deployment_coding_selected(fixed["runtime_manifest"]):
+            from .temporal_deployment_coding_validation import CodingValidation
 
-    async def query(name, payload):
-        return await handle.query(name, payload)
-
-    async def update(name, payload):
-        return await handle.execute_update(
-            name, payload, id="ralf-coding:" + name + ":" + digest(payload)
+            validation = CodingValidation(runtime, client, fixed, info)
+        bindings = (
+            None
+            if validation is None
+            else tuple(_binding(getattr(validation, name)) for name in ("validate", "permission"))
         )
 
-    async def authority(invocation, runner, *, recovery=False):
+        def check_validation():
+            if (
+                validation is not None
+                and tuple(
+                    _binding(getattr(validation, name)) for name in ("validate", "permission")
+                )
+                != bindings
+            ):
+                raise DefinitionMismatch("Original compact Coding validation callbacks changed")
+
+        async def validate():
+            from .temporal_session_activities import validate_tree_activity
+
+            runtime.validate_release(fixed["runtime_manifest"])
+            if client.namespace != namespace:
+                raise DefinitionMismatch("Coding original namespace changed")
+            check_validation()
+            if validation is None:
+                await validate_tree_activity(client, fixed, workflow_id=workflow_id)
+            else:
+                completed = await validation.validate()
+                if completed is not None:
+                    raise DefinitionMismatch("Coding validation requires completed None")
+            check_validation()
+            if client.namespace != namespace:
+                raise DefinitionMismatch("Coding namespace changed during validation")
+            runtime.validate_release(fixed["runtime_manifest"])
+
+        async def query(name, payload):
+            return await handle.query(name, payload)
+
+        async def update(name, payload):
+            from .temporal_coding_state import CODING_GRANT
+
+            if name == CODING_GRANT and validation is not None:
+                from .temporal_deployment_coding_bridge import grant_allowed
+
+                check_validation()
+                allowed = await grant_allowed(runtime, client, fixed, info, validation)
+                check_validation()
+                if type(allowed) is not bool:
+                    raise DefinitionMismatch("Coding grant validation requires completed boolean")
+                if not allowed:
+                    command_id = "ralf-deployment-coding-close:" + digest([workflow_id, epoch])
+                    try:
+                        await handle.execute_update(
+                            "command",
+                            {
+                                "command_id": command_id,
+                                "payload": {"kind": "cancel", "scope": fixed["scope"]},
+                            },
+                            id=command_id,
+                        )
+                    finally:
+                        # A completed or uncertain original cancel still has
+                        # an I/O boundary; never resend it to regain evidence.
+                        await validate()
+                    raise DefinitionMismatch("Original scoped Coding admission is closed")
+            return await handle.execute_update(
+                name, payload, id="ralf-coding:" + name + ":" + digest(payload)
+            )
+
         return TemporalCodingAuthority(
             request=fixed,
             invocation_id=invocation,

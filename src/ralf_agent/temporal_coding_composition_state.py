@@ -5,6 +5,7 @@ import json
 from uuid import UUID
 
 from .errors import DefinitionMismatch, ValidationError
+from .temporal_deployment_coding_state import guard_mutation
 from .types import canonical, digest
 
 ACTIVITY = "ralf.temporal.coding-composition-admission.v1"
@@ -175,6 +176,8 @@ def initialize_namespace(state, payload):
         raise DefinitionMismatch("Namespace binding differs from original History")
     value = _namespace(payload["namespace"])
     previous = state.composition_namespace
+    if guard_mutation(state, previous if previous["id"] is not None else None, value):
+        return {"run_id": state.run_id, "recorded": True}
     if previous["name"] != value["name"] or (previous["id"] is not None and previous != value):
         raise DefinitionMismatch("Original namespace binding is immutable")
     if previous["id"] is None:
@@ -456,6 +459,8 @@ def pin_child_execution(state, run_id, evidence):
         "original_execution_epoch": evidence["original_execution_epoch"],
     }
     previous = call.get("child_execution")
+    if guard_mutation(state, previous, value):
+        return {"run_id": run_id, "recorded": True}
     if previous is not None and previous != value:
         raise DefinitionMismatch("Original child SDK execution cannot be replaced")
     if previous is None:
@@ -516,6 +521,13 @@ def request_parent_stop(state, *, terminal_state, reason):
     _require(state)
     if terminal_state not in {"cancelled", "failed"}:
         raise ValidationError("Parent stopping requires a cancellation/failure intent")
+    requested = {
+        "terminal_state": terminal_state,
+        "reason": copy.deepcopy(reason),
+        "child_intent_ids": [c["id"] for c in state.children],
+    }
+    if guard_mutation(state, state.composition_stop_intent, requested):
+        return {"state_revision": state.revision, "remote_stop_confirmed": state.quiescent}
     if state.composition_stop_intent is None:
         state.composition_stop_intent = {
             "terminal_state": terminal_state,
@@ -603,6 +615,8 @@ def adopt_child_stop(state, run_id, evidence):
     }:
         raise DefinitionMismatch("Child physical closure requires original fixed SDK epoch")
     previous = call.get("physical_stop_proof")
+    if guard_mutation(state, previous, evidence):
+        return {"run_id": run_id, "recorded": True}
     if previous is not None:
         if evidence["revision"] < previous["revision"]:
             return {"run_id": run_id, "recorded": True}
@@ -694,6 +708,8 @@ def adopt_admission(state, response):
         or response["execution_epoch"] != state.epoch
     ):
         raise DefinitionMismatch("Original root admission receipt is invalid")
+    if guard_mutation(state, state.composition_admission, response):
+        return
     initialize_namespace(
         state,
         {

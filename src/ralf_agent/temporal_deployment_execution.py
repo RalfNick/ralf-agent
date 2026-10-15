@@ -98,8 +98,11 @@ def _sealed(value):
         _reject()
 
 
-def _policy(runtime):
-    runtime.validate_release()
+def _policy(runtime, *, expected=None):
+    if expected is None:
+        runtime.validate_release()
+    else:
+        runtime.validate_release(expected)
     pin = getattr(runtime, "_deployment_admission_policy_pin", None)
     if pin is None:
         return None
@@ -109,7 +112,10 @@ def _policy(runtime):
         or getattr(runtime, "_deployment_admission_identity", None) != pin.identity
     ):
         _reject()
-    runtime.validate_release()
+    if expected is None:
+        runtime.validate_release()
+    else:
+        runtime.validate_release(expected)
     return detached(pin.identity)
 
 
@@ -370,7 +376,7 @@ async def _pin(client, parent, child, call):
             _reject()
 
 
-async def _ancestry(runtime, client, policy, original):
+async def _ancestry(runtime, client, policy, original, *, read_only=False):
     current = original
     for index in range(len(original["admission"]["lineage"]) - 1, -1, -1):
         link = original["admission"]["lineage"][index]
@@ -399,7 +405,11 @@ async def _ancestry(runtime, client, policy, original):
             or call.get("dispatch_started") is not True
         ):
             _reject()
-        await _pin(client, parent, current, call)
+        if read_only:
+            if call.get("deployment_execution_epoch") != current["execution_epoch"]:
+                _reject()
+        else:
+            await _pin(client, parent, current, call)
         refreshed = await _proof(
             runtime,
             client,
@@ -646,7 +656,16 @@ def registered_activity(runtime, client):
     @activity.defn(name=ACTIVITY)
     async def admission(value: dict) -> dict:
         try:
-            return {"ok": True, "result": await admit(runtime, client, value, activity.info())}
+            response = {"ok": True, "result": await admit(runtime, client, value, activity.info())}
+            from .temporal_deployment_coding_state import selected as coding_selected
+
+            if coding_selected(value["runtime_manifest"]):
+                from .temporal_deployment_coding_bridge import admission as coding_admission
+
+                response["coding_admission"] = await coding_admission(
+                    runtime, client, value, activity.info()
+                )
+            return response
         except Exception as exc:
             return {
                 "ok": False,
@@ -664,8 +683,17 @@ def wrap_activities(runtime, client, activities):
         definition = activity._Definition.from_callable(function)
         if definition is None:
             _reject()
+        from .temporal_deployment_coding_bridge import STOP_ACTIVITY, is_registered_stop_activity
+        from .temporal_deployment_coding_state import selected as coding_selected
         from .temporal_deployment_protocol import public_selected
         from .temporal_deployment_release import RELEASE_ACTIVITY, is_registered_activity
+
+        if definition.name == STOP_ACTIVITY:
+            if not coding_selected(runtime.manifest) or not is_registered_stop_activity(
+                runtime, client, function
+            ):
+                _reject()
+            return function
 
         if definition.name == RELEASE_ACTIVITY:
             if not public_selected(runtime.manifest) or not is_registered_activity(

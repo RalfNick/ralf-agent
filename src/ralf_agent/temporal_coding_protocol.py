@@ -529,17 +529,21 @@ def validate_protocol(manifest):
             sha(fingerprint)
 
 
-def publish(manifest, runtime):
+def publish(manifest, runtime, *, _validate=True, _copy=True):
     from .temporal_state import detached
+    from .types import canonical
 
-    result = detached(manifest)
+    if not _copy:
+        canonical(manifest)
+    result = detached(manifest) if _copy else manifest
     result.update(
         kernel="temporal-3",
         binding_protocol=22,
         dispatch_admission="history-1",
         coding_execution_protocol=registration(runtime),
     )
-    validate_protocol(result)
+    if _validate:
+        validate_protocol(result)
     return result
 
 

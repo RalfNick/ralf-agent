@@ -14,6 +14,7 @@ from .codex_protocol import CodexCodingProtocol, CodexProtocol, _snapshot
 from .codex_rpc import CodexRPCClosed, CodexRPCError, CodexRPCTransport
 from .codex_runner_capacity import RootCapacity
 from .coding_resource_fingerprint import policy_value
+from .component_fingerprint import executable_digest as _history_executable_digest
 from .errors import (
     AuthorizationDenied,
     CloseIncomplete,
@@ -970,11 +971,92 @@ class CodexCodingRunner:
         raise RunnerOutcomeUnknown("cold original native evidence remains uncertain")
 
     async def _request(self, owner, method, params, *, control=False):
-        await self._cancelled_owned(owner)
-        protocol = owner["control"] if control else self._protocol
-        accepted = protocol.validate_request(method, params)
-        if owner.get("history"):
-            await self._authority_method(owner, "validate_registration")
+        adjacent = control is True or (
+            control is False
+            and type(method) is str
+            and method in {"thread/start", "turn/start", "thread/read"}
+        )
+        authority = owner.get("authority") if adjacent and owner.get("history") else None
+        request = authority._request if type(authority) is TemporalCodingAuthority else None
+        manifest = request.get("runtime_manifest") if type(request) is dict else None
+        deployment = (
+            manifest.get("deployment_admission_protocol") if type(manifest) is dict else None
+        )
+        selected_adjacent = (
+            adjacent
+            and owner.get("history")
+            and type(authority) is TemporalCodingAuthority
+            and type(deployment) is dict
+            and type(deployment.get("version")) is int
+            and deployment["version"] == 3
+        )
+        if selected_adjacent:
+            from .component_fingerprint import executable_digest
+
+            proof, native = authority._proof, request.get("coding_request")
+            if (
+                type(proof) is not dict
+                or set(proof)
+                != {
+                    "scope",
+                    "run_id",
+                    "action_id",
+                    "release_digest",
+                    "execution_epoch",
+                    "request_digest",
+                    "invocation_id",
+                }
+                or any(
+                    proof[name] != request.get(name)
+                    for name in (
+                        "scope",
+                        "run_id",
+                        "action_id",
+                        "release_digest",
+                        "execution_epoch",
+                    )
+                )
+                or proof["request_digest"] != digest(request)
+                or type(native) is not dict
+                or native.get("release_digest") != request["release_digest"]
+                or native.get("request_digest")
+                != digest({k: v for k, v in native.items() if k != "request_digest"})
+            ):
+                raise DefinitionMismatch("Original deployment native request changed")
+            identity = digest(request), copy.deepcopy(proof)
+            protocol = owner["control"] if control else self._protocol
+            accepted = protocol.validate_request(method, params)
+            for name, (fixed, fingerprint) in _HISTORY_CONTROL_PINS.items():
+                if (
+                    getattr(getattr(authority, name), "__func__", None) is not fixed
+                    or getattr(TemporalCodingAuthority, name) is not fixed
+                    or executable_digest(fixed) != fingerprint
+                ):
+                    raise DefinitionMismatch("Original deployment native validation changed")
+            # The original state Query already has fresh validation on both sides.
+            # No I/O separates its final validation from this native send.
+            # Business phase grants and PG execute checks remain independent.
+            await self._cancelled_owned(owner)
+            if (
+                owner.get("authority") is not authority
+                or digest(authority._request) != identity[0]
+                or authority._proof != identity[1]
+            ):
+                raise DefinitionMismatch("Original deployment native authority changed")
+            for name, (fixed, fingerprint) in _HISTORY_CONTROL_PINS.items():
+                if (
+                    getattr(getattr(authority, name), "__func__", None) is not fixed
+                    or getattr(TemporalCodingAuthority, name) is not fixed
+                    or executable_digest(fixed) != fingerprint
+                ):
+                    raise DefinitionMismatch("Original deployment native validation changed")
+            authority._check_pins()
+        else:
+            await self._cancelled_owned(owner)
+            protocol = owner["control"] if control else self._protocol
+            accepted = protocol.validate_request(method, params)
+            if owner.get("history"):
+                await self._authority_method(owner, "validate_registration")
         result = await owner["transport"].request(method, accepted)
         return protocol.validate_response(method, result)
 
@@ -1690,4 +1772,12 @@ _HISTORY_METHODS = {
         "adopt",
         "validate_registration",
     )
+}
+
+# The selected adjacent path must prove that cancellation still executes the
+# original fresh pre/Query/post validation, including nested helper code.
+_HISTORY_CONTROL_PINS = {
+    name: (method, _history_executable_digest(method))
+    for name in ("cancelled", "_state", "_call", "_check_pins")
+    for method in (getattr(TemporalCodingAuthority, name),)
 }

@@ -7,6 +7,20 @@ import sys
 import pytest
 
 
+@pytest.fixture(autouse=True)
+def isolated_generated_application_modules():
+    def clear():
+        for name in list(sys.modules):
+            if name == "agent_app" or name.startswith("agent_app."):
+                sys.modules.pop(name)
+
+    clear()
+    try:
+        yield
+    finally:
+        clear()
+
+
 def generate(root):
     from ralf_agent import fact_index_maintenance_starter as module
 

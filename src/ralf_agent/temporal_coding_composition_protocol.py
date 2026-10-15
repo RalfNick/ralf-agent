@@ -542,20 +542,24 @@ def require_sdk():
         )
 
 
-def publish(manifest, runtime):
+def publish(manifest, runtime, *, _validate=True, _copy=True):
     from .temporal_state import detached
+    from .types import canonical
 
     if runtime.coding_execution is not True or runtime.coding_composition is not True:
         raise DefinitionMismatch("Original Coding composition opt-in is missing")
     require_sdk()
-    result = detached(manifest)
+    if not _copy:
+        canonical(manifest)
+    result = detached(manifest) if _copy else manifest
     result["binding_protocol"] = 23
     result["coding_composition_protocol"] = {
         "version": 7,
         "topology": "bounded-recursive-orchestration",
         "implementation": implementation(),
     }
-    validate_protocol(result)
+    if _validate:
+        validate_protocol(result)
     return result
 
 

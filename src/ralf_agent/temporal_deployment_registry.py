@@ -7,19 +7,35 @@ from .temporal_deployment_admission import (
     DeploymentAdmissionState,
     _detached,
     _exact,
+    _namespace,
+    _scope,
     _sha,
     _text,
+    root_run_id,
 )
 from .types import canonical, digest
 
 SUBMISSION_CAPACITY = 1024 * 1024
+CONTROL_BINDING_FIELDS = {
+    "version",
+    "scope",
+    "namespace",
+    "target",
+    "target_execution_epoch",
+    "root_run_id",
+    "root_execution_epoch",
+}
+_CONTROL_KINDS = {"approve", "cancel", "reconcile", "drive", "send_input", "patch"}
 
 
 class PublicDeploymentAdmissionState(DeploymentAdmissionState):
+    publication_versions = (2,)
+
     def __init__(self, admission_policy, namespace, *, capacity):
         super().__init__(admission_policy, namespace, capacity=capacity)
         self.submissions = {}
         self.retirements = {}
+        self.control_bindings = {}
 
     def _submission(self, request):
         metadata = request["root_admission"]
@@ -41,6 +57,13 @@ class PublicDeploymentAdmissionState(DeploymentAdmissionState):
         _text(envelope["task_queue"])
         if not public_selected(envelope["manifest"]):
             raise DefinitionMismatch("Original submission requires public deployment publication")
+        if (
+            envelope["manifest"]["deployment_admission_protocol"]["version"]
+            not in self.publication_versions
+        ):
+            raise DefinitionMismatch(
+                "Original Registry does not accept this deployment publication"
+            )
         if envelope["manifest"]["deployment_admission_protocol"]["policy"] != self.policy:
             raise DefinitionMismatch("Original deployment submission policy changed")
         if (
@@ -103,17 +126,14 @@ class PublicDeploymentAdmissionState(DeploymentAdmissionState):
             }
         )
 
-    def _control(self, request):
-        _exact(request, _REQUEST_FIELDS)
+    def _control_request(self, request):
+        if type(request) is not dict or set(request) not in (
+            _REQUEST_FIELDS,
+            _REQUEST_FIELDS | {"descendant"},
+        ):
+            raise ValidationError("Invalid public deployment control fields")
         scope = self._authority(request)
-        if request["kind"] not in {
-            "approve",
-            "cancel",
-            "reconcile",
-            "drive",
-            "send_input",
-            "patch",
-        }:
+        if type(request["kind"]) is not str or request["kind"] not in _CONTROL_KINDS:
             raise ValidationError("Unsupported public deployment control")
         for field in ("command_id", "target"):
             _text(request[field])
@@ -124,7 +144,19 @@ class PublicDeploymentAdmissionState(DeploymentAdmissionState):
         if previous is not None:
             if previous["identity"] != identity:
                 raise IdempotencyConflict("Scoped deployment control identity changed")
-            return _detached(previous["receipt"])
+        return scope, key, identity, previous
+
+    def _control_receipt(self, key):
+        receipt = self.commands[key]["receipt"]
+        binding = self.control_bindings.get(key)
+        return _detached(receipt if binding is None else {**receipt, "control_binding": binding})
+
+    def _control(self, request):
+        scope, key, identity, previous = self._control_request(request)
+        if previous is not None:
+            return self._control_receipt(key)
+        if "descendant" in request:
+            raise AuthorizationDenied("Descendant control requires original SDK verification")
         if not any(
             r["scope"] == scope and r["run_id"] == request["target"] for r in self.roots.values()
         ):
@@ -139,6 +171,142 @@ class PublicDeploymentAdmissionState(DeploymentAdmissionState):
         }
         self.commands[key] = _detached({"identity": identity, "receipt": receipt})
         return _detached(receipt)
+
+    def deployment_control(self, request):
+        _exact(request, _REQUEST_FIELDS | {"command_kind"})
+        if request["kind"] != "deployment_control":
+            raise ValidationError("Invalid public deployment control query")
+        control = {
+            **{name: value for name, value in request.items() if name != "command_kind"},
+            "kind": request["command_kind"],
+        }
+        _, key, _, previous = self._control_request(control)
+        return None if previous is None else self._control_receipt(key)
+
+    def prepare_deployment_control(self, request):
+        scope, _, _, previous = self._control_request(request)
+        if previous is not None:
+            return {"receipt": self._control_receipt(digest([scope, request["command_id"]]))}
+        descendant = request.get("descendant")
+        _exact(descendant, {"root_command_id", "execution_epoch"})
+        for value in descendant.values():
+            _text(value)
+            if len(value) > 1024:
+                raise ValidationError("Original descendant control identity exceeds its allowance")
+        root_key = digest([scope, descendant["root_command_id"]])
+        root = self.roots.get(root_key)
+        if root is None:
+            raise DefinitionMismatch("Descendant control requires its held original root")
+        from .temporal_deployment_execution_state import _root
+
+        _root(root, bound=True)
+        if (
+            root["scope"] != scope
+            or root["namespace"] != self.namespace
+            or root["registry_id"] != self.registry_id
+            or root["command_id"] != descendant["root_command_id"]
+            or root["run_id"]
+            != root_run_id(self.policy["deployment_id"], scope, root["command_id"])
+            or request["target"] == root["run_id"]
+        ):
+            raise DefinitionMismatch("Descendant control changed its original root identity")
+        record = self.submissions.get(root_key)
+        _exact(record, {"reservation", "submission", "run_receipt", "execution_epoch"})
+        reservation = record["reservation"]
+        _exact(
+            reservation, {"command_id", "target", "record_state", "apply_state", "root_admission"}
+        )
+        expected = {
+            "command_id": root["command_id"],
+            "target": root["run_id"],
+            "record_state": "durably_recorded",
+            "apply_state": "not_applied",
+            "root_admission": {**root, "state": "held-unbound", "execution_epoch": None},
+        }
+        original_command = self.commands.get(root_key)
+        if (
+            reservation != expected
+            or original_command
+            != {
+                "identity": {
+                    "kind": "submit",
+                    "target": root["run_id"],
+                    "payload_digest": root["request_digest"],
+                },
+                "receipt": reservation,
+            }
+            or record["execution_epoch"] not in (None, root["execution_epoch"])
+        ):
+            raise DefinitionMismatch("Original root first acceptance changed")
+        submission = self._submission(
+            {
+                "scope": scope,
+                "command_id": root["command_id"],
+                "kind": "submit",
+                "target": root["run_id"],
+                "payload_digest": root["request_digest"],
+                "admission_policy": self.policy,
+                "namespace": self.namespace,
+                "root_admission": {
+                    "version": 2,
+                    "manifest_digest": root["manifest_digest"],
+                    "submission": record["submission"],
+                },
+            }
+        )
+        if len(self.commands) >= self.capacity:
+            raise ValidationError("Temporal deployment command registry capacity exhausted")
+        return _detached(
+            {
+                "request": {name: request[name] for name in _REQUEST_FIELDS},
+                "root": root,
+                "submission": submission,
+                "target_execution_epoch": descendant["execution_epoch"],
+            }
+        )
+
+    def commit_deployment_control(self, request, verification):
+        prepared = self.prepare_deployment_control(request)
+        if "receipt" in prepared:
+            return prepared["receipt"]
+        _exact(verification, CONTROL_BINDING_FIELDS)
+        if type(verification["version"]) is not int or verification["version"] != 1:
+            raise ValidationError("Invalid original descendant control binding version")
+        _scope(verification["scope"])
+        _namespace(verification["namespace"])
+        for name in ("target", "target_execution_epoch", "root_run_id", "root_execution_epoch"):
+            _text(verification[name])
+        root = prepared["root"]
+        expected = {
+            "version": 1,
+            "scope": prepared["request"]["scope"],
+            "namespace": root["namespace"],
+            "target": prepared["request"]["target"],
+            "target_execution_epoch": prepared["target_execution_epoch"],
+            "root_run_id": root["run_id"],
+            "root_execution_epoch": root["execution_epoch"],
+        }
+        if verification != expected:
+            raise DefinitionMismatch("SDK descendant control binding changed its original target")
+        base = prepared["request"]
+        key = digest([base["scope"], base["command_id"]])
+        receipt = {
+            "command_id": base["command_id"],
+            "target": base["target"],
+            "record_state": "durably_recorded",
+            "apply_state": "not_applied",
+        }
+        command = _detached(
+            {
+                "identity": {name: base[name] for name in ("kind", "target", "payload_digest")},
+                "receipt": receipt,
+            }
+        )
+        binding = _detached(verification)
+        # Preparation rechecked the held root and capacity after SDK verification.
+        self.commands[key] = command
+        self.control_bindings[key] = binding
+        return self._control_receipt(key)
 
     def deployment_submission(self, request):
         _exact(
