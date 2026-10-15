@@ -1,5 +1,9 @@
 # 第三阶段支持矩阵与收口门槛
 
+最新定位补充：本次原Registry重放State单Query为Coding60／composition61次验证，其中57次Coding检查经绑定层coding_enabled触发；Replay／Query及完整State不变检查通过。选中root已正退休，不能代替整个历史状态分布或实际性能验收。下一批只审查同步绑定验证中的重复完整协议检查，先证明原拒绝／source与默认兼容，再决定候选；没有新增产品能力或放宽阶段门槛。
+
+2026-10-16 当前S2 checkpoint：修复诊断后的唯一原图首项1 failed／392.302秒，零错误／跳过，424产品／857测试无漂移。前三Tool成功、第四Tool未调度；两root退休与Session ACK、owned关闭及安全清理通过，第二Turn为超时取消，仍不满足原360秒业务门槛。CPU质量通过，主要互斥成本为Manifest64.167秒、composition60.179秒、Coding28.097秒；原History的离线只读Query计数不改变State，仅收窄下一步Registry调用来源检查，不当作实际性能改善。原其余十二正常／五故障未运行，600秒诊断未授权／执行，S2／P3-2与第三阶段保持开放。见[最新验收记录](../architecture/reviews/2026-10-15-temporal-deployment-sessions.md)；以下各采样为历史证据。
+
 2026-10-16 最新S2首项CPU v2诊断：1 failed／514.670秒，零错误／跳过，原360秒业务期限未变，424产品／857测试无漂移。前三Tool成功，第四在关闭准入后拒绝且无candidate；effects3 adopted＋1 dispatched，accepted2／retired1／retained1，assembly关闭失败、schema保留。CPU记录fault1／incomplete5，函数排名及残差归因无效；已RED复现并修复诊断空stack累计线程问题，保留原限额、补固定首fault原因，四模块76项通过，关闭回调联合25项通过，无新服务采样或产品修改。其余十二正常／五故障未运行，600秒诊断未授权／执行，S2／P3-2及第三阶段保持开放。详见[当前验收记录](../architecture/reviews/2026-10-15-temporal-deployment-sessions.md)。
 
 2026-10-16 按变更规则3修复P3-3已有订阅路径的必要可用性：waiting_input不再导致follow误退出，仍为非终态；同步／异步和真实SQLite断连、同游标／原问题重启续接已补6项，受影响81项通过，独立安装38通过、424产品／855测试无漂移，完整默认canonical及默认保存History离线兼容通过。本批不开发新HTTP功能、不跳过P3-2，也不把Local订阅证据当作完整服务验收。见[修复记录](../architecture/reviews/2026-10-16-input-event-observation.md)。

@@ -94,6 +94,10 @@ The independent source review established these three required boundaries. The c
 
 ## S2 — existing Coding scope through the same Session origin
 
+最新定位：本次原Registry History离线重放及单Query通过、完整State不变；一个原正退休root触发Coding60／composition61次，57次Coding验证经绑定层coding_enabled触发。下一批针对一次同步绑定验证中的公开边界与内部已验证数据职责，先做最小RED和源码边界审查，保留每次native fresh SDK／close权限及动态source拒绝，再测完整收益。没有新产品实现；不把退休root的单Query计数当成所有历史Query分布或承诺能回收的业务时间。原360及其余矩阵门槛不变。
+
+最新实际checkpoint（2026-10-16）：修复后的CPU v2首项1 failed／392.302秒，零错误／跳过，424产品／857测试无漂移。原360秒body取消，前三Tool成功、第四Tool未调度；两root正退休、Session两Turn各6组start/end ACK完整，owned关闭及安全清理通过。第二Turn为cancelled，不判两Turn成功。CPU质量fault0／incomplete0；互斥主要成本为Manifest64.167秒、composition60.179秒、Coding28.097秒，未覆盖74.179秒。原匹配History离线重放／合成只读node Query计数通过，State／publication／命令序列／History不变，node仅Coding3及composition3次。下一步仅检查Registry Query的完整调用链及结构性重复，再决定必要候选；不能因不同样本变快认定提速，不实施低收益native permission归并、不新增实景或缓存权限。原其余十二正常／五故障待验，600秒诊断未授权／执行，S2／P3-2不关闭。证据见[最新验收记录](../../../architecture/reviews/2026-10-15-temporal-deployment-sessions.md)，下方为历史checkpoint。
+
 当前实际checkpoint（2026-10-16）：原360秒CPU v2首项已终态1 failed／514.670秒，零错误／跳过；424产品／857测试无漂移。前三Tool有原成功candidate，第四在关闭准入后拒绝、无candidate；effects3 adopted＋1 dispatched、两root仅一条退休，assembly关闭失败而schema按原义务保留。CPU记录fault1／incomplete5，全部函数排名／残差归因撤回。已RED复现并修复诊断空stack累计历史线程问题，保留64并发和其他限额、补固定首fault原因；四模块76项通过，另关闭回调联合25项通过。两路只读审查确证第四Tool进入原关闭准入分支，不把该结果当独立source漂移缺陷修产品；旧采样缺fault分支记录，不能反推其唯一原因。下一批先取得有效关键路径证据再决定产品候选；本批不重跑未变化全量、同一无效夹具或新服务。600秒诊断未授权／执行，原其余十二正常／五故障继续待验，S2／P3-2不关闭。后续成本审查段落保留各自历史范围，最新事实以[验收记录](../../../architecture/reviews/2026-10-15-temporal-deployment-sessions.md)为准。
 
 当前决策：冷包完整Runtime ABBA已否定helper-guard候选（18.455833→19.931383ms／次，约慢8%），不进入产品或再测同变体。135项原算法指纹及现场调用计数相同，0服务／模型／native；详见[结构审查](../../../architecture/reviews/2026-10-15-temporal-deployment-sessions.md#v21-验证成本结构审查2026-10-16未形成新产品候选)。同步声明与请求层级审查也未证明足够收益，不引入批量指纹或驻留SCV。原v21匹配Worker已完成一条199事件原History离线重放，并在原ReplayState完成一次SDK只读Query（约10.052ms），完整60字段State／publication／命令序列不变，0服务／模型；不代表实际服务验收，带cProfile的异常耗时统计不采纳。原监测仍有约195.532秒进程CPU未覆盖，下一步只补Worker关键路径计数（含Sandbox代码副本和直接DTO验证），诊断先自检再决定一次必要的原360秒采样。跨I/O的权限、原SDK事实及原360秒期限保持，未新增实际首项通过证据。

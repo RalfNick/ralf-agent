@@ -1,5 +1,23 @@
 # 部署 Session 集成与收尾验证
 
+## 修复后 CPU v2 首项（2026-10-16，有效计数，业务仍未通过）
+
+仅修复诊断生命周期，产品仍与`9ebb6f9`的独立安装逐字相同。新冻结`cpu-v2-lifecycle-fixed-prepared`含424产品／857测试，audit SHA256 `802804adb2a75a687da5fe9d7fcc55ebe2d51a44cca5db60bf28b89649239319`；相对上一采样只有诊断helper和测试两文件变化，runner仅换全新输出目录。原单项`graph-sequential-sdk`及80／60／180／360／60／40秒期限不变，未执行其他组合、模型或600秒诊断。
+
+唯一实际诊断已终态exit1：1 failed／392.302秒（testcase391.623秒），零错误／跳过，424产品及857测试无漂移。原body仍在approve.sleep被360秒scenario取消。三个Tool分别41.510／48.470／59.019秒成功，均有candidate、adopted效果和停止证据；第四child已启动Context／Model，**尚未调度Tool**，不能沿用上一样本的第四Tool definition_mismatch。两root均正退休；Session两Turn各6组start／end及Completed正ACK，Advance分别为succeeded和cancelled，原assembly关闭成功、Worker退出、schema按证据安全删除。正关闭证明成功Turn与取消Turn责任已清，不是两Turn业务成功。34项原输入前后哈希不变；业务证据`cpu-v2-lifecycle-terminal-evidence/summary.json` SHA256 `6cfa442b67409efaf41427e00f9966b46c164ed2c7a42080e721e12a40b98ea6`。
+
+本次唯一CPU记录通过质量门禁：fault0／incomplete0／first_fault_reason=null，321统计行和635时间桶完整对账，无重叠窗口。含关闭的进程CPU328.620秒、墙钟382.218秒；选中目标exclusive254.441秒，未覆盖74.179秒，不能为未观测部分猜测归因。互斥前三为Runtime._current_manifest64.167秒／5313次、composition.validate_protocol60.179秒／57082次、coding.validate_protocol28.097秒／45971次。Coding的inclusive87.600秒已包含composition，不相加。RunnerJournal._json标签是共享严格JSON验证，不等于全部来自journal。
+
+精确Registry closeCoding Accepted为21:16:20.376506Z；initial-body-error文件mtime21:16:19.514991Z仅作代理，不当精确取消点。10秒同步返回桶中，关闭前完整桶0–34的selected-exclusive233.361秒，跨界桶35为5.900秒单列，关闭后完整桶为15.180秒；最大观测单call wall0.275秒。前完整桶主要为composition57.266秒、Manifest56.767秒、Coding26.715秒，说明重成本已发生在关闭前；分桶不是精确critical-path或可回收预算。证据`cpu-v2-lifecycle-fixed-terminal-analysis/phase-evidence.json` SHA256 `ee4e1308ad4753187e67d3b30942be316b03cd47e0831dfd77a4f59947e5c127`。不同运行的392.302与514.670秒不推导稳定性能改善。
+
+随后仅一次零服务离线调用边检查：本次匹配的424产品和首个成功child原199事件History，经原runner／restrictions重放，在原ReplayState的合成只读Query中仅计两个验证函数及最多两层caller、512键，不采集参数／locals或函数耗时。Query正响应、State／publication／命令序列／原business completion及History全部不变，计数fault0／overflow0，原线程profile恢复、Replay成功，子进程exit0。该node Query触发Coding3次（经_selected两次、_require一次）、composition3次；不能把单node结果外推Registry的377次Query及64.484秒inclusive成本。证据`cpu-v2-query-call-edges/summary.json` SHA256 `686efa0f5694c099c77c4754ec88e96bfb12b0afc96b1403f3c73b85bf2b12b1`。下一步只读核查原Registry Query的完整调用来源及同一同步栈重复验证，不再猜JSON或追加小缓存。warm native permission归并9→2虽然理论可保留fresh读取，但每Tool触发次数有限，未据此实施新协议。
+
+Registry调用边随后完成一次：复用本次原211事件History及匹配安装，在原ReplayState发一次原view Query，Replay／Query成功、profile恢复、fault0／overflow0，424产品与History不变，完整Registry存储字段1,393,641B、publication／命令序列／原completion前后相同。容器快照对所有dict／list／tuple／set作递归类型标签，9组类型碰撞反例通过，避免set与用户dict同形而误认State未变。最终原State已无held root，选择一条原正退休root，不能外推为历史377个Query的状态分布或业务关键路径成本。
+
+本次单Query触发Coding60次、composition61次；其中Coding48次来自`reject_runner_descriptor→coding_enabled`、9次来自`validate_runner_tools→coding_enabled`，剩余3次来自完整Manifest／deployment入口，所有composition调用均保留各自父调用计数。它证明绑定层的重复完整协议检查是明确的下一审查点；未据此删除检查、缓存allowed、提前解析动态alias或承诺收益。Registry原始事实及退休分支继续完整验证；下一批优先在一次同步绑定验证内明确公开边界与内部已验证数据的职责，先以RED及源码边界审查证明替代路径，再进行完整链路成本对照。证据`cpu-v2-registry-query-call-edges/summary.json` SHA256 `2cf8b56afbb427321bc52d7d25fee47c8c35f93b1cc2935973854c6a108f39b7`。该离线Query没有SDK服务／模型／Client，也不构造新State或补写History事件。
+
+S2／P3-2仍开放，原其余十二正常／五故障未运行。原360秒验收没有通过；本批诊断及正关闭不关闭阶段，也不授权600秒窗口。
+
 ## CPU v2 关键路径诊断（2026-10-16，实际首项失败，采样无效）
 
 仅修改测试遥测，产品仍为`9ebb6f9`，不新增能力或调整原80／60／180／360及关闭期限。原CPU默认v1保持；显式CPU＋variants开关或原测试目录marker才启用v2，peer在子进程环境过滤前固定选择。固定18个同步目标补入直接`dto._intent`、origin、Runner／journal／protocol校验；只将位置与完整CodeType结构相等的新code对象记为遥测副本，不作为原模块、源码或授权证明。首次START立即配对，外来代码只禁用自己的该事件；不用全局restart，不采集参数／结果／异常内容。

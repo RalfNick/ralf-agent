@@ -1,5 +1,9 @@
 # Implementation status — 0.1.0.dev120
 
+最新定位补充：本次Registry原History离线重放及单次只读Query通过，完整State／publication／命令序列不变；原State已退休的一个root触发Coding60／composition61次验证，其中48＋9次Coding检查来自绑定层的reject_runner_descriptor与validate_runner_tools。下一批仅审查一次同步绑定验证的职责归并，先证明原字段／source／错误拒绝与默认兼容，再测完整收益；不缓存权限或SDK事实，也不把该单退休root的计数外推整个业务窗口。当前没有新产品候选。
+
+2026-10-16 最新checkpoint：修复诊断生命周期后，原360秒首项仍1 failed／392.302秒，424产品／857测试无漂移；前三Tool成功、第四child已启动但Tool未调度。两root均退休、Session start/end ACK完整，第一Turn成功／第二Turn取消，owned关闭与安全清理通过，不能判两Turn业务成功。CPU质量首次完整通过（fault0／incomplete0）：含关闭窗口328.620 CPU秒中，Manifest重建64.167秒、composition验证60.179秒、Coding验证28.097秒为互斥成本，大部分发生在关闭前；未覆盖74.179秒。原History离线重放／只读Query计数通过且State不变，单node仅Coding3／composition3，下一步核查成本较高的Registry调用链，不将inclusive相加或继续盲目微调。S2／P3-2未关闭，其余十二正常／五故障未运行，600秒诊断未授权／执行。见[最新验收记录](../architecture/reviews/2026-10-15-temporal-deployment-sessions.md)。下方514.670秒及其他结果保留各自历史范围。
+
 2026-10-16 最新原图CPU v2诊断已终态：1 failed／514.670秒，零错误／跳过，424产品／857测试无漂移，未改变原360秒业务期限。前三Tool及candidate成功，第四Tool在关闭准入后拒绝、无candidate；effects3 adopted＋1 dispatched，两root仅一条退休，assembly关闭失败而Worker退出，schema依原义务保留。CPU采样fault1／incomplete5，全部排名和残差归因不采纳。诊断空stack累计历史线程的缺陷已RED复现并修复，保留64并发和其他限额、补固定首fault原因；四模块76项通过，独立关闭回调联合检查25项通过，未新增服务采样或修改产品。不从该复现反推旧fault唯一来源，下一步须先取得有效关键路径证据，不再按关闭后拒绝猜测源码漂移或叠加微优化。S2／P3-2保持开放，其余十二正常／五故障未运行，600秒诊断未授权／执行。详见[当前验收记录](../architecture/reviews/2026-10-15-temporal-deployment-sessions.md)。以下成本与离线证据保留各自快照范围。
 
 2026-10-16 当前P3-2仍由原360秒图编排验收阻塞。冷包完整Runtime对照已否定helper-guard优化（18.456→19.931ms／次），未进入产品；批量指纹与复用SCV也因未证明足够收益且增加变更检测责任而不实施。原CPU诊断只覆盖约47%的进程CPU，剩余约195.532秒未归因。原匹配Worker已通过199事件保存History离线重放，并在同一ReplayState上完成一次约10.052ms的SDK只读Query，完整State／publication／命令序列不变，0服务／模型；不作实际服务或完整性能验收，异常cProfile耗时撤回。下一步补原Worker关键路径计数覆盖，不继续盲目微调。原其余十二正常／五故障仍待验，独立600秒诊断仍未授权／执行。见[当前结构审查](../architecture/reviews/2026-10-15-temporal-deployment-sessions.md#v21-验证成本结构审查2026-10-16未形成新产品候选)。
