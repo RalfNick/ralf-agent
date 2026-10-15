@@ -1,5 +1,7 @@
 # 部署 Session 集成与收尾验证
 
+当前后续诊断见[整链成本预算与下一批门槛](2026-10-16-coding-session-critical-path.md)：已完成原History去重墙钟预算、已知载荷来源核对，并停止未达门槛的私有校验原型。没有新增真实服务运行；本记录中的原S2失败结论不变。
+
 ## Activity 根命令定向查询（2026-10-16，实际仍超时）
 
 2026-10-16 P3-2/S2 仍未完成：本批 actual Model／Context 的 Coding4／binding23 根命令定向查询已实现，保留完整 fresh ancestry、原 Registry 握手与实时准入，缺失／不匹配提示回退。新增21项通过，独立审查无P1／P2；全部270个Temporal模块3759 passed／589配置依赖skipped，独立安装14模块291 passed，默认完整canonical及保存History离线兼容通过，425产品／861测试无漂移。一次原图原360秒实际验收仍1 failed／390.282秒：四Tool均ok、效果adopted且物理停止；首Turn成功，第二Turn最终为failed／released，未产生完整业务验收结果。两root退休、两Turn完整正ACK、owned关闭与安全清理通过，不能替代业务成功。不据此宣称性能改善，本批不追加复跑或查询级微调；其余十二正常／五故障及P3-3／4／5／A仍待原定门槛。下一批先基于既有证据形成关键路径和传输预算，再决定成组修复；仅本地提交，不推送。

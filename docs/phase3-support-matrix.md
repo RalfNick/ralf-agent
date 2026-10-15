@@ -1,6 +1,6 @@
 # 第三阶段支持矩阵与收口门槛
 
-2026-10-16 P3-2/S2 仍未完成：本批 actual Model／Context 的 Coding4／binding23 根命令定向查询已实现，保留完整 fresh ancestry、原 Registry 握手与实时准入，缺失／不匹配提示回退。新增21项通过，独立审查无P1／P2；全部270个Temporal模块3759 passed／589配置依赖skipped，独立安装14模块291 passed，默认完整canonical及保存History离线兼容通过，425产品／861测试无漂移。一次原图原360秒实际验收仍1 failed／390.282秒：四Tool均ok、效果adopted且物理停止；首Turn成功，第二Turn最终为failed／released，未产生完整业务验收结果。两root退休、两Turn完整正ACK、owned关闭与安全清理通过，不能替代业务成功。不据此宣称性能改善，本批不追加复跑或查询级微调；其余十二正常／五故障及P3-3／4／5／A仍待原定门槛。下一批先基于既有证据形成关键路径和传输预算，再决定成组修复；仅本地提交，不推送。
+2026-10-16 P3-2/S2 仍未完成：本批 actual Model／Context 的 Coding4／binding23 根命令定向查询已实现，保留完整 fresh ancestry、原 Registry 握手与实时准入，缺失／不匹配提示回退。新增21项通过，独立审查无P1／P2；全部270个Temporal模块3759 passed／589配置依赖skipped，独立安装14模块291 passed，默认完整canonical及保存History离线兼容通过，425产品／861测试无漂移。一次原图原360秒实际验收仍1 failed／390.282秒：四Tool均ok、效果adopted且物理停止；首Turn成功，第二Turn最终为failed／released，未产生完整业务验收结果。两root退休、两Turn完整正ACK、owned关闭与安全清理通过，不能替代业务成功。不据此宣称性能改善，本批不追加复跑或查询级微调；其余十二正常／五故障及P3-3／4／5／A仍待原定门槛。整链预算已完成：首Turn提交至成功Advance186.795秒；完整closure含6份相同约102KB Manifest，不能将载荷大小直接当作超时原因。纯校验归并私有原型的完整Runtime测量中目标发布分支未命中，且未达10%收益门槛，不进入产品或服务复跑。下一批先测完整proof无损传输的整链成本，未证明收益前不加Query协议；见[成本与决策记录](../architecture/reviews/2026-10-16-coding-session-critical-path.md)。仅本地提交，不推送。
 
 以下为各冻结快照的历史证据；以本段及最新验收记录为当前执行依据。
 
