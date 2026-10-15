@@ -62,6 +62,12 @@ S2 已实现并交叉审阅，既往 Agent／sequence 两 Turn 有通过证据�
 
 ## 候选与剩余门槛
 
+后续性能修复仅针对 P3-2 的原期限阻塞。v9 的计时诊断与正常验收分开：首次探针因 Python 的非局部 monitoring event 配置错误在业务前失败，未取得 CPU 证据；修正并完成离线探针检查后，固定图诊断仍失败（396.11秒），不能计为通过。有效的首 owner 至次 owner 前采样窗口为84.722秒，不冒称完整 Activity 边界：目标函数 exclusive CPU 合计28.291秒，其中 Manifest 重建15.893秒、Runner root检查6.158秒；原生九项回应合计0.092879秒。SDK交叠区间66.226秒与CPU重叠，不相加；原函数pins均未变，探针错误为0。
+
+已完成两项最小修复并待冻结实际复验：plain Runner 连续调用同一 root 检查时合并一次，Connected 的不同 override 与 base 保持独立；Session 校验仅在两份 intent 的 canonical digest 相同时共享本次快照，每次仍重算完整 wire hash，不同 canonical 的数值键输入保留原双快照校验。原七项 SDK 事实、逐 await pins、独立 Runtime 检查和期限均保持。定向证据分别为 registration RED 4失败／2通过→6通过、相关218通过；snapshot RED 9失败／7通过→相关137通过、最终16通过；最终两项及相邻边界同次63通过／4.99秒。各次检查不拼为当前全量，不代表实际图场景已通过。
+
+v10 `frozen-candidate121-s2-root-snapshot` 已完成冻结与安装：1735文件／424产品，inventory `6ad18433fd38dd6170f08fc11089a5e838eb35737e45f519aec015578b923451`。源码／wheel／site 字节一致，安装定向30通过／3.86秒，默认完整canonical及原／continued History离线重放通过，Provider0／服务0。实际 graph-sequential 仍为1失败／364.31秒，但失败阶段已改变：两个原Tool分别71.409541秒、76.865328秒正常完成，均返回`ok: true`并采纳原result candidate，没有原80秒Activity超时。首次Turn的approve辅助等待在180秒处超时并发出原取消，第二Tool随后完成；第二Turn未执行，不能算完整图或Session验收。后续关闭也未完成，缺少最终cleanup报告，不声明资源清理或恢复已通过。源码／wheel／site／测试前后无漂移，340个已加载模块来自安装。
+
 v5 `s2-advance` 快照1727文件／424产品文件，inventory SHA256：`d530c203d8d4f7826cc915b2184c1be48937934966bafca380aa1bf17ce6ee53`。v6 `s2-origin-reads` 快照1729文件／424产品文件，inventory SHA256：`b935d23c2abae7a156662f0e5c447b2b8f9751a0bf65e02f37875e1e06eaea74`，首个安装 Agent 通过，矩阵首两项失败。v7 `s2-selector-snapshot` 快照1730文件／424产品文件，inventory SHA256：`ef3fc59506253032671f0660a6fbe761d3a4ad93cf40ca0448afa345e67d7826`；155项相关测试通过，安装后优先复验失败的sequence已通过，原十三项集合及原期限保持。源码、wheel、独立安装424产品文件一致；metadata 仍为未发布 `0.1.0.dev120`。
 
 v8 `frozen-candidate121-s2-preflight-observer` 快照1732文件／424产品文件，inventory SHA256：`ee5f60a4930791029e44c84af770ad0effa87580ac930ec152052726025be093`。该快照的安装失败、定向测试及离线兼容分别记录如上，不与旧快照结果相加；其记录时最小origin合并尚未验证。

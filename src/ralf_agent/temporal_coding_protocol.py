@@ -429,8 +429,10 @@ def registration(runtime):
             raise ValidationError(
                 "Temporal Coding requires the exact shared PostgreSQL journal and concrete Runner"
             )
-        type(runner)._check_root(runner)
-        CodexCodingRunner._check_root(runner)
+        root_check = type(runner)._check_root
+        root_check(runner)
+        if root_check is not CodexCodingRunner._check_root:
+            CodexCodingRunner._check_root(runner)
         runner._journal._ready()
         result[name] = {
             "runner": handler.identity,

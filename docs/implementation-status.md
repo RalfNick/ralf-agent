@@ -14,6 +14,8 @@
 
 v9 受影响Temporal回归为3355 passed／589 skipped／2 failed（245模块，143.94秒）；两项旧内部校验次数断言已修订为实际Query前后边界断言，与新origin测试同次22 passed／3.33秒。产品未因此改动，不拼接为一次完整全绿；S2实际门槛仍未通过。
 
+当前v10收尾增量已修复同一 plain Runner root 检查的连续重复调用，以及 Session 同值快照的重复完整 hash；Connected 独立检查、非同值 canonical 输入、七项 fresh SDK 事实及 Runtime 校验保持。最终定向63项通过，安装定向30项、默认及保存History离线兼容通过；实际图1失败／364.31秒。两个Tool已在原80秒内成功，但首Turn的整图approve辅助等待超过180秒后取消，第二Turn未执行，关闭也未完整确认。继续优化嵌套只读校验，不调大既有期限掩盖开销；S2／P3-2保持开放。证据见[本批记录](../architecture/reviews/2026-10-15-temporal-deployment-sessions.md)。
+
 以下 Dev120 段落描述已提交基线及其当时边界；不覆盖上述 S1／S2 checkpoint 的有限验证结果。
 
 Dev120 已将显式公共 deployment3 接入既定 Temporal Coding Agent／sequence、有界图、Team／Dynamic 与递归组合，和 ordinary2 共用同地址 Registry 容量。原 Run／Parent History 继续拥有审批、native grant、效果与预算；原树闭合和独立 ACK 证明控制退休，unknown、零费用占用与实际 handler 责任保持。子事实通知、紧凑身份／CONTROL 和 fresh-owned publication 减少重复工作；最终完整验证及 SDK 身份门禁保留，稳态只读 read-set 的明确边界见[本批验收](../architecture/reviews/2026-10-15-temporal-deployment-coding.md)，不新增权限缓存或即时 read-auth 撤销能力。

@@ -69,6 +69,9 @@ class SessionControlValidation:
         if self.intent["coordinator_id"] != self.value["coordinator_id"]:
             _reject()
         self._intent_digest = digest(self.intent)
+        self._shared_intent = digest(self.value["intent"]) == self._intent_digest
+        if self._shared_intent:
+            self.value["intent"] = self.intent
         self._resources = runtime, client, client.workflow_service, client.data_converter
         self._claim = tuple(getattr(info, k, None) for k in _ACTIVITY_FIELDS)
         self._ports = [
@@ -89,7 +92,7 @@ class SessionControlValidation:
         self._check()
 
     def _check(self, *, full=True):
-        if type(full) is not bool:
+        if type(full) is not bool or type(self._shared_intent) is not bool:
             _reject()
         runtime, client, service, converter = self._resources
         if (
@@ -100,7 +103,8 @@ class SessionControlValidation:
             or client.workflow_service is not service
             or client.data_converter is not converter
             or digest(self.value) != self._digest
-            or digest(self.intent) != self._intent_digest
+            or (self._shared_intent and self.intent is not self.value.get("intent"))
+            or (not self._shared_intent and digest(self.intent) != self._intent_digest)
             or self._bindings != tuple(_binding(getattr(o, n)) for o, n in self._ports)
             or tuple(getattr(self.info, k, None) for k in _ACTIVITY_FIELDS) != self._claim
         ):
