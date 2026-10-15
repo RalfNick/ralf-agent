@@ -94,6 +94,8 @@ The independent source review established these three required boundaries. The c
 
 ## S2 — existing Coding scope through the same Session origin
 
+v19当前源码候选已完成本轮离线定位及必要最小修复：一次真实原控制链／SDK形状observe调用完整Runtime端口76次，pre-body46次中bootstrap31次；不是把约33秒交接当作一个RPC。仅已全验证、固定child且actual CONTROL Activity的Coding4只读observe使用专用私有类，保留全部SDK和六组Session七事实，full76→37；其自身固定Manifest真实Runtime入／出口、逐await pins、取消清snapshot和拒permission保持。其余入口沿原实现。新增15项与同次132模块回归1956 passed／289 skipped／93.30秒通过；跳过不代服务验收。独立审阅通过，下一步仅冻结、安装／默认保存History兼容与一次原图复验；不把调用次数换算为实际速度结论。
+
 下一批固定工作量为一个原链路定位／必要最小修复批次：先从已保存的SDK时序和离线CPU证据区分45–58秒Tool与约33秒工具交接的成本，找出阻塞原360秒两Turn门槛的显著重复。无依据时不再开启实际重跑；有修复后按影响范围检查，再用同一固定安装版本复验一次原图。单次原图连清理约6–7分钟，修复耗时需定位后确定。不得把首项失败改成可选、不提高期限或扩大实现范围。
 
 最新实际checkpoint为2026-10-16 v18／本地 `85dce98`：安装七模块128 passed／22.33秒，默认完整canonical及原／continued保存History离线重放通过；实际原图仍1失败／390.395秒。首Turn成功发布，第二Turn第三Tool完成、第四child注册与整体360秒取消交错，未成功启动第四Tool。owned关闭成功，accepted2／retired2／retained0，Session清理证据成立，schema安全删除。仍须解决原期限内完整两Turn；其余十二项正常组合及五项故障未运行，S2未关闭。只对原执行／交接的剩余耗时继续定位，不新增功能、通用重构、额外模型或期限；单次结果不证明性能改善。以下v17及更早失败记录不覆盖该checkpoint。

@@ -293,7 +293,8 @@ async def execute(runtime, client, value, info):
     from . import temporal_deployment_execution as execution
     from .temporal_bindings import request_release_digest
     from .temporal_deployment_coding_bridge import control
-    from .temporal_deployment_coding_validation import CodingValidation
+    from .temporal_deployment_coding_validation import CodingValidation, _ObservationValidation
+    from .temporal_parent_state import CONTROL_ACTIVITY
 
     value = detached(value)
     if (
@@ -320,7 +321,31 @@ async def execute(runtime, client, value, info):
         "child_execution_epoch"
     ] not in (None, call.get("deployment_execution_epoch")):
         _reject()
-    validator = CodingValidation(
+    protocol = proof["manifest"]["deployment_admission_protocol"]
+    epoch = call.get("deployment_execution_epoch")
+    describe_readset = (
+        value["mode"] == "observe"
+        and epoch is not None
+        and type(protocol.get("version")) is int
+        and protocol["version"] == 4
+    )
+    pinned_observation = (
+        describe_readset
+        and type(epoch) is str
+        and bool(epoch)
+        and call.get("child_execution")
+        == {
+            "namespace": proof["namespace"],
+            "execution_epoch": epoch,
+            "original_execution_epoch": epoch,
+        }
+    )
+    validator_type = (
+        _ObservationValidation
+        if pinned_observation and getattr(info, "activity_type", None) == CONTROL_ACTIVITY
+        else CodingValidation
+    )
+    validator = validator_type(
         runtime,
         client,
         {
@@ -335,13 +360,6 @@ async def execute(runtime, client, value, info):
             ),
         },
         info,
-    )
-    protocol = proof["manifest"]["deployment_admission_protocol"]
-    describe_readset = (
-        value["mode"] == "observe"
-        and call.get("deployment_execution_epoch") is not None
-        and type(protocol.get("version")) is int
-        and protocol["version"] == 4
     )
     # The preceding full Activity validation permits only this read. Finish the
     # adjacent descriptor read before bootstrap/fresh; control still follows a
@@ -385,18 +403,6 @@ async def execute(runtime, client, value, info):
         "namespace": proof["namespace"],
         "task_queue": info.task_queue,
     }
-    epoch = call.get("deployment_execution_epoch")
-    pinned_observation = (
-        describe_readset
-        and type(epoch) is str
-        and bool(epoch)
-        and call.get("child_execution")
-        == {
-            "namespace": proof["namespace"],
-            "execution_epoch": epoch,
-            "original_execution_epoch": epoch,
-        }
-    )
     if pinned_observation:
         # The complete original Activity proof and Coding read set above cover
         # this read-only collection. Keep composition's own identity checks and

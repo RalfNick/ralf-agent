@@ -1,5 +1,15 @@
 # 部署 Session 集成与收尾验证
 
+## v19 CONTROL 只读冷验证候选（2026-10-16，待安装／实际复验）
+
+v18剩余阻塞的离线定位分开记录：原native22工厂的单个只读方法，在单／双Runner SDK形状fixture分别约69.82／107.83毫秒process CPU，4次Runtime full、2组完整Session七事实、27次SDK事实读取；实际composition23深度1与更大Manifest不同，不能外推实际45–58秒Tool耗时。原完整双Runner Runtime的3次full带cProfile约0.155秒，实际保存Session的intent／command查询各30次CPU均低于0.1秒，也不支持单靠JSON／复制解释整体期限。未据此修改权限、缓存或数据库。
+
+原CONTROL真实验证／proof／SCV链、只替换SDK传输边界的冷observe中，完整Runtime端口76次：原Activity gate8、ctor4、pre-body46（其中bootstrap31）、composition body2、post-parent proof／policy6、出口validator9、最终Runtime1。SDK形状fixture的Runtime端口只作等值检查，不能把其耗时当作真实组件重建CPU。原约33.108秒工具交接含两个observe、register与后续child启动／审批；第三Tool完成后20.373秒含三次observe，分别处于context／model收尾及最终成功状态，不能删除这些合法阶段。
+
+修复仅在原完整Activity证明后、exact Coding4、固定child namespace／first／current epoch及实际 `ralf.temporal.control.v1` 时选择私有 `_ObservationValidation`。复用原bootstrap／fresh所有SDK读取与纯关联，专用入口自身直接完整Runtime固定Manifest入／出口，中间执行原local/source/claim/port/request pins；不使用调用者的假validate作完整出口。base与派生类／方法固定，委托前锚定base class和原checker code，权限与原生readset入口拒绝，任何错误／取消清snapshot／digest。原末轮parent proof、child describe、Activity／namespace／Runtime保持；缺type／非CONTROL、未pin、其他mode及旧3沿原类。该边界不宣称所有cold bootstrap仍逐await重建Runtime，也没有通用skip开关、mode token或permission缓存。
+
+有效主RED的全部SDK Counter和返回结果已先通过，仅full76不小于76失败；修复后full37，所有原SDK Counter、六组Session事实和原pack结果相同。15项新增检查涵盖Runtime出口、source／base class／checker替换、Activity／client漂移、取消清snapshot、unexpected Update、普通public validate／permission完整检查、未pin与非CONTROL回退。独立源码审阅通过。同次132模块回归1956 passed／289 skipped／93.30秒（-Werror），1271产品／测试文件前后相同，Ruff／格式／空白检查通过。安装与原图实际复验尚未完成，S2／P3-2保持开放；下方v18保留最新已结束的实际证据。
+
 ## v18 收尾候选（2026-10-16，实际首项仍超时／关闭通过）
 
 两项修复针对P3-2原图期限与owned close阻塞。三子树读取使用真实Session／Parent／Run State、原admission／closure／seal与原SDK形状：原v17完整树有13组Session七事实，新封闭读取为1组，所有Run／Registry／Start读取Counter和返回证书逐项相同；独立raw verifier不可被outer validate替代。19项覆盖成员intent／origin、终末Start／epoch、源码／类替换、缺seal／pin、取消及普通4双轮保持。通用proof和sealing未引入skip，原生每请求fresh保持。

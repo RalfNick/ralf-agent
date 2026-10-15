@@ -152,6 +152,24 @@ class CodingValidation:
 
             self._ports += [(verification, "validate_session_origin"), (self, "_session_origin")]
             self._ports += [
+                (globals(), "CodingValidation"),
+                (globals(), "_ObservationValidation"),
+                *[
+                    (CodingValidation, name)
+                    for name in ("_check", "_bootstrap", "_fresh", "validate")
+                ],
+                *[
+                    (_ObservationValidation, name)
+                    for name in (
+                        "__init__",
+                        "_check",
+                        "validate",
+                        "permission",
+                        "_validate_readset",
+                    )
+                ],
+            ]
+            self._ports += [
                 (verification, "_read_session_tree"),
                 (verification, "_SessionTreeReading"),
                 *[
@@ -750,3 +768,66 @@ class CodingValidation:
             _reject()
         check(full=True)
         return value
+
+
+class _ObservationValidation(CodingValidation):
+    """Closed CONTROL read set; never a native admission or permission port.
+
+    The transport selects this only after full original Activity verification and
+    an exactly pinned child. All original bootstrap/fresh SDK reads remain; only
+    repeated component reconstruction moves to this entry's own complete exits.
+    """
+
+    def __init__(self, runtime, client, request, info):
+        from .temporal_parent_state import CONTROL_ACTIVITY
+
+        manifest = request.get("runtime_manifest", {})
+        protocol = manifest.get("deployment_admission_protocol", {})
+        if (
+            type(self) is not _ObservationValidation
+            or type(protocol) is not dict
+            or type(protocol.get("version")) is not int
+            or protocol["version"] != 4
+            or manifest.get("binding_protocol") not in (22, 23)
+            or "coding_execution_protocol" not in manifest
+            or "coding_request" in request
+            or getattr(info, "activity_type", None) != CONTROL_ACTIVITY
+        ):
+            _reject()
+        self._observation_base = CodingValidation
+        self._observation_check = CodingValidation._check
+        self._observation_check_binding = _binding(self._observation_check)
+        runtime.validate_release(manifest)
+        CodingValidation.__init__(self, runtime, client, request, info)
+
+    def _check(self, *, full):
+        if type(full) is not bool:
+            _reject()
+        if (
+            CodingValidation is not self._observation_base
+            or self._observation_base._check is not self._observation_check
+            or _binding(self._observation_check) != self._observation_check_binding
+        ):
+            raise DefinitionMismatch("Original observation validation implementation changed")
+        self._observation_check(self, full=False)
+
+    async def validate(self):
+        try:
+            self._check(full=False)
+            self._runtime.validate_release(self._manifest)
+            await CodingValidation.validate(self)
+            self._check(full=False)
+            self._runtime.validate_release(self._manifest)
+            self._check(full=False)
+        except BaseException:
+            # A failed/cancelled collection cannot become another call's usable
+            # bootstrap, even if its final SDK read had already completed.
+            self._snapshot = self._snapshot_digest = None
+            raise
+        return None
+
+    async def permission(self):
+        _reject()
+
+    async def _validate_readset(self):
+        _reject()
