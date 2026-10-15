@@ -1,5 +1,7 @@
 # 第三阶段支持矩阵与收口门槛
 
+2026-10-16 成本结构审查：没有足够收益或等价证据的新候选，不修改产品、不重复运行v21。已否决纯copy改动及跳过queued/running观察；交接含原必要阶段，沙箱纯函数对照不代替完整Query测量。原360首项失败及十二正常／五故障待验状态不变。一次独立较长窗口诊断正在向用户澄清，未授权／执行，不能替代原门槛或标记阶段完成；R01–R26与固定阶段范围不变。证据见[审查记录](../architecture/reviews/2026-10-15-temporal-deployment-sessions.md)。
+
 2026-10-16 v21／`e6726c5`正常首项1 failed／455.001秒，零错误／跳过，424产品／854测试前后同。整体360秒取消第二轮，前三Tool成功且candidate已接受，第四实际开始后21.029423秒definition_mismatch／无candidate；首seal至正Advance Completed ACK19.594258秒。accepted2／retired1／retained1，effects3 adopted＋1 dispatched，Worker退出但assembly关闭失败，schema依原未退休root／Session证据及未采纳写门槛保留。其余十二项正常组合和五项故障未运行，S2／P3-2及第三阶段未关闭。下一批审查原工具及交接的完整验证成本；不依夹具计数追加微调、同产品复跑或提高期限。证据见[验收记录](../architecture/reviews/2026-10-15-temporal-deployment-sessions.md)。
 
 2026-10-16 v21窄候选已实现：Coding4 observer后代只读集合保留原全部非Session SDK事实及独立末七事实，将三后代对照的重复Session组15→1；最终23模块368 passed／58.66秒、零失败／错误／跳过，1278产品／测试前后同，独立审查无P1／P2。独立安装四模块73 passed／20.65秒、默认完整canonical及保存History离线兼容通过，424产品／854测试无漂移，Provider0／服务0。随后实际首项失败，见上方；首项图、其余十二项和五项故障不据此关闭，S2／P3-2及第三阶段仍开放。范围与证据见[验收记录](../architecture/reviews/2026-10-15-temporal-deployment-sessions.md)。

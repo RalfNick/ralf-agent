@@ -1,5 +1,16 @@
 # 部署 Session 集成与收尾验证
 
+## v21 验证成本结构审查（2026-10-16，未形成新产品候选）
+
+复用已结束的正常原图History和独立安装，未重复实际场景、未改产品或测试期限。此次不是v22候选，`e6726c5`仍是产品基线，S2／P3-2及第三阶段继续开放。
+
+- **完整Runtime构造。** 每次双Runner验证调用check_runner_binding4次、runner_registration2次、implementation_identity4次、inspect.getsource28次、handler.check14次、runner.identity18次、executable_digest1009次。这些包含真实getter、方法和源码复核，不能把累计时间全部算作可删除工作。唯一私有候选只省ToolRegistry.manifests末次外层copy，保留全部现场读取；完整Runtime ABBA为18.8391→19.7560ms／次，120份Manifest canonical及全部采样调用Counter相同。没有显示收益，且未知自定义deepcopy仍需fallback等价证明，因此未实施。纯测CPU3.3064秒，0服务／模型／native；临时方法已恢复，产品无变化。证据 `runtime-copy-review-v21/result.json`。
+- **原交接工作。** 两窗口31.565852／43.275841秒，按互不重叠边界分为旧Tool结束→父正physical-stop采纳10.560971／16.740411秒、该采纳→下一register完成6.636540／7.148317秒、register完成→新Tool开始14.368341／19.387113秒。第二轮还含两次原CONTEXT Activity，分别5.229330／4.132518秒；不是可直接跳过的空闲。窗口TimerStarted均0，Signal ACK最大37.697ms，WorkflowTask排队最大17.398ms。Parent observe与子Activity存在重叠，不能全部累加成可回收串行时间；跳过旧queued/running观察可能丢失唯一waiting_approval唤醒，未采纳。证据 `v21-handoff-review/summary.json` SHA256 `f9264be68b2bd119f6c7774fdbd8d16031e9aab66624164b81babf4df243af1f`。
+- **沙箱纯函数覆盖。** 对本次真实原child的完整proof／Start／父physical-stop输入，在原SDK Importer与原restrictions中执行node_identity_digest，未改passthrough或任何验证器。host暖调用4.388–4.936ms，Sandbox暖调用4.915–5.481ms，完整输出相同、cache guards均正常；纯测CPU50.428ms。未观察到该纯函数的数量级放大；这不覆盖完整node(State)、Registry Query、activation或传输，不能拿5ms解释SDK调用总耗时。证据 `v21-node-sandbox-offline/result.json` SHA256 `dc374b0574ab257f64000c8130c94d3fd598e9dba89dffc4594f9f57cdc61db2`。另一个完整Registry fixture的host测量为7.283–8.871ms；其Sandbox setup在原CREATE别名校验处被拒，未运行Sandbox Query，未据此得出比值或绕过校验。
+- **准入入口边界。** validate_activity的默认ancestry可能发child-pin Update，不能直接称为只读。仅完整admitted且原父边epoch已固定的子集可另行论证封闭读取，bind／pin／call-start更新必须保持在外；本图常见深度1入口只预计减少一组，root CONTROL无此收益。没有完整链路收益证据，本轮不增加该collector，也不引入raw-pins第二验证器。
+
+为区分“整体测试取消导致第四Tool／close失败”和独立功能缺陷，已向用户询问是否允许一次独立较长窗口诊断，**尚未获得答复，未执行**。已准备可审查的私有dry-run：同一冻结产品及原854测试不改，额外独立测试文件的AST仅将场景看门狗360→600；Tool80／Runner60／approve180及关闭规则保持，单跑原graph-sequential-sdk，显式标记diagnostic-only，不能打开其余矩阵或关闭原360门槛。默认不执行，不读取服务配置；仅明确授权后才允许`--execute`。用户若要求保持所有场景360，则放弃该诊断，继续按原门槛开发；不把未答复当作授权。
+
 ## v21 正常原图首项（2026-10-16，`e6726c5`，未通过）
 
 复验原冻结 `frozen-candidate121-s2-descendants-v21-final`／独立安装包，未开启CPU、SDK计时或RAISE。唯一首项为1 failed／455.001秒（testcase454.553秒），零错误／跳过；424产品、wheel及854测试在运行前后无漂移。初始body为CancelledError，原栈为scenario:76→approve:386→sleep:665，原整体wait_for360到期；第二root开始至其后cleanup cancel仅132.230586秒，第二轮approve180尚未到期。其余十二项正常组合及五项故障未运行，S2／P3-2与第三阶段继续开放。
