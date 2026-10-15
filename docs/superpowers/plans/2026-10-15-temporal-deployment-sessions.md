@@ -94,8 +94,11 @@ The independent source review established these three required boundaries. The c
 
 ## S2 — existing Coding scope through the same Session origin
 
-最新checkpoint为本地 `09b9595`／v15，metadata保持dev120。独立安装两模块32项、默认及保存History离线兼容通过；实际graph-sequential仍1失败／278.43秒，180秒等待超时、第二Turn未运行，其余十二项正常组合及五项故障未运行。原root最终成功并正退休，owned关闭成功、Worker退出；Update及Activity均接受2447868字节语义结果的有界无损编码。清理器读取编码结果出现KeyError，schema保留；不能以退休成功代替完整Turn通过。下面候选开发段落按其当时状态阅读，不覆盖此checkpoint。
-当前源码收尾仅针对重复完整校验及清理器解码。warm Coding callback的相同完整Manifest绑定，将内层重复Runtime检查交回既有独立外层边界，全部七项Session事实及逐await pins保留；cold／public／permission／普通4与旧3保持完整校验。十模块同次179 passed／8.08秒；清理器按原State完整验证后解码，再沿原History规则重建，相关两模块36 passed／10.63秒。两次结果不相加，尚无本批安装／实际复验。只读observer transport已按既有组出口聚合：SDK每await前后完整本地检查，组／最终出口七事实保持；ordinary／默认路径不变。最终受影响回归同次860 passed／193 skipped／53.01秒，跳过不作实际服务验收；独立审查无阻塞。不放宽逐原生请求fresh、原期限、效果、停止或ACK。下一步冻结本批后只跑原图首门槛；通过后继续原剩余十二项和五项故障，不增加新能力。
+最新checkpoint为本地 `c483088`／v16，metadata保持dev120。最终受影响回归860 passed／193 skipped／53.01秒，独立安装四模块79 passed／9.40秒，默认及保存History离线兼容通过。实际graph-sequential仍1失败／386.44秒：第一Turn成功发布，第二Turn执行中触发原360秒整体期限，第四Tool未运行；不是内部180秒审批超时。owned关闭、两root正退休、全部原ACK及实际证据清理通过，schema已由原runner安全删除。其余十二项正常组合及五项故障未运行。下面候选开发段落按其当时状态阅读，不覆盖此checkpoint。
+
+本批重复完整校验及清理器解码已经本地提交／安装／实际复验。warm callback将相同完整Manifest的重复Runtime检查交回原独立外层，cold／public／permission／普通4与旧3保持full；只读observer的SDK每await前后完整本地检查、组及最终出口七事实保持。193项配置依赖跳过不作服务验收。下一批仅定位交接／观察累计耗时：第一root start→seal199.465570秒，两Tool交接35.248867秒；第二Turn首Tool成功后多次observe才进入下一child注册，360整体取消先到。保留原80／60／180／360期限、逐原生请求fresh、效果／预算／停止／ACK与原十三项及五项故障；不新增功能或另起适配专项。
+
+下一批预计工作量为一轮定向定位、必要的最小修复、受影响回归及一次冻结安装图复验；该服务单项本轮约6分钟，总修复时长在定位前不作确定承诺。正常首门槛通过后，才运行相同候选的其余十二项及五项故障，不用不同候选拼接完成状态。
 
 2026-10-15 本次有限收尾：先修复v13恢复路径的2MiB载荷拒绝，完成Coding4有界无损编码及State／Workflow两端接线，保留原semantic digest、Update ID、ACK、8MiB语义限制和逐请求fresh。相关八模块同次191项通过，含两处wire、冷恢复、Scope拒绝和sandbox激活；仅为源码证据，安装／真实服务复验待做。180秒主流程超时独立未解，其余十二项正常组合和五项故障未运行。该次未启动新的服务矩阵；后续v14复验结果以上方checkpoint为准，S2仍开放。
 
