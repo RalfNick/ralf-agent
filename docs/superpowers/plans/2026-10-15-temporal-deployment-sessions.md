@@ -94,7 +94,9 @@ The independent source review established these three required boundaries. The c
 
 ## S2 — existing Coding scope through the same Session origin
 
-v21窄批次已实现并完成最终23模块368 passed／58.66秒（-Werror），零失败／错误／跳过；1278产品／测试前后同，独立审查及格式检查通过。仅将正证书／退休后的后代集合复用既有独立reader：原结果与非Session Counter相同，三后代Session组15→1，独立raw七事实与完整出口保持。独立安装四模块73 passed／20.65秒、默认完整canonical及保存History离线兼容通过，424产品／854测试无漂移，Provider0／服务0；没有v21实际服务结果。下一步只复验固定原图首项，通过后再展开原其余十二项及五故障；不改原期限，不增加功能或再次运行相同v20诊断，S2／P3-2继续开放。
+v21正常原图首项已终态1 failed／455.001秒，零错误／跳过；424产品／854测试运行前后同。原整体360秒取消第二轮，第二approve180未到期；前三Tool成功且candidate已接受，第四实际开始后21.029423秒definition_mismatch、无candidate。首seal→正Advance Completed ACK19.594258秒；两root一条退休，3 adopted＋1 dispatched，原close未成功、schema保留，不能以Worker退出替代。其余十二项正常组合及五故障不解锁，S2／P3-2继续开放。本轮只登记实际结果，不再相同产品复跑或追加尾部小修补。下一批复用函数级CPU证据审查工具阶段与交接的完整验证成本；候选须先证明原字段／身份／source／错误检测契约及完整链路收益，不引入第二验证权威、跨请求缓存或期限放宽。预计一个有界结构审查／必要源码检查批次，只有新候选证据充分后才运行约8分钟的原首项；当前不足以估计整阶段结束时间。
+
+v21窄批次已实现并完成最终23模块368 passed／58.66秒（-Werror），零失败／错误／跳过；1278产品／测试前后同，独立审查及格式检查通过。仅将正证书／退休后的后代集合复用既有独立reader：原结果与非Session Counter相同，三后代Session组15→1，独立raw七事实与完整出口保持。独立安装四模块73 passed／20.65秒、默认完整canonical及保存History离线兼容通过，424产品／854测试无漂移，Provider0／服务0。随后实际首项失败，见上方；只有固定原图通过后再展开原其余十二项及五故障，不改原期限、不增加功能，S2／P3-2继续开放。
 
 当前定位checkpoint：v20 CPU-only实际1 failed／453.198秒，零错误／跳过；原整体360秒取消第二Turn。前三Tool成功且有candidate（48.107700／42.299957／44.522015秒），第四Tool20.742248秒为definition_mismatch、无candidate；首seal至正Advance Completed ACK21.705067秒。accepted2／retired1／held1，首次CloseIncomplete、最终RPCError；原root／Session关闭证据与unadopted write未清，schema保留。正常428.761秒与SDK／RAISE314.926秒仍分记，不比较为优化收益；其余十二项正常组合和五项故障未运行，S2／P3-2开放。
 

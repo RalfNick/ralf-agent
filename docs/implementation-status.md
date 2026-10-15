@@ -1,6 +1,8 @@
 # Implementation status — 0.1.0.dev120
 
-2026-10-16 v21窄候选：仅Coding4 Session observer的后代只读集合合并重复Session验证，原Run／Registry／Start／祖先及逐后代session_proof读取不减；新独立raw七事实与Runtime出口后才返回。三后代真实对照结果及全部非Session Counter相同，Session组15→1；最终23模块368 passed／58.66秒，零失败／错误／跳过，1278产品／测试前后无漂移。独立审查及格式检查通过；独立安装四模块73 passed／20.65秒，默认完整canonical及保存History离线兼容通过，424产品／854测试核对无漂移，Provider0／服务0。无v21实际服务验收结果，S2／P3-2仍开放，不从夹具次数推导实际提速。详见[验收记录](../architecture/reviews/2026-10-15-temporal-deployment-sessions.md)。
+2026-10-16 v21／`e6726c5`正常首项已结束：1 failed／455.001秒，零错误／跳过；424产品及854测试前后无漂移。整体360秒取消第二轮，第二approve180尚未到期。前三Tool成功且candidate已接受，第四实际开始、21.029423秒后为definition_mismatch且无candidate；首seal→正Advance Completed ACK19.594258秒。两root仅一条退休，effects3 adopted＋1 dispatched，assembly关闭未成功，schema按原未退休／Session证据／未采纳写门槛保留；Worker退出不替代关闭。其余十二项正常组合及五项故障未运行，S2／P3-2仍开放。停止同版本重复运行及尾部小修补，下一批复用既有CPU证据审查工具阶段和交接的完整验证成本，不扩大范围或放宽期限。详见[验收记录](../architecture/reviews/2026-10-15-temporal-deployment-sessions.md)。
+
+2026-10-16 v21窄候选：仅Coding4 Session observer的后代只读集合合并重复Session验证，原Run／Registry／Start／祖先及逐后代session_proof读取不减；新独立raw七事实与Runtime出口后才返回。三后代真实对照结果及全部非Session Counter相同，Session组15→1；最终23模块368 passed／58.66秒，零失败／错误／跳过，1278产品／测试前后无漂移。独立审查及格式检查通过；独立安装四模块73 passed／20.65秒，默认完整canonical及保存History离线兼容通过，424产品／854测试核对无漂移，Provider0／服务0。随后实际首项未通过，见上方；S2／P3-2仍开放，不从夹具次数推导实际提速。详见[验收记录](../architecture/reviews/2026-10-15-temporal-deployment-sessions.md)。
 
 2026-10-16 CPU-only诊断已结束（产品仍为v20／`49d26d8`）：1 failed／453.198秒，零错误／跳过；原整体360秒取消第二Turn。前三Tool成功并有candidate（48.107700／42.299957／44.522015秒），第四Tool20.742248秒为definition_mismatch、无candidate。第一seal至正Advance Completed ACK为21.705067秒；两root仅一条退休、held1，首次close为CloseIncomplete，最终RPCError，schema因未退休root、未确认Session关闭／证据及unadopted write保留。其余十二项正常组合和五项故障未运行，S2／P3-2仍开放。此前正常428.761秒与SDK／RAISE诊断314.926秒保留各自范围，不作跨样本性能比较。
 

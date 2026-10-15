@@ -1,12 +1,24 @@
 # 部署 Session 集成与收尾验证
 
+## v21 正常原图首项（2026-10-16，`e6726c5`，未通过）
+
+复验原冻结 `frozen-candidate121-s2-descendants-v21-final`／独立安装包，未开启CPU、SDK计时或RAISE。唯一首项为1 failed／455.001秒（testcase454.553秒），零错误／跳过；424产品、wheel及854测试在运行前后无漂移。初始body为CancelledError，原栈为scenario:76→approve:386→sleep:665，原整体wait_for360到期；第二root开始至其后cleanup cancel仅132.230586秒，第二轮approve180尚未到期。其余十二项正常组合及五项故障未运行，S2／P3-2与第三阶段继续开放。
+
+前三个Tool均成功且原result_candidate已接受，实际Activity分别47.483732／42.913477／45.864810秒。第四Tool确已调度和开始，21.029423秒后返回definition_mismatch，无candidate；不能沿用旧样本“第四Tool未启动”的结论。三笔native写与结果采纳分记。首root为succeeded seal，seal至正Session Advance Completed ACK为19.594258秒；两轮各首Tool完成至下一Tool开始间隔31.565852／43.275841秒。它们是本样本时序，不证明夹具15→1对应实际RPC数，也不与不同运行推断稳定性能收益。
+
+原effects为3 adopted＋1 dispatched，accepted roots2／retired1／retained1。首次close为CloseIncomplete／close_incomplete，最终cleanup为RPCError；Worker进程已退出而assembly_close_succeeded为false，schema保留。删除门槛明确为root_retirement_unconfirmed、scoped_session_close_unconfirmed、session_evidence_invalid（EvidenceMismatch）、unadopted_write，不能以进程退出或首轮ACK清除第二root义务。未认定额外关闭缺陷，也未强制退休或删除数据。
+
+私有脱敏事实 `v21-final-terminal-evidence/terminal-evidence.json` SHA256 `f96d232685b305cce7889fe91d632505f3e902918c715a022d74f045b9bcdae2`，保留输入History摘要。新增helper的源码绑定还经独立复核：原SCV与factory registration固定完整source_bindings，不能由新reader重新baseline洗掉原绑定；CodingValidation不调用该后代helper，显式ports列表不对称未形成绕过，本轮不据此补代码或复跑。
+
+本轮不再重跑同产品或叠加尾部小优化。后代读取归并尚不足以关闭门槛；下一批复用已有CPU证据，审查原工具阶段及跨步骤交接的完整验证成本，先证明候选保留原契约且对完整链路有实质收益，再复验固定首项。不新增功能、第二验证权威、跨请求事实缓存或权限缓存，不提高80／60／180／360及关闭期限。
+
 ## v21 后代只读集合候选（2026-10-16，实际验收待定）
 
 仅在 Coding4／binding22或23 的 Session observer 已确认原证书及 Registry 正退休后，将后半后代读取纳入新的独立封闭集合。复用既有 reader 的 node／ancestry 关联，保留 LIFO、未启动过滤、固定 epoch、重复／4096 上限、每条祖先边第二次父读以及原逐后代 `session_proof` Query。中间结果不可采纳，独立 raw SDK Session 七事实、完整身份及 Runtime／source 出口通过后才返回 detached 列表。外层业务身份、Registry epoch、末 Session 验证与 State／end ACK 不变；ordinary／旧3、所有 native 请求沿原路径。
 
 主 RED 在旧循环先证明完整结果及全部非 Session SDK Counter 等值，再由重复 Session history15而非1失败；候选减少为1组，不能据此推导实际 RPC 或墙钟收益。新增14项覆盖祖先第二次父读、错误 epoch／重复／原 root、完整 Registry intent／origin、末 reset／namespace、fake outer、方法 source 替换、异常／取消排空与新调用重读、ordinary 拒绝。最终23模块同次368 passed／58.66秒（-Werror），零失败／错误／跳过；1278个产品／测试文件前后相同。独立只读审查无 P1／P2 阻塞，Ruff／格式／空白检查通过。
 
-最终源码快照 `frozen-candidate121-s2-descendants-v21-final` 含1753公共／424产品／854测试，inventory SHA256 `c198e945efc47d30e07c2e508ce96debaa4a9635ae285d146093f86468cd4c44`；本验收登记在冻结后同步。独立安装四模块73 passed／20.65秒，零失败／错误／跳过；424产品在source／sdist／wheel／安装间一致，854测试副本及安装前后无漂移，所有导入来自独立安装。默认完整Profile／Manifest／编排canonical等值，原及continued保存History离线重放通过，Provider0／服务0，不代表live continuation。wheel SHA256 `2baceefd8305ce66d17cac0b2935592392bc6009705653d60d3328465a93c4c4`。尚无v21实际服务结果；本批不重跑相同v20诊断，也不放宽期限。首项原图、其余十二项正常组合及五项故障门槛仍未通过／未运行，S2／P3-2继续开放。
+最终源码快照 `frozen-candidate121-s2-descendants-v21-final` 含1753公共／424产品／854测试，inventory SHA256 `c198e945efc47d30e07c2e508ce96debaa4a9635ae285d146093f86468cd4c44`；本验收登记在冻结后同步。独立安装四模块73 passed／20.65秒，零失败／错误／跳过；424产品在source／sdist／wheel／安装间一致，854测试副本及安装前后无漂移，所有导入来自独立安装。默认完整Profile／Manifest／编排canonical等值，原及continued保存History离线重放通过，Provider0／服务0，不代表live continuation。wheel SHA256 `2baceefd8305ce66d17cac0b2935592392bc6009705653d60d3328465a93c4c4`。随后v21正常首项455.001秒失败，见上方；本批未重跑相同v20诊断或放宽期限。首项原图、其余十二项正常组合及五项故障门槛仍未通过／未运行，S2／P3-2继续开放。
 
 ## v20 CPU-only实际诊断（2026-10-16，未通过）
 
