@@ -1,6 +1,10 @@
 # Implementation status — 0.1.0.dev120
 
-2026-10-16 收尾候选v18（metadata不变）：已实现Coding4 Session封闭整树读取与同次关闭末轮纯physical-pending消解，未增加功能范围或放宽原期限。同一工作区131个受影响模块1941 passed／289 skipped／88.74秒（-Werror），1270个产品／测试文件前后不变；跳过不作服务验收。三子树主RED在原v17上为13组重复Session事实；新路径保留每项Run／Registry／Start读取和相同证书，仅在独立raw SDK七事实及完整出口后返回，19项定向检查通过。关闭主RED在合法原夹具上确认，18项新增检查覆盖同次晚到停止、真实资源回执、硬错误／缺ACK／unknown／原资源和子节点消失，以及旧3行为保持。独立源码和夹具审查无阻塞；当前实际checkpoint仍为以下v17，安装与真实服务复验待做，S2／P3-2保持开放。
+当前验收checkpoint（2026-10-16，v18／本地 `85dce98`，metadata仍dev120）：Coding4 Session封闭整树读取与同次关闭末轮纯physical-pending消解已实现并经独立审阅。131个受影响模块1941 passed／289 skipped／88.74秒（-Werror），1270产品／测试文件前后相同；安装七模块128 passed／22.33秒、零失败／错误／跳过，424产品及846测试副本前后相同、所有导入来自安装。默认完整canonical与原／continued保存History离线重放通过，Provider0／服务0，不代表live continuation；跳过不作实际服务验收。
+
+v18原图首门槛仍1失败／390.395秒、零错误／跳过。第一Turn成功发布，首root start→seal203.202694秒、seal→Session end记录接受21.812938秒。三个Tool均成功并保存候选，耗时45.936381／49.222193／57.774631秒；第四child注册与原360秒取消交错，未成功启动、无第四Tool。owned关闭本轮成功，两root正退休、Session与原树／资源证据通过，schema按原规则安全删除；不能据此宣称内部typed-pending分支实际命中。仍未满足整体期限，其余十二项正常组合及五项故障未运行，S2／P3-2与第三阶段保持开放。下方v17及更早记录保留各自历史范围。
+
+三子树主RED在原v17上为13组重复Session事实；新路径保留每项Run／Registry／Start读取和相同证书，以独立raw SDK七事实及完整出口验证，19项定向检查通过。关闭合法原夹具RED与18项新增检查覆盖晚到停止、资源producer、硬错误／缺ACK／unknown／原资源和子节点消失、旧3保持。实际History不包含Query返回或私有分支遥测，不能把夹具13→1当作实际RPC量或速度改善。下一步仅定位现有执行／交接的剩余耗时，不扩功能、不缓存权限、不提高原80／60／180／360期限。逐快照证据见[验收记录](../architecture/reviews/2026-10-15-temporal-deployment-sessions.md)。
 
 当前验收 checkpoint（2026-10-15，v17／本地 `a4cfc38`）：S1 普通 Session 已验收；P3-2 的 S2 Coding Session 仍开放，P3-3／4／5／A 尚未关闭。最终受影响回归959 passed／193 skipped／55.06秒（-Werror），跳过不作实际服务验收。独立安装五模块91 passed／11.39秒、零失败／错误／跳过，424产品及844测试副本前后相同；默认完整canonical及原／continued保存History离线重放通过，Provider0／服务0，不代表live continuation。
 

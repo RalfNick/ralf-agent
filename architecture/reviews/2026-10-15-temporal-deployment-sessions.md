@@ -1,12 +1,22 @@
 # 部署 Session 集成与收尾验证
 
-## v18 收尾候选（2026-10-16，待安装／实际复验）
+## v18 收尾候选（2026-10-16，实际首项仍超时／关闭通过）
 
 两项修复针对P3-2原图期限与owned close阻塞。三子树读取使用真实Session／Parent／Run State、原admission／closure／seal与原SDK形状：原v17完整树有13组Session七事实，新封闭读取为1组，所有Run／Registry／Start读取Counter和返回证书逐项相同；独立raw verifier不可被outer validate替代。19项覆盖成员intent／origin、终末Start／epoch、源码／类替换、缺seal／pin、取消及普通4双轮保持。通用proof和sealing未引入skip，原生每请求fresh保持。
 
 关闭主用例对合法原夹具／HEAD源码复验RED，早期pure physical pending即使在同次末扫后root／child均正停止仍失败。修复仅在exact Coding4／binding23延后这类本模块标记，保留全部hard错误；原最终resource／ancestor adoption后只读fresh整树与原资源正验证，缺child／resource、变epoch、unknown／未停／缺ACK仍拒绝。18项新检查通过，新增只读helper纳入原Worker指纹；不新增cancel／drive／Update、attempt或期限。该RED不证明v17实际CloseIncomplete的唯一来源。
 
-独立实现与夹具审阅无阻塞。同一候选131个受影响模块1941 passed／289 skipped／88.74秒（-Werror），1270个产品／测试文件前后相同；跳过不作实际服务验收。Ruff、格式与空白检查通过。安装与原图实际复验尚未执行，S2、P3-2与第三阶段仍开放；以下v17保留为最新实际checkpoint。
+独立实现与夹具审阅无阻塞。同一候选131个受影响模块1941 passed／289 skipped／88.74秒（-Werror），1270个产品／测试文件前后相同；跳过不作实际服务验收。Ruff、格式与空白检查通过。源码本地提交 `85dce98`；冻结1745个公共文件，inventory SHA256为 `b7e190ff8b89c80ece6f74cdd11701c2c302c7c246952ebb36ba583f697eafbe`。424产品文件在源码／wheel／安装中相同，846测试副本前后相同；安装七模块128 passed／22.33秒、零失败／错误／跳过，所有导入来自安装目录。wheel SHA256为 `b9664d07a1b0596af5b75b4ebb2b7ff3d9a6fc15178843d3110fc61651232a1f`，metadata仍dev120。
+
+默认完整Profile／identity／Manifest／orchestration canonical仍为 `9df90a99df2c298ab2b2bf8aad0b7d907d2670e2c5247055c81cfe1afa475fbd`，原／continued保存History离线重放通过，Provider0／服务0，不代live continuation。
+
+实际 `installed-s2-closed-tree-v18-sdk` 首门槛1失败／390.395秒、零错误／跳过，424产品／846测试冻结副本前后相同、所有导入来自安装。primary／initial均为scenario76→approve370→sleep665的CancelledError，发生于原360秒整体取消，不是approve内部180秒超时。首root于16:05:03.871527Z开始、16:08:27.074221Z成功seal，耗时203.202694秒；第一／第二Tool分别45.936381／49.222193秒，均有原stop、result_candidate及成功结果，交接33.108373秒。携带正Advance的call_end Update于16:08:48.887159Z接受，seal→end接受21.812938秒，正ACK、原Activity及WFT消费随后完成。
+
+第二root于16:09:04.113051Z开始，第三Tool16:09:37.711754Z→16:10:35.486385Z，57.774631秒成功；原stop与候选均在完成前记录。原root直到16:10:55.859508Z观察到该child成功；第四child的register16:10:55.940365Z→16:11:00.105125Z与整体取消交错并返回definition_mismatch，没有第四child Started或Tool调度。第二root16:10:58.966034Z记录cancel，16:11:03.073819Z以cancelled seal。最终三笔native业务提交不代替完整两Turn成功。与v17单次样本相比首root慢11.217768秒、seal→end接受短2.409474秒；不作因果、RPC数或稳定性能结论，SDK History未记录Query返回及reader私有分支命中。
+
+本轮owned关闭成功：`assembly_close_succeeded:true`、`close_error:null`、`workers_exited:true`，原accepted2／retired2／retained0，Session关闭与原树／资源清理证据成立，deletion_allowed:true、reasons空、evidence_errors空，schema_retained:false。该实际证据关闭本轮cleanup错误，不能证明typed-pending内部条件实际命中或旧v17资源已获删除授权。旧快照恢复资源继续保留。原80／60／180／360期限、native逐请求fresh和全部停止／ACK门槛保持；其余十二项正常组合及五项故障未运行。S2、P3-2与第三阶段仍开放，下一步仅定位原执行／交接的累计耗时。验收后文档单独同步，不冒称与冻结1745个公共文件逐字相同。
+
+Session retention History离线逐command／begin_call／end_call／recover_deployment_result重建及原ACK逐项匹配：两Turn各6 start／6 end，最终busy:false、active_run:null、pending_calls0、unpublished_turns0，两entry均published。首Turn发布succeeded，第二Turn发布cancelled，不能当作两次业务成功。e204／e389为携带正Advance的call_end UpdateAccepted，e205 16:08:48.887177Z／e390 16:11:14.963162Z才是原UpdateCompleted正ACK（recorded:true／body_stopped:true）；seal→完整ACK为21.812956秒。两root原closure ready:true／reasons空，call ledger分别20／10项，未停及缺end／fence均0；保存资源3项均pending_stop:false、stopped／fenced／transport_closed／retired:true，3 effects已adopted。此分析只读本轮保存证据，未新增服务请求或对旧资源执行删除。
 
 日期：2026-10-15。按 [P3-2 固定计划](../../docs/superpowers/plans/2026-10-15-temporal-deployment-sessions.md)收尾，仅本地开发与提交，不推送。S1 普通 Session 功能子集已在 `4fdd5ae`、`8e33b9a` 记录；本批继续接通既定 Coding Session，不引入新编排、适配器或执行权威。
 
