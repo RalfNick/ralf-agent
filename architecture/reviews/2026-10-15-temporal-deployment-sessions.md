@@ -14,6 +14,16 @@
 
 ## v21 验证成本结构审查（2026-10-16，未形成新产品候选）
 
+新的成本边界核对：原v20含关闭的Worker窗口中，固定目标exclusive CPU依次为`_current_manifest`110.207923秒、`dto.validate_intent`23.730883秒、`validate_release`自身16.483636秒、`SessionControlValidation._check`14.183679秒、`CodingValidation._check`10.391366秒、observer0.160222秒，共175.157709秒；进程其余195.531916秒未覆盖，不能归因给JSON或当作可回收业务时间。原v21实际211,063B intent的离线纯验证约13.53–15.95ms，origin约9.93–9.96ms，0服务／模型／SDK client；证据`v21-pure-validation-cost/result.json` SHA256 `9de846d2bb4a1f0f184fe0ae6bb19599516dc86070fbebc2f9cc1adaea63f2e2`。1849次DTO观测包含关闭，不能等同SCV构造次数或业务关键路径。
+
+本批不采纳两种新缓存设计：固定inventory批量指纹若提前解析目标，会漏处理中途alias替换；只在出口拒绝helper漂移，也不能消除已污染的共享LRU。复用SCV对象虽能保留逐次SDK读取，但需要新的驻留实例／方法及DTO传递依赖保护，现有证据不支持足够关键路径收益。CREATE三次构造仍各含alias及原源码读取；composition末轮126项也有独立live descriptor采样，不能因正常夹具无业务回调就删除。源码保持原实现，不再叠加这些微优化；下一步使用匹配不可变Worker与保存原History做有界离线重放定位，Queries与服务时间不在重放覆盖内。
+
+原v21不可变安装已完成一条实际Coding child保存片段的原版SDK离线重放：199事件、1,177,109B，重放阶段CPU0.991171秒／wall2.211143秒，子进程exit0。原History SHA256 `a9c1b6b536137b77d88e569a43788cd69aa71e80b47352073f068f5fcec253f5`及424产品文件前后不变，原runner／restrictions不改，服务0／模型0／未创建Client。末事件为WorkflowTaskCompleted；业务Tool成功与result_candidate已有原记录，但这不是WorkflowExecutionCompleted，也不证明资源退休或owned close。实时Query、Activity实现及服务等待不在重放范围，不能据单child结果分配整个195.532秒残差。带cProfile的第二次重放同样成功，但统计存在负耗时及self大于cumulative，全部profile函数耗时结论撤回；每activation新建Profile且同线程开关，现有记录不足以确认原因，未猜测换timer重跑。原版重放的独立计时与哈希审计不受影响。证据`v21-child-replay-offline/summary.json` SHA256 `98960840df3b6a7c114763503666f538cae887e6bbb8b9a54d1f257c34cf1e22`，另保留`profile-quality-rejected.json`。下一步先论证如何对原重放State采样只读Query，不以新State夹具、缺失事件补造或新服务场景替代。
+
+上述Query诊断随后在同一原ReplayState完成：薄delegate在eviction前送一次独立query-only activation，经原Sandbox／SDK只读handler，既不把响应送给Core也不更改输入History，随后原样转发eviction。正响应665B，CPU10.051708ms／wall10.051333ms；60字段／332,885B完整State、publication、SDK命令序列和原business completion均前后相同，原424产品与History哈希不变，Replay成功且eviction命令0，子进程exit0，服务／模型／Client均0。首个探针误将421个py与含3个json的424项库存比较，setup失败／Query0；仅修正该计数后在全新目录执行一次，原失败保留。证据`v21-query-activation-offline-fixed-setup/summary.json` SHA256 `9af607dc1c966af465904792d8317321fbf3caeb46c56140253460c088b4cc83`。这是离线合成观察，并非历史实时Query回放、实际服务延迟或完整性能门槛；单child的单次结果不能解释整个未观测CPU。下一批只补原Worker的关键路径计数覆盖（含Sandbox代码副本和直接DTO验证），先验证诊断自身质量，再决定必要的原360秒采样；不继续追加缓存或放宽期限。
+
+后续冷包对照已排除helper-guard候选：A／B分别首次导入并构造各自真实原pin，使用同一物理夹具，未热替换或绕过依赖保护。四个独立进程ABBA、每块30次完整双Runner Runtime校验，A为18.423233／18.488433ms，B为20.103867／19.758900ms；合并18.455833→19.931383ms，候选约慢8%，因此放弃。135项原算法指纹与全部选定现场调用Counter相同；完整声明的差异逐路径核对为两项改动函数及其派生源码／声明摘要，未整块屏蔽implementation。无服务／模型／native调用，源快照及夹具前后无漂移。证据`cache-guard-cold-review/summary.json` SHA256 `eb4ade240f79bca351638ac60550f2249306220cbc585707f17ae100cff2dbf1`；公共产品未采用该候选，未采用的测试草稿已移至私有证据目录。此测量不代表实际360秒样本或稳定生产性能结论；停止该优化分支。
+
 后续唯一helper-guard私有原型在完整Runtime测量前被原Runner dependency pin拒绝：临时替换executable_digest代码与原固定依赖不符。未修改或绕过pin，临时代码已恢复，未进入ABBA；六个小等价case不是完整Manifest等价或收益证明，未实施该优化，也不外推原360门槛。证据`cache-guard-review/failure-summary.json`；无服务／模型／native或公共修改。原始性能阻塞仍开放，独立600诊断仍未授权／执行。
 
 复用已结束的正常原图History和独立安装，未重复实际场景、未改产品或测试期限。此次不是v22候选，`e6726c5`仍是产品基线，S2／P3-2及第三阶段继续开放。

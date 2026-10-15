@@ -94,6 +94,8 @@ The independent source review established these three required boundaries. The c
 
 ## S2 — existing Coding scope through the same Session origin
 
+当前决策：冷包完整Runtime ABBA已否定helper-guard候选（18.455833→19.931383ms／次，约慢8%），不进入产品或再测同变体。135项原算法指纹及现场调用计数相同，0服务／模型／native；详见[结构审查](../../../architecture/reviews/2026-10-15-temporal-deployment-sessions.md#v21-验证成本结构审查2026-10-16未形成新产品候选)。同步声明与请求层级审查也未证明足够收益，不引入批量指纹或驻留SCV。原v21匹配Worker已完成一条199事件原History离线重放，并在原ReplayState完成一次SDK只读Query（约10.052ms），完整60字段State／publication／命令序列不变，0服务／模型；不代表实际服务验收，带cProfile的异常耗时统计不采纳。原监测仍有约195.532秒进程CPU未覆盖，下一步只补Worker关键路径计数（含Sandbox代码副本和直接DTO验证），诊断先自检再决定一次必要的原360秒采样。跨I/O的权限、原SDK事实及原360秒期限保持，未新增实际首项通过证据。
+
 当前批次只修复已复现的原回执幂等P2，不是性能候选：Coding4中首次unprepared已采纳、stop_needed排空后，原admitted-stop重复完整canonical相同证据返回原ACK，不写状态／事件，不释放unknown或改变grant。原完整身份及namespace／矛盾native检查、未选中与publication3路径保留。新增22项，20模块402 passed，另8个协议模块98 passed；独立安装63 passed，424产品／855测试无漂移，完整默认canonical和默认保存History离线兼容通过，本批仅本地提交。选中Coding指纹改变，既有保留History必须继续匹配原不可变Worker；不复用旧运行接受新实现。原360秒验收及其余十二正常／五故障门槛仍开放，独立600秒诊断未授权／执行；修复不能代替性能门槛或解决未知业务结果。下一步仍需关闭原360秒性能门槛，只有固定原图通过后才展开其余矩阵；不为本窄修重复预计仍会超时的同场景，亦不声称能够估计整阶段结束时间。
 
 成本结构审查已完成一批：完整Runtime copy候选无收益、交接未见可删除空等，原SDK Importer纯node identity对照未见数量级CPU放大；未改产品、未运行新实际场景。不会据此继续叠加小copy／计数组合或增加Activity collector。下一步已提出用户澄清：是否允许一次独立600秒整体看门狗诊断，单独判断取消后果，不改变Tool80／Runner60／approve180和原关闭／未知义务，也不关闭原360门槛。私有runner已dry-run核对唯一AST常量差异、原冻结产品与测试保留、diagnostic-only及无remaining入口；当前未授权／未执行。得到明确答复前不得运行；未答复不是批准。若获准，预计一次约8–12分钟的固定诊断及证据登记；若不允许，保留原窗口继续审查，无法据当前证据估计整阶段完成时间。
