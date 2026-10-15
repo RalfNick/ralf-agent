@@ -14,6 +14,8 @@
 
 ## v21 验证成本结构审查（2026-10-16，未形成新产品候选）
 
+后续唯一helper-guard私有原型在完整Runtime测量前被原Runner dependency pin拒绝：临时替换executable_digest代码与原固定依赖不符。未修改或绕过pin，临时代码已恢复，未进入ABBA；六个小等价case不是完整Manifest等价或收益证明，未实施该优化，也不外推原360门槛。证据`cache-guard-review/failure-summary.json`；无服务／模型／native或公共修改。原始性能阻塞仍开放，独立600诊断仍未授权／执行。
+
 复用已结束的正常原图History和独立安装，未重复实际场景、未改产品或测试期限。此次不是v22候选，`e6726c5`仍是产品基线，S2／P3-2及第三阶段继续开放。
 
 - **完整Runtime构造。** 每次双Runner验证调用check_runner_binding4次、runner_registration2次、implementation_identity4次、inspect.getsource28次、handler.check14次、runner.identity18次、executable_digest1009次。这些包含真实getter、方法和源码复核，不能把累计时间全部算作可删除工作。唯一私有候选只省ToolRegistry.manifests末次外层copy，保留全部现场读取；完整Runtime ABBA为18.8391→19.7560ms／次，120份Manifest canonical及全部采样调用Counter相同。没有显示收益，且未知自定义deepcopy仍需fallback等价证明，因此未实施。纯测CPU3.3064秒，0服务／模型／native；临时方法已恢复，产品无变化。证据 `runtime-copy-review-v21/result.json`。

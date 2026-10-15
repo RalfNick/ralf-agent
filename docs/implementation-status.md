@@ -1,5 +1,7 @@
 # Implementation status — 0.1.0.dev120
 
+2026-10-16 修复既有事件订阅对waiting_input的错误拒绝：同步／异步follow保持等待，真实Local＋SQLite观察断连不改变原Run，Engine重启后按原游标接收完整后续事件和一次input_answered。新增6项，受影响5模块81通过；独立安装38通过，424产品／855测试无漂移，完整默认canonical及默认保存History离线兼容通过。仅现有观察路径兼容修复，没有新增HTTP端点；P3-2保持开放，完整P3-3及后续门槛未验收。见[修复记录](../architecture/reviews/2026-10-16-input-event-observation.md)。
+
 2026-10-16 新增Coding4恢复幂等窄修：原unprepared已采纳但stop_needed排空后，原admitted-stop调用重复相同回执可返回原ACK，不添事件／权限／结算；完整身份与namespace及无原生grant／回执检查保留，首回执、外来／变更证据仍拒绝，unknown不释放。新增22项，受影响20模块402通过，另8个协议模块98通过；独立安装63通过，424产品／855测试核对无漂移，完整默认canonical及默认保存History离线兼容通过。旧Coding History仍需原匹配Worker，不能据旧路径行为保持声称选中Coding指纹相同。原360秒场景仍失败，600秒诊断未授权／执行，S2／P3-2仍开放。见[当前修复记录](../architecture/reviews/2026-10-15-temporal-deployment-sessions.md)。
 
 2026-10-16 结构审查未形成新产品候选：完整双Runner Runtime少一次外层copy的私有ABBA未显示收益（18.839→19.756ms／次），已放弃；原交接包含必要Context／Model／physical-stop／register／approval，未找到秒级空等可删。原SDK Importer内的纯node identity暖调用约4.9–5.5ms、与host结果相同，不能代替完整Query测量。未重复实际场景、未改产品或期限，S2／P3-2仍开放。独立较长窗口诊断已提出用户澄清，尚未授权／执行，且即使通过也不关闭原360验收门槛。细节见[审查记录](../architecture/reviews/2026-10-15-temporal-deployment-sessions.md)。

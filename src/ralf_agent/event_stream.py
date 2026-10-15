@@ -16,6 +16,7 @@ _STATES = {
     "queued",
     "running",
     "waiting_approval",
+    "waiting_input",
     "waiting_reconciliation",
     "outcome_unknown",
     "cancelling",

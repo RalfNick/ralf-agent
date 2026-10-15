@@ -53,6 +53,118 @@ class AsyncReader(Reader):
         return super().status(run_id)
 
 
+@pytest.mark.parametrize("asynchronous", [False, True])
+def test_follow_waiting_input_continues_to_answer_events(asynchronous):
+    def advance(reader, run_id):
+        value = snapshot(run_id, reader.state)
+        if reader.state == "waiting_input":
+            reader.records.append(RunEvent(run_id, 1, "input_answered", {}))
+            reader.state = "succeeded"
+        return value
+
+    class SyncInput(Reader):
+        def status(self, run_id):
+            return advance(self, run_id)
+
+    class AsyncInput(AsyncReader):
+        async def status(self, run_id):
+            return advance(self, run_id)
+
+    async def run():
+        reader = AsyncInput() if asynchronous else SyncInput()
+        reader.state = "waiting_input"
+        stream = api("RunEventSubscription")(reader, "r", poll_interval=0.01)
+        try:
+            assert [record.event.kind async for record in stream] == ["input_answered"]
+            assert stream.cursor.after == 1 and not reader.closed
+        finally:
+            await stream.aclose()
+
+    asyncio.run(run())
+
+
+@pytest.mark.parametrize("state", ["waiting_input_replacement", "", None])
+def test_follow_still_rejects_unknown_status_without_advancing_cursor(state):
+    async def run():
+        reader = Reader()
+        reader.state = state
+        stream = api("RunEventSubscription")(reader, "r", poll_interval=0.01)
+        try:
+            with pytest.raises(ValidationError, match="invalid status"):
+                await anext(stream)
+            assert stream.cursor.after == 0 and not reader.closed
+        finally:
+            await stream.aclose()
+
+    asyncio.run(run())
+
+
+def test_waiting_input_observation_disconnect_and_restart_preserve_original_question(tmp_path):
+    from tests.helpers import ScriptedProvider
+    from tests.test_local_user_input import make, question, reply, request
+
+    async def run():
+        seen_status, repolled = asyncio.Event(), asyncio.Event()
+
+        class ObservedReader(SQLiteRunReader):
+            def status(self, run_id):
+                value = super().status(run_id)
+                seen_status.set()
+                return value
+
+            def events(self, run_id, **options):
+                if seen_status.is_set():
+                    repolled.set()
+                return super().events(run_id, **options)
+
+        path = tmp_path / "input-events.sqlite"
+        with make(path, ScriptedProvider([question()])) as engine:
+            run_id = engine.submit(
+                AgentSpec("ask", "Ask then answer", ("request_input",)), "task", command_id="s"
+            ).run_id
+            assert (await engine.drive(run_id)).state == "waiting_input"
+            pending = request(engine, run_id)
+            before = engine.store.run(run_id)
+            stream = api("RunEventSubscription")(
+                ObservedReader(path),
+                run_id,
+                after=engine.events(run_id)[-1].seq,
+                poll_interval=0.01,
+            )
+            observer = asyncio.create_task(anext(stream))
+            polled = asyncio.create_task(repolled.wait())
+            try:
+                done, _ = await asyncio.wait({observer, polled}, timeout=1)
+                if observer in done:
+                    observer.result()
+                assert polled in done and not observer.done()
+                await stream.aclose()
+                with pytest.raises(StopAsyncIteration):
+                    await observer
+                assert engine.store.run(run_id) == before
+                cursor = stream.cursor
+            finally:
+                await stream.aclose()
+                polled.cancel()
+                await asyncio.gather(observer, polled, return_exceptions=True)
+
+        with make(path, ScriptedProvider([ModelResponse(output="done")])) as engine:
+            assert engine.status(run_id).state == "waiting_input"
+            resumed = api("RunEventSubscription")(
+                SQLiteRunReader(path), run_id, after=cursor, poll_interval=0.01
+            )
+            try:
+                assert reply(engine, run_id, pending).apply_state == "applied"
+                assert (await engine.drive(run_id)).result == "done"
+                records = [record.event async for record in resumed]
+                assert records == engine.events(run_id, after=cursor.after)
+                assert sum(record.kind == "input_answered" for record in records) == 1
+            finally:
+                await resumed.aclose()
+
+    asyncio.run(run())
+
+
 def test_cursor_roundtrip_and_sse_cannot_inject_event_lines():
     cursor = api("EventCursor")(Scope("w", "p"), "run\nx", 1)
     assert api("EventCursor").from_token(cursor.token) == cursor

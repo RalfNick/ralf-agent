@@ -112,6 +112,12 @@ after observations produce a diagnostic and preserve the original result.
 
 ## Subscribe to persisted events
 
+With `follow=True`, `waiting_input` is a valid nonterminal status. A subscription
+can remain open while the original Run waits for an answer. Closing the observer
+leaves the question and Run unchanged; reconnect with its last consumed cursor to
+read the persisted answer and subsequent events, including after an Engine restart.
+Submitting the answer and driving the Run remain separate authority operations.
+
 ```python
 from contextlib import aclosing
 from ralf_agent import EventCursor, RunEventSubscription, SQLiteRunReader
