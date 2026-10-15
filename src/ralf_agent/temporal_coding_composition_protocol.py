@@ -12,6 +12,7 @@ def _pure_sources():
             (
                 "enabled",
                 "validate_topology",
+                "_topology_definitions",
                 "_direct_agents",
                 "_recursive_definitions",
                 "_validate_hidden_agents",
@@ -418,15 +419,8 @@ def _recursive_definitions(definition, policy):
     return composites
 
 
-def validate_topology(request, manifest):
-    """Check effective grants for every actual leaf before any child permission."""
-    from .binding_paths import agent_paths
-    from .binding_types import AgentBindingDescriptor
-    from .temporal_bindings import effective_step, validate_bindings
-
-    definition = request["definition"]
-    if definition["kind"] in {"agent", "sequence"}:
-        return
+def _topology_definitions(definition, manifest):
+    """Validate topology bounds independently of already resolved leaf grants."""
     concurrency = definition.get("max_concurrency", 1)
     from .governance import TemporalExecutionPolicy
 
@@ -444,6 +438,19 @@ def validate_topology(request, manifest):
     else:
         _direct_agents(definition)
         composites = [definition]
+    return composites
+
+
+def validate_topology(request, manifest):
+    """Check effective grants for every actual leaf before any child permission."""
+    from .binding_paths import agent_paths
+    from .binding_types import AgentBindingDescriptor
+    from .temporal_bindings import effective_step, validate_bindings
+
+    definition = request["definition"]
+    if definition["kind"] in {"agent", "sequence"}:
+        return
+    composites = _topology_definitions(definition, manifest)
     validate_bindings(request, manifest)
     for path, step in agent_paths(definition).items():
         effective_step(

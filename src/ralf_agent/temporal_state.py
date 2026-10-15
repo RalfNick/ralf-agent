@@ -351,6 +351,7 @@ def validate_request(request, manifest):
         if not isinstance(definition.get("steps"), list) or not definition["steps"]:
             raise ValidationError("Temporal requires at least one native Agent step")
         steps = definition["steps"]
+    resolved_topology = False
     if request.get("agent_bindings"):
         from .binding_paths import agent_paths
         from .binding_types import AgentBindingDescriptor
@@ -365,11 +366,32 @@ def validate_request(request, manifest):
             )
             for path, value in agent_paths(definition).items()
         ] + (planner_agents if definition["kind"] in {"graph", "team", "dynamic"} else [])
+        from .temporal_bindings import _plain_binding_inputs
+
+        protocol = manifest.get("deployment_admission_protocol") if type(manifest) is dict else None
+        resolved_topology = (
+            type(request) is dict
+            and type(protocol) is dict
+            and type(protocol.get("version")) is int
+            and protocol["version"] == 4
+            and "coding_execution_protocol" in manifest
+            and definition["kind"] in {"graph", "team", "dynamic"}
+            and _plain_binding_inputs(manifest, request)
+        )
     from .temporal_coding_composition_protocol import enabled as composition_enabled
     from .temporal_coding_composition_protocol import validate_topology
 
     if composition_enabled(manifest):
-        validate_topology(request, manifest)
+        if resolved_topology:
+            from .temporal_coding_composition_protocol import (
+                _topology_definitions,
+                _validate_hidden_agents,
+            )
+
+            for composite in _topology_definitions(definition, manifest):
+                _validate_hidden_agents(composite, manifest)
+        else:
+            validate_topology(request, manifest)
     if (
         not composition_enabled(manifest)
         and definition.get("kind") not in {"agent", "sequence"}

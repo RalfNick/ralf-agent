@@ -1,5 +1,23 @@
 # 部署 Session 集成与收尾验证
 
+## 请求内拓扑绑定复用（2026-10-16，原场景仍超时）
+
+原360秒正常首项仍由本地`90da97c`的435.464秒失败记录定义；本批只处理该P3-2阻塞，不增加范围或改期限。同一`validate_request`原来在初始步骤、Coding拓扑及末尾三处重复整组绑定验证。现仅exact Coding4、普通JSON完整request／manifest、非空显式绑定且已遍历全部实际Agent路径时，拓扑阶段复用首次已经完成的叶绑定解析；未显式绑定的叶也已用原默认descriptor检查。私有`_topology_definitions`只拆出原并发／递归结构检查，隐藏planner／completion Agent继续逐一验证；公开`validate_topology`保持独立完整入口，末尾原完整`validate_bindings`／`effective_step`及构造器Scope检查保留。无bindings、旧协议、自定义容器／共享引用及扫描回退沿原路径。原native逐请求fresh SDK、效果／预算／停止ACK和执行权威均未改。
+
+这是实验Coding路径内部采样次数调整，不是缓存、跨请求证明或新增skip参数。新helper进入原pure源码库存；旧selected History仍用原匹配不可变Worker。先观察主RED：三Agent完整请求27次描述校验而非预期18；修复后18，公开拓扑仍9。新增18项已通过，覆盖graph／Team／Dynamic／嵌套、legacy／custom回退、并发与Runner拒绝、缺路径、source库存／现场替换、隐藏Coding planner、拓扑后tool_set变化被末轮独立拒绝，以及无绑定仍经公开拓扑入口。初次补充的嵌套测试误用仅接收AgentSpec的GraphNode，且漏列AuthorizationDenied预期；均为测试构造修正，产品未因此变更。独立源码审查无P1／P2。进一步提前协议验证／复用Session投影需要额外错误顺序、helper现场身份及隐藏Agent责任论证，本批未实施，不叠加猜测优化。
+
+冻结`topology-pass-release/snapshot`：1759项目文件／424产品／859测试，audit SHA256 `82b87ed53f1800608256116f0f4b9ac6fbf8b9e2e5820f553326e51ce1e165d2`。相对90da97c仅修改`temporal_state.py`和`temporal_coding_composition_protocol.py`两个产品文件。全部268个Temporal模块同次回归3707 passed／589 skipped／197.494秒，零失败／错误；589配置依赖跳过不作服务验收。新wheel独立安装后10模块212 passed／8.268秒，零失败／错误／跳过；source／sdist／wheel／site的424产品及859测试副本前后相等，导入均来自独立site。完整默认Profile／Manifest／编排canonical保持原SHA256 `9df90a99df2c298ab2b2bf8aad0b7d907d2670e2c5247055c81cfe1afa475fbd`，原及continued默认保存History离线重放通过，Provider／服务0，不代表live continuation或旧Coding History兼容。wheel SHA256 `ec20719abd6ac9e73671354d924d9d7b1b410dcddd8737aab0cc49fbbb10426b`，sdist SHA256 `bb209fb01a7af6bdda63e312e06a8d544132a7c04d234121dddd13338325d784`，安装汇总SHA256 `0a0c19d168f30f4b66d40fa929dddfb330c66c2592ca2a206e817b05832f6eae`。
+
+预先固定完整`validate_request`为主指标（不少于10% CPU收益），采用真实双Runner工厂、PG view夹具与BindingCatalog、原三Agent图请求；A为90da97c匹配不可变包，B为本冻结候选，各自冷导入并建立自己的原发布／pins。四进程ABBA每块每操作10次；各冷进程内先预热后计时，测量的是隔离包的warm完整调用，不代表首次调用。无服务／模型／native。完整请求CPU均值A75.58105→B51.2205ms，下降32.231%；绑定控制14.9012→14.88545ms、Runtime控制19.7961→19.0087ms，均视为基本不变，不外推端到端或吞吐。测量外计数为descriptor27→18、Coding／composition协议各36→24，独立绑定链仍各6；profile恢复、原输入canonical及产品／物理pins前后不变。完整material的24处差异均闭合于声明的四函数／两source及其派生摘要，无整块屏蔽implementation；Scope、缺Runner、坏协议／并发与source替换拒绝一致。证据 `request-validation-cold-abba-90da97c/summary.json` SHA256 `c3ed085651d3c92b3fdd4fcdaa814e08902550ad3b074a963efd140fd37fd8be`。
+
+唯一原`graph-sequential-sdk`正常首项已终态exit1：1 failed／392.537秒（testcase392.005秒），零错误／跳过，424产品／859测试前后无漂移，diagnostic marker为空。所有80／60／180／360／60／40秒期限保持；原body仍为scenario360在approve.sleep处取消，不是审批180或Tool80。四Tool均原SDKCompleted成功，分别37.523601／35.478805／39.143722／38.319134秒，有SQL result_candidate、adopted效果和正physical-stop证据；第四Tool完成于22:24:06.176838Z。最后一个工具成功也不代表第二root完整业务成功，不将尾部耗时猜测为纯observer成本。
+
+本次两root均正退休（accepted2／retired2／retained0），effects4 adopted。两Turn均有6组start／end及6＋6个Completed正ACK；第一Advance在22:21:24.797403Z正完成、root_state=succeeded，第二在22:24:41.515726Z正完成但root_state=cancelled。没有最终两Turn业务结果文件。owned assembly关闭成功、Worker退出，schema通过原证据门槛安全删除，reasons为空；取消Run的责任清理成立，原两Turn业务成功门槛仍失败。不把不同运行的435.464→392.537秒当稳定业务加速。34项原输入前后哈希一致，终态证据 `topology-pass-normal-terminal-evidence/summary.json` SHA256 `a764f42b5403660e8fc28b6abbf3450644a38c74f184dfa2278c36a00dda987f`。
+
+同一原History的最小尾部核对已明确下一边界：第四Tool22:24:06.176838成功后，evidence于08.373096完成，tool_execution_ended有07.345095正ACK；Context于08.670270开始、13.799614正完成，随后Model于13.994179开始、19.294399返回validation_error／dispatched:false。initial-body-error文件mtime16.597481仅异常后的文件代理；原Registry coding-close在17.246233 Accepted，child取消在18.097343 Completed，root取消在21.454645 Completed。四个CONTROL observe分别于10.908622／14.782179／19.235595／22.829394成功完成，前三见running、末见cancelled；第二root只启动a／b，没有join子Run。故到取消时child最终Model仍在途，业务尾部不只是Session观察等待；该Model回执在close／cancel交错之后，不能据此认定独立验证缺陷或模型质量问题。12个原输入哈希不变，无服务／重放／新采样；证据 `topology-pass-tail-evidence/summary.json` SHA256 `f8c2469d8947787ad0d5312a8a9b374ea6d18984f35877d065a1fb8eab36e78c`。上述时间均为UTC22:24分内，除明确mtime代理外都是原SDK事件；不从中推断函数CPU或删除成功observe／join。
+
+正常runner SHA256 `63526f367d44a77c67058b1234d860355f4610c9544b696129a65028fda74147`，audit SHA256 `54b3a363ab1713a6f0efa2bf47aac4c25a9161bc08e531f4ef7b0fcfffa8ad77`。其余十二正常／五故障未解锁，S2／P3-2继续开放；独立600秒诊断仍未授权／执行。下一步复用本次原History确定第四Tool之后实际未完成的业务／控制步骤，再针对必要完整校验成本提出候选；不重开成功的工具与安全关闭、不盲目重跑当前包或继续扩大绑定归并范围。
+
 ## 同步绑定验证归并（2026-10-16，原场景复验仍失败）
 
 本批只修复 P3-2 原360秒首项的已证实成本来源，不新增能力、拓扑或期限。在 exact Coding4 的普通JSON输入中，`validate_bindings` 每个descriptor先独立执行原完整含Scope验证，再把该返回值交给内部纯投影，避免公开投影重复完整验证。公开 `effective_manifest` 仍独立完整验证，并可显式接收Scope。默认／旧3、自定义容器、共享引用／环、非有限数和超过有界资格扫描的输入均走原路径；扫描限制只决定回退，不新增公开输入限制。原 `selected_session_data`、原生请求逐次fresh SDK事实、效果／预算和停止ACK不变，没有跨请求缓存或新的验证权威。新增两个纯函数均纳入composition源码库存。

@@ -1,5 +1,7 @@
 # 第三阶段支持矩阵与收口门槛
 
+2026-10-16 当前拓扑归并候选：仅exact Coding4普通JSON完整请求，Coding拓扑复用首次已完整解析的全部叶绑定；公开拓扑、隐藏Agent、原结构／并发、末轮独立全组和Scope验证保留。新增18项通过，完整请求冷包CPU下降32.2%，独立绑定／Runtime基本不变；未据此宣称业务提速。424产品／859测试已冻结，全部Temporal回归3707 passed／589配置依赖skipped，独立安装212 passed及默认canonical／保存History离线兼容通过；原360秒首项本候选正常复验仍1 failed／392.537秒：四Tool最终成功及效果采纳、两root退休、两Turn完整ACK和owned关闭／安全清理均成立，但第二Turn为期限取消而非成功；S2／P3-2保持开放。下一步仅定位最后工具之后的实际未完成步骤，不将完整尾部猜测为observer成本。其他十二正常／五故障未运行。详见[当前验收记录](../architecture/reviews/2026-10-15-temporal-deployment-sessions.md)；下方为各快照历史证据。
+
 2026-10-16 当前候选：已归并exact Coding4普通JSON输入的同步绑定验证，保留原Scope完整校验、默认／旧协议／自定义输入回退及native逐请求fresh事实；无跨请求缓存。冷包完整绑定链CPU约下降23.7%，完整Runtime基本不变，不外推业务性能。全部Temporal回归3689 passed／589配置依赖skipped，独立安装194 passed，默认完整canonical及默认保存History离线兼容通过；424产品／858测试前后无漂移。唯一原360秒图首项正常复验1 failed／435.464秒；四Tool最终成功且效果全部adopted、两root退休，但整体期限已取消业务，第二Turn缺末end／Advance，owned关闭失败，schema依原Session义务保留。其他十二正常／五故障未运行，S2／P3-2仍开放。详见[本批验收记录](../architecture/reviews/2026-10-15-temporal-deployment-sessions.md)。下方各checkpoint为历史证据，不覆盖本段当前状态。
 
 2026-10-16 当前S2 checkpoint：修复诊断后的唯一原图首项1 failed／392.302秒，零错误／跳过，424产品／857测试无漂移。前三Tool成功、第四Tool未调度；两root退休与Session ACK、owned关闭及安全清理通过，第二Turn为超时取消，仍不满足原360秒业务门槛。CPU质量通过，主要互斥成本为Manifest64.167秒、composition60.179秒、Coding28.097秒；原History的离线只读Query计数不改变State，仅收窄下一步Registry调用来源检查，不当作实际性能改善。原其余十二正常／五故障未运行，600秒诊断未授权／执行，S2／P3-2与第三阶段保持开放。见[最新验收记录](../architecture/reviews/2026-10-15-temporal-deployment-sessions.md)；以下各采样为历史证据。
