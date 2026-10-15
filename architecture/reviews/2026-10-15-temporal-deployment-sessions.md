@@ -1,8 +1,24 @@
 # 部署 Session 集成与收尾验证
 
+## v21 后代只读集合候选（2026-10-16，实际验收待定）
 
+仅在 Coding4／binding22或23 的 Session observer 已确认原证书及 Registry 正退休后，将后半后代读取纳入新的独立封闭集合。复用既有 reader 的 node／ancestry 关联，保留 LIFO、未启动过滤、固定 epoch、重复／4096 上限、每条祖先边第二次父读以及原逐后代 `session_proof` Query。中间结果不可采纳，独立 raw SDK Session 七事实、完整身份及 Runtime／source 出口通过后才返回 detached 列表。外层业务身份、Registry epoch、末 Session 验证与 State／end ACK 不变；ordinary／旧3、所有 native 请求沿原路径。
 
-## v20 有界计时诊断（2026-10-16，产品仍为`49d26d8`）
+主 RED 在旧循环先证明完整结果及全部非 Session SDK Counter 等值，再由重复 Session history15而非1失败；候选减少为1组，不能据此推导实际 RPC 或墙钟收益。新增14项覆盖祖先第二次父读、错误 epoch／重复／原 root、完整 Registry intent／origin、末 reset／namespace、fake outer、方法 source 替换、异常／取消排空与新调用重读、ordinary 拒绝。最终23模块同次368 passed／58.66秒（-Werror），零失败／错误／跳过；1278个产品／测试文件前后相同。独立只读审查无 P1／P2 阻塞，Ruff／格式／空白检查通过。
+
+最终源码快照 `frozen-candidate121-s2-descendants-v21-final` 含1753公共／424产品／854测试，inventory SHA256 `c198e945efc47d30e07c2e508ce96debaa4a9635ae285d146093f86468cd4c44`；本验收登记在冻结后同步。独立安装四模块73 passed／20.65秒，零失败／错误／跳过；424产品在source／sdist／wheel／安装间一致，854测试副本及安装前后无漂移，所有导入来自独立安装。默认完整Profile／Manifest／编排canonical等值，原及continued保存History离线重放通过，Provider0／服务0，不代表live continuation。wheel SHA256 `2baceefd8305ce66d17cac0b2935592392bc6009705653d60d3328465a93c4c4`。尚无v21实际服务结果；本批不重跑相同v20诊断，也不放宽期限。首项原图、其余十二项正常组合及五项故障门槛仍未通过／未运行，S2／P3-2继续开放。
+
+## v20 CPU-only实际诊断（2026-10-16，未通过）
+
+`installed-s2-v20-cpu-diagnostic-sdk` 唯一首项1 failed／453.198秒，零错误／跳过；原整体360秒取消第二Turn，不能归为另一个approve180到期。前三Tool成功并有原candidate，耗时48.107700／42.299957／44.522015秒；第四Tool20.742248秒返回definition_mismatch，无candidate。第一root seal至Session正Advance UpdateCompleted ACK为21.705067秒；不是只取得Accepted。其余十二项正常组合和五项故障未运行，S2／P3-2保持开放。下方正常428.761秒与SDK／RAISE314.926秒是独立样本，不能比较为稳定性能变化。
+
+首次close为CloseIncomplete（original_coding_close），最终cleanup为RPCError；accepted2／retired1／retained1，effects为3 adopted＋1 dispatched。原删除门槛列出root_retirement_unconfirmed、scoped_session_close_unconfirmed、session_evidence_invalid（EvidenceMismatch）及unadopted_write，schema保留。首Turn正ACK不消解第二Turn或原写的剩余义务；不把其他样本的缺ACK细节直接套入本次，也不据关闭汇总错误认定独立产品缺陷。
+
+CPU聚合覆盖整个Worker及关闭：370.689625 CPU秒／416.570039墙钟秒；`_current_manifest` 6062次、110.207923 CPU秒，`validate_release` 6147次、inclusive 128.445344 CPU秒。嵌套inclusive值不能相加，也不能全部算作approve或Tool窗口。faults0／incomplete0；固定host code之外的Sandbox重导入未覆盖，projection为未观测null，不是零CPU。证据为私有 `v20-cpu-diagnostic/final-cpu-summary.json` 与 `terminal-evidence.json`；CPU-only没有同时启用SDK span或RAISE。
+
+下一步仍只针对既定阻塞：纯Unicode／ASCII分支ABBA在完整Runtime中仅2–5%收益，已放弃；广义raw live-pins没有完整差异等价证明，不实施。随后实施的窄descendant集合候选见上方v21记录，其实际收益仍待原门槛验证；不缓存SDK事实、权限或跨请求结果，不放宽期限，也不据本轮CPU计数宣称任何候选收益。
+
+## v20 SDK／RAISE历史计时诊断（产品仍为`49d26d8`）
 
 本批仅在私有runner显式启用既有SDK计时与RAISE异常定位，复用原冻结v20、原安装产品与测试；没有改变Tool80／Runner60／approve180／整体360或关闭预算。唯一首项诊断已结束：1 failed／314.926秒，零错误／跳过，424产品与850测试副本前后无漂移。**诊断不是正常验收，不能与下方428.761秒正常样本推导速度改善或退化。** 本次初始错误明确为首Turn的approve180 TimeoutError；仅一个业务root、两个Tool成功并有原candidate（69.037／68.056秒），最终root cancelled seal，无正Session Advance ACK，schema保留。没有第二Turn／第三、第四Tool。
 
@@ -14,9 +30,9 @@
 
 另做零服务离线CPU测量：保存的211493字节真实Session请求，100次 `_check(full=False)` 每次约0.665ms，其中digest约0.635ms，source bindings约0.012ms；这不是实际关键链占比。双Runner完整Runtime参考模板无profile 30次共0.601秒，带cProfile三次0.149秒，主要累积在完整manifest重建；模板不是原实际Profile，不把单次样本换算为优化收益。**不再盲目减少轻校验次数。** 下一必要诊断仅针对固定同步Runtime／Session校验与compact投影代码，采用测试专用、显式启用的有界CPU聚合，不替换产品方法、不读取载荷、不新增SDK或改变权限。仅该定位缺口及受影响检查属于本批；正常首门槛、其余十二项及五项故障仍未通过／未运行。
 
-CPU诊断夹具本地检查已完成：独立helper固定八个host code对象，采用严格id身份（不把结构相等的Sandbox code副本当原对象）；只对这些code启用START／RETURN，global UNWIND首先按固定身份过滤。64线程／128层边界、异常／丢失／fault计数、每线程CPU与墙钟及整个process窗口数字均有界；exclusive只扣除选中目标之间的嵌套，不是全callee self time。原code／产品method不替换；默认关闭、Python无monitoring时不回退trace，槽位归属和外部工具不接管，失败不覆盖业务返回或异常。已修复disabled setup异常遮蔽与结构相等副本UNWIND误入的RED，未修改产品。五个受影响模块同次95 passed／4.43秒（-Werror），零失败／错误／跳过；1277产品／测试文件前后相同，424产品仍与v20相同，独立审查无P1／P2。尚无实际CPU聚合结果。下一次只显式启CPU计数，不同时启SDK span或RAISE记录，保持原场景与期限；诊断不解锁其余矩阵。
+CPU诊断夹具本地检查已完成：独立helper固定八个host code对象，采用严格id身份（不把结构相等的Sandbox code副本当原对象）；只对这些code启用START／RETURN，global UNWIND首先按固定身份过滤。64线程／128层边界、异常／丢失／fault计数、每线程CPU与墙钟及整个process窗口数字均有界；exclusive只扣除选中目标之间的嵌套，不是全callee self time。原code／产品method不替换；默认关闭、Python无monitoring时不回退trace，槽位归属和外部工具不接管，失败不覆盖业务返回或异常。已修复disabled setup异常遮蔽与结构相等副本UNWIND误入的RED，未修改产品。五个受影响模块同次95 passed／4.43秒（-Werror），零失败／错误／跳过；1277产品／测试文件前后相同，424产品仍与v20相同，独立审查无P1／P2。CPU-only实际聚合结果已在上方单列；保持原场景与期限，诊断不解锁其余矩阵。
 
-下一次CPU-only诊断夹具已冻结为 `frozen-candidate121-s2-v20-cpu-diagnostic`：1752公共／424产品／853测试，inventory SHA256 `02e1536c56817ebfc37b95ff9789c02780daa4075acd8461616ee8b8745228a9`。产品与原v20相同，复用原已安装wheel；私有runner仅bootstrap，显式白名单只加CPUflag、不继承模型配置。当前仅准备／静态解析通过，未执行；本段文档在冻结后同步，不声称公共文档仍逐字相同。
+该CPU-only诊断夹具冻结为 `frozen-candidate121-s2-v20-cpu-diagnostic`：1752公共／424产品／853测试，inventory SHA256 `02e1536c56817ebfc37b95ff9789c02780daa4075acd8461616ee8b8745228a9`。产品与原v20相同，复用原已安装wheel；私有runner仅bootstrap，显式白名单只加CPUflag、不继承模型配置。该次实际已结束，结果见上方；本段文档在冻结后同步，不声称公共文档仍逐字相同。
 
 ## v20 正常首项结果（2026-10-16，`49d26d8`，未通过）
 

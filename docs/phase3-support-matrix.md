@@ -1,6 +1,10 @@
 # 第三阶段支持矩阵与收口门槛
 
-2026-10-16 定位更新：同一v20产品的一次显式计时诊断1 failed／314.926秒，424产品与850测试无漂移；本次为首Turn approve180超时，仅两个Tool成功，无正Session Advance，schema保留。它与下方正常首项428.761秒分开，不作性能比较或验收。原生peer响应为毫秒级，外围SDK并集和Worker CPU证据要求进一步区分完整Runtime重建／纯投影与等待。真实Session轻校验离线约0.665ms／次，不支持继续盲目微调。测试专用CPU计数已实现并经独立审查：固定八个host code，逐线程CPU／墙钟聚合，严格code对象身份过滤，默认关闭、保留原异常与外部监控工具，退出仅写脱敏数字。五个受影响模块同次95 passed／4.43秒（-Werror），零跳过，1277产品／测试文件前后无漂移；424产品文件仍与v20相同。沙箱重导入代码不在覆盖范围；尚未运行实际CPU诊断，不表示S2已通过。详见[验收记录](../architecture/reviews/2026-10-15-temporal-deployment-sessions.md)。
+2026-10-16 v21窄候选已实现：Coding4 observer后代只读集合保留原全部非Session SDK事实及独立末七事实，将三后代对照的重复Session组15→1；最终23模块368 passed／58.66秒、零失败／错误／跳过，1278产品／测试前后同，独立审查无P1／P2。独立安装四模块73 passed／20.65秒、默认完整canonical及保存History离线兼容通过，424产品／854测试无漂移，Provider0／服务0。尚无v21实际服务证据；首项图、其余十二项和五项故障不据此关闭，S2／P3-2及第三阶段仍开放。范围与证据见[验收记录](../architecture/reviews/2026-10-15-temporal-deployment-sessions.md)。
+
+2026-10-16 CPU-only诊断已结束（产品仍为v20／`49d26d8`）：1 failed／453.198秒，零错误／跳过；原整体360秒取消第二Turn。前三Tool成功并有candidate（48.107700／42.299957／44.522015秒），第四Tool20.742248秒为definition_mismatch、无candidate。第一seal至正Advance Completed ACK为21.705067秒；两root仅一条退休、held1，首次close为CloseIncomplete，最终RPCError，schema因未退休root、未确认Session关闭／证据及unadopted write保留。其余十二项正常组合和五项故障未运行，S2／P3-2仍开放。此前正常428.761秒与SDK／RAISE诊断314.926秒保留各自范围，不作跨样本性能比较。
+
+整个Worker计数窗口（含关闭）为370.689625 CPU秒／416.570039墙钟秒；`_current_manifest` 6062次、110.207923 CPU秒，`validate_release` 6147次、inclusive 128.445344 CPU秒，嵌套值不能相加。计数faults0／incomplete0；仅覆盖固定host code，projection未观测为null，不能称CPU为零或据此归因完整关键链。纯Unicode／ASCII分支ABBA的完整Runtime收益仅2–5%，已放弃；广义raw live-pins缺完整等价证明，不实施。随后窄descendant候选见上方v21，不代表实际门槛已通过。详见[验收记录](../architecture/reviews/2026-10-15-temporal-deployment-sessions.md)。
 
 
 2026-10-16 v20源码候选：仅exact Coding4／actual CONTROL／完整固定child的只读observe，已接入封闭Session身份读取；原完整Activity入口、所有Run／Registry／Start／祖先／compact／当前child读取保留，末独立raw Session七事实后才返回。主RED已确认原结果和非Session Counter相同，再由原6组变2组；默认/native逐请求fresh、其他mode、未pin和旧协议保持。新增取消finally清理、逐await拒写端口和完整身份／source pins，私有helper不提供Session权威。采样频率变化已写入实验契约，匹配不可变Worker恢复旧运行。同次135模块回归1986 passed／289 skipped／106.38秒（-Werror），1274产品／测试文件前后相同，独立审阅无P1／P2，Ruff／格式／空白检查通过。安装11模块173 passed／43.01秒，默认完整canonical及原／continued保存History离线重放通过，424产品与850测试副本前后相同、全部导入来自安装。源码本地提交 `49d26d8`；真实首项已结束，1 failed／428.761秒，424产品与850测试前后无漂移。整体360秒取消传入SDK Update；前三Tool成功且原结果已接受，第四业务子Workflow已启动但Tool尚未调度。第一Turn正Completed ACK已取得；第二Turn末observe缺end ACK。三条效果adopted、两业务root退休仍不代Session关闭，schema保留。S2／P3-2未关闭，其余十二项及五项故障未运行。下一批先以既有有界SDK／Worker计时定位实际耗时，不再依夹具计数盲目微调或重跑。
@@ -15,7 +19,7 @@
 
 2026-10-16 历史checkpoint为v18／本地 `85dce98`：封闭只读树和同次关闭pending修复已实现，独立审阅无阻塞；131模块受影响回归1941 passed／289 skipped／88.74秒，安装128项通过、默认与保存History离线兼容通过，跳过不作服务验收。实际原图仍1失败／390.395秒：首Turn成功，第二Turn第三Tool成功、第四child未成功启动即遇原360秒取消。本轮owned关闭、原树／资源和Session清理证据通过，schema安全删除；整体期限仍是集成阻塞，S2／P3-2未关闭。其余十二项正常组合和五项故障未运行，首项完整通过后才继续；以下v17及更早记录仅为历史证据。
 
-日期：2026-10-15。第二阶段在本地提交 `695175e`／`0.1.0.dev113` 冻结；第三阶段按本矩阵推进 R21–R24 服务化与治理。dev120 编排基线为 `c52d54c`，S1 普通 Session 已在 `4fdd5ae`、`8e33b9a` 本地提交；S2 显式预览在 `ff58574` 本地提交。第一阶段 dev99 的业务质量、第二阶段的所选编排与执行证据继续按原范围引用。S1 普通 Session 功能子集已完成验收；S2 的 Agent／sequence 两 Turn 有独立通过证据，但最新 v20 安装首项图编排第一Turn成功、第二Turn受360秒整体期限取消，第四Tool尚未调度、Session关闭未完成且schema保留，整项仍失败，其余十二项及故障门槛未运行。逐快照结果见[当前验收记录](../architecture/reviews/2026-10-15-temporal-deployment-sessions.md)，不合并为完整通过。Temporal＋PG 集成、P3-2 与第三阶段尚未关闭，下面的目标不能当成交付清单。
+日期：2026-10-15。第二阶段在本地提交 `695175e`／`0.1.0.dev113` 冻结；第三阶段按本矩阵推进 R21–R24 服务化与治理。dev120 编排基线为 `c52d54c`，S1 普通 Session 已在 `4fdd5ae`、`8e33b9a` 本地提交；S2 显式预览在 `ff58574` 本地提交。第一阶段 dev99 的业务质量、第二阶段的所选编排与执行证据继续按原范围引用。S1 普通 Session 功能子集已完成验收；S2 的 Agent／sequence 两 Turn 有独立通过证据，但此前v20正常首项图编排与本次CPU-only诊断均未过原360秒整体期限；各自关闭／保留证据分记于上方，整项仍失败，其余十二项及故障门槛未运行。逐快照结果见[当前验收记录](../architecture/reviews/2026-10-15-temporal-deployment-sessions.md)，不合并为完整通过。Temporal＋PG 集成、P3-2 与第三阶段尚未关闭，下面的目标不能当成交付清单。
 
 ## 收尾范围冻结（2026-10-15 用户指令）
 

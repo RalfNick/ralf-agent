@@ -688,32 +688,48 @@ async def _observe(validation):
         _reject()
     run_proof = await handle.query("view", {"kind": "session_proof", "scope": i["scope"]})
     await validation.validate()
-    descendants, pending, seen = [], list(proof["children"]), {i["run_id"]}
-    while pending:
-        child = pending.pop()
-        if child.get("dispatch_started") is not True and child.get("started") is not True:
-            continue
-        child_id, child_epoch = child["run_id"], child.get("deployment_execution_epoch")
-        if child_id in seen or len(seen) >= 4096 or type(child_epoch) is not str or not child_epoch:
-            _reject()
-        seen.add(child_id)
-        physical = await execution._proof(
-            validation.runtime, readonly, policy, i["scope"], child_id, child_epoch, required=True
-        )
-        await validation.validate()
-        root_proof = await execution._ancestry(
-            validation.runtime, readonly, policy, physical, read_only=True
-        )
-        await validation.validate()
-        if root_proof["run_id"] != i["run_id"] or root_proof["execution_epoch"] != epoch:
-            _reject()
-        descendants.append(
-            await readonly.get_workflow_handle(child_id, run_id=child_epoch).query(
-                "view",
-                {"kind": "session_proof", "scope": i["scope"]},
+    if readonly._aggregate:
+        from .temporal_session_deployment_verification import _read_session_descendants
+
+        descendants = await _read_session_descendants(validation, readonly, policy, proof)
+    else:
+        descendants, pending, seen = [], list(proof["children"]), {i["run_id"]}
+        while pending:
+            child = pending.pop()
+            if child.get("dispatch_started") is not True and child.get("started") is not True:
+                continue
+            child_id, child_epoch = child["run_id"], child.get("deployment_execution_epoch")
+            if (
+                child_id in seen
+                or len(seen) >= 4096
+                or type(child_epoch) is not str
+                or not child_epoch
+            ):
+                _reject()
+            seen.add(child_id)
+            physical = await execution._proof(
+                validation.runtime,
+                readonly,
+                policy,
+                i["scope"],
+                child_id,
+                child_epoch,
+                required=True,
             )
-        )
-        pending.extend(physical["children"])
+            await validation.validate()
+            root_proof = await execution._ancestry(
+                validation.runtime, readonly, policy, physical, read_only=True
+            )
+            await validation.validate()
+            if root_proof["run_id"] != i["run_id"] or root_proof["execution_epoch"] != epoch:
+                _reject()
+            descendants.append(
+                await readonly.get_workflow_handle(child_id, run_id=child_epoch).query(
+                    "view",
+                    {"kind": "session_proof", "scope": i["scope"]},
+                )
+            )
+            pending.extend(physical["children"])
     await _business_identity(validation, epoch, reservation=record["reservation"])
     await registry_epoch(
         validation.runtime,

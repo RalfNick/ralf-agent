@@ -1007,10 +1007,49 @@ class _SessionTreeReading:
         self._check()
         return certificate
 
+    async def read_descendants(self):
+        """Collect original descendant proposals before one independent SDK exit."""
+        descendants, pending, seen = [], list(self._proof["children"]), {self._proof["run_id"]}
+        while pending:
+            child = pending.pop()
+            if child.get("dispatch_started") is not True and child.get("started") is not True:
+                continue
+            child_id, child_epoch = child["run_id"], child.get("deployment_execution_epoch")
+            if (
+                child_id in seen
+                or len(seen) >= 4096
+                or type(child_epoch) is not str
+                or not child_epoch
+            ):
+                _reject()
+            seen.add(child_id)
+            physical = await self._node(child_id, child_epoch)
+            await self._ancestry(physical)
+            descendants.append(
+                await self._client.get_workflow_handle(child_id, run_id=child_epoch).query(
+                    "view", {"kind": "session_proof", "scope": self._proof["scope"]}
+                )
+            )
+            self._check()
+            pending.extend(physical["children"])
+        self._check()
+        verified = await self._validation.validate()
+        self._check()
+        if canonical(verified) != self._identity:
+            _reject()
+        self._resources[0].validate_release(self._proof["manifest"])
+        self._check()
+        return detached(descendants)
+
 
 async def _read_session_tree(validation, readonly, policy, proof):
     """Return a closed certificate only after fresh independent Session facts."""
     return await _SessionTreeReading(validation, readonly, policy, proof).read()
+
+
+async def _read_session_descendants(validation, readonly, policy, proof):
+    """Return fresh descendant proposals only after independent Session facts."""
+    return await _SessionTreeReading(validation, readonly, policy, proof).read_descendants()
 
 
 def source_bindings():
@@ -1049,7 +1088,9 @@ def source_bindings():
             _SessionTreeReading._ancestry,
             _SessionTreeReading._tree,
             _SessionTreeReading.read,
+            _SessionTreeReading.read_descendants,
             _read_session_tree,
+            _read_session_descendants,
             _read_session_node,
             dto.encode_control_body,
             dto.decode_control_body,

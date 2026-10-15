@@ -94,9 +94,13 @@ The independent source review established these three required boundaries. The c
 
 ## S2 — existing Coding scope through the same Session origin
 
-当前定位checkpoint：原v20产品的单次有界SDK／RAISE诊断已终态1 failed／314.926秒，首Turn approve180超时，两个Tool成功但无正Session Advance；schema保留。与正常428.761秒／整体360失败分记，不能作性能比较。实际peer毫秒级响应、SDK span并集和Worker CPU说明需继续区分本地完整重建／纯投影和RPC等待；离线真实Session轻检查约0.665ms／次，不支持据此再叠加微调。
+v21窄批次已实现并完成最终23模块368 passed／58.66秒（-Werror），零失败／错误／跳过；1278产品／测试前后同，独立审查及格式检查通过。仅将正证书／退休后的后代集合复用既有独立reader：原结果与非Session Counter相同，三后代Session组15→1，独立raw七事实与完整出口保持。独立安装四模块73 passed／20.65秒、默认完整canonical及保存History离线兼容通过，424产品／854测试无漂移，Provider0／服务0；没有v21实际服务结果。下一步只复验固定原图首项，通过后再展开原其余十二项及五故障；不改原期限，不增加功能或再次运行相同v20诊断，S2／P3-2继续开放。
 
-本批最小诊断实现：仅tests的独立helper，以显式env／marker启用sys.monitoring固定同步代码CPU聚合，原产品函数和source pins不替换。PY_START／RETURN只作用于固定code，异常unwind仅过滤目标code；有界线程／栈，退出恢复自有槽位，固定脱敏数字聚合仅退出写入，故障不改变业务结果。现有Worker plugin负责生命周期，默认不启用；先验证返回／异常／foreign工具／嵌套与关闭清理，再冻结夹具。下一次实际诊断仅测量，不解锁其余矩阵；直到有函数级证据才实施产品修复。424个产品文件及既有安装／默认／History证据按原范围复用，不重跑未受影响全量。该测试夹具已完成，独立审查无P1／P2，五模块95 passed／4.43秒（-Werror），1277产品／测试前后无漂移；真实CPU测量尚未运行。仅覆盖固定host code对象，沙箱副本不在覆盖内；exclusive只扣除选中目标之间嵌套。下一次仅开CPUflag，不同时开SDK计时或RAISE，以减少附加开销；仍不作为正常验收。
+当前定位checkpoint：v20 CPU-only实际1 failed／453.198秒，零错误／跳过；原整体360秒取消第二Turn。前三Tool成功且有candidate（48.107700／42.299957／44.522015秒），第四Tool20.742248秒为definition_mismatch、无candidate；首seal至正Advance Completed ACK21.705067秒。accepted2／retired1／held1，首次CloseIncomplete、最终RPCError；原root／Session关闭证据与unadopted write未清，schema保留。正常428.761秒与SDK／RAISE314.926秒仍分记，不比较为优化收益；其余十二项正常组合和五项故障未运行，S2／P3-2开放。
+
+全Worker含关闭窗口370.689625 CPU秒／416.570039墙钟秒；`_current_manifest` 6062次110.207923 CPU秒，`validate_release` 6147次inclusive 128.445344 CPU秒，嵌套不能相加或等同业务关键窗口。faults0／incomplete0；projection未覆盖为null，不称零CPU。纯Unicode／ASCII分支ABBA完整Runtime仅2–5%已放弃；广义raw live-pins缺等价证明不实施。随后窄descendant候选的实现／检查见上方v21，不改native逐请求fresh、期限或权限边界，实际首门槛仍待。
+
+本批最小诊断实现：仅tests的独立helper，以显式env／marker启用sys.monitoring固定同步代码CPU聚合，原产品函数和source pins不替换。PY_START／RETURN只作用于固定code，异常unwind仅过滤目标code；有界线程／栈，退出恢复自有槽位，固定脱敏数字聚合仅退出写入，故障不改变业务结果。现有Worker plugin负责生命周期，默认不启用；先验证返回／异常／foreign工具／嵌套与关闭清理，再冻结夹具。下一次实际诊断仅测量，不解锁其余矩阵；直到有函数级证据才实施产品修复。424个产品文件及既有安装／默认／History证据按原范围复用，不重跑未受影响全量。该测试夹具已完成，独立审查无P1／P2，五模块95 passed／4.43秒（-Werror），1277产品／测试前后无漂移；CPU-only实际结果已在上方记录。仅覆盖固定host code对象，沙箱副本不在覆盖内；exclusive只扣除选中目标之间嵌套。本次未同时开SDK计时或RAISE，仍不作为正常验收。
 
 
 历史诊断checkpoint为 `d9bae41`（产品仍为v19）：一次原图1 failed／482.320秒，整体360秒取消；首Turn与前三Tool成功，第四Tool为definition_mismatch且无结果候选。首次close由原task返回CloseIncomplete，不是外层wait_timeout。未知leaf原handler／call-end ACK完整，但无业务结果，effects仍3 adopted＋1 dispatched，1／2 root未退休、schema保留。关闭拒绝有依据，独立关闭缺陷未证明；并行Task堆栈不能作为它的等待因果。不继续复跑同产品或为不同关闭窗口叠加修复。
