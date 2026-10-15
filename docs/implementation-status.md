@@ -1,6 +1,6 @@
 # Implementation status — 0.1.0.dev120
 
-最新定位补充：本次Registry原History离线重放及单次只读Query通过，完整State／publication／命令序列不变；原State已退休的一个root触发Coding60／composition61次验证，其中48＋9次Coding检查来自绑定层的reject_runner_descriptor与validate_runner_tools。下一批仅审查一次同步绑定验证的职责归并，先证明原字段／source／错误拒绝与默认兼容，再测完整收益；不缓存权限或SDK事实，也不把该单退休root的计数外推整个业务窗口。当前没有新产品候选。
+2026-10-16 当前候选：已归并exact Coding4普通JSON输入的同步绑定验证，保留原Scope完整校验、默认／旧协议／自定义输入回退及native逐请求fresh事实；无跨请求缓存。冷包完整绑定链CPU约下降23.7%，完整Runtime基本不变，不外推业务性能。全部Temporal回归3689 passed／589配置依赖skipped，独立安装194 passed，默认完整canonical及默认保存History离线兼容通过；424产品／858测试前后无漂移。唯一原360秒图首项正常复验1 failed／435.464秒；四Tool最终成功且效果全部adopted、两root退休，但整体期限已取消业务，第二Turn缺末end／Advance，owned关闭失败，schema依原Session义务保留。其他十二正常／五故障未运行，S2／P3-2仍开放。详见[本批验收记录](../architecture/reviews/2026-10-15-temporal-deployment-sessions.md)。下方各checkpoint为历史证据，不覆盖本段当前状态。
 
 2026-10-16 最新checkpoint：修复诊断生命周期后，原360秒首项仍1 failed／392.302秒，424产品／857测试无漂移；前三Tool成功、第四child已启动但Tool未调度。两root均退休、Session start/end ACK完整，第一Turn成功／第二Turn取消，owned关闭与安全清理通过，不能判两Turn业务成功。CPU质量首次完整通过（fault0／incomplete0）：含关闭窗口328.620 CPU秒中，Manifest重建64.167秒、composition验证60.179秒、Coding验证28.097秒为互斥成本，大部分发生在关闭前；未覆盖74.179秒。原History离线重放／只读Query计数通过且State不变，单node仅Coding3／composition3，下一步核查成本较高的Registry调用链，不将inclusive相加或继续盲目微调。S2／P3-2未关闭，其余十二正常／五故障未运行，600秒诊断未授权／执行。见[最新验收记录](../architecture/reviews/2026-10-15-temporal-deployment-sessions.md)。下方514.670秒及其他结果保留各自历史范围。
 

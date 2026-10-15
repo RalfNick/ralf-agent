@@ -1,6 +1,7 @@
 """Versioned scoped selections; no clients or alternate authority in History."""
 
 import copy
+import math
 from dataclasses import asdict
 from types import SimpleNamespace
 
@@ -161,6 +162,37 @@ def validate_descriptor(manifest, descriptor, scope=None):
     return descriptor
 
 
+def _plain_binding_inputs(manifest, selections, scope=None):
+    """Bounded eligibility only; unusual Python inputs retain the original path."""
+    pending = [(manifest, 0), (selections, 0), (scope, 0)]
+    seen, remaining = set(), 32768
+    while pending:
+        value, depth = pending.pop()
+        remaining -= 1
+        if remaining < 0 or depth > 64:
+            return False
+        kind = type(value)
+        if value is None or kind is str or kind is int or kind is bool:
+            continue
+        if kind is float:
+            if not math.isfinite(value):
+                return False
+            continue
+        if (kind is not dict and kind is not list) or id(value) in seen:
+            return False
+        seen.add(id(value))
+        if len(value) + len(pending) > remaining:
+            return False
+        if kind is dict:
+            for name, item in value.items():
+                if type(name) is not str:
+                    return False
+                pending.append((item, depth + 1))
+        else:
+            pending.extend((item, depth + 1) for item in value)
+    return True
+
+
 def validate_bindings(request, manifest, scope=None):
     from .binding_paths import agent_paths
 
@@ -171,9 +203,23 @@ def validate_bindings(request, manifest, scope=None):
         raise ValidationError("Temporal binding path does not name an actual declared Agent")
     if selections and manifest["kernel"] != "temporal-3":
         raise DefinitionMismatch("Per-Agent bindings require temporal-3")
+    protocol = manifest.get("deployment_admission_protocol") if type(manifest) is dict else None
+    single_pass = (
+        type(request) is dict
+        and type(selections) is dict
+        and bool(selections)
+        and type(protocol) is dict
+        and type(protocol.get("version")) is int
+        and protocol["version"] == 4
+        and "coding_execution_protocol" in manifest
+        and _plain_binding_inputs(manifest, selections, scope)
+    )
     for descriptor in selections.values():
-        validate_descriptor(manifest, descriptor, scope)
-        effective_manifest(manifest, descriptor)
+        choices = validate_descriptor(manifest, descriptor, scope)
+        if single_pass:
+            _effective_manifest(manifest, choices)
+        else:
+            effective_manifest(manifest, descriptor)
     if selected_session_data(request, manifest) and (
         request["definition"]["kind"] not in {"agent", "sequence"}
         and "session_tree_protocol" not in manifest
@@ -299,8 +345,12 @@ def catalog_registration(runtime):
     return {"version": 1, "scope": asdict(catalog.scope), "records": records}
 
 
-def effective_manifest(manifest, descriptor):
-    choices = validate_descriptor(manifest, descriptor)
+def effective_manifest(manifest, descriptor, *, scope=None):
+    choices = validate_descriptor(manifest, descriptor, scope)
+    return _effective_manifest(manifest, choices)
+
+
+def _effective_manifest(manifest, choices):
     result = detached(manifest)
     if manifest.get("binding_protocol") in (
         8,

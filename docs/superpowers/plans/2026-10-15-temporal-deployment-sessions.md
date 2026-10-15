@@ -94,7 +94,7 @@ The independent source review established these three required boundaries. The c
 
 ## S2 — existing Coding scope through the same Session origin
 
-最新定位：本次原Registry History离线重放及单Query通过、完整State不变；一个原正退休root触发Coding60／composition61次，57次Coding验证经绑定层coding_enabled触发。下一批针对一次同步绑定验证中的公开边界与内部已验证数据职责，先做最小RED和源码边界审查，保留每次native fresh SDK／close权限及动态source拒绝，再测完整收益。没有新产品实现；不把退休root的单Query计数当成所有历史Query分布或承诺能回收的业务时间。原360及其余矩阵门槛不变。
+当前执行：同步绑定完整验证归并已完成RED→GREEN及独立审查；全部Temporal回归3689 passed／589配置依赖skipped，安装后194 passed，默认canonical／保存History离线兼容通过。冷包完整绑定CPU约下降23.7%，Runtime基本不变。冻结424产品／858测试，唯一原360秒graph-sequential-sdk正常验收已1 failed／435.464秒，无诊断flags、期限不变；四Tool最终成功／effects4 adopted、两root退休，但第二Turn缺末end／Advance ACK，owned关闭失败，schema保留。不解锁其余十二正常及五故障。下一批按既有有效CPU证据检查完整Manifest／协议重复构造边界，先证明完整收益与原拒绝等价，不再同版本盲目复跑或放宽期限。原600秒诊断未授权／执行，S2／P3-2不据离线证据关闭。详见[当前验收记录](../../../architecture/reviews/2026-10-15-temporal-deployment-sessions.md)；以下为历史checkpoint。
 
 最新实际checkpoint（2026-10-16）：修复后的CPU v2首项1 failed／392.302秒，零错误／跳过，424产品／857测试无漂移。原360秒body取消，前三Tool成功、第四Tool未调度；两root正退休、Session两Turn各6组start/end ACK完整，owned关闭及安全清理通过。第二Turn为cancelled，不判两Turn成功。CPU质量fault0／incomplete0；互斥主要成本为Manifest64.167秒、composition60.179秒、Coding28.097秒，未覆盖74.179秒。原匹配History离线重放／合成只读node Query计数通过，State／publication／命令序列／History不变，node仅Coding3及composition3次。下一步仅检查Registry Query的完整调用链及结构性重复，再决定必要候选；不能因不同样本变快认定提速，不实施低收益native permission归并、不新增实景或缓存权限。原其余十二正常／五故障待验，600秒诊断未授权／执行，S2／P3-2不关闭。证据见[最新验收记录](../../../architecture/reviews/2026-10-15-temporal-deployment-sessions.md)，下方为历史checkpoint。
 

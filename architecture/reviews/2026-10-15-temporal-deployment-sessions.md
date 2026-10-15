@@ -1,5 +1,21 @@
 # 部署 Session 集成与收尾验证
 
+## 同步绑定验证归并（2026-10-16，原场景复验仍失败）
+
+本批只修复 P3-2 原360秒首项的已证实成本来源，不新增能力、拓扑或期限。在 exact Coding4 的普通JSON输入中，`validate_bindings` 每个descriptor先独立执行原完整含Scope验证，再把该返回值交给内部纯投影，避免公开投影重复完整验证。公开 `effective_manifest` 仍独立完整验证，并可显式接收Scope。默认／旧3、自定义容器、共享引用／环、非有限数和超过有界资格扫描的输入均走原路径；扫描限制只决定回退，不新增公开输入限制。原 `selected_session_data`、原生请求逐次fresh SDK事实、效果／预算和停止ACK不变，没有跨请求缓存或新的验证权威。新增两个纯函数均纳入composition源码库存。
+
+这是实验Coding路径的重复source／alias采样次数调整，不能声称所有采样次数不变或旧selected指纹相同。旧Coding History继续用原匹配不可变Worker恢复。主RED先观察单Agent三次验证而非预期两次，修复后native22／composition23均为两次；三Agent完整链由9次变6次。补充测试覆盖Scope优先拒绝、默认／旧协议／自定义容器回退、坏协议和source库存、公开独立验证、输入隔离及扫描边界。没有调整Runner Scope的既有授权职责。
+
+冻结快照 `binding-pass-release/snapshot`：1758项目文件／424产品／858测试，inventory SHA256 `e5b02b7abaa4d32d0d694b56db242fae909f52d3e2aef3cdb6acba8119d6465f`。9个受影响模块源码194 passed／7.021秒；全部267个Temporal模块3689 passed／589 skipped／190.070秒，零失败／错误。589配置依赖跳过不作为真实服务验收。独立新wheel安装后同9模块194 passed／6.212秒，零失败／错误／跳过；424产品在source／sdist／wheel／site一致，858测试副本及前后审计不变，导入均来自安装。完整默认Profile／Manifest／编排canonical仍为 `9df90a99df2c298ab2b2bf8aad0b7d907d2670e2c5247055c81cfe1afa475fbd`，原及continued默认保存History离线重放通过，Provider／服务0，不代表live continuation。wheel SHA256 `81e0ccbe8be5c3be36502eda4d9557fbb5bd41c89126324670674b35ad76697c`。独立源码审查无P1／P2。
+
+一次四个冷进程ABBA使用相同物理配置的真实双Runner工厂、完整Coding4／composition23发布与原三Agent请求，无服务／模型／native调用。完整绑定验证CPU均值A19.4461→B14.83585ms，下降23.7078%；完整Runtime验证仅约0.55%变化，不称为改善。完整结果差异24处，全部由声明的五个函数／source摘要变化解释，没有整块屏蔽implementation；原完整Scope、坏协议和source拒绝一致。该测量只证明同步完整绑定链的CPU收益，不代表业务墙钟或框架整体提速。证据 `binding-validation-cold-abba/summary.json` 及 `independent-result-review.json`（SHA256 `e41e8248583759562b257e97738bd66c90b088d73d62545375b784ea467c41c7`）。
+
+唯一原 `graph-sequential-sdk` 正常验收已终态exit1：1 failed／435.464秒（testcase435.006秒），零错误／跳过。Tool80／Runner60／审批180／场景360／首次关闭60／清理40保持，diagnostic flags及marker均为空；424产品／858测试前后无漂移。原body在approve→status→SDK query处由360秒scenario取消，不是Tool80或审批180到期。四个Tool最终均成功（40.451683／39.821789／40.538817／49.333893秒），各有result_candidate、adopted效果和正physical-stop证据；第四Tool到21:59:59.818411Z才完成，不能把关闭期间才取得的结果当原业务窗口内成功。
+
+两root均正退休（accepted2／retired2／retained0），但第一Turn才有succeeded Advance的Completed正ACK。Session第一Turn6组start／end及正ACK完整，第二Turn6个start／5个end，缺末end及Advance；没有最终两Turn业务结果文件。首次close为CloseIncomplete，最终close为RPCError；Worker已退出而assembly_close_succeeded=false，schema依scoped_session_close_unconfirmed／session_evidence_invalid（EvidenceMismatch）保留。四笔效果已采纳和root退休都不能代替Session责任解除；未强制退休或清理，也未据本次关闭报错推定独立缺陷。36项原输入前后哈希一致，业务证据 `binding-pass-normal-terminal-evidence/summary.json` SHA256 `17e8957aac55c056e39c7426581e61319b9667d2661d471d467be4217e18da5a`。
+
+本批归并有完整同步绑定CPU收益，仍不足以关闭原360秒两Turn及Session收尾门槛；不由不同产品／采样运行推断稳定端到端改善。其余十二正常／五故障未运行，S2／P3-2不关闭，独立600秒诊断仍未授权／执行。下一批只针对既有有效CPU证据中的完整Manifest／协议重复构造边界，先证明职责、现场source及Scope拒绝保持，再决定有实质完整链路收益的最小候选；不继续同版本盲目复跑或提高期限。正常runner SHA256 `f63bbed87316474fcbf6f94e5f1e0aa02b10963d213e15a362ee63ef2dfb3c85`，其audit SHA256 `21361791726216d1236d19d96a01731214855ae0fdc80044a1bcd48c1963aa60`。
+
 ## 修复后 CPU v2 首项（2026-10-16，有效计数，业务仍未通过）
 
 仅修复诊断生命周期，产品仍与`9ebb6f9`的独立安装逐字相同。新冻结`cpu-v2-lifecycle-fixed-prepared`含424产品／857测试，audit SHA256 `802804adb2a75a687da5fe9d7fcc55ebe2d51a44cca5db60bf28b89649239319`；相对上一采样只有诊断helper和测试两文件变化，runner仅换全新输出目录。原单项`graph-sequential-sdk`及80／60／180／360／60／40秒期限不变，未执行其他组合、模型或600秒诊断。
