@@ -66,6 +66,8 @@ The closure digest already includes native actions and child physical proofs. Ad
 
 After seal, new native grants, stop invocations, owner/receipt mutations and child adoption refuse. Exact already-recorded native receipts/stop requests/end acknowledgements return their original reply without events or new permission. Keep the public sealed-root `drive` wake and Registry-owned SDK verification; no TTL, forced eviction, caller certificate, summed-credit test or Facade release.
 
+For experimental publication4, an original admitted stop invocation may also repeat an exactly adopted `unprepared` receipt after stop observation has drained `stop_needed`. Preserve the complete original proof, admitted-stop membership, absence of grants and prepared/stop/thread/turn evidence, and the complete original namespace binding checks. Only the identical canonical receipt returns its recorded acknowledgement without writing state or emitting another event; a first or changed receipt still requires the original active stop conditions. This does not settle the business effect, release unknown budget or grant new native permission. Publication3 and unselected paths keep their prior behavior. The executable inventory changes, so retained Coding Histories continue with their matching immutable Worker rather than silently adopting the new implementation.
+
 ## Cold Coding call completion
 
 An original deployment call end ACK is distinct from Tool owner stop. Worker/process death alone cannot clear all deployment call records or prove surviving foreign/native operations ended.

@@ -1,5 +1,7 @@
 # Implementation status — 0.1.0.dev120
 
+2026-10-16 新增Coding4恢复幂等窄修：原unprepared已采纳但stop_needed排空后，原admitted-stop调用重复相同回执可返回原ACK，不添事件／权限／结算；完整身份与namespace及无原生grant／回执检查保留，首回执、外来／变更证据仍拒绝，unknown不释放。新增22项，受影响20模块402通过，另8个协议模块98通过；独立安装63通过，424产品／855测试核对无漂移，完整默认canonical及默认保存History离线兼容通过。旧Coding History仍需原匹配Worker，不能据旧路径行为保持声称选中Coding指纹相同。原360秒场景仍失败，600秒诊断未授权／执行，S2／P3-2仍开放。见[当前修复记录](../architecture/reviews/2026-10-15-temporal-deployment-sessions.md)。
+
 2026-10-16 结构审查未形成新产品候选：完整双Runner Runtime少一次外层copy的私有ABBA未显示收益（18.839→19.756ms／次），已放弃；原交接包含必要Context／Model／physical-stop／register／approval，未找到秒级空等可删。原SDK Importer内的纯node identity暖调用约4.9–5.5ms、与host结果相同，不能代替完整Query测量。未重复实际场景、未改产品或期限，S2／P3-2仍开放。独立较长窗口诊断已提出用户澄清，尚未授权／执行，且即使通过也不关闭原360验收门槛。细节见[审查记录](../architecture/reviews/2026-10-15-temporal-deployment-sessions.md)。
 
 2026-10-16 v21／`e6726c5`正常首项已结束：1 failed／455.001秒，零错误／跳过；424产品及854测试前后无漂移。整体360秒取消第二轮，第二approve180尚未到期。前三Tool成功且candidate已接受，第四实际开始、21.029423秒后为definition_mismatch且无candidate；首seal→正Advance Completed ACK19.594258秒。两root仅一条退休，effects3 adopted＋1 dispatched，assembly关闭未成功，schema按原未退休／Session证据／未采纳写门槛保留；Worker退出不替代关闭。其余十二项正常组合及五项故障未运行，S2／P3-2仍开放。停止同版本重复运行及尾部小修补，下一批复用既有CPU证据审查工具阶段和交接的完整验证成本，不扩大范围或放宽期限。详见[验收记录](../architecture/reviews/2026-10-15-temporal-deployment-sessions.md)。

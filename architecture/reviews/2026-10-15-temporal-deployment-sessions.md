@@ -1,5 +1,17 @@
 # 部署 Session 集成与收尾验证
 
+## 已采纳未准备回执的恢复幂等修复（2026-10-16，源码候选）
+
+复用 v21 已终态资料，不重跑服务。第四 Tool 所在 Scope 的 Registry close 在18:57:22.223170先接受，原 owner 回执18:57:32.328305接受，原`ralf-deployment-coding-close:*`取消18:57:34.638707接受，Tool随后以definition_mismatch返回。原History没有native phase grant；首次unprepared回执148有Completed149正ACK，第二次同证据回执183的Completed184则为authorization_denied，不能把两次Accepted都当成功。PG同一effect／Run／Action／namespace_binding已有prepare_granted=false、pending_stop=false，但业务effect仍dispatched。该正物理证据不等于业务无效果结算，现有契约与纯状态测试明确保留unknown。私有只读证据`v21-fourth-tool-causal-audit/result.json` SHA256 `f1732dfb1a64a1a255057df818114831e40e9f4d691e44ff235b9d14222416e7`，四个输入前后哈希一致；内层异常未持久化，不能仅凭History断言每个拒绝条件。
+
+最小纯History复现确认独立P2：首次原unprepared已采纳并完成停止观察后，新的原admitted-stop恢复调用在journal I/O期间遇到stop_needed被推进为false，相同完整回执被误拒。RED为2 failed／14 passed；候选仅在exact Coding4允许完整canonical相同的已存unprepared返回原ACK，不写状态、不添事件。完整原proof、stop身份、无grants／无prepared-stop-thread-turn、原namespace/request/runner/dispatch/generation仍全部检查；首回执、不同证据、bool／number混淆、矛盾native状态及外来身份拒绝，unknown预算不变。未选择与publication3保留原拒绝。新增22项覆盖活状态／独立深拷贝恢复、身份及矛盾证据；深拷贝不是SDK History恢复验收。
+
+20模块402 passed／16.11秒，另8个协议模块98 passed／4.83秒，均-Werror、零失败／错误／跳过，分别登记不冒称同次全量。首次受限运行392 passed／10 failed，其中8项本地Unix socket bind被沙箱拒绝，2项为其未关闭socket的后续告警；原报告保留，允许测试专用socket后同组402项通过。独立只读审查未发现新增P1／P2，格式及静态检查通过。本修复改变Coding executable inventory，旧Coding History继续用匹配的原不可变Worker，不声称Coding发布字节等值。
+
+独立构建／安装两模块63 passed／2.209秒，零失败／错误／跳过；424产品在source／sdist／wheel／site前后一致、855测试副本无漂移，所有产品导入来自新安装。完整默认Profile／Manifest／orchestration canonical等值，原及continued默认保存History离线重放通过，Provider0／服务0，未运行live continuation或旧Coding History。证据`receipt-recovery-check/final-summary.json`；wheel SHA256 `15abbd357f6be56b4b89421d4d45ae803380b57cb61d0c85416b0076e5954b4e`，sdist SHA256 `b78c947a49cc8d8fadd85328059c525d073be649cd845a66b74e898bcd54d603`。本登记在构建后同步，不声称当前全部文档与构建快照相同。
+
+完整Registry快照的唯一修正setup测量已完成：host／原Sandbox／私有passthrough CPU中位7.540／10.443／6.608ms，全部9次812B结果canonical相同、State与query不变。仅fixture JSON测量，无实际SDK Query／activation或State恢复，不证明passthrough安全或整体性能收益；未修改产品沙箱配置。未再叠加性能微调。原360秒验收仍失败，独立600秒诊断仍未授权／执行；该幂等修复不消解未知业务效果，也不关闭S2／P3-2或解锁其余十二项正常组合和五项故障。
+
 ## v21 验证成本结构审查（2026-10-16，未形成新产品候选）
 
 复用已结束的正常原图History和独立安装，未重复实际场景、未改产品或测试期限。此次不是v22候选，`e6726c5`仍是产品基线，S2／P3-2及第三阶段继续开放。

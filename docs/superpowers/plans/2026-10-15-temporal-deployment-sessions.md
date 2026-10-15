@@ -94,6 +94,8 @@ The independent source review established these three required boundaries. The c
 
 ## S2 — existing Coding scope through the same Session origin
 
+当前批次只修复已复现的原回执幂等P2，不是性能候选：Coding4中首次unprepared已采纳、stop_needed排空后，原admitted-stop重复完整canonical相同证据返回原ACK，不写状态／事件，不释放unknown或改变grant。原完整身份及namespace／矛盾native检查、未选中与publication3路径保留。新增22项，20模块402 passed，另8个协议模块98 passed；独立安装63 passed，424产品／855测试无漂移，完整默认canonical和默认保存History离线兼容通过，本批仅本地提交。选中Coding指纹改变，既有保留History必须继续匹配原不可变Worker；不复用旧运行接受新实现。原360秒验收及其余十二正常／五故障门槛仍开放，独立600秒诊断未授权／执行；修复不能代替性能门槛或解决未知业务结果。下一步仍需关闭原360秒性能门槛，只有固定原图通过后才展开其余矩阵；不为本窄修重复预计仍会超时的同场景，亦不声称能够估计整阶段结束时间。
+
 成本结构审查已完成一批：完整Runtime copy候选无收益、交接未见可删除空等，原SDK Importer纯node identity对照未见数量级CPU放大；未改产品、未运行新实际场景。不会据此继续叠加小copy／计数组合或增加Activity collector。下一步已提出用户澄清：是否允许一次独立600秒整体看门狗诊断，单独判断取消后果，不改变Tool80／Runner60／approve180和原关闭／未知义务，也不关闭原360门槛。私有runner已dry-run核对唯一AST常量差异、原冻结产品与测试保留、diagnostic-only及无remaining入口；当前未授权／未执行。得到明确答复前不得运行；未答复不是批准。若获准，预计一次约8–12分钟的固定诊断及证据登记；若不允许，保留原窗口继续审查，无法据当前证据估计整阶段完成时间。
 
 v21正常原图首项已终态1 failed／455.001秒，零错误／跳过；424产品／854测试运行前后同。原整体360秒取消第二轮，第二approve180未到期；前三Tool成功且candidate已接受，第四实际开始后21.029423秒definition_mismatch、无candidate。首seal→正Advance Completed ACK19.594258秒；两root一条退休，3 adopted＋1 dispatched，原close未成功、schema保留，不能以Worker退出替代。其余十二项正常组合及五故障不解锁，S2／P3-2继续开放。本轮只登记实际结果，不再相同产品复跑或追加尾部小修补。下一批复用函数级CPU证据审查工具阶段与交接的完整验证成本；候选须先证明原字段／身份／source／错误检测契约及完整链路收益，不引入第二验证权威、跨请求缓存或期限放宽。预计一个有界结构审查／必要源码检查批次，只有新候选证据充分后才运行约8分钟的原首项；当前不足以估计整阶段结束时间。

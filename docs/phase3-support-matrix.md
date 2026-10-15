@@ -1,5 +1,7 @@
 # 第三阶段支持矩阵与收口门槛
 
+2026-10-16 当前新增一个已复现的Coding4回执幂等修复：原admitted-stop在停止观察排空后重交相同已存unprepared仍返回原ACK，全部原proof／namespace／无grants与原生回执检查保留，不修改unknown效果／预算。新增22项，20模块402通过，另8个协议模块98通过；独立安装63通过、424产品／855测试无漂移，完整默认canonical及默认保存History离线兼容通过。旧Coding History仍使用原匹配Worker。原360秒首项仍失败，其余十二项及五故障不解锁；600秒诊断未授权／执行，S2／P3-2保持开放。见[当前登记](../architecture/reviews/2026-10-15-temporal-deployment-sessions.md)。
+
 2026-10-16 成本结构审查：没有足够收益或等价证据的新候选，不修改产品、不重复运行v21。已否决纯copy改动及跳过queued/running观察；交接含原必要阶段，沙箱纯函数对照不代替完整Query测量。原360首项失败及十二正常／五故障待验状态不变。一次独立较长窗口诊断正在向用户澄清，未授权／执行，不能替代原门槛或标记阶段完成；R01–R26与固定阶段范围不变。证据见[审查记录](../architecture/reviews/2026-10-15-temporal-deployment-sessions.md)。
 
 2026-10-16 v21／`e6726c5`正常首项1 failed／455.001秒，零错误／跳过，424产品／854测试前后同。整体360秒取消第二轮，前三Tool成功且candidate已接受，第四实际开始后21.029423秒definition_mismatch／无candidate；首seal至正Advance Completed ACK19.594258秒。accepted2／retired1／retained1，effects3 adopted＋1 dispatched，Worker退出但assembly关闭失败，schema依原未退休root／Session证据及未采纳写门槛保留。其余十二项正常组合和五项故障未运行，S2／P3-2及第三阶段未关闭。下一批审查原工具及交接的完整验证成本；不依夹具计数追加微调、同产品复跑或提高期限。证据见[验收记录](../architecture/reviews/2026-10-15-temporal-deployment-sessions.md)。

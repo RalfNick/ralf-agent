@@ -10,7 +10,7 @@ from .errors import AuthorizationDenied, DefinitionMismatch
 from .temporal_deployment_coding_state import guard_mutation
 from .temporal_deployment_coding_state import selected as deployment_coding_selected
 from .temporal_tool_execution import ordinary
-from .types import digest
+from .types import canonical, digest
 
 CODING_QUERY = "coding_state"
 CODING_GRANT = "admit_coding_phase"
@@ -276,9 +276,15 @@ def adopt(state, payload):
         value["phase"] = "namespace_absent"
     elif payload["kind"] == "unprepared":
         evidence = payload["evidence"]
+        repeated = (
+            deployment_coding_selected(state.manifest)
+            and state.manifest["deployment_admission_protocol"]["version"] == 4
+            and previous is not None
+            and canonical(previous) == canonical(evidence)
+        )
         if (
             payload["invocation_id"] not in value["stop_invocations"]
-            or not value["stop_needed"]
+            or (not value["stop_needed"] and not repeated)
             or value["grants"]
             or any(value.get(key) is not None for key in ("prepared", "stop", "thread", "turn"))
             or type(evidence) is not dict
@@ -320,6 +326,10 @@ def adopt(state, payload):
                 )
         if "unprepared" in value and value["unprepared"] != evidence:
             raise DefinitionMismatch("Original unprepared resource tombstone changed")
+        if repeated:
+            # Original stop observation may have drained during recovery I/O.
+            # Reading the same adopted fact creates neither work nor settlement.
+            return {"action_id": action["id"], "recorded": True}
         value["unprepared"] = copy.deepcopy(evidence)
     else:
         from .coding_execution_rules import adopt as adopt_receipt
