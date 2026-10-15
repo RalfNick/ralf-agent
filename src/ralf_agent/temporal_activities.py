@@ -6,6 +6,7 @@ return observations; they never instantiate a local execution engine/store.
 
 import inspect
 from dataclasses import asdict
+from weakref import WeakKeyDictionary
 
 from .context import ContextAssembler
 from .decisions import validate_decision
@@ -30,6 +31,15 @@ from .temporal_state import (
 )
 from .tools import ToolRegistry
 from .types import AgentSpec, InvocationContext, ModelResponse, Scope, ToolCall, canonical, digest
+
+_EVIDENCE_REGISTRATIONS = WeakKeyDictionary()
+
+
+def _register_evidence_wrapper(runtime, client, original, wrapped):
+    registration = _EVIDENCE_REGISTRATIONS.get(original)
+    if registration is None or registration[0] is not runtime or registration[1] is not client:
+        raise DefinitionMismatch("Original evidence factory registration changed")
+    _EVIDENCE_REGISTRATIONS[wrapped] = (runtime, client, original)
 
 
 def component_identity(component, methods, *, synchronous=False):
@@ -1944,6 +1954,8 @@ def registered_activities(runtime, client=None):
     @activity.defn(name=ACK_ACTIVITY)
     async def evidence(request: dict) -> dict:
         return await runtime.acknowledge_evidence(request)
+
+    _EVIDENCE_REGISTRATIONS[evidence] = (runtime, client)
 
     from .temporal_managed_context import ACTIVITY
 

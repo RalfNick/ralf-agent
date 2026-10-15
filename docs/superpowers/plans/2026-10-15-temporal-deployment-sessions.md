@@ -1,6 +1,6 @@
 # Temporal deployment Session admission — next delivery plan
 
-> **Status: S1 ordinary Session publication4 is connected as an explicit preview; delivery remains in progress.** The committed product baseline is dev120 (`c52d54c`). The current installed S1 matrix passes; this does not close every S1 fault/recovery gate or the unimplemented S2 scope.
+> **Status: the fixed S1 ordinary Session functional subset is accepted for this batch.** S2 Coding Session, Temporal＋PostgreSQL integration and phase-three acceptance remain pending. Source and installed evidence are recorded by snapshot below.
 >
 > **For agentic workers:** implement only after the Session contract is reviewed, using the existing authorized execution workflow and TDD. Do not infer authorization to run services, models, commit, or push from this document.
 
@@ -16,13 +16,21 @@
 
 **2026-10-15 收尾范围冻结：** 用户要求加快进度并停止自动扩展新功能。本计划是[第三阶段固定清单 P3-2](../../phase3-support-matrix.md#收尾范围冻结2026-10-15-用户指令)的当前必需项；仅将既有普通 Session（S1）及已选 Coding Session（S2）接入部署准入，不增加新 Session／编排类型、持久 FIFO、替代调度器、额外适配器、模型、平台集成或通用重构。所选部署固定为可信单宿主上的既有 Local＋SQLite、Temporal＋PostgreSQL。OIDC、跨宿主、HA、Kubernetes 及新增外部集成留在阶段之后；优先手动、有界治理和原身份恢复，不另建后台调度。完整 R01–R26 路线图保留，不自动扩大本轮验收维度。
 
-dev120 已在 `c52d54c` 本地提交；所选 Coding 部署准入的最终证据见[验收记录](../../../architecture/reviews/2026-10-15-temporal-deployment-coding.md)。该基线未交付部署 Session。当前工作区已实现并接通 S1 的显式 deployment4／Registry4、公共 Session 入口与 Worker 路径：沿原 intent／SDK 身份共享 Registry 容量，保留重复及延迟重试、独立 observer／ACK、正退休后推进与 owned-close 的原 receiver。当前 pub4 普通 Session 作为显式 preview 已接通，产品代码和接口保持冻结。最终 durable 候选的安装实际 SDK 矩阵已通过：专用 3 秒超时复现 1 passed，公共默认 60 秒的 9 种普通编排 9 passed，均无 skip／failed／error；最终 v4 安装的最小两项链路亦通过（2 passed／39.63 秒），覆盖两次 Turn、审批期间 Worker 重启和完成回复丢失后的原回执恢复。这些结果不代表 S1 全部故障／恢复门槛完成。S2 既有 Coding Session 尚未实现，仍为必需后续；P3-2、批次 2 和第三阶段均保持进行中，未标验收完成。
+dev120 的 `c52d54c` 未交付部署 Session；其 Coding 部署准入证据见[验收记录](../../../architecture/reviews/2026-10-15-temporal-deployment-coding.md)。本地 `4fdd5ae` 已记录 S1 显式 preview，当前 v6 候选继续沿原 public client → Session → Registry → Run 路径，固定 intent／SDK 身份、独立 observer／ACK、共享容量与正退休后推进，不增加协议范围。
 
-此前 S1 最小实际验证（历史候选）：源码 1 passed／23.16 秒、wheel 安装 1 passed／26.13 秒。两次普通 Agent Turn 各有原 Registry 正向退休、容量归零和重复回执证据，关闭后 Worker 停止、owned Provider 仅关闭一次；安装检查的 314 个已加载模块均来自安装目录。源码、wheel 和安装的 424 个产品文件一致。dev120 默认完整发布等值、原 History 重放／续接和新增 Provider 调用为零亦已验证。首轮关闭入口缺失的失败保留，修复后复验通过；这些是最小正向链路证据，不代替本计划剩余恢复／编排、最终全量及 S2 门槛。
+当前 v6 修复两项实际阻塞：关闭时仅为 exact factory 原 evidence ACK 保留维护路径，固定 Runtime／client／函数与请求 Scope，完整原 SDK／Registry held／call-end 校验保持；每次机械 release 使用新的 SDK Update ID，避免同 ID 永久重放已完成的失败，原 root／certificate payload 和 Registry 唯一退休语义不变。首轮 closing ACK 拒绝、后续全局 1 秒期限打断机械 verify，以及固定失败 ID 阻止原证书重试的失败证据分别保留。最终债务夹具显式使用 3 秒故障期限，仍断言 unknown 时原物理处理器未结束；不改变产品期限、公共默认 60 秒或旧接受信封。
 
-S1 原 observer 超时恢复补充：既有内部 `session_deployment_call_end` Update 增加完整原 `body_result`，与既有 digest／stopped／identity 一并校验后才记录；ACK DTO 保持不变。结果受既有 submission allowance 的 8 倍字节上限约束。原 Session History 仅保留成功 register／正向 Advance，全部原调用 end 债务关闭后通过既有 adopt 路径消费一次；超时后优先消费该结果，未结束调用不触发替代 observer，null／error 不自动唤醒循环。保持 3 秒 start-to-close／14 秒总界限，不把 observer 纳入业务 root ledger。针对性开发检查已通过，最终安装候选的专用 3 秒实际 SDK 复现已通过。此前原 3 秒场景中 Run 已退休而 Session 仍 busy 的失败保留；它与修复后的通过结果来自不同运行，不能合并为一次通过。
+实际 SDK 证据分开登记：
 
-回归证据分开登记：最终受影响检查为 3167 passed／567 skipped；此前基线全量为 12083 passed／805 skipped。后者不是 durable late-body 修复后的同一全量运行，skip 也不计作实际 SDK 验收。
+- v4 安装：9 种普通编排 9 passed；原 3 秒 observer 超时恢复 1 passed；两 Profile／队列／Scope 的共享 max1、deferred 原 intent 重试及命令／权限拒绝 1 passed。它们保留各自原运行证据。
+- v6 安装：最小两项链路 2 passed／40.67 秒，覆盖两次 Turn、审批 Worker 重启与已完成回执丢失；冷 Runtime／client 恢复及已完成退休回复丢失 1 passed／27.23 秒，保持原 intent／信封／epoch／回执及一次 conversation publication。
+- v6 effect-ack／call-end-ack 债务两节点一次通过：2 passed／84.06 秒，零 failed／error／skip，424 个产品文件与 316 个已加载安装模块核验通过。每节点两次 Turn／两次物理写：unknown 且原处理器未结束时保持 busy／root1，原 stop＋ACK 后才退休／发布／root0；第二 Turn 的 owned close 先为 `CloseIncomplete`、原 receiver 存活且 Provider 关闭数为 0，依原关闭契约重试排空后才停止 receiver、Provider 关闭一次。cleanup 不替代门槛断言。**S1 普通 Session 功能子集在本批验收关闭。**
+
+v6 源码／sdist／wheel／安装的 424 个产品文件一致；完整默认 publication 和原／continued History 离线重放通过，live continuation 沿用 v4 的独立原证据。回归分别为 v5 Temporal 3175 passed／571 skipped、v6 24 个受影响模块 438 passed／90 skipped；历史全量 12083 passed／805 skipped 属于旧快照，不合并为当前全量，skip 不计实际 SDK 验收。
+
+原 observer 修复继续有效：既有 `session_deployment_call_end` 携带完整原 `body_result`，与 digest／stopped／identity 校验后记录；ACK DTO 不变。History 只保留成功 register／正向 Advance，原调用全部结束后消费一次；null／error 不自动唤醒，不将 observer 纳入业务 root ledger。专用 3 秒／14 秒原超时场景的失败与修复后通过来自不同运行，分别保留。
+
+S2 既有 Coding Session、Temporal＋PostgreSQL 集成以及 P3-2／批次 2／第三阶段整体验收继续待定。以下涉及普通与 Coding 的共享条目不能因 S1 的普通证据全部勾选；不从本批普通通过推导整个支持矩阵完成。
 
 ## Committed dev120 source baseline
 
@@ -71,12 +79,14 @@ The independent source review established these three required boundaries. The c
 
 ## S1 — ordinary Session coordinator admission
 
+**本批普通功能子集已验收关闭。** 首条兼容普通／Coding／Session 的共享 Registry 条目仍保留后续 Coding 集成范围；其余 S1 普通条目已由本批单测及实际 SDK 证据满足，不能据此关闭 S2／PG 或整个阶段。
+
 - [ ] Complete the explicit deployment4/Registry4 handshake, selected by explicit Session deployment enablement plus public admission. A new Registry accepts the current compatible ordinary/Coding/session publications under one policy; old incompatible Registries refuse the new publication. Host selects its maximum required Registry version before first acceptance.
-- [ ] Define an original `session_origin` beside business deployment metadata: coordinator ID and first/current/original SDK epoch, Turn ID/sequence, original SessionRef and intent digests. Preserve business lineage beginning at the Turn Run; never manufacture a business Parent edge to the coordinator.
-- [ ] Keep Session intent acceptance first, then verify the exact original intent from its actual coordinator History before reserving the original deployment root/envelope. Use the original SDK-owned verification/commit pattern; accept no raw caller attestation. Record original request, Manifest, queue and Activity timeout. Start only that original SDK child with deployment metadata.
-- [ ] Define capacity-deferred start and duplicate-command recovery explicitly: retain one original pending intent/Turn, expose its durable state, and wake that original History on retry. Do not create a second Turn, replace an uncertain SDK start, or leave a reservation unrelated to an accepted original intent.
-- [ ] Pin coordinator transport and notifications to Scope, actual namespace UUID, original SDK epochs, and original Session binding. Lookup the first receipt/envelope before current-alias validation. Idle rebind changes only future accepted Turns.
-- [ ] Admit only the exact trusted coordinator control registration, with fresh original SDK proof. Keep all business Activities behind the existing Run gate. Complete original result/effect/charge adoption and physical/ACK closure before advancing the Turn; use original deployment seal/retirement evidence rather than coordinator claims to free quota. Owned close retains the receiver for allowed original observations and retirement; unknown debt remains held.
+- [x] Define an original `session_origin` beside business deployment metadata: coordinator ID and first/current/original SDK epoch, Turn ID/sequence, original SessionRef and intent digests. Preserve business lineage beginning at the Turn Run; never manufacture a business Parent edge to the coordinator.
+- [x] Keep Session intent acceptance first, then verify the exact original intent from its actual coordinator History before reserving the original deployment root/envelope. Use the original SDK-owned verification/commit pattern; accept no raw caller attestation. Record original request, Manifest, queue and Activity timeout. Start only that original SDK child with deployment metadata.
+- [x] Define capacity-deferred start and duplicate-command recovery explicitly: retain one original pending intent/Turn, expose its durable state, and wake that original History on retry. Do not create a second Turn, replace an uncertain SDK start, or leave a reservation unrelated to an accepted original intent.
+- [x] Pin coordinator transport and notifications to Scope, actual namespace UUID, original SDK epochs, and original Session binding. Lookup the first receipt/envelope before current-alias validation. Idle rebind changes only future accepted Turns.
+- [x] Admit only the exact trusted coordinator control registration, with fresh original SDK proof. Keep all business Activities behind the existing Run gate. Complete original result/effect/charge adoption and physical/ACK closure before advancing the Turn; use original deployment seal/retirement evidence rather than coordinator claims to free quota. Owned close retains the receiver for allowed original observations and retirement; unknown debt remains held.
 
 **Files:** create focused pure/SDK Session deployment helpers; modify `temporal_session_state.py`, `temporal_session_workflow.py`, `temporal_session_client.py`, `temporal_session_activities.py`; integrate the existing deployment protocol, registry, execution state/transport, submissions, Runtime facade, Host version selection, and assembly lifecycle. Keep the shared DTOs in the reviewed contract before splitting ownership.
 

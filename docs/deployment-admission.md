@@ -19,9 +19,11 @@ runtime = TemporalRuntime(
 
 该选择使用同地址 Registry4；已有不兼容 Registry 不会自动升级或换地址规避容量。Session coordinator 不占业务根额度，每个 Turn 的原业务 Run 占用一个根槽位；只有正向退休并完成原观察回执后才发布会话和接受下一 Turn。相同命令保持首次定义、队列和回执，修改别名不会替换原 Run。owned Assembly 关闭时保留原 Worker 接收允许的观察与收尾；无法确认的占用继续报告 `CloseIncomplete`，须保留原资源并按原身份恢复。
 
-最终 durable 候选的安装实际 SDK 检查已通过：专用 3 秒超时复现 1 passed，公共默认 60 秒的 9 种普通编排 9 passed，均无 skip／failed／error。修复将原控制 body_result 随既有 end Update 保存在 Session History，原调用全部结束后消费一次；Activity 完成回复丢失不再要求重新执行 observer，3 秒／14 秒界限保持不变。此前原 3 秒失败与修复后通过来自不同运行，历史失败仍保留。最终 v4 安装的最小两项链路亦通过（2 passed／39.63 秒），含两次 Turn、审批期间 Worker 重启及完成回复丢失后的原回执恢复；不能据此宣称 S1 全部故障／恢复门槛已完成。
+当前 v6 候选补齐了两项实际恢复修复：owned close 原先错误拒绝原 `evidence` ACK，现仅允许本次 factory 注册、固定 Runtime／client／函数的 ACK 维护路径，仍经过完整原 SDK、Registry 和 call-end 门禁；机械退休原先复用已失败的 SDK Update ID，现每次尝试使用新 ID，原 root／certificate payload 与 Registry 语义幂等不变。历史失败保留。债务夹具最终显式使用 3 秒故障期限，并断言 outcome unknown 时物理处理器仍未结束；它独立于公共默认 60 秒检查，也不修改旧接受信封。
 
-最终受影响检查为 3167 passed／567 skipped；此前基线全量为 12083 passed／805 skipped，两者分开登记，基线全量不是修复后同一运行。该 preview 仅支持普通 Session，S2 Coding Session 尚未实现。后续仍按[固定计划](superpowers/plans/2026-10-15-temporal-deployment-sessions.md)推进，P3-2、批次 2 和第三阶段尚未关闭。
+实际 SDK 证据按快照分别登记：v4 安装的 9 种普通编排、专用原 3 秒 observer 恢复及两 Profile／队列／Scope 共享容量场景分别为 9、1、1 passed；v6 安装的最小两项链路为 2 passed／40.67 秒，冷 Runtime／client 恢复及已完成退休回复丢失为 1 passed／27.23 秒。v6 的 effect-ack／call-end-ack 两个债务节点一次运行通过（2 passed／84.06 秒，零 failed／error／skip），每个节点验证两次 Turn 和两次真实物理写：unknown 时保持 busy／root1，原物理结束与 ACK 后才退休、发布并归零；第二 Turn 的关闭先报告 `CloseIncomplete` 且原 receiver 存活、owned Provider 未关闭，排空后才停止 receiver 并关闭 Provider 一次。S1 普通 Session 功能子集在本批验收关闭。已通过的跨队列恢复保持原 intent、回执和唯一 Turn；未知效果、物理结束与 ACK 门槛不由 cleanup 代替。
+
+回归数字不合并：v5 Temporal 检查为 3175 passed／571 skipped；v6 的 24 个受影响模块为 438 passed／90 skipped；历史基线全量为 12083 passed／805 skipped，属于旧快照。skip 不计实际 SDK 验收。v6 源码、sdist、wheel 和安装的 424 个产品文件一致，债务实际检查的 316 个已加载模块来自安装目录；完整默认 publication 及原／continued History 离线重放通过；live continuation 保留 v4 的独立原证据。S2 Coding Session、Temporal＋PostgreSQL 集成、P3-2、批次 2 和第三阶段整体验收继续待定，后续仅按[固定计划](superpowers/plans/2026-10-15-temporal-deployment-sessions.md)推进。
 
 ## 策略与占用单位
 
@@ -230,6 +232,6 @@ Worker 核对实际 Activity Workflow ID、namespace 名称／UUID、current 与
 
 上述内部参数不是公共装配入口，仍发布 v1 且不提供退休。公共入口使用 `TemporalRuntime(admission_policy=policy)`，或 Profile 的 `components.admission_policy`／`bounded`，再把所选 Runtime 发布传给 Engine。同步／异步工厂与 Builder 宿主策略复用原 exact DTO；宿主与 Profile 策略不能共存。普通执行选择 v2；候选中与显式 `coding_execution=True` 组合时选择 v3，所选编排再显式开启 `coding_composition=True`。无需在 Profile 中手写协议或 Registry 版本。
 
-当前 Engine 接受 v2／v3：v2 正向核对 Registry2／3，v3 只接受 Registry3。已有同地址 v1／不兼容 Registry 明确拒绝，不替换、重置或自动升级；恢复原任务不能换 deployment／Registry，宿主另建部署不解除原占用。重复提交先按原命令和请求找回首次信封／回执，再按原发布恢复，仍须宿主授权与实际身份核对；原树义务闭合后由 Registry 自身 SDK 校验 Activity 幂等退休，详见[公共契约](../architecture/specs/temporal-deployment-public-contract.md)、[Coding 部署指南](temporal-deployment-coding.md)与[执行指南](temporal-execution.md)。
+当前普通／Coding 非 Session 入口继续接受 v2／v3；显式普通 Session 选择 v4／Registry4。v2 正向核对 Registry2／3／4，v3 正向核对 Registry3／4；Coding Session 仍未交付。已有同地址 v1／不兼容 Registry 明确拒绝，不替换、重置或自动升级；恢复原任务不能换 deployment／Registry，宿主另建部署不解除原占用。重复提交先按原命令和请求找回首次信封／回执，再按原发布恢复，仍须宿主授权与实际身份核对；原树义务闭合后由 Registry 自身 SDK 校验 Activity 幂等退休，详见[公共契约](../architecture/specs/temporal-deployment-public-contract.md)、[Coding 部署指南](temporal-deployment-coding.md)与[执行指南](temporal-execution.md)。
 
-dev119 冻结源码与独立安装各通过 953 项受影响检查、27 项公共实际服务与 17 项私有 v1 服务，零失败／错误／跳过；其默认发布和原 dev118 History 重放／续接兼容及 owned 清理已登记。候选 dev120 的 Coding／恢复／安装／兼容结果另行登记，当前未提交或发布。SDK Session coordinator Turns 继续拒绝且仍为必需后续项；普通受管理 Session 写入不等同于该 coordinator 准入。登记或 SDK 派发证明不能自行解除 claim，也不证明完整批次 2、阶段全量回归或新模型质量通过。本地交付不推送远端。
+dev119 冻结源码与独立安装各通过 953 项受影响检查、27 项公共实际服务与 17 项私有 v1 服务，零失败／错误／跳过；其默认发布和原 dev118 History 重放／续接兼容及 owned 清理已登记。dev120 的 Coding／恢复／安装／兼容结果另行登记且已本地提交，未推送。dev120 基线的 Session coordinator 拒绝边界保留；当前显式 v4 已接通普通 coordinator Turns，Coding Session 仍为必需后续项。普通受管理 Session 写入不等同于 coordinator 准入。登记或 SDK 派发证明不能自行解除 claim，也不证明完整批次 2、阶段全量回归或新模型质量通过。本地交付不推送远端。

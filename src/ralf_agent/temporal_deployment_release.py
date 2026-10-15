@@ -450,7 +450,7 @@ async def execute(runtime, client, value, info):
         result = await client.get_workflow_handle(root["registry_id"]).execute_update(
             "release_deployment_root",
             _binding(root, policy, certificate),
-            id="ralf-deployment-release:" + digest(certificate),
+            id="ralf-deployment-release:" + digest(certificate) + ":" + uuid4().hex,
         )
         execution._actual(client, info, run_id=proof["run_id"], epoch=proof["execution_epoch"])
     elif mode == "control":

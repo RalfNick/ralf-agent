@@ -666,6 +666,13 @@ def build_temporal_worker(
                 if activity._Definition.from_callable(function).name == SESSION_ACTIVITY
             )
             maintenance.append((parent_activities[0], "control"))
+            from .temporal_state import ACK_ACTIVITY
+
+            maintenance.extend(
+                (function, "evidence")
+                for function in native_activities
+                if activity._Definition.from_callable(function).name == ACK_ACTIVITY
+            )
         if manifest["deployment_admission_protocol"]["version"] == 3:
             from temporalio import activity
 
@@ -687,6 +694,11 @@ def build_temporal_worker(
             maintenance.append((parent_activities[0], "control"))
         originals = activities
         activities = wrap_activities(runtime, client, originals)
+        from .temporal_activities import _register_evidence_wrapper
+
+        for original, wrapped in zip(originals, activities, strict=True):
+            if any(original is fixed and kind == "evidence" for fixed, kind in maintenance):
+                _register_evidence_wrapper(runtime, client, original, wrapped)
         maintenance = [
             (wrapped, kind)
             for original, wrapped in zip(originals, activities, strict=True)

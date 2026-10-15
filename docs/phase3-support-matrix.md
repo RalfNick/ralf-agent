@@ -1,6 +1,6 @@
 # 第三阶段支持矩阵与收口门槛
 
-日期：2026-10-15。第二阶段在本地提交 `695175e`／`0.1.0.dev113` 冻结；第三阶段按本矩阵推进 R21–R24 服务化与治理。当前产品基线 `0.1.0.dev120` 已在 `c52d54c` 本地提交。第一阶段 dev99 的业务质量、第二阶段的所选编排与执行证据继续按原范围引用。工作区 S1 普通 Session 已接通并完成有限安装版 SDK 验证，恢复门槛仍待，S2 未实施；P3-2 与第三阶段尚未完整验收，下面的目标不能当成交付清单。
+日期：2026-10-15。第二阶段在本地提交 `695175e`／`0.1.0.dev113` 冻结；第三阶段按本矩阵推进 R21–R24 服务化与治理。dev120 编排基线为 `c52d54c`，S1 普通 Session 已在 `4fdd5ae` 本地提交，当前收尾候选为 v6。第一阶段 dev99 的业务质量、第二阶段的所选编排与执行证据继续按原范围引用。S1 普通 Session 功能子集已完成验收，v6 安装最小审批／重启、冷恢复与债务复验通过；S2 未实施，Temporal＋PG 集成、P3-2 与第三阶段尚未关闭，下面的目标不能当成交付清单。
 
 ## 收尾范围冻结（2026-10-15 用户指令）
 
@@ -13,7 +13,7 @@
 | ID | 本阶段仅需关闭的交付门槛 | 冻结时状态／结束条件 |
 | --- | --- | --- |
 | P3-1 | 已有 Local／Temporal Run 与审批期限 | dev114／115 已交付；复用原证据，不重开功能建设 |
-| P3-2 | 部署容量准入的 Session 收尾 | **进行中，未完整验收。** Local、普通 Temporal 与所选 Coding 部署沿 dev116–120 复用；S1 普通 Session 的最终 durable 安装版已通过有限实际 SDK 矩阵，最小审批／重启两项待结果；S2 第二阶段已选 Coding Session 尚未实施。纯状态／模拟传输测试与跳过项不算实际 SDK 验收。完成原 Turn／命令去重、重启、取消、实际停止、未知义务、容量安全释放、安装及约定兼容后关闭；不增加会话种类、编排拓扑或新调度器 |
+| P3-2 | 部署容量准入的 Session 收尾 | **进行中，未完整验收。** Local、普通 Temporal 与所选 Coding 部署沿 dev116–120 复用；S1 普通 Session 功能子集已验收；S2 第二阶段已选 Coding Session 尚未实施，Temporal＋PG 集成仍待。纯状态／模拟传输测试与跳过项不算实际 SDK 验收。完成原 Turn／命令去重、重启、取消、实际停止、未知义务、容量安全释放、安装及约定兼容后关闭；不增加会话种类、编排拓扑或新调度器 |
 | P3-3 | 最小服务控制与持久观察 | 复用原 SDK／A2A，交付提交、查询、审批、取消、核验／恢复及 HTTP 事件游标续接；断连不取消业务，背压有界。累计命令容量耗尽不得令已有任务失去必要取消／恢复入口；不建设 Web 控制台或新传输协议 |
 | P3-4 | 最小身份、权限、审计与保留 | 可信宿主认证结果映射调用者／Scope，复用资源授权交集；越权控制／事件读取拒绝、审计脱敏、完成数据清理保护活动树、原效果、幂等及恢复证据。复用既有数据后端，不开发 OIDC 联邦或通用权限平台 |
 | P3-5 | 所选部署的备份恢复与升级责任 | 安装后验证既有所选 SQLite／Temporal／PG 数据、原版本 Worker、业务身份和效果证据的备份／恢复；升级失败可诊断并有可操作回退路径。活动及 unknown 义务须安全保留，不能以复制文件或清理占位冒充恢复；不开发通用迁移框架或跨宿主灾备 |
@@ -51,14 +51,16 @@
 | 批次 | 必需行为与验收 | 当前状态 |
 | --- | --- | --- |
 | 1：期限配置 | Temporal 现有 `TemporalExecutionPolicy` 接入 Profile／SDK／JSON／TOML 和自定义工厂；省略保持原默认，非法内置配置在组件 I/O 前拒绝；实际服务验证审批重启、原到期时间、批准／过期、晚到证据和 owned 关闭；安装后复验 | dev114 已通过策略入口、默认兼容、配置／替换和 owned 清理；源码／安装各 4 项实际 Temporal／PG 场景及各 313 项受影响回归（2 项其他远程配置跳过）通过，见[策略配置](temporal-execution-policy.md)与[验收登记](../architecture/reviews/2026-10-14-temporal-policy-profiles.md) |
-| 2：Local 期限与容量 | 所选 Local 链路补 Run／审批期限；观察等待与业务期限分离；准入额度原子获取，关闭／恢复释放责任明确；活动、未知效果和实际未结束处理器不得被过期或清理释放 | dev115 已补 Local 持久期限与审批过期，见[指南](local-execution-policy.md)和[本批登记](../architecture/reviews/2026-10-14-local-deadlines.md)；dev116 已补 Local 全 DB／每 Scope 持久根准入，见[指南](deployment-admission.md)及[登记](../architecture/reviews/2026-10-14-local-admission.md)；dev117／dev118 已接通原 Registry 与内部 Worker SDK 门禁，见[登记](../architecture/reviews/2026-10-14-temporal-deployment-dispatch.md)。dev119 已实现普通公共 v2 Engine／Profile、原接受信封与不确定启动恢复、真实 Activity 义务及原树校验后安全退休；源码与独立安装各 953 项受影响、27 项公共实际服务及 17 项私有 v1 服务零失败／错误／跳过；默认发布、原 History 兼容和 owned 清理通过，见[验收记录](../architecture/reviews/2026-10-15-temporal-deployment-public.md)。内部 v1 继续只占位；dev120已接通所选Coding准入与物理关闭；SDK Session coordinator尚未接入，明确拒绝且仍为必需项。现有单 Run／Runner 限制不能替代部署准入；批次 2 未关闭 |
+| 2：Local 期限与容量 | 所选 Local 链路补 Run／审批期限；观察等待与业务期限分离；准入额度原子获取，关闭／恢复释放责任明确；活动、未知效果和实际未结束处理器不得被过期或清理释放 | dev115 已补 Local 持久期限与审批过期，见[指南](local-execution-policy.md)和[本批登记](../architecture/reviews/2026-10-14-local-deadlines.md)；dev116 已补 Local 全 DB／每 Scope 持久根准入，见[指南](deployment-admission.md)及[登记](../architecture/reviews/2026-10-14-local-admission.md)；dev117／dev118 已接通原 Registry 与内部 Worker SDK 门禁，见[登记](../architecture/reviews/2026-10-14-temporal-deployment-dispatch.md)。dev119 已实现普通公共 v2 Engine／Profile、原接受信封与不确定启动恢复、真实 Activity 义务及原树校验后安全退休；源码与独立安装各 953 项受影响、27 项公共实际服务及 17 项私有 v1 服务零失败／错误／跳过；默认发布、原 History 兼容和 owned 清理通过，见[验收记录](../architecture/reviews/2026-10-15-temporal-deployment-public.md)。内部 v1 继续只占位；dev120已接通所选Coding准入与物理关闭；S1 普通 Session 功能子集已验收，S2 所选 Coding Session 与 Temporal＋PG 集成仍为必需项。现有单 Run／Runner 限制不能替代部署准入；批次 2 未关闭 |
 | 3：观察与服务控制 | 持久 HTTP 事件游标与断连续接；审批、核验和恢复沿原身份与幂等命令；断连只结束观察；统一诊断和明确关闭／移交责任 | 原事件分页、订阅与 A2A polling 已有；完整 hosted 观察及管理链路待补齐 |
 | 4：身份、权限与保留 | 宿主认证结果形成可信调用者；资源 ACL、Scope 与每 Agent 能力绑定取交集；跨 Scope 控制／事件读取拒绝；审计脱敏；保留清理保护活动 Run、原效果与恢复所需证据 | 可信 Scope／工具授权及 namespace 保护已有；服务身份映射、完整资源 ACL、审计与保留尚未闭环 |
 | 5：恢复与升级 | 安装后备份／恢复所选服务组合；核对原业务身份、版本与效果证据；故障窗口、迁移失败与回退可诊断；依赖服务／Worker 的拥有与关闭分别检查 | 进程重启、原 Worker 恢复及私有证据保留已有；框架级备份恢复、迁移和恢复管理待补齐 |
 
 **已提交基线 checkpoint（dev120／`c52d54c`）：** 所选公共Coding准入门槛已完成，见[本批验收](../architecture/reviews/2026-10-15-temporal-deployment-coding.md)。同一416产品字节的v30完整离线11847 passed／804 skipped、安装／dev119默认原History兼容通过；后测试修订另有92项定向通过。实际normal原矩阵13通过／1失败保留，修订后的并行owned-close normal单项复验1通过（152.70秒）；是两次运行，不称同次14全绿。目标停止故障实际命中，原未知效果／额度及恢复资料继续保留。该基线明确拒绝公共SDK Session coordinator。
 
-**当前工作区 S1 checkpoint（最终 durable 候选，未完整验收）：** 安装版专用 3 秒超时恢复复现 1 passed；默认 60 秒的九种既有普通编排矩阵 9 passed，两次运行均零跳过／失败／错误。冻结源码、wheel 与安装的 424 产品文件一致，dev120 默认发布与原 History 兼容沿原独立证据引用。前一冻结 `candidate-full` 完整回归为 12083 passed／805 skipped；当前最终 durable 受影响 Temporal 检查为 3167 passed／567 skipped，不拼接为当前全量通过。最终 v4 安装的最小两项链路通过（2 passed／39.63 秒），含审批期间 Worker 重启及完成回复丢失后的原回执恢复；S1 恢复门槛未全部关闭，S2 未实施；P3-2、第三阶段与完整 R01–R26 未关闭，P3-3／4／5／A 保持原状态。以下追加记录均为 dev120 提交前各候选版本历史，其中“当前未发布／待修”指当时状态，不覆盖上述当前 checkpoint。
+**当前工作区 S1 checkpoint（普通 Session 功能子集已验收，最终 v6）：** closing 只开放原 factory evidence ACK 的维护通道；机械 release 每次使用 fresh SDK Update ID，原 root／certificate／payload 与 Registry 退休幂等保持。v6 源码、wheel 与安装 424 产品文件一致；默认完整 publication 等值及原／续接 History 离线 replay 通过，新增 Provider 调用为零，live continuation 沿 v4 原证据引用。实际 SDK 按版本分记：v4 默认 60 秒普通编排 9 passed、专用 3 秒恢复 1 passed、容量 1 passed；v6 最小审批／重启 2 passed／40.67 秒、全新 Runtime／Client 的已 seal 原根及退休回复丢失恢复 1 passed／27.23 秒，债务两项同次 2 passed／84.06 秒、零失败／错误／跳过。债务每项两次 Turn／物理写入，unknown／ACK 未清时保持 busy 与占位，实际停止和原 ACK 后才退休／发布；owned 关闭未完成时 receiver 与资源保留，按既有契约各两次关闭后排空并关闭一次。此前失败按原候选／夹具分类保留。
+
+回归记录互不相加：旧 `candidate-full` 完整回归 12083 passed／805 skipped；v5 受影响 Temporal 3175 passed／571 skipped；v6 release 相关 24 模块 438 passed／90 skipped，均不冒称当前全量。S2 未实施；Temporal＋PG 集成、P3-2、第三阶段与完整 R01–R26 未关闭，P3-3／4／5／A 保持原状态。以下追加记录均为 dev120 提交前各候选版本历史，其中“当前未发布／待修”指当时状态，不覆盖上述当前 checkpoint。
 
 dev119 已封存根的退休恢复仍由原 History 推进：恢复 Registry 通路后，公共 `drive` 通过精确重复 seal Update 只唤醒原释放重试，不复活业务或直接替 Registry 释放。该 P2 的实际 RED→目标 GREEN 已保留，并纳入最终冻结公共矩阵。异步 Parent 取消必须等实际后代停止；已完成 Action 的延后 effect ACK 沿原 `drive` 恢复，不能用业务终态或 `reconcile(query=True)` 代替物理闭合／ACK。
 

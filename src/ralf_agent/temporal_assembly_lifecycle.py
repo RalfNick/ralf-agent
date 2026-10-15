@@ -55,6 +55,12 @@ class WorkerExecutionOwner:
                     and activity._Definition.from_callable(function).name == "ralf_coding_stop"
                     and _native_stop_registration(runtime, client, function)
                 )
+                evidence = (
+                    kind == "evidence"
+                    and manifest.get("session_deployment_protocol") == 1
+                    and manifest.get("deployment_admission_protocol", {}).get("version") == 4
+                    and _evidence_registration(runtime, client, function)
+                )
                 session_check = None
                 if manifest.get("session_deployment_protocol") == 1:
                     from .temporal_session_deployment_control import (
@@ -80,11 +86,13 @@ class WorkerExecutionOwner:
                         "native-stop",
                         "session-control",
                         "session-registry",
+                        "evidence",
                     }
                     or not (
                         control
                         or native_stop
                         or session
+                        or evidence
                         or kind == "release"
                         and is_registered_activity(runtime, client, function)
                         or kind == "stop"
@@ -95,6 +103,10 @@ class WorkerExecutionOwner:
                 binding = _maintenance_binding(function)
                 validator = _maintenance_binding(runtime.validate_release)
                 native_registration = _maintenance_binding(_native_stop_registration)
+                evidence_registration = _maintenance_binding(_evidence_registration)
+                evidence_ack = (
+                    _maintenance_binding(runtime.acknowledge_evidence) if evidence else None
+                )
                 name = activity._Definition.from_callable(function).name
 
                 def maintenance_check(request):
@@ -109,6 +121,12 @@ class WorkerExecutionOwner:
                             or _native_stop_registration(runtime, client, function) != native_stop
                         )
                         or digest(runtime.orchestration_release) != self.release_digest
+                        or kind == "evidence"
+                        and (
+                            _maintenance_binding(_evidence_registration) != evidence_registration
+                            or _evidence_registration(runtime, client, function) != evidence
+                            or _maintenance_binding(runtime.acknowledge_evidence) != evidence_ack
+                        )
                         or activity._Definition.from_callable(function).name != name
                         or activity.info().activity_type != name
                         or self._closing
@@ -274,6 +292,74 @@ def _native_stop_registration(runtime, client, function):
     return (
         _maintenance_binding(tree),
         _maintenance_binding(sessions.validate_tree_activity),
+    )
+
+
+def _evidence_registration(runtime, client, function):
+    """Only the registered ACK object inside its original universal SDK gate."""
+    from types import CodeType
+
+    from . import temporal_activities as activities
+    from . import temporal_deployment_execution as execution
+
+    def nested(code, name):
+        return next(
+            (
+                item
+                for item in code.co_consts
+                if isinstance(item, CodeType) and item.co_name == name
+            ),
+            None,
+        )
+
+    def captures(value):
+        return dict(
+            zip(
+                value.__code__.co_freevars,
+                (cell.cell_contents for cell in value.__closure__ or ()),
+                strict=True,
+            )
+        )
+
+    registered = activities._EVIDENCE_REGISTRATIONS.get(function)
+    original = getattr(function, "__wrapped__", None)
+    if original is None:
+        return False
+    factory = activities._EVIDENCE_REGISTRATIONS.get(original)
+    wrapper_code = nested(execution.wrap_activities.__code__, "wrap")
+    if (
+        registered is None
+        or len(registered) != 3
+        or registered[0] is not runtime
+        or registered[1] is not client
+        or registered[2] is not original
+        or factory is None
+        or len(factory) != 2
+        or factory[0] is not runtime
+        or factory[1] is not client
+        or getattr(runtime.acknowledge_evidence, "__self__", None) is not runtime
+        or getattr(runtime.acknowledge_evidence, "__func__", None)
+        is not activities.TemporalRuntime.acknowledge_evidence
+        or wrapper_code is None
+        or getattr(function, "__code__", None) is not nested(wrapper_code, "wrapped")
+        or getattr(function, "__globals__", None) is not execution.__dict__
+        or getattr(original, "__code__", None)
+        is not nested(activities.registered_activities.__code__, "evidence")
+        or getattr(original, "__globals__", None) is not activities.__dict__
+    ):
+        return False
+    wrapper, body = captures(function), captures(original)
+    if not (
+        wrapper.get("function") is original
+        and wrapper.get("runtime") is runtime
+        and wrapper.get("client") is client
+        and body.get("runtime") is runtime
+    ):
+        return False
+    return (
+        _maintenance_binding(activities.registered_activities),
+        _maintenance_binding(execution.wrap_activities),
+        _maintenance_binding(execution.validate_activity),
     )
 
 

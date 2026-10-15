@@ -521,3 +521,74 @@ def test_whole_loop_cancellation_keeps_actual_thread_and_original_end_obligation
         if not loop.is_closed():
             loop.close()
         asyncio.run(runtime._deployment_execution_owner.aclose(wait_timeout=2))
+
+
+def test_release_retry_uses_fresh_sdk_update_after_cached_verification_failure(monkeypatch):
+    """A failed SDK Update is durable by ID; the original certificate is retryable."""
+    from temporalio.client import WorkflowUpdateFailedError
+    from temporalio.exceptions import ApplicationError
+
+    async def run():
+        runtime, client, state, _, info = environment(monkeypatch)
+        get_handle = client.get_workflow_handle
+        outcomes, attempts, requests = {}, [], []
+        verification_attempts = 0
+        committed = None
+
+        class DeduplicatingHandle:
+            def __init__(self, original):
+                self.original = original
+
+            def __getattr__(self, name):
+                return getattr(self.original, name)
+
+            async def execute_update(self, name, request, **options):
+                nonlocal verification_attempts, committed
+                if name != "release_deployment_root":
+                    return await self.original.execute_update(name, request, **options)
+                update_id = options["id"]
+                attempts.append(update_id)
+                requests.append(copy.deepcopy(request))
+                if update_id not in outcomes:
+                    if committed is not None:
+                        # Original Registry semantic idempotency survives new SDK IDs.
+                        outcomes[update_id] = copy.deepcopy(committed)
+                    else:
+                        verification_attempts += 1
+                        if verification_attempts == 1:
+                            outcomes[update_id] = WorkflowUpdateFailedError(
+                                ApplicationError(
+                                    "Original verification Activity timed out",
+                                    type="deployment_release_failed",
+                                    non_retryable=True,
+                                )
+                            )
+                        else:
+                            committed = await self.original.execute_update(name, request, **options)
+                            outcomes[update_id] = copy.deepcopy(committed)
+                outcome = outcomes[update_id]
+                if isinstance(outcome, BaseException):
+                    raise outcome
+                return copy.deepcopy(outcome)
+
+        client.get_workflow_handle = lambda *args, **options: DeduplicatingHandle(
+            get_handle(*args, **options)
+        )
+        value = {
+            "mode": "release",
+            "scope": state.scope,
+            "run_id": state.run_id,
+            "execution_epoch": state.epoch,
+        }
+        with pytest.raises(WorkflowUpdateFailedError):
+            await module().execute(runtime, client, value, info)
+        certificate = copy.deepcopy(state.deployment_seal)
+        expected = {"run_id": state.run_id, "retired": True}
+        assert await module().execute(runtime, client, value, info) == expected
+        assert await module().execute(runtime, client, value, info) == expected
+        assert len(attempts) == len(set(attempts)) == 3
+        assert verification_attempts == 2 and len(client.retirements) == 1
+        assert requests[0] == requests[1] == requests[2] == client.retirements[0]
+        assert requests[0]["certificate"] == certificate == state.deployment_seal
+
+    asyncio.run(run())

@@ -1,10 +1,12 @@
 # Implementation status — 0.1.0.dev120
 
-执行约束更新（2026-10-15）：按用户指令固定第三阶段范围、优先收尾，当前只执行[冻结清单 P3-1 至 P3-5／P3-A](phase3-support-matrix.md#收尾范围冻结2026-10-15-用户指令)。Session 准入为当前 P3-2 必需工作，尚未验收；不新增功能矩阵、适配器或独立重构专项。本条调整开发优先级，不变更以下已验收状态，也不代表第三阶段已完成。
+执行约束更新（2026-10-15）：按用户指令固定第三阶段范围、优先收尾，当前只执行[冻结清单 P3-1 至 P3-5／P3-A](phase3-support-matrix.md#收尾范围冻结2026-10-15-用户指令)。S1 普通 Session 功能子集已验收，P3-2 的 S2 与所选集成门槛仍待；不新增功能矩阵、适配器或独立重构专项。本条调整开发优先级，不变更以下已验收状态，也不代表第三阶段已完成。
 
-工作区 S1 进展：显式 `enable_sessions=True`、`deployment_sessions=True` 与部署准入策略已接通普通 Session 的 publication4／Registry4，旧默认选择保持。最终 durable 安装版的专用 3 秒超时恢复复现为 1 passed，默认 60 秒的九种既有普通编排矩阵为 9 passed；两次运行均零跳过／失败／错误。424 个产品文件在冻结源码、wheel 与安装中一致；dev120 默认发布及原 History 重放／续接兼容沿原独立证据引用，新增 Provider 调用为零，不冒称本次重新执行。此前关闭入口缺失及 observer 晚回执失败按原候选保留。
+工作区 S1 checkpoint（最终 v6 候选）：显式 `enable_sessions=True`、`deployment_sessions=True` 与部署准入策略已接通普通 Session 的 publication4／Registry4，旧默认选择保持。v6 补齐 closing 期间原 factory 的 evidence ACK 维护通道；每次机械 release 使用 fresh SDK Update ID，原 root／certificate／payload 不变，退休幂等仍由原 Registry History 保证。424 个产品文件在冻结源码、wheel 与安装中一致；v6 默认完整 publication 等值、原／续接 History 离线 replay 通过，新增 Provider 调用为零；live continuation 仍沿 v4 独立证据引用。
 
-验证出处分开登记：完整回归 12083 passed／805 skipped 属于前一冻结 `candidate-full`；当前最终 durable 产品的受影响 Temporal 检查为 3167 passed／567 skipped，不能拼接为当前全量通过，跳过也不算实际验收。最终 v4 安装的最小两项链路通过（2 passed／39.63 秒），覆盖两次 Turn、审批期间 Worker 重启和完成回复丢失恢复；S1 恢复门槛尚未完整验收，S2 未实施，P3-2／第三阶段仍进行中，P3-3／4／5／A 不变。接口与剩余门槛见[固定 Session 计划](superpowers/plans/2026-10-15-temporal-deployment-sessions.md)。
+实际 SDK 证据分版本保留：v4 默认 60 秒的九种既有普通编排 9 passed、专用 3 秒超时恢复 1 passed、容量场景 1 passed；v6 最小审批／重启链路 2 passed／40.67 秒，全新 Runtime／Client 恢复已 seal 未退休原根及退休回复丢失 1 passed／27.23 秒。v6 债务两项同次 2 passed／84.06 秒、零失败／错误／跳过：每项两次 Turn／物理写入，unknown 及 ACK 债务期间保持 busy／根占位，原实际停止与 ACK 后才退休／发布；owned 关闭未完成时保留 receiver 与资源，按既有契约各两次关闭后排空并关闭一次。既往关闭入口、observer 晚回执、1 秒故障夹具和失败 Update ID 重放记录分类保留，不以复验覆盖失败。
+
+回归出处分开登记：前一冻结 `candidate-full` 完整回归为 12083 passed／805 skipped；v5 受影响 Temporal 为 3175 passed／571 skipped；v6 release 相关 24 模块为 438 passed／90 skipped。这些结果不相加，不宣称当前全量通过，跳过不算实际验收。S1 普通 Session 功能子集关闭，S2 未实施，Temporal＋PG 集成、P3-2／第三阶段尚未关闭，P3-3／4／5／A 不变。接口与剩余门槛见[固定 Session 计划](superpowers/plans/2026-10-15-temporal-deployment-sessions.md)。
 
 以下 Dev120 段落描述已提交基线及其当时边界；不覆盖上述 S1 checkpoint 的有限验证结果。
 
