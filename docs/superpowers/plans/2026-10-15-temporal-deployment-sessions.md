@@ -94,7 +94,11 @@ The independent source review established these three required boundaries. The c
 
 ## S2 — existing Coding scope through the same Session origin
 
-2026-10-15 本次有限收尾：先修复v13恢复路径的2MiB载荷拒绝，完成Coding4有界无损编码及State／Workflow两端接线，保留原semantic digest、Update ID、ACK、8MiB语义限制和逐请求fresh。相关八模块同次191项通过，含两处wire、冷恢复、Scope拒绝和sandbox激活；仅为源码证据，安装／真实服务复验待做。180秒主流程超时独立未解，其余十二项正常组合和五项故障未运行。本轮结束后不自动重跑耗时矩阵或扩展功能，先交付这项本地修复；S2仍开放。
+最新checkpoint为本地 `91a7837`／v14，metadata保持dev120。独立安装两模块37项、默认及保存History离线兼容通过；实际graph-sequential仍1失败／308.83秒，180秒等待超时、owned关闭和清理未完成，schema保留。本次未到大body编码路径，不以没有2MiB错误认定其服务验收通过；其余十二项正常组合及五项故障未运行。下面候选开发段落按其当时状态阅读，不覆盖此checkpoint。
+
+固定child epoch的Coding4 observe合并已完成源码修复：最前execution.validate_activity仍完整执行，随后只读current child.describe及同步DTO核对，再运行完整bootstrap／fresh；合并describe前后两套相邻的重复校验。bridge.control前及末轮完整校验保持，register／cancel／recover、epochNone和旧3保持原路径。真实validator主RED→GREEN后相关六模块同次115 passed／6.97秒，含describe期间Runtime／namespace／父子epoch及SDK端口漂移在bridge控制前拒绝，以及其他模式和旧3对照；独立审查无阻塞。不引入proof token、跨调用权限缓存或新的执行权威；该源码增量尚未安装／服务复验，S2各门槛仍待。下一步冻结该增量后只跑原图首门槛，单次约5分钟；通过后再运行其余十二项和五项故障，不预判修复耗时或通过结果。
+
+2026-10-15 本次有限收尾：先修复v13恢复路径的2MiB载荷拒绝，完成Coding4有界无损编码及State／Workflow两端接线，保留原semantic digest、Update ID、ACK、8MiB语义限制和逐请求fresh。相关八模块同次191项通过，含两处wire、冷恢复、Scope拒绝和sandbox激活；仅为源码证据，安装／真实服务复验待做。180秒主流程超时独立未解，其余十二项正常组合和五项故障未运行。该次未启动新的服务矩阵；后续v14复验结果以上方checkpoint为准，S2仍开放。
 
 源码已接通并完成交叉审阅，实际安装验收仍待通过。首轮全受影响 Temporal 回归 3226 passed／584 skipped；两个正常 Agent 安装候选分别命中沙箱激活与原生握手期限，另一次计时诊断复现握手问题，失败及原恢复资源均保留。后续分流及 Advance 修复后，v5 首个实际安装 Agent 两 Turn 通过，其余矩阵两个首项分别因顺序工具超时和动态子调用旧 metadata 校验失败，后续十项未运行。已补齐完整 Session origin 校验；仅 Coding4 的首批四项独立读取并发，保留全部七项 fresh 事实与最终校验。v6 首个Agent通过，但矩阵首两项仍失败；隔离计时显示一次原Runner60秒预算耗尽。v7仅减少三个同步方法的重复完整intent复制，安装相关155项通过，原失败sequence两Turn／四次业务写通过（306.23秒），其余十二项并行验收。全部修复保持原超时、原事实读取及执行权威；不得因源码／模拟验证通过勾选下方交付门槛。参见[验收记录](../../../architecture/reviews/2026-10-15-temporal-deployment-sessions.md)。
 
@@ -104,7 +108,7 @@ The independent source review established these three required boundaries. The c
 
 **Files:** the S1 helpers plus the existing Coding state/composition control/compact validation bridge and their focused tests. No Codex protocol expansion, new scheduler, alternate effects authority, or independent quota counter is planned.
 
-最新已提交预览为 `22af163`，metadata 保持未发布 `0.1.0.dev120`。既往 Agent／sequence 两 Turn 有通过证据；v12 图首门槛仍1失败／268.17秒，两个Tool在原80秒内完成，但180秒审批辅助等待在第二child收尾阶段失败，owned关闭与最终清理也未通过。其余十二项与五项故障未运行，不能关闭S2。v13仅合并exact Coding4只读启动证明的重复首轮Session读取，保留末轮完整事实及固定身份，ordinary Session4保持原两轮；本地回归、审查、安装及离线兼容通过，但实际图仍1失败／343.10秒，180秒等待仍在第二child收尾阶段超时。随后Session原History确认2MiB载荷硬拒绝，晚于Root取消／退休，不作为先前超时根因；大证据传输与主流程等待须分别收尾，逐原生请求fresh契约保持。继续保持原期限、不新增协议；各候选证据及剩余项以[验收记录](../../../architecture/reviews/2026-10-15-temporal-deployment-sessions.md)为准。
+历史v12已提交预览为 `22af163`，metadata 保持未发布 `0.1.0.dev120`。既往 Agent／sequence 两 Turn 有通过证据；v12 图首门槛仍1失败／268.17秒，两个Tool在原80秒内完成，但180秒审批辅助等待在第二child收尾阶段失败，owned关闭与最终清理也未通过。其余十二项与五项故障未运行，不能关闭S2。v13仅合并exact Coding4只读启动证明的重复首轮Session读取，保留末轮完整事实及固定身份，ordinary Session4保持原两轮；本地回归、审查、安装及离线兼容通过，但实际图仍1失败／343.10秒，180秒等待仍在第二child收尾阶段超时。随后Session原History确认2MiB载荷硬拒绝，晚于Root取消／退休，不作为先前超时根因；大证据传输与主流程等待须分别收尾，逐原生请求fresh契约保持。继续保持原期限、不新增协议；各候选证据及剩余项以[验收记录](../../../architecture/reviews/2026-10-15-temporal-deployment-sessions.md)为准。
 
 ## Review focus for delivery closure
 

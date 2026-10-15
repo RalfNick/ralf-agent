@@ -62,6 +62,16 @@ S2 已实现并交叉审阅，既往 Agent／sequence 两 Turn 有通过证据�
 
 ## 候选与剩余门槛
 
+v14 `frozen-candidate121-s2-control-body-codec`冻结于本地`91a7837`：1740文件／424产品，inventory `583fdcbed44e21f1ed9e669189d4ab36099e1717da3be78c289e8de8cf5d5150`，wheel SHA256 `0b96f87e073fb400da065b5eedb38cee2d76e23b33b734d4be8f5953db03a316`。独立安装新增两模块37 passed／6.70秒（-Werror、零失败／错误／跳过）；source／wheel／site及841份测试副本前后字节一致，默认完整canonical仍为`9df90a99df2c298ab2b2bf8aad0b7d907d2670e2c5247055c81cfe1afa475fbd`，原／continued保存History离线Replayer通过，Provider0／服务0，不代表live continuation。
+
+v14实际graph-sequential仍1 failed／308.83秒，零错误／跳过，424产品及测试前后无漂移、339已加载模块来自独立安装。主异常是approve辅助等待180秒超时，两个Tool分别53.223301秒／60.000258秒完成且`ok:true`，均有原result_candidate／stop收据。父release Activity约29.17秒后返回`deployment_release_failed`，原root退休未确认。owned关闭先CloseIncomplete，Worker退出后重试为RPCError／Timeout expired；最终cleanup为schema_retained、deletion_allowed:false，保留pending Registry Update、未确认退休／Session关闭及原证据，不能称清理完成。其余十二项正常组合与五项故障未运行。
+
+v14保存的Session History只有5次call_start／5次call_end：两register原body分别212144／212496字节，其余三observe为160字节的pending结果；最后end在13:45:42.742924 UTC，之后为wake Signals，没有大结果observe完成。全部保存History编码标记为0，无PAYLOADS_TOO_LARGE；故本次没有命中编码正向路径，不能据错误未复现关闭2MiB实际服务门槛。源码及安装codec证据继续有效，服务证据仍待。
+
+主流程结构定位来自独立的v13原History：首次批准13:14:58.178至父观察最终子成功13:18:00.169共181.991秒，两Tool合计127.831465秒，中间交接40.901435秒。父12次observe累计83.750秒，部分与Tool重叠，不与Tool耗时直接相加。源码下界为每observe三轮fresh至少39项事实、四轮完整root proof至少52项，合计至少91次SDK事实读取；12次至少1092项，不含其余bootstrap、physical及namespace读取。Query不入History，这不是实测RPC总数。下一项将固定child epoch的Coding4 observe中相邻的只读describe与完整校验归为一组；前置execute.validate_activity、bridge前完整bootstrap／fresh、末轮校验及其他模式保持。审阅未发现该重排跨过grant／Update，但仍须RED→GREEN和安装实际验证，不据此预判主超时已解决。
+
+该有限重排已实现：仅exact整数版本4、observe及原SDK proof中的固定child epoch，将describe前的一次validator.validate移至其后的既有完整校验集合，三轮变两轮；constructor固定资源／源码／Activity／请求及完整Runtime检查保持。最前execute.validate_activity仍完整完成才发只读describe，DTO核对后必须完成bootstrap＋fresh才进入bridge，末轮不变；register／cancel／recover、epochNone及旧3路径保持。真实CodingValidation（非伪造validator返回）的主RED为3轮及旧顺序，修复后相关六模块同次115 passed／6.97秒，-Werror、零失败／错误／跳过；含during-describe Runtime／namespace／父子epoch及SDK端口漂移在bridge前拒绝和其他模式／旧3对照。独立源码审查、Ruff、格式与空白检查通过；该增量尚未冻结安装或运行实际门槛，不从读取预算减少推导真实延迟或关闭成功。下一批只复验原图首门槛，单次服务检查此前约5分钟；通过后才运行剩余十二项及五项故障，缺陷修复耗时不作确定承诺。
+
 当前有界修复只针对v13取消后另行暴露的2MiB恢复传输限制：exact Coding4且原body大于512KiB时，将canonical JSON经zlib/base64编码到exact版本信封，整个信封至多1MiB，解压至多原8MiB加1字节探测；尺寸、摘要、canonical、EOF及尾随数据全部校验，禁止无界flush或截断。结束确认Update与Activity返回两处均使用该编码；State先解码再按原digest及完整语义校验记账，Workflow先解码再校验ACK并处理结果。原Update ID、semantic digest、冷恢复body和ACK保持；普通4及小结果保持raw，旧raw仍接收。新增四个codec源码绑定沿原factory／validation前后检查，await中替换会被拒绝。新wire需匹配不可变Worker，不能宣称旧Worker可直接热接续新编码。
 
 这项修复的主RED分别为codec API缺失、合法大Advance的end_call／Workflow尚未解码，以及codec源码替换未被原pins拒绝。最终相关八模块同次191 passed／10.79秒，`-Werror`、零失败／错误／跳过；覆盖原合法2,097,693字节body（合法submission仍小于1MiB）、重复ACK、冷状态恢复、Scope／摘要篡改不改账本、两处wire输出及SDK sandbox runtime激活。代码审查与Ruff／格式／空白检查通过。本轮不启动新的服务矩阵，安装及真实服务payload复验仍待；该源码结果不证明解决180秒审批等待或owned关闭。P3-2／S2保持开放，原十三项正常矩阵及五项故障门槛不删减。

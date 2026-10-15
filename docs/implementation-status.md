@@ -1,14 +1,12 @@
 # Implementation status — 0.1.0.dev120
 
+当前验收 checkpoint（2026-10-15，v14／本地 `91a7837`）：S1 普通 Session 已验收；P3-2 的 S2 Coding Session 仍开放，P3-3／4／5／A 尚未关闭。大载荷修复的相关八模块191项通过；独立安装两模块37项通过（6.70秒），424产品／测试副本前后字节一致，默认完整canonical及原／continued保存History离线重放通过。零模型调用，离线兼容不代表live continuation。
+
+v14实际graph-sequential首门槛仍1失败／308.83秒，零错误／跳过；180秒审批辅助等待超时。两个Tool均成功（53.223301秒／60.000258秒），但原root退休未确认；owned关闭先CloseIncomplete、后RPCError，Worker退出、schema保留，不能认定恢复／清理通过。本次没有进入大body编码路径，不能据没有2MiB错误宣称该服务门槛已过。其余十二项正常组合与五项故障未运行。
+
+当前源码已将固定child epoch的Coding4 observe中相邻只读describe与完整校验合并；前置Activity验证、bridge控制前完整bootstrap／fresh及末轮验证保持，其他模式、epoch未固定和旧3保持原路径。真实CodingValidation的主RED→GREEN后，相关六模块同次115 passed／6.97秒（-Werror、零失败／错误／跳过），读取期间Runtime／namespace／父子epoch及SDK端口漂移在控制前拒绝。原SDK事实、逐原生请求fresh、实际结束、采纳及期限保持；该增量尚未安装／真实服务复验，不用局部计数预测真实图必过。以下各候选段落保留当时证据；最新状态以上述checkpoint与[验收记录](../architecture/reviews/2026-10-15-temporal-deployment-sessions.md)为准。
+
 执行约束更新（2026-10-15）：按用户指令固定第三阶段范围、优先收尾，当前只执行[冻结清单 P3-1 至 P3-5／P3-A](phase3-support-matrix.md#收尾范围冻结2026-10-15-用户指令)。S1 普通 Session 功能子集已验收，P3-2 的 S2 与所选集成门槛仍待；不新增功能矩阵、适配器或独立重构专项。本条调整开发优先级，不变更以下已验收状态，也不代表第三阶段已完成。
-
-最新源码修复仅处理 S2 恢复大载荷：exact Coding4 的原控制结果超过512KiB时使用有界无损压缩，结束确认 Update 和 Activity 返回两处均编码；原语义8MiB上限、摘要、Update身份、ACK和语义校验保持。普通4及小结果保持raw形状，旧raw可读；新编码必须使用匹配源码的Worker，不承诺旧Worker热兼容。相关八模块同次191 passed／10.79秒，`-Werror`、零失败／错误／跳过，覆盖真实语义恢复及sandbox激活；未运行该修复的安装／真实服务复验。原180秒主流程超时仍未解决，其余十二项与五项故障门槛仍未运行，S2／P3-2保持开放。以下v11–v13为先前候选证据。
-
-当前 S2 v11 仅减少显式 Coding4 callback 内重复的 Manifest 重建，保留外层独立双边检查、原 Session 七项实时事实及 bootstrap／公开授权完整路径。真实 Session verifier 的定向计数从11次降到5次，同次六模块91项通过，独立审查无阻塞；安装四模块46项、默认及保存History离线兼容通过。真实图首门槛仍1失败／333.35秒：两个Tool分别约56.53／57.58秒成功，plain join注册期间整图审批等待超时，随后Root取消；关闭仍未完成，schema保留。其余十二项及五项故障未运行，未关闭任何实际门槛。下一步消除observer验证器使用带校验客户端造成的嵌套重复，保留原实时证据和期限。分候选证据见[本批记录](../architecture/reviews/2026-10-15-temporal-deployment-sessions.md)。
-
-v12 收尾候选已消除该原传输嵌套：保留独立 verifier 的完整七项事实、原 Activity 及 await 后资源检查，读取次数56→7，不缓存权限或接受外层伪造结果。同次相关四模块65项、独立审查、安装四模块49项及默认／保存History兼容通过。实际图仍1失败／268.17秒：原180秒审批辅助等待超时，关闭仍不完整，Worker退出后清理重试报无poller，schema保留。其余十二项与五项故障未运行，不据总耗时缩短认定收尾改善。继续定位子运行之间及汇合注册的关键路径，S2／P3-2保持开放。
-
-v13 仅合并 Coding4 只读启动证明中的首轮重复 Session 读取，保留末轮完整七项事实、原启动／namespace 关联与固定预期身份；普通 Session4 两轮保持。定向四模块91项、独立审查、安装五模块57项和默认／保存History兼容通过。实际图仍1失败／343.10秒：两个Tool约65.93／61.91秒成功，但180秒审批辅助等待仍在第二child收尾阶段失败，join尚未注册。之后Session History另记录PAYLOADS_TOO_LARGE：消息体2121093字节超过2MiB，晚于Root取消和退休，不能认定为审批超时原因。owned关闭未完成、schema保留；其余十二项与五项故障未运行。下一步闭环大证据传输，逐原生请求fresh要求保持，不增加preflight豁免；S2／P3-2保持开放。
 
 工作区 S1 checkpoint（最终 v6 候选）：显式 `enable_sessions=True`、`deployment_sessions=True` 与部署准入策略已接通普通 Session 的 publication4／Registry4，旧默认选择保持。v6 补齐 closing 期间原 factory 的 evidence ACK 维护通道；每次机械 release 使用 fresh SDK Update ID，原 root／certificate／payload 不变，退休幂等仍由原 Registry History 保证。424 个产品文件在冻结源码、wheel 与安装中一致；v6 默认完整 publication 等值、原／续接 History 离线 replay 通过，新增 Provider 调用为零；live continuation 仍沿 v4 独立证据引用。
 
@@ -16,13 +14,7 @@ v13 仅合并 Coding4 只读启动证明中的首轮重复 Session 读取，保�
 
 回归出处分开登记：前一冻结 `candidate-full` 完整回归为 12083 passed／805 skipped；v5 受影响 Temporal 为 3175 passed／571 skipped；v6 release 相关 24 模块为 438 passed／90 skipped。这些结果不相加，不宣称当前全量通过，跳过不算实际验收。S1 普通 Session 功能子集关闭，S2 已实现、实际 SDK 门槛仍待通过，Temporal＋PG 集成、P3-2／第三阶段尚未关闭，P3-3／4／5／A 不变。接口与剩余门槛见[固定 Session 计划](superpowers/plans/2026-10-15-temporal-deployment-sessions.md)。
 
-当前 S2 开发 checkpoint：已将既有 native6／binding22、composition7／binding23 接入显式 publication4／Registry4 Session，保留原 Coding 准入索引、真实 SDK Session parent 与旁置 origin；关闭继续按物理 Coding → Session 排空 → 原调用与退休 → Worker 退出。SDK／JSON／TOML 默认选择保持。首轮冻结源码 Temporal 回归 3226 passed／584 skipped；实际安装检查发现并修复沙箱、重复校验、Coding4 分流和 Advance fence 格式问题。v5 首个真实 Agent 两 Turn 通过，589项安装相关回归通过／241配置跳过；其余矩阵两个首项分别暴露顺序 Coding 超时和动态 Parent 子调用身份校验问题，后续十项未运行。已定向修复完整 Session origin 的子调用校验，并将 Coding4 首批四项独立读取并发；全部七项 fresh 事实、最终原 epoch 校验和原期限保持。v6 已冻结，受影响回归3313通过／589配置跳过，首个安装Agent两Turn通过（184.12秒）；该候选其余矩阵首两项仍失败，后续十项未运行；未知效果及资源保留。隔离计时复现确认一例原Runner60秒预算耗尽；v7仅减少同步selector的重复完整复制，安装相关155项通过，原失败sequence两Turn／四次业务写通过（306.23秒）。其余矩阵Agent通过、图和动态失败，九项未运行：图是原工具80秒超时；动态两次业务已退休，但首次observer失败需原身份重试。正在定向处理只读握手耗时及observer诊断，完整组合与故障门槛仍待通过，不提高原期限或缓存动态事实。已经补齐对应激活、相邻校验和只读清单校验回归，并准备原恢复／ACK／CONTROL 进程死亡验收；未执行的用例不能计为验收。详细证据与最终结果见[本批记录](../architecture/reviews/2026-10-15-temporal-deployment-sessions.md)。
-
-最新 S2 v9 本地预览（`frozen-candidate121-s2-terminal-origin`，1733文件／424产品，inventory `bf084f2053d67a26dafd82d1f4a0b8a8717f0ac099c4dd7755115c860c8ecda7`）：仅删除`_fresh`首轮重复origin校验两行，保留bootstrap、末尾完整七项事实和实际I/O双边验证，无缓存；3 failed／5 passed的RED后相关检查93 passed／4.24秒，独立复核84 passed／5.04秒，安装检查22 passed／2.57秒（-Werror），不相加。默认canonical等值、原／continued History离线重放通过，Provider0／服务0。真实Graph首门槛1 failed／365.94秒，其余十二项及故障场景未运行；424产品无漂移、340已加载安装模块来源已核验。原Tool在80.002156秒真实SDK Activity超时，terminal observation为75.92秒，无result candidate，effect仍dispatched、额度和恢复资料保留。observer脱敏日志另捕获`RPCError／CANCELLED`，发生在begin之后、body之前的第二次validate，经早期gather进入_namespace；不将其作为主Tool超时根因或成功Advance采用失败。既往v8失败及各快照证据保留，不宣称局部加速等于完整成功；下一步测量同步CPU与SDK排队，不增加协议或放宽期限。S2／Temporal＋PG／P3-2与第三阶段继续开放。
-
-v9 受影响Temporal回归为3355 passed／589 skipped／2 failed（245模块，143.94秒）；两项旧内部校验次数断言已修订为实际Query前后边界断言，与新origin测试同次22 passed／3.33秒。产品未因此改动，不拼接为一次完整全绿；S2实际门槛仍未通过。
-
-当前v10收尾增量已修复同一 plain Runner root 检查的连续重复调用，以及 Session 同值快照的重复完整 hash；Connected 独立检查、非同值 canonical 输入、七项 fresh SDK 事实及 Runtime 校验保持。最终定向63项通过，安装定向30项、默认及保存History离线兼容通过；实际图1失败／364.31秒。两个Tool已在原80秒内成功，但首Turn的整图approve辅助等待超过180秒后取消，第二Turn未执行，关闭也未完整确认。继续优化嵌套只读校验，不调大既有期限掩盖开销；S2／P3-2保持开放。证据见[本批记录](../architecture/reviews/2026-10-15-temporal-deployment-sessions.md)。
+S2 的既往 Agent／sequence 两Turn证据及v5–v13各候选失败记录均保留在本批验收记录，不拼接为当前十三项矩阵通过。当前状态以上方v14 checkpoint为准。
 
 以下 Dev120 段落描述已提交基线及其当时边界；不覆盖上述 S1／S2 checkpoint 的有限验证结果。
 

@@ -334,7 +334,18 @@ async def execute(runtime, client, value, info):
         },
         info,
     )
-    await validator.validate()
+    protocol = proof["manifest"]["deployment_admission_protocol"]
+    describe_readset = (
+        value["mode"] == "observe"
+        and call.get("deployment_execution_epoch") is not None
+        and type(protocol.get("version")) is int
+        and protocol["version"] == 4
+    )
+    # The preceding full Activity validation permits only this read. Finish the
+    # adjacent descriptor read before bootstrap/fresh; control still follows a
+    # complete validation, and the independent post-control validation remains.
+    if not describe_readset:
+        await validator.validate()
     if value["mode"] == "register" and not await validator.permission():
         _reject()
 
