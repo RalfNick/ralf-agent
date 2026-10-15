@@ -102,7 +102,7 @@ The independent source review established these three required boundaries. The c
 
 **Files:** the S1 helpers plus the existing Coding state/composition control/compact validation bridge and their focused tests. No Codex protocol expansion, new scheduler, alternate effects authority, or independent quota counter is planned.
 
-当前源码预览已在 `ff58574` 本地提交，metadata 保持未发布 `0.1.0.dev120`。后续 v7 sequence 实际复验通过，但图和动态仍失败；最新 v8 优先复验图编排仍发生原 80 秒 Activity 超时，其余十二项与故障门槛未运行。只读握手并发未显示实际加速，不能据此关闭门槛。当前沿同一权限与恢复契约处理重复校验阻塞，不延长原期限、不新增协议；各候选的准确证据及剩余项以[验收记录](../../../architecture/reviews/2026-10-15-temporal-deployment-sessions.md)为准。
+最新已提交预览为 `22af163`，metadata 保持未发布 `0.1.0.dev120`。既往 Agent／sequence 两 Turn 有通过证据；v12 图首门槛仍1失败／268.17秒，两个Tool在原80秒内完成，但180秒审批辅助等待在第二child收尾阶段失败，owned关闭与最终清理也未通过。其余十二项与五项故障未运行，不能关闭S2。v13仅合并exact Coding4只读启动证明的重复首轮Session读取，保留末轮完整事实及固定身份，ordinary Session4保持原两轮；本地回归、审查、安装及离线兼容通过，但实际图仍1失败／343.10秒，180秒等待仍在第二child收尾阶段超时。随后Session原History确认2MiB载荷硬拒绝，晚于Root取消／退休，不作为先前超时根因；大证据传输与主流程等待须分别收尾，逐原生请求fresh契约保持。继续保持原期限、不新增协议；各候选证据及剩余项以[验收记录](../../../architecture/reviews/2026-10-15-temporal-deployment-sessions.md)为准。
 
 ## Review focus for delivery closure
 

@@ -338,6 +338,7 @@ async def _public_start_binding(client, policy, proof, description, *, runtime=N
     )
     verified = None
     if session:
+        from .temporal_deployment_coding_state import selected as coding_selected
         from .temporal_session_deployment_dto import validate_intent, validate_origin
         from .temporal_session_deployment_verification import validate_session_origin
 
@@ -363,11 +364,16 @@ async def _public_start_binding(client, policy, proof, description, *, runtime=N
             or intent["submission"] != response["submission"]
         ):
             _reject()
-        verified = await validate_session_origin(
-            runtime, client, intent, response["session_origin"]
-        )
-        if verified != {"intent": intent, "session_origin": response["session_origin"]}:
-            _reject()
+        # Coding4 adopts no evidence before the final full Session read-set.
+        # Fix the expected identity now; subsequent SDK callbacks cannot change
+        # it by mutating the Registry response while only read-only I/O follows.
+        verified = detached({"intent": intent, "session_origin": response["session_origin"]})
+        if not coding_selected(proof["manifest"]):
+            if (
+                await validate_session_origin(runtime, client, intent, response["session_origin"])
+                != verified
+            ):
+                _reject()
     envelope = response["submission"]
     _exact(envelope, {"version", "request", "manifest", "activity_timeout", "task_queue"})
     if (

@@ -4,7 +4,7 @@
 
 ## 当前结论
 
-S2 已实现并交叉审阅，既往 Agent／sequence 两 Turn 有通过证据；最新 v12 安装候选的 graph-sequential 首门槛仍失败，其余十二项未运行，故障门槛尚未执行，不能标为完成。两个原 Tool Activity 均完成，当前失败点仍为整图审批辅助等待超时，后续关闭未完成，schema 按证据保留。当前仅为本地预览，Temporal＋PostgreSQL、P3-2、第三阶段整体验收继续开放。以下结果来自不同快照，不相加、不称为最终全量；跳过不构成服务或模型验收。
+S2 已实现并交叉审阅，既往 Agent／sequence 两 Turn 有通过证据；最新 v13 安装候选的 graph-sequential 首门槛仍失败，其余十二项未运行，故障门槛尚未执行，不能标为完成。两个原 Tool Activity 均完成，当前失败点仍为整图审批辅助等待超时；后续 Session 收尾出现已证实的2MiB消息硬拒绝，schema 按证据保留。当前仅为本地预览，Temporal＋PostgreSQL、P3-2、第三阶段整体验收继续开放。以下结果来自不同快照，不相加、不称为最终全量；跳过不构成服务或模型验收。
 
 ## 实现边界
 
@@ -81,6 +81,14 @@ v12 候选仅在相同 Runtime／完整 intent 的 exact `_CheckedClient` 和 ex
 v12 `frozen-candidate121-s2-origin-transport`：1737文件／424产品，inventory `2509ad148a65efdf7fc9644f20a61c3e6a0989d07bed1258d6e6afd63c96b3c5`。源码／wheel／site一致，安装后四模块49通过／3.41秒，零失败／错误／跳过，424产品及838份测试副本前后无漂移；导入来自独立安装。默认完整canonical及原／continued保存History离线重放通过，Provider0／服务0，实际图门槛另行记录。
 
 v12 实际 graph-sequential：1失败／268.17秒，零错误／跳过，原180秒审批辅助等待仍超时，其余十二项及五项故障未执行。两个原 Tool Activity 都完成，但不是完整 Turn／会话通过；424产品与测试前后无漂移，339已加载模块来自安装。owned Coding 关闭先返回CloseIncomplete，Worker退出后的清理重试出现RPCError（task queue近期无poller）；最终报告Worker已退出，但root退休、scoped Session关闭与Session证据均未确认，schema保留。不能用总耗时缩短证明observer性能或收尾改善；该候选的正常图与关闭仍未验收。后续先按原History定位两个Tool之间及汇合注册的实际关键路径，再做有依据的最小修复。
+
+v13 收尾候选针对上述主路径共用的 `_public_start_binding`：仅 exact Coding4 将首轮重复 Session 读取改为 await 前 detached 的完整预期身份，保留原启动记录／namespace 只读查询与末轮完整七项事实及结果比对。中间不发送 grant／Update／业务写，也不返回正 proof；普通 Session4 保持原两轮，旧3与默认路径保持。不增加跨层上下文、事实缓存或新执行权威。真实主计数 RED 1失败（14项事实）→GREEN（7项）；同次四模块91通过／2.27秒，另一次六模块153通过／2.64秒，各次不相加；独立审查与 Ruff／格式／空白检查通过。安装兼容、实际整图与收尾仍待该冻结候选验证。
+
+v13 `frozen-candidate121-s2-terminal-start-binding`：1738文件／424产品，inventory `0228db22aeefbea9d77e88626e4dd999e60312fb8956b73b67969b237b1f1e7a`。源码／wheel／site一致，安装后五模块57通过／3.78秒，零失败／错误／跳过；424产品与839份测试副本前后无漂移，导入均来自独立安装。默认完整canonical及原／continued保存History离线重放通过，Provider0／服务0，不代表live continuation或实际图通过。
+
+v13 实际 graph-sequential：1失败／343.10秒，零错误／跳过；其余十二项及五项故障未运行。两个原Tool分别65.926138秒、61.905327秒完成，均`ok:true`且有原result candidate；不能由局部读取计数推导真实加速。180秒审批辅助等待在第二child收尾观察期间超时，尚未注册join。取消后约1.09秒才收到该child的succeeded／physical_stopped:true观察；整Turn未通过。424产品及测试前后无漂移，340已加载模块来自安装；owned关闭仍CloseIncomplete、Worker已退出、schema保留。
+
+v13 收尾载荷另有独立证据：原Root取消于13:17:59.080015 UTC，Registry正退休于13:18:10.636168；随后Session的observe已记录call_start，但无call_end接受／Activity完成。原Session History事件188／191的WORKFLOW_TASK_FAILED原因为PAYLOADS_TOO_LARGE，SDK日志消息体2121093字节超过2097152上限23941字节。该错误晚于审批超时，不能用来解释主等待失败。源码关联到`session_deployment_call_end.body_result`中的完整Advance证据，失败入参未进入History，具体Update和大字段仍为关联推断，不能写成已捕获的完整失败载荷。后续优先修复该真实证据传输门槛，完整原生逐请求fresh契约保持；不实施跳过单帧动态事实的preflight批量例外。
 
 v5 `s2-advance` 快照1727文件／424产品文件，inventory SHA256：`d530c203d8d4f7826cc915b2184c1be48937934966bafca380aa1bf17ce6ee53`。v6 `s2-origin-reads` 快照1729文件／424产品文件，inventory SHA256：`b935d23c2abae7a156662f0e5c447b2b8f9751a0bf65e02f37875e1e06eaea74`，首个安装 Agent 通过，矩阵首两项失败。v7 `s2-selector-snapshot` 快照1730文件／424产品文件，inventory SHA256：`ef3fc59506253032671f0660a6fbe761d3a4ad93cf40ca0448afa345e67d7826`；155项相关测试通过，安装后优先复验失败的sequence已通过，原十三项集合及原期限保持。源码、wheel、独立安装424产品文件一致；metadata 仍为未发布 `0.1.0.dev120`。
 

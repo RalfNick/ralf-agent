@@ -6,6 +6,8 @@
 
 v12 收尾候选已消除该原传输嵌套：保留独立 verifier 的完整七项事实、原 Activity 及 await 后资源检查，读取次数56→7，不缓存权限或接受外层伪造结果。同次相关四模块65项、独立审查、安装四模块49项及默认／保存History兼容通过。实际图仍1失败／268.17秒：原180秒审批辅助等待超时，关闭仍不完整，Worker退出后清理重试报无poller，schema保留。其余十二项与五项故障未运行，不据总耗时缩短认定收尾改善。继续定位子运行之间及汇合注册的关键路径，S2／P3-2保持开放。
 
+v13 仅合并 Coding4 只读启动证明中的首轮重复 Session 读取，保留末轮完整七项事实、原启动／namespace 关联与固定预期身份；普通 Session4 两轮保持。定向四模块91项、独立审查、安装五模块57项和默认／保存History兼容通过。实际图仍1失败／343.10秒：两个Tool约65.93／61.91秒成功，但180秒审批辅助等待仍在第二child收尾阶段失败，join尚未注册。之后Session History另记录PAYLOADS_TOO_LARGE：消息体2121093字节超过2MiB，晚于Root取消和退休，不能认定为审批超时原因。owned关闭未完成、schema保留；其余十二项与五项故障未运行。下一步闭环大证据传输，逐原生请求fresh要求保持，不增加preflight豁免；S2／P3-2保持开放。
+
 工作区 S1 checkpoint（最终 v6 候选）：显式 `enable_sessions=True`、`deployment_sessions=True` 与部署准入策略已接通普通 Session 的 publication4／Registry4，旧默认选择保持。v6 补齐 closing 期间原 factory 的 evidence ACK 维护通道；每次机械 release 使用 fresh SDK Update ID，原 root／certificate／payload 不变，退休幂等仍由原 Registry History 保证。424 个产品文件在冻结源码、wheel 与安装中一致；v6 默认完整 publication 等值、原／续接 History 离线 replay 通过，新增 Provider 调用为零；live continuation 仍沿 v4 独立证据引用。
 
 实际 SDK 证据分版本保留：v4 默认 60 秒的九种既有普通编排 9 passed、专用 3 秒超时恢复 1 passed、容量场景 1 passed；v6 最小审批／重启链路 2 passed／40.67 秒，全新 Runtime／Client 恢复已 seal 未退休原根及退休回复丢失 1 passed／27.23 秒。v6 债务两项同次 2 passed／84.06 秒、零失败／错误／跳过：每项两次 Turn／物理写入，unknown 及 ACK 债务期间保持 busy／根占位，原实际停止与 ACK 后才退休／发布；owned 关闭未完成时保留 receiver 与资源，按既有契约各两次关闭后排空并关闭一次。既往关闭入口、observer 晚回执、1 秒故障夹具和失败 Update ID 重放记录分类保留，不以复验覆盖失败。
