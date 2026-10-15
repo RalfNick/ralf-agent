@@ -94,9 +94,8 @@ The independent source review established these three required boundaries. The c
 
 ## S2 — existing Coding scope through the same Session origin
 
-最新checkpoint为本地 `91a7837`／v14，metadata保持dev120。独立安装两模块37项、默认及保存History离线兼容通过；实际graph-sequential仍1失败／308.83秒，180秒等待超时、owned关闭和清理未完成，schema保留。本次未到大body编码路径，不以没有2MiB错误认定其服务验收通过；其余十二项正常组合及五项故障未运行。下面候选开发段落按其当时状态阅读，不覆盖此checkpoint。
-
-固定child epoch的Coding4 observe合并已完成源码修复：最前execution.validate_activity仍完整执行，随后只读current child.describe及同步DTO核对，再运行完整bootstrap／fresh；合并describe前后两套相邻的重复校验。bridge.control前及末轮完整校验保持，register／cancel／recover、epochNone和旧3保持原路径。真实validator主RED→GREEN后相关六模块同次115 passed／6.97秒，含describe期间Runtime／namespace／父子epoch及SDK端口漂移在bridge控制前拒绝，以及其他模式和旧3对照；独立审查无阻塞。不引入proof token、跨调用权限缓存或新的执行权威；该源码增量尚未安装／服务复验，S2各门槛仍待。下一步冻结该增量后只跑原图首门槛，单次约5分钟；通过后再运行其余十二项和五项故障，不预判修复耗时或通过结果。
+最新checkpoint为本地 `09b9595`／v15，metadata保持dev120。独立安装两模块32项、默认及保存History离线兼容通过；实际graph-sequential仍1失败／278.43秒，180秒等待超时、第二Turn未运行，其余十二项正常组合及五项故障未运行。原root最终成功并正退休，owned关闭成功、Worker退出；Update及Activity均接受2447868字节语义结果的有界无损编码。清理器读取编码结果出现KeyError，schema保留；不能以退休成功代替完整Turn通过。下面候选开发段落按其当时状态阅读，不覆盖此checkpoint。
+当前源码收尾仅针对重复完整校验及清理器解码。warm Coding callback的相同完整Manifest绑定，将内层重复Runtime检查交回既有独立外层边界，全部七项Session事实及逐await pins保留；cold／public／permission／普通4与旧3保持完整校验。十模块同次179 passed／8.08秒；清理器按原State完整验证后解码，再沿原History规则重建，相关两模块36 passed／10.63秒。两次结果不相加，尚无本批安装／实际复验。只读observer transport已按既有组出口聚合：SDK每await前后完整本地检查，组／最终出口七事实保持；ordinary／默认路径不变。最终受影响回归同次860 passed／193 skipped／53.01秒，跳过不作实际服务验收；独立审查无阻塞。不放宽逐原生请求fresh、原期限、效果、停止或ACK。下一步冻结本批后只跑原图首门槛；通过后继续原剩余十二项和五项故障，不增加新能力。
 
 2026-10-15 本次有限收尾：先修复v13恢复路径的2MiB载荷拒绝，完成Coding4有界无损编码及State／Workflow两端接线，保留原semantic digest、Update ID、ACK、8MiB语义限制和逐请求fresh。相关八模块同次191项通过，含两处wire、冷恢复、Scope拒绝和sandbox激活；仅为源码证据，安装／真实服务复验待做。180秒主流程超时独立未解，其余十二项正常组合和五项故障未运行。该次未启动新的服务矩阵；后续v14复验结果以上方checkpoint为准，S2仍开放。
 

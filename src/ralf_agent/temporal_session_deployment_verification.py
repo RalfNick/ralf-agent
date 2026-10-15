@@ -9,7 +9,7 @@ from .task_controls import _binding
 from .temporal_session_deployment_dto import validate_intent, validate_origin
 from .temporal_session_state import SESSION_ACTIVITY, SESSION_WORKFLOW
 from .temporal_state import detached
-from .types import digest
+from .types import canonical, digest
 
 REQUEST_FIELDS = {
     "version",
@@ -46,7 +46,19 @@ def _reject():
 class SessionControlValidation:
     """Invocation-local fresh reads, with immutable port and Activity pins."""
 
-    def __init__(self, runtime, client, value, info, *, deployment_id, _coordinator_activity=True):
+    def __init__(
+        self,
+        runtime,
+        client,
+        value,
+        info,
+        *,
+        deployment_id,
+        _coordinator_activity=True,
+        _full_release=True,
+    ):
+        if type(_full_release) is not bool:
+            _reject()
         if (
             type(value) is not dict
             or set(value) != REQUEST_FIELDS
@@ -89,7 +101,7 @@ class SessionControlValidation:
         self._bindings = tuple(_binding(getattr(owner, name)) for owner, name in self._ports)
         self._source_bindings = source_bindings()
         self._source_function = _binding(source_bindings)
-        self._check()
+        self._check(full=_full_release)
 
     def _check(self, *, full=True):
         if type(full) is not bool or type(self._shared_intent) is not bool:
@@ -222,10 +234,13 @@ class SessionControlValidation:
             "turn_id": i["turn_id"],
         }
 
-    async def validate(self):
-        # The SDK-only read set retains original identity/port pins at every
-        # await; full component inventory validation brackets the complete set.
-        self._check()
+    async def validate(self, *, _full_release=True):
+        # The public default brackets the set with full inventory checks. Only
+        # the matching warm Coding callback delegates those to its independent
+        # outer boundary; every original identity/port pin remains per await.
+        if type(_full_release) is not bool:
+            _reject()
+        self._check(full=_full_release)
         i, client = self.intent, self.client
         current = client.get_workflow_handle(i["coordinator_id"])
         handle = client.get_workflow_handle(
@@ -321,7 +336,7 @@ class SessionControlValidation:
         self._check(full=False)
         self._description(description)
         await self._namespace()
-        self._check()
+        self._check(full=_full_release)
         origin = {
             "version": 1,
             **{
@@ -795,6 +810,11 @@ async def _verify_receipt(runtime, client, value, *, info):
 def source_bindings():
     """Pin executable verifier ports, including in-memory source replacements."""
     from . import temporal_session_deployment_dto as dto
+    from .temporal_session_deployment_control import (
+        _CheckedClient,
+        _CheckedHandle,
+        _CheckedService,
+    )
 
     return tuple(
         _binding(function)
@@ -810,6 +830,18 @@ def source_bindings():
             dto.decode_control_body,
             dto._coded_control_body,
             dto._body_reject,
+            _CheckedClient.__init__,
+            _CheckedClient._after_read,
+            _CheckedClient.get_workflow_handle,
+            _CheckedClient.namespace.fget,
+            _CheckedClient.workflow_service.fget,
+            _CheckedClient.data_converter.fget,
+            _CheckedService.__init__,
+            _CheckedService.describe_namespace,
+            _CheckedHandle.__init__,
+            _CheckedHandle.query,
+            _CheckedHandle.describe,
+            _CheckedHandle.fetch_history_events,
             SessionControlValidation.__init__,
             SessionControlValidation._check,
             SessionControlValidation.validate,
@@ -822,11 +854,13 @@ def source_bindings():
     )
 
 
-async def validate_session_origin(runtime, client, intent, origin):
+async def validate_session_origin(runtime, client, intent, origin, *, _release_boundary=None):
     """Fresh original coordinator SDK read for an independently verified Run edge.
 
     This read does not claim that the calling Activity belongs to the Session.
     Its caller retains actual Run/Parent identity and admission responsibility.
+    The private boundary is supplied only by a warm Coding read set bracketed
+    by independent full checks for that same fixed Manifest.
     """
     from .temporal_session_deployment_control import _CheckedClient
 
@@ -843,6 +877,20 @@ async def validate_session_origin(runtime, client, intent, origin):
 
     manifest = intent["submission"]["manifest"]
     policy = manifest.get("deployment_admission_protocol", {}).get("policy", {})
+    protocol = manifest.get("deployment_admission_protocol", {})
+    full_release = True
+    if (
+        type(_release_boundary) is dict
+        and type(protocol) is dict
+        and type(protocol.get("version")) is int
+        and protocol["version"] == 4
+        and manifest.get("binding_protocol") in (22, 23)
+        and "coding_execution_protocol" in manifest
+    ):
+        boundary = canonical(_release_boundary)
+        full_release = not (
+            canonical(intent["binding"]["manifest"]) == boundary and canonical(manifest) == boundary
+        )
     wire = {
         "version": 1,
         "mode": "observe",
@@ -857,6 +905,7 @@ async def validate_session_origin(runtime, client, intent, origin):
             )
         },
     }
+    checks = {} if full_release else {"_full_release": False}
     validation = SessionControlValidation(
         runtime,
         transport,
@@ -864,8 +913,9 @@ async def validate_session_origin(runtime, client, intent, origin):
         info,
         deployment_id=policy.get("deployment_id"),
         _coordinator_activity=False,
+        **checks,
     )
-    result = await validation.validate()
+    result = await validation.validate(**checks)
     if outer is not None:
         outer._check()
         if (

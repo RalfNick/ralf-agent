@@ -1,10 +1,10 @@
 # Implementation status — 0.1.0.dev120
 
-当前验收 checkpoint（2026-10-15，v14／本地 `91a7837`）：S1 普通 Session 已验收；P3-2 的 S2 Coding Session 仍开放，P3-3／4／5／A 尚未关闭。大载荷修复的相关八模块191项通过；独立安装两模块37项通过（6.70秒），424产品／测试副本前后字节一致，默认完整canonical及原／continued保存History离线重放通过。零模型调用，离线兼容不代表live continuation。
+当前验收 checkpoint（2026-10-15，v15／本地 `09b9595`）：S1 普通 Session 已验收；P3-2 的 S2 Coding Session 仍开放，P3-3／4／5／A 尚未关闭。独立安装两模块32项通过（3.04秒），424产品／测试副本前后字节一致，默认完整canonical及原／continued保存History离线重放通过。零模型调用，离线兼容不代表live continuation。
 
-v14实际graph-sequential首门槛仍1失败／308.83秒，零错误／跳过；180秒审批辅助等待超时。两个Tool均成功（53.223301秒／60.000258秒），但原root退休未确认；owned关闭先CloseIncomplete、后RPCError，Worker退出、schema保留，不能认定恢复／清理通过。本次没有进入大body编码路径，不能据没有2MiB错误宣称该服务门槛已过。其余十二项正常组合与五项故障未运行。
+v15实际graph-sequential首门槛仍1失败／278.43秒，零错误／跳过；180秒审批辅助等待超时，第二Turn未运行。两个Tool均成功（55.064416秒／51.206474秒），原root最终succeeded并正退休；owned关闭成功、Worker退出。本次实际Update及Activity输出均接受同一2447868字节语义结果的无损编码，原digest相符，大载荷路径已有正向服务证据。schema仍保留：清理器读取编码封套时KeyError，不能认定删除门槛通过。其余十二项正常组合与五项故障未运行。
 
-当前源码已将固定child epoch的Coding4 observe中相邻只读describe与完整校验合并；前置Activity验证、bridge控制前完整bootstrap／fresh及末轮验证保持，其他模式、epoch未固定和旧3保持原路径。真实CodingValidation的主RED→GREEN后，相关六模块同次115 passed／6.97秒（-Werror、零失败／错误／跳过），读取期间Runtime／namespace／父子epoch及SDK端口漂移在控制前拒绝。原SDK事实、逐原生请求fresh、实际结束、采纳及期限保持；该增量尚未安装／真实服务复验，不用局部计数预测真实图必过。以下各候选段落保留当时证据；最新状态以上述checkpoint与[验收记录](../architecture/reviews/2026-10-15-temporal-deployment-sessions.md)为准。
+当前源码正在收尾固定配置的重复完整校验与清理器解码修复。最终受影响Session／Coding回归同次860 passed／193 skipped／53.01秒（-Werror）；跳过均不作实际服务验收。清理器此前完整History重建及保留规则两模块36 passed／10.63秒另记；原v15保存History的完整离线重建亦通过，无实时查询或资源删除。本批尚未安装／真实服务复验。只读observer改为组内逐await完整本地检查、既有组出口完整七事实；warm callback相同Manifest的重复Runtime校验交回独立外层边界，其他路径保持。逐原生请求fresh、实际结束、采纳及期限保持；不以局部计数预测真实图必过。以下各候选段落保留当时证据；最新状态以上述checkpoint与[验收记录](../architecture/reviews/2026-10-15-temporal-deployment-sessions.md)为准。
 
 执行约束更新（2026-10-15）：按用户指令固定第三阶段范围、优先收尾，当前只执行[冻结清单 P3-1 至 P3-5／P3-A](phase3-support-matrix.md#收尾范围冻结2026-10-15-用户指令)。S1 普通 Session 功能子集已验收，P3-2 的 S2 与所选集成门槛仍待；不新增功能矩阵、适配器或独立重构专项。本条调整开发优先级，不变更以下已验收状态，也不代表第三阶段已完成。
 
@@ -14,7 +14,7 @@ v14实际graph-sequential首门槛仍1失败／308.83秒，零错误／跳过；
 
 回归出处分开登记：前一冻结 `candidate-full` 完整回归为 12083 passed／805 skipped；v5 受影响 Temporal 为 3175 passed／571 skipped；v6 release 相关 24 模块为 438 passed／90 skipped。这些结果不相加，不宣称当前全量通过，跳过不算实际验收。S1 普通 Session 功能子集关闭，S2 已实现、实际 SDK 门槛仍待通过，Temporal＋PG 集成、P3-2／第三阶段尚未关闭，P3-3／4／5／A 不变。接口与剩余门槛见[固定 Session 计划](superpowers/plans/2026-10-15-temporal-deployment-sessions.md)。
 
-S2 的既往 Agent／sequence 两Turn证据及v5–v13各候选失败记录均保留在本批验收记录，不拼接为当前十三项矩阵通过。当前状态以上方v14 checkpoint为准。
+S2 的既往 Agent／sequence 两Turn证据及各候选失败记录均保留在本批验收记录，不拼接为当前十三项矩阵通过。当前状态以上方v15 checkpoint为准。
 
 以下 Dev120 段落描述已提交基线及其当时边界；不覆盖上述 S1／S2 checkpoint 的有限验证结果。
 

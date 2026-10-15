@@ -592,7 +592,15 @@ class CodingValidation:
         if type(_full_release) is not bool:
             _reject()
         result = await validate_session_origin(
-            self._runtime, self._client, identity["intent"], identity["session_origin"]
+            self._runtime,
+            self._client,
+            identity["intent"],
+            identity["session_origin"],
+            **(
+                {"_release_boundary": self._request["runtime_manifest"]}
+                if not _full_release
+                else {}
+            ),
         )
         self._check(full=_full_release)
         if result != identity:
@@ -657,7 +665,10 @@ class CodingValidation:
                 raise value
         await execution._namespace(client, s["namespace"])
         if s["session"] is not None:
-            await self._session_origin(s["session"], _full_release=_full_release)
+            # A cold invocation retains every bootstrap/full Session check.
+            # Only the warm private callback has independent outer full checks
+            # for this exact fixed Manifest before and after the complete set.
+            await self._session_origin(s["session"], _full_release=_full_release or not steady)
         # Only synchronous DTO checks remain. The public callback immediately
         # performs the full post-I/O check, including the pinned _fresh method.
         permitted = True

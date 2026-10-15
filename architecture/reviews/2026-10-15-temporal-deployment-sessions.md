@@ -4,7 +4,14 @@
 
 ## 当前结论
 
-S2 已实现并交叉审阅，既往 Agent／sequence 两 Turn 有通过证据；最新 v13 安装候选的 graph-sequential 首门槛仍失败，其余十二项未运行，故障门槛尚未执行，不能标为完成。两个原 Tool Activity 均完成，当前失败点仍为整图审批辅助等待超时；后续 Session 收尾出现已证实的2MiB消息硬拒绝，schema 按证据保留。当前仅为本地预览，Temporal＋PostgreSQL、P3-2、第三阶段整体验收继续开放。以下结果来自不同快照，不相加、不称为最终全量；跳过不构成服务或模型验收。
+S2 已实现并交叉审阅，既往 Agent／sequence 两 Turn 有通过证据；最新 v15（本地 `09b9595`）安装候选的 graph-sequential 首门槛仍失败，其余十二项与五项故障未运行。两个Tool及原root最终成功、正退休与owned关闭已确认，但180秒审批辅助等待超时，第二Turn未运行。2447868字节语义结果的Update／Activity编码输出均获接受；schema因清理器未解码而保留。当前仅为本地预览，Temporal＋PostgreSQL、P3-2、第三阶段整体验收继续开放。以下结果来自不同快照，不相加、不称为最终全量；跳过不构成服务或模型验收。
+v15 `frozen-candidate121-s2-observe-readset`：1741文件／424产品，inventory `b2c29e53608e5f09a6e1eff78ec79fd8a43b9c25dddae9d662102bb7ddbfaf51`，wheel SHA256 `e4675aa292556f4d4c6ffcde6587be4a6768ae84ea27230fda4ac6b72302e7e0`。独立安装两模块32 passed／3.04秒，-Werror；424产品与842测试副本前后无漂移，导入均来自安装。默认完整canonical与原值一致，原／continued保存History离线Replayer通过，Provider0／服务0，不代表live continuation。
+v15实际graph-sequential 1 failed／278.43秒、零错误／跳过。两个Tool分别55.064416秒／51.206474秒，原join成功读回晚于超时诊断文件，root最终succeeded并正退休。cleanup记录assembly_close_succeeded:true、workers_exited:true、retired_roots:1、retained_roots:0；schema仍保留且deletion_allowed:false，唯一拒绝原因session_evidence_invalid／KeyError。原Session有6次call_start／6次call_end，无未结束调用。最后observe的语义body2447868字节，编码Update body785015字节，Activity完整wire786068字节；两处解码digest均为 `823b7f408f91774bd0c3f327ae17063198d953f27c2f4aaf3c814e722c91e70f`，与原end.body_result_digest相符。实际编码门槛已有正向证据，但整图／两Turn与删除门槛未过，不删除原schema。
+清理器缺陷已复现：State.end_call先验证／解码，随后测试读取器仍以原封套访问body['ok']。修复只在State完整校验后用相同Manifest解码；完整History重建及篡改／缺ACK／未退休保留两模块36 passed／10.63秒（-Werror），未接服务或删除资源。warm重复完整Runtime校验另有十模块179 passed／8.08秒。上述源码检查不代替新冻结候选的安装／实际图复验。
+
+修复后的同一清理器还对v15原保存的203-event Session History完成全部离线重建：原Registry接受／退休、调用ACK、Advance、receipt及最终pending_calls／unpublished_turns为零均通过。没有实时SDK查询或删除schema，原失败cleanup记录保留；该结果证明读取器能处理原实际证据，不单独授权当前资源删除。
+
+当前源码的有限聚合分两层。warm Coding callback仅在原完整binding／submission Manifest与外层固定配置相同时，将内层重复Runtime重建交回既有两次独立外层完整检查；cold／public／permission保持原full，七项SDK事实及逐await pins保留。只读Session observer仅对exact Coding4、binding22／23启用组内读取：每次SDK await前后仍完整本地pins与Runtime检查，组内不再每项重复七事实；原proof／closure／tree／descendant组出口、最终出口、独立origin verifier及owned body／end ACK的完整七事实检查保持。普通4／默认wrapper仍逐项完整validate；选项严格bool且固定原选值，原资源与wrapper源方法进入既有pins，无Update端口、权限缓存或新状态机。真实_observe的主RED逐read10→11次完整校验，修复后native／composition正Advance及ordinary对照通过；追加选值漂移拒绝后四模块同次86 passed／4.87秒。最终受影响Session／Coding回归同次860 passed／193 skipped／53.01秒（-Werror），193项配置依赖跳过不作为真实服务验收。独立审查、Ruff／格式／空白检查通过；实际超时是否解决仍须新候选验证，原逐原生请求fresh及全部期限未改。
 
 ## 实现边界
 

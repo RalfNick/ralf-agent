@@ -642,7 +642,18 @@ async def _observe(validation):
         return result
     # These existing SDK proof readers validate the original Run/Parent and its
     # descendants. The observer itself has no business call-ledger entry.
-    readonly = _CheckedClient(validation)
+    manifest = i["submission"]["manifest"]
+    protocol = manifest.get("deployment_admission_protocol", {})
+    readonly = _CheckedClient(
+        validation,
+        _aggregate=(
+            type(protocol) is dict
+            and type(protocol.get("version")) is int
+            and protocol["version"] == 4
+            and manifest.get("binding_protocol") in (22, 23)
+            and "coding_execution_protocol" in manifest
+        ),
+    )
     proof = await execution._proof(
         validation.runtime, readonly, policy, i["scope"], i["run_id"], epoch, required=True
     )
@@ -721,11 +732,41 @@ async def _observe(validation):
 
 
 class _CheckedClient:
-    """Read-only SDK ports that revalidate the coordinator after every await."""
+    """Read-only SDK ports; Coding observation groups retain explicit SDK exits."""
 
-    def __init__(self, validation):
+    def __init__(self, validation, *, _aggregate=False):
+        if type(_aggregate) is not bool:
+            _reject()
+        if _aggregate:
+            manifest = validation.intent["submission"]["manifest"]
+            protocol = manifest.get("deployment_admission_protocol", {})
+            if not (
+                type(protocol) is dict
+                and type(protocol.get("version")) is int
+                and protocol["version"] == 4
+                and manifest.get("binding_protocol") in (22, 23)
+                and "coding_execution_protocol" in manifest
+            ):
+                _reject()
         self.validation = validation
-        self._service = _CheckedService(validation)
+        self._aggregate = _aggregate
+        self._read_binding = validation, _aggregate
+        self._service = _CheckedService(self)
+
+    async def _after_read(self):
+        if (
+            type(self._aggregate) is not bool
+            or self.validation is not self._read_binding[0]
+            or self._aggregate is not self._read_binding[1]
+        ):
+            _reject()
+        if self._aggregate:
+            # The enclosing _observe verifies all seven live Session facts at
+            # each group exit, before using or returning the collected proof.
+            # Local pins and complete Runtime validation remain per SDK await.
+            self.validation._check()
+        else:
+            await self.validation.validate()
 
     @property
     def namespace(self):
@@ -740,25 +781,23 @@ class _CheckedClient:
         return self.validation.client.data_converter
 
     def get_workflow_handle(self, *args, **kwargs):
-        return _CheckedHandle(
-            self.validation, self.validation.client.get_workflow_handle(*args, **kwargs)
-        )
+        return _CheckedHandle(self, self.validation.client.get_workflow_handle(*args, **kwargs))
 
 
 class _CheckedService:
-    def __init__(self, validation):
-        self.validation = validation
+    def __init__(self, client):
+        self.client, self.validation = client, client.validation
 
     async def describe_namespace(self, request):
         self.validation._check()
         result = await self.validation.client.workflow_service.describe_namespace(request)
-        await self.validation.validate()
+        await self.client._after_read()
         return result
 
 
 class _CheckedHandle:
-    def __init__(self, validation, handle):
-        self.validation, self.handle = validation, handle
+    def __init__(self, client, handle):
+        self.client, self.validation, self.handle = client, client.validation, handle
 
     def fetch_history_events(self, **kwargs):
         async def events():
@@ -769,7 +808,7 @@ class _CheckedHandle:
                     item = await anext(source)
                 except StopAsyncIteration:
                     return
-                await self.validation.validate()
+                await self.client._after_read()
                 yield item
 
         return events()
@@ -777,13 +816,13 @@ class _CheckedHandle:
     async def query(self, *args, **kwargs):
         self.validation._check()
         result = await self.handle.query(*args, **kwargs)
-        await self.validation.validate()
+        await self.client._after_read()
         return result
 
     async def describe(self):
         self.validation._check()
         result = await self.handle.describe()
-        await self.validation.validate()
+        await self.client._after_read()
         return result
 
 

@@ -60,9 +60,9 @@ def test_warm_callback_aggregates_coding_checks_but_retains_all_session_sdk_fact
         client.calls.clear()
         session.events.clear()
         await authority.validate_registration()
-        # Two outer checks plus the real Session verifier's constructor and
-        # entry/exit checks. Only CodingValidation's own redundant full checks go.
-        assert runtime.rebuilds == 5
+        # The two independent outer checks bracket the complete warm read set;
+        # the original Session namespace/epoch/intent facts are still all fresh.
+        assert runtime.rebuilds == 2
         assert client.namespace_reads == 4  # Two Coding plus two Session UUID reads.
         assert session.events == [
             "describe",
@@ -249,5 +249,115 @@ def test_default_callback_keeps_original_tree_validator(monkeypatch):
         authority = await callbacks(client, request, info, runtime)("original", None, recovery=True)
         assert await authority.validate_registration() is None
         assert events == ["original-tree"]
+
+    asyncio.run(run())
+
+
+def test_first_cold_callback_keeps_original_complete_bootstrap_checks(monkeypatch):
+    async def run():
+        runtime, client, session, request, info = environment(monkeypatch)
+        authority = await callbacks(client, request, info, runtime)("original", None, recovery=True)
+        runtime.rebuilds = 0
+        await authority.validate_registration()
+        assert runtime.rebuilds == 30
+        runtime.rebuilds = 0
+        await authority.validate_registration()
+        assert runtime.rebuilds == 2
+
+    asyncio.run(run())
+
+
+@pytest.mark.parametrize("value", [None, 0, 1, "false"])
+@pytest.mark.parametrize("boundary", ["constructor", "validate"])
+def test_session_full_release_flag_requires_exact_bool_before_sdk_reads(
+    monkeypatch, value, boundary
+):
+    from ralf_agent.errors import DefinitionMismatch
+    from ralf_agent.temporal_session_deployment_verification import SessionControlValidation
+
+    async def run():
+        runtime, client, session, request, info = environment(monkeypatch)
+        intent = client.record["intent"]
+        wire = {
+            "version": 1,
+            "mode": "observe",
+            "intent": intent,
+            **{
+                key: intent[key]
+                for key in (
+                    "scope",
+                    "namespace",
+                    "coordinator_id",
+                    "coordinator_execution_epoch",
+                )
+            },
+        }
+        options = {
+            "deployment_id": runtime._deployment_admission_policy.deployment_id,
+            "_coordinator_activity": False,
+        }
+        if boundary == "constructor":
+            with pytest.raises(DefinitionMismatch):
+                SessionControlValidation(
+                    runtime, client, wire, None, _full_release=value, **options
+                )
+        else:
+            validator = SessionControlValidation(runtime, client, wire, None, **options)
+            runtime.rebuilds = 0
+            with pytest.raises(DefinitionMismatch):
+                await validator.validate(_full_release=value)
+        assert runtime.rebuilds == 0
+        assert not client.calls and not session.events
+
+    asyncio.run(run())
+
+
+@pytest.mark.parametrize("boundary", ["none", "different", "ordinary4", "old3"])
+def test_unmatched_or_unselected_session_boundary_keeps_all_three_full_checks(
+    monkeypatch, boundary
+):
+    import copy
+    from collections import Counter
+
+    from ralf_agent.temporal_session_deployment_verification import validate_session_origin
+    from tests.test_temporal_session_deployment_dto import origin, seal
+
+    async def run():
+        runtime, client, _, request, info = environment(monkeypatch)
+        intent = copy.deepcopy(client.record["intent"])
+        manifest = intent["binding"]["manifest"]
+        if boundary == "ordinary4":
+            manifest.pop("coding_execution_protocol")
+        elif boundary == "old3":
+            manifest["deployment_admission_protocol"]["version"] = 3
+        intent["submission"]["manifest"] = copy.deepcopy(manifest)
+        intent["session_ref"]["definition_digest"] = digest(intent["binding"])
+        intent["submission"]["request"]["session_turn"]["session_ref"] = copy.deepcopy(
+            intent["session_ref"]
+        )
+        seal(intent)
+        runtime.manifest = copy.deepcopy(manifest)
+        session = SessionClient(
+            {
+                "intent": intent,
+                **{key: intent[key] for key in ("namespace", "coordinator_execution_epoch")},
+            }
+        )
+        fixed = None if boundary == "none" else copy.deepcopy(manifest)
+        if boundary == "different":
+            fixed["changed_fixed_boundary"] = True
+        runtime.rebuilds = 0
+        expected_origin = origin(intent)
+        assert await validate_session_origin(
+            runtime, session, intent, expected_origin, _release_boundary=fixed
+        ) == {"intent": intent, "session_origin": expected_origin}
+        assert runtime.rebuilds == 3
+        assert Counter(session.events) == {
+            "namespace": 2,
+            "describe": 2,
+            "history": 1,
+            "deployment_session_intent": 1,
+            "deployment_session_command": 1,
+        }
 
     asyncio.run(run())

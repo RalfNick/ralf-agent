@@ -360,6 +360,7 @@ async def session_evidence(
 ):
     """Read/reduce original History through the existing pure Session state only."""
     from ralf_agent.temporal_session_activities import namespace_id
+    from ralf_agent.temporal_session_deployment_dto import decode_control_body
     from ralf_agent.temporal_session_deployment_state import START_SELECTOR_FIELDS
     from ralf_agent.temporal_session_state import (
         SESSION_ACTIVITY,
@@ -470,7 +471,9 @@ async def session_evidence(
                 require(set(value) == {"identity"} and entry.begin_call(call) == result)
             else:
                 require(entry.end_call(value) == result)
-                body = value["body_result"]
+                body = decode_control_body(
+                    value["body_result"], entry.intent["submission"]["manifest"]
+                )
                 if (
                     body["ok"]
                     and call["mode"] == "observe"

@@ -3,11 +3,12 @@
 import asyncio
 import copy
 from types import SimpleNamespace
+from unittest.mock import patch
 
 import pytest
 
 from ralf_agent.temporal_session_state import TemporalSessionState
-from ralf_agent.types import digest
+from ralf_agent.types import canonical, digest
 from tests.test_temporal_deployment_coding_retention import description, started, update
 from tests.test_temporal_deployment_session_registry import (
     NAMESPACE,
@@ -26,11 +27,31 @@ from temporalio.client import WorkflowHistory
 from temporalio.converter import DataConverter
 
 
-async def scenario(*, fault=None):
+async def scenario(*, fault=None, encoded=False):
     from tests.temporal_deployment_coding_retention import deletion_evidence
 
     registry = state()
-    intent, request = coding_intent_request(registry)
+    if encoded:
+        from ralf_agent.temporal_deployment_protocol import validate_protocol
+        from tests import test_temporal_session_deployment_coding_registry as fixture
+
+        original_manifest = fixture.coding_session_manifest
+
+        def large_manifest(**options):
+            manifest = original_manifest(**options)
+            # A real ToolSpec description grows the accepted release, rather
+            # than adding a field the original publication would reject.
+            manifest["tools"]["plain"]["description"] = (
+                "Original accepted tool description. " * 8192
+            )
+            validate_protocol(manifest)
+            assert len(canonical(manifest).encode()) < 1024 * 1024
+            return manifest
+
+        with patch.object(fixture, "coding_session_manifest", large_manifest):
+            intent, request = coding_intent_request(registry)
+    else:
+        intent, request = coding_intent_request(registry)
     binding = intent["binding"]
     initial = {
         "scope": SCOPE,
@@ -109,7 +130,14 @@ async def scenario(*, fault=None):
             "body_stopped": True,
             "body_result": body,
         }
+        if encoded:
+            from ralf_agent.temporal_session_deployment_dto import encode_control_body
+
+            end["body_result"] = encode_control_body(body, binding["manifest"])
+            assert "_ralf_session_control_body" in end["body_result"]
         ack = entry.end_call(end)
+        if fault == "bad_digest" and mode == "observe":
+            end["body_result_digest"] = "0" * 64
         if fault != "missing_end" or mode != "observe":
             await update(session_events, "session_deployment_call_end", end, ack)
         session.recover_deployment_result()
@@ -313,6 +341,24 @@ def test_session_four_positive_original_history_allows_fixture_deletion():
     assert report["deletion_allowed"], report
     assert len(report["accepted_roots"]) == 1
     assert intent["coordinator_id"] in archived and intent["run_id"] in archived
+
+
+def test_encoded_session_body_original_history_allows_fixture_deletion():
+    report, intent, archived = asyncio.run(scenario(encoded=True))
+    assert report["deletion_allowed"], {
+        key: report.get(key) for key in ("reasons", "session_evidence_exception_type")
+    }
+    assert len(report["retired_roots"]) == 1
+    assert intent["coordinator_id"] in archived and intent["run_id"] in archived
+
+
+@pytest.mark.parametrize("fault", ["missing_end", "unretired", "bad_digest"])
+def test_encoded_session_body_missing_original_evidence_still_retains(fault):
+    report, _, _ = asyncio.run(scenario(encoded=True, fault=fault))
+    assert not report["deletion_allowed"]
+    assert (
+        "root_retirement_unconfirmed" if fault == "unretired" else "session_evidence_invalid"
+    ) in report["reasons"]
 
 
 @pytest.mark.parametrize(
