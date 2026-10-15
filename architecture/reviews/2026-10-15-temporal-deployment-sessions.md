@@ -1,5 +1,18 @@
 # 部署 Session 集成与收尾验证
 
+
+## 当前诊断结论（2026-10-16，`d9bae41`；产品仍为v19）
+
+本轮仅增加原关闭失败边界诊断，复用原v19 wheel及已安装产品；冻结1746个公共文件，inventory SHA256 `f89cfde08be85f82551eb81175e69d183da90bc9152d5167eb2a6a64450cc53f`。唯一原图运行 `installed-s2-close-diagnostics-v19-sdk` 为1 failed／482.320秒，零错误／跳过，424产品与847测试副本前后audit相同。产品未优化，不将本次样本与上一轮比较为性能改善。其余十二项正常组合和五项故障未运行，S2／P3-2保持开放。
+
+主错误仍是原360秒scenario取消approve.sleep，非approve180超时。第一root17:01:57.185010Z→17:05:00.885200Z成功seal；携带正Advance的UpdateAccepted e200为17:05:22.382063Z，原UpdateCompleted正ACK e201为17:05:22.382079Z，seal后21.496879秒；原Activity203和消费WFT206随后结束。前三Tool均成功并有原result_candidate。第四Tool17:07:34.476059Z实际开始、17:07:49.346967Z结束，14.870908秒、ok:false／definition_mismatch，原回执只有owner／error，尚无prepared／thread／turn／result_candidate；本轮不能标为runner_outcome_unknown或业务成功。第二root在保存窗口内无seal。
+
+新增诊断改变了下一步判断：首次close原trace是 `_bounded_task` 正在await原task，随后bridge.close:649自身抛出结构化 `CloseIncomplete({deployment_coding:[{phase:original_coding_close,code:close_incomplete}]})`；不是 `_bounded_task:723` 的外层TimeoutError翻译。原任务done后被既有drain清除，因此快照中没有活跃coding_stop_task。并行release Activity的query堆栈不能当作它的等待因果；跨shield的静态帧同样不提供任务关联。bridge保留code但丢失内层report仍是诊断限制，不据此猜测具体内部错误。
+
+本次四条native资源均已有封闭证据（三条正stop、一条正unprepared），effects为3 adopted＋1 dispatched且无原结果evidence／adopted digest。未知leaf原四对call_start／call_end、handler结束ACK均完整，本轮不声称它仍缺原end ACK；实际效果未确认仍独立阻止退休。最终assembly关闭失败，cleanup重试RPCError，accepted2／retired1／retained1，Session关闭证据不足，schema保留；fixture子进程退出不替代assembly关闭或原调用fence。**保留行为有依据，独立关闭缺陷尚未证明。** 不为追逐不同关闭窗口反复运行服务或放宽unknown要求。
+
+下一修复只针对原360秒完整两Turn门槛。只读架构复核允许研究“单次exact Coding4 CONTROL observe封闭Session身份读集”：原完整Activity入口不变，中间保留所有原Run／Registry／Start／祖先／当前child读取与固定完整身份关联，最终独立raw SDK七事实和全部原出口通过后才返回。此候选尚未实现，当前保留每组七事实的契约仍有效；不能只删除校验或声称采样语义完全相同，不能影响native逐请求fresh、权限及写操作。先完成狭义设计、反例和独立审查，再实现和复验；不启动第二次同产品诊断。
+
 ## v19 CONTROL 只读冷验证候选（2026-10-16，安装通过／实际首项失败）
 
 源码本地提交 `4d72895`，metadata仍dev120；冻结1746个公共文件，inventory SHA256为 `a5717970302584b7aedb31d90c8027349f8a6f15dc5a3b0044d41ad6d8e452da`。安装后八模块143 passed／29.94秒、零失败／错误／跳过，424产品文件源码／wheel／site及847测试副本前后相同，所有导入来自安装目录。wheel SHA256为 `5913d9a324413dbea7ffcbc5a54691a758883e57630b44d35130e2700d5e42ff`。默认完整canonical仍为 `9df90a99df2c298ab2b2bf8aad0b7d907d2670e2c5247055c81cfe1afa475fbd`，原／continued保存History离线重放通过，Provider0／服务0，不代live continuation。所有离线进程退出后只运行一次原图首门槛，结果1 failed／466.580秒，零错误／跳过，424产品和测试副本前后无漂移；验收文档后续另行同步，不称与冻结公共文档逐字相同。

@@ -1,5 +1,8 @@
 # 第三阶段支持矩阵与收口门槛
 
+最新诊断checkpoint（2026-10-16，`d9bae41`，产品仍为v19）：唯一原图1 failed／482.320秒，424产品及847测试副本前后无漂移；整体360秒取消，首Turn成功、前三Tool成功，第四Tool返回definition_mismatch、无结果候选。首次close是原任务实际返回CloseIncomplete，非外层等待超时；未知leaf的handler／call-end ACK已齐，但缺原业务结果，effects仍3 adopted＋1 dispatched，仅1／2 root退休，schema正确保留。独立关闭缺陷未证明，停止按关闭报错本身叠加修复。S2／P3-2仍开放，其余十二项正常组合和五项故障未运行。下一步只设计并验证exact只读CONTROL的封闭Session身份读集，减少跨层重复；当前契约与native逐请求fresh不变，不据架构候选宣称已实现或360秒通过。详情见验收记录；以下v19首次运行及更早记录保留各自范围。
+
+
 2026-10-16 v19源码收尾候选：真实CONTROL＋Coding4固定child的只读冷验证中归并重复Runtime重建，原SDK读取与六组Session事实全部保持，主用例full端口76→37；默认、权限和原生路径不变。同次132模块1956 passed／289 skipped／93.30秒，独立审阅及格式检查通过；安装八模块143项、默认完整canonical及保存History离线兼容通过。最新实际v19仍1失败／466.580秒：首Turn成功，第二Turn第四Tool在整体360秒取消后为unknown；原Coding close两次未排空，仅1／2 root退休，Session／stop ACK与一条write义务未清，schema保留。四native资源物理停止不代替这些ACK。当前唯一集成阻塞仍是S2原图完整两Turn及其关闭；其余十二项正常组合和五项故障未运行。不据离线计数推断实际速度，不扩矩阵或期限。
 
 诊断增量仅修改原失败fixture：Worker退出前优先保存原stop任务的静态await链，最多32任务／16层，保持原错误及资源义务。四个直接受影响模块37 passed／61配置依赖跳过，产品424文件与v19冻结源码相同，独立审阅无P1／P2；没有新增实际运行证据，S2／P3-2状态不变。
