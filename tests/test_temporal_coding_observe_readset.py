@@ -136,6 +136,7 @@ def environment(monkeypatch):
             return await super().validate()
 
     monkeypatch.setattr(bridge, "control", control)
+    monkeypatch.setattr(composition_control, "control", control)
     monkeypatch.setattr(validation, "CodingValidation", TracedValidation)
     return runtime, client, parent, call, info, captured, steps
 

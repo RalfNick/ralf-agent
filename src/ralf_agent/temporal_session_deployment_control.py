@@ -753,18 +753,22 @@ class _CheckedClient:
         self._read_binding = validation, _aggregate
         self._service = _CheckedService(self)
 
-    async def _after_read(self):
+    def _full_read(self):
         if (
             type(self._aggregate) is not bool
             or self.validation is not self._read_binding[0]
             or self._aggregate is not self._read_binding[1]
         ):
             _reject()
-        if self._aggregate:
+        return not self._aggregate
+
+    async def _after_read(self):
+        if not self._full_read():
             # The enclosing _observe verifies all seven live Session facts at
             # each group exit, before using or returning the collected proof.
-            # Local pins and complete Runtime validation remain per SDK await.
-            self.validation._check()
+            # All local pins remain per await; complete Runtime validation is
+            # performed by the existing independent group boundaries.
+            self.validation._check(full=False)
         else:
             await self.validation.validate()
 
@@ -789,7 +793,7 @@ class _CheckedService:
         self.client, self.validation = client, client.validation
 
     async def describe_namespace(self, request):
-        self.validation._check()
+        self.validation._check(full=self.client._full_read())
         result = await self.validation.client.workflow_service.describe_namespace(request)
         await self.client._after_read()
         return result
@@ -801,7 +805,7 @@ class _CheckedHandle:
 
     def fetch_history_events(self, **kwargs):
         async def events():
-            self.validation._check()
+            self.validation._check(full=self.client._full_read())
             source = self.handle.fetch_history_events(**kwargs)
             while True:
                 try:
@@ -814,13 +818,13 @@ class _CheckedHandle:
         return events()
 
     async def query(self, *args, **kwargs):
-        self.validation._check()
+        self.validation._check(full=self.client._full_read())
         result = await self.handle.query(*args, **kwargs)
         await self.client._after_read()
         return result
 
     async def describe(self):
-        self.validation._check()
+        self.validation._check(full=self.client._full_read())
         result = await self.handle.describe()
         await self.client._after_read()
         return result

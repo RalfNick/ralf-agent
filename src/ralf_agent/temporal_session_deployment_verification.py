@@ -831,6 +831,7 @@ def source_bindings():
             dto._coded_control_body,
             dto._body_reject,
             _CheckedClient.__init__,
+            _CheckedClient._full_read,
             _CheckedClient._after_read,
             _CheckedClient.get_workflow_handle,
             _CheckedClient.namespace.fget,

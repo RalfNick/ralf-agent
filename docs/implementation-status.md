@@ -6,6 +6,8 @@ v16实际graph-sequential仍1失败／386.44秒，零错误／跳过；第一Tur
 
 本批有限聚合已安装／服务复验：warm callback相同完整Manifest的重复Runtime校验交回独立外层边界；只读observer组内逐await完整本地检查、既有组出口完整七事实保持，普通4／默认／旧路径保持。没有新增权限缓存、执行权威或放宽逐原生请求fresh／期限。原v15清理器KeyError由相同Manifest解码修复，原203-event History离线重建及v16实际安全清理通过。剩余阻塞是两Turn累计耗时；第一root开始至seal199.465570秒，两Tool交接35.248867秒，结果发布还需原Session观察／ACK。下一批仅沿该交接／观察路径定位冗余，保留原十三项及五项故障，不新增功能。各候选结果分开记录，详见[验收记录](../architecture/reviews/2026-10-15-temporal-deployment-sessions.md)。
 
+v17 待服务复验源码仅归并两处只读重复：Session observer的逐SDK检查保留全部本地pins，Runtime完整重建由原group入口／出口承担；固定child双epoch／namespace的Coding4 observe直接使用原composition reader和拒写client，去掉桥内重复父Activity验证，首轮／末轮完整验证保留。其他mode、未固定child及旧3保持原桥，原生每请求fresh与期限不变。最终受影响回归959 passed／193 skipped／55.06秒，独立审查及Ruff／格式通过；跳过不作为服务验收，不从静态调用减少推断两Turn必过。安装与真实图结果仍待同一冻结候选验证。
+
 执行约束更新（2026-10-15）：按用户指令固定第三阶段范围、优先收尾，当前只执行[冻结清单 P3-1 至 P3-5／P3-A](phase3-support-matrix.md#收尾范围冻结2026-10-15-用户指令)。S1 普通 Session 功能子集已验收，P3-2 的 S2 与所选集成门槛仍待；不新增功能矩阵、适配器或独立重构专项。本条调整开发优先级，不变更以下已验收状态，也不代表第三阶段已完成。
 
 工作区 S1 checkpoint（最终 v6 候选）：显式 `enable_sessions=True`、`deployment_sessions=True` 与部署准入策略已接通普通 Session 的 publication4／Registry4，旧默认选择保持。v6 补齐 closing 期间原 factory 的 evidence ACK 维护通道；每次机械 release 使用 fresh SDK Update ID，原 root／certificate／payload 不变，退休幂等仍由原 Registry History 保证。424 个产品文件在冻结源码、wheel 与安装中一致；v6 默认完整 publication 等值、原／续接 History 离线 replay 通过，新增 Provider 调用为零；live continuation 仍沿 v4 独立证据引用。

@@ -288,6 +288,8 @@ def expand_response(state, call, response):
 
 
 async def execute(runtime, client, value, info):
+    from . import temporal_coding_composition_control as composition
+    from . import temporal_deployment_coding_bridge as bridge
     from . import temporal_deployment_execution as execution
     from .temporal_bindings import request_release_digest
     from .temporal_deployment_coding_bridge import control
@@ -383,7 +385,26 @@ async def execute(runtime, client, value, info):
         "namespace": proof["namespace"],
         "task_queue": info.task_queue,
     }
-    result = await control(runtime, client, full, info)
+    epoch = call.get("deployment_execution_epoch")
+    pinned_observation = (
+        describe_readset
+        and type(epoch) is str
+        and bool(epoch)
+        and call.get("child_execution")
+        == {
+            "namespace": proof["namespace"],
+            "execution_epoch": epoch,
+            "original_execution_epoch": epoch,
+        }
+    )
+    if pinned_observation:
+        # The complete original Activity proof and Coding read set above cover
+        # this read-only collection. Keep composition's own identity checks and
+        # the independent complete exit below; do not repeat the bridge's
+        # same-parent Activity verification. Unexpected cold writes still fail.
+        result = await composition.control(runtime, bridge._ReadOnlyClient(client), full, info)
+    else:
+        result = await control(runtime, client, full, info)
     current = await execution._proof(
         runtime,
         client,

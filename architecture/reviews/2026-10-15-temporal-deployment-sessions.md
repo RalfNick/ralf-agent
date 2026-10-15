@@ -23,6 +23,10 @@ v15实际graph-sequential 1 failed／278.43秒、零错误／跳过。两个Tool
 
 ## 实现边界
 
+v17源码收尾只针对v16累计期限。按原三child正观察路径静态推导，wrapped SDK读至少159次，v16逐读前后造成至少318次额外完整Runtime重建；该下界不是实测RPC总数或性能。现exact Coding4 aggregate transport每读保留source／client／service／converter／Activity／request pins，使用full=False，完整Runtime复核留在既有group及最终出口；独立origin七事实与其full、owned body和end ACK均保持。普通4/default逐读原full不变，最后descendant session_proof与后续组／最终出口共同保护，不提前返回Advance。主RED native／composition每SDK额外重建2次→修复后0次；17项测试验证真实_observe在Runtime漂移时仍于完整出口拒绝，并覆盖逐读源码／请求／端口／Activity及逐History项漂移。
+
+同批compact observe仅在exact Coding4、原child非空固定epoch和完整namespace／first／current child_execution匹配时，保留原first Activity proof与完整Coding validator，直接调用原composition.control＋既有拒写client；省去中间重复桥验证。末current parent proof、child describe、validator、Activity／namespace／Runtime及pack完全保留；missing pin／其他mode／旧3仍走桥。实际生产reader和proof的SDK形状夹具RED父Activity验证2次→1次，结果与原桥exact相等；9项含出口Runtime／namespace／父子身份／原pin／源码漂移及冷写拒绝，底层Update0。静态每合格observe至少省16项重复SDK读取，不把该下界换算成秒数。两项产品合并经独立审查，最终受影响回归同次959 passed／193 skipped／55.06秒（-Werror）；跳过不作为实际服务验收，Ruff／格式／空白检查通过。安装、默认历史兼容及实际两Turn结果仍待新冻结候选，原80／60／180／360期限与native逐请求fresh保持。
+
 - 显式 Session＋部署准入＋Coding 使用 publication4／Registry4，旧默认选择保持。同地址不兼容 Registry 拒绝，不换地址规避容量。
 - native6／binding22、composition7／binding23 请求与库存形状保持。实际 SDK parent 是原 Session coordinator，业务 lineage 不把它计作业务父节点或根额度。
 - 原 intent、首次信封、Scope、namespace、原始／首个／当前 epoch 关联真实 SDK 证据。Registry 管准入和退休，原 Run／Parent History 管业务、预算和效果，Session History 管串行 Turn 与发布。

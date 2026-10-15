@@ -136,9 +136,34 @@ class CodingValidation:
             )
         ]
         if self._manifest["deployment_admission_protocol"]["version"] == 4:
+            from . import temporal_deployment_coding_bridge as bridge
             from . import temporal_session_deployment_verification as verification
 
             self._ports += [(verification, "validate_session_origin"), (self, "_session_origin")]
+            self._ports += [
+                (composition, "control"),
+                (bridge, "_ReadOnlyClient"),
+                (bridge, "_ReadOnlyHandle"),
+                *[
+                    (bridge._ReadOnlyClient, name)
+                    for name in (
+                        "__init__",
+                        "__getattr__",
+                        "get_workflow_handle",
+                        "start_workflow",
+                    )
+                ],
+                *[
+                    (bridge._ReadOnlyHandle, name)
+                    for name in (
+                        "__init__",
+                        "query",
+                        "describe",
+                        "fetch_history_events",
+                        "execute_update",
+                    )
+                ],
+            ]
         self._ports += [(globals(), "_signed"), (globals(), "_reject")]
         self._bindings = tuple(
             _binding(owner[name] if isinstance(owner, dict) else getattr(owner, name))
