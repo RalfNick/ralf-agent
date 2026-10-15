@@ -2,7 +2,17 @@
 
 
 
-## v20 封闭CONTROL身份读集（2026-10-16，源码候选）
+## v20 实际首项结果（2026-10-16，`49d26d8`，未通过）
+
+唯一原图首项 `installed-s2-closed-observation-v20-sdk` 已结束：1 failed／428.761秒，零错误／跳过；424产品与850测试副本前后无漂移。初始 `WorkflowUpdateRPCTimeoutOrCancelledError` 是整体360秒取消传入SDK Update，不能归为独立RPC超时或approve180到期。第二root启动至随后cleanup cancel不足122秒。其余十二项正常组合与五项故障未运行，S2／P3-2保持开放。
+
+前三Tool均成功且原result_candidate已接受，Activity各耗时46.739／48.432／44.631秒。第四个业务子Workflow已启动，但无Tool调度／开始／结果候选，不能称第四Tool已执行。第一root成功seal到Session正Advance Completed ACK为21.733秒；正ACK为Session History e213，不以e212 Accepted代替。
+
+关闭仍未完成。首次close由原bridge任务返回CloseIncomplete，不是外层等待超时；内层具体原因仍未保存，不能证明独立关闭缺陷。三条native资源均有原停止／fence／退休／transport closed证据，三条效果均adopted，业务root为accepted2／retired2；但Session第二Turn仍6个call_start／5个call_end，末observe缺end ACK、无正Advance，且没有Registry Session close Accepted。根退休不消解Session义务，schema继续保留；fixture子进程退出不代表assembly关闭成功。
+
+两root全部observe自首次起均携原SDK child epoch，冻结Workflow路径在mark_started前已固定完整child身份；不能把耗时归因于末observe才pin。History未保存父proof Query回包或私有分支遥测，因此仍不能实证优化分支命中，夹具Session读取6→2不等于实际RPC减少或性能改善。下一批先使用既有有界SDK／Worker计时诊断区分实际读取、校验和事件循环等待，再决定最小修复；诊断与正常验收分开。不继续同产品盲跑、不追加功能、不放宽原期限或ACK要求。
+
+## v20 封闭CONTROL身份读集（源码及安装检查）
 
 本批直接针对P3-2原360秒两Turn门槛，不修饰未知效果或放宽关闭要求。原真实控制链主RED先确认pack结果、所有非Session SDK Counter和Update0相同，随后Session history6不等于2失败。实现后原完整Activity入口保留；共享私有 `_read_session_node` 只复用原Run/Registry/Start纯关联，默认 `_proof` 不变。封闭集合首次从实际原节点取得完整intent／origin，并与已验证入口的root／namespace／manifest／Session origin固定；后代节点不要求业务lineage为空。
 
@@ -10,12 +20,12 @@
 
 本批修订了明确的实验采样语义：完整CONTROL调用首末采样替代中间重复组，允许原Scope只读在漂移被末验发现前继续，但不允许使用结果，也不承诺逐读立即撤销。独立verifier与原类／方法、helper及端口闭包都在source pins内；历史publication4仍须匹配不可变Worker，不自动迁移保留的未知运行。
 
-定向真实SDK形状检查覆盖原结果／Counter、原Session epoch／first／original／namespace漂移、完整Registry身份变更、source／SCV类或validate替换、假outer.validate、取消无pack及清snapshot、后代与缺祖先pin拒写。端口实例被lookalike替换的新增RED已复现并补固定实例检查。最终同次135模块回归1986 passed／289 skipped／106.38秒（-Werror），1274产品／测试前后相同。289跳过不作服务验收；首轮沙箱Unix socket限制及未闭合集合误用新getter均记录在失败日志，后者仅在所选分支使用新私有端口后原22项通过，最终在已授权本地隔离Redis／Unix socket环境复验完整受影响集合。独立源码审阅无P1／P2，Ruff／格式／空白检查通过。安装兼容已通过，实际首项仍待，不据夹具计数宣称实际360秒已通过。
+定向真实SDK形状检查覆盖原结果／Counter、原Session epoch／first／original／namespace漂移、完整Registry身份变更、source／SCV类或validate替换、假outer.validate、取消无pack及清snapshot、后代与缺祖先pin拒写。端口实例被lookalike替换的新增RED已复现并补固定实例检查。最终同次135模块回归1986 passed／289 skipped／106.38秒（-Werror），1274产品／测试前后相同。289跳过不作服务验收；首轮沙箱Unix socket限制及未闭合集合误用新getter均记录在失败日志，后者仅在所选分支使用新私有端口后原22项通过，最终在已授权本地隔离Redis／Unix socket环境复验完整受影响集合。独立源码审阅无P1／P2，Ruff／格式／空白检查通过。安装兼容通过，实际首项失败如上，不据夹具计数宣称实际360秒已通过。
 
 
 冻结 `frozen-candidate121-s2-closed-observation-v20`：1749公共／424产品／850测试，inventory SHA256 `adbf5b0ad530cff2059fa2e6249b269c930d0dda136da7c3ba62d88b02382ce8`。wheel仍为dev120，SHA256 `6be9f55dc9e0a66df8f717475c1745973915c37611650c539dfefc6ddecd2bf4`。独立安装11模块173 passed／43.01秒，零失败／错误／跳过，424源码／wheel／site与850测试副本前后相同，所有导入来自安装。默认完整canonical仍为 `9df90a99df2c298ab2b2bf8aad0b7d907d2670e2c5247055c81cfe1afa475fbd`；原／continued保存History离线重放通过，Provider0／服务0，不代live continuation。首次安装套件Unix socket沙箱失败单独保留，按既有IPC授权在相同集合／断言完整复验通过；所有build／test子进程退出后才可运行一次原图。验收后文档单独同步，不声称当前公共文档与冻结字节相同。
 
-## 当前诊断结论（2026-10-16，`d9bae41`；产品仍为v19）
+## v19 历史诊断结论（`d9bae41`；产品仍为v19）
 
 本轮仅增加原关闭失败边界诊断，复用原v19 wheel及已安装产品；冻结1746个公共文件，inventory SHA256 `f89cfde08be85f82551eb81175e69d183da90bc9152d5167eb2a6a64450cc53f`。唯一原图运行 `installed-s2-close-diagnostics-v19-sdk` 为1 failed／482.320秒，零错误／跳过，424产品与847测试副本前后audit相同。产品未优化，不将本次样本与上一轮比较为性能改善。其余十二项正常组合和五项故障未运行，S2／P3-2保持开放。
 
