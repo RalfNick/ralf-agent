@@ -100,14 +100,16 @@ The independent source review established these three required boundaries. The c
 下一批限定为一个原CONTROL只读采样边界设计／实现批次：借鉴既有sealed-tree内部读取与完整身份关联，不复用sealed-only证书walk，也不改默认 `_proof`。先明确exact Coding4／actual CONTROL／固定child及祖先身份／全程拒写的封闭集合，保留原完整Activity入口和末独立raw七事实出口；中间只作不可采纳proposal。对齐当前仍要求每组七事实的契约，审查reset／namespace／epoch／Scope／source漂移、原Registry／Start替换及错误／取消清理后再实施。未pin、ordinary、旧3、其他mode、所有native／permission入口保持原行为。原360秒门槛不变，实际RPC／延迟需最终固定版本验证。预计一批设计、受影响检查和必要修复；首次实际复验仍约8分钟，修复总时长无充分证据估计。
 
 
-### 下一候选的最小实现边界（设计已复核，未实现）
+### v20候选的最小实现边界（已实现，最终验收待定）
 
 - 从 `temporal_session_deployment_verification._SessionTreeReading._node` 提取既有私有读序列：原 `_read_admission` → `_start_record` → 完整canonical intent／origin相等 → `_start_record_binding`。默认 `_proof` 不变；新入口只产生封闭集合内不可采纳的node proposal。CONTROL Parent可能是后代，固定共同业务root／原Registry epoch；不照搬sealed-tree的空lineage约束，不把Session coordinator算作业务root。
 - 将 CodingValidation bootstrap 前段leaf／ancestry／ancestor读取提为私有固定方法；基类仍执行原full proof路径，只有 exact私有observation类使用上述collector。后面的composition／Start／current describe／Registry配置与完整envelope／node／held关联保留，不能用外层假validate或类型标志代替原证据。
 - transport仅在原完整 `validate_activity` 后、actual CONTROL＋Coding4＋非空fixed child epoch和完整child_execution匹配时打开collector；register／cancel／recover／ordinary／旧3／未pin和native路径不变。该完整入口可能进行原ancestry pin，不能被归入随后只读集合或跳过。
 - 私有observation的Session identity检查只关联同一完整固定identity；末parent node使用同一内部读序列，保留当前child描述／epoch／namespace及纯关联。所有Run、Registry、Start与compact读仍真实读取，代理全程拒绝Update／start／discover／pin；若需要写入直接拒绝，不能先写再补终验。不得缓存SDK响应或把采样结果跨请求共享。
 - 全部body读取结束、任何pack／return前，新建独立raw `SessionControlValidation(..., _coordinator_activity=False)` 读完整七事实，与固定identity相等，再完成原Activity、source／endpoint／request／Runtime等出口。try/finally清除全部proposal／snapshot；独立verifier、helper、类／方法和transport闭包纳入既有source pins。调用中延后发现reset／identity漂移是明确的采样语义变化，须窄范围修订当前契约，不承诺逐读立即撤销。
-- 首要RED须先确认所有非Session SDK读取及原结果相同，仅Session完整组6→2仍失败；然后验证缺ancestor pin拒写、中段完整Registry intent替换、末current／first／original epoch或namespace漂移、source／端口替换、假outer validate、错误／取消不返回proposal，以及默认／native原fresh对照。通过源码审阅和受影响检查、固定安装与约定兼容后，才复验一次原图；调用计数不能换算成性能或验收通过。
+- 首要RED已确认所有非Session SDK读取及原结果相同，仅Session完整组原6不等于2失败；然后验证缺ancestor pin拒写、中段完整Registry intent替换、末current／first／original epoch或namespace漂移、source／端口替换、假outer validate、错误／取消不返回proposal，以及默认／native原fresh对照。通过源码审阅和受影响检查、固定安装与约定兼容后，才复验一次原图；调用计数不能换算成性能或验收通过。
+
+v20实现更新：已提取原节点读取序列，sealed-tree仍保留原入口／出口；只有transport原完整入口后的exact CONTROL分支打开私有集合，所有group读取由独立固定只读端口逐await检查，完整canonical身份为不可变str，不缓存SDK回包。最后独立new raw SCV完整7和原出口通过才pack；transport finally在正常、错误和取消后清全部私有snapshot／proposal，原captured discard不能被晚到替换。新增真实后代node/ancestor纯关联及原端口实例替换拒绝，缺原pin无Update。最终135模块受影响回归1986 passed／289 skipped／106.38秒（-Werror），1274产品／测试前后相同；独立审阅无P1／P2，Ruff／格式／空白检查通过。安装11模块173 passed／43.01秒，默认完整canonical及原／continued保存History离线兼容通过；424产品与850测试副本前后相同，全部导入来自安装。一次真实首项仍待；不提前关闭S2，也不运行其余十二项／故障矩阵。
 
 v19当前源码候选已完成本轮离线定位及必要最小修复：一次真实原控制链／SDK形状observe调用完整Runtime端口76次，pre-body46次中bootstrap31次；不是把约33秒交接当作一个RPC。仅已全验证、固定child且actual CONTROL Activity的Coding4只读observe使用专用私有类，保留全部SDK和六组Session七事实，full76→37；其自身固定Manifest真实Runtime入／出口、逐await pins、取消清snapshot和拒permission保持。其余入口沿原实现。新增15项与同次132模块回归1956 passed／289 skipped／93.30秒通过；跳过不代服务验收。独立审阅、冻结安装八模块143项、默认完整canonical及保存History离线兼容通过；随后一次原图仍1失败／466.580秒，原360秒取消，关闭未排空。前三Tool成功，第四Tool已启动但最终unknown，无结果候选。仅1／2 root退休，schema保留；其余十二项正常组合和五项故障未运行。不把调用次数换算为实际速度结论。
 

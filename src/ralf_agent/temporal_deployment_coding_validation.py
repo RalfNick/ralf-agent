@@ -114,6 +114,8 @@ class CodingValidation:
                 "permission",
                 "_check",
                 "_bootstrap",
+                "_bootstrap_nodes",
+                "_read_client",
                 "_fresh",
                 "_description",
                 "_node",
@@ -150,19 +152,59 @@ class CodingValidation:
             from . import temporal_deployment_release as release
             from . import temporal_session_deployment_verification as verification
 
-            self._ports += [(verification, "validate_session_origin"), (self, "_session_origin")]
+            self._ports += [
+                (verification, "validate_session_origin"),
+                (verification, "_read_session_node"),
+                (verification, "source_bindings"),
+                (self, "_session_origin"),
+            ]
+            self._ports += [(verification, "SessionControlValidation")]
+            self._ports += [
+                (verification.SessionControlValidation, name)
+                for name in (
+                    "__init__",
+                    "_check",
+                    "validate",
+                    "_namespace",
+                    "_description",
+                    "_start",
+                    "selector",
+                    "lifecycle",
+                )
+            ]
+            for cls in (_ObservationReads, _ObservationReadHandle, _ObservationReadService):
+                self._ports += [(globals(), cls.__name__)]
+                self._ports += [
+                    (cls, name)
+                    for name, method in vars(cls).items()
+                    if callable(method) or isinstance(method, property)
+                ]
             self._ports += [
                 (globals(), "CodingValidation"),
                 (globals(), "_ObservationValidation"),
                 *[
                     (CodingValidation, name)
-                    for name in ("_check", "_bootstrap", "_fresh", "validate")
+                    for name in (
+                        "_check",
+                        "_bootstrap",
+                        "_bootstrap_nodes",
+                        "_read_client",
+                        "_fresh",
+                        "validate",
+                    )
                 ],
                 *[
                     (_ObservationValidation, name)
                     for name in (
                         "__init__",
                         "_check",
+                        "_read_client",
+                        "_bootstrap_nodes",
+                        "_session_origin",
+                        "_open_reading",
+                        "_read_observation_node",
+                        "_finish_reading",
+                        "_discard_reading",
                         "validate",
                         "permission",
                         "_validate_readset",
@@ -204,8 +246,9 @@ class CodingValidation:
             ]
         self._ports += [(globals(), "_signed"), (globals(), "_reject")]
         self._bindings = tuple(
-            _binding(owner[name] if isinstance(owner, dict) else getattr(owner, name))
+            _binding(method.fget if isinstance(method, property) else method)
             for owner, name in self._ports
+            for method in (owner[name] if isinstance(owner, dict) else getattr(owner, name),)
         )
         self._check_pin = _binding(self._check)
         self._snapshot = None
@@ -226,8 +269,9 @@ class CodingValidation:
         ):
             _reject()
         if self._bindings != tuple(
-            _binding(owner[name] if isinstance(owner, dict) else getattr(owner, name))
+            _binding(method.fget if isinstance(method, property) else method)
             for owner, name in self._ports
+            for method in (owner[name] if isinstance(owner, dict) else getattr(owner, name),)
         ):
             _reject()
         if self._claim != tuple(getattr(self._info, field, None) for field in _CLAIM_FIELDS):
@@ -256,6 +300,51 @@ class CodingValidation:
         if full and execution._policy(runtime, expected=self._manifest) != self._policy:
             _reject()
 
+    def _read_client(self):
+        return self._client
+
+    async def _bootstrap_nodes(self, readonly):
+        from . import temporal_deployment_execution as execution
+
+        runtime, request = self._runtime, self._request
+        leaf = await execution._proof(
+            runtime,
+            readonly,
+            self._policy,
+            request["scope"],
+            request["run_id"],
+            request["execution_epoch"],
+            required=True,
+        )
+        self._check(full=True)
+        if canonical(leaf["manifest"]) != canonical(self._manifest):
+            _reject()
+        if (
+            "deployment_admission" in request
+            and request["deployment_admission"] != leaf["admission"]
+        ):
+            _reject()
+        if "coding_parent" in request and request["coding_parent"] != leaf["request"].get(
+            "coding_parent"
+        ):
+            _reject()
+        root = await execution._ancestry(runtime, readonly, self._policy, leaf, read_only=True)
+        self._check(full=True)
+        proofs = [leaf]
+        for link in reversed(leaf["admission"]["lineage"]):
+            parent = await execution._proof(
+                runtime,
+                readonly,
+                self._policy,
+                request["scope"],
+                link["parent_run_id"],
+                link["parent_execution_epoch"],
+                required=True,
+            )
+            self._check(full=True)
+            proofs.append(parent)
+        return leaf, root, proofs
+
     async def _bootstrap(self):
         from . import temporal_coding_composition_control as composition
         from . import temporal_deployment_control_projection as projection
@@ -266,44 +355,9 @@ class CodingValidation:
             self._check(full=True)
             if self._snapshot is not None:
                 return
-            runtime, client, request = self._runtime, self._client, self._request
+            client, request = self._read_client(), self._request
             readonly = _ReadOnlyClient(client)
-            leaf = await execution._proof(
-                runtime,
-                readonly,
-                self._policy,
-                request["scope"],
-                request["run_id"],
-                request["execution_epoch"],
-                required=True,
-            )
-            self._check(full=True)
-            if canonical(leaf["manifest"]) != canonical(self._manifest):
-                _reject()
-            if (
-                "deployment_admission" in request
-                and request["deployment_admission"] != leaf["admission"]
-            ):
-                _reject()
-            if "coding_parent" in request and request["coding_parent"] != leaf["request"].get(
-                "coding_parent"
-            ):
-                _reject()
-            root = await execution._ancestry(runtime, readonly, self._policy, leaf, read_only=True)
-            self._check(full=True)
-            proofs = [leaf]
-            for link in reversed(leaf["admission"]["lineage"]):
-                parent = await execution._proof(
-                    runtime,
-                    readonly,
-                    self._policy,
-                    request["scope"],
-                    link["parent_run_id"],
-                    link["parent_execution_epoch"],
-                    required=True,
-                )
-                self._check(full=True)
-                proofs.append(parent)
+            leaf, root, proofs = await self._bootstrap_nodes(readonly)
             if proofs[-1] != root:
                 # Mutable proof fields may change between reads; bind only the original identity.
                 if any(
@@ -686,7 +740,7 @@ class CodingValidation:
             if _binding(check) != self._check_pin:
                 _reject()
             check(full=_full_release)
-        s, client = self._snapshot, self._client
+        s, client = self._snapshot, self._read_client()
         await execution._namespace(client, s["namespace"])
         if _binding(check) != self._check_pin:
             _reject()
@@ -794,6 +848,10 @@ class _ObservationValidation(CodingValidation):
             or getattr(info, "activity_type", None) != CONTROL_ACTIVITY
         ):
             _reject()
+        self._reading = self._reading_pin = None
+        self._reading_identity = self._reading_original = None
+        self._reading_original_digest = None
+        self._reading_verifier = None
         self._observation_base = CodingValidation
         self._observation_check = CodingValidation._check
         self._observation_check_binding = _binding(self._observation_check)
@@ -810,6 +868,208 @@ class _ObservationValidation(CodingValidation):
         ):
             raise DefinitionMismatch("Original observation validation implementation changed")
         self._observation_check(self, full=False)
+        if (
+            (
+                self._reading_original is not None
+                and digest(self._reading_original) != self._reading_original_digest
+            )
+            or self._reading is not self._reading_pin
+            or (
+                self._reading is not None
+                and (
+                    type(self._reading) is not _ObservationReads
+                    or self._reading_identity is not self._reading._identity
+                )
+            )
+        ):
+            _reject()
+
+    def _read_client(self):
+        return self._client if self._reading is None else self._reading
+
+    def _open_reading(self, proof):
+        self._check(full=False)
+        if self._reading is not None or any(
+            proof[key] != self._request[request_key]
+            for key, request_key in (
+                ("scope", "scope"),
+                ("run_id", "run_id"),
+                ("execution_epoch", "execution_epoch"),
+                ("manifest", "runtime_manifest"),
+            )
+        ):
+            _reject()
+        self._reading_original = detached(
+            {
+                key: proof[key]
+                for key in (
+                    "scope",
+                    "run_id",
+                    "execution_epoch",
+                    "manifest_digest",
+                    "namespace",
+                    "admission",
+                )
+            }
+        )
+        self._reading_original_digest = digest(self._reading_original)
+        self._reading = self._reading_pin = _ObservationReads(self)
+        self._check(full=False)
+
+    async def _read_observation_node(self, run_id, epoch):
+        from .temporal_session_deployment_verification import _read_session_node
+
+        self._check(full=False)
+        if self._reading is None:
+            _reject()
+        value, identity = await _read_session_node(
+            self._runtime,
+            self._reading,
+            self._policy,
+            self._request["scope"],
+            run_id,
+            epoch,
+            expected_identity=None if self._reading_identity is None else self._reading_identity,
+        )
+        self._check(full=False)
+        original = self._reading_original
+        if (
+            value["manifest"] != self._manifest
+            or value["namespace"] != original["namespace"]
+            or value["admission"]["root"] != original["admission"]["root"]
+            or identity["session_origin"] != original["admission"]["session_origin"]
+        ):
+            _reject()
+        if self._reading_identity is None:
+            if run_id != original["run_id"] or epoch != original["execution_epoch"]:
+                _reject()
+            # The complete identity is immutable text, pinned by object identity
+            # in the private read ports. No large mutable copy needs re-hashing
+            # at every SDK boundary; every Registry result still correlates it.
+            self._reading._identity = canonical(identity)
+            self._reading_identity = self._reading._identity
+        return value
+
+    async def _bootstrap_nodes(self, readonly):
+        if self._reading is None:
+            return await CodingValidation._bootstrap_nodes(self, readonly)
+        from . import temporal_deployment_execution as execution
+
+        request = self._request
+        leaf = await self._read_observation_node(request["run_id"], request["execution_epoch"])
+        self._check(full=False)
+        if (
+            canonical(leaf["manifest"]) != canonical(self._manifest)
+            or (
+                "deployment_admission" in request
+                and request["deployment_admission"] != leaf["admission"]
+            )
+            or (
+                "coding_parent" in request
+                and request["coding_parent"] != leaf["request"].get("coding_parent")
+            )
+        ):
+            _reject()
+        current = leaf
+        for index in range(len(leaf["admission"]["lineage"]) - 1, -1, -1):
+            link = leaf["admission"]["lineage"][index]
+            parent = await self._read_observation_node(
+                link["parent_run_id"], link["parent_execution_epoch"]
+            )
+            if (
+                parent["request_digest"] != link["parent_request_digest"]
+                or parent["manifest_digest"] != link["parent_manifest_digest"]
+                or parent["admission"]
+                != {**leaf["admission"], "lineage": leaf["admission"]["lineage"][:index]}
+            ):
+                _reject()
+            call = execution._child(parent, current["run_id"])
+            if (
+                call.get("id") != link["call_id"]
+                or call.get("command_id") != current["command_id"]
+                or call.get("request") != current["request"]
+                or call.get("deployment_admission") != current["admission"]
+                or call.get("dispatch_started") is not True
+                or call.get("deployment_execution_epoch") != current["execution_epoch"]
+                or call.get("child_execution")
+                != {
+                    "namespace": current["namespace"],
+                    "execution_epoch": current["execution_epoch"],
+                    "original_execution_epoch": current["execution_epoch"],
+                }
+            ):
+                _reject()
+            refreshed = await self._read_observation_node(
+                parent["run_id"], parent["execution_epoch"]
+            )
+            pinned = execution._child(refreshed, current["run_id"])
+            if (
+                pinned.get("deployment_execution_epoch") != current["execution_epoch"]
+                or pinned.get("request") != current["request"]
+                or pinned.get("deployment_admission") != current["admission"]
+            ):
+                _reject()
+            current = refreshed
+        root, proofs = current, [leaf]
+        for link in reversed(leaf["admission"]["lineage"]):
+            proofs.append(
+                await self._read_observation_node(
+                    link["parent_run_id"], link["parent_execution_epoch"]
+                )
+            )
+        return leaf, root, proofs
+
+    async def _session_origin(self, identity, *, _full_release=True):
+        if self._reading is None:
+            return await CodingValidation._session_origin(
+                self, identity, _full_release=_full_release
+            )
+        self._check(full=False)
+        if type(_full_release) is not bool or canonical(identity) != self._reading_identity:
+            _reject()
+
+    async def _finish_reading(self):
+        from .temporal_session_deployment_verification import SessionControlValidation
+
+        self._check(full=False)
+        if self._reading is None or self._reading_identity is None:
+            _reject()
+        import json
+
+        identity = json.loads(self._reading_identity)
+        intent = identity["intent"]
+        wire = {
+            "version": 1,
+            "mode": "observe",
+            "intent": intent,
+            **{
+                key: intent[key]
+                for key in ("scope", "namespace", "coordinator_id", "coordinator_execution_epoch")
+            },
+        }
+        # Construct the verifier here, on the pinned original SDK transport.
+        # A replaced outer validate() cannot manufacture these seven facts.
+        verifier = SessionControlValidation(
+            self._runtime,
+            self._client,
+            wire,
+            self._info,
+            deployment_id=self._policy["deployment_id"],
+            _coordinator_activity=False,
+        )
+        self._reading_verifier = verifier
+        result = await verifier.validate()
+        self._check(full=False)
+        if canonical(result) != canonical(identity):
+            _reject()
+        self._runtime.validate_release(self._manifest)
+        self._check(full=False)
+
+    def _discard_reading(self):
+        self._snapshot = self._snapshot_digest = None
+        self._reading = self._reading_pin = self._reading_identity = self._reading_original = None
+        self._reading_original_digest = None
+        self._reading_verifier = None
 
     async def validate(self):
         try:
@@ -830,4 +1090,118 @@ class _ObservationValidation(CodingValidation):
         _reject()
 
     async def _validate_readset(self):
+        _reject()
+
+
+class _ObservationReads:
+    """Fixed, invocation-local read ports; no SDK response or permission cache."""
+
+    def __init__(self, validation):
+        if type(validation) is not _ObservationValidation:
+            _reject()
+        self._validation, self._client = validation, validation._client
+        self._identity = None
+        self._checker = validation._check
+        self._checker_pin = _binding(self._checker)
+        self._converter = self._client.data_converter
+        self._decode_pin = _binding(self._converter.decode)
+        self._service = _ObservationReadService(self)
+
+    def _check(self):
+        if (
+            self._validation._reading is not self
+            or self._validation._client is not self._client
+            or _binding(self._checker) != self._checker_pin
+            or self._client.data_converter is not self._converter
+            or _binding(self._converter.decode) != self._decode_pin
+        ):
+            _reject()
+        # Invoke the originally captured checker. Replacing validate() or the
+        # instance's current checker cannot replace this source/resource guard.
+        self._checker(full=False)
+
+    @property
+    def namespace(self):
+        self._check()
+        return self._client.namespace
+
+    @property
+    def workflow_service(self):
+        self._check()
+        return self._service
+
+    @property
+    def data_converter(self):
+        self._check()
+        return self._converter
+
+    def get_workflow_handle(self, *args, **kwargs):
+        self._check()
+        handle = self._client.get_workflow_handle(*args, **kwargs)
+        self._check()
+        return _ObservationReadHandle(self, handle)
+
+    async def start_workflow(self, *args, **kwargs):
+        _reject()
+
+
+class _ObservationReadService:
+    def __init__(self, client):
+        self._client = client
+
+    async def describe_namespace(self, *args, **kwargs):
+        self._client._check()
+        try:
+            return await self._client._client.workflow_service.describe_namespace(*args, **kwargs)
+        finally:
+            self._client._check()
+
+
+class _ObservationReadHandle:
+    def __init__(self, client, handle):
+        self._client, self._handle = client, handle
+        self._methods = tuple(
+            _binding(getattr(handle, name))
+            for name in ("query", "describe", "fetch_history_events")
+        )
+
+    def _check(self):
+        self._client._check()
+        if self._methods != tuple(
+            _binding(getattr(self._handle, name))
+            for name in ("query", "describe", "fetch_history_events")
+        ):
+            _reject()
+
+    async def query(self, *args, **kwargs):
+        self._check()
+        try:
+            return await self._handle.query(*args, **kwargs)
+        finally:
+            self._check()
+
+    async def describe(self, *args, **kwargs):
+        self._check()
+        try:
+            return await self._handle.describe(*args, **kwargs)
+        finally:
+            self._check()
+
+    def fetch_history_events(self, *args, **kwargs):
+        async def events():
+            self._check()
+            source = self._handle.fetch_history_events(*args, **kwargs)
+            while True:
+                self._check()
+                try:
+                    item = await anext(source)
+                except StopAsyncIteration:
+                    return
+                finally:
+                    self._check()
+                yield item
+
+        return events()
+
+    async def execute_update(self, *args, **kwargs):
         _reject()

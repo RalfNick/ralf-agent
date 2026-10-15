@@ -361,109 +361,129 @@ async def execute(runtime, client, value, info):
         },
         info,
     )
-    # The preceding full Activity validation permits only this read. Finish the
-    # adjacent descriptor read before bootstrap/fresh; control still follows a
-    # complete validation, and the independent post-control validation remains.
-    if not describe_readset:
-        await validator.validate()
-    if value["mode"] == "register" and not await validator.permission():
-        _reject()
-
-    def child_description(epoch):
-        from .temporal_parent_state import PARENT_WORKFLOW_NAME
-        from .temporal_state import WORKFLOW_NAME
-
-        return {
-            "id": call["run_id"],
-            "run_id": epoch,
-            "namespace": proof["namespace"]["name"],
-            "task_queue": info.task_queue,
-            "parent_id": proof["run_id"],
-            "parent_run_id": proof["execution_epoch"],
-            "workflow_type": PARENT_WORKFLOW_NAME
-            if call["request"]["definition"]["kind"] in {"graph", "team", "dynamic"}
-            else WORKFLOW_NAME,
-        }
-
-    if value["mode"] != "register" and call.get("deployment_execution_epoch") is not None:
-        validator._description(
-            await client.get_workflow_handle(call["run_id"]).describe(),
-            child_description(call["deployment_execution_epoch"]),
-        )
-        await validator.validate()
-    full = {
-        "mode": value["mode"],
-        "scope": proof["scope"],
-        "child": detached(call),
-        "parent_id": proof["run_id"],
-        "parent_execution_epoch": proof["execution_epoch"],
-        "parent_request_digest": proof["request_digest"],
-        "parent_release_digest": request_release_digest(proof["request"], proof["manifest"]),
-        "runtime_manifest": proof["manifest"],
-        "namespace": proof["namespace"],
-        "task_queue": info.task_queue,
-    }
-    if pinned_observation:
-        # The complete original Activity proof and Coding read set above cover
-        # this read-only collection. Keep composition's own identity checks and
-        # the independent complete exit below; do not repeat the bridge's
-        # same-parent Activity verification. Unexpected cold writes still fail.
-        result = await composition.control(runtime, bridge._ReadOnlyClient(client), full, info)
-    else:
-        result = await control(runtime, client, full, info)
-    current = await execution._proof(
-        runtime,
-        client,
-        execution._policy(runtime),
-        proof["scope"],
-        proof["run_id"],
-        proof["execution_epoch"],
-        required=True,
-    )
-    current_call = execution._child(current, call["run_id"])
-    if (
-        current["scope"] != proof["scope"]
-        or current["run_id"] != proof["run_id"]
-        or current["execution_epoch"] != proof["execution_epoch"]
-        or current["namespace"] != proof["namespace"]
-        or current["request_digest"] != proof["request_digest"]
-        or current["manifest_digest"] != proof["manifest_digest"]
-        or _child_digest(current_call) != _child_digest(call)
-    ):
-        _reject()
-    if value["mode"] != "register":
-        child_proof = result.get("coding_composition_proof")
-        if type(child_proof) is not dict:
+    closed_reading = type(validator) is _ObservationValidation
+    discard = validator._discard_reading if closed_reading else None
+    try:
+        if closed_reading:
+            validator._open_reading(proof)
+        reading_client = validator._read_client() if closed_reading else client
+        # The preceding full Activity validation permits only this read. Finish the
+        # adjacent descriptor read before bootstrap/fresh; control still follows a
+        # complete validation, and the independent post-control validation remains.
+        if not describe_readset:
+            await validator.validate()
+        if value["mode"] == "register" and not await validator.permission():
             _reject()
-        expected_epoch = child_proof["execution_epoch"]
-        if (
-            current_call.get("deployment_execution_epoch") != expected_epoch
-            or call.get("deployment_execution_epoch") not in (None, expected_epoch)
-            or current_call.get("child_execution")
-            != {
-                "namespace": proof["namespace"],
-                "execution_epoch": expected_epoch,
-                "original_execution_epoch": expected_epoch,
+
+        def child_description(epoch):
+            from .temporal_parent_state import PARENT_WORKFLOW_NAME
+            from .temporal_state import WORKFLOW_NAME
+
+            return {
+                "id": call["run_id"],
+                "run_id": epoch,
+                "namespace": proof["namespace"]["name"],
+                "task_queue": info.task_queue,
+                "parent_id": proof["run_id"],
+                "parent_run_id": proof["execution_epoch"],
+                "workflow_type": PARENT_WORKFLOW_NAME
+                if call["request"]["definition"]["kind"] in {"graph", "team", "dynamic"}
+                else WORKFLOW_NAME,
             }
+
+        if value["mode"] != "register" and call.get("deployment_execution_epoch") is not None:
+            validator._description(
+                await reading_client.get_workflow_handle(call["run_id"]).describe(),
+                child_description(call["deployment_execution_epoch"]),
+            )
+            await validator.validate()
+        full = {
+            "mode": value["mode"],
+            "scope": proof["scope"],
+            "child": detached(call),
+            "parent_id": proof["run_id"],
+            "parent_execution_epoch": proof["execution_epoch"],
+            "parent_request_digest": proof["request_digest"],
+            "parent_release_digest": request_release_digest(proof["request"], proof["manifest"]),
+            "runtime_manifest": proof["manifest"],
+            "namespace": proof["namespace"],
+            "task_queue": info.task_queue,
+        }
+        if pinned_observation:
+            # The complete original Activity proof and Coding read set above cover
+            # this read-only collection. Keep composition's own identity checks and
+            # the independent complete exit below; do not repeat the bridge's
+            # same-parent Activity verification. Unexpected cold writes still fail.
+            result = await composition.control(
+                runtime, bridge._ReadOnlyClient(reading_client), full, info
+            )
+        else:
+            result = await control(runtime, client, full, info)
+        if closed_reading:
+            if execution._policy(runtime) != validator._policy:
+                _reject()
+            current = await validator._read_observation_node(
+                proof["run_id"], proof["execution_epoch"]
+            )
+        else:
+            current = await execution._proof(
+                runtime,
+                client,
+                execution._policy(runtime),
+                proof["scope"],
+                proof["run_id"],
+                proof["execution_epoch"],
+                required=True,
+            )
+        current_call = execution._child(current, call["run_id"])
+        if (
+            current["scope"] != proof["scope"]
+            or current["run_id"] != proof["run_id"]
+            or current["execution_epoch"] != proof["execution_epoch"]
+            or current["namespace"] != proof["namespace"]
+            or current["request_digest"] != proof["request_digest"]
+            or current["manifest_digest"] != proof["manifest_digest"]
+            or _child_digest(current_call) != _child_digest(call)
         ):
             _reject()
-        validator._description(
-            await client.get_workflow_handle(call["run_id"]).describe(),
-            child_description(expected_epoch),
+        if value["mode"] != "register":
+            child_proof = result.get("coding_composition_proof")
+            if type(child_proof) is not dict:
+                _reject()
+            expected_epoch = child_proof["execution_epoch"]
+            if (
+                current_call.get("deployment_execution_epoch") != expected_epoch
+                or call.get("deployment_execution_epoch") not in (None, expected_epoch)
+                or current_call.get("child_execution")
+                != {
+                    "namespace": proof["namespace"],
+                    "execution_epoch": expected_epoch,
+                    "original_execution_epoch": expected_epoch,
+                }
+            ):
+                _reject()
+            validator._description(
+                await reading_client.get_workflow_handle(call["run_id"]).describe(),
+                child_description(expected_epoch),
+            )
+        await validator.validate()
+        if value["mode"] == "register" and not await validator.permission():
+            _reject()
+        execution._actual(client, info, run_id=proof["run_id"], epoch=proof["execution_epoch"])
+        await execution._namespace(reading_client, proof["namespace"])
+        if closed_reading:
+            await validator._finish_reading()
+        runtime.validate_release(proof["manifest"])
+        if value["mode"] != "observe":
+            return detached(result)
+        state = SimpleNamespace(
+            scope=proof["scope"],
+            run_id=proof["run_id"],
+            epoch=proof["execution_epoch"],
+            manifest=proof["manifest"],
+            composition_namespace=proof["namespace"],
         )
-    await validator.validate()
-    if value["mode"] == "register" and not await validator.permission():
-        _reject()
-    execution._actual(client, info, run_id=proof["run_id"], epoch=proof["execution_epoch"])
-    await execution._namespace(client, proof["namespace"])
-    runtime.validate_release(proof["manifest"])
-    if value["mode"] != "observe":
-        return detached(result)
-    state = SimpleNamespace(
-        scope=proof["scope"],
-        run_id=proof["run_id"],
-        epoch=proof["execution_epoch"],
-        manifest=proof["manifest"],
-        composition_namespace=proof["namespace"],
-    )
-    return pack_response(state, current_call, result)
+        return pack_response(state, current_call, result)
+    finally:
+        if discard is not None:
+            discard()

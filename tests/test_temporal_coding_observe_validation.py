@@ -204,7 +204,9 @@ def environment(monkeypatch):
     )
 
 
-def test_pinned_readonly_observe_keeps_all_original_sdk_facts_and_result(monkeypatch):
+def test_pinned_readonly_observe_keeps_original_node_facts_and_independent_session_exit(
+    monkeypatch,
+):
     async def run():
         e = environment(monkeypatch)
         result = await transport.execute(
@@ -222,8 +224,8 @@ def test_pinned_readonly_observe_keeps_all_original_sdk_facts_and_result(monkeyp
                 "deployment_admission": 4,
                 "deployment_session_root": 4,
                 "deployment_start": 4,
-                "deployment_session_intent": 6,
-                "deployment_session_command": 6,
+                "deployment_session_intent": 2,
+                "deployment_session_command": 2,
                 "coding_composition_proof": 3,
                 "deployment_configuration": 1,
                 "deployment_coding_validation": 4,
@@ -232,14 +234,14 @@ def test_pinned_readonly_observe_keeps_all_original_sdk_facts_and_result(monkeyp
             }
         )
         assert Counter(e.client.events) == Counter(
-            namespace=33,
-            describe=12,
-            deployment_session_intent=6,
-            deployment_session_command=6,
-            history=6,
+            namespace=25,
+            describe=4,
+            deployment_session_intent=2,
+            deployment_session_command=2,
+            history=2,
         )
-        # Baseline real cold CONTROL performs 76 full calls. The private readonly
-        # validator must remove repetition while keeping all original SDK reads.
+        # Original non-Session reads stay identical. Session sampling now spans
+        # the complete closed observation, with independent full entry/exit.
         assert e.full["runtime"] < 76
 
     asyncio.run(run())

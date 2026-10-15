@@ -1,6 +1,20 @@
 # 部署 Session 集成与收尾验证
 
 
+
+## v20 封闭CONTROL身份读集（2026-10-16，源码候选）
+
+本批直接针对P3-2原360秒两Turn门槛，不修饰未知效果或放宽关闭要求。原真实控制链主RED先确认pack结果、所有非Session SDK Counter和Update0相同，随后Session history6不等于2失败。实现后原完整Activity入口保留；共享私有 `_read_session_node` 只复用原Run/Registry/Start纯关联，默认 `_proof` 不变。封闭集合首次从实际原节点取得完整intent／origin，并与已验证入口的root／namespace／manifest／Session origin固定；后代节点不要求业务lineage为空。
+
+私有bootstrap和fresh保留全部原组件／配置／节点／当前描述读取；末parent reading仍取完整实际事实。所有collection SDK调用走固定只读端口，对每次await（包括异常、取消和逐History项）执行原captured checker及source／handle／service／converter／Activity／request pins。完整canonical Session身份为不可变str并由原读取端口实例固定，既不缓存SDK回包也不提供权限。末独立new raw SCV完整七事实与该身份相等、原出口通过后才pack。finally调用原captured discard，在成功／错误／取消时清除整个集合和snapshot；已捕获旧端口不再可用。默认、独立未open validator、native逐请求fresh、permission、其他mode／未pin／旧3保持原路径。
+
+本批修订了明确的实验采样语义：完整CONTROL调用首末采样替代中间重复组，允许原Scope只读在漂移被末验发现前继续，但不允许使用结果，也不承诺逐读立即撤销。独立verifier与原类／方法、helper及端口闭包都在source pins内；历史publication4仍须匹配不可变Worker，不自动迁移保留的未知运行。
+
+定向真实SDK形状检查覆盖原结果／Counter、原Session epoch／first／original／namespace漂移、完整Registry身份变更、source／SCV类或validate替换、假outer.validate、取消无pack及清snapshot、后代与缺祖先pin拒写。端口实例被lookalike替换的新增RED已复现并补固定实例检查。最终同次135模块回归1986 passed／289 skipped／106.38秒（-Werror），1274产品／测试前后相同。289跳过不作服务验收；首轮沙箱Unix socket限制及未闭合集合误用新getter均记录在失败日志，后者仅在所选分支使用新私有端口后原22项通过，最终在已授权本地隔离Redis／Unix socket环境复验完整受影响集合。独立源码审阅无P1／P2，Ruff／格式／空白检查通过。安装兼容已通过，实际首项仍待，不据夹具计数宣称实际360秒已通过。
+
+
+冻结 `frozen-candidate121-s2-closed-observation-v20`：1749公共／424产品／850测试，inventory SHA256 `adbf5b0ad530cff2059fa2e6249b269c930d0dda136da7c3ba62d88b02382ce8`。wheel仍为dev120，SHA256 `6be9f55dc9e0a66df8f717475c1745973915c37611650c539dfefc6ddecd2bf4`。独立安装11模块173 passed／43.01秒，零失败／错误／跳过，424源码／wheel／site与850测试副本前后相同，所有导入来自安装。默认完整canonical仍为 `9df90a99df2c298ab2b2bf8aad0b7d907d2670e2c5247055c81cfe1afa475fbd`；原／continued保存History离线重放通过，Provider0／服务0，不代live continuation。首次安装套件Unix socket沙箱失败单独保留，按既有IPC授权在相同集合／断言完整复验通过；所有build／test子进程退出后才可运行一次原图。验收后文档单独同步，不声称当前公共文档与冻结字节相同。
+
 ## 当前诊断结论（2026-10-16，`d9bae41`；产品仍为v19）
 
 本轮仅增加原关闭失败边界诊断，复用原v19 wheel及已安装产品；冻结1746个公共文件，inventory SHA256 `f89cfde08be85f82551eb81175e69d183da90bc9152d5167eb2a6a64450cc53f`。唯一原图运行 `installed-s2-close-diagnostics-v19-sdk` 为1 failed／482.320秒，零错误／跳过，424产品与847测试副本前后audit相同。产品未优化，不将本次样本与上一轮比较为性能改善。其余十二项正常组合和五项故障未运行，S2／P3-2保持开放。

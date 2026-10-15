@@ -807,6 +807,24 @@ async def _verify_receipt(runtime, client, value, *, info):
     return {"ok": True, "result": detached(prepared)}
 
 
+async def _read_session_node(
+    runtime, client, policy, scope, run_id, epoch, *, expected_identity=None
+):
+    """Read a correlated node proposal; no independent Session SDK authority."""
+    from . import temporal_deployment_execution as execution
+
+    value, description = await execution._read_admission(
+        runtime, client, policy, scope, run_id, epoch, required=True
+    )
+    response, identity = await execution._start_record(client, policy, value)
+    if identity is None or (
+        expected_identity is not None and canonical(identity) != expected_identity
+    ):
+        _reject()
+    await execution._start_record_binding(client, value, description, response)
+    return detached(value), detached(identity)
+
+
 class _SessionTreeReading:
     """Invocation-local proposals, usable only after the independent SDK exit.
 
@@ -878,17 +896,17 @@ class _SessionTreeReading:
             _reject()
 
     async def _node(self, run_id, epoch):
-        from . import temporal_deployment_execution as execution
-
         self._check()
         runtime, _, _ = self._resources
-        value, description = await execution._read_admission(
-            runtime, self._client, self._policy, self._proof["scope"], run_id, epoch, required=True
+        value, _ = await _read_session_node(
+            runtime,
+            self._client,
+            self._policy,
+            self._proof["scope"],
+            run_id,
+            epoch,
+            expected_identity=self._identity,
         )
-        response, identity = await execution._start_record(self._client, self._policy, value)
-        if identity is None or canonical(identity) != self._identity:
-            _reject()
-        await execution._start_record_binding(self._client, value, description, response)
         self._check()
         return value
 
@@ -1032,6 +1050,7 @@ def source_bindings():
             _SessionTreeReading._tree,
             _SessionTreeReading.read,
             _read_session_tree,
+            _read_session_node,
             dto.encode_control_body,
             dto.decode_control_body,
             dto._coded_control_body,

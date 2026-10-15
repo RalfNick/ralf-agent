@@ -1,5 +1,8 @@
 # Implementation status — 0.1.0.dev120
 
+2026-10-16 v20源码候选：仅exact Coding4／actual CONTROL／完整固定child的只读observe，已接入封闭Session身份读取；原完整Activity入口、所有Run／Registry／Start／祖先／compact／当前child读取保留，末独立raw Session七事实后才返回。主RED已确认原结果和非Session Counter相同，再由原6组变2组；默认/native逐请求fresh、其他mode、未pin和旧协议保持。新增取消finally清理、逐await拒写端口和完整身份／source pins，私有helper不提供Session权威。采样频率变化已写入实验契约，匹配不可变Worker恢复旧运行。同次135模块回归1986 passed／289 skipped／106.38秒（-Werror），1274产品／测试文件前后相同，独立审阅无P1／P2，Ruff／格式／空白检查通过。安装11模块173 passed／43.01秒，默认完整canonical及原／continued保存History离线重放通过，424产品与850测试副本前后相同、全部导入来自安装。真实首项待验；不能把读取计数当作实际速度或S2通过。下方v19诊断仍为最新已结束的实际证据。
+
+
 最新诊断checkpoint（2026-10-16，`d9bae41`，产品仍为v19）：唯一原图1 failed／482.320秒，424产品及847测试副本前后无漂移；整体360秒取消，首Turn成功、前三Tool成功，第四Tool返回definition_mismatch、无结果候选。首次close是原任务实际返回CloseIncomplete，非外层等待超时；未知leaf的handler／call-end ACK已齐，但缺原业务结果，effects仍3 adopted＋1 dispatched，仅1／2 root退休，schema正确保留。独立关闭缺陷未证明，停止按关闭报错本身叠加修复。S2／P3-2仍开放，其余十二项正常组合和五项故障未运行。下一步只设计并验证exact只读CONTROL的封闭Session身份读集，减少跨层重复；当前契约与native逐请求fresh不变，不据架构候选宣称已实现或360秒通过。详情见验收记录；以下v19首次运行及更早记录保留各自范围。
 
 
