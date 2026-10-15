@@ -145,6 +145,7 @@ class TemporalRuntime:
         recall_policy=None,
         recall_planner=None,
         enable_sessions=False,
+        deployment_sessions=False,
         limits=None,
         verifier=None,
         session_store=None,
@@ -166,6 +167,20 @@ class TemporalRuntime:
     ):
         from .governance import DeploymentAdmissionPolicy
 
+        if (
+            type(deployment_sessions) is not bool
+            or deployment_sessions
+            and (
+                enable_sessions is not True
+                or admission_policy is None
+                or coding_execution
+                or coding_composition
+            )
+        ):
+            raise ValidationError(
+                "Session deployment requires explicit ordinary public admission and Sessions"
+            )
+        self.deployment_sessions = self._deployment_sessions_pin = deployment_sessions
         if admission_policy is not None and _deployment_admission_policy is not None:
             raise ValidationError("Select one public or internal deployment admission policy")
         self._deployment_public_execution = self._deployment_public_execution_pin = (
@@ -593,6 +608,8 @@ class TemporalRuntime:
         self._manifest = validate_manifest(self._current_manifest())
 
     def _current_manifest(self):
+        if self.deployment_sessions is not self._deployment_sessions_pin:
+            raise DefinitionMismatch("Original Session deployment selection changed")
         if self.coding_composition:
             from .temporal_coding_composition_protocol import require_sdk
 
@@ -885,6 +902,7 @@ class TemporalRuntime:
             result,
             self._deployment_admission_identity,
             public=self._deployment_public_execution,
+            **({"session_deployment": True} if self.deployment_sessions else {}),
             **({"_copy": False} if owned_publication else {}),
         )
 

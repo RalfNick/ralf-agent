@@ -127,6 +127,10 @@ class TemporalRuntimeBuilder:
         from .admission_factories import host_options
 
         host_admission = host_options(profile, admission_policy)
+        if profile.execution.get("deployment_sessions") and not (
+            host_admission or "admission_policy" in profile.components
+        ):
+            raise ValidationError("Deployment Sessions require an explicit admission policy")
         scope = Scope() if scope is None else scope
         if not isinstance(scope, Scope):
             raise ValidationError("Temporal assembly requires a trusted Scope")

@@ -92,9 +92,71 @@ def _depth(state):
     )
 
 
+def _session_origin(metadata, scope, manifest, request=None):
+    """Pure origin correlation; actual SDK coordinator proof remains transport-owned."""
+    from .session_types import SessionRef, integer
+    from .temporal_session_deployment_dto import ORIGIN_FIELDS
+    from .temporal_session_state import workflow_id
+
+    origin = metadata["session_origin"]
+    _exact(origin, ORIGIN_FIELDS)
+    if type(origin["version"]) is not int or origin["version"] != 1:
+        raise ValidationError("Invalid Session origin version")
+    _namespace(origin["namespace"])
+    _sha(origin["intent_digest"])
+    integer(origin["turn_seq"])
+    for name in ("session_command_id", "coordinator_id", "turn_id"):
+        _text(origin[name])
+    for name in (
+        "coordinator_execution_epoch",
+        "coordinator_first_execution_epoch",
+        "coordinator_original_execution_epoch",
+    ):
+        _epoch(origin[name])
+        if origin[name] != origin["coordinator_execution_epoch"]:
+            raise DefinitionMismatch("Session origin SDK execution cannot be replaced")
+    ref = SessionRef.from_dict(origin["session_ref"])
+    key = ref.key.to_dict()
+    root = metadata["root"]
+    command = "ralf-session-run:" + digest([key, origin["session_command_id"]])
+    if (
+        {"workspace": ref.key.workspace, "principal": ref.key.principal} != scope
+        or origin["namespace"] != root["namespace"]
+        or origin["coordinator_id"] != workflow_id(ref.key)
+        or ref.coordination_ref
+        != digest(["temporal-session-coordination-v1", ref.key.resource_id, scope])
+        or origin["turn_id"] != "ralf-turn-" + digest([key, origin["session_command_id"]])
+        or root["command_id"] != command
+    ):
+        raise DefinitionMismatch("Session origin differs from its original root")
+    turn = {
+        "session_ref": origin["session_ref"],
+        "turn_id": origin["turn_id"],
+        "turn_seq": origin["turn_seq"],
+        "coordinator_id": origin["coordinator_id"],
+    }
+    if request is not None:
+        if not metadata["lineage"] and request.get("session_turn") != turn:
+            raise DefinitionMismatch("Session root lost its original Turn")
+        if "session_turn" in request and request["session_turn"] != turn:
+            raise DefinitionMismatch("Session execution changed its original Turn")
+        if "session_observer" in request and request["session_observer"] != {
+            "coordinator_id": origin["coordinator_id"]
+        }:
+            raise DefinitionMismatch("Session execution changed its original observer")
+        if "session_lineage" in request and (
+            request["session_lineage"].get("root_turn") != turn
+            or request["session_lineage"].get("root_run_id") != root["run_id"]
+            or request["session_lineage"].get("namespace_id") != root["namespace"]["id"]
+        ):
+            raise DefinitionMismatch("Session descendant lost its original Turn ancestry")
+    return _detached(origin)
+
+
 def _metadata(state, metadata, namespace, epoch, original_epoch, parent):
-    _exact(metadata, {"version", "root", "lineage"})
-    if type(metadata["version"]) is not int or metadata["version"] != 1:
+    session = state.manifest["deployment_admission_protocol"]["version"] == 4
+    _exact(metadata, {"version", "root", "lineage"} | ({"session_origin"} if session else set()))
+    if type(metadata["version"]) is not int or metadata["version"] != (2 if session else 1):
         raise ValidationError("Invalid original deployment metadata version")
     _root(metadata["root"])
     _epoch(epoch)
@@ -140,6 +202,9 @@ def _metadata(state, metadata, namespace, epoch, original_epoch, parent):
         or command_id != _command(state)
     ):
         raise DefinitionMismatch("Original deployment ancestry ends at another accepted Run")
+    origin = (
+        _session_origin(metadata, state.scope, state.manifest, state.request) if session else None
+    )
     if lineage:
         _exact(parent, {"namespace", "workflow_id", "run_id"})
         expected = {
@@ -149,6 +214,15 @@ def _metadata(state, metadata, namespace, epoch, original_epoch, parent):
         }
         if parent != expected:
             raise DefinitionMismatch("Actual original SDK parent differs from accepted ancestry")
+    elif origin is not None:
+        if parent != {
+            "namespace": namespace,
+            "workflow_id": origin["coordinator_id"],
+            "run_id": origin["coordinator_execution_epoch"],
+        }:
+            raise DefinitionMismatch(
+                "Actual Session root SDK parent differs from original coordinator"
+            )
     elif parent is not None:
         raise DefinitionMismatch("Original deployment root cannot have an SDK parent")
 
@@ -161,7 +235,9 @@ def initialize(state, metadata=None, *, namespace, epoch, original_epoch, parent
     validate_protocol(state.manifest)
     if metadata is None:
         raise DefinitionMismatch("Selected release requires original deployment metadata")
-    if any(key in state.request for key in ("session_turn", "session_observer", "session_lineage")):
+    if state.manifest["deployment_admission_protocol"]["version"] != 4 and any(
+        key in state.request for key in ("session_turn", "session_observer", "session_lineage")
+    ):
         raise DefinitionMismatch("Deployment Session coordinator admission is unavailable")
     _metadata(state, metadata, namespace, epoch, original_epoch, parent)
     values = {
@@ -308,9 +384,7 @@ def project_child(state, call):
         "child_command_id": call["command_id"],
         "child_request_digest": digest(call["request"]),
     }
-    return _detached(
-        {"version": 1, "root": metadata["root"], "lineage": [*metadata["lineage"], link]}
-    )
+    return _detached({**metadata, "lineage": [*metadata["lineage"], link]})
 
 
 def pin_child(state, payload):

@@ -1,6 +1,6 @@
 # Temporal deployment Session admission — next delivery plan
 
-> **Status: not implemented; pending design review.** This is a source-grounded handoff for the work after dev120, not a dev120 acceptance claim.
+> **Status: S1 ordinary Session publication4 is connected as an explicit preview; delivery remains in progress.** The committed product baseline is dev120 (`c52d54c`). The current installed S1 matrix passes; this does not close every S1 fault/recovery gate or the unimplemented S2 scope.
 >
 > **For agentic workers:** implement only after the Session contract is reviewed, using the existing authorized execution workflow and TDD. Do not infer authorization to run services, models, commit, or push from this document.
 
@@ -10,15 +10,23 @@
 
 **Tech stack:** Existing Temporal Python SDK, pure Session/deployment state, fixed Worker Activities, existing effect and Runner journals.
 
-**Spec:** A Session deployment contract must be reviewed before implementation. Existing boundaries are documented in `architecture/specs/temporal-deployment-public-contract.md`, `architecture/specs/temporal-deployment-coding-contract.md`, and `architecture/specs/temporal-deployment-control-contract.md`.
+**Spec:** Keep the aligned Session interfaces and the original authorities fixed during implementation. Existing boundaries are documented in the [public contract](../../../architecture/specs/temporal-deployment-public-contract.md), [Coding contract](../../../architecture/specs/temporal-deployment-coding-contract.md), and [control contract](../../../architecture/specs/temporal-deployment-control-contract.md).
 
 ## Current delivery checkpoint
 
-**2026-10-15 收尾范围冻结：** 用户要求加快进度并停止自动扩展新功能。本计划是[第三阶段固定清单 P3-2](../../phase3-support-matrix.md#收尾范围冻结2026-10-15-用户指令)的当前必需项；仅将既有普通 Session（S1）及已选 Coding Session（S2）接入部署准入，不增加新 Session／编排类型、持久 FIFO、替代调度器、额外适配器或通用重构。沿已有协议完成最小公开链路及原定恢复／安装门槛后关闭 P3-2，转入 P3-3，不继续深化本子系统。dev120 已在 `c52d54c` 本地提交；当前 Session 源码在工作区实现中，尚未验收。以下候选 checkpoint 是历史记录，不覆盖当前冻结范围或 dev120 最终验收。
+**2026-10-15 收尾范围冻结：** 用户要求加快进度并停止自动扩展新功能。本计划是[第三阶段固定清单 P3-2](../../phase3-support-matrix.md#收尾范围冻结2026-10-15-用户指令)的当前必需项；仅将既有普通 Session（S1）及已选 Coding Session（S2）接入部署准入，不增加新 Session／编排类型、持久 FIFO、替代调度器、额外适配器、模型、平台集成或通用重构。所选部署固定为可信单宿主上的既有 Local＋SQLite、Temporal＋PostgreSQL。OIDC、跨宿主、HA、Kubernetes 及新增外部集成留在阶段之后；优先手动、有界治理和原身份恢复，不另建后台调度。完整 R01–R26 路线图保留，不自动扩大本轮验收维度。
 
-dev119 remains the published boundary; dev120 is uncommitted. Frozen v24 Trial47 passed the complete approval-idle graph case (1 passed, 0 skipped, 151.117 seconds): the 10-second idle window retained identical 220 events, 1,574,051 JSON bytes and 7 calls; subsequent business success, two adopted effects, seal, physical stop and Registry count zero were asserted. Trial46 has no JUnit result, was ended by the owner with SIGTERM after an asyncio exit timeout, and retains two unended original calls and PG evidence; its primary cause is unresolved and it is not a pass. Trial48 parallel owned-close on v25 failed (123.37 seconds): the primary error is a fixture diagnostics query against a closing Engine; a separate stop-Activity closing rejection still needs diagnosis. Its 416 product source files equal v24, and this case is not accepted. Current-candidate full regression, final installed acceptance and compatibility remain pending. None of these records implements or approves Session admission; phase3 batch2 remains open.
+dev120 已在 `c52d54c` 本地提交；所选 Coding 部署准入的最终证据见[验收记录](../../../architecture/reviews/2026-10-15-temporal-deployment-coding.md)。该基线未交付部署 Session。当前工作区已实现并接通 S1 的显式 deployment4／Registry4、公共 Session 入口与 Worker 路径：沿原 intent／SDK 身份共享 Registry 容量，保留重复及延迟重试、独立 observer／ACK、正退休后推进与 owned-close 的原 receiver。当前 pub4 普通 Session 作为显式 preview 已接通，产品代码和接口保持冻结。最终 durable 候选的安装实际 SDK 矩阵已通过：专用 3 秒超时复现 1 passed，公共默认 60 秒的 9 种普通编排 9 passed，均无 skip／failed／error；最终 v4 安装的最小两项链路亦通过（2 passed／39.63 秒），覆盖两次 Turn、审批期间 Worker 重启和完成回复丢失后的原回执恢复。这些结果不代表 S1 全部故障／恢复门槛完成。S2 既有 Coding Session 尚未实现，仍为必需后续；P3-2、批次 2 和第三阶段均保持进行中，未标验收完成。
 
-## Current source facts
+此前 S1 最小实际验证（历史候选）：源码 1 passed／23.16 秒、wheel 安装 1 passed／26.13 秒。两次普通 Agent Turn 各有原 Registry 正向退休、容量归零和重复回执证据，关闭后 Worker 停止、owned Provider 仅关闭一次；安装检查的 314 个已加载模块均来自安装目录。源码、wheel 和安装的 424 个产品文件一致。dev120 默认完整发布等值、原 History 重放／续接和新增 Provider 调用为零亦已验证。首轮关闭入口缺失的失败保留，修复后复验通过；这些是最小正向链路证据，不代替本计划剩余恢复／编排、最终全量及 S2 门槛。
+
+S1 原 observer 超时恢复补充：既有内部 `session_deployment_call_end` Update 增加完整原 `body_result`，与既有 digest／stopped／identity 一并校验后才记录；ACK DTO 保持不变。结果受既有 submission allowance 的 8 倍字节上限约束。原 Session History 仅保留成功 register／正向 Advance，全部原调用 end 债务关闭后通过既有 adopt 路径消费一次；超时后优先消费该结果，未结束调用不触发替代 observer，null／error 不自动唤醒循环。保持 3 秒 start-to-close／14 秒总界限，不把 observer 纳入业务 root ledger。针对性开发检查已通过，最终安装候选的专用 3 秒实际 SDK 复现已通过。此前原 3 秒场景中 Run 已退休而 Session 仍 busy 的失败保留；它与修复后的通过结果来自不同运行，不能合并为一次通过。
+
+回归证据分开登记：最终受影响检查为 3167 passed／567 skipped；此前基线全量为 12083 passed／805 skipped。后者不是 durable late-body 修复后的同一全量运行，skip 也不计作实际 SDK 验收。
+
+## Committed dev120 source baseline
+
+These facts describe the committed baseline, rather than acceptance of the current working-tree integration.
 
 - `temporal_session_state.py` records a durable Turn/start intent. `temporal_session_workflow.py` registers that intent and starts the single original business child with `ABANDON`, `REJECT_DUPLICATE`, and no retry policy. Its actual SDK parent is the Session coordinator.
 - `temporal_session_client.py` reserves Session commands through the existing command registry and waits for the original `start_receipt`; duplicate commands retain their first receipt and original binding.
@@ -30,9 +38,16 @@ dev119 remains the published boundary; dev120 is uncommitted. Frozen v24 Trial47
 
 Preserve private1, ordinary2, Coding3, native6/binding22, composition7/binding23, their complete inventories, and immutable matching Workers. Reuse the same deployment Registry address and capacity across supported profiles. Do not upgrade an existing incompatible Registry or choose another address to bypass capacity. Do not count a coordinator as a business root. Preserve all currently selected native/sequence/graph/Team/Dynamic/recursive definitions in S2. No new model-quality gate is introduced.
 
-## Required contract decisions before implementation
+## Frozen contract and acceptance requirements
 
-The independent source review identified these three prerequisites. They are requirements for the next shared contract, not an approved wire ABI or a completed design review. Keep every implementation checkbox below open until that contract fixes exact field sets, nullability, response shapes and SDK verification/commit boundaries.
+The independent source review established these three required boundaries. The current implementation has aligned field sets and SDK prepare/verify/commit interfaces; freeze those interfaces and complete their integration. The checkboxes remain open until their required evidence is recorded. Pure validation or a passing simulated SDK test does not establish SDK attestation or close a runtime acceptance gate.
+
+### Finite remaining work and completion conditions
+
+1. Complete S1 along the existing public client → original Session → original Registry → original Run path. Verify two consecutive ordinary Turns and the already selected ordinary compositions with actual SDK evidence, original identity/receipt recovery, shared capacity and permission rejection.
+2. Complete S2 for the existing required native/sequence/graph/Team/Dynamic/recursive Coding subset. Retain the original reply-loss, cancellation, Worker death, unknown-effect, physical stop/ACK and owned-close gates below; do not add topologies, adapters or model-quality gates.
+3. Freeze the integrated candidate, finish the affected checks, required actual lifecycle matrix, installed acceptance and agreed default/History compatibility. Record failures, skips and missing evidence separately; retain original recovery resources for unresolved obligations.
+4. Close P3-2 only when S1 and S2 satisfy those gates, then proceed to the remaining fixed phase-three batches. Complete their original service-control, permission/audit/retention and backup/restore requirements and final phase acceptance; freeze phase three once all fixed gates pass. Do not reopen this subsystem to pursue optional optimizations or the full R01–R26 roadmap.
 
 ### 1. Session commands and Turn roots have distinct records under one collision authority
 
@@ -56,7 +71,7 @@ The independent source review identified these three prerequisites. They are req
 
 ## S1 — ordinary Session coordinator admission
 
-- [ ] Review an explicit new publication/Registry handshake (proposed deployment4/Registry4), selected by explicit Session enablement plus public admission. A new Registry accepts the current compatible ordinary/Coding/session publications under one policy; old incompatible Registries refuse the new publication. Host selects its maximum required Registry version before first acceptance.
+- [ ] Complete the explicit deployment4/Registry4 handshake, selected by explicit Session deployment enablement plus public admission. A new Registry accepts the current compatible ordinary/Coding/session publications under one policy; old incompatible Registries refuse the new publication. Host selects its maximum required Registry version before first acceptance.
 - [ ] Define an original `session_origin` beside business deployment metadata: coordinator ID and first/current/original SDK epoch, Turn ID/sequence, original SessionRef and intent digests. Preserve business lineage beginning at the Turn Run; never manufacture a business Parent edge to the coordinator.
 - [ ] Keep Session intent acceptance first, then verify the exact original intent from its actual coordinator History before reserving the original deployment root/envelope. Use the original SDK-owned verification/commit pattern; accept no raw caller attestation. Record original request, Manifest, queue and Activity timeout. Start only that original SDK child with deployment metadata.
 - [ ] Define capacity-deferred start and duplicate-command recovery explicitly: retain one original pending intent/Turn, expose its durable state, and wake that original History on retry. Do not create a second Turn, replace an uncertain SDK start, or leave a reservation unrelated to an accepted original intent.
@@ -75,7 +90,7 @@ The independent source review identified these three prerequisites. They are req
 
 **Files:** the S1 helpers plus the existing Coding state/composition control/compact validation bridge and their focused tests. No Codex protocol expansion, new scheduler, alternate effects authority, or independent quota counter is planned.
 
-## Review focus before implementation
+## Review focus for delivery closure
 
 - Actual Session SDK parent must be verified separately from business ancestry, including after every relevant await and after reset/replacement.
 - A capacity-deferred Turn must be observable and recoverable using its original command without accidental second acceptance.

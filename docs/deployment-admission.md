@@ -1,6 +1,27 @@
 # 部署内 root 准入与容量
 
-日期：2026-10-15。Local／SQLite 已有持久部署准入，沿原命令、Run、预算和 Coordinator 管理占用，证据见[Local 验收登记](../architecture/reviews/2026-10-14-local-admission.md)。Temporal 内部 Worker 门禁保留为私有 v1，只持有占位；dev119 已交付普通公共 v2 Engine／Profile、原接受信封恢复及原树校验后安全退休，证据见[公共验收记录](../architecture/reviews/2026-10-15-temporal-deployment-public.md)。dev120已验收所选公共Coding v3，使用同一 Registry 管理根额度，配置与恢复见[Temporal Coding 部署准入](temporal-deployment-coding.md)，恢复与安装证据见[本批验收](../architecture/reviews/2026-10-15-temporal-deployment-coding.md)。SDK Session coordinator 尚未接入，继续明确拒绝。当前阶段范围见[支持矩阵](phase3-support-matrix.md)，批次 2 未关闭。
+日期：2026-10-15。Local／SQLite 已有持久部署准入，沿原命令、Run、预算和 Coordinator 管理占用，证据见[Local 验收登记](../architecture/reviews/2026-10-14-local-admission.md)。Temporal 内部 Worker 门禁保留为私有 v1，只持有占位；dev119 已交付普通公共 v2 Engine／Profile、原接受信封恢复及原树校验后安全退休，证据见[公共验收记录](../architecture/reviews/2026-10-15-temporal-deployment-public.md)。dev120已验收所选公共Coding v3，使用同一 Registry 管理根额度，配置与恢复见[Temporal Coding 部署准入](temporal-deployment-coding.md)，恢复与安装证据见[本批验收](../architecture/reviews/2026-10-15-temporal-deployment-coding.md)。dev120 提交基线的 SDK Session coordinator 尚未接入，继续明确拒绝。当前阶段范围见[支持矩阵](phase3-support-matrix.md)，批次 2 未关闭。
+
+当前工作区 pub4／Registry4 已接通普通 SDK Session，作为显式 preview 提供；省略 `deployment_sessions` 保持既有发布与拒绝边界。显式配置如下：
+
+```python
+runtime = TemporalRuntime(
+    providers=providers,
+    tools=tools,
+    admission_policy=policy,
+    enable_sessions=True,
+    deployment_sessions=True,
+)
+# TemporalProfile.execution 对应：
+# {"enable_sessions": True, "deployment_sessions": True}
+# 仍须由 Builder 宿主参数或 Profile 提供原部署准入策略。
+```
+
+该选择使用同地址 Registry4；已有不兼容 Registry 不会自动升级或换地址规避容量。Session coordinator 不占业务根额度，每个 Turn 的原业务 Run 占用一个根槽位；只有正向退休并完成原观察回执后才发布会话和接受下一 Turn。相同命令保持首次定义、队列和回执，修改别名不会替换原 Run。owned Assembly 关闭时保留原 Worker 接收允许的观察与收尾；无法确认的占用继续报告 `CloseIncomplete`，须保留原资源并按原身份恢复。
+
+最终 durable 候选的安装实际 SDK 检查已通过：专用 3 秒超时复现 1 passed，公共默认 60 秒的 9 种普通编排 9 passed，均无 skip／failed／error。修复将原控制 body_result 随既有 end Update 保存在 Session History，原调用全部结束后消费一次；Activity 完成回复丢失不再要求重新执行 observer，3 秒／14 秒界限保持不变。此前原 3 秒失败与修复后通过来自不同运行，历史失败仍保留。最终 v4 安装的最小两项链路亦通过（2 passed／39.63 秒），含两次 Turn、审批期间 Worker 重启及完成回复丢失后的原回执恢复；不能据此宣称 S1 全部故障／恢复门槛已完成。
+
+最终受影响检查为 3167 passed／567 skipped；此前基线全量为 12083 passed／805 skipped，两者分开登记，基线全量不是修复后同一运行。该 preview 仅支持普通 Session，S2 Coding Session 尚未实现。后续仍按[固定计划](superpowers/plans/2026-10-15-temporal-deployment-sessions.md)推进，P3-2、批次 2 和第三阶段尚未关闭。
 
 ## 策略与占用单位
 

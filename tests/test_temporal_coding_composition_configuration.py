@@ -151,6 +151,7 @@ def test_selected_publication_rechecks_sdk_before_worker_implementation_discover
 
 def test_selected_runtime_registration_rechecks_sdk_before_tool_registry_access(monkeypatch):
     value = object.__new__(TemporalRuntime)
+    value.deployment_sessions = value._deployment_sessions_pin = False
     value.coding_composition = True
     hide_original_execution_field(monkeypatch)
     with pytest.raises(ValidationError, match="SDK.*original_execution_run_id"):

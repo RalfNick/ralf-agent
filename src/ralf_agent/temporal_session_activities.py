@@ -43,6 +43,11 @@ async def validate_tree_activity(client, request, *, workflow_id):
 
 
 def registered_session_activities(runtime, client):
+    if runtime.manifest.get("session_deployment_protocol") == 1:
+        from .temporal_session_deployment_control import registered_session_deployment_activities
+
+        return registered_session_deployment_activities(runtime, client)
+
     from temporalio import activity
 
     from .temporal import TemporalEngine

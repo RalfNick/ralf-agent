@@ -2,6 +2,12 @@
 
 执行约束更新（2026-10-15）：按用户指令固定第三阶段范围、优先收尾，当前只执行[冻结清单 P3-1 至 P3-5／P3-A](phase3-support-matrix.md#收尾范围冻结2026-10-15-用户指令)。Session 准入为当前 P3-2 必需工作，尚未验收；不新增功能矩阵、适配器或独立重构专项。本条调整开发优先级，不变更以下已验收状态，也不代表第三阶段已完成。
 
+工作区 S1 进展：显式 `enable_sessions=True`、`deployment_sessions=True` 与部署准入策略已接通普通 Session 的 publication4／Registry4，旧默认选择保持。最终 durable 安装版的专用 3 秒超时恢复复现为 1 passed，默认 60 秒的九种既有普通编排矩阵为 9 passed；两次运行均零跳过／失败／错误。424 个产品文件在冻结源码、wheel 与安装中一致；dev120 默认发布及原 History 重放／续接兼容沿原独立证据引用，新增 Provider 调用为零，不冒称本次重新执行。此前关闭入口缺失及 observer 晚回执失败按原候选保留。
+
+验证出处分开登记：完整回归 12083 passed／805 skipped 属于前一冻结 `candidate-full`；当前最终 durable 产品的受影响 Temporal 检查为 3167 passed／567 skipped，不能拼接为当前全量通过，跳过也不算实际验收。最终 v4 安装的最小两项链路通过（2 passed／39.63 秒），覆盖两次 Turn、审批期间 Worker 重启和完成回复丢失恢复；S1 恢复门槛尚未完整验收，S2 未实施，P3-2／第三阶段仍进行中，P3-3／4／5／A 不变。接口与剩余门槛见[固定 Session 计划](superpowers/plans/2026-10-15-temporal-deployment-sessions.md)。
+
+以下 Dev120 段落描述已提交基线及其当时边界；不覆盖上述 S1 checkpoint 的有限验证结果。
+
 Dev120 已将显式公共 deployment3 接入既定 Temporal Coding Agent／sequence、有界图、Team／Dynamic 与递归组合，和 ordinary2 共用同地址 Registry 容量。原 Run／Parent History 继续拥有审批、native grant、效果与预算；原树闭合和独立 ACK 证明控制退休，unknown、零费用占用与实际 handler 责任保持。子事实通知、紧凑身份／CONTROL 和 fresh-owned publication 减少重复工作；最终完整验证及 SDK 身份门禁保留，稳态只读 read-set 的明确边界见[本批验收](../architecture/reviews/2026-10-15-temporal-deployment-coding.md)，不新增权限缓存或即时 read-auth 撤销能力。
 
 v30 完整离线重新执行全部12651个唯一节点：11847 passed／804 skipped／0 failed／0 errors，430.21秒，无通过复用或未执行项；804跳过不代实际验收。之后4个测试文件修订另有92项定向检查通过，产品416文件未改，不相加为新全量。独立安装416产品字节一致，209个已加载模块全来自安装；dev119默认完整发布、原History重放／续接与新增Provider调用0通过。原安装normal矩阵13项通过／1项失败保留，修订后并行owned-close的独立normal单项1 passed／152.70秒，前后pins、真实故障回执和保留门槛通过；这是两次运行，不是同次14项全绿。测试仅按公开aclose契约允许最多2次恢复调用，原300秒总界／每次80秒保持，不宣称已证明v30的精确根因。原Assembly和Workers结束，unknown Root仍按原占位与恢复资料保留。

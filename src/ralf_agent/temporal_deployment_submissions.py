@@ -32,7 +32,7 @@ def _policy(engine):
     if (
         type(protocol) is not dict
         or type(protocol.get("version")) is not int
-        or protocol["version"] not in (2, 3)
+        or protocol["version"] not in (2, 3, 4)
     ):
         _reject()
     policy = DeploymentAdmissionPolicy.from_identity(protocol["policy"]).identity
@@ -114,9 +114,11 @@ async def _registry(engine, client, scope, namespace, policy, *, start=True):
     registry_protocol = getattr(engine, "_deployment_registry_protocol", publication)
     if (
         type(registry_protocol) is not int
-        or registry_protocol not in (2, 3)
+        or registry_protocol not in (2, 3, 4)
         or publication == 3
-        and registry_protocol != 3
+        and registry_protocol not in (3, 4)
+        or publication == 4
+        and registry_protocol != 4
     ):
         _reject()
     if start:
@@ -164,7 +166,9 @@ async def _registry(engine, client, scope, namespace, policy, *, start=True):
     )
     if type(configuration) is not dict or type(configuration.get("version")) is not int:
         _reject()
-    if configuration["version"] not in ({2, 3} if publication == 2 else {3}):
+    if configuration["version"] not in (
+        {2, 3, 4} if publication == 2 else {3, 4} if publication == 3 else {4}
+    ):
         _reject()
     if configuration != {
         "version": configuration["version"],
@@ -222,7 +226,7 @@ def _record(value, *, request, command_id, scope, namespace, policy):
         _reject()
     protocol = submission["manifest"].get("deployment_admission_protocol", {})
     if (
-        protocol.get("version") not in (2, 3)
+        protocol.get("version") not in (2, 3, 4)
         or protocol.get("policy") != policy
         or protocol.get("registry_id") != root["registry_id"]
     ):
@@ -547,8 +551,77 @@ async def recover_retirement(engine, run_id, closure):
         or proof["execution_epoch"] != epoch
         or proof["original_execution_epoch"] != epoch
         or proof["manifest"] != submission["manifest"]
-        or proof["admission"] != {"version": 1, "root": root, "lineage": []}
     ):
+        _reject()
+    session = "session_origin" in proof["admission"]
+    validation = None
+    if session:
+        from types import SimpleNamespace
+
+        from .temporal_session_deployment_control import _business_identity
+        from .temporal_session_deployment_verification import SessionControlValidation
+        from .temporal_state import validate_manifest
+
+        origin = proof["admission"]["session_origin"]
+        if (
+            submission["manifest"].get("deployment_admission_protocol", {}).get("version") != 4
+            or submission["manifest"].get("session_deployment_protocol") != 1
+            or proof["admission"]
+            != {"version": 2, "root": root, "lineage": [], "session_origin": origin}
+        ):
+            _reject()
+        saved = await _query(
+            registry,
+            {
+                "kind": "deployment_session_root",
+                "scope": scope,
+                "admission_policy": policy,
+                "namespace": namespace,
+                "command_id": command_id,
+                "payload_digest": digest(request),
+            },
+        )
+        await _recheck(engine, client, scope, namespace, policy)
+        _exact(saved, _RECORD_FIELDS | {"intent", "session_origin"})
+        if {k: saved[k] for k in _RECORD_FIELDS} != record or saved["session_origin"] != origin:
+            _reject()
+        intent, original_manifest = saved["intent"], detached(submission["manifest"])
+        manifest_digest = digest(original_manifest)
+        if (
+            intent["run_id"] != run_id
+            or intent["run_command_id"] != command_id
+            or intent["submission"] != submission
+        ):
+            _reject()
+
+        def validate_original_release(expected):
+            # A facade retains no provider Runtime. This adapter only pins the
+            # original Registry envelope and caller's existing SDK resources.
+            _check(engine, client, scope, namespace, policy)
+            if digest(original_manifest) != manifest_digest or expected != original_manifest:
+                _reject()
+            validate_manifest(original_manifest)
+
+        validation = SessionControlValidation(
+            SimpleNamespace(validate_release=validate_original_release),
+            client,
+            {
+                "version": 1,
+                "mode": "observe",
+                "intent": intent,
+                **{
+                    k: intent[k]
+                    for k in ("scope", "namespace", "coordinator_id", "coordinator_execution_epoch")
+                },
+            },
+            None,
+            deployment_id=policy["deployment_id"],
+            _coordinator_activity=False,
+        )
+        if (await validation.validate())["session_origin"] != origin:
+            _reject()
+        await _recheck(engine, client, scope, namespace, policy)
+    elif proof["admission"] != {"version": 1, "root": root, "lineage": []}:
         _reject()
     bound_root = {**root, "state": "held-bound", "execution_epoch": epoch}
     retirement = await _query(
@@ -559,9 +632,22 @@ async def recover_retirement(engine, run_id, closure):
         if retirement != {"root": bound_root, "certificate": certificate, "released": True}:
             _reject()
         return detached(certificate)
-    actual_epoch, receipt = await _actual_submission(
-        engine, client, record, scope, command_id, namespace, policy
-    )
+    if session:
+        original_run = await _business_identity(
+            validation, epoch, reservation=record["reservation"]
+        )
+        receipt = await _query(
+            original_run,
+            {"kind": "submission", "scope": scope, "command_id": command_id, "request": request},
+        )
+        await validation.validate()
+        await _recheck(engine, client, scope, namespace, policy)
+        _receipt(receipt, command_id=command_id, run_id=run_id)
+        actual_epoch = epoch
+    else:
+        actual_epoch, receipt = await _actual_submission(
+            engine, client, record, scope, command_id, namespace, policy
+        )
     if actual_epoch != epoch or receipt != record["run_receipt"]:
         _reject()
     handle = client.get_workflow_handle(run_id, run_id=epoch)
@@ -569,6 +655,9 @@ async def recover_retirement(engine, run_id, closure):
     await _recheck(engine, client, scope, namespace, policy)
     if original != closure:
         _reject()
+    if validation is not None:
+        await validation.validate()
+        await _recheck(engine, client, scope, namespace, policy)
     # A fresh SDK Update executes the existing idempotent seal handler and its
     # wake. Reusing the first seal Update ID would only replay its old reply.
     try:
@@ -581,6 +670,9 @@ async def recover_retirement(engine, run_id, closure):
         )
     except Exception as exc:
         _raise_sdk(exc)
+    if validation is not None:
+        await _business_identity(validation, epoch, reservation=record["reservation"])
+        await validation.validate()
     _certificate(result, proof)
     if result != certificate:
         _reject()

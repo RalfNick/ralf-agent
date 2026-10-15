@@ -261,7 +261,7 @@ def validate_binding(binding, scope):
 class TemporalSessionState:
     """One bounded Session. No clocks, I/O, provider calls or lock leases."""
 
-    def __init__(self, accepted):
+    def __init__(self, accepted, *, deployment_context=None):
         accepted = detached(accepted)
         self.scope = accepted["scope"]
         Scope(**self.scope)
@@ -270,6 +270,21 @@ class TemporalSessionState:
             k: accepted[k] for k in ("request", "manifest", "task_queue", "activity_timeout")
         }
         validate_binding(self.binding, self.scope)
+        from .temporal_session_deployment_state import selected
+
+        self.deployment_context = None
+        self.deployment_turns = {}
+        if selected(self.binding["manifest"]):
+            from .temporal_deployment_admission import _exact, _namespace, _text
+
+            _exact(deployment_context, {"namespace", "coordinator_execution_epoch"})
+            _namespace(deployment_context["namespace"])
+            _text(deployment_context["coordinator_execution_epoch"])
+            if deployment_context["namespace"]["id"] != self.namespace_id:
+                raise DefinitionMismatch("Session deployment context changed namespace resource")
+            self.deployment_context = detached(deployment_context)
+        elif deployment_context is not None:
+            raise DefinitionMismatch("Legacy Session cannot select deployment lifecycle")
         from .temporal_session_identity import data_resource_id, selected_namespace, selected_source
 
         self.data_source = selected_source(self.binding["request"], self.binding["manifest"])
@@ -283,7 +298,9 @@ class TemporalSessionState:
             ["temporal-session-coordination-v1", self.key.resource_id, self.scope]
         )
         self.binding_revision = 1
+        self.binding_history = {1: detached(self.binding)}
         self.receipts, self.identities, self.records = {}, {}, []
+        self.command_refs = {}
         self.history, self.active, self.error = [], None, None
         self.native_history = {}
         self.started_runs = set()
@@ -359,6 +376,16 @@ class TemporalSessionState:
                 else:
                     binding = request["binding"]
                     validate_binding(binding, self.scope)
+                    from .temporal_session_deployment_state import selected
+
+                    if selected(binding["manifest"]) != (self.deployment_context is not None) or (
+                        self.deployment_context is not None
+                        and binding["manifest"]["deployment_admission_protocol"]["policy"]
+                        != self.binding["manifest"]["deployment_admission_protocol"]["policy"]
+                    ):
+                        raise DefinitionMismatch(
+                            "Idle rebind cannot replace Session deployment authority"
+                        )
                     from .temporal_session_identity import data_resource_id, selected_source
 
                     source = selected_source(binding["request"], binding["manifest"])
@@ -378,6 +405,7 @@ class TemporalSessionState:
                         detached(binding),
                         self.binding_revision + 1,
                     )
+                    self.binding_history[self.binding_revision] = detached(self.binding)
                     outcome["session_ref"] = self.ref.to_dict()
             else:
                 credits(request["budget"])
@@ -389,6 +417,16 @@ class TemporalSessionState:
                 turn_id = "ralf-turn-" + digest([self.key.to_dict(), command])
                 run_command = "ralf-session-run:" + digest([self.key.to_dict(), command])
                 run_id = "ralf-temporal-" + digest([self.scope, run_command])
+                if self.deployment_context is not None:
+                    from .temporal_deployment_admission import root_run_id
+
+                    run_id = root_run_id(
+                        self.binding["manifest"]["deployment_admission_protocol"]["policy"][
+                            "deployment_id"
+                        ],
+                        self.scope,
+                        run_command,
+                    )
                 run_request = {
                     **self.binding["request"],
                     "input": request["input"],
@@ -447,7 +485,7 @@ class TemporalSessionState:
                     digest(request["input"]),
                     command,
                 )
-                self.active = {
+                candidate = {
                     "turn": turn.to_dict(),
                     "run_id": run_id,
                     "command_id": run_command,
@@ -458,22 +496,53 @@ class TemporalSessionState:
                     },
                     "started": False,
                 }
+                if self.deployment_context is not None:
+                    from .temporal_session_deployment_state import (
+                        TemporalSessionDeploymentState,
+                        build_intent,
+                    )
+
+                    deployment_id = self.binding["manifest"]["deployment_admission_protocol"][
+                        "policy"
+                    ]["deployment_id"]
+                    original_intent = build_intent(
+                        candidate,
+                        self.binding,
+                        deployment_id=deployment_id,
+                        **self.deployment_context,
+                    )
+                    self.deployment_turns[command] = TemporalSessionDeploymentState(
+                        original_intent, deployment_id=deployment_id
+                    )
+                self.active = candidate
                 self.records.append(turn.to_dict())
                 self.error = None
                 outcome["turn"] = turn.to_dict()
         receipt = self._receipt(command, kind, outcome, rejected="error" in outcome)
         self.identities[command], self.receipts[command] = fingerprint, receipt
+        self.command_refs[command] = detached(request.get("session_ref", self.ref.to_dict()))
         return detached(receipt)
 
     def start_intent(self):
         return detached(self.active)
 
     def mark_started(self):
+        if self.deployment_context is not None:
+            raise DefinitionMismatch(
+                "Deployment Session start requires original Registry SDK evidence"
+            )
         if self.active is not None:
             self.active["started"] = True
             self.started_runs.add(self.active["run_id"])
 
     def adopt_observation(self, proof):
+        if self.deployment_context is not None:
+            raise DefinitionMismatch(
+                "Deployment Session publication requires positive retirement and observer ACK"
+            )
+        return self._adopt_observation(proof)
+
+    def _adopt_observation(self, proof):
         if self.active is None:
             return False
         proof = detached(proof)
@@ -553,8 +622,139 @@ class TemporalSessionState:
         self.active, self.error = None, None
         return True
 
-    def snapshot(self):
+    def deployment_turn(self, request=None):
+        if self.deployment_context is None:
+            raise DefinitionMismatch("Session deployment lifecycle is unavailable")
+        command = (
+            self.active["turn"]["command_id"]
+            if request is None and self.active is not None
+            else request.get("session_command_id")
+            if type(request) is dict
+            else None
+        )
+        entry = self.deployment_turns.get(command)
+        if entry is None:
+            raise DefinitionMismatch("Original Session deployment intent is unavailable")
+        if request is not None:
+            entry.check_selector(request)
+        return entry
+
+    def deployment_view(self, request):
+        return self.deployment_turn(request).view()
+
+    def deployment_command(self, request):
+        entry = self.deployment_turn(request)
         return {
+            "receipt": detached(self.receipts[entry.intent["session_command_id"]]),
+            "session_ref": entry.intent["session_ref"],
+        }
+
+    def deployment_binding(self, request):
+        from .temporal_deployment_admission import _exact
+
+        _exact(request, {"scope", "namespace", "coordinator_execution_epoch", "session_ref"})
+        if (
+            self.deployment_context is None
+            or request["scope"] != self.scope
+            or any(
+                request[name] != self.deployment_context[name]
+                for name in ("namespace", "coordinator_execution_epoch")
+            )
+        ):
+            raise DefinitionMismatch("Session binding belongs to another original coordinator")
+        self._check_ref(request["session_ref"])
+        ref = SessionRef.from_dict(request["session_ref"])
+        binding = self.binding_history.get(ref.binding_revision)
+        if binding is None or digest(binding) != ref.definition_digest:
+            raise DefinitionMismatch("Session binding is not an original accepted revision")
+        return detached(binding)
+
+    def deployment_receipt(self, request):
+        from .temporal_deployment_admission import _exact
+
+        _exact(request, {"scope", "namespace", "coordinator_execution_epoch", "command_id"})
+        if (
+            self.deployment_context is None
+            or request["scope"] != self.scope
+            or any(
+                request[name] != self.deployment_context[name]
+                for name in ("namespace", "coordinator_execution_epoch")
+            )
+        ):
+            raise DefinitionMismatch("Session receipt belongs to another original coordinator")
+        receipt = self.receipts.get(request["command_id"])
+        if receipt is None:
+            return None
+        outcome = receipt["outcome"]
+        ref = outcome.get("session_ref") or outcome.get("turn", {}).get("session")
+        if ref is None:
+            # Rejected commands never grant a new binding; retain the original addressed ref.
+            ref = self.command_refs[request["command_id"]]
+        return {"receipt": detached(receipt), "session_ref": detached(ref)}
+
+    def deployment_retry(self, request):
+        entry = self.deployment_turn(request)
+        return {"intent_digest": entry.intent["intent_digest"], "wake_recorded": entry.retry()}
+
+    def deployment_hint(self, request):
+        from .temporal_deployment_admission import _exact, _sha, _text
+        from .temporal_session_deployment_state import START_SELECTOR_FIELDS
+
+        _exact(request, START_SELECTOR_FIELDS | {"run_id", "execution_epoch", "change_token"})
+        entry = self.deployment_turn({name: request[name] for name in START_SELECTOR_FIELDS})
+        _sha(request["change_token"])
+        _text(request["execution_epoch"])
+        if request["run_id"] != entry.intent["run_id"] or (
+            entry.view()["execution_epoch"] is not None
+            and request["execution_epoch"] != entry.view()["execution_epoch"]
+        ):
+            raise DefinitionMismatch("Session hint changed original business Run identity")
+        return (
+            self.active is not None
+            and self.active["turn"]["command_id"] == entry.intent["session_command_id"]
+        )
+
+    def adopt_deployment_registration(self, body, ack):
+        entry = self.deployment_turn()
+        entry.call_ended(ack, {"ok": True, "result": body})
+        if ack["identity"]["mode"] != "register":
+            raise DefinitionMismatch("Session registration requires its original mechanical call")
+        entry.adopt_registration(body)
+        entry.consume_result({"ok": True, "result": body})
+        if entry.view()["phase"] == "started":
+            self.active["started"] = True
+            self.started_runs.add(self.active["run_id"])
+        elif entry.view()["phase"] == "start-refused":
+            self.active, self.error = None, None
+        return entry.view()
+
+    def adopt_deployment_observation(self, body, ack):
+        entry = self.deployment_turn()
+        proof = entry.validate_observation(body, ack)
+        if proof is None:
+            return False
+        advanced = self._adopt_observation(proof)
+        if advanced:
+            entry.published = True
+            entry.consume_result(body)
+        return advanced
+
+    def recover_deployment_result(self):
+        if self.active is None:
+            return False
+        entry = self.deployment_turn()
+        result = entry.recovered_result()
+        if result is None:
+            return False
+        body, ack = result["body"], result["ack"]
+        if ack["identity"]["mode"] == "register":
+            self.adopt_deployment_registration(body["result"], ack)
+        else:
+            self.adopt_deployment_observation(body, ack)
+        return True
+
+    def snapshot(self):
+        result = {
             "ref": self.ref.to_dict(),
             "binding_revision": self.binding_revision,
             "last_turn_seq": len(self.records),
@@ -562,6 +762,19 @@ class TemporalSessionState:
             "busy": self.active is not None,
             "error": detached(self.error),
         }
+        if self.deployment_context is not None:
+            result["deployment_close"] = {
+                "pending_calls": sum(
+                    call["end"] is None
+                    for entry in self.deployment_turns.values()
+                    for call in entry.calls.values()
+                ),
+                "unpublished_turns": sum(
+                    entry.view()["phase"] != "start-refused" and not entry.published
+                    for entry in self.deployment_turns.values()
+                ),
+            }
+        return result
 
     def profile_binding(self):
         return {

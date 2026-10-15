@@ -23,6 +23,8 @@ with workflow.unsafe.imports_passed_through():
         temporal_deployment_coding_state,  # noqa: F401 -- original pure call fencing
         temporal_deployment_control_projection,  # noqa: F401 -- fixed compact Query projector
         temporal_deployment_registry,  # noqa: F401 -- preload pure acceptance
+        temporal_deployment_session_registry,  # noqa: F401 -- original Session command/claim facts
+        temporal_deployment_session_updates,  # noqa: F401 -- Registry-owned SDK commit path
         temporal_parent_completion_state,  # noqa: F401 -- preload pure parent release gates
         temporal_parent_state,  # noqa: F401 -- fixed original child addressing
         temporal_session_identity,  # noqa: F401 -- preload pure Session addressing
@@ -637,6 +639,7 @@ class TemporalRunWorkflow:
             if operation is None:
                 await self._ensure_deployment_retirement(timeout)
                 await self._notify_deployment_parent()
+                await self._notify_session()
                 expiry = policy.get("approval_timeout_seconds")
                 pending = next(
                     (
@@ -1262,7 +1265,101 @@ class TemporalRunWorkflow:
         except Exception as exc:
             return {"error": getattr(exc, "code", "validation_error")}
 
+    def _session_deployment_notification(self):
+        from .errors import DefinitionMismatch
+        from .temporal_session_deployment_state import selected
+
+        if not selected(self.state.manifest):
+            return None
+        deployment_state._require(self.state)
+        metadata = self.state.deployment_admission
+        if metadata["lineage"]:
+            return None
+        origin = metadata["session_origin"]
+        info = workflow.info()
+        if (
+            info.workflow_id != self.state.run_id
+            or info.namespace != origin["namespace"]["name"]
+            or any(
+                getattr(info, name, None) != self.state.epoch
+                for name in ("run_id", "first_execution_run_id", "original_execution_run_id")
+            )
+        ):
+            raise DefinitionMismatch(
+                "Session notification requires the original business SDK epoch"
+            )
+        token = digest(
+            {
+                "intent_digest": origin["intent_digest"],
+                "run_id": self.state.run_id,
+                "execution_epoch": self.state.epoch,
+                "seal": getattr(self.state, "deployment_seal", None),
+                "retirement": getattr(self.state, "deployment_retirement", None),
+                "calls": getattr(self.state, "deployment_calls", {}),
+                "evidence_acks": {
+                    name: getattr(self.state, name, None)
+                    for name in ("pending_acks", "deferred_acks", "active_evidence_ack")
+                },
+            }
+        )
+        return {
+            "scope": detached(self.state.scope),
+            **{
+                name: detached(origin[name])
+                for name in (
+                    "namespace",
+                    "coordinator_execution_epoch",
+                    "session_command_id",
+                    "turn_id",
+                    "intent_digest",
+                )
+            },
+            "run_id": self.state.run_id,
+            "execution_epoch": self.state.epoch,
+            "change_token": token,
+        }
+
+    async def _notify_deployment_session(self):
+        from .temporal_session_state import quiet
+
+        if not quiet(self.state.diagnostics()):
+            return
+        current = self._session_deployment_notification()
+        if current is None:
+            return
+        if not hasattr(self, "_session_deployment_pending"):
+            self._session_deployment_pending = None
+            self._session_deployment_sent = None
+        if self._session_deployment_pending is None:
+            if current["change_token"] == self._session_deployment_sent:
+                return
+            self._session_deployment_pending = detached(current)
+        origin = self.state.deployment_admission["session_origin"]
+        for _ in range(2):
+            pending = detached(self._session_deployment_pending)
+            try:
+                await workflow.get_external_workflow_handle(
+                    origin["coordinator_id"], run_id=origin["coordinator_execution_epoch"]
+                ).signal("wake", pending)
+                current = self._session_deployment_notification()
+            except Exception:
+                # This debt never enters the original business closure/retirement.
+                # An original recovery wake retries the same bytes without polling.
+                return
+            self._session_deployment_sent = pending["change_token"]
+            self._session_deployment_pending = None
+            if current is None or current["change_token"] == self._session_deployment_sent:
+                return
+            # A pending pre-retirement hint may have survived an earlier failure.
+            # Deliver the changed retirement facts before the next passive wait.
+            self._session_deployment_pending = detached(current)
+
     async def _notify_session(self):
+        from .temporal_session_deployment_state import selected
+
+        if selected(self.state.manifest):
+            await self._notify_deployment_session()
+            return
         turn = self.state.request.get("session_turn", self.state.request.get("session_observer"))
         if turn is None:
             return
@@ -1305,23 +1402,24 @@ class TemporalCommandRegistryWorkflow:
             or type(selected) is not dict
             or set(selected) != {"version", "policy", "namespace"}
             or type(selected["version"]) is not int
-            or selected["version"] not in (1, 2, 3)
+            or selected["version"] not in (1, 2, 3, 4)
             or selected["policy"] is None
             or selected["namespace"] is None
         ):
             raise DefinitionMismatch("Invalid original deployment admission envelope")
+        info = workflow.info()
         commands = TemporalCommandRegistryState(
             admission_policy=selected["policy"],
             namespace=selected["namespace"],
             admission_protocol=selected["version"],
+            **({"registry_execution_epoch": info.run_id} if selected["version"] == 4 else {}),
         )
-        info = workflow.info()
         if info.namespace != selected["namespace"][
             "name"
         ] or info.workflow_id != deployment_registry_id(selected["policy"]["deployment_id"]):
             raise DefinitionMismatch("Deployment admission requires its original SDK address")
         self.commands = commands
-        if selected["version"] in (2, 3):
+        if selected["version"] in (2, 3, 4):
             # Defer refusal until an SDK-owned entry point. Raising from init
             # can leave the SDK's already-prepared run coroutine unawaited.
             epoch = getattr(info, "run_id", None)
@@ -1334,7 +1432,7 @@ class TemporalCommandRegistryWorkflow:
                 self._deployment_registry_initialization_error = "definition_mismatch"
             else:
                 self._deployment_registry_epoch = epoch
-                if selected["version"] == 3:
+                if selected["version"] in (3, 4):
                     self.commands.deployment.deployment_registry_execution_epoch = epoch
 
     def _check_deployment_registry_epoch(self):
@@ -1370,7 +1468,7 @@ class TemporalCommandRegistryWorkflow:
             self._check_deployment_registry_epoch()
             if (
                 self.commands.deployment is not None
-                and self.commands.admission_protocol in (2, 3)
+                and self.commands.admission_protocol in (2, 3, 4)
                 and type(request) is dict
                 and "descendant" in request
             ):
@@ -1414,6 +1512,43 @@ class TemporalCommandRegistryWorkflow:
             raise ApplicationError(
                 "Temporal command identity was rejected",
                 type=getattr(exc, "code", None) or getattr(exc, "type", "validation_error"),
+                non_retryable=True,
+            ) from None
+
+    async def _session_verified_update(self, operation, request):
+        from .temporal_deployment_session_updates import execute
+
+        try:
+            return await execute(self, operation, request)
+        except Exception as exc:
+            raise ApplicationError(
+                "Original Session deployment verification rejected",
+                type=getattr(exc, "code", None) or getattr(exc, "type", "validation_error"),
+                non_retryable=True,
+            ) from None
+
+    @workflow.update(name="reserve_session_root")
+    async def reserve_session_root(self, request: dict) -> dict:
+        return await self._session_verified_update("session_root", request)
+
+    @workflow.update(name="session_never_claimed")
+    async def session_never_claimed(self, request: dict) -> dict:
+        return await self._session_verified_update("session_never_claimed", request)
+
+    @workflow.update(name="record_deployment_session_command")
+    async def record_deployment_session_command(self, request: dict) -> dict:
+        return await self._session_verified_update("session_receipt", request)
+
+    @workflow.update(name="close_deployment_sessions")
+    async def close_deployment_sessions(self, request: dict) -> dict:
+        try:
+            from .temporal_deployment_session_updates import state as session_state
+
+            return session_state(self).close_deployment_sessions(request)
+        except Exception as exc:
+            raise ApplicationError(
+                "Original scoped deployment Session close refused",
+                type=getattr(exc, "code", "definition_mismatch"),
                 non_retryable=True,
             ) from None
 
@@ -1563,6 +1698,19 @@ class TemporalCommandRegistryWorkflow:
             return {"error": getattr(exc, "code", "definition_mismatch")}
         if self.commands.deployment is not None:
             try:
+                if request.get("kind") in {
+                    "deployment_session_command",
+                    "deployment_session_root",
+                    "deployment_session_never_claimed",
+                }:
+                    from .temporal_deployment_session_updates import state as session_state
+
+                    method = {
+                        "deployment_session_command": "deployment_session_command",
+                        "deployment_session_root": "deployment_session_root",
+                        "deployment_session_never_claimed": "deployment_session_never_claimed",
+                    }[request["kind"]]
+                    return getattr(session_state(self), method)(request)
                 if request.get("kind") == "deployment_coding_validation":
                     return self.deployment_coding_validation(request)
                 if request.get("kind") == "deployment_control":
@@ -1606,7 +1754,7 @@ class TemporalCommandRegistryWorkflow:
     def deployment_coding_validation(self, request: dict) -> dict:
         try:
             self._check_deployment_registry_epoch()
-            if self.commands.admission_protocol != 3 or self.commands.deployment is None:
+            if self.commands.admission_protocol not in (3, 4) or self.commands.deployment is None:
                 raise ValueError("Original Registry3 required")
             info = workflow.info()
             if (

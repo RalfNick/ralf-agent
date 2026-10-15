@@ -495,7 +495,8 @@ async def execute(runtime, client, value, info):
         if (
             type(configuration) is not dict
             or type(configuration.get("version")) is not int
-            or configuration["version"] not in ({2, 3} if publication == 2 else {3})
+            or configuration["version"]
+            not in ({2, 3, 4} if publication == 2 else {3, 4} if publication == 3 else {4})
         ):
             _reject()
         if configuration != {
@@ -600,7 +601,8 @@ async def _verify_control(runtime, client, policy, value, info):
     if (
         type(configuration) is not dict
         or type(configuration.get("version")) is not int
-        or configuration["version"] not in ({2, 3} if publication == 2 else {3})
+        or configuration["version"]
+        not in ({2, 3, 4} if publication == 2 else {3, 4} if publication == 3 else {4})
         or configuration
         != {
             "version": configuration["version"],

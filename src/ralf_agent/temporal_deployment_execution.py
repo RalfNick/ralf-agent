@@ -149,8 +149,9 @@ async def _namespace(client, expected):
 def _metadata(
     value, policy, *, scope, run_id, command_id, request_digest, manifest_digest, manifest
 ):
-    _exact(value, {"version", "root", "lineage"})
-    if type(value["version"]) is not int or value["version"] != 1:
+    session = manifest.get("deployment_admission_protocol", {}).get("version") == 4
+    _exact(value, {"version", "root", "lineage"} | ({"session_origin"} if session else set()))
+    if type(value["version"]) is not int or value["version"] != (2 if session else 1):
         _reject()
     root, links = value["root"], value["lineage"]
     _exact(root, _ROOT_FIELDS)
@@ -211,6 +212,10 @@ def _metadata(
             _reject()
     elif root["command_id"] != command_id or root["request_digest"] != request_digest:
         _reject()
+    if session:
+        from .temporal_deployment_execution_state import _session_origin
+
+        _session_origin(value, scope, manifest)
 
 
 def _receipt(proof, *, required):
@@ -287,9 +292,18 @@ async def _proof(runtime, client, policy, scope, run_id, epoch, *, required=Fals
     ):
         _reject()
     links = value["admission"]["lineage"]
+    origin = value["admission"].get("session_origin")
     expected_parent = (
-        (links[-1]["parent_run_id"], links[-1]["parent_execution_epoch"]) if links else (None, None)
+        (links[-1]["parent_run_id"], links[-1]["parent_execution_epoch"])
+        if links
+        else (origin["coordinator_id"], origin["coordinator_execution_epoch"])
+        if origin
+        else (None, None)
     )
+    if origin is not None:
+        from .temporal_deployment_execution_state import _session_origin
+
+        _session_origin(value["admission"], scope, value["manifest"], value["request"])
     if (description.parent_id, description.parent_run_id) != expected_parent:
         _reject()
     _receipt(value, required=required)
@@ -297,17 +311,18 @@ async def _proof(runtime, client, policy, scope, run_id, epoch, *, required=Fals
     from .temporal_deployment_protocol import public_selected
 
     if public_selected(value["manifest"]):
-        await _public_start_binding(client, policy, value, description)
+        await _public_start_binding(client, policy, value, description, runtime=runtime)
     return value
 
 
-async def _public_start_binding(client, policy, proof, description):
+async def _public_start_binding(client, policy, proof, description, *, runtime=None):
     root = proof["admission"]["root"]
+    session = proof["manifest"].get("deployment_admission_protocol", {}).get("version") == 4
     response = detached(
         await client.get_workflow_handle(root["registry_id"]).query(
             "view",
             {
-                "kind": "deployment_submission",
+                "kind": "deployment_session_root" if session else "deployment_submission",
                 "scope": root["scope"],
                 "command_id": root["command_id"],
                 "payload_digest": root["request_digest"],
@@ -316,7 +331,43 @@ async def _public_start_binding(client, policy, proof, description):
             },
         )
     )
-    _exact(response, {"reservation", "submission", "run_receipt", "execution_epoch"})
+    _exact(
+        response,
+        {"reservation", "submission", "run_receipt", "execution_epoch"}
+        | ({"intent", "session_origin"} if session else set()),
+    )
+    verified = None
+    if session:
+        from .temporal_session_deployment_dto import validate_intent, validate_origin
+        from .temporal_session_deployment_verification import validate_session_origin
+
+        if runtime is None:
+            _reject()
+        intent = response["intent"]
+        validate_intent(
+            intent,
+            deployment_id=policy["deployment_id"],
+            scope=proof["scope"],
+            namespace=proof["namespace"],
+            coordinator_execution_epoch=proof["admission"]["session_origin"][
+                "coordinator_execution_epoch"
+            ],
+        )
+        validate_origin(
+            response["session_origin"], intent=intent, deployment_id=policy["deployment_id"]
+        )
+        if (
+            response["session_origin"] != proof["admission"]["session_origin"]
+            or intent["run_id"] != root["run_id"]
+            or intent["run_command_id"] != root["command_id"]
+            or intent["submission"] != response["submission"]
+        ):
+            _reject()
+        verified = await validate_session_origin(
+            runtime, client, intent, response["session_origin"]
+        )
+        if verified != {"intent": intent, "session_origin": response["session_origin"]}:
+            _reject()
     envelope = response["submission"]
     _exact(envelope, {"version", "request", "manifest", "activity_timeout", "task_queue"})
     if (
@@ -344,6 +395,12 @@ async def _public_start_binding(client, policy, proof, description):
     if started != expected:
         _reject()
     await _namespace(client, root["namespace"])
+    if session:
+        if (
+            await validate_session_origin(runtime, client, intent, response["session_origin"])
+            != verified
+        ):
+            _reject()
 
 
 def _child(parent, child_id):
@@ -687,6 +744,26 @@ def wrap_activities(runtime, client, activities):
         from .temporal_deployment_coding_state import selected as coding_selected
         from .temporal_deployment_protocol import public_selected
         from .temporal_deployment_release import RELEASE_ACTIVITY, is_registered_activity
+
+        if runtime.manifest.get("session_deployment_protocol") == 1:
+            from .temporal_session_deployment_control import (
+                REGISTRY_ACTIVITY,
+                is_registered_registry_activity,
+            )
+            from .temporal_session_deployment_control import (
+                is_registered_activity as is_session_activity,
+            )
+            from .temporal_session_state import SESSION_ACTIVITY
+
+            if definition.name in {SESSION_ACTIVITY, REGISTRY_ACTIVITY}:
+                check = (
+                    is_session_activity
+                    if definition.name == SESSION_ACTIVITY
+                    else is_registered_registry_activity
+                )
+                if not check(runtime, client, function):
+                    _reject()
+                return function
 
         if definition.name == STOP_ACTIVITY:
             if not coding_selected(runtime.manifest) or not is_registered_stop_activity(

@@ -357,6 +357,7 @@ def test_selected_assembly_drain_uses_composition_close_not_native_only(monkeypa
     monkeypatch.setattr(module(), "close", selected_close)
     monkeypatch.setattr(temporal_coding_runtime, "close", old_close)
     owner = SimpleNamespace(
+        release=MANIFEST,
         _worker_start=None,
         _worker=None,
         _runtime=SimpleNamespace(

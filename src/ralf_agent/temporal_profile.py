@@ -22,6 +22,7 @@ LOCAL_COMPONENTS = frozenset(
 EXECUTION_FLAGS = frozenset(
     {
         "enable_sessions",
+        "deployment_sessions",
         "session_writes",
         "composite_sessions",
         "context_reads",
@@ -88,11 +89,18 @@ class TemporalProfile:
                 "model_continuation",
                 "coding_execution",
                 "coding_composition",
+                "deployment_sessions",
             }
             or execution.get(name, False)
         }
         if flags.get("coding_composition") and not flags.get("coding_execution"):
             raise ValidationError("Coding composition requires explicit Coding execution")
+        if flags.get("deployment_sessions") and (
+            not flags["enable_sessions"]
+            or flags.get("coding_execution")
+            or flags.get("coding_composition")
+        ):
+            raise ValidationError("Deployment Sessions require ordinary Session execution")
         from .runtime_builder import (
             model_history_declarations,
             validate_session_history_declarations,

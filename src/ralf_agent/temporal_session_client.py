@@ -36,7 +36,15 @@ class TemporalSessionClient:
             self.engine.scope.principal,
         ):
             raise AuthorizationDenied("Session belongs to another trusted Scope")
+        from .temporal_session_deployment_state import selected
         from .temporal_session_identity import data_resource_id
+
+        if selected(self.engine.release):
+            if ref.coordination_ref != digest(
+                ["temporal-session-coordination-v1", ref.key.resource_id, asdict(self.engine.scope)]
+            ):
+                raise DefinitionMismatch("Session belongs to another actual namespace resource")
+            return
 
         possible = {resource_id(self.namespace_id)} | {
             data_resource_id(self.namespace_id, {"dataset_id": value})
@@ -100,6 +108,14 @@ class TemporalSessionClient:
         return receipt
 
     async def open(self, definition, session_id, *, command_id, namespace=None):
+        from .temporal_session_deployment_state import selected
+
+        if selected(self.engine.release):
+            from .temporal_session_deployment_client import DeploymentSessionClient
+
+            return await DeploymentSessionClient(self).open(
+                definition, session_id, command_id=command_id, namespace=namespace
+            )
         binding = detached(self.binding(definition))
         from .temporal_session_identity import data_resource_id, selected_namespace, selected_source
 
@@ -155,6 +171,14 @@ class TemporalSessionClient:
         return await self._apply(key, payload)
 
     async def submit(self, ref, input, *, command_id, budget):
+        from .temporal_session_deployment_state import selected
+
+        if selected(self.engine.release):
+            from .temporal_session_deployment_client import DeploymentSessionClient
+
+            return await DeploymentSessionClient(self).submit(
+                ref, input, command_id=command_id, budget=budget
+            )
         self.validate(ref)
         receipt = await self.command(
             ref.key,
@@ -174,6 +198,17 @@ class TemporalSessionClient:
         return receipt
 
     async def rebind(self, ref, definition, *, command_id, expected_binding_revision):
+        from .temporal_session_deployment_state import selected
+
+        if selected(self.engine.release):
+            from .temporal_session_deployment_client import DeploymentSessionClient
+
+            return await DeploymentSessionClient(self).rebind(
+                ref,
+                definition,
+                command_id=command_id,
+                expected_binding_revision=expected_binding_revision,
+            )
         self.validate(ref)
         return await self.command(
             ref.key,
@@ -188,6 +223,12 @@ class TemporalSessionClient:
         )
 
     async def view(self, ref, kind, **options):
+        from .temporal_session_deployment_state import selected
+
+        if selected(self.engine.release):
+            from .temporal_session_deployment_client import DeploymentSessionClient
+
+            return await DeploymentSessionClient(self).view(ref, kind, **options)
         self.validate(ref)
         value = await self.engine._handle(workflow_id(ref.key)).query(
             "view", {"scope": asdict(self.engine.scope), "kind": kind, **options}

@@ -136,9 +136,10 @@ class TemporalClientRuntime(Runtime):
     @property
     def capabilities(self):
         from .temporal_deployment_protocol import public_selected
+        from .temporal_session_deployment_state import selected
 
-        sessions = self.engine.release.get("session_protocol") == 1 and not public_selected(
-            self.engine.release
+        sessions = self.engine.release.get("session_protocol") == 1 and (
+            not public_selected(self.engine.release) or selected(self.engine.release)
         )
         return {
             "schema_version": 1,
@@ -169,8 +170,9 @@ class TemporalClientRuntime(Runtime):
     async def _session_client(self):
         self._check()
         from .temporal_deployment_protocol import public_selected
+        from .temporal_session_deployment_state import selected
 
-        if public_selected(self.engine.release):
+        if public_selected(self.engine.release) and not selected(self.engine.release):
             raise ValidationError(
                 "Temporal deployment Session coordinator admission is unavailable"
             )
@@ -230,7 +232,7 @@ class TemporalClientRuntime(Runtime):
         self._check()
         # A call owns its configuration. Default methods bind to this view so
         # internal awaits cannot switch their eventual server/Scope or release.
-        if self.engine.release.get("deployment_admission_protocol", {}).get("version") in (2, 3):
+        if self.engine.release.get("deployment_admission_protocol", {}).get("version") in (2, 3, 4):
             vars(self.engine).setdefault("_deployment_namespace_binding", {"namespace": None})
         view = copy.copy(self.engine)
         for name, value in vars(self.engine).items():

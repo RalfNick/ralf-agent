@@ -1646,10 +1646,11 @@ class TemporalCommandRegistryState:
         namespace=None,
         capacity=COMMAND_REGISTRY_CAPACITY,
         admission_protocol=1,
+        registry_execution_epoch=None,
     ):
         if type(capacity) is not int or not 1 <= capacity <= COMMAND_REGISTRY_CAPACITY:
             raise ValidationError("Invalid Temporal command registry capacity")
-        if type(admission_protocol) is not int or admission_protocol not in (1, 2, 3):
+        if type(admission_protocol) is not int or admission_protocol not in (1, 2, 3, 4):
             raise ValidationError("Invalid deployment Registry protocol")
         self.admission_protocol = admission_protocol
         self.deployment = None
@@ -1658,7 +1659,16 @@ class TemporalCommandRegistryState:
 
             if scope is not None:
                 raise ValidationError("Deployment Registry cannot select a single scope")
-            if admission_protocol == 3:
+            if admission_protocol == 4:
+                from .temporal_deployment_session_registry import SessionDeploymentAdmissionState
+
+                self.deployment = SessionDeploymentAdmissionState(
+                    admission_policy,
+                    namespace,
+                    capacity=capacity,
+                    registry_execution_epoch=registry_execution_epoch,
+                )
+            elif admission_protocol == 3:
                 from .temporal_deployment_coding_registry import CodingDeploymentAdmissionState
 
                 self.deployment = CodingDeploymentAdmissionState(
@@ -1817,12 +1827,12 @@ class TemporalCommandRegistryState:
         )
 
     def _public_deployment(self):
-        if self.admission_protocol not in (2, 3) or self.deployment is None:
+        if self.admission_protocol not in (2, 3, 4) or self.deployment is None:
             raise DefinitionMismatch("Original public deployment Registry is required")
         return self.deployment
 
     def _coding_deployment(self):
-        if self.admission_protocol != 3 or self.deployment is None:
+        if self.admission_protocol not in (3, 4) or self.deployment is None:
             raise DefinitionMismatch("Original Coding deployment Registry3 is required")
         return self.deployment
 

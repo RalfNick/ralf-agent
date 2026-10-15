@@ -651,6 +651,21 @@ def build_temporal_worker(
             release_activity = registered_release(runtime, client)
             activities.append(release_activity)
             maintenance.append((release_activity, "release"))
+        if manifest.get("session_deployment_protocol") == 1:
+            from temporalio import activity
+
+            from .temporal_session_deployment_control import registered_registry_session_activities
+            from .temporal_session_state import SESSION_ACTIVITY
+
+            registry_activities = registered_registry_session_activities(runtime, client)
+            activities.extend(registry_activities)
+            maintenance.extend((function, "session-registry") for function in registry_activities)
+            maintenance.extend(
+                (function, "session-control")
+                for function in activities
+                if activity._Definition.from_callable(function).name == SESSION_ACTIVITY
+            )
+            maintenance.append((parent_activities[0], "control"))
         if manifest["deployment_admission_protocol"]["version"] == 3:
             from temporalio import activity
 
@@ -753,6 +768,12 @@ def _workflow_runner():
             "ralf_agent.temporal_coding_composition_state",
             "ralf_agent.temporal_coding_composition_protocol",
             "ralf_agent.temporal_deployment_coding_state",
+            "ralf_agent.temporal_deployment_protocol",
+            "ralf_agent.temporal_deployment_admission",
+            "ralf_agent.temporal_session_deployment_dto",
+            "ralf_agent.temporal_session_deployment_state",
+            "ralf_agent.temporal_deployment_execution",
+            "ralf_agent.temporal_deployment_release_state",
             "ralf_agent.temporal_memory_state",
             "ralf_agent.temporal_facts_state",
             "ralf_agent.temporal_knowledge_state",

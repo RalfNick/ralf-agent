@@ -55,13 +55,30 @@ CODING_SOURCE_FILES = PUBLIC_SOURCE_FILES + (
     "temporal_deployment_control_transport.py",
 )
 
+SESSION_SOURCE_FILES = CODING_SOURCE_FILES + (
+    "temporal_session_state.py",
+    "temporal_session_workflow.py",
+    "temporal_session_client.py",
+    "temporal_session_activities.py",
+    "temporal_session_identity.py",
+    "temporal_session_tree.py",
+    "temporal_session_deployment_dto.py",
+    "temporal_session_deployment_state.py",
+    "temporal_deployment_session_registry.py",
+    "temporal_session_deployment_control.py",
+    "temporal_session_deployment_verification.py",
+    "temporal_deployment_session_updates.py",
+    "temporal_session_deployment_client.py",
+    "temporal_session_deployment_close.py",
+)
+
 
 def public_selected(manifest):
     return (
         selected(manifest)
         and type(manifest["deployment_admission_protocol"]) is dict
         and type(manifest["deployment_admission_protocol"].get("version")) is int
-        and manifest["deployment_admission_protocol"].get("version") in (2, 3)
+        and manifest["deployment_admission_protocol"].get("version") in (2, 3, 4)
     )
 
 
@@ -71,11 +88,13 @@ def selected(manifest):
 
 def validate_protocol(manifest):
     if not selected(manifest):
+        if type(manifest) is dict and "session_deployment_protocol" in manifest:
+            raise DefinitionMismatch("Session deployment requires its selected publication")
         return
     value = manifest["deployment_admission_protocol"]
     try:
         _exact(value, {"version", "policy", "registry_id", "implementation"})
-        if type(value["version"]) is not int or value["version"] not in (1, 2, 3):
+        if type(value["version"]) is not int or value["version"] not in (1, 2, 3, 4):
             raise ValidationError("Invalid original deployment protocol version")
         policy = _policy(value["policy"])
         if value["registry_id"] != registry_id(policy["deployment_id"]):
@@ -83,7 +102,9 @@ def validate_protocol(manifest):
         _exact(
             value["implementation"],
             set(
-                CODING_SOURCE_FILES
+                SESSION_SOURCE_FILES
+                if value["version"] == 4
+                else CODING_SOURCE_FILES
                 if value["version"] == 3
                 else PUBLIC_SOURCE_FILES
                 if value["version"] == 2
@@ -94,6 +115,17 @@ def validate_protocol(manifest):
             _sha(fingerprint)
         if manifest.get("kernel") not in {"temporal-1", "temporal-2", "temporal-3"}:
             raise DefinitionMismatch("Unsupported deployment runtime release")
+        if value["version"] == 4:
+            if (
+                type(manifest.get("session_protocol")) is not int
+                or manifest["session_protocol"] != 1
+                or type(manifest.get("session_deployment_protocol")) is not int
+                or manifest["session_deployment_protocol"] != 1
+                or manifest.get("dispatch_admission") != "history-1"
+            ):
+                raise DefinitionMismatch("Deployment4 requires its explicit Session protocol")
+        elif "session_deployment_protocol" in manifest:
+            raise DefinitionMismatch("Session deployment requires publication4")
         if value["version"] == 3:
             from . import temporal_deployment_coding_state
             from .temporal_coding_protocol import validate_protocol as validate_coding
@@ -123,15 +155,31 @@ def validate_protocol(manifest):
         raise DefinitionMismatch("Invalid fixed deployment admission publication") from None
 
 
-def publish(manifest, policy_identity, *, public=False, _copy=True):
+def publish(manifest, policy_identity, *, public=False, _copy=True, session_deployment=False):
     result = copy.deepcopy(manifest) if _copy else manifest
+    if type(session_deployment) is not bool:
+        raise ValidationError("Session deployment selection requires an explicit boolean")
+    if session_deployment and (not public or policy_identity is None):
+        raise ValidationError("Session deployment requires explicit public admission")
     if policy_identity is None:
         return result
     policy = _policy(policy_identity)
     directory = Path(__file__).parent
-    version = 3 if public and "coding_execution_protocol" in result else 2 if public else 1
+    version = (
+        4
+        if session_deployment
+        else 3
+        if public and "coding_execution_protocol" in result
+        else 2
+        if public
+        else 1
+    )
+    if session_deployment:
+        result["session_deployment_protocol"] = 1
     files = (
-        CODING_SOURCE_FILES
+        SESSION_SOURCE_FILES
+        if version == 4
+        else CODING_SOURCE_FILES
         if version == 3
         else PUBLIC_SOURCE_FILES
         if version == 2

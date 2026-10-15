@@ -45,7 +45,7 @@ class WorkerExecutionOwner:
                 kind = selected[0]
                 control = (
                     kind == "control"
-                    and manifest.get("deployment_admission_protocol", {}).get("version") == 3
+                    and manifest.get("deployment_admission_protocol", {}).get("version") in (3, 4)
                     and activity._Definition.from_callable(function).name
                     == "ralf.temporal.control.v1"
                 )
@@ -55,13 +55,36 @@ class WorkerExecutionOwner:
                     and activity._Definition.from_callable(function).name == "ralf_coding_stop"
                     and _native_stop_registration(runtime, client, function)
                 )
+                session_check = None
+                if manifest.get("session_deployment_protocol") == 1:
+                    from .temporal_session_deployment_control import (
+                        is_registered_activity as is_session_activity,
+                    )
+                    from .temporal_session_deployment_control import (
+                        is_registered_registry_activity,
+                    )
+
+                    session_check = {
+                        "session-control": is_session_activity,
+                        "session-registry": is_registered_registry_activity,
+                    }.get(kind)
+                session = session_check is not None and session_check(runtime, client, function)
                 if (
                     len(selected) != 1
                     or runtime is None
-                    or kind not in {"release", "stop", "control", "native-stop"}
+                    or kind
+                    not in {
+                        "release",
+                        "stop",
+                        "control",
+                        "native-stop",
+                        "session-control",
+                        "session-registry",
+                    }
                     or not (
                         control
                         or native_stop
+                        or session
                         or kind == "release"
                         and is_registered_activity(runtime, client, function)
                         or kind == "stop"
@@ -94,6 +117,14 @@ class WorkerExecutionOwner:
                         or self._closing
                         and kind == "control"
                         and _activity_body(request).get("mode") not in {"observe", "cancel"}
+                        or session_check is not None
+                        and not session_check(runtime, client, function)
+                        or self._closing
+                        and kind == "session-control"
+                        and request.get("mode") != "observe"
+                        or self._closing
+                        and kind == "session-registry"
+                        and request.get("mode") not in {"session_receipt", "session_never_claimed"}
                     ):
                         raise DefinitionMismatch("Worker original maintenance identity changed")
                     runtime.validate_release(manifest)
@@ -273,13 +304,14 @@ class TemporalRuntimeAssembly:
         self._worker_stop = None
         self._worker_failure = None
         self._coding_stop_task = None
+        self._session_stop_task = None
         self._aclosing = False
         self._client, self._queue = None, None
         self._engines = []
         self._calls = WorkerExecutionOwner(scope=scope, release=self.release)
         self._coding_submissions = None
         if self.release.get("binding_protocol") in (13, 15, 17, 19, 21, 23) or (
-            self.release.get("deployment_admission_protocol", {}).get("version") in (2, 3)
+            self.release.get("deployment_admission_protocol", {}).get("version") in (2, 3, 4)
         ):
             from .temporal_coding_composition_submissions import CompositionSubmissionOwner
 
@@ -467,6 +499,26 @@ class TemporalRuntimeAssembly:
             except (Exception, asyncio.CancelledError):
                 if not self._worker_ready.done():
                     raise
+        if self.release.get("session_deployment_protocol") == 1 and self._client is not None:
+            from .temporal_session_deployment_close import close as close_sessions
+
+            if self._session_stop_task is None:
+                self._session_stop_task = asyncio.create_task(
+                    close_sessions(
+                        self._runtime,
+                        client=self._client,
+                        scope=self._scope,
+                        task_queue=self._queue,
+                        wait_timeout=wait_timeout,
+                    )
+                )
+                self._session_stop_task.add_done_callback(_observe)
+            try:
+                await _bounded_task(self._session_stop_task, wait_timeout)
+            except BaseException:
+                if self._session_stop_task.done():
+                    self._session_stop_task = None
+                raise
         if getattr(self._runtime, "coding_execution", False):
             if (
                 self._runtime.orchestration_release.get("binding_protocol")

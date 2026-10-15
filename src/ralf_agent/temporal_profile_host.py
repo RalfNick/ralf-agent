@@ -152,7 +152,7 @@ class TemporalProfileHost:
             registry_versions = {}
             for engine in self._engines.values():
                 version = engine.release.get("deployment_admission_protocol", {}).get("version")
-                if version in (2, 3):
+                if version in (2, 3, 4):
                     identity = engine.command_registry_id
                     registry_versions[identity] = max(version, registry_versions.get(identity, 2))
             for engine in self._engines.values():

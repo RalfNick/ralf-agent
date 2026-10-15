@@ -52,7 +52,9 @@ TERMINAL = {"succeeded", "failed", "cancelled"}
 
 def public(manifest):
     value = manifest.get("deployment_admission_protocol") if type(manifest) is dict else None
-    return type(value) is dict and type(value.get("version")) is int and value["version"] in (2, 3)
+    return (
+        type(value) is dict and type(value.get("version")) is int and value["version"] in (2, 3, 4)
+    )
 
 
 def _detached(value):
