@@ -248,8 +248,21 @@ class CodingSystem:
         self.workers.append(worker)
         with fixture.definition_mismatch_trace(self.directory):
             async with worker:
+                primary_error = None
                 try:
                     yield worker
+                except BaseException as error:
+                    primary_error = error
+                    try:
+                        from tests.temporal_coding_primary_failure import save_primary_failure
+
+                        save_primary_failure(self.directory, error)
+                        (self.directory / "primary-failure.json").replace(
+                            self.directory / "initial-body-error.json"
+                        )
+                    except BaseException:
+                        pass  # Diagnostics must not replace the original body failure.
+                    raise
                 finally:
                     (self.directory / "release-turns").touch()
                     for path in self.directory.glob("block-*"):
@@ -278,6 +291,11 @@ class CodingSystem:
                             )
                         )
                         path.chmod(0o600)
+                        if primary_error is not None:
+                            raise BaseExceptionGroup(
+                                "Coding Worker body and owned cleanup failed",
+                                [primary_error, error],
+                            ) from None
                         raise
 
     async def start_process(self):
@@ -612,6 +630,7 @@ async def coding_system(
     roots=1,
     actual_docker=None,
     never_go=False,
+    deployment_sessions=False,
 ):
     import psycopg
     from psycopg import sql
@@ -695,7 +714,15 @@ async def coding_system(
         "120",
         {"default": {"adapter": "deployment-coding-peer", "config": {"directory": str(directory)}}},
         components,
-        execution={"coding_execution": True, "coding_composition": composition},
+        execution={
+            "coding_execution": True,
+            "coding_composition": composition,
+            **(
+                {"enable_sessions": True, "deployment_sessions": True}
+                if deployment_sessions
+                else {}
+            ),
+        },
         binding_components=[
             {
                 "role": "runner",
@@ -725,7 +752,9 @@ async def coding_system(
         client = clients[0]
         data["namespace"] = namespace
         system = CodingSystem(directory, admin, schema, sock, socket_path, data, assembly, client)
-        assert system.release["deployment_admission_protocol"]["version"] == 3
+        assert system.release["deployment_admission_protocol"]["version"] == (
+            4 if deployment_sessions else 3
+        )
         assert system.release["coding_execution_protocol"]["version"] == 6
         assert system.release["binding_protocol"] == (23 if composition else 22)
         if composition:

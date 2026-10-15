@@ -644,9 +644,10 @@ class TemporalSessionState:
 
     def deployment_command(self, request):
         entry = self.deployment_turn(request)
+        intent = entry.intent
         return {
-            "receipt": detached(self.receipts[entry.intent["session_command_id"]]),
-            "session_ref": entry.intent["session_ref"],
+            "receipt": detached(self.receipts[intent["session_command_id"]]),
+            "session_ref": intent["session_ref"],
         }
 
     def deployment_binding(self, request):

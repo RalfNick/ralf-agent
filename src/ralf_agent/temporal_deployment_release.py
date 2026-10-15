@@ -256,7 +256,9 @@ async def _closure(runtime, client, policy, proof):
         _reject()
     if not value["ready"] or value["reasons"]:
         _reject()
-    coding = original["manifest"].get("deployment_admission_protocol", {}).get("version") == 3
+    from .temporal_deployment_coding_state import selected as coding_selected
+
+    coding = coding_selected(original["manifest"])
     for call in value["calls"].values():
         _exact(
             call,

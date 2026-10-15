@@ -126,7 +126,10 @@ def validate_protocol(manifest):
                 raise DefinitionMismatch("Deployment4 requires its explicit Session protocol")
         elif "session_deployment_protocol" in manifest:
             raise DefinitionMismatch("Session deployment requires publication4")
-        if value["version"] == 3:
+        coding = value["version"] == 3 or (
+            value["version"] == 4 and "coding_execution_protocol" in manifest
+        )
+        if coding:
             from . import temporal_deployment_coding_state
             from .temporal_coding_protocol import validate_protocol as validate_coding
 
@@ -146,7 +149,7 @@ def validate_protocol(manifest):
             or manifest.get("dispatch_admission") != "history-1"
         ):
             raise DefinitionMismatch("Unsupported deployment binding header")
-        if value["version"] != 3 and any(
+        if not coding and any(
             name in manifest
             for name in ("coding_execution_protocol", "coding_composition_protocol")
         ):

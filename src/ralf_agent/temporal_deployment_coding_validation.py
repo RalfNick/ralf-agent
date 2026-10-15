@@ -1,4 +1,4 @@
-"""Fresh selected3 SDK identity reads around original native I/O.
+"""Fresh selected Coding SDK identity reads around original native I/O.
 
 Only immutable identities survive the bootstrap. Permission is read afresh and
 is still acted on by the original Run's native grant Update.
@@ -134,6 +134,10 @@ class CodingValidation:
                 "submission_identity_digest",
             )
         ]
+        if self._manifest["deployment_admission_protocol"]["version"] == 4:
+            from . import temporal_session_deployment_verification as verification
+
+            self._ports += [(verification, "validate_session_origin"), (self, "_session_origin")]
         self._ports += [(globals(), "_signed"), (globals(), "_reject")]
         self._bindings = tuple(
             _binding(owner[name] if isinstance(owner, dict) else getattr(owner, name))
@@ -333,6 +337,12 @@ class CodingValidation:
                 expected_parent = (
                     proof["admission"]["lineage"][-1] if proof["admission"]["lineage"] else None
                 )
+                if expected_parent is None and "session_origin" in proof["admission"]:
+                    origin = proof["admission"]["session_origin"]
+                    expected_parent = {
+                        "parent_run_id": origin["coordinator_id"],
+                        "parent_execution_epoch": origin["coordinator_execution_epoch"],
+                    }
                 desc = {
                     "id": proof["run_id"],
                     "run_id": proof["execution_epoch"],
@@ -363,11 +373,12 @@ class CodingValidation:
             proxy = registry(readonly, request["scope"], self._manifest)
             await proxy._authority()
             self._check(full=True)
+            session = self._manifest["deployment_admission_protocol"]["version"] == 4
             record = detached(
                 await proxy.handle.query(
                     "view",
                     {
-                        "kind": "deployment_submission",
+                        "kind": "deployment_session_root" if session else "deployment_submission",
                         "scope": root["scope"],
                         "command_id": root["command_id"],
                         "payload_digest": root["request_digest"],
@@ -378,8 +389,34 @@ class CodingValidation:
             )
             self._check(full=True)
             execution._exact(
-                record, {"reservation", "submission", "run_receipt", "execution_epoch"}
+                record,
+                {"reservation", "submission", "run_receipt", "execution_epoch"}
+                | ({"intent", "session_origin"} if session else set()),
             )
+            session_identity = None
+            if session:
+                from .temporal_session_deployment_dto import validate_intent, validate_origin
+
+                intent, origin = record["intent"], record["session_origin"]
+                validate_intent(
+                    intent,
+                    deployment_id=self._policy["deployment_id"],
+                    scope=root["scope"],
+                    namespace=root["namespace"],
+                    coordinator_execution_epoch=root["admission"]["session_origin"][
+                        "coordinator_execution_epoch"
+                    ],
+                )
+                validate_origin(origin, intent=intent, deployment_id=self._policy["deployment_id"])
+                if (
+                    origin != root["admission"]["session_origin"]
+                    or intent["submission"] != record["submission"]
+                    or intent["run_id"] != root["run_id"]
+                    or intent["run_command_id"] != root["command_id"]
+                ):
+                    _reject()
+                session_identity = {"intent": detached(intent), "session_origin": detached(origin)}
+                await self._session_origin(session_identity)
             envelope = record["submission"]
             execution._exact(
                 envelope, {"version", "request", "manifest", "activity_timeout", "task_queue"}
@@ -433,7 +470,14 @@ class CodingValidation:
             }
             self._description(registry_description, registry_expected)
             bound = root["admission_receipt"]["root"]
+            configuration_version = proxy.configuration_version
+            if type(configuration_version) is not int or configuration_version not in (
+                (4,) if session else (3, 4)
+            ):
+                _reject()
             snapshot = {
+                "configuration_version": configuration_version,
+                "session": session_identity,
                 "registry_description": registry_expected,
                 "nodes": nodes,
                 "namespace": detached(root["namespace"]),
@@ -521,7 +565,7 @@ class CodingValidation:
                 for name, expected in (
                     ("registry_id", s["registry_id"]),
                     ("registry_execution_epoch", s["registry_epoch"]),
-                    ("configuration_version", 3),
+                    ("configuration_version", s["configuration_version"]),
                     ("policy", self._policy),
                     ("scope", self._request["scope"]),
                     ("namespace", s["namespace"]),
@@ -540,6 +584,16 @@ class CodingValidation:
         ):
             _reject()
         return value["admitted"]
+
+    async def _session_origin(self, identity):
+        from .temporal_session_deployment_verification import validate_session_origin
+
+        result = await validate_session_origin(
+            self._runtime, self._client, identity["intent"], identity["session_origin"]
+        )
+        self._check(full=True)
+        if result != identity:
+            _reject()
 
     async def _fresh(self):
         from . import temporal_deployment_execution as execution
@@ -561,6 +615,8 @@ class CodingValidation:
         if _binding(check) != self._check_pin:
             _reject()
         check(full=not steady)
+        if s["session"] is not None:
+            await self._session_origin(s["session"])
         reads = []
         for node in s["nodes"]:
             handle = client.get_workflow_handle(node["id"], run_id=node["epoch"])
@@ -597,6 +653,8 @@ class CodingValidation:
             if isinstance(value, BaseException):
                 raise value
         await execution._namespace(client, s["namespace"])
+        if s["session"] is not None:
+            await self._session_origin(s["session"])
         # Only synchronous DTO checks remain. The public callback immediately
         # performs the full post-I/O check, including the pinned _fresh method.
         permitted = True

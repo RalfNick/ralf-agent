@@ -180,15 +180,10 @@ class TemporalRuntime:
         if (
             type(deployment_sessions) is not bool
             or deployment_sessions
-            and (
-                enable_sessions is not True
-                or admission_policy is None
-                or coding_execution
-                or coding_composition
-            )
+            and (enable_sessions is not True or admission_policy is None)
         ):
             raise ValidationError(
-                "Session deployment requires explicit ordinary public admission and Sessions"
+                "Session deployment requires explicit public admission and Sessions"
             )
         self.deployment_sessions = self._deployment_sessions_pin = deployment_sessions
         if admission_policy is not None and _deployment_admission_policy is not None:

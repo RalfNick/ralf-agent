@@ -988,7 +988,11 @@ class CodexCodingRunner:
             and type(authority) is TemporalCodingAuthority
             and type(deployment) is dict
             and type(deployment.get("version")) is int
-            and deployment["version"] == 3
+            and (
+                deployment["version"] == 3
+                or deployment["version"] == 4
+                and "coding_execution_protocol" in manifest
+            )
         )
         if selected_adjacent:
             from .component_fingerprint import executable_digest

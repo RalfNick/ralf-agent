@@ -13,6 +13,7 @@ from temporalio.exceptions import (
 
 with workflow.unsafe.imports_passed_through():
     from . import (  # noqa: F401
+        coding_create_inventory,  # Pure native inventory schema used during Session activation.
         temporal_context_read_protocol,
         temporal_context_read_state,
         temporal_parent_completion_state,
@@ -402,10 +403,11 @@ class TemporalSessionWorkflow:
                     entry = self.state.deployment_turns.get(selector["session_command_id"])
                     if entry is None:
                         return None
+                    intent = entry.intent
                     self.state.deployment_turn(
-                        {**selector, "intent_digest": entry.intent["intent_digest"]}
+                        {**selector, "intent_digest": intent["intent_digest"]}
                     )
-                    return entry.intent
+                    return intent
                 if kind == "deployment_session_start":
                     return self.state.deployment_view(selector)
                 if kind == "deployment_session_lifecycle":

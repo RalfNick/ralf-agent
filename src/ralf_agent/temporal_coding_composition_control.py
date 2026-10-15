@@ -34,10 +34,9 @@ def _root_kind(manifest, kind):
 
 
 def _registry(client, scope, manifest=None):
-    if (
-        manifest is not None
-        and manifest.get("deployment_admission_protocol", {}).get("version") == 3
-    ):
+    if manifest is not None and manifest.get("deployment_admission_protocol", {}).get(
+        "version"
+    ) in (3, 4):
         from .temporal_deployment_coding_bridge import registry
 
         return registry(client, scope, manifest)
@@ -177,7 +176,7 @@ async def _bind_submission(client, scope, expected, epoch, namespace, manifest=N
 
 
 async def root_admission(runtime, client, value, info):
-    if value["runtime_manifest"].get("deployment_admission_protocol", {}).get("version") == 3:
+    if value["runtime_manifest"].get("deployment_admission_protocol", {}).get("version") in (3, 4):
         from .temporal_deployment_coding_bridge import root_admission as deployment_root_admission
 
         return await deployment_root_admission(runtime, client, value, info)
@@ -670,7 +669,9 @@ async def control(runtime, client, value, info=None):
             release=value["runtime_manifest"],
             scope=Scope(**value["scope"]),
         )
-        if value["runtime_manifest"].get("deployment_admission_protocol", {}).get("version") != 3:
+        if value["runtime_manifest"].get("deployment_admission_protocol", {}).get(
+            "version"
+        ) not in (3, 4):
             await engine._guard("submit", call["command_id"], call["run_id"], call["request"])
         if value["runtime_manifest"].get("binding_protocol") == 23:
             current = await _proof(
@@ -823,7 +824,7 @@ def _resource_request(runtime, leaf, resource, requests):
 
 
 async def _deployment_sealed(runtime, client, original, namespace):
-    if original["manifest"].get("deployment_admission_protocol", {}).get("version") != 3:
+    if original["manifest"].get("deployment_admission_protocol", {}).get("version") not in (3, 4):
         return False
     from .temporal_deployment_coding_bridge import sealed
 

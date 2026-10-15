@@ -6,7 +6,9 @@
 
 实际 SDK 证据分版本保留：v4 默认 60 秒的九种既有普通编排 9 passed、专用 3 秒超时恢复 1 passed、容量场景 1 passed；v6 最小审批／重启链路 2 passed／40.67 秒，全新 Runtime／Client 恢复已 seal 未退休原根及退休回复丢失 1 passed／27.23 秒。v6 债务两项同次 2 passed／84.06 秒、零失败／错误／跳过：每项两次 Turn／物理写入，unknown 及 ACK 债务期间保持 busy／根占位，原实际停止与 ACK 后才退休／发布；owned 关闭未完成时保留 receiver 与资源，按既有契约各两次关闭后排空并关闭一次。既往关闭入口、observer 晚回执、1 秒故障夹具和失败 Update ID 重放记录分类保留，不以复验覆盖失败。
 
-回归出处分开登记：前一冻结 `candidate-full` 完整回归为 12083 passed／805 skipped；v5 受影响 Temporal 为 3175 passed／571 skipped；v6 release 相关 24 模块为 438 passed／90 skipped。这些结果不相加，不宣称当前全量通过，跳过不算实际验收。S1 普通 Session 功能子集关闭，S2 未实施，Temporal＋PG 集成、P3-2／第三阶段尚未关闭，P3-3／4／5／A 不变。接口与剩余门槛见[固定 Session 计划](superpowers/plans/2026-10-15-temporal-deployment-sessions.md)。
+回归出处分开登记：前一冻结 `candidate-full` 完整回归为 12083 passed／805 skipped；v5 受影响 Temporal 为 3175 passed／571 skipped；v6 release 相关 24 模块为 438 passed／90 skipped。这些结果不相加，不宣称当前全量通过，跳过不算实际验收。S1 普通 Session 功能子集关闭，S2 已实现、实际 SDK 门槛仍待通过，Temporal＋PG 集成、P3-2／第三阶段尚未关闭，P3-3／4／5／A 不变。接口与剩余门槛见[固定 Session 计划](superpowers/plans/2026-10-15-temporal-deployment-sessions.md)。
+
+当前 S2 开发 checkpoint：已将既有 native6／binding22、composition7／binding23 接入显式 publication4／Registry4 Session，保留原 Coding 准入索引、真实 SDK Session parent 与旁置 origin；关闭继续按物理 Coding → Session 排空 → 原调用与退休 → Worker 退出。SDK／JSON／TOML 默认选择保持。首轮冻结源码 Temporal 回归 3226 passed／584 skipped；实际安装检查发现并修复沙箱、重复校验、Coding4 分流和 Advance fence 格式问题。v5 首个真实 Agent 两 Turn 通过，589项安装相关回归通过／241配置跳过；其余矩阵两个首项分别暴露顺序 Coding 超时和动态 Parent 子调用身份校验问题，后续十项未运行。已定向修复完整 Session origin 的子调用校验，并将 Coding4 首批四项独立读取并发；全部七项 fresh 事实、最终原 epoch 校验和原期限保持。v6 已冻结，受影响回归3313通过／589配置跳过，首个安装Agent两Turn通过（184.12秒）；该候选其余矩阵首两项仍失败，后续十项未运行；未知效果及资源保留。隔离计时复现确认一例原Runner60秒预算耗尽；v7仅减少同步selector的重复完整复制，安装相关155项通过，原失败sequence两Turn／四次业务写通过（306.23秒）。其余十二项及故障门槛仍待通过，不提高原期限或缓存动态事实。已经补齐对应激活、相邻校验和只读清单校验回归，并准备原恢复／ACK／CONTROL 进程死亡验收；未执行的用例不能计为验收。详细证据与最终结果见[本批记录](../architecture/reviews/2026-10-15-temporal-deployment-sessions.md)。
 
 以下 Dev120 段落描述已提交基线及其当时边界；不覆盖上述 S1 checkpoint 的有限验证结果。
 

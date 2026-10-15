@@ -59,8 +59,12 @@ class TemporalParentWorkflow(TemporalRunWorkflow):
         )
         self.wake_revision = 0
         self._check_session_parent(info)
-        self._check_composition_parent(info)
-        self._initialize_deployment(accepted, info)
+        if self.state.manifest.get("deployment_admission_protocol", {}).get("version") == 4:
+            self._initialize_deployment(accepted, info)
+            self._check_composition_parent(info)
+        else:
+            self._check_composition_parent(info)
+            self._initialize_deployment(accepted, info)
 
     async def _activity(self, name, value, activity_timeout):
         if deployment_selected(self.state.manifest):

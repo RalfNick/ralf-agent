@@ -32,7 +32,15 @@ COMPOSITION_FIELDS = (
 
 def selected(manifest):
     value = manifest.get("deployment_admission_protocol") if type(manifest) is dict else None
-    return type(value) is dict and type(value.get("version")) is int and value["version"] == 3
+    return (
+        type(value) is dict
+        and type(value.get("version")) is int
+        and (
+            value["version"] == 3
+            or value["version"] == 4
+            and "coding_execution_protocol" in manifest
+        )
+    )
 
 
 def guard_mutation(state, previous, requested):
@@ -244,9 +252,14 @@ def adopt_call_fence(state, request, attestation):
 
 
 def check_guard_registration(manifest):
-    """Validate the fixed v3 pure callables and their actual native guard aliases."""
+    """Validate selected Coding callables and their actual native guard aliases."""
     value = manifest.get("deployment_admission_protocol") if type(manifest) is dict else None
-    if type(value) is not dict or type(value.get("version")) is not int or value["version"] != 3:
+    if (
+        type(value) is not dict
+        or type(value.get("version")) is not int
+        or value["version"] != 3
+        and not (value["version"] == 4 and "coding_execution_protocol" in manifest)
+    ):
         return
     for name, function, code, defaults, keyword_defaults in _GUARD_FUNCTION_PINS:
         if (

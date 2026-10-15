@@ -130,7 +130,8 @@ class TemporalSessionDeploymentState:
 
     def check_selector(self, request):
         _exact(request, START_SELECTOR_FIELDS)
-        if any(request[name] != self.intent[name] for name in START_SELECTOR_FIELDS):
+        intent = self.intent
+        if any(request[name] != intent[name] for name in START_SELECTOR_FIELDS):
             _reject()
         return True
 
@@ -439,8 +440,17 @@ class TemporalSessionDeploymentState:
             or deployment["admission_receipt"].get("root") != bound
         ):
             _reject()
+        from .temporal_deployment_coding_state import ATTESTATION_FIELDS
+        from .temporal_deployment_coding_state import selected as coding_selected
+        from .temporal_state import TOOL_ACTIVITY
+
+        coding = coding_selected(original["submission"]["manifest"])
         for record in closure["calls"].values():
-            _exact(record, {"identity", "allowed", "stopped", "end_proof"})
+            _exact(
+                record,
+                {"identity", "allowed", "stopped", "end_proof"}
+                | ({"fence_proof"} if coding else set()),
+            )
             _exact(record["identity"], CALL_FIELDS)
             identity = record["identity"]
             if (
@@ -454,6 +464,23 @@ class TemporalSessionDeploymentState:
                 or identity["manifest_digest"] != digest(original["submission"]["manifest"])
             ):
                 _reject()
+            if coding and record["fence_proof"] is not None:
+                fence = record["fence_proof"]
+                _exact(fence, ATTESTATION_FIELDS)
+                if (
+                    type(fence["version"]) is not int
+                    or fence["version"] != 1
+                    or record["allowed"] is not True
+                    or record["stopped"] is not True
+                    or record["end_proof"] != identity
+                    or identity["activity_name"] != TOOL_ACTIVITY
+                    or fence["identity"] != identity
+                    or fence["namespace"] != original["namespace"]
+                    or fence["execution_epoch"] != self.start["execution_epoch"]
+                    or fence["process_present"] is not False
+                    or fence["native_fenced"] is not True
+                ):
+                    _reject()
         seal = closure["seal"]
         _exact(seal, CERTIFICATE_FIELDS)
         if (

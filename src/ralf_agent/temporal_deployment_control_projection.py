@@ -168,6 +168,13 @@ def node_identity_digest(deployment_proof, start, composition_proof=None):
                 "run_id": metadata["lineage"][-1]["parent_execution_epoch"],
             }
         )
+        if not metadata["lineage"] and "session_origin" in metadata:
+            origin = metadata["session_origin"]
+            parent = {
+                "namespace": origin["namespace"]["name"],
+                "workflow_id": origin["coordinator_id"],
+                "run_id": origin["coordinator_execution_epoch"],
+            }
         shadow = SimpleNamespace(
             scope=proof["scope"],
             run_id=proof["run_id"],
@@ -238,7 +245,7 @@ def node_identity_digest(deployment_proof, start, composition_proof=None):
 
 def _child_identity(call):
     from .temporal_coding_composition_state import _link
-    from .temporal_deployment_execution_state import LINK_FIELDS, _root
+    from .temporal_deployment_execution_state import LINK_FIELDS, _root, _session_origin
 
     if type(call) is not dict:
         raise ValidationError("Original child intent requires plain fields")
@@ -252,13 +259,18 @@ def _child_identity(call):
         if call["child_request_digest"] != digest(call["request"]):
             raise DefinitionMismatch("Original child request digest changed")
         metadata = call["deployment_admission"]
-        _exact(metadata, {"version", "root", "lineage"})
-        if type(metadata["version"]) is not int or metadata["version"] != 1:
+        session = type(metadata) is dict and metadata.get("version") == 2
+        _exact(
+            metadata, {"version", "root", "lineage"} | ({"session_origin"} if session else set())
+        )
+        if type(metadata["version"]) is not int or metadata["version"] != (2 if session else 1):
             raise ValidationError("Original child metadata version changed")
         _root(metadata["root"])
         lineage = metadata["lineage"]
         if type(lineage) is not list or not lineage or len(lineage) > 8:
             raise DefinitionMismatch("Original child deployment lineage unavailable")
+        if session:
+            _session_origin(metadata, link["scope"], None, call["request"])
         previous_id, previous_request = (
             metadata["root"]["run_id"],
             metadata["root"]["request_digest"],
@@ -516,6 +528,30 @@ def registry(state, request):
             raise ValidationError("Original Coding close fact changed")
         record = state.submissions[key]
         _exact(record, {"reservation", "submission", "run_receipt", "execution_epoch"})
+        session_origin = None
+        if record["submission"]["manifest"]["deployment_admission_protocol"]["version"] == 4:
+            original = state.deployment_session_root(
+                {
+                    "kind": "deployment_session_root",
+                    "scope": scope,
+                    "admission_policy": state.policy,
+                    "namespace": state.namespace,
+                    "command_id": root["command_id"],
+                    "payload_digest": root["request_digest"],
+                }
+            )
+            _exact(original, set(record) | {"intent", "session_origin"})
+            intent = state._intent(original["intent"], request)
+            session_origin = original["session_origin"]
+            if (
+                any(original[name] != value for name, value in record.items())
+                or session_origin != state._origin(intent)
+                or intent["submission"] != record["submission"]
+                or intent["run_command_id"] != root["command_id"]
+                or intent["run_id"] != root["run_id"]
+                or getattr(state, "deployment_configuration_version", 3) != 4
+            ):
+                raise DefinitionMismatch("Original Session root intent changed")
         reservation = {
             "command_id": root["command_id"],
             "target": root["run_id"],
@@ -543,10 +579,14 @@ def registry(state, request):
                 "admission_policy": state.policy,
                 "namespace": state.namespace,
                 "payload_digest": root["request_digest"],
+                "command_id": root["command_id"],
+                "kind": "submit",
+                "target": root["run_id"],
                 "root_admission": {
-                    "version": 2,
+                    "version": 4 if session_origin is not None else 2,
                     "manifest_digest": root["manifest_digest"],
                     "submission": record["submission"],
+                    **({"session_origin": session_origin} if session_origin is not None else {}),
                 },
             }
         )
@@ -582,7 +622,7 @@ def registry(state, request):
             "version": 1,
             "registry_id": state.registry_id,
             "registry_execution_epoch": state.deployment_registry_execution_epoch,
-            "configuration_version": 3,
+            "configuration_version": getattr(state, "deployment_configuration_version", 3),
             "policy": state.policy,
             "scope": scope,
             "namespace": state.namespace,

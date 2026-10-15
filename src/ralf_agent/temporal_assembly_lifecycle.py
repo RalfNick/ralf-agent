@@ -7,6 +7,7 @@ from functools import wraps
 
 from .errors import CloseIncomplete, DefinitionMismatch, ValidationError
 from .temporal_context_execution import ContextExecutionOwner
+from .temporal_deployment_coding_state import selected as _coding_deployment_selected
 from .types import Scope, digest
 
 
@@ -51,7 +52,7 @@ class WorkerExecutionOwner:
                 )
                 native_stop = (
                     kind == "native-stop"
-                    and manifest.get("deployment_admission_protocol", {}).get("version") == 3
+                    and _coding_deployment_selected(manifest)
                     and activity._Definition.from_callable(function).name == "ralf_coding_stop"
                     and _native_stop_registration(runtime, client, function)
                 )
@@ -585,6 +586,45 @@ class TemporalRuntimeAssembly:
             except (Exception, asyncio.CancelledError):
                 if not self._worker_ready.done():
                     raise
+        if getattr(self._runtime, "coding_execution", False):
+            if (
+                self._runtime.orchestration_release.get("binding_protocol")
+                in (13, 15, 17, 19, 21, 23)
+                or (
+                    self._runtime.orchestration_release.get("binding_protocol") == 22
+                    and _coding_deployment_selected(self._runtime.orchestration_release)
+                )
+            ) and self._client is None:
+                await self._close_unused_composition()
+            else:
+                if _coding_deployment_selected(self._runtime.orchestration_release):
+                    from .temporal_deployment_coding_bridge import close as close_coding
+                elif self._runtime.orchestration_release.get("binding_protocol") in (
+                    13,
+                    15,
+                    17,
+                    19,
+                    21,
+                    23,
+                ):
+                    from .temporal_coding_composition_control import close as close_coding
+                else:
+                    from .temporal_coding_runtime import close as close_coding
+
+                if self._coding_stop_task is None:
+                    close_options = {"client": self._client, "scope": self._scope}
+                    if _coding_deployment_selected(self._runtime.orchestration_release):
+                        close_options["task_queue"] = self._queue
+                    self._coding_stop_task = asyncio.create_task(
+                        close_coding(self._runtime, **close_options)
+                    )
+                    self._coding_stop_task.add_done_callback(_observe)
+                try:
+                    await _bounded_task(self._coding_stop_task, wait_timeout)
+                except BaseException:
+                    if self._coding_stop_task.done():
+                        self._coding_stop_task = None
+                    raise
         if self.release.get("session_deployment_protocol") == 1 and self._client is not None:
             from .temporal_session_deployment_close import close as close_sessions
 
@@ -605,66 +645,11 @@ class TemporalRuntimeAssembly:
                 if self._session_stop_task.done():
                     self._session_stop_task = None
                 raise
-        if getattr(self._runtime, "coding_execution", False):
-            if (
-                self._runtime.orchestration_release.get("binding_protocol")
-                in (13, 15, 17, 19, 21, 23)
-                or (
-                    self._runtime.orchestration_release.get("binding_protocol") == 22
-                    and self._runtime.orchestration_release.get(
-                        "deployment_admission_protocol", {}
-                    ).get("version")
-                    == 3
-                )
-            ) and self._client is None:
-                await self._close_unused_composition()
-            else:
-                if (
-                    self._runtime.orchestration_release.get(
-                        "deployment_admission_protocol", {}
-                    ).get("version")
-                    == 3
-                ):
-                    from .temporal_deployment_coding_bridge import close as close_coding
-                elif self._runtime.orchestration_release.get("binding_protocol") in (
-                    13,
-                    15,
-                    17,
-                    19,
-                    21,
-                    23,
-                ):
-                    from .temporal_coding_composition_control import close as close_coding
-                else:
-                    from .temporal_coding_runtime import close as close_coding
-
-                if self._coding_stop_task is None:
-                    close_options = {"client": self._client, "scope": self._scope}
-                    if (
-                        self._runtime.orchestration_release.get(
-                            "deployment_admission_protocol", {}
-                        ).get("version")
-                        == 3
-                    ):
-                        close_options["task_queue"] = self._queue
-                    self._coding_stop_task = asyncio.create_task(
-                        close_coding(self._runtime, **close_options)
-                    )
-                    self._coding_stop_task.add_done_callback(_observe)
-                try:
-                    await _bounded_task(self._coding_stop_task, wait_timeout)
-                except BaseException:
-                    if self._coding_stop_task.done():
-                        self._coding_stop_task = None
-                    raise
         # Keep the actual-call tracker and the original poller open while
         # original Histories finish their release/Registry verification chain.
         if not await self._calls.wait(wait_timeout=wait_timeout):
             raise CloseIncomplete("Original Worker calls remain owned")
-        hosted_deployment = (
-            self._worker is not None
-            and self.release.get("deployment_admission_protocol", {}).get("version") == 3
-        )
+        hosted_deployment = self._worker is not None and _coding_deployment_selected(self.release)
         if hosted_deployment:
             from .temporal_deployment_release import check_owner
 

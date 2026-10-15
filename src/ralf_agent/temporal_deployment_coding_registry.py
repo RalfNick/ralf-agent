@@ -26,13 +26,19 @@ class CodingDeploymentAdmissionState(PublicDeploymentAdmissionState):
         if key in self.commands:
             return super().reserve(request)
         envelope = self._submission(request)
-        selected = envelope["manifest"]["deployment_admission_protocol"]["version"] == 3
-        if selected and digest([scope, digest(envelope["manifest"])]) in self.coding_closed:
-            raise DefinitionMismatch("Original scoped Coding admission has been closed")
+        selected = self._coding_open(scope, envelope["manifest"])
         result = super().reserve(request)
         if selected:
             self.coding_index[key] = {"close_requested": False}
         return result
+
+    def _coding_open(self, scope, manifest):
+        from .temporal_deployment_coding_state import selected
+
+        coding = selected(manifest)
+        if coding and digest([scope, digest(manifest)]) in self.coding_closed:
+            raise DefinitionMismatch("Original scoped Coding admission has been closed")
+        return coding
 
     def _candidate(self, key):
         root = self.roots.get(key) or self.retirements.get(key, {}).get("root")

@@ -38,7 +38,11 @@ def _selected(manifest):
     return (
         type(protocol) is dict
         and type(protocol.get("version")) is int
-        and protocol["version"] == 3
+        and (
+            protocol["version"] == 3
+            or protocol["version"] == 4
+            and "coding_execution_protocol" in manifest
+        )
         and manifest.get("binding_protocol") in (22, 23)
         and "coding_execution_protocol" in manifest
     )
@@ -80,6 +84,7 @@ class _Registry:
         self.handle = client.get_workflow_handle(self.id)
         self.namespace = None
         self.execution_epoch = None
+        self.configuration_version = None
 
     async def _authority(self):
         from temporalio.client import WorkflowExecutionStatus
@@ -118,13 +123,21 @@ class _Registry:
                 "namespace": namespace,
             },
         )
-        if configuration != {
-            "version": 3,
-            "registry_id": self.id,
-            "policy": self.policy,
-            "namespace": namespace,
-        }:
+        allowed = (3, 4) if self.manifest["deployment_admission_protocol"]["version"] == 3 else (4,)
+        if (
+            type(configuration) is not dict
+            or type(configuration.get("version")) is not int
+            or configuration["version"] not in allowed
+            or configuration
+            != {
+                "version": configuration["version"],
+                "registry_id": self.id,
+                "policy": self.policy,
+                "namespace": namespace,
+            }
+        ):
             _reject()
+        self.configuration_version = configuration["version"]
         await _namespace(self.client, namespace)
         self.namespace = detached(namespace)
         return namespace
@@ -147,7 +160,7 @@ class _Registry:
                     COMMAND_REGISTRY_NAME,
                     {
                         "deployment_admission": {
-                            "version": 3,
+                            "version": self.manifest["deployment_admission_protocol"]["version"],
                             "policy": self.policy,
                             "namespace": self.namespace,
                         }
@@ -232,6 +245,9 @@ class _ReadOnlyHandle:
 
     async def describe(self):
         return await self.handle.describe()
+
+    def fetch_history_events(self, *args, **kwargs):
+        return self.handle.fetch_history_events(*args, **kwargs)
 
     async def execute_update(self, *args, **kwargs):
         _reject()

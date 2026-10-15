@@ -991,3 +991,82 @@ def test_generated_peer_records_only_an_actual_target_kill_failure(tmp_path, fau
         assert result.returncode == 0 and result.stdout == target + "\n" and result.stderr == ""
         assert state["Running"] is False
         assert not receipt.exists()
+
+
+@pytest.mark.parametrize("body_fails,close_fails", [(True, True), (True, False), (False, True)])
+def test_worker_context_preserves_body_failure_and_original_close_failure(
+    tmp_path, monkeypatch, body_fails, close_fails
+):
+    events = []
+    primary = OSError("private body failure must not enter static diagnostics")
+    closing = CloseIncomplete({"original_native_owner": "not_stopped"})
+
+    class Worker:
+        async def __aenter__(self):
+            events.append("worker-start")
+            return self
+
+        async def __aexit__(self, *args):
+            events.append("worker-stop")
+
+    class Assembly:
+        async def aclose(self, *, wait_timeout):
+            assert wait_timeout == 60
+            events.append("assembly-close")
+            if close_fails:
+                raise closing
+
+    class Admin:
+        async def execute(self, query, parameters):
+            assert query == "SELECT to_regclass(%s)"
+            assert parameters == ("original.ralf_test_ack_gate",)
+            events.append("original-gate-query")
+            return self
+
+        async def fetchone(self):
+            return (None,)
+
+    system = service.CodingSystem.__new__(service.CodingSystem)
+    system.directory, system.schema = tmp_path, "original"
+    system.client, system.queue, system.runtime, system.release = object(), "queue", object(), {}
+    system.admin, system.assembly, system.workers = Admin(), Assembly(), []
+    worker = Worker()
+    monkeypatch.setattr(service, "build_temporal_worker", lambda *args, **kwargs: worker)
+    (tmp_path / "block-original").touch()
+    (tmp_path / "fail-kill").touch()
+
+    async def scenario():
+        async with system.worker():
+            events.append("body")
+            if body_fails:
+                raise primary
+
+    if body_fails and close_fails:
+        with pytest.raises(BaseExceptionGroup) as error:
+            asyncio.run(scenario())
+        assert error.value.exceptions == (primary, closing)
+    else:
+        expected = primary if body_fails else closing
+        with pytest.raises(type(expected)) as error:
+            asyncio.run(scenario())
+        assert error.value is expected
+    assert events == [
+        "worker-start",
+        "body",
+        "original-gate-query",
+        "assembly-close",
+        "worker-stop",
+    ]
+    assert (tmp_path / "release-turns").exists()
+    assert not (tmp_path / "block-original").exists() and not (tmp_path / "fail-kill").exists()
+    assert system.workers == [worker]
+    if body_fails:
+        path = tmp_path / "initial-body-error.json"
+        diagnostic = json.loads(path.read_text())
+        assert diagnostic["error"]["type"] == "OSError"
+        assert diagnostic["frames"][-1]["function"] == "scenario"
+        assert "private body failure" not in path.read_text()
+        assert path.stat().st_mode & 0o777 == 0o600
+    if close_fails:
+        diagnostic = json.loads((tmp_path / "initial-close-error.json").read_text())
+        assert diagnostic["type"] == "CloseIncomplete" and diagnostic["report"] == closing.report

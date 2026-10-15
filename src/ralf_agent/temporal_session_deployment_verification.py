@@ -88,7 +88,9 @@ class SessionControlValidation:
         self._source_function = _binding(source_bindings)
         self._check()
 
-    def _check(self):
+    def _check(self, *, full=True):
+        if type(full) is not bool:
+            _reject()
         runtime, client, service, converter = self._resources
         if (
             self.runtime is not runtime
@@ -137,16 +139,17 @@ class SessionControlValidation:
                 and tuple(getattr(live, k, None) for k in _ACTIVITY_FIELDS) != self._claim
             ):
                 _reject()
-        runtime.validate_release(i["binding"]["manifest"])
+        if full:
+            runtime.validate_release(i["binding"]["manifest"])
 
     async def _namespace(self):
         from temporalio.api.workflowservice.v1 import DescribeNamespaceRequest
 
-        self._check()
+        self._check(full=False)
         result = await self.client.workflow_service.describe_namespace(
             DescribeNamespaceRequest(namespace=self.intent["namespace"]["name"])
         )
-        self._check()
+        self._check(full=False)
         if result.namespace_info.id != self.intent["namespace"]["id"]:
             _reject()
 
@@ -166,12 +169,12 @@ class SessionControlValidation:
 
     async def _start(self, handle, description):
         events = handle.fetch_history_events(page_size=1)
-        self._check()
+        self._check(full=False)
         try:
             first = await anext(events)
         except StopAsyncIteration:
             _reject()
-        self._check()
+        self._check(full=False)
         if first.event_id != 1 or not first.HasField("workflow_execution_started_event_attributes"):
             _reject()
         start = first.workflow_execution_started_event_attributes
@@ -187,7 +190,7 @@ class SessionControlValidation:
         ):
             _reject()
         accepted = await self.client.data_converter.decode(start.input.payloads)
-        self._check()
+        self._check(full=False)
         if len(accepted) != 1 or type(accepted[0]) is not dict:
             _reject()
         accepted, i = accepted[0], self.intent
@@ -216,25 +219,72 @@ class SessionControlValidation:
         }
 
     async def validate(self):
-        self._check()
-        await self._namespace()
+        # The SDK-only read set retains original identity/port pins at every
+        # await; full component inventory validation brackets the complete set.
         self._check()
         i, client = self.intent, self.client
         current = client.get_workflow_handle(i["coordinator_id"])
-        description = await current.describe()
-        self._check()
-        self._description(description)
         handle = client.get_workflow_handle(
             i["coordinator_id"], run_id=i["coordinator_execution_epoch"]
         )
+        manifest = i["binding"]["manifest"]
+        protocol = manifest.get("deployment_admission_protocol")
+        coding = (
+            type(protocol) is dict
+            and type(protocol.get("version")) is int
+            and protocol["version"] == 4
+            and "coding_execution_protocol" in manifest
+        )
+        if coding:
+            import asyncio
+
+            async def read(operation, *args):
+                self._check(full=False)
+                try:
+                    return await operation(*args)
+                finally:
+                    self._check(full=False)
+
+            # All four facts are independent reads of the original coordinator.
+            # A failed/cancelled reader cannot leave another SDK read unobserved.
+            readers = asyncio.gather(
+                self._namespace(),
+                read(current.describe),
+                read(handle.query, "view", self.selector("deployment_session_intent")),
+                read(handle.query, "view", self.selector("deployment_session_command")),
+                return_exceptions=True,
+            )
+            try:
+                results = await asyncio.shield(readers)
+            except asyncio.CancelledError:
+                while not readers.done():
+                    try:
+                        await asyncio.shield(readers)
+                    except asyncio.CancelledError:
+                        pass
+                self._check(full=False)
+                raise
+            self._check(full=False)
+            for result in results:
+                if isinstance(result, BaseException):
+                    raise result
+            _, description, intent, command = results
+        else:
+            await self._namespace()
+            self._check(full=False)
+            description = await current.describe()
+            self._check(full=False)
+        self._description(description)
         await self._start(handle, description)
-        self._check()
-        intent = await handle.query("view", self.selector("deployment_session_intent"))
-        self._check()
+        self._check(full=False)
+        if not coding:
+            intent = await handle.query("view", self.selector("deployment_session_intent"))
+            self._check(full=False)
         if intent != i:
             _reject()
-        command = await handle.query("view", self.selector("deployment_session_command"))
-        self._check()
+        if not coding:
+            command = await handle.query("view", self.selector("deployment_session_command"))
+            self._check(full=False)
         if type(command) is not dict or set(command) != {"receipt", "session_ref"}:
             _reject()
         receipt = command["receipt"]
@@ -264,7 +314,7 @@ class SessionControlValidation:
             _reject()
         # A reset while an epoch-pinned Query succeeds must still refuse.
         description = await client.get_workflow_handle(i["coordinator_id"]).describe()
-        self._check()
+        self._check(full=False)
         self._description(description)
         await self._namespace()
         self._check()

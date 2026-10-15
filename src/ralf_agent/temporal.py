@@ -673,7 +673,9 @@ def build_temporal_worker(
                 for function in native_activities
                 if activity._Definition.from_callable(function).name == ACK_ACTIVITY
             )
-        if manifest["deployment_admission_protocol"]["version"] == 3:
+        from .temporal_deployment_coding_state import selected as coding_deployment_selected
+
+        if coding_deployment_selected(manifest):
             from temporalio import activity
 
             from .temporal_coding_state import CODING_STOP_ACTIVITY
@@ -691,7 +693,8 @@ def build_temporal_worker(
             )
             # This exact factory-produced control retains both universal SDK
             # admission and original actual-call/end-ACK wrappers.
-            maintenance.append((parent_activities[0], "control"))
+            if manifest.get("session_deployment_protocol") != 1:
+                maintenance.append((parent_activities[0], "control"))
         originals = activities
         activities = wrap_activities(runtime, client, originals)
         from .temporal_activities import _register_evidence_wrapper

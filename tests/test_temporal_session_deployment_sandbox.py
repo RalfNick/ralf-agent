@@ -80,3 +80,79 @@ def test_original_session_lifecycle_has_no_late_sandbox_import(workflow_module):
         finally:
             context.in_activation = False
             context.is_runtime = False
+
+
+@pytest.mark.parametrize(
+    "composition", [False, True], ids=["native6-binding22", "composition7-binding23"]
+)
+def test_coding_session_activation_has_no_late_pure_validation_import(monkeypatch, composition):
+    from types import SimpleNamespace
+
+    from temporalio import workflow
+    from temporalio.worker.workflow_sandbox._importer import Importer
+    from temporalio.worker.workflow_sandbox._restrictions import RestrictionContext
+
+    from ralf_agent.temporal import _workflow_runner
+    from tests.test_temporal_deployment_session_registry import state as registry_state
+    from tests.test_temporal_session_deployment_coding_registry import coding_intent_request
+
+    intent, _ = coding_intent_request(registry_state(), composition=composition)
+    key = intent["session_ref"]["key"]
+    binding = copy.deepcopy(intent["binding"])
+    accepted = {
+        "scope": intent["scope"],
+        "namespace_id": intent["namespace"]["id"],
+        "session_namespace": key["namespace"],
+        "session_id": key["session_id"],
+        "command_id": "open",
+        **binding,
+    }
+    actual = SimpleNamespace(
+        namespace=intent["namespace"]["name"],
+        workflow_id=intent["coordinator_id"],
+        run_id=intent["coordinator_execution_epoch"],
+        first_execution_run_id=intent["coordinator_execution_epoch"],
+        original_execution_run_id=intent["coordinator_execution_epoch"],
+        parent=None,
+        task_queue=binding["task_queue"],
+    )
+    monkeypatch.setattr(workflow, "info", lambda: actual)
+    module_name = "ralf_agent.temporal_session_workflow"
+    importlib.import_module(module_name)
+    context = RestrictionContext()
+    importer = Importer(_workflow_runner().restrictions, context)
+    with importer.applied():
+        product = importlib.import_module(module_name)
+        context.is_runtime = True
+        context.in_activation = True
+        try:
+            with warnings.catch_warnings():
+                warnings.simplefilter("error", UserWarning)
+                instance = product.TemporalSessionWorkflow(accepted)
+                receipt = instance.state.command(
+                    {
+                        "kind": "submit",
+                        "scope": intent["scope"],
+                        "command_id": intent["session_command_id"],
+                        "session_ref": instance.state.ref.to_dict(),
+                        "input": intent["submission"]["request"]["input"],
+                        "budget": intent["submission"]["request"]["budget"],
+                    }
+                )
+                assert receipt["outcome"]["turn"]["turn_seq"] == 1
+                original = instance.state.deployment_turn().intent
+                assert original["binding"]["manifest"] == binding["manifest"]
+                assert original["submission"]["manifest"]["binding_protocol"] == (
+                    23 if composition else 22
+                )
+                assert (
+                    original["submission"]["manifest"]["coding_execution_protocol"]["version"] == 6
+                )
+                if composition:
+                    assert (
+                        original["submission"]["manifest"]["coding_composition_protocol"]["version"]
+                        == 7
+                    )
+        finally:
+            context.in_activation = False
+            context.is_runtime = False

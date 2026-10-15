@@ -290,7 +290,22 @@ def validate_child_link(
         raise DefinitionMismatch("Replacement SDK execution cannot own original Coding History")
     state.composition_original_epoch = original_epoch
     if "coding_parent" not in state.request:
-        if parent_run_id is not None:
+        if state.manifest.get("deployment_admission_protocol", {}).get("version") == 4:
+            from .temporal_deployment_execution_state import _require as require_deployment
+            from .temporal_deployment_execution_state import _session_origin
+
+            require_deployment(state)
+            metadata = state.deployment_admission
+            origin = _session_origin(metadata, state.scope, state.manifest, state.request)
+            if metadata["lineage"] or (
+                namespace != origin["namespace"]["name"]
+                or parent_namespace != namespace
+                or parent_run_id != origin["coordinator_id"]
+                or parent_epoch != origin["coordinator_execution_epoch"]
+            ):
+                raise DefinitionMismatch("SDK parent differs from original Session coordinator")
+            state.composition_namespace = copy.deepcopy(origin["namespace"])
+        elif parent_run_id is not None:
             raise DefinitionMismatch("Unlinked Coding execution cannot be a child")
         if recursive_enabled(state.manifest) and getattr(state, "depth", 0) != 0:
             raise DefinitionMismatch("Original Coding root SDK depth changed")

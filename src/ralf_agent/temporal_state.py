@@ -1684,6 +1684,8 @@ class TemporalCommandRegistryState:
                 self.deployment = DeploymentAdmissionState(
                     admission_policy, namespace, capacity=capacity
                 )
+            if admission_protocol in (3, 4):
+                self.deployment.deployment_configuration_version = admission_protocol
             self.scope = None
             return
         self.scope, self.capacity, self.identities = detached(scope), capacity, {}

@@ -1,6 +1,6 @@
 # 第三阶段支持矩阵与收口门槛
 
-日期：2026-10-15。第二阶段在本地提交 `695175e`／`0.1.0.dev113` 冻结；第三阶段按本矩阵推进 R21–R24 服务化与治理。dev120 编排基线为 `c52d54c`，S1 普通 Session 已在 `4fdd5ae` 本地提交，当前收尾候选为 v6。第一阶段 dev99 的业务质量、第二阶段的所选编排与执行证据继续按原范围引用。S1 普通 Session 功能子集已完成验收，v6 安装最小审批／重启、冷恢复与债务复验通过；S2 未实施，Temporal＋PG 集成、P3-2 与第三阶段尚未关闭，下面的目标不能当成交付清单。
+日期：2026-10-15。第二阶段在本地提交 `695175e`／`0.1.0.dev113` 冻结；第三阶段按本矩阵推进 R21–R24 服务化与治理。dev120 编排基线为 `c52d54c`，S1 普通 Session 已在 `4fdd5ae` 本地提交，当前收尾候选为 v6。第一阶段 dev99 的业务质量、第二阶段的所选编排与执行证据继续按原范围引用。S1 普通 Session 功能子集已完成验收，v6 安装最小审批／重启、冷恢复与债务复验通过；S2 已实现、首个真实 Agent 两 Turn 通过，完整集成仍待，Temporal＋PG 集成、P3-2 与第三阶段尚未关闭，下面的目标不能当成交付清单。
 
 ## 收尾范围冻结（2026-10-15 用户指令）
 
@@ -13,7 +13,7 @@
 | ID | 本阶段仅需关闭的交付门槛 | 冻结时状态／结束条件 |
 | --- | --- | --- |
 | P3-1 | 已有 Local／Temporal Run 与审批期限 | dev114／115 已交付；复用原证据，不重开功能建设 |
-| P3-2 | 部署容量准入的 Session 收尾 | **进行中，未完整验收。** Local、普通 Temporal 与所选 Coding 部署沿 dev116–120 复用；S1 普通 Session 功能子集已验收；S2 第二阶段已选 Coding Session 尚未实施，Temporal＋PG 集成仍待。纯状态／模拟传输测试与跳过项不算实际 SDK 验收。完成原 Turn／命令去重、重启、取消、实际停止、未知义务、容量安全释放、安装及约定兼容后关闭；不增加会话种类、编排拓扑或新调度器 |
+| P3-2 | 部署容量准入的 Session 收尾 | **进行中，未完整验收。** Local、普通 Temporal 与所选 Coding 部署沿 dev116–120 复用；S1 普通 Session 功能子集已验收；S2 第二阶段已选 Coding Session 已实现、实际 SDK 门槛仍待通过，Temporal＋PG 集成仍待。纯状态／模拟传输测试与跳过项不算实际 SDK 验收。完成原 Turn／命令去重、重启、取消、实际停止、未知义务、容量安全释放、安装及约定兼容后关闭；不增加会话种类、编排拓扑或新调度器 |
 | P3-3 | 最小服务控制与持久观察 | 复用原 SDK／A2A，交付提交、查询、审批、取消、核验／恢复及 HTTP 事件游标续接；断连不取消业务，背压有界。累计命令容量耗尽不得令已有任务失去必要取消／恢复入口；不建设 Web 控制台或新传输协议 |
 | P3-4 | 最小身份、权限、审计与保留 | 可信宿主认证结果映射调用者／Scope，复用资源授权交集；越权控制／事件读取拒绝、审计脱敏、完成数据清理保护活动树、原效果、幂等及恢复证据。复用既有数据后端，不开发 OIDC 联邦或通用权限平台 |
 | P3-5 | 所选部署的备份恢复与升级责任 | 安装后验证既有所选 SQLite／Temporal／PG 数据、原版本 Worker、业务身份和效果证据的备份／恢复；升级失败可诊断并有可操作回退路径。活动及 unknown 义务须安全保留，不能以复制文件或清理占位冒充恢复；不开发通用迁移框架或跨宿主灾备 |
@@ -60,7 +60,7 @@
 
 **当前工作区 S1 checkpoint（普通 Session 功能子集已验收，最终 v6）：** closing 只开放原 factory evidence ACK 的维护通道；机械 release 每次使用 fresh SDK Update ID，原 root／certificate／payload 与 Registry 退休幂等保持。v6 源码、wheel 与安装 424 产品文件一致；默认完整 publication 等值及原／续接 History 离线 replay 通过，新增 Provider 调用为零，live continuation 沿 v4 原证据引用。实际 SDK 按版本分记：v4 默认 60 秒普通编排 9 passed、专用 3 秒恢复 1 passed、容量 1 passed；v6 最小审批／重启 2 passed／40.67 秒、全新 Runtime／Client 的已 seal 原根及退休回复丢失恢复 1 passed／27.23 秒，债务两项同次 2 passed／84.06 秒、零失败／错误／跳过。债务每项两次 Turn／物理写入，unknown／ACK 未清时保持 busy 与占位，实际停止和原 ACK 后才退休／发布；owned 关闭未完成时 receiver 与资源保留，按既有契约各两次关闭后排空并关闭一次。此前失败按原候选／夹具分类保留。
 
-回归记录互不相加：旧 `candidate-full` 完整回归 12083 passed／805 skipped；v5 受影响 Temporal 3175 passed／571 skipped；v6 release 相关 24 模块 438 passed／90 skipped，均不冒称当前全量。S2 未实施；Temporal＋PG 集成、P3-2、第三阶段与完整 R01–R26 未关闭，P3-3／4／5／A 保持原状态。以下追加记录均为 dev120 提交前各候选版本历史，其中“当前未发布／待修”指当时状态，不覆盖上述当前 checkpoint。
+回归记录互不相加：旧 `candidate-full` 完整回归 12083 passed／805 skipped；v5 受影响 Temporal 3175 passed／571 skipped；v6 release 相关 24 模块 438 passed／90 skipped，均不冒称当前全量。S2 已实现、实际 SDK 门槛仍待通过；Temporal＋PG 集成、P3-2、第三阶段与完整 R01–R26 未关闭，P3-3／4／5／A 保持原状态。以下追加记录均为 dev120 提交前各候选版本历史，其中“当前未发布／待修”指当时状态，不覆盖上述当前 checkpoint。
 
 dev119 已封存根的退休恢复仍由原 History 推进：恢复 Registry 通路后，公共 `drive` 通过精确重复 seal Update 只唤醒原释放重试，不复活业务或直接替 Registry 释放。该 P2 的实际 RED→目标 GREEN 已保留，并纳入最终冻结公共矩阵。异步 Parent 取消必须等实际后代停止；已完成 Action 的延后 effect ACK 沿原 `drive` 恢复，不能用业务终态或 `reconcile(query=True)` 代替物理闭合／ACK。
 

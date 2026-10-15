@@ -15,7 +15,6 @@ from .errors import (
 from .session_types import SessionKey, SessionRef, integer
 from .temporal_deployment_admission import (
     _REQUEST_FIELDS,
-    DeploymentAdmissionState,
     _detached,
     _exact,
     _sha,
@@ -201,6 +200,7 @@ class SessionDeploymentAdmissionState(CodingDeploymentAdmissionState):
         return _detached(receipt)
 
     def _session_open(self, scope, manifest):
+        self._coding_open(scope, manifest)
         if digest([scope, digest(manifest)]) in self.session_closed:
             raise DefinitionMismatch("Original scoped Session deployment admission has been closed")
 
@@ -403,9 +403,8 @@ class SessionDeploymentAdmissionState(CodingDeploymentAdmissionState):
             not public_selected(manifest)
             or manifest["deployment_admission_protocol"]["version"] != 4
             or manifest["deployment_admission_protocol"]["policy"] != self.policy
-            or "coding_execution_protocol" in manifest
         ):
-            raise DefinitionMismatch("Original Session root requires ordinary deployment4")
+            raise DefinitionMismatch("Original Session root requires deployment4")
 
     def prepare_session_root(self, request, intent):
         _exact(request, _REQUEST_FIELDS | {"root_admission"})
@@ -450,23 +449,38 @@ class SessionDeploymentAdmissionState(CodingDeploymentAdmissionState):
         expected = {name: prepared[name] for name in ("intent", "session_origin")}
         if not _equal(verification, expected):
             raise DefinitionMismatch("Original SDK Session intent verification changed")
-        legacy = _detached(request)
-        legacy["root_admission"] = {
-            "version": 1,
-            "manifest_digest": request["root_admission"]["manifest_digest"],
-        }
-        receipt = DeploymentAdmissionState.reserve(self, legacy)
+        accepted = CodingDeploymentAdmissionState.reserve(self, request)
+        receipt = {name: item for name, item in accepted.items() if name != "submission"}
         key = digest([request["scope"], request["command_id"]])
-        self.submissions[key] = _detached(
-            {
-                "reservation": receipt,
-                "submission": prepared["intent"]["submission"],
-                "run_receipt": None,
-                "execution_epoch": None,
-            }
-        )
         self.session_roots[key] = _detached(expected)
         return _detached({**receipt, "submission": self.submissions[key]["submission"]})
+
+    def _candidate(self, key):
+        candidate = super()._candidate(key)
+        record = self.submissions[key]
+        if record["submission"]["manifest"]["deployment_admission_protocol"]["version"] == 4:
+            accepted = self.session_roots.get(key)
+            if accepted is None:
+                raise DefinitionMismatch("Original Coding Session intent is unavailable")
+            root = self.roots.get(key) or self.retirements[key]["root"]
+            intent = self._intent(
+                accepted["intent"],
+                {
+                    "scope": root["scope"],
+                    "admission_policy": self.policy,
+                    "namespace": self.namespace,
+                },
+            )
+            if (
+                not _equal(accepted["session_origin"], self._origin(intent))
+                or not _equal(record["submission"], intent["submission"])
+                or root["command_id"] != intent["run_command_id"]
+                or root["run_id"] != intent["run_id"]
+                or root["request_digest"] != digest(intent["submission"]["request"])
+                or root["manifest_digest"] != digest(intent["submission"]["manifest"])
+            ):
+                raise DefinitionMismatch("Original Coding Session admission changed")
+        return candidate
 
     def deployment_session_root(self, request):
         _exact(request, _LOOKUP)

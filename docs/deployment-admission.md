@@ -2,7 +2,7 @@
 
 日期：2026-10-15。Local／SQLite 已有持久部署准入，沿原命令、Run、预算和 Coordinator 管理占用，证据见[Local 验收登记](../architecture/reviews/2026-10-14-local-admission.md)。Temporal 内部 Worker 门禁保留为私有 v1，只持有占位；dev119 已交付普通公共 v2 Engine／Profile、原接受信封恢复及原树校验后安全退休，证据见[公共验收记录](../architecture/reviews/2026-10-15-temporal-deployment-public.md)。dev120已验收所选公共Coding v3，使用同一 Registry 管理根额度，配置与恢复见[Temporal Coding 部署准入](temporal-deployment-coding.md)，恢复与安装证据见[本批验收](../architecture/reviews/2026-10-15-temporal-deployment-coding.md)。dev120 提交基线的 SDK Session coordinator 尚未接入，继续明确拒绝。当前阶段范围见[支持矩阵](phase3-support-matrix.md)，批次 2 未关闭。
 
-当前工作区 pub4／Registry4 已接通普通 SDK Session，作为显式 preview 提供；省略 `deployment_sessions` 保持既有发布与拒绝边界。显式配置如下：
+当前工作区 pub4／Registry4 已接通普通 SDK Session，S1 普通子集已验收；已接通既定 Coding Session，S2 实际集成验收仍进行中，不代表完整支持矩阵已完成。省略 `deployment_sessions` 保持既有发布与拒绝边界。普通显式配置如下：
 
 ```python
 runtime = TemporalRuntime(
@@ -16,6 +16,8 @@ runtime = TemporalRuntime(
 # {"enable_sessions": True, "deployment_sessions": True}
 # 仍须由 Builder 宿主参数或 Profile 提供原部署准入策略。
 ```
+
+已选 Coding Agent 在同一配置上显式开启原 `coding_execution=True`；既定 Coding 编排还需原 `coding_composition=True`，并沿原 Runner、环境和工具配置装配。native6／binding22 与 composition7／binding23 形状不变，SDK／JSON／TOML 选择一致；这些开关不提供新的模型或环境默认值。Coding Session 的恢复、调用结束、物理 stop 与 ACK 继续使用原执行权威，不能仅因业务终态释放容量。S2 的逐快照失败、修复和未通过门槛见[集成验收记录](../architecture/reviews/2026-10-15-temporal-deployment-sessions.md)。
 
 该选择使用同地址 Registry4；已有不兼容 Registry 不会自动升级或换地址规避容量。Session coordinator 不占业务根额度，每个 Turn 的原业务 Run 占用一个根槽位；只有正向退休并完成原观察回执后才发布会话和接受下一 Turn。相同命令保持首次定义、队列和回执，修改别名不会替换原 Run。owned Assembly 关闭时保留原 Worker 接收允许的观察与收尾；无法确认的占用继续报告 `CloseIncomplete`，须保留原资源并按原身份恢复。
 
