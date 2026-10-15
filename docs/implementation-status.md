@@ -1,6 +1,6 @@
 # Implementation status — 0.1.0.dev120
 
-2026-10-16 当前唯一阻塞仍为 P3-2/S2 原图两 Turn 的 360 秒验收。末段完整入口已定位：Context／Model 在实际 call-start 正 ACK 前分别已耗 1.917／3.252 秒；深度一的入口重复三组 Session 七事实，不能用离线一次 Runtime 校验解释整段耗时。当前限定候选只收集 actual Model／Context 的只读入口，保留全部原 Run／Registry／Start、父刷新、held-root 及末独立 raw Session 七事实；缺初始祖先 pin 丢弃后走原完整路径，原生工具权限、后续 tree guards 和 call ledger 不变。候选已实现并经独立审查，新增31项恢复／漂移／回退检查；全部269个Temporal模块3738 passed／589配置依赖skipped，独立安装13模块270 passed、默认完整canonical及保存History离线兼容通过。425产品／860测试无漂移；原图真实单项仍1 failed／391.197秒，四Tool、效果采纳与物理停止成功，第二轮最终Model成功后join登记与整体期限关闭交错而未启动。两root退休、两Turn完整ACK、owned关闭及安全清理通过，仍不满足原两Turn业务门槛。其余十二正常／五故障不解锁，P3-3／4／5／A 不扩展。此前约 5% 的文本扫描候选已撤回，不再为零散微优化重跑服务。
+2026-10-16 P3-2/S2 仍未完成：本批 actual Model／Context 的 Coding4／binding23 根命令定向查询已实现，保留完整 fresh ancestry、原 Registry 握手与实时准入，缺失／不匹配提示回退。新增21项通过，独立审查无P1／P2；全部270个Temporal模块3759 passed／589配置依赖skipped，独立安装14模块291 passed，默认完整canonical及保存History离线兼容通过，425产品／861测试无漂移。一次原图原360秒实际验收仍1 failed／390.282秒：四Tool均ok、效果adopted且物理停止；首Turn成功，第二Turn最终为failed／released，未产生完整业务验收结果。两root退休、两Turn完整正ACK、owned关闭与安全清理通过，不能替代业务成功。不据此宣称性能改善，本批不追加复跑或查询级微调；其余十二正常／五故障及P3-3／4／5／A仍待原定门槛。下一批先基于既有证据形成关键路径和传输预算，再决定成组修复；仅本地提交，不推送。
 
 以下为各冻结快照的历史证据；以本段及最新验收记录为当前执行依据。
 

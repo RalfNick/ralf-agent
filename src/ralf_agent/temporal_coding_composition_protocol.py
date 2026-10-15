@@ -206,6 +206,7 @@ def _worker_sources():
                 "_validate_child_intent",
                 "_children",
                 "_ancestry",
+                "_activity_root_command",
                 "_ancestry_admission",
                 "control",
                 "_initialize_root",

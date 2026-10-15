@@ -272,7 +272,9 @@ async def validate_activity(client, request, *, workflow_id):
     if manifest.get("binding_protocol") == 23 and link is not None:
         if request.get("coding_parent", link) != link:
             raise DefinitionMismatch("Composition Activity changed its original parent link")
-        chain, admitted = await _ancestry_admission(client, original, manifest, namespace)
+        chain, admitted = await _ancestry_admission(
+            client, original, manifest, namespace, _activity_request=request
+        )
         if not admitted:
             await _command(client, original, "cancel", owner_id=chain[0][0]["run_id"])
         await _namespace(client, namespace)
@@ -557,31 +559,106 @@ async def _ancestry(client, original, manifest, namespace):
     return chain
 
 
-async def _ancestry_admission(client, original, manifest, namespace):
+def _activity_root_command(client, request, original, root, manifest, namespace):
+    """Use an original Activity address as a hint, never as admission evidence."""
+    from temporalio import activity
+
+    from .temporal_deployment_admission import registry_id, root_run_id
+    from .temporal_deployment_execution import _activity_body
+    from .temporal_deployment_release import _CONTEXT
+    from .temporal_state import CONTEXT_ACTIVITY, MODEL_ACTIVITY
+
+    try:
+        protocol = manifest.get("deployment_admission_protocol", {})
+        if (
+            request is None
+            or manifest.get("binding_protocol") != 23
+            or protocol.get("version") != 4
+            or "coding_execution_protocol" not in manifest
+        ):
+            return None
+        info = activity.info()
+        context = _CONTEXT.get()
+        if (
+            getattr(info, "activity_type", None) not in {MODEL_ACTIVITY, CONTEXT_ACTIVITY}
+            or context is None
+            or context[1] is not client
+        ):
+            return None
+        proof, carrier = context[2:]
+        body = _activity_body(carrier)
+        if (
+            canonical(body.get("original_request", body)) != canonical(request)
+            or info.workflow_id != original["run_id"]
+            or info.workflow_run_id != original["execution_epoch"]
+            or info.workflow_namespace != namespace["name"]
+            or client.namespace != namespace["name"]
+            or any(
+                proof[k] != original[k]
+                for k in (
+                    "scope",
+                    "run_id",
+                    "execution_epoch",
+                    "original_execution_epoch",
+                    "namespace",
+                    "request_digest",
+                    "request",
+                )
+            )
+            or canonical(proof["manifest"]) != canonical(manifest)
+            or proof["manifest_digest"] != digest(manifest)
+        ):
+            return None
+        hint = proof["admission_receipt"]["root"]
+        command = hint["command_id"]
+        deployment = protocol["policy"]["deployment_id"]
+        if (
+            type(command) is not str
+            or not command.strip()
+            or any(
+                hint[k] != root[k] for k in ("scope", "run_id", "request_digest", "execution_epoch")
+            )
+            or hint["namespace"] != namespace
+            or hint["manifest_digest"] != digest(manifest)
+            or hint["registry_id"] != protocol["registry_id"]
+            or hint["registry_id"] != registry_id(deployment)
+            or root_run_id(deployment, root["scope"], command) != root["run_id"]
+        ):
+            return None
+        return command
+    except (KeyError, TypeError, ValueError, AttributeError, RuntimeError, DefinitionMismatch):
+        return None
+
+
+async def _ancestry_admission(client, original, manifest, namespace, *, _activity_request=None):
     """Observe the one accepted root; never register nested parents as roots."""
     chain = await _ancestry(client, original, manifest, namespace)
     root = chain[-1][0] if chain else original
-    candidates = await _registry(client, root["scope"], manifest).query(
-        "view",
-        {
-            "scope": root["scope"],
-            "kind": "coding_composition_candidates",
-            "manifest_digest": digest(manifest),
-        },
-    )
-    if type(candidates) is not list or len(candidates) > 4096:
-        raise DefinitionMismatch("Original Coding root acceptance unavailable")
-    matching = [c for c in candidates if type(c) is dict and c.get("run_id") == root["run_id"]]
-    if len(matching) != 1:
-        raise DefinitionMismatch("Original Coding ancestor lacks unique root acceptance")
-    candidate = matching[0]
+    command = _activity_root_command(client, _activity_request, original, root, manifest, namespace)
+    candidate = None
+    if command is None:
+        candidates = await _registry(client, root["scope"], manifest).query(
+            "view",
+            {
+                "scope": root["scope"],
+                "kind": "coding_composition_candidates",
+                "manifest_digest": digest(manifest),
+            },
+        )
+        if type(candidates) is not list or len(candidates) > 4096:
+            raise DefinitionMismatch("Original Coding root acceptance unavailable")
+        matching = [c for c in candidates if type(c) is dict and c.get("run_id") == root["run_id"]]
+        if len(matching) != 1:
+            raise DefinitionMismatch("Original Coding ancestor lacks unique root acceptance")
+        candidate = matching[0]
+        command = candidate["command_id"]
     expected = {
-        "command_id": candidate["command_id"],
+        "command_id": command,
         "run_id": root["run_id"],
         "request_digest": root["request_digest"],
         "manifest_digest": digest(manifest),
     }
-    if (
+    if candidate is not None and (
         any(candidate.get(k) != v for k, v in expected.items())
         or candidate.get("execution_epoch") != root["execution_epoch"]
         or candidate.get("namespace") != namespace

@@ -1,5 +1,23 @@
 # 部署 Session 集成与收尾验证
 
+## Activity 根命令定向查询（2026-10-16，实际仍超时）
+
+2026-10-16 P3-2/S2 仍未完成：本批 actual Model／Context 的 Coding4／binding23 根命令定向查询已实现，保留完整 fresh ancestry、原 Registry 握手与实时准入，缺失／不匹配提示回退。新增21项通过，独立审查无P1／P2；全部270个Temporal模块3759 passed／589配置依赖skipped，独立安装14模块291 passed，默认完整canonical及保存History离线兼容通过，425产品／861测试无漂移。一次原图原360秒实际验收仍1 failed／390.282秒：四Tool均ok、效果adopted且物理停止；首Turn成功，第二Turn最终为failed／released，未产生完整业务验收结果。两root退休、两Turn完整正ACK、owned关闭与安全清理通过，不能替代业务成功。不据此宣称性能改善，本批不追加复跑或查询级微调；其余十二正常／五故障及P3-3／4／5／A仍待原定门槛。下一批先基于既有证据形成关键路径和传输预算，再决定成组修复；仅本地提交，不推送。
+
+核心 RED：MODEL／CONTEXT 两项在原代码仍各有一次 `coding_composition_candidates` 查询。新路径保留完整原 `_ancestry` 的 Query／Describe 顺序，提示只取现有原 Activity context 的 command；必须匹配 raw client、原 carrier、当前 Activity Run／epoch／namespace、fresh original／root 的 Scope／请求／Manifest，以及 `root_run_id(deployment, Scope, command)` 的确定性地址。随后新建原 Registry 代理，执行完整 SDK 握手、`coding_composition_admission` 与原准入／namespace／关闭检查。不使用 context 的 admitted 值，不保留跨调用缓存。
+
+默认、旧 publication、Tool／CONTROL、无 actual Activity 或上下文不匹配均保留原扫描。定向查询仅验证目标 root 的原 Registry intent；不再顺便检查同 Scope 无关候选损坏、全局候选数上限或绕过正常 Registry 派生地址约束伪造的重复项。这是显式实验协议的查询范围调整，不能声称任意损坏状态下与全量扫描等价；原 Worker／History 仍按不可变匹配版本恢复。
+
+本批实现验证已完成：新增21项 `-Werror` 通过；全部270个Temporal模块3759 passed／589配置依赖skipped、零失败／错误，222.762秒进程窗口（pytest自身219.33秒）。425产品／861测试冻结，无源码漂移。独立安装14模块291 passed／39.472秒、零失败／错误／跳过，源码／sdist／wheel／site425文件一致，861测试副本前后不变；默认完整Profile／Manifest／编排canonical及原／continued保存History离线重放通过，模型／服务调用0。独立只读审查无P1／P2，Ruff／格式／空白检查通过。这些不代替原场景业务验收。
+
+私有证据：`/private/tmp/ralf-agent-dev121-root/activity-root-release/result.json`；冻结清单SHA256 `649dc6b404e97f3095049da8f6a13af13523fc261b1813c9d07fccfcc81fb27d`。独立安装摘要 `/private/tmp/ralf-agent-dev121-session-sdk/default-compat-s2-activity-root-routing/final-summary.json`，SHA256 `001c971bbf04f4c06dc0b54289b71ef0e70b69c04735c17662eb5a57a0077cd1`。原始单项由同一独立安装包执行并已终态exit1；原Tool80／Runner60／approve180／scenario360／first-close60／cleanup40秒保持，无诊断flags，其他十二正常／五故障未启动。
+
+原实际单项1 failed／0 errors／0 skipped，JUnit390.282秒（含原关闭）；根进程session22047已确认exit1，425产品／861测试及安装导入无漂移。原scenario360在 `approve → status → _view → SDK Query` 取消，非approve180超时。四Tool分别38.067292／36.221950／41.038917／39.338817秒，均SDK Completed、ok:true，有原candidate和采纳摘要，四effect adopted、四physical stop且无pending stop。两root accepted／retired均2，retained0；两Turn各6start／6end且全部原Completed ACK为正，首Advance succeeded／released，第二failed／released。assembly关闭和Worker退出成功，schemaRetained=false、deletionAllowed=true、保留原因空；未手动清理，无完整 `session-coding-result.json`。第二Turn第四Tool23:38:54.215060Z完成；后Context23:38:56.680737→59.777864Z、3.097127秒成功。末Model23:39:00.020130→03.189868Z、3.169738秒，返回validation_error／dispatched:false。独立History顺序为Registry Coding close正Completed e196在23:39:01.846962Z（close_requested:true），末leaf原parent-stop取消e215在02.311035Z，`admit_context_dispatch` 正Completed e221在03.002468Z明确allowed:false，然后Model拒绝，graph root cancel e474在05.990082Z。原guard在allowed:false抛ValidationError，与该未派发结果一致；这是原360超时后关闭拒绝的证据，不构成独立模型故障。root最终child_run_failed／failed来自该末leaf，不表示第二Turn成功。末两次CONTROL observe分别4.950611／4.925859秒、均ok，不据此宣称分支命中或性能收益。脱敏tail摘要 `/private/tmp/ralf-agent-dev121-session-sdk/activity-root-normal-terminal-evidence/tail-summary.json` SHA256 `a4d97f4dd5ed9a2dbc69d491683ec18857f867a7b61b84d864c41ecb8979c57e`。
+
+原图本批没有证明性能收益或门槛关闭。只读终态提取34输入文件哈希前后相同，摘要 `/private/tmp/ralf-agent-dev121-session-sdk/activity-root-normal-terminal-evidence/summary.json` SHA256 `4c5081b0560e5db2ad88141509e1e7a5378b86a35f0b9925ce8e7e7c21beee4a`；输入表SHA256 `74d82895d5b93f27615067f95fcff410c8156bc2ba2d1d79f863d65d377968b0`。本批不再启动服务或连续微调。下一步先统一关键路径／请求传输预算：现有日志存在约0.6–0.9MB重复载荷警告，但警告本身不能证明网络、序列化或重建各自耗时；将其与既有Manifest／composition／Coding成本证据关联后再选成组修复，不扩大支持矩阵、不更改期限，也不预设改进。
+
+以下保存前批证据，不覆盖本批结果。
+
 ## Model／Context 完整入口归并（2026-10-16，原场景仍超时）
 
 当前唯一集成阻塞仍是 P3-2/S2 的原 `graph-sequential-sdk` 两 Turn 在 360 秒内完成；不重开已成功的工具执行和取消清理。原 c4 History 中，末 Context 的 5.129344 秒里，Activity 开始至实际 call-start 正 Completed 已占 1.916502 秒；末 Model 的 5.300220 秒里，该前置区间为 3.251893 秒。它们来自同一运行的 SDK 时间界限，不是函数 CPU、纯网络时间或两个可相加的独占成本。Model 在 close／cancel 交错之后返回 `dispatched:false`，不因此认定模型或独立校验缺陷。
