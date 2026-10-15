@@ -1,12 +1,10 @@
 # Implementation status — 0.1.0.dev120
 
-当前验收 checkpoint（2026-10-15，v16／本地 `c483088`）：S1 普通 Session 已验收；P3-2 的 S2 Coding Session 仍开放，P3-3／4／5／A 尚未关闭。最终受影响Session／Coding回归860 passed／193 skipped／53.01秒（-Werror）；跳过不作实际服务验收。独立安装四模块79 passed／9.40秒、零失败／错误／跳过，424产品与843测试副本前后字节一致；默认完整canonical及原／continued保存History离线重放通过，Provider0／服务0，不代表live continuation。
+当前验收 checkpoint（2026-10-15，v17／本地 `a4cfc38`）：S1 普通 Session 已验收；P3-2 的 S2 Coding Session 仍开放，P3-3／4／5／A 尚未关闭。最终受影响回归959 passed／193 skipped／55.06秒（-Werror），跳过不作实际服务验收。独立安装五模块91 passed／11.39秒、零失败／错误／跳过，424产品及844测试副本前后相同；默认完整canonical及原／continued保存History离线重放通过，Provider0／服务0，不代表live continuation。
 
-v16实际graph-sequential仍1失败／386.44秒，零错误／跳过；第一Turn全部业务断言通过并成功发布，第二Turn已接受／启动，在第二个child注册时触发原场景360秒整体期限，第四Tool未运行。三个已执行Tool均成功（49.570947秒／43.645311秒／47.214290秒），原80秒Tool／60秒Runner与180秒审批期限未改。第一root成功、第二root在cleanup取消，均正退休；12对原调用start／end及Activity返回摘要相符，两个大结果编码／ACK通过。owned关闭、Worker退出和原证据清理通过，deletion_allowed:true、schema_retained:false。两Turn成功门槛仍未过，其余十二项正常组合及五项故障未运行。
+v17实际graph-sequential仍1失败／432.08秒，零错误／跳过。第一Turn成功发布，第二Turn第四child已启动，但未批准／未调度Tool便触发原360秒整体期限。前三个Tool均成功（48.236686／43.243227／47.418934秒），第一root成功、第二root在清理取消后以failed退休；两root均正退休、held0，不能代替Session关闭。第二Turn末observer有start无end，原ACK未清；owned关闭先CloseIncomplete，退出Worker后的重试RPCError，schema保留。缺少Registry的Session close回执直接触发保留规则，尚未进入State重建，不将其称为新codec／State缺陷。其余十二项正常组合与五项故障未运行。
 
-本批有限聚合已安装／服务复验：warm callback相同完整Manifest的重复Runtime校验交回独立外层边界；只读observer组内逐await完整本地检查、既有组出口完整七事实保持，普通4／默认／旧路径保持。没有新增权限缓存、执行权威或放宽逐原生请求fresh／期限。原v15清理器KeyError由相同Manifest解码修复，原203-event History离线重建及v16实际安全清理通过。剩余阻塞是两Turn累计耗时；第一root开始至seal199.465570秒，两Tool交接35.248867秒，结果发布还需原Session观察／ACK。下一批仅沿该交接／观察路径定位冗余，保留原十三项及五项故障，不新增功能。各候选结果分开记录，详见[验收记录](../architecture/reviews/2026-10-15-temporal-deployment-sessions.md)。
-
-v17 待服务复验源码仅归并两处只读重复：Session observer的逐SDK检查保留全部本地pins，Runtime完整重建由原group入口／出口承担；固定child双epoch／namespace的Coding4 observe直接使用原composition reader和拒写client，去掉桥内重复父Activity验证，首轮／末轮完整验证保留。其他mode、未固定child及旧3保持原桥，原生每请求fresh与期限不变。最终受影响回归959 passed／193 skipped／55.06秒，独立审查及Ruff／格式通过；跳过不作为服务验收，不从静态调用减少推断两Turn必过。安装与真实图结果仍待同一冻结候选验证。
+本批只归并既有只读验证：Runtime完整检查移到原group边界，固定child的observe省去桥内重复父验证，原生逐请求fresh、首／末完整证据及原80／60／180／360期限保持。实际首root start→seal191.984926秒、两Tool交接33.603793秒、seal→Session ACK24.222412秒；比v16单次样本略短，不能推断因果或稳定性能。当前局部优化不足以关闭整项。下一批核对同一只读树内重复Session身份读取及上游physical close责任，先明确封闭读取／独立出口验证边界，再做必要修复；不新增功能、缓存权限或放宽未知／停止／ACK门槛。逐快照证据见[验收记录](../architecture/reviews/2026-10-15-temporal-deployment-sessions.md)。
 
 执行约束更新（2026-10-15）：按用户指令固定第三阶段范围、优先收尾，当前只执行[冻结清单 P3-1 至 P3-5／P3-A](phase3-support-matrix.md#收尾范围冻结2026-10-15-用户指令)。S1 普通 Session 功能子集已验收，P3-2 的 S2 与所选集成门槛仍待；不新增功能矩阵、适配器或独立重构专项。本条调整开发优先级，不变更以下已验收状态，也不代表第三阶段已完成。
 
@@ -16,7 +14,7 @@ v17 待服务复验源码仅归并两处只读重复：Session observer的逐SDK
 
 回归出处分开登记：前一冻结 `candidate-full` 完整回归为 12083 passed／805 skipped；v5 受影响 Temporal 为 3175 passed／571 skipped；v6 release 相关 24 模块为 438 passed／90 skipped。这些结果不相加，不宣称当前全量通过，跳过不算实际验收。S1 普通 Session 功能子集关闭，S2 已实现、实际 SDK 门槛仍待通过，Temporal＋PG 集成、P3-2／第三阶段尚未关闭，P3-3／4／5／A 不变。接口与剩余门槛见[固定 Session 计划](superpowers/plans/2026-10-15-temporal-deployment-sessions.md)。
 
-S2 的既往 Agent／sequence 两Turn证据及各候选失败记录均保留在本批验收记录，不拼接为当前十三项矩阵通过。当前状态以上方v16 checkpoint为准。
+S2 的既往 Agent／sequence 两Turn证据及各候选失败记录均保留在本批验收记录，不拼接为当前十三项矩阵通过。当前状态以上方v17 checkpoint为准。
 
 以下 Dev120 段落描述已提交基线及其当时边界；不覆盖上述 S1／S2 checkpoint 的有限验证结果。
 

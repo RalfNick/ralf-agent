@@ -94,13 +94,13 @@ The independent source review established these three required boundaries. The c
 
 ## S2 — existing Coding scope through the same Session origin
 
-最新checkpoint为本地 `c483088`／v16，metadata保持dev120。最终受影响回归860 passed／193 skipped／53.01秒，独立安装四模块79 passed／9.40秒，默认及保存History离线兼容通过。实际graph-sequential仍1失败／386.44秒：第一Turn成功发布，第二Turn执行中触发原360秒整体期限，第四Tool未运行；不是内部180秒审批超时。owned关闭、两root正退休、全部原ACK及实际证据清理通过，schema已由原runner安全删除。其余十二项正常组合及五项故障未运行。下面候选开发段落按其当时状态阅读，不覆盖此checkpoint。
+最新checkpoint为本地 `a4cfc38`／v17，metadata保持dev120。相关回归959 passed／193 skipped／55.06秒，独立安装五模块91 passed／11.39秒，默认与保存History离线兼容通过。原图实际首项1失败／432.08秒：第一Turn成功发布；第二Turn第四child已启动、尚未批准即被整体360秒取消，第四Tool未运行；不是内部180秒TimeoutError。两root正退休、held0；第二Session尾调用缺end ACK，physical close先CloseIncomplete，Worker退出后重试RPCError，schema保留。其余十二项正常组合及五项故障未运行。各候选历史不覆盖此checkpoint。
 
-本批重复完整校验及清理器解码已经本地提交／安装／实际复验。warm callback将相同完整Manifest的重复Runtime检查交回原独立外层，cold／public／permission／普通4与旧3保持full；只读observer的SDK每await前后完整本地检查、组及最终出口七事实保持。193项配置依赖跳过不作服务验收。下一批仅定位交接／观察累计耗时：第一root start→seal199.465570秒，两Tool交接35.248867秒；第二Turn首Tool成功后多次observe才进入下一child注册，360整体取消先到。保留原80／60／180／360期限、逐原生请求fresh、效果／预算／停止／ACK与原十三项及五项故障；不新增功能或另起适配专项。
+本批原只读group和固定child observe重复检查已本地提交／安装／实际复验。最终证明、原生逐请求fresh及原80／60／180／360期限保持。首root start→seal191.984926秒、Tool交接33.603793秒、seal→Session ACK24.222412秒；与v16的差异是两个单次样本，不作性能归因或稳定SLO结论。SDK History不记录Query返回和分支marker，实际carrier／最终pin与直读条件相符，但没有直接实际branch计数。当前微调仍不足以满足整体期限。
 
-下一批预计工作量为一轮定向定位、必要的最小修复、受影响回归及一次冻结安装图复验；该服务单项本轮约6分钟，总修复时长在定位前不作确定承诺。正常首门槛通过后，才运行相同候选的其余十二项及五项故障，不用不同候选拼接完成状态。
+下一批固定为重复Session proof的封闭只读收集边界和上游physical close责任核对。每个原Run／Registry身份关联仍须读取，组出口由原raw SDK上的独立verifier验证全部七项Session事实后才可返回；不允许凭wrapper标志跳过通用proof验证、缓存permission或借用假的外层validate。先完成针对性设计审查与必要最小实现／恢复测试，再做受影响回归、安装兼容及一次原图复验；单次服务检查本轮约7分钟，总修复时长未确定。不扩展功能范围、不调高期限；首项完整通过后才运行相同候选的其余十二项和五项故障。
 
-v17源码已完成该轮定位／修复：纯Session observer group只保留逐await本地pins，完整Runtime及七事实出口不删；exact Coding4、observe、原child非空epoch且完整child_execution匹配时，在原完整validator之后直调拒写client下的composition.control，桥内重复父验证归入已有首／末完整边界。register／cancel／recover、未固定child及旧3保持桥。真实reader对照结果相同、父Activity验证2→1、底层Update0，Runtime与身份／源码漂移仍在可用返回前拒绝。受影响回归959 passed／193 skipped／55.06秒；本批未以源码通过关闭任何正常／故障矩阵项，下一步仍为冻结安装及原图复验。
+两项独立定位按同一批集成：只读树的身份收集必须封闭、默认通用proof行为保持；关闭侧先TDD验证早期pending能否在同次末轮全部原fresh资源／祖先正闭合后消解。不得用retired／held0、较晚PG快照或单个parent physical标志覆盖错误；身份／源码／SDK错误、真实未停、未知效果及缺ACK仍必须保留。v17外层report丢失了composition内部细节，当前只能确认候选危险结构，不能宣称实际唯一根因。
 
 2026-10-15 本次有限收尾：先修复v13恢复路径的2MiB载荷拒绝，完成Coding4有界无损编码及State／Workflow两端接线，保留原semantic digest、Update ID、ACK、8MiB语义限制和逐请求fresh。相关八模块同次191项通过，含两处wire、冷恢复、Scope拒绝和sandbox激活；仅为源码证据，安装／真实服务复验待做。180秒主流程超时独立未解，其余十二项正常组合和五项故障未运行。该次未启动新的服务矩阵；后续v14复验结果以上方checkpoint为准，S2仍开放。
 

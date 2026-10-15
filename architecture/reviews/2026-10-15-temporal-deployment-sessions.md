@@ -4,7 +4,13 @@
 
 ## 当前结论
 
-S2 已实现并交叉审阅，既往 Agent／sequence 两 Turn 有通过证据；最新 v16（本地 `c483088`）安装候选的 graph-sequential 第一Turn成功发布，第二Turn执行中触发360秒整体期限，整项仍失败。原三个Tool均成功，owned关闭、原ACK、两root退休及安全清理通过；其余十二项与五项故障未运行。Temporal＋PostgreSQL、P3-2和第三阶段整体验收继续开放。以下结果来自不同快照，不相加、不称为最终全量；跳过不构成服务或模型验收。
+S2 已实现并交叉审阅，既往 Agent／sequence 两Turn有通过证据；最新 v17（本地 `a4cfc38`）原图第一Turn成功发布，第二Turn受360秒整体期限取消，第四Tool未调度。两root已正退休，但physical close未完成、Session尾ACK未清，schema按规则保留，整项仍失败。其余十二项正常组合及五项故障未运行；P3-2、Temporal＋PostgreSQL与第三阶段继续开放。以下快照不相加，不把单次耗时差异归因于特定优化。
+
+v17 `frozen-candidate121-s2-read-groups`：1743文件／424产品，inventory `0ebe1405a0340979d46c8b77c037466989939502de8b94fa17255a118218186e`，wheel SHA256 `8dba36a020238553d6037c51ee56dae1cb3fd1db32eff2692e6543b1495f774f`。独立安装五模块91 passed／11.39秒（-Werror、零失败／错误／跳过），424产品及844测试副本前后一致，导入来自安装。默认完整canonical与原值相等，原／continued保存History离线Replay通过，Provider0／服务0，不代表live continuation。
+
+v17实际首项1 failed／432.076秒、零错误／跳过，424产品和测试前后无漂移。首root15:18:24.611015→15:21:36.595941成功seal，191.984926秒；前两Tool48.236686／43.243227秒，交接33.603793秒。Session正encoded ACK15:22:00.818353（seal后24.222412秒），Activity15:22:01.054201完成，WFT15:22:01.227124消费；第二Turn15:22:09.054接受，第二root15:22:16.019173启动。第三Tool15:22:48.883619→15:23:36.302553，47.418934秒，三个Tool均ok:true与原candidate／stop。第四child15:23:59.712372实际启动，但没有批准或Tool调度；primary15:24:13.253为scenario360取消approve.sleep。第二root收到cancel后15:24:36.053584以failed seal，15:24:43.666正退休。与v16比较仅为两个单次运行，不构成性能因果或稳定SLO证据。保存carrier和最终child_execution符合直读分支条件，SDK History没有Query回包或分支marker，不称为直接命中计数。
+
+Session首Turn6对start／end；第二Turn6start／5end，末observer start ACK15:24:44.466961后无end／Advance。11个完成Activity的原return与对应end语义digest全匹配；首Turn编码语义2448126B与原digest匹配。初始owned close报CloseIncomplete，报告phase=original_coding_close；生命周期在Session关闭前重抛，Registry没有close_deployment_sessions Update。retention helper的require(records)直接EvidenceMismatch，未进入session_evidence／State reducer，所以不能称为新State／codec拒绝。Worker退出后重试Registry配置查询RPCError；唯一Session body诊断为FAILED_PRECONDITION，位置树读取／原祖先proof中的readonly query。cleanup为assembly_close_succeeded:false、workers_exited:true、accepted2／retired2／held0、deletion_allowed:false，reasons为scoped_session_close_unconfirmed与session_evidence_invalid，schema保留。没有证据证明本批local-pin检查造成State缺陷，也没有证据排除其上游耗时影响；Session债务必须保留。
 
 v16 `frozen-candidate121-s2-session-boundaries`：1742文件／424产品，inventory `52eb0156c67ba0003ceff9abcb2374bf4fe1b49122c8a913253c11fe41872fd8`，wheel SHA256 `ff04c96f17364d7561cd82b2cf5c55400010fa1f68248280f7f6a2034ccf4b5e`。独立安装四模块79 passed／9.40秒、-Werror，424产品及843测试副本前后相同，导入均来自安装。默认完整canonical与原值相等，原／continued保存History离线Replay通过，Provider0／服务0，不代表live continuation。
 
@@ -23,9 +29,11 @@ v15实际graph-sequential 1 failed／278.43秒、零错误／跳过。两个Tool
 
 ## 实现边界
 
+v17关闭候选另行核对：原close末段继续对root子节点采纳正stop，最后一项15:24:48.922，随后15:24:49.076报CloseIncomplete。较晚的15:25:19 PG捕获中三resource均pending_stop:false且stopped／fenced／transport_closed:true，三个effect已adopted；这是较晚快照，不能倒推49.076时每项都已正闭合。源码 `_close_subtree` 保留早先pending、`composition.close` 累计早先obligations后在末轮资源／祖先adoption之后仍据旧列表拒绝，构成需要定向TDD的候选；bridge把内层report压成单code，现有实际证据不能唯一确定命中分支。下一批必须以原fresh完整身份与真实闭合证据区分已消解pending和仍有效错误，不靠退休额度或放宽证据“修复”关闭。
+
 v17源码收尾只针对v16累计期限。按原三child正观察路径静态推导，wrapped SDK读至少159次，v16逐读前后造成至少318次额外完整Runtime重建；该下界不是实测RPC总数或性能。现exact Coding4 aggregate transport每读保留source／client／service／converter／Activity／request pins，使用full=False，完整Runtime复核留在既有group及最终出口；独立origin七事实与其full、owned body和end ACK均保持。普通4/default逐读原full不变，最后descendant session_proof与后续组／最终出口共同保护，不提前返回Advance。主RED native／composition每SDK额外重建2次→修复后0次；17项测试验证真实_observe在Runtime漂移时仍于完整出口拒绝，并覆盖逐读源码／请求／端口／Activity及逐History项漂移。
 
-同批compact observe仅在exact Coding4、原child非空固定epoch和完整namespace／first／current child_execution匹配时，保留原first Activity proof与完整Coding validator，直接调用原composition.control＋既有拒写client；省去中间重复桥验证。末current parent proof、child describe、validator、Activity／namespace／Runtime及pack完全保留；missing pin／其他mode／旧3仍走桥。实际生产reader和proof的SDK形状夹具RED父Activity验证2次→1次，结果与原桥exact相等；9项含出口Runtime／namespace／父子身份／原pin／源码漂移及冷写拒绝，底层Update0。静态每合格observe至少省16项重复SDK读取，不把该下界换算成秒数。两项产品合并经独立审查，最终受影响回归同次959 passed／193 skipped／55.06秒（-Werror）；跳过不作为实际服务验收，Ruff／格式／空白检查通过。安装、默认历史兼容及实际两Turn结果仍待新冻结候选，原80／60／180／360期限与native逐请求fresh保持。
+同批compact observe仅在exact Coding4、原child非空固定epoch和完整namespace／first／current child_execution匹配时，保留原first Activity proof与完整Coding validator，直接调用原composition.control＋既有拒写client；省去中间重复桥验证。末current parent proof、child describe、validator、Activity／namespace／Runtime及pack完全保留；missing pin／其他mode／旧3仍走桥。实际生产reader和proof的SDK形状夹具RED父Activity验证2次→1次，结果与原桥exact相等；9项含出口Runtime／namespace／父子身份／原pin／源码漂移及冷写拒绝，底层Update0。静态每合格observe至少省16项重复SDK读取，不把该下界换算成秒数。两项产品合并经独立审查，最终受影响回归同次959 passed／193 skipped／55.06秒（-Werror）；跳过不作为实际服务验收，Ruff／格式／空白检查通过。此为v17运行前的源码证据；随后安装／离线兼容通过，实际两Turn仍整体超时、关闭未完成，结果以上方v17 checkpoint为准。原80／60／180／360期限与native逐请求fresh保持。
 
 - 显式 Session＋部署准入＋Coding 使用 publication4／Registry4，旧默认选择保持。同地址不兼容 Registry 拒绝，不换地址规避容量。
 - native6／binding22、composition7／binding23 请求与库存形状保持。实际 SDK parent 是原 Session coordinator，业务 lineage 不把它计作业务父节点或根额度。
