@@ -210,8 +210,21 @@ async def admission_async_factory(config, context):
     return admission_factory(config, context)
 
 
+def _coding_cpu_enabled(directory):
+    marker = Path(directory) / "capture-coding-cpu"
+    enabled = os.getenv("RALF_TEST_DEPLOYMENT_CODING_CPU") == "1"
+    try:
+        enabled = marker.exists() or enabled
+        if enabled:
+            marker.touch(mode=0o600)
+    except OSError:
+        pass  # Diagnostic marker I/O must not change the original test operation.
+    return enabled
+
+
 def peer(directory, *, hold=False):
     directory = Path(directory)
+    _coding_cpu_enabled(directory)
     cli = parallel_peer(directory)
     source = cli.read_text()
     kill_failure = (
@@ -664,8 +677,11 @@ def loop_timing_plugin(timing):
             return config
 
         async def run_worker(self, worker, next):
-            async with timing.loop_probe():
-                await next(worker)
+            from tests.temporal_deployment_coding_cpu_fixture import coding_cpu_profile
+
+            with coding_cpu_profile(timing.directory):
+                async with timing.loop_probe():
+                    return await next(worker)
 
         def configure_replayer(self, config):
             return config
@@ -695,7 +711,10 @@ class FaultClient:
         self.original, self.directory = original, Path(directory)
         self.timing = SDKTiming(directory)
         self._workflow_service = None
-        self._timing_plugin = loop_timing_plugin(self.timing) if self.timing.enabled else None
+        cpu_enabled = _coding_cpu_enabled(self.directory)
+        self._timing_plugin = (
+            loop_timing_plugin(self.timing) if self.timing.enabled or cpu_enabled else None
+        )
 
     def __getattr__(self, name):
         return getattr(self.original, name)

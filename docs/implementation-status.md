@@ -1,5 +1,8 @@
 # Implementation status — 0.1.0.dev120
 
+2026-10-16 定位更新：同一v20产品的一次显式计时诊断1 failed／314.926秒，424产品与850测试无漂移；本次为首Turn approve180超时，仅两个Tool成功，无正Session Advance，schema保留。它与下方正常首项428.761秒分开，不作性能比较或验收。原生peer响应为毫秒级，外围SDK并集和Worker CPU证据要求进一步区分完整Runtime重建／纯投影与等待。真实Session轻校验离线约0.665ms／次，不支持继续盲目微调。测试专用CPU计数已实现并经独立审查：固定八个host code，逐线程CPU／墙钟聚合，严格code对象身份过滤，默认关闭、保留原异常与外部监控工具，退出仅写脱敏数字。五个受影响模块同次95 passed／4.43秒（-Werror），零跳过，1277产品／测试文件前后无漂移；424产品文件仍与v20相同。沙箱重导入代码不在覆盖范围；尚未运行实际CPU诊断，不表示S2已通过。详见[验收记录](../architecture/reviews/2026-10-15-temporal-deployment-sessions.md)。
+
+
 2026-10-16 v20源码候选：仅exact Coding4／actual CONTROL／完整固定child的只读observe，已接入封闭Session身份读取；原完整Activity入口、所有Run／Registry／Start／祖先／compact／当前child读取保留，末独立raw Session七事实后才返回。主RED已确认原结果和非Session Counter相同，再由原6组变2组；默认/native逐请求fresh、其他mode、未pin和旧协议保持。新增取消finally清理、逐await拒写端口和完整身份／source pins，私有helper不提供Session权威。采样频率变化已写入实验契约，匹配不可变Worker恢复旧运行。同次135模块回归1986 passed／289 skipped／106.38秒（-Werror），1274产品／测试文件前后相同，独立审阅无P1／P2，Ruff／格式／空白检查通过。安装11模块173 passed／43.01秒，默认完整canonical及原／continued保存History离线重放通过，424产品与850测试副本前后相同、全部导入来自安装。源码本地提交 `49d26d8`；真实首项已结束，1 failed／428.761秒，424产品与850测试前后无漂移。整体360秒取消传入SDK Update；前三Tool成功且原结果已接受，第四业务子Workflow已启动但Tool尚未调度。第一Turn正Completed ACK已取得；第二Turn末observe缺end ACK。三条效果adopted、两业务root退休仍不代Session关闭，schema保留。S2／P3-2未关闭，其余十二项及五项故障未运行。下一批先以既有有界SDK／Worker计时定位实际耗时，不再依夹具计数盲目微调或重跑。
 
 

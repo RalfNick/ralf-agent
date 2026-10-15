@@ -2,7 +2,23 @@
 
 
 
-## v20 实际首项结果（2026-10-16，`49d26d8`，未通过）
+## v20 有界计时诊断（2026-10-16，产品仍为`49d26d8`）
+
+本批仅在私有runner显式启用既有SDK计时与RAISE异常定位，复用原冻结v20、原安装产品与测试；没有改变Tool80／Runner60／approve180／整体360或关闭预算。唯一首项诊断已结束：1 failed／314.926秒，零错误／跳过，424产品与850测试副本前后无漂移。**诊断不是正常验收，不能与下方428.761秒正常样本推导速度改善或退化。** 本次初始错误明确为首Turn的approve180 TimeoutError；仅一个业务root、两个Tool成功并有原candidate（69.037／68.056秒），最终root cancelled seal，无正Session Advance ACK，schema保留。没有第二Turn／第三、第四Tool。
+
+6441条SDK span完整配对、无pending；约309.676秒可见窗口中，span墙钟并集247.279秒。各组和并行span不能累加，也不等于纯网络时间。两个native进程收到initialize至返回turn/start分别22.124／23.229秒，期间各有547个重叠SDK span，并集18.672／19.639秒；peer自身逐方法响应为毫秒级。Worker loop lag中位25.34ms／p95 143.68ms；一次只读进程快照中，运行260秒、累计CPU164.49秒（包含诊断与并行Activity）。这些证据把定位重点移至本地完整校验／Workflow纯投影及SDK等待的组合，不能据此归因某个独占阶段。
+
+现有SDK计时的边界必须保留：Session selector有1083个Query未标出kind；History读取、converter decode和原assembly raw-client关闭RPC未逐项计时；异步子Task常丢失runner调用栈。独立源码审阅确认通用Activity wrapper不会绕过exact observation分支，但额外执行原完整准入与实际call ledger；根Parent完整Worker路径静态至少三组Session事实，直接transport夹具只有两组。不能从夹具6→2外推完整Worker读取数。
+
+异常定位把首次close直接抛出点收窄至composition `_close_subtree:938`，之后由原close汇总、bridge再包装，非外层等待超时。sealed后原Coding receipt／child-stop的非精确重复被既有不可逆门禁拒绝；日志不含原evidence内容，不据此猜字段差异、放宽sealed门禁或认定新关闭缺陷。后续cleanup RPCError与首次close分开记录。
+
+另做零服务离线CPU测量：保存的211493字节真实Session请求，100次 `_check(full=False)` 每次约0.665ms，其中digest约0.635ms，source bindings约0.012ms；这不是实际关键链占比。双Runner完整Runtime参考模板无profile 30次共0.601秒，带cProfile三次0.149秒，主要累积在完整manifest重建；模板不是原实际Profile，不把单次样本换算为优化收益。**不再盲目减少轻校验次数。** 下一必要诊断仅针对固定同步Runtime／Session校验与compact投影代码，采用测试专用、显式启用的有界CPU聚合，不替换产品方法、不读取载荷、不新增SDK或改变权限。仅该定位缺口及受影响检查属于本批；正常首门槛、其余十二项及五项故障仍未通过／未运行。
+
+CPU诊断夹具本地检查已完成：独立helper固定八个host code对象，采用严格id身份（不把结构相等的Sandbox code副本当原对象）；只对这些code启用START／RETURN，global UNWIND首先按固定身份过滤。64线程／128层边界、异常／丢失／fault计数、每线程CPU与墙钟及整个process窗口数字均有界；exclusive只扣除选中目标之间的嵌套，不是全callee self time。原code／产品method不替换；默认关闭、Python无monitoring时不回退trace，槽位归属和外部工具不接管，失败不覆盖业务返回或异常。已修复disabled setup异常遮蔽与结构相等副本UNWIND误入的RED，未修改产品。五个受影响模块同次95 passed／4.43秒（-Werror），零失败／错误／跳过；1277产品／测试文件前后相同，424产品仍与v20相同，独立审查无P1／P2。尚无实际CPU聚合结果。下一次只显式启CPU计数，不同时启SDK span或RAISE记录，保持原场景与期限；诊断不解锁其余矩阵。
+
+下一次CPU-only诊断夹具已冻结为 `frozen-candidate121-s2-v20-cpu-diagnostic`：1752公共／424产品／853测试，inventory SHA256 `02e1536c56817ebfc37b95ff9789c02780daa4075acd8461616ee8b8745228a9`。产品与原v20相同，复用原已安装wheel；私有runner仅bootstrap，显式白名单只加CPUflag、不继承模型配置。当前仅准备／静态解析通过，未执行；本段文档在冻结后同步，不声称公共文档仍逐字相同。
+
+## v20 正常首项结果（2026-10-16，`49d26d8`，未通过）
 
 唯一原图首项 `installed-s2-closed-observation-v20-sdk` 已结束：1 failed／428.761秒，零错误／跳过；424产品与850测试副本前后无漂移。初始 `WorkflowUpdateRPCTimeoutOrCancelledError` 是整体360秒取消传入SDK Update，不能归为独立RPC超时或approve180到期。第二root启动至随后cleanup cancel不足122秒。其余十二项正常组合与五项故障未运行，S2／P3-2保持开放。
 
