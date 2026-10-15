@@ -1,5 +1,7 @@
 # Implementation status — 0.1.0.dev120
 
+执行约束更新（2026-10-15）：按用户指令固定第三阶段范围、优先收尾，当前只执行[冻结清单 P3-1 至 P3-5／P3-A](phase3-support-matrix.md#收尾范围冻结2026-10-15-用户指令)。Session 准入为当前 P3-2 必需工作，尚未验收；不新增功能矩阵、适配器或独立重构专项。本条调整开发优先级，不变更以下已验收状态，也不代表第三阶段已完成。
+
 Dev120 已将显式公共 deployment3 接入既定 Temporal Coding Agent／sequence、有界图、Team／Dynamic 与递归组合，和 ordinary2 共用同地址 Registry 容量。原 Run／Parent History 继续拥有审批、native grant、效果与预算；原树闭合和独立 ACK 证明控制退休，unknown、零费用占用与实际 handler 责任保持。子事实通知、紧凑身份／CONTROL 和 fresh-owned publication 减少重复工作；最终完整验证及 SDK 身份门禁保留，稳态只读 read-set 的明确边界见[本批验收](../architecture/reviews/2026-10-15-temporal-deployment-coding.md)，不新增权限缓存或即时 read-auth 撤销能力。
 
 v30 完整离线重新执行全部12651个唯一节点：11847 passed／804 skipped／0 failed／0 errors，430.21秒，无通过复用或未执行项；804跳过不代实际验收。之后4个测试文件修订另有92项定向检查通过，产品416文件未改，不相加为新全量。独立安装416产品字节一致，209个已加载模块全来自安装；dev119默认完整发布、原History重放／续接与新增Provider调用0通过。原安装normal矩阵13项通过／1项失败保留，修订后并行owned-close的独立normal单项1 passed／152.70秒，前后pins、真实故障回执和保留门槛通过；这是两次运行，不是同次14项全绿。测试仅按公开aclose契约允许最多2次恢复调用，原300秒总界／每次80秒保持，不宣称已证明v30的精确根因。原Assembly和Workers结束，unknown Root仍按原占位与恢复资料保留。

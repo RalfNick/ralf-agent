@@ -14,6 +14,8 @@
 
 ## Current delivery checkpoint
 
+**2026-10-15 收尾范围冻结：** 用户要求加快进度并停止自动扩展新功能。本计划是[第三阶段固定清单 P3-2](../../phase3-support-matrix.md#收尾范围冻结2026-10-15-用户指令)的当前必需项；仅将既有普通 Session（S1）及已选 Coding Session（S2）接入部署准入，不增加新 Session／编排类型、持久 FIFO、替代调度器、额外适配器或通用重构。沿已有协议完成最小公开链路及原定恢复／安装门槛后关闭 P3-2，转入 P3-3，不继续深化本子系统。dev120 已在 `c52d54c` 本地提交；当前 Session 源码在工作区实现中，尚未验收。以下候选 checkpoint 是历史记录，不覆盖当前冻结范围或 dev120 最终验收。
+
 dev119 remains the published boundary; dev120 is uncommitted. Frozen v24 Trial47 passed the complete approval-idle graph case (1 passed, 0 skipped, 151.117 seconds): the 10-second idle window retained identical 220 events, 1,574,051 JSON bytes and 7 calls; subsequent business success, two adopted effects, seal, physical stop and Registry count zero were asserted. Trial46 has no JUnit result, was ended by the owner with SIGTERM after an asyncio exit timeout, and retains two unended original calls and PG evidence; its primary cause is unresolved and it is not a pass. Trial48 parallel owned-close on v25 failed (123.37 seconds): the primary error is a fixture diagnostics query against a closing Engine; a separate stop-Activity closing rejection still needs diagnosis. Its 416 product source files equal v24, and this case is not accepted. Current-candidate full regression, final installed acceptance and compatibility remain pending. None of these records implements or approves Session admission; phase3 batch2 remains open.
 
 ## Current source facts
