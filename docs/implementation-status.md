@@ -2,6 +2,8 @@
 
 执行约束更新（2026-10-15）：按用户指令固定第三阶段范围、优先收尾，当前只执行[冻结清单 P3-1 至 P3-5／P3-A](phase3-support-matrix.md#收尾范围冻结2026-10-15-用户指令)。S1 普通 Session 功能子集已验收，P3-2 的 S2 与所选集成门槛仍待；不新增功能矩阵、适配器或独立重构专项。本条调整开发优先级，不变更以下已验收状态，也不代表第三阶段已完成。
 
+当前 S2 v11 仅减少显式 Coding4 callback 内重复的 Manifest 重建，保留外层独立双边检查、原 Session 七项实时事实及 bootstrap／公开授权完整路径。真实 Session verifier 的定向计数从11次降到5次，同次六模块91项通过，独立审查无阻塞；安装四模块46项、默认及保存History离线兼容通过。真实图首门槛仍1失败／333.35秒：两个Tool分别约56.53／57.58秒成功，plain join注册期间整图审批等待超时，随后Root取消；关闭仍未完成，schema保留。其余十二项及五项故障未运行，未关闭任何实际门槛。下一步消除observer验证器使用带校验客户端造成的嵌套重复，保留原实时证据和期限。分候选证据见[本批记录](../architecture/reviews/2026-10-15-temporal-deployment-sessions.md)。
+
 工作区 S1 checkpoint（最终 v6 候选）：显式 `enable_sessions=True`、`deployment_sessions=True` 与部署准入策略已接通普通 Session 的 publication4／Registry4，旧默认选择保持。v6 补齐 closing 期间原 factory 的 evidence ACK 维护通道；每次机械 release 使用 fresh SDK Update ID，原 root／certificate／payload 不变，退休幂等仍由原 Registry History 保证。424 个产品文件在冻结源码、wheel 与安装中一致；v6 默认完整 publication 等值、原／续接 History 离线 replay 通过，新增 Provider 调用为零；live continuation 仍沿 v4 独立证据引用。
 
 实际 SDK 证据分版本保留：v4 默认 60 秒的九种既有普通编排 9 passed、专用 3 秒超时恢复 1 passed、容量场景 1 passed；v6 最小审批／重启链路 2 passed／40.67 秒，全新 Runtime／Client 恢复已 seal 未退休原根及退休回复丢失 1 passed／27.23 秒。v6 债务两项同次 2 passed／84.06 秒、零失败／错误／跳过：每项两次 Turn／物理写入，unknown 及 ACK 债务期间保持 busy／根占位，原实际停止与 ACK 后才退休／发布；owned 关闭未完成时保留 receiver 与资源，按既有契约各两次关闭后排空并关闭一次。既往关闭入口、observer 晚回执、1 秒故障夹具和失败 Update ID 重放记录分类保留，不以复验覆盖失败。

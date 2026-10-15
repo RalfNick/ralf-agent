@@ -4,7 +4,7 @@
 
 ## 当前结论
 
-S2 已实现并交叉审阅，既往 Agent／sequence 两 Turn 有通过证据；最新 v9 安装候选的 graph-sequential 首门槛仍失败，其余十二项未运行，故障门槛尚未执行，不能标为完成。当前仅为本地预览，Temporal＋PostgreSQL、P3-2、第三阶段整体验收继续开放。以下结果来自不同快照，不相加、不称为最终全量；跳过不构成服务或模型验收。
+S2 已实现并交叉审阅，既往 Agent／sequence 两 Turn 有通过证据；最新 v11 安装候选的 graph-sequential 首门槛仍失败，其余十二项未运行，故障门槛尚未执行，不能标为完成。v11 的两个原 Tool 已在原期限内完成，当前失败点为整图审批辅助等待超时，后续关闭未完成，schema 按证据保留。当前仅为本地预览，Temporal＋PostgreSQL、P3-2、第三阶段整体验收继续开放。以下结果来自不同快照，不相加、不称为最终全量；跳过不构成服务或模型验收。
 
 ## 实现边界
 
@@ -67,6 +67,14 @@ S2 已实现并交叉审阅，既往 Agent／sequence 两 Turn 有通过证据�
 已完成两项最小修复并待冻结实际复验：plain Runner 连续调用同一 root 检查时合并一次，Connected 的不同 override 与 base 保持独立；Session 校验仅在两份 intent 的 canonical digest 相同时共享本次快照，每次仍重算完整 wire hash，不同 canonical 的数值键输入保留原双快照校验。原七项 SDK 事实、逐 await pins、独立 Runtime 检查和期限均保持。定向证据分别为 registration RED 4失败／2通过→6通过、相关218通过；snapshot RED 9失败／7通过→相关137通过、最终16通过；最终两项及相邻边界同次63通过／4.99秒。各次检查不拼为当前全量，不代表实际图场景已通过。
 
 v10 `frozen-candidate121-s2-root-snapshot` 已完成冻结与安装：1735文件／424产品，inventory `6ad18433fd38dd6170f08fc11089a5e838eb35737e45f519aec015578b923451`。源码／wheel／site 字节一致，安装定向30通过／3.86秒，默认完整canonical及原／continued History离线重放通过，Provider0／服务0。实际 graph-sequential 仍为1失败／364.31秒，但失败阶段已改变：两个原Tool分别71.409541秒、76.865328秒正常完成，均返回`ok: true`并采纳原result candidate，没有原80秒Activity超时。首次Turn的approve辅助等待在180秒处超时并发出原取消，第二Tool随后完成；第二Turn未执行，不能算完整图或Session验收。后续关闭也未完成，缺少最终cleanup报告，不声明资源清理或恢复已通过。源码／wheel／site／测试前后无漂移，340个已加载模块来自安装。
+
+v11 候选仅合并显式 Coding4 callback 内重复的完整发布校验：外层固定 Manifest 入口／出口独立检查、bootstrap、公开 validate／permission、SessionControlValidation 的全部七项 SDK 事实及完整检查保持，资源／源码／请求／Activity pins 仍逐边界核对。主回归使用真实 Session verifier，warm callback 重建次数 RED 为11次、修复后5次；不是缓存 SDK 事实或权限。相关五模块75通过／3.58秒；加入边界回归后的同次六模块91通过／4.89秒，Ruff／格式／空白检查通过。独立审查无阻塞。实际首门槛结果另列，未通过不进入其余组合与五项故障门槛，不以局部计数代替验收。
+
+v11 `frozen-candidate121-s2-aggregate-readset`：1736文件／424产品，inventory `a285a49afd978230142244e4f949447b21e529b88d1d83c7ae1e37eecc281efb`。源码／wheel／site一致；安装后四模块46通过／3.54秒，零失败／错误／跳过；默认完整 canonical 与原值相等，原及 continued 保存 History 离线重放通过，Provider0／服务0，不代表 live continuation。产品与837份测试副本前后无漂移，导入均来自独立安装。
+
+v11 实际 graph-sequential：1失败／333.35秒，零错误／跳过；其余十二项及五项故障未运行。424产品／原测试前后无漂移，340已加载模块来自安装。只读原 History 核对两个 Tool 分别56.530649秒、57.576230秒完成，均有`ok:true`与原result candidate；第一 Tool完成到第二 Tool开始间隔41.476033秒。第二 child 的实际结束证明完成后开始 plain join 注册，随后180秒审批辅助等待失败并触发清理取消；join 注册结果为definition_mismatch。Root最后seal为cancelled，Registry释放该完整cancelled证书，不能登记Turn成功。owned关闭仍为CloseIncomplete，清理报告因session_evidence_invalid保留schema，Worker已退出；不声称清理通过，也不删除恢复资料。
+
+下一项已定位的结构性重复在 observer：`_CheckedClient` 每次读取后运行完整 Session 校验，而嵌套 `validate_session_origin` 又把同一带校验客户端作为其七项验证的传输层，每项读取再次触发原校验，额外放大约49次事实读取。优先审查仅固定原 SDK 传输、继续执行原七项验证的最小修复，不增加紧凑投影、缓存权限或调大期限；该源码发现不单独证明已解决实际失败。
 
 v5 `s2-advance` 快照1727文件／424产品文件，inventory SHA256：`d530c203d8d4f7826cc915b2184c1be48937934966bafca380aa1bf17ce6ee53`。v6 `s2-origin-reads` 快照1729文件／424产品文件，inventory SHA256：`b935d23c2abae7a156662f0e5c447b2b8f9751a0bf65e02f37875e1e06eaea74`，首个安装 Agent 通过，矩阵首两项失败。v7 `s2-selector-snapshot` 快照1730文件／424产品文件，inventory SHA256：`ef3fc59506253032671f0660a6fbe761d3a4ad93cf40ca0448afa345e67d7826`；155项相关测试通过，安装后优先复验失败的sequence已通过，原十三项集合及原期限保持。源码、wheel、独立安装424产品文件一致；metadata 仍为未发布 `0.1.0.dev120`。
 

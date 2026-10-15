@@ -110,6 +110,7 @@ class CodingValidation:
             (self, name)
             for name in (
                 "validate",
+                "_validate_readset",
                 "permission",
                 "_check",
                 "_bootstrap",
@@ -585,23 +586,27 @@ class CodingValidation:
             _reject()
         return value["admitted"]
 
-    async def _session_origin(self, identity):
+    async def _session_origin(self, identity, *, _full_release=True):
         from .temporal_session_deployment_verification import validate_session_origin
 
+        if type(_full_release) is not bool:
+            _reject()
         result = await validate_session_origin(
             self._runtime, self._client, identity["intent"], identity["session_origin"]
         )
-        self._check(full=True)
+        self._check(full=_full_release)
         if result != identity:
             _reject()
 
-    async def _fresh(self):
+    async def _fresh(self, *, _full_release=True):
         from . import temporal_deployment_execution as execution
 
+        if type(_full_release) is not bool:
+            _reject()
         check = self._check
         if _binding(check) != self._check_pin:
             _reject()
-        check(full=True)
+        check(full=_full_release)
         # Only an already-bootstrapped original-Scope read-set may defer full
         # release validation to its public exit. Bootstrap keeps every full check.
         steady = self._snapshot is not None
@@ -609,12 +614,12 @@ class CodingValidation:
             await self._bootstrap()
             if _binding(check) != self._check_pin:
                 _reject()
-            check(full=True)
+            check(full=_full_release)
         s, client = self._snapshot, self._client
         await execution._namespace(client, s["namespace"])
         if _binding(check) != self._check_pin:
             _reject()
-        check(full=not steady)
+        check(full=_full_release and not steady)
         reads = []
         for node in s["nodes"]:
             handle = client.get_workflow_handle(node["id"], run_id=node["epoch"])
@@ -646,13 +651,13 @@ class CodingValidation:
         results = await asyncio.gather(*reads, return_exceptions=True)
         if _binding(check) != self._check_pin:
             _reject()
-        check(full=not steady)
+        check(full=_full_release and not steady)
         for value in results:
             if isinstance(value, BaseException):
                 raise value
         await execution._namespace(client, s["namespace"])
         if s["session"] is not None:
-            await self._session_origin(s["session"])
+            await self._session_origin(s["session"], _full_release=_full_release)
         # Only synchronous DTO checks remain. The public callback immediately
         # performs the full post-I/O check, including the pinned _fresh method.
         permitted = True
@@ -662,6 +667,17 @@ class CodingValidation:
         permitted = self._registry(results[-2]) and permitted
         self._description(results[-1], s["registry_description"])
         return permitted
+
+    async def _validate_readset(self):
+        # Only the selected4 aggregate callback uses this private read-set.
+        # Its independent full Runtime checks bracket this whole await; the
+        # original Session verifier and bootstrap retain their own full checks.
+        await self._fresh(_full_release=False)
+        check = self._check
+        if _binding(check) != self._check_pin:
+            _reject()
+        check(full=False)
+        return None
 
     async def validate(self):
         await self._fresh()

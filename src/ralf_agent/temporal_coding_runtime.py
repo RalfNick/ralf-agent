@@ -101,18 +101,22 @@ def callbacks(client, request, info, runtime):
             from .temporal_deployment_coding_validation import CodingValidation
 
             validation = CodingValidation(runtime, client, fixed, info)
+        validation_names = ("validate", "permission")
+        if (
+            validation is not None
+            and fixed["runtime_manifest"]["deployment_admission_protocol"]["version"] == 4
+        ):
+            validation_names += ("_validate_readset",)
         bindings = (
             None
             if validation is None
-            else tuple(_binding(getattr(validation, name)) for name in ("validate", "permission"))
+            else tuple(_binding(getattr(validation, name)) for name in validation_names)
         )
 
         def check_validation():
             if (
                 validation is not None
-                and tuple(
-                    _binding(getattr(validation, name)) for name in ("validate", "permission")
-                )
+                and tuple(_binding(getattr(validation, name)) for name in validation_names)
                 != bindings
             ):
                 raise DefinitionMismatch("Original compact Coding validation callbacks changed")
@@ -127,7 +131,12 @@ def callbacks(client, request, info, runtime):
             if validation is None:
                 await validate_tree_activity(client, fixed, workflow_id=workflow_id)
             else:
-                completed = await validation.validate()
+                operation = (
+                    validation._validate_readset
+                    if "_validate_readset" in validation_names
+                    else validation.validate
+                )
+                completed = await operation()
                 if completed is not None:
                     raise DefinitionMismatch("Coding validation requires completed None")
             check_validation()
