@@ -822,6 +822,19 @@ async def validate_session_origin(runtime, client, intent, origin):
     This read does not claim that the calling Activity belongs to the Session.
     Its caller retains actual Run/Parent identity and admission responsibility.
     """
+    from .temporal_session_deployment_control import _CheckedClient
+
+    # A verifier must read the original SDK transport, not a transport that
+    # recursively verifies the same Session after each of its own seven reads.
+    # Keep an independent verifier; the wrapper's validate() is never evidence.
+    outer, transport, info, intent_digest = None, client, None, None
+    if type(client) is _CheckedClient and type(client.validation) is SessionControlValidation:
+        candidate = client.validation
+        candidate._check()
+        if candidate.runtime is runtime and digest(candidate.intent) == digest(intent):
+            outer, transport, info = candidate, candidate.client, candidate.info
+            intent_digest = digest(candidate.intent)
+
     manifest = intent["submission"]["manifest"]
     policy = manifest.get("deployment_admission_protocol", {}).get("policy", {})
     wire = {
@@ -840,13 +853,23 @@ async def validate_session_origin(runtime, client, intent, origin):
     }
     validation = SessionControlValidation(
         runtime,
-        client,
+        transport,
         wire,
-        None,
+        info,
         deployment_id=policy.get("deployment_id"),
         _coordinator_activity=False,
     )
     result = await validation.validate()
+    if outer is not None:
+        outer._check()
+        if (
+            client.validation is not outer
+            or outer.client is not transport
+            or outer.info is not info
+            or outer.runtime is not runtime
+            or digest(outer.intent) != intent_digest
+        ):
+            _reject()
     if result["session_origin"] != origin:
         _reject()
     return result
