@@ -23,6 +23,10 @@ def coding_cpu_profile(directory):
         enabled = enabled and monitoring is not None
         if enabled:
             marker.touch(mode=0o600)
+            variants = (
+                os.getenv("RALF_TEST_DEPLOYMENT_CODING_CPU_VARIANTS") == "1"
+                or (Path(directory) / "capture-coding-cpu-variants").exists()
+            )
             from ralf_agent.temporal_activities import TemporalRuntime
             from ralf_agent.temporal_deployment_coding_validation import (
                 CodingValidation,
@@ -49,6 +53,22 @@ def coding_cpu_profile(directory):
         enabled = False
     if not enabled:
         yield False
+        return
+
+    if variants:
+        try:
+            from tests.temporal_coding_cpu_variants import coding_cpu_variants
+
+            context = coding_cpu_variants(directory, targets)
+            installed = context.__enter__()
+        except BaseException:
+            yield False
+            return
+        try:
+            yield installed
+        finally:
+            with suppress(BaseException):
+                context.__exit__(*sys.exc_info())
         return
 
     active, installed, faults, lost = False, False, 0, 0

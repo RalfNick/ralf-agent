@@ -94,6 +94,8 @@ The independent source review established these three required boundaries. The c
 
 ## S2 — existing Coding scope through the same Session origin
 
+当前实际checkpoint（2026-10-16）：原360秒CPU v2首项已终态1 failed／514.670秒，零错误／跳过；424产品／857测试无漂移。前三Tool有原成功candidate，第四在关闭准入后拒绝、无candidate；effects3 adopted＋1 dispatched、两root仅一条退休，assembly关闭失败而schema按原义务保留。CPU记录fault1／incomplete5，全部函数排名／残差归因撤回。已RED复现并修复诊断空stack累计历史线程问题，保留64并发和其他限额、补固定首fault原因；四模块76项通过，另关闭回调联合25项通过。两路只读审查确证第四Tool进入原关闭准入分支，不把该结果当独立source漂移缺陷修产品；旧采样缺fault分支记录，不能反推其唯一原因。下一批先取得有效关键路径证据再决定产品候选；本批不重跑未变化全量、同一无效夹具或新服务。600秒诊断未授权／执行，原其余十二正常／五故障继续待验，S2／P3-2不关闭。后续成本审查段落保留各自历史范围，最新事实以[验收记录](../../../architecture/reviews/2026-10-15-temporal-deployment-sessions.md)为准。
+
 当前决策：冷包完整Runtime ABBA已否定helper-guard候选（18.455833→19.931383ms／次，约慢8%），不进入产品或再测同变体。135项原算法指纹及现场调用计数相同，0服务／模型／native；详见[结构审查](../../../architecture/reviews/2026-10-15-temporal-deployment-sessions.md#v21-验证成本结构审查2026-10-16未形成新产品候选)。同步声明与请求层级审查也未证明足够收益，不引入批量指纹或驻留SCV。原v21匹配Worker已完成一条199事件原History离线重放，并在原ReplayState完成一次SDK只读Query（约10.052ms），完整60字段State／publication／命令序列不变，0服务／模型；不代表实际服务验收，带cProfile的异常耗时统计不采纳。原监测仍有约195.532秒进程CPU未覆盖，下一步只补Worker关键路径计数（含Sandbox代码副本和直接DTO验证），诊断先自检再决定一次必要的原360秒采样。跨I/O的权限、原SDK事实及原360秒期限保持，未新增实际首项通过证据。
 
 当前批次只修复已复现的原回执幂等P2，不是性能候选：Coding4中首次unprepared已采纳、stop_needed排空后，原admitted-stop重复完整canonical相同证据返回原ACK，不写状态／事件，不释放unknown或改变grant。原完整身份及namespace／矛盾native检查、未选中与publication3路径保留。新增22项，20模块402 passed，另8个协议模块98 passed；独立安装63 passed，424产品／855测试无漂移，完整默认canonical和默认保存History离线兼容通过，本批仅本地提交。选中Coding指纹改变，既有保留History必须继续匹配原不可变Worker；不复用旧运行接受新实现。原360秒验收及其余十二正常／五故障门槛仍开放，独立600秒诊断未授权／执行；修复不能代替性能门槛或解决未知业务结果。下一步仍需关闭原360秒性能门槛，只有固定原图通过后才展开其余矩阵；不为本窄修重复预计仍会超时的同场景，亦不声称能够估计整阶段结束时间。

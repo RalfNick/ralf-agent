@@ -217,6 +217,8 @@ def _coding_cpu_enabled(directory):
         enabled = marker.exists() or enabled
         if enabled:
             marker.touch(mode=0o600)
+            if os.getenv("RALF_TEST_DEPLOYMENT_CODING_CPU_VARIANTS") == "1":
+                (Path(directory) / "capture-coding-cpu-variants").touch(mode=0o600)
     except OSError:
         pass  # Diagnostic marker I/O must not change the original test operation.
     return enabled

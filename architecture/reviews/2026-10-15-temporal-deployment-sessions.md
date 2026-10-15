@@ -1,5 +1,23 @@
 # 部署 Session 集成与收尾验证
 
+## CPU v2 关键路径诊断（2026-10-16，实际首项失败，采样无效）
+
+仅修改测试遥测，产品仍为`9ebb6f9`，不新增能力或调整原80／60／180／360及关闭期限。原CPU默认v1保持；显式CPU＋variants开关或原测试目录marker才启用v2，peer在子进程环境过滤前固定选择。固定18个同步目标补入直接`dto._intent`、origin、Runner／journal／protocol校验；只将位置与完整CodeType结构相等的新code对象记为遥测副本，不作为原模块、源码或授权证明。首次START立即配对，外来代码只禁用自己的该事件；不用全局restart，不采集参数／结果／异常内容。
+
+收集有256code／64线程／128栈／2048统计行及时间桶行／1MiB输出边界，只清自己的监控slot／local事件及callback。限额、负值、未结束或不自洽使采样无效；输出超限则无记录，缺文件不能当零CPU。10秒桶按同步返回时归属，保留最大跨桶调用wall及Unix起点，帮助区分业务与关闭窗口，不能当精确关键路径。桶原点误用单call起点的RED已复现并改为整个window；原业务RuntimeError／CancelledError同对象保留，超输出上限也不吞异常。
+
+新增16项，四受影响模块同次75 passed／3.08秒（-Werror），零失败／错误／跳过；Ruff／格式／空白通过，产品源码无修改。核心首次copy／改body或位置拒收、多线程／nested异常、外国tool的DISABLE保持、部分注册失败／cap清理、双context、env过滤后marker及桶总数对账均覆盖。独立源码审查无P1／P2，桶补充由上述RED复验。预先在原v21不可变安装、原199事件ReplayState的单次只读SDK Query验证了新Sandbox node副本正计数、fault0／incomplete0／timing_valid及完整State不变；该较早helper快照SHA为`a90d36ad8dbf1315792debcd7e8ec80cf1e3604b4cf8741634dc4b890e81e65a`，不冒称包含随后补入的桶字段。该次证据`v21-query-cpu-v2-offline/summary.json` SHA256 `38fe1caa59e5f2ee9f296cb12601be4b603415177f8da5525f4239adfb0097ce`，服务／模型／Client0。
+
+最终冻结`cpu-v2-final-prepared`含424产品／857完整测试，frozen audit SHA256 `f34c7bf139195c079f171faf97cbbd0faeda58d8fbb2124b342374e02d401a77`，helper SHA256 `8888dde7affea2ee3ffdd6f52c81271b0bf103ec3a51336a4ecd6298b35fc005`。原产品source／独立site／wheel逐字等值，直接复用已安装产品，无新build。唯一`graph-sequential-sdk`实际CPU诊断已终态：1 failed／514.670秒，零错误／跳过；424产品和857测试前后无漂移。原业务360秒取消发生在approve.sleep，关闭时间另计；永久diagnostic-only，无remaining入口，不能据本次关闭原360秒门槛。
+
+本次CPU记录`timing_valid=false`、fault1／incomplete5，观测64个线程身份和7个代码副本。已完成行与时间桶即使对账相同也不能覆盖采样质量失败；全部函数排名及残差归因不采纳。记录只包含通用fault计数，不能从64个线程反推实际触发分支。CPU质量证据`cpu-v2-terminal-analysis/final-evidence.json` SHA256 `aeab3bc2efde0940e20607f31ea1a21d494b9cc7e376b5eb2b8ec229c8eacbfa`，保留失败原件；先修复可复现的诊断生命周期问题，不盲目复跑同一夹具。
+
+业务证据与CPU质量分开：前三Tool分别43.217／42.755／46.954秒成功，均有原candidate、adopted效果及停止证据；第四Tool14.245秒返回definition_mismatch、无candidate，资源为unprepared。accepted2／retired1／retained1，effects3 adopted＋1 dispatched；Worker退出而assembly关闭失败，schema因原退休／Session证据／未采纳写义务保留。37项原输入前后相同，业务证据`cpu-v2-terminal-evidence/summary.json` SHA256 `214bdeba9297a83daae7bf77a40463177025cd2c1904f41d6a1c44f149fd7105`。其余十二正常／五故障仍未运行，600秒诊断未授权／执行。
+
+后续只读因果核对将第四Tool收窄到原关闭准入分支：Registry的closeCoding在20:55:03.700827Z完成；原child在20:55:04.225365Z的自动cancel ID，按原Workflow ID／epoch重算与唯一`grant_allowed=False`分支完全相同；20:55:05.919499Z才返回definition_mismatch。无原prepare grant接受，资源prepare_granted=false／prepared=null，Parent-stop取消发生在其后。因而不按独立源码／epoch漂移缺陷修改产品，也不放宽关闭后拒绝。History缺原Python trace及Query回包，最终异常仍可能来自该分支finally重验或显式closed抛出，不能断言某个Registry／node字段的实际返回。两路只读审阅一致，六项输入哈希不变；证据`cpu-v2-fourth-tool-boundary/summary.json` SHA256 `d1459f459a58e31d657713e857e4dcaec07dfd810f4833b88c67274d25b9e769`。主阻塞仍是关闭前两Turn超过360秒。
+
+诊断自身已完成最小修复：旧`stacks`保留结束线程的空列表，确定性顺序65个逻辑线程（同时仅一个活动调用）会错误耗尽64额度。RED复现后，仅在最后一帧返回时删除空stack；保留64并发／2048历史统计行和其他原限额，新增固定首fault枚举，不记录异常内容。仅替换诊断模块的threading代理，未改真实threading模块。RED两项失败→定向通过；最终四模块76 passed／5.42秒（-Werror），零失败／错误／跳过，Ruff／格式／空白通过，产品源码未修改。该复现证明诊断缺陷，不反推旧实际fault的唯一来源；旧采样仍无效，不补算排名或声称原360秒已通过。本批未启动新的服务采样。
+
 ## 已采纳未准备回执的恢复幂等修复（2026-10-16，源码候选）
 
 复用 v21 已终态资料，不重跑服务。第四 Tool 所在 Scope 的 Registry close 在18:57:22.223170先接受，原 owner 回执18:57:32.328305接受，原`ralf-deployment-coding-close:*`取消18:57:34.638707接受，Tool随后以definition_mismatch返回。原History没有native phase grant；首次unprepared回执148有Completed149正ACK，第二次同证据回执183的Completed184则为authorization_denied，不能把两次Accepted都当成功。PG同一effect／Run／Action／namespace_binding已有prepare_granted=false、pending_stop=false，但业务effect仍dispatched。该正物理证据不等于业务无效果结算，现有契约与纯状态测试明确保留unknown。私有只读证据`v21-fourth-tool-causal-audit/result.json` SHA256 `f1732dfb1a64a1a255057df818114831e40e9f4d691e44ff235b9d14222416e7`，四个输入前后哈希一致；内层异常未持久化，不能仅凭History断言每个拒绝条件。

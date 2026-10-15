@@ -1,5 +1,7 @@
 # 第三阶段支持矩阵与收口门槛
 
+2026-10-16 最新S2首项CPU v2诊断：1 failed／514.670秒，零错误／跳过，原360秒业务期限未变，424产品／857测试无漂移。前三Tool成功，第四在关闭准入后拒绝且无candidate；effects3 adopted＋1 dispatched，accepted2／retired1／retained1，assembly关闭失败、schema保留。CPU记录fault1／incomplete5，函数排名及残差归因无效；已RED复现并修复诊断空stack累计线程问题，保留原限额、补固定首fault原因，四模块76项通过，关闭回调联合25项通过，无新服务采样或产品修改。其余十二正常／五故障未运行，600秒诊断未授权／执行，S2／P3-2及第三阶段保持开放。详见[当前验收记录](../architecture/reviews/2026-10-15-temporal-deployment-sessions.md)。
+
 2026-10-16 按变更规则3修复P3-3已有订阅路径的必要可用性：waiting_input不再导致follow误退出，仍为非终态；同步／异步和真实SQLite断连、同游标／原问题重启续接已补6项，受影响81项通过，独立安装38通过、424产品／855测试无漂移，完整默认canonical及默认保存History离线兼容通过。本批不开发新HTTP功能、不跳过P3-2，也不把Local订阅证据当作完整服务验收。见[修复记录](../architecture/reviews/2026-10-16-input-event-observation.md)。
 
 2026-10-16 当前新增一个已复现的Coding4回执幂等修复：原admitted-stop在停止观察排空后重交相同已存unprepared仍返回原ACK，全部原proof／namespace／无grants与原生回执检查保留，不修改unknown效果／预算。新增22项，20模块402通过，另8个协议模块98通过；独立安装63通过、424产品／855测试无漂移，完整默认canonical及默认保存History离线兼容通过。旧Coding History仍使用原匹配Worker。原360秒首项仍失败，其余十二项及五故障不解锁；600秒诊断未授权／执行，S2／P3-2保持开放。见[当前登记](../architecture/reviews/2026-10-15-temporal-deployment-sessions.md)。

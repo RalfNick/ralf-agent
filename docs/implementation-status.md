@@ -1,5 +1,7 @@
 # Implementation status — 0.1.0.dev120
 
+2026-10-16 最新原图CPU v2诊断已终态：1 failed／514.670秒，零错误／跳过，424产品／857测试无漂移，未改变原360秒业务期限。前三Tool及candidate成功，第四Tool在关闭准入后拒绝、无candidate；effects3 adopted＋1 dispatched，两root仅一条退休，assembly关闭失败而Worker退出，schema依原义务保留。CPU采样fault1／incomplete5，全部排名和残差归因不采纳。诊断空stack累计历史线程的缺陷已RED复现并修复，保留64并发和其他限额、补固定首fault原因；四模块76项通过，独立关闭回调联合检查25项通过，未新增服务采样或修改产品。不从该复现反推旧fault唯一来源，下一步须先取得有效关键路径证据，不再按关闭后拒绝猜测源码漂移或叠加微优化。S2／P3-2保持开放，其余十二正常／五故障未运行，600秒诊断未授权／执行。详见[当前验收记录](../architecture/reviews/2026-10-15-temporal-deployment-sessions.md)。以下成本与离线证据保留各自快照范围。
+
 2026-10-16 当前P3-2仍由原360秒图编排验收阻塞。冷包完整Runtime对照已否定helper-guard优化（18.456→19.931ms／次），未进入产品；批量指纹与复用SCV也因未证明足够收益且增加变更检测责任而不实施。原CPU诊断只覆盖约47%的进程CPU，剩余约195.532秒未归因。原匹配Worker已通过199事件保存History离线重放，并在同一ReplayState上完成一次约10.052ms的SDK只读Query，完整State／publication／命令序列不变，0服务／模型；不作实际服务或完整性能验收，异常cProfile耗时撤回。下一步补原Worker关键路径计数覆盖，不继续盲目微调。原其余十二正常／五故障仍待验，独立600秒诊断仍未授权／执行。见[当前结构审查](../architecture/reviews/2026-10-15-temporal-deployment-sessions.md#v21-验证成本结构审查2026-10-16未形成新产品候选)。
 
 2026-10-16 修复既有事件订阅对waiting_input的错误拒绝：同步／异步follow保持等待，真实Local＋SQLite观察断连不改变原Run，Engine重启后按原游标接收完整后续事件和一次input_answered。新增6项，受影响5模块81通过；独立安装38通过，424产品／855测试无漂移，完整默认canonical及默认保存History离线兼容通过。仅现有观察路径兼容修复，没有新增HTTP端点；P3-2保持开放，完整P3-3及后续门槛未验收。见[修复记录](../architecture/reviews/2026-10-16-input-event-observation.md)。
