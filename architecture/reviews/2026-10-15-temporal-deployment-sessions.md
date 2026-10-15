@@ -1,5 +1,13 @@
 # 部署 Session 集成与收尾验证
 
+## v18 收尾候选（2026-10-16，待安装／实际复验）
+
+两项修复针对P3-2原图期限与owned close阻塞。三子树读取使用真实Session／Parent／Run State、原admission／closure／seal与原SDK形状：原v17完整树有13组Session七事实，新封闭读取为1组，所有Run／Registry／Start读取Counter和返回证书逐项相同；独立raw verifier不可被outer validate替代。19项覆盖成员intent／origin、终末Start／epoch、源码／类替换、缺seal／pin、取消及普通4双轮保持。通用proof和sealing未引入skip，原生每请求fresh保持。
+
+关闭主用例对合法原夹具／HEAD源码复验RED，早期pure physical pending即使在同次末扫后root／child均正停止仍失败。修复仅在exact Coding4／binding23延后这类本模块标记，保留全部hard错误；原最终resource／ancestor adoption后只读fresh整树与原资源正验证，缺child／resource、变epoch、unknown／未停／缺ACK仍拒绝。18项新检查通过，新增只读helper纳入原Worker指纹；不新增cancel／drive／Update、attempt或期限。该RED不证明v17实际CloseIncomplete的唯一来源。
+
+独立实现与夹具审阅无阻塞。同一候选131个受影响模块1941 passed／289 skipped／88.74秒（-Werror），1270个产品／测试文件前后相同；跳过不作实际服务验收。Ruff、格式与空白检查通过。安装与原图实际复验尚未执行，S2、P3-2与第三阶段仍开放；以下v17保留为最新实际checkpoint。
+
 日期：2026-10-15。按 [P3-2 固定计划](../../docs/superpowers/plans/2026-10-15-temporal-deployment-sessions.md)收尾，仅本地开发与提交，不推送。S1 普通 Session 功能子集已在 `4fdd5ae`、`8e33b9a` 记录；本批继续接通既定 Coding Session，不引入新编排、适配器或执行权威。
 
 ## 当前结论

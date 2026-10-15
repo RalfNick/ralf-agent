@@ -807,8 +807,198 @@ async def _verify_receipt(runtime, client, value, *, info):
     return {"ok": True, "result": detached(prepared)}
 
 
+class _SessionTreeReading:
+    """Invocation-local proposals, usable only after the independent SDK exit.
+
+    This reader has no admission, mutation or proof-returning port. In particular,
+    its intermediate Run readings are not a substitute for execution._proof.
+    """
+
+    def __init__(self, validation, readonly, policy, proof):
+        from .temporal_session_deployment_control import _CheckedClient
+
+        if type(readonly) is not _CheckedClient or readonly.validation is not validation:
+            _reject()
+        validation._check()
+        readonly._full_read()
+        i = detached(validation.intent)
+        manifest = i["submission"]["manifest"]
+        protocol = manifest.get("deployment_admission_protocol", {})
+        if (
+            type(protocol) is not dict
+            or type(protocol.get("version")) is not int
+            or protocol["version"] != 4
+            or manifest.get("binding_protocol") not in (22, 23)
+            or "coding_execution_protocol" not in manifest
+            or protocol.get("policy") != policy
+            or proof["run_id"] != i["run_id"]
+            or proof["scope"] != i["scope"]
+            or proof["manifest"] != manifest
+            or proof["request"] != i["submission"]["request"]
+            or proof["admission"]["lineage"] != []
+        ):
+            _reject()
+        origin = detached(proof["admission"].get("session_origin"))
+        validate_origin(origin, intent=i, deployment_id=validation.deployment_id)
+        self._outer, self._readonly = validation, readonly
+        self._resources = validation.runtime, validation.client, validation.info
+        self._intent = canonical(i)
+        self._identity = canonical({"intent": i, "session_origin": origin})
+        self._policy, self._proof = detached(policy), detached(proof)
+        # The outer object's validate() is not evidence. All group reads use a
+        # separate pinned verifier; the exit reads the original SDK transport.
+        self._validation = SessionControlValidation(
+            validation.runtime,
+            validation.client,
+            detached(validation.value),
+            validation.info,
+            deployment_id=validation.deployment_id,
+        )
+        self._client = _CheckedClient(self._validation, _aggregate=True)
+        self._check()
+
+    def _check(self):
+        runtime, client, info = self._resources
+        outer, readonly = self._outer, self._readonly
+        outer._check(full=False)
+        readonly._full_read()
+        self._validation._check(full=False)
+        if (
+            readonly.validation is not outer
+            or outer.runtime is not runtime
+            or outer.client is not client
+            or outer.info is not info
+            or canonical(outer.intent) != self._intent
+            or self._validation.runtime is not runtime
+            or self._validation.client is not client
+            or self._validation.info is not info
+            or canonical(self._validation.intent) != self._intent
+            or self._client.validation is not self._validation
+        ):
+            _reject()
+
+    async def _node(self, run_id, epoch):
+        from . import temporal_deployment_execution as execution
+
+        self._check()
+        runtime, _, _ = self._resources
+        value, description = await execution._read_admission(
+            runtime, self._client, self._policy, self._proof["scope"], run_id, epoch, required=True
+        )
+        response, identity = await execution._start_record(self._client, self._policy, value)
+        if identity is None or canonical(identity) != self._identity:
+            _reject()
+        await execution._start_record_binding(self._client, value, description, response)
+        self._check()
+        return value
+
+    async def _ancestry(self, original):
+        from . import temporal_deployment_execution as execution
+
+        current = original
+        for index in range(len(original["admission"]["lineage"]) - 1, -1, -1):
+            link = original["admission"]["lineage"][index]
+            parent = await self._node(link["parent_run_id"], link["parent_execution_epoch"])
+            if (
+                parent["request_digest"] != link["parent_request_digest"]
+                or parent["manifest_digest"] != link["parent_manifest_digest"]
+                or parent["admission"]
+                != {**original["admission"], "lineage": original["admission"]["lineage"][:index]}
+            ):
+                _reject()
+            call = execution._child(parent, current["run_id"])
+            if (
+                call.get("id") != link["call_id"]
+                or call.get("command_id") != current["command_id"]
+                or call.get("request") != current["request"]
+                or call.get("deployment_admission") != current["admission"]
+                or call.get("dispatch_started") is not True
+                or call.get("deployment_execution_epoch") != current["execution_epoch"]
+            ):
+                _reject()
+            refreshed = await self._node(parent["run_id"], parent["execution_epoch"])
+            pinned = execution._child(refreshed, current["run_id"])
+            if (
+                pinned.get("deployment_execution_epoch") != current["execution_epoch"]
+                or pinned.get("request") != current["request"]
+                or pinned.get("deployment_admission") != current["admission"]
+            ):
+                _reject()
+            current = refreshed
+        if (
+            current["run_id"] != self._proof["run_id"]
+            or current["execution_epoch"] != self._proof["execution_epoch"]
+        ):
+            _reject()
+
+    async def _tree(self, proof, seen):
+        from . import temporal_deployment_release as release
+
+        self._check()
+        if proof["run_id"] in seen or len(seen) >= 4096:
+            _reject()
+        seen.add(proof["run_id"])
+        runtime, _, _ = self._resources
+        closure = await release._closure(runtime, self._client, self._policy, proof)
+        proof, children = closure["deployment"], []
+        for call in proof["children"]:
+            if call.get("settled") is not True or call.get("uncertain") is True:
+                _reject()
+            if call.get("dispatch_started") is not True and call.get("started") is not True:
+                if (
+                    call.get("deployment_execution_epoch") is not None
+                    or call.get("state") not in release.state.TERMINAL
+                ):
+                    _reject()
+                children.append(release._child_entry(call, None))
+                continue
+            epoch = call.get("deployment_execution_epoch")
+            if type(epoch) is not str or not epoch:
+                _reject()
+            child = await self._node(call["run_id"], epoch)
+            if (
+                child["request"] != call["request"]
+                or child["command_id"] != call["command_id"]
+                or child["admission"] != call["deployment_admission"]
+            ):
+                _reject()
+            await self._ancestry(child)
+            certificate = await self._tree(child, seen)
+            children.append(release._child_entry(call, certificate))
+        certificate = closure["seal"]
+        if certificate is None:
+            _reject()
+        release._certificate(certificate, proof)
+        if certificate["children"] != children:
+            _reject()
+        current = await self._node(proof["run_id"], proof["execution_epoch"])
+        readback = await release._closure(runtime, self._client, self._policy, current)
+        if readback["seal"] != certificate:
+            _reject()
+        self._check()
+        return detached(certificate)
+
+    async def read(self):
+        certificate = await self._tree(self._proof, set())
+        self._check()
+        verified = await self._validation.validate()
+        self._check()
+        if canonical(verified) != self._identity:
+            _reject()
+        self._resources[0].validate_release(self._proof["manifest"])
+        self._check()
+        return certificate
+
+
+async def _read_session_tree(validation, readonly, policy, proof):
+    """Return a closed certificate only after fresh independent Session facts."""
+    return await _SessionTreeReading(validation, readonly, policy, proof).read()
+
+
 def source_bindings():
     """Pin executable verifier ports, including in-memory source replacements."""
+    from . import temporal_deployment_execution as execution
+    from . import temporal_deployment_release as release
     from . import temporal_session_deployment_dto as dto
     from .temporal_session_deployment_control import (
         _CheckedClient,
@@ -826,6 +1016,22 @@ def source_bindings():
             verify_registry_request,
             _verify_receipt,
             validate_session_origin,
+            execution._read_admission,
+            execution._start_record,
+            execution._start_record_binding,
+            execution._public_start_binding,
+            execution._child,
+            release._closure,
+            release._certificate,
+            release._child_entry,
+            _SessionTreeReading,
+            _SessionTreeReading.__init__,
+            _SessionTreeReading._check,
+            _SessionTreeReading._node,
+            _SessionTreeReading._ancestry,
+            _SessionTreeReading._tree,
+            _SessionTreeReading.read,
+            _read_session_tree,
             dto.encode_control_body,
             dto.decode_control_body,
             dto._coded_control_body,

@@ -211,6 +211,7 @@ def _worker_sources():
                 "_resources",
                 "_leaf_requests",
                 "_resource_request",
+                "_closed_subtree",
                 "_close_child",
                 "_close_subtree",
                 "_adopt_resource_ancestry",

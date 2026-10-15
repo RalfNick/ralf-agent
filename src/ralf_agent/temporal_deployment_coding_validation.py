@@ -123,7 +123,17 @@ class CodingValidation:
         ]
         self._ports += [
             (execution, name)
-            for name in ("_actual", "_policy", "_proof", "_ancestry", "_namespace")
+            for name in (
+                "_actual",
+                "_policy",
+                "_proof",
+                "_read_admission",
+                "_public_start_binding",
+                "_start_record",
+                "_start_record_binding",
+                "_ancestry",
+                "_namespace",
+            )
         ]
         self._ports += [(composition, name) for name in ("_proof", "_ancestry")]
         self._ports += [
@@ -137,9 +147,19 @@ class CodingValidation:
         ]
         if self._manifest["deployment_admission_protocol"]["version"] == 4:
             from . import temporal_deployment_coding_bridge as bridge
+            from . import temporal_deployment_release as release
             from . import temporal_session_deployment_verification as verification
 
             self._ports += [(verification, "validate_session_origin"), (self, "_session_origin")]
+            self._ports += [
+                (verification, "_read_session_tree"),
+                (verification, "_SessionTreeReading"),
+                *[
+                    (verification._SessionTreeReading, name)
+                    for name in ("__init__", "_check", "_node", "_ancestry", "_tree", "read")
+                ],
+                *[(release, name) for name in ("_closure", "_certificate", "_child_entry")],
+            ]
             self._ports += [
                 (composition, "control"),
                 (bridge, "_ReadOnlyClient"),

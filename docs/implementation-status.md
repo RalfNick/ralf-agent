@@ -1,5 +1,7 @@
 # Implementation status — 0.1.0.dev120
 
+2026-10-16 收尾候选v18（metadata不变）：已实现Coding4 Session封闭整树读取与同次关闭末轮纯physical-pending消解，未增加功能范围或放宽原期限。同一工作区131个受影响模块1941 passed／289 skipped／88.74秒（-Werror），1270个产品／测试文件前后不变；跳过不作服务验收。三子树主RED在原v17上为13组重复Session事实；新路径保留每项Run／Registry／Start读取和相同证书，仅在独立raw SDK七事实及完整出口后返回，19项定向检查通过。关闭主RED在合法原夹具上确认，18项新增检查覆盖同次晚到停止、真实资源回执、硬错误／缺ACK／unknown／原资源和子节点消失，以及旧3行为保持。独立源码和夹具审查无阻塞；当前实际checkpoint仍为以下v17，安装与真实服务复验待做，S2／P3-2保持开放。
+
 当前验收 checkpoint（2026-10-15，v17／本地 `a4cfc38`）：S1 普通 Session 已验收；P3-2 的 S2 Coding Session 仍开放，P3-3／4／5／A 尚未关闭。最终受影响回归959 passed／193 skipped／55.06秒（-Werror），跳过不作实际服务验收。独立安装五模块91 passed／11.39秒、零失败／错误／跳过，424产品及844测试副本前后相同；默认完整canonical及原／continued保存History离线重放通过，Provider0／服务0，不代表live continuation。
 
 v17实际graph-sequential仍1失败／432.08秒，零错误／跳过。第一Turn成功发布，第二Turn第四child已启动，但未批准／未调度Tool便触发原360秒整体期限。前三个Tool均成功（48.236686／43.243227／47.418934秒），第一root成功、第二root在清理取消后以failed退休；两root均正退休、held0，不能代替Session关闭。第二Turn末observer有start无end，原ACK未清；owned关闭先CloseIncomplete，退出Worker后的重试RPCError，schema保留。缺少Registry的Session close回执直接触发保留规则，尚未进入State重建，不将其称为新codec／State缺陷。其余十二项正常组合与五项故障未运行。

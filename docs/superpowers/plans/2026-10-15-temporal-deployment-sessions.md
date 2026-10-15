@@ -94,6 +94,8 @@ The independent source review established these three required boundaries. The c
 
 ## S2 — existing Coding scope through the same Session origin
 
+2026-10-16 v18收尾源码已实现并经独立审查：仅 `_observe` 的Coding4封闭树入口归并独立Session读取，通用 `_proof`／`_tree` 与ordinary双轮完整校验保持；每个Run／Registry／Start仍实际读取，末轮独立raw SDK七事实与全部pins／Runtime正验证后才返回证书。真实三子状态／SDK形状主用例验证原13组→新1组、读取Counter与证书相同，定向19项通过。关闭侧仅明确的纯physical pending可延至原末轮resource／ancestor adoption后，以fresh完整原树与原资源正证据消解；新增18项涵盖合法零资源、真实资源producer、硬错误／缺ACK／unknown／子／资源消失及旧3对照。同次131模块受影响回归1941 passed／289 skipped／88.74秒（-Werror），1270个产品／测试前后相同。未启动模型或新服务，不作为实际恢复验收；下一步只做冻结、安装兼容和一次原图复验。
+
 最新checkpoint为本地 `a4cfc38`／v17，metadata保持dev120。相关回归959 passed／193 skipped／55.06秒，独立安装五模块91 passed／11.39秒，默认与保存History离线兼容通过。原图实际首项1失败／432.08秒：第一Turn成功发布；第二Turn第四child已启动、尚未批准即被整体360秒取消，第四Tool未运行；不是内部180秒TimeoutError。两root正退休、held0；第二Session尾调用缺end ACK，physical close先CloseIncomplete，Worker退出后重试RPCError，schema保留。其余十二项正常组合及五项故障未运行。各候选历史不覆盖此checkpoint。
 
 本批原只读group和固定child observe重复检查已本地提交／安装／实际复验。最终证明、原生逐请求fresh及原80／60／180／360期限保持。首root start→seal191.984926秒、Tool交接33.603793秒、seal→Session ACK24.222412秒；与v16的差异是两个单次样本，不作性能归因或稳定SLO结论。SDK History不记录Query返回和分支marker，实际carrier／最终pin与直读条件相符，但没有直接实际branch计数。当前微调仍不足以满足整体期限。

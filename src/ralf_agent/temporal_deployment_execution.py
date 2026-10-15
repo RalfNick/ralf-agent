@@ -244,6 +244,18 @@ def _receipt(proof, *, required):
 
 
 async def _proof(runtime, client, policy, scope, run_id, epoch, *, required=False):
+    value, description = await _read_admission(
+        runtime, client, policy, scope, run_id, epoch, required=required
+    )
+    from .temporal_deployment_protocol import public_selected
+
+    if public_selected(value["manifest"]):
+        await _public_start_binding(client, policy, value, description, runtime=runtime)
+    return value
+
+
+async def _read_admission(runtime, client, policy, scope, run_id, epoch, *, required=False):
+    """Read original Run facts; Session origin is not independently verified here."""
     handle = client.get_workflow_handle(run_id, run_id=epoch)
     description = await handle.describe()
     if (
@@ -308,14 +320,39 @@ async def _proof(runtime, client, policy, scope, run_id, epoch, *, required=Fals
         _reject()
     _receipt(value, required=required)
     await _namespace(client, value["admission"]["root"]["namespace"])
-    from .temporal_deployment_protocol import public_selected
-
-    if public_selected(value["manifest"]):
-        await _public_start_binding(client, policy, value, description, runtime=runtime)
-    return value
+    return value, description
 
 
 async def _public_start_binding(client, policy, proof, description, *, runtime=None):
+    response, verified = await _start_record(client, policy, proof)
+    session = verified is not None
+    if session:
+        from .temporal_deployment_coding_state import selected as coding_selected
+        from .temporal_session_deployment_verification import validate_session_origin
+
+        if runtime is None:
+            _reject()
+        if not coding_selected(proof["manifest"]):
+            if (
+                await validate_session_origin(
+                    runtime, client, verified["intent"], verified["session_origin"]
+                )
+                != verified
+            ):
+                _reject()
+    await _start_record_binding(client, proof, description, response)
+    if session:
+        if (
+            await validate_session_origin(
+                runtime, client, verified["intent"], verified["session_origin"]
+            )
+            != verified
+        ):
+            _reject()
+
+
+async def _start_record(client, policy, proof):
+    """Read and correlate the Registry envelope, without Session SDK authority."""
     root = proof["admission"]["root"]
     session = proof["manifest"].get("deployment_admission_protocol", {}).get("version") == 4
     response = detached(
@@ -338,12 +375,8 @@ async def _public_start_binding(client, policy, proof, description, *, runtime=N
     )
     verified = None
     if session:
-        from .temporal_deployment_coding_state import selected as coding_selected
         from .temporal_session_deployment_dto import validate_intent, validate_origin
-        from .temporal_session_deployment_verification import validate_session_origin
 
-        if runtime is None:
-            _reject()
         intent = response["intent"]
         validate_intent(
             intent,
@@ -368,12 +401,11 @@ async def _public_start_binding(client, policy, proof, description, *, runtime=N
         # Fix the expected identity now; subsequent SDK callbacks cannot change
         # it by mutating the Registry response while only read-only I/O follows.
         verified = detached({"intent": intent, "session_origin": response["session_origin"]})
-        if not coding_selected(proof["manifest"]):
-            if (
-                await validate_session_origin(runtime, client, intent, response["session_origin"])
-                != verified
-            ):
-                _reject()
+    return response, verified
+
+
+async def _start_record_binding(client, proof, description, response):
+    root = proof["admission"]["root"]
     envelope = response["submission"]
     _exact(envelope, {"version", "request", "manifest", "activity_timeout", "task_queue"})
     if (
@@ -401,12 +433,6 @@ async def _public_start_binding(client, policy, proof, description, *, runtime=N
     if started != expected:
         _reject()
     await _namespace(client, root["namespace"])
-    if session:
-        if (
-            await validate_session_origin(runtime, client, intent, response["session_origin"])
-            != verified
-        ):
-            _reject()
 
 
 def _child(parent, child_id):

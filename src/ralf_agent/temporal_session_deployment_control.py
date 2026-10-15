@@ -668,7 +668,12 @@ async def _observe(validation):
         _reject()
     closure = await release._closure(validation.runtime, readonly, policy, proof)
     await validation.validate()
-    certificate = await release._tree(validation.runtime, readonly, policy, proof, seal=False)
+    if readonly._aggregate:
+        from .temporal_session_deployment_verification import _read_session_tree
+
+        certificate = await _read_session_tree(validation, readonly, policy, proof)
+    else:
+        certificate = await release._tree(validation.runtime, readonly, policy, proof, seal=False)
     await validation.validate()
     if closure["seal"] != certificate:
         _reject()

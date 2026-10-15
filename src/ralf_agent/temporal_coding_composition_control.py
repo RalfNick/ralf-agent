@@ -851,24 +851,76 @@ async def _fence_leaf(runtime, client, leaf, namespace):
         runtime.validate_release(request["runtime_manifest"])
 
 
-async def _close_subtree(runtime, client, parent, manifest, namespace):
+class _PhysicalClosePending(CloseIncomplete):
+    """Only a locally observed physical wait, never an SDK/error acknowledgement."""
+
+
+async def _closed_subtree(client, original, manifest, namespace, known):
+    """Read the complete original tree again; a deferred wait grants no closure."""
+    from .temporal_coding_composition_state import _proof as physical_proof
+
+    current = await _proof(
+        client,
+        original["scope"],
+        original["run_id"],
+        original["execution_epoch"],
+        manifest,
+        namespace,
+        request=original["request"],
+    )
+    physical_proof(current)
+    if not current["physical_stopped"]:
+        raise CloseIncomplete({"coding_composition": "original subtree closure remains pending"})
+    if not _root_kind(manifest, current["request"]["definition"]["kind"]):
+        return
+    children = await _children(client, current, namespace)
+    by_id = {call["run_id"]: call for call in children}
+    for previous in known.get(current["run_id"], ()):
+        call = by_id.get(previous["run_id"])
+        if (
+            call is None
+            or call["request"] != previous["request"]
+            or previous.get("dispatch_started") is True
+            and call.get("dispatch_started") is not True
+            or previous.get("child_execution") is not None
+            and call.get("child_execution") != previous["child_execution"]
+        ):
+            raise DefinitionMismatch("Original closing child inventory changed")
+    for call in children:
+        _validate_child_intent(current, call, manifest, namespace)
+        if call.get("dispatch_started") is not True:
+            if call.get("physical_no_start") is not True:
+                raise CloseIncomplete({"coding_composition": "original child no-start unconfirmed"})
+            continue
+        child = await _child_proof(client, current, call, manifest, namespace)
+        await _closed_subtree(client, child, manifest, namespace, known)
+
+
+async def _close_subtree(runtime, client, parent, manifest, namespace, *, _tree=None):
     """Cancel an original parent, then attempt every direct edge postorder."""
     if await _deployment_sealed(runtime, client, parent, namespace):
         return parent
     await _ancestry(client, parent, manifest, namespace)
     pending = []
+    hard = False
     try:
         await _command(client, parent, "cancel", owner_id=parent["run_id"])
     except Exception as exc:
+        hard = True
         pending.append(
             {"parent": parent["run_id"], "code": getattr(exc, "code", "cancel_unavailable")}
         )
-    for call in await _children(client, parent, namespace):
+    children = await _children(client, parent, namespace)
+    if _tree is not None:
+        _tree[parent["run_id"]] = detached(children)
+    for call in children:
         if call.get("dispatch_started") is not True:
             continue  # Original History owns and closes undelivered intents.
         try:
-            await _close_child(runtime, client, parent, call, manifest, namespace)
+            await _close_child(runtime, client, parent, call, manifest, namespace, _tree=_tree)
         except Exception as exc:
+            if type(exc) is not _PhysicalClosePending:
+                hard = True
             pending.append(
                 {"child": call.get("run_id"), "code": getattr(exc, "code", "stop_unavailable")}
             )
@@ -882,7 +934,8 @@ async def _close_subtree(runtime, client, parent, manifest, namespace):
         request=parent["request"],
     )
     if pending or not refreshed["physical_stopped"]:
-        raise CloseIncomplete({"coding_composition": pending or "original subtree closure pending"})
+        error = _PhysicalClosePending if _tree is not None and not hard else CloseIncomplete
+        raise error({"coding_composition": pending or "original subtree closure pending"})
     return refreshed
 
 
@@ -925,9 +978,15 @@ async def _adopt_resource_ancestry(client, leaf, roots, manifest, namespace):
             )
 
 
-async def _close_child(runtime, client, root, call, manifest, namespace):
+async def _close_child(runtime, client, root, call, manifest, namespace, *, _tree=None):
     leaf = await _child_proof(client, root, call, manifest, namespace)
     await _adopt(client, root, leaf, epoch=True)
+    if _tree is not None:
+        original = next(item for item in _tree[root["run_id"]] if item["run_id"] == leaf["run_id"])
+        original["child_execution"] = {
+            name: detached(leaf[name])
+            for name in ("namespace", "execution_epoch", "original_execution_epoch")
+        }
     nested = manifest.get("binding_protocol") == 23 and _root_kind(
         manifest, leaf["request"]["definition"]["kind"]
     )
@@ -945,7 +1004,7 @@ async def _close_child(runtime, client, root, call, manifest, namespace):
     if not nested and leaf["state"] not in {"cancelling", "cancelled", "failed", "succeeded"}:
         raise DefinitionMismatch("Original leaf stop recovery requires business closure")
     if nested:
-        leaf = await _close_subtree(runtime, client, leaf, manifest, namespace)
+        leaf = await _close_subtree(runtime, client, leaf, manifest, namespace, _tree=_tree)
     elif not leaf["physical_stopped"]:
         parent = await _proof(
             client,
@@ -972,7 +1031,8 @@ async def _close_child(runtime, client, root, call, manifest, namespace):
     )
     await _adopt(client, root, leaf)
     if not leaf["physical_stopped"]:
-        raise CloseIncomplete({"coding_composition": "original leaf owner closure remains pending"})
+        error = _PhysicalClosePending if _tree is not None else CloseIncomplete
+        raise error({"coding_composition": "original leaf owner closure remains pending"})
 
 
 def _is_notfound(exc):
@@ -1033,6 +1093,17 @@ async def close(runtime, *, client, scope, candidates=None):
     await _namespace(client, namespace)
     roots = {}
     obligations = []
+    publication = manifest.get("deployment_admission_protocol", {}).get("version")
+    tree = (
+        {}
+        if type(publication) is int
+        and publication == 4
+        and manifest.get("binding_protocol") == 23
+        and selected(manifest)
+        else None
+    )
+    deferred = []
+    original_resources = set()
     for candidate in receipt["candidates"]:
         try:
             if (
@@ -1066,6 +1137,18 @@ async def close(runtime, *, client, scope, candidates=None):
         records = ()
     for resource in records:
         try:
+            if tree is not None:
+                original_resources.add(
+                    digest(
+                        [
+                            resource["scope"],
+                            resource["effect_key"],
+                            resource["runner"],
+                            resource["request"],
+                            resource["namespace_binding"],
+                        ]
+                    )
+                )
             if digest(resource["runner"]) not in runners:
                 raise DefinitionMismatch("Composition close changed original Runner")
             dispatch = resource["request"]["dispatch"]
@@ -1146,7 +1229,9 @@ async def close(runtime, *, client, scope, candidates=None):
     for root in roots.values():
         if manifest.get("binding_protocol") == 23:
             try:
-                await _close_subtree(runtime, client, root, manifest, namespace)
+                await _close_subtree(runtime, client, root, manifest, namespace, _tree=tree)
+            except _PhysicalClosePending:
+                deferred.append(root)
             except Exception as exc:
                 obligations.append(
                     {"root": root["run_id"], "code": getattr(exc, "code", "stop_unavailable")}
@@ -1188,6 +1273,28 @@ async def close(runtime, *, client, scope, candidates=None):
             )
     try:
         runners, records = await _resources(runtime, scope)
+        if tree is not None:
+            from .postgres_coding_resources import validate_resource
+
+            for resource in records:
+                validate_resource(
+                    canonical(resource),
+                    (scoped["workspace"], scoped["principal"], resource["effect_key"]),
+                )
+            final_resources = {
+                digest(
+                    [
+                        row["scope"],
+                        row["effect_key"],
+                        row["runner"],
+                        row["request"],
+                        row["namespace_binding"],
+                    ]
+                )
+                for row in records
+            }
+            if not original_resources <= final_resources:
+                raise DefinitionMismatch("Original closing resource inventory disappeared")
         for resource in records:
             try:
                 if digest(resource["runner"]) not in runners:
@@ -1277,6 +1384,13 @@ async def close(runtime, *, client, scope, candidates=None):
         obligations.append(
             {"resources": "original", "code": getattr(exc, "code", "resources_unavailable")}
         )
+    for root in deferred:
+        try:
+            await _closed_subtree(client, root, manifest, namespace, tree)
+        except Exception as exc:
+            obligations.append(
+                {"root": root["run_id"], "code": getattr(exc, "code", "proof_unavailable")}
+            )
     runtime.validate_release(manifest)
     await _namespace(client, namespace)
     if obligations:
