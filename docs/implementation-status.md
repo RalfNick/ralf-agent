@@ -2,6 +2,8 @@
 
 **当前优先级（2026-10-16 用户指令）：先保障基础能力，避免过度开发。** 先修复安装、模型与工具、单 Agent、基础 Workflow、上下文、记忆／RAG及恢复主链路；已有能力通过默认实现和定制示例复用，不新增封装。Temporal Coding Session性能专项后置；下方失败和所有未验收项保留，不把调整优先级算成门槛完成。起步路径见[基础能力入口](basic-capabilities.md)。
 
+2026-10-16 基础SDK集成回归：`b871f61` 修复工具缺参、默认值及实时签名变化的公共采纳边界，保留原合法Schema／Manifest与审批恢复；首用、Session／配置和默认本地备份步骤已同步。一次完整离线源码回归 **12,749 passed／838 skipped，零失败／错误**，425产品／862 Python测试前后哈希一致，另2个JSON夹具与固定提交一致（合计864测试／夹具），Ruff／格式检查通过。跳过原因及独立安装的有限范围见[基础回归记录](basic-capabilities.md#基础修复的完整离线回归)。本批没有新增真实模型质量／外部服务验收，不覆盖下方保留的S2原360秒失败，也不关闭第三阶段。
+
 2026-10-16 P3-2/S2原360秒验收仍未完成（ec0ebe4原首项1 failed／386.753秒）。用户授权的同包600秒独立诊断1 passed／456.329秒：两Turn均succeeded／released，四Tool及效果采纳、物理停止、原正ACK、两root退休和安全清理通过；首submit到第二成功Advance为432.497075秒，不替代360验收或模型质量证据。另已修复根TemporalRuntime注册getter在单次release校验内替换已检查组件／方法的P2缺口：保留原full，以静态descriptor／code及原owner pins封闭出口；新增10项、冻结32模块628 passed、独立安装10模块171 passed，默认完整canonical及原／continued默认History离线兼容通过，425产品／863测试无漂移。该新代码未复跑真实服务，不能借用旧包600诊断判通过。其余十二正常／五故障不解锁，P3-3／4／5／A保持原状态。下一批继续以完整Tool／CONTROL调用定位累计成本，先验证成组收益，再决定原360复验；不扩大范围或修改门槛。详见[整链证据](../architecture/reviews/2026-10-16-coding-session-critical-path.md)及[绑定修复](../architecture/reviews/2026-10-16-temporal-release-reentrancy.md)。仅本地提交，不推送。
 
 `04c512c` 后的成本审查未产生产品变更：快速复制已复现原拒绝行为差异并否决；节点双读并发缺显著收益证据，纯库存bulk尚缺常量纯度证明。完整Tool的正向离线链不能以初始化PG／简化Authority夹具替代。没有新实际服务运行或阶段门槛关闭，原期限和范围保留。详见[候选复核](../architecture/reviews/2026-10-16-coding-session-critical-path.md#绑定修复后的成本候选复核)。

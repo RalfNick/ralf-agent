@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased — Basic SDK reliability and usage
+
+- Reject typed tool proposals that omit required callable inputs before approval or dispatch, even when an explicit Schema admits them. Validate against the original frozen parameter declaration and captured defaults; later Python signature/default metadata cannot change the accepted arguments. Existing valid Schemas, tool Manifests and approval recovery retain their identities.
+- Correct first-use examples for observation timeouts, durable Session busy receipts, per-Action approval command IDs, configuration recovery and RAG updates. A repeated command retrieves its original receipt; a new task or refreshed answer needs a new command identity.
+- Document and exercise a manual backup/recovery drill for the default offline Local starter, including its separate business-effect database. This is a limited application procedure, not framework-wide backup, migration or a completed phase-three gate.
+- Keep the frozen phase-one/two evidence and outstanding phase-three gates separate from these basic fixes. Current supported scope and verification are listed in [basic capabilities](docs/basic-capabilities.md) and the [phase-three matrix](docs/phase3-support-matrix.md).
+- Verify the fixed `b871f61` product in one complete offline source run: 12,749 passed, 838 configuration-dependent skips, no failures/errors. Hashes of 425 product files and 862 Python test files match before and after; two JSON fixtures match the fixed commit, making 864 test/fixture files in total. Full Ruff and formatting checks pass. Independent installation retains its separately scoped evidence; this run adds no live-model or external-service acceptance.
+
 ## 0.1.0.dev120 — Public Temporal Coding deployment
 
 - Admit the existing bounded native Agent/sequence, graph, Team, Dynamic and recursive Coding scope through deployment3 and the original shared Registry. Preserve History grants, effects, budgets, physical closure and independent native/tool/deployment/effect ACK obligations.
