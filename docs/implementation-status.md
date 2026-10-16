@@ -1,6 +1,6 @@
 # Implementation status — 0.1.0.dev120
 
-2026-10-16 P3-2/S2 仍未完成：本批 actual Model／Context 的 Coding4／binding23 根命令定向查询已实现，保留完整 fresh ancestry、原 Registry 握手与实时准入，缺失／不匹配提示回退。新增21项通过，独立审查无P1／P2；全部270个Temporal模块3759 passed／589配置依赖skipped，独立安装14模块291 passed，默认完整canonical及保存History离线兼容通过，425产品／861测试无漂移。一次原图原360秒实际验收仍1 failed／390.282秒：四Tool均ok、效果adopted且物理停止；首Turn成功，第二Turn最终为failed／released，未产生完整业务验收结果。两root退休、两Turn完整正ACK、owned关闭与安全清理通过，不能替代业务成功。不据此宣称性能改善，本批不追加复跑或查询级微调；其余十二正常／五故障及P3-3／4／5／A仍待原定门槛。整链预算已完成：首Turn提交至成功Advance186.795秒；完整closure含6份相同约102KB Manifest，不能将载荷大小直接当作超时原因。纯校验归并私有原型的完整Runtime测量中目标发布分支未命中，且未达10%收益门槛，不进入产品或服务复跑。下一批先测完整proof无损传输的整链成本，未证明收益前不加Query协议；见[成本与决策记录](../architecture/reviews/2026-10-16-coding-session-critical-path.md)。仅本地提交，不推送。
+2026-10-16 P3-2/S2 仍未完成，最新原图原360秒真实验收为 `31b846a` 的1 failed／390.282秒；原四Tool成功、effect adopted、物理停止及资源安全清理不替代两Turn成功。本批已完成完整proof无损传输预算：载荷减少68.4%–71.6%，但完整CPU平均增加9.013%，按原门槛否决，不加Query协议、不复跑服务。产品只补CONTROL未知失败的安全诊断，保持原回执、重试和取消：新增18项、20个相关模块399 passed，独立安装7模块157 passed，默认完整canonical及原／continued保存History离线兼容通过，425产品／862测试无漂移；独立审查无P1／P2，Ruff／格式／空白检查通过。本批没有新增真实服务或模型验收，旧Coding History仍用匹配不可变Worker。其余十二正常／五故障不解锁，P3-3／4／5／A保持原状态。下一批聚焦同步release验证的单次受控计算边界，先证实际调用覆盖、收益和漂移拒绝，不再扩大传输或逐个删除Query；见[整链预算与决策](../architecture/reviews/2026-10-16-coding-session-critical-path.md)。仅本地提交，不推送。
 
 以下为各冻结快照的历史证据；以本段及最新验收记录为当前执行依据。
 

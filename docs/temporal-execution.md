@@ -123,3 +123,9 @@ separate History snapshot; default native context remains compatible. See
 
 
 dev65 [Session data reads](temporal-session-data-reads.md) adds opt-in fixed bounded reads for stateless native/sequence only; external durable Session writes and advanced addressing remain unsupported.
+
+## Control failure diagnostics
+
+Unexpected child-control failures retain the original `child_control_failed` result and retry behavior. The Worker emits a warning through `ralf_agent.temporal_control_activities`, with structured `child_control_failure` metadata: a fixed operation label, bounded static traceback locations, real RPC status and up to four wrapped cause codes from a fixed allowlist. Unknown codes are reported as `unknown`. Request bodies, Scope, exception messages/details, locals and absolute file paths are excluded. Known RALF errors retain their existing codes without this extra warning.
+
+Diagnostic collection and logging failures cannot replace the original control response. Business cancellation continues to propagate. These logs are observations, not execution or recovery evidence; original Run/Action/Session receipts remain authoritative. Selected Coding Histories still require their matching immutable Worker.

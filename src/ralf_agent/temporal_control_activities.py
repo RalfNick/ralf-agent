@@ -121,6 +121,89 @@ async def control(runtime, client, value, info=None):
     return detached(result)
 
 
+def _record_control_failure(value, exc):
+    """Observe static failure locations without changing a control result."""
+    try:
+        import logging
+
+        from temporalio.exceptions import ApplicationError
+        from temporalio.service import RPCStatusCode
+
+        known_codes = {
+            "ralf_error",
+            "validation_error",
+            "idempotency_conflict",
+            "budget_exceeded",
+            "capacity_exceeded",
+            "completion_rejected",
+            "agent_limit_exceeded",
+            "authorization_denied",
+            "definition_mismatch",
+            "coordinator_busy",
+            "not_found",
+            "provider_error",
+            "memory_backend_error",
+            "runtime_closed",
+            "execution_host_failed",
+            "close_incomplete",
+            "session_busy",
+            "session_binding_mismatch",
+        }
+        mode = value.get("mode") if type(value) is dict else None
+        if type(mode) is not str or mode not in {"register", "observe", "cancel", "recover"}:
+            mode = "unknown"
+        frames, trace = [], exc.__traceback__
+        while trace is not None and len(frames) < 16:
+            code = trace.tb_frame.f_code
+            frames.append(
+                {
+                    "file": code.co_filename.replace("\\", "/").rsplit("/", 1)[-1][:128],
+                    "function": code.co_name[:128],
+                    "line": trace.tb_lineno,
+                }
+            )
+            trace = trace.tb_next
+        status = getattr(exc, "status", None)
+        causes, seen, current = [], {id(exc)}, exc
+        while len(causes) < 4:
+            nested = getattr(current, "cause", None)
+            if not isinstance(nested, BaseException):
+                nested = current.__cause__
+            if not isinstance(nested, BaseException) or id(nested) in seen:
+                break
+            seen.add(id(nested))
+            code = (
+                nested.code
+                if isinstance(nested, RalfError)
+                else nested.type
+                if isinstance(nested, ApplicationError)
+                else None
+            )
+            causes.append(
+                {
+                    "exception_module": type(nested).__module__[:128],
+                    "exception_type": type(nested).__name__[:128],
+                    "code": code if type(code) is str and code in known_codes else "unknown",
+                }
+            )
+            current = nested
+        detail = {
+            "mode": mode,
+            "exception_module": type(exc).__module__[:128],
+            "exception_type": type(exc).__name__[:128],
+            "rpc_status": status.name if isinstance(status, RPCStatusCode) else None,
+            "frames": frames,
+            "causes": causes,
+        }
+        logging.getLogger(__name__).warning(
+            "Child control body failed: " + repr(detail),
+            extra={"child_control_failure": detail},
+        )
+    except BaseException:
+        # A broken logger or diagnostic accessor cannot change the original reply.
+        pass
+
+
 def registered_parent_activities(runtime, client):
     from temporalio import activity
 
@@ -132,10 +215,13 @@ def registered_parent_activities(runtime, client):
         try:
             return {"ok": True, "result": await control(runtime, client, value, activity.info())}
         except Exception as exc:
-            return {
+            response = {
                 "ok": False,
                 "code": exc.code if isinstance(exc, RalfError) else "child_control_failed",
             }
+            if not isinstance(exc, RalfError):
+                _record_control_failure(value, exc)
+            return response
 
     from .temporal_coding_composition_control import ACTIVITY as COMPOSITION_ADMISSION_ACTIVITY
 

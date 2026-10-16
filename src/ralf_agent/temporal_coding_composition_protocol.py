@@ -226,6 +226,7 @@ def _worker_sources():
             "temporal_control_activities",
             (
                 "control",
+                "_record_control_failure",
                 "registered_parent_activities",
                 "select",
                 "_RecordedCaller.__init__",
