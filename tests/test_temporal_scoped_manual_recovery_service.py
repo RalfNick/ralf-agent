@@ -24,7 +24,21 @@ pytestmark = pytest.mark.skipif(
 
 
 def test_actual_full_scoped_manual_preserves_original_action_and_end_debt(tmp_path):
+    _exercise(tmp_path, pressure_updates=False)
 
+
+def test_actual_scoped_manual_after_registry_2000_updates(tmp_path):
+    _exercise(tmp_path, pressure_updates=True)
+
+
+@pytest.mark.skipif(
+    not os.getenv("RALF_TEST_MANUAL_LEGACY_PYTHON"), reason="requires immutable old manual Worker"
+)
+def test_actual_old_manual_worker_uses_original_update_without_manual_signal(tmp_path):
+    _exercise(tmp_path, pressure_updates=False, legacy_worker=True)
+
+
+def _exercise(tmp_path, *, pressure_updates, legacy_worker=False):
     async def run():
         from temporalio.client import WorkflowExecutionStatus
         from temporalio.service import RPCError, RPCStatusCode
@@ -32,7 +46,7 @@ def test_actual_full_scoped_manual_preserves_original_action_and_end_debt(tmp_pa
         clients, namespace = await _clients()
         client, queue = (clients[0], "scoped-manual-" + uuid.uuid4().hex)
         scope = Scope("unowned-end", queue)
-        python = sys.executable
+        python = os.environ["RALF_TEST_MANUAL_LEGACY_PYTHON"] if legacy_worker else sys.executable
         environment = {
             k: os.environ[k]
             for k in ("PATH", "HOME", "TMPDIR", "RALF_TEST_TEMPORAL_ADDRESS")
@@ -101,6 +115,9 @@ def test_actual_full_scoped_manual_preserves_original_action_and_end_debt(tmp_pa
             )
             child = original.workflow["children"][0]["run_id"]
             owned.add(child)
+            (tmp_path / "original-identities.json").write_text(
+                json.dumps({"scope": asdict(scope), "queue": queue, "owned": sorted(owned)})
+            )
 
             async def child_status():
                 try:
@@ -115,7 +132,9 @@ def test_actual_full_scoped_manual_preserves_original_action_and_end_debt(tmp_pa
             assert (tmp_path / "slow-started").exists() and (not (tmp_path / "slow-ended").exists())
             registry = client.get_workflow_handle(engine.command_registry_id)
             before = await registry.query("view", {"scope": asdict(scope)})
-            for fill_start in range(before["accepted_commands"], 4096, 48):
+            for fill_start in range(
+                before["accepted_commands"], 4096 if not legacy_worker else 0, 48
+            ):
                 await asyncio.gather(
                     *[
                         engine._guard(
@@ -130,19 +149,78 @@ def test_actual_full_scoped_manual_preserves_original_action_and_end_debt(tmp_pa
                 (tmp_path / "progress.json").write_text(
                     json.dumps({"accepted": min(fill_start + 48, 4096)})
                 )
-            assert (await registry.query("view", {"scope": asdict(scope)}))[
-                "accepted_commands"
-            ] == 4096
-            with pytest.raises(ValidationError):
-                await engine.submit(AgentSpec("new", "new"), "new", command_id="refused")
+            if not legacy_worker:
+                assert (await registry.query("view", {"scope": asdict(scope)}))[
+                    "accepted_commands"
+                ] == 4096
+                with pytest.raises(ValidationError):
+                    await engine.submit(AgentSpec("new", "new"), "new", command_id="refused")
+            else:
+                # Directly exercise the existing strong-admission helper against
+                # its genuine old CONTROL verifier; no full-capacity claim here.
+                from ralf_agent.temporal_scoped_manual_recovery import reserve_manual
+
+                payload = {
+                    "kind": "reconcile",
+                    "scope": asdict(scope),
+                    "action_id": first["id"],
+                    "query": False,
+                    "result": "operator confirms slow effect",
+                }
+                await reserve_manual(
+                    engine,
+                    registry,
+                    {
+                        "scope": asdict(scope),
+                        "command_id": "confirm",
+                        "kind": "reconcile",
+                        "target": child,
+                        "payload_digest": digest(payload),
+                    },
+                    payload,
+                )
+            if pressure_updates:
+                repeat = {
+                    "scope": asdict(scope),
+                    "command_id": f"fill:{before['accepted_commands']}",
+                    "kind": "drive",
+                    "target": root.run_id,
+                    "payload_digest": digest({"scope": asdict(scope), "kind": "drive"}),
+                }
+                for update_start in range(0, 2000, 8):
+                    await asyncio.gather(
+                        *[registry.execute_update("reserve", repeat) for _ in range(8)]
+                    )
+                    (tmp_path / "update-progress.json").write_text(
+                        json.dumps({"distinct_updates": update_start + 8})
+                    )
+                assert (await registry.query("view", {"scope": asdict(scope)}))[
+                    "accepted_commands"
+                ] == 4096
             receipt = await engine.reconcile(
                 child, first["id"], "operator confirms slow effect", command_id="confirm"
             )
             assert (await registry.query("view", {"scope": asdict(scope)}))[
                 "accepted_commands"
-            ] == 4097
-            with pytest.raises(RalfError):
-                await engine.reconcile(child, first["id"], "changed", command_id="another-confirm")
+            ] == (before["accepted_commands"] + 1 if legacy_worker else 4097)
+            if legacy_worker:
+                # This compatibility case has free ordinary slots. Existing
+                # late evidence is allowed, but cannot replace the first result
+                # or clear its independent physical-end obligation.
+                late = await engine.reconcile(
+                    child, first["id"], "changed", command_id="another-confirm"
+                )
+                assert late.apply_state == "applied"
+                same = next(
+                    a for a in (await engine.status(child)).actions if a["id"] == first["id"]
+                )
+                assert same["result"] == "operator confirms slow effect"
+                assert same["execution_unconfirmed"] is True
+            else:
+                with pytest.raises(RalfError):
+                    await engine.reconcile(
+                        child, first["id"], "changed", command_id="another-confirm"
+                    )
             finished = await _eventually(
                 lambda: engine.diagnostics(child),
                 lambda d: (
@@ -197,6 +275,14 @@ def test_actual_full_scoped_manual_preserves_original_action_and_end_debt(tmp_pa
                 history = await client.get_workflow_handle(target).fetch_history()
                 await replay_temporal_history(history, namespace=namespace["name"])
                 (tmp_path / f"history-{index}.json").write_text(history.to_json())
+                if target == engine.command_registry_id:
+                    manual_signals = sum(
+                        e.HasField("workflow_execution_signaled_event_attributes")
+                        and e.workflow_execution_signaled_event_attributes.signal_name
+                        == "reserve_scoped_manual"
+                        for e in history.events
+                    )
+                    assert (manual_signals == 0) is legacy_worker
                 if target == child:
                     marked = any(
                         b"ralf-unowned-tool-end-evidence-v1" in p.data
@@ -209,8 +295,13 @@ def test_actual_full_scoped_manual_preserves_original_action_and_end_debt(tmp_pa
             (tmp_path / "result.json").write_text(
                 json.dumps(
                     {
-                        "normal_capacity": 4096,
-                        "accepted_after_manual": 4097,
+                        "normal_capacity": None if legacy_worker else 4096,
+                        "registry_distinct_updates_before_manual": 2000 if pressure_updates else 0,
+                        "accepted_after_manual": before["accepted_commands"] + 1
+                        if legacy_worker
+                        else 4097,
+                        "legacy_manual_transport_compatibility": legacy_worker,
+                        "manual_proof_signals": manual_signals,
                         "legacy_baseline": False,
                         "protected": True,
                         "thread_started_and_ended": True,
@@ -241,6 +332,10 @@ def test_actual_full_scoped_manual_preserves_original_action_and_end_debt(tmp_pa
             for target in sorted(owned):
                 try:
                     handle = client.get_workflow_handle(target)
+                    if failure is not None:
+                        (tmp_path / f"failed-history-{target}.json").write_text(
+                            (await handle.fetch_history()).to_json()
+                        )
                     if (await handle.describe()).status == WorkflowExecutionStatus.RUNNING:
                         await handle.terminate(reason="owned unowned-tool acceptance cleanup")
                     assert (await handle.describe()).status != WorkflowExecutionStatus.RUNNING

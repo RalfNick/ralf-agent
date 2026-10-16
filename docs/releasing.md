@@ -109,3 +109,13 @@ dev12 制品还需在源码外运行 `ralf init my-parallel --template parallel`
 此前12组制品不变。默认Card／普通发布与保存History兼容通过；所选实验指纹变化，
 历史所选发布仍需精确匹配Worker。不可变旧Worker只保留原Update兼容路径及其上限，
 没有追溯修复或未知义务清除。完整P3-3、原P3-2失败及后续门槛均未关闭。
+
+## P3-3 scoped 人工证明运输增量
+
+制品`dist/p3-manual-transport-20261016/ralf_agent-0.1.0.dev120-py3-none-any.whl`，
+SHA256 `1d083edf1bcfddf22bdfee71ca2dc58174764424ff98c7177a0b555f62e0f95f`，附
+`verification.json`／`SHA256SUMS`。源码／隔离安装各1,316项；同包真实压力和旧manual
+Worker兼容分别通过，详见[验收记录](../architecture/reviews/2026-10-16-temporal-scoped-manual-transport.md)。
+此前13组制品不变。默认发布／保存History兼容通过；所选实验指纹变化仍要求匹配的
+历史Worker。旧manual Worker兼容路径保留其Update上限，没有追溯升级或清除未知义务。
+首次结束ACK等剩余生命周期、完整P3-3及P3-2原失败不关闭。

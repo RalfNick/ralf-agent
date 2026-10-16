@@ -391,3 +391,34 @@ and post-await checks around the same helper.
 Same-wheel actual native/graph-child pressure and immutable old Worker compatibility
 have separate passing case evidence; neither complete P3-3 nor all SDK Update/
 History lifecycle is closed. See [record and retained failures](../reviews/2026-10-16-temporal-run-command-capacity.md).
+
+
+## Async scoped manual proof transport
+
+The current scoped SDK also preserves original strong manual proof after Registry
+Update exhaustion. A dedicated async `reserve_scoped_manual` Signal calls the full
+original `reserve` handler: original CONTROL verification, awaited recheck and
+atomic commit are unchanged. This accepts no caller-supplied proof and makes no
+business-effect or physical-stop decision outside the original authorities.
+
+A64-entry observation cache claims pending before awaiting proof; same-observation
+retransmission cannot schedule it twice. Only completed entries are evicted. If
+all64 are pending, an additional observation performs no proof and remains unknown.
+Business identities/Action slots/bindings are never evicted.30-second observer
+wait does not cancel the original30/65-second verifier. Unknown/evicted observations,
+timeout and cancellation never authorize Update fallback or another business ID.
+
+Full Scope, canonical request and manual payload digest, Registry namespace and
+original SDK epoch are checked. The SDK pins ports and original epoch. Exact
+version1 configuration remains unchanged; its optional observation probe is
+supported by current Workers. Twice-exact old configuration on the pinned epoch
+permits only original Update compatibility. Generic errors/changed replies do not.
+Old Workers keep their own Update limit. Engine binding/namespace UUID and pinned
+original target application checks remain mandatory.
+
+Actual4,096-identity/2,000-Update manual recovery and old-manual-Worker helper/API
+compatibility pass in separate runs of one wheel. The latter has free ordinary
+space and does not prove old full-capacity support. See [evidence, failures and
+remaining gates](../reviews/2026-10-16-temporal-scoped-manual-transport.md). Original
+Tool/native/context/session end ACK, public Registry strong proof and History
+lifecycle still require separate closure; fullP3-3 stays open.

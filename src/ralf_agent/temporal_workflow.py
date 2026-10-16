@@ -30,6 +30,7 @@ with workflow.unsafe.imports_passed_through():
         temporal_parent_completion_state,  # noqa: F401 -- preload pure parent release gates
         temporal_parent_state,  # noqa: F401 -- fixed original child addressing
         temporal_scoped_manual_recovery,  # noqa: F401 -- scoped original Action proof
+        temporal_scoped_manual_transport,  # noqa: F401 -- original async manual observations
         temporal_scoped_reservation,  # noqa: F401 -- scoped reservation observations
         temporal_session_identity,  # noqa: F401 -- preload pure Session addressing
         temporal_startup_options,  # noqa: F401 -- preload pure public acceptance validation
@@ -1623,6 +1624,12 @@ class TemporalCommandRegistryWorkflow:
 
         accept(self, envelope, workflow.info())
 
+    @workflow.signal(name="reserve_scoped_manual")
+    async def reserve_scoped_manual(self, envelope: dict) -> None:
+        from .temporal_scoped_manual_transport import accept
+
+        await accept(self, envelope, workflow.info())
+
     async def _session_verified_update(self, operation, request):
         from .temporal_deployment_session_updates import execute
 
@@ -1851,6 +1858,14 @@ class TemporalCommandRegistryWorkflow:
             return {"error": "authorization_denied"}
         try:
             if request.get("kind") == "scoped_manual_configuration":
+                if "manual_observation" in request:
+                    from .temporal_scoped_manual_transport import observe
+
+                    return {
+                        "manual_observation": observe(
+                            self, request["manual_observation"], workflow.info()
+                        )
+                    }
                 from .temporal_scoped_manual_recovery import configuration
 
                 return configuration(self.commands, workflow.info())

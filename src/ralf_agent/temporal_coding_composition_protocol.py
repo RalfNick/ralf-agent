@@ -172,6 +172,10 @@ def _pure_sources():
 
 def _worker_sources():
     return {
+        "scoped_manual_transport": (
+            "temporal_scoped_manual_transport",
+            ("_identity", "accept", "observe", "execute"),
+        ),
         "run_command_transport": (
             "temporal_command_transport",
             (
@@ -284,6 +288,7 @@ def _worker_sources():
                 "TemporalRunWorkflow.coding_composition_child_stopped",
                 "TemporalCommandRegistryWorkflow.__init__",
                 "TemporalCommandRegistryWorkflow.reserve",
+                "TemporalCommandRegistryWorkflow.reserve_scoped_manual",
                 "TemporalCommandRegistryWorkflow.view",
                 "TemporalCommandRegistryWorkflow.close_coding_composition_submissions",
                 "TemporalCommandRegistryWorkflow.admit_coding_composition_submission",

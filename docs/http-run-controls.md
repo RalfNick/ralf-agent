@@ -153,6 +153,13 @@ remain authoritative. Old Worker compatibility uses positively discovered Update
 and retains that old limit. Other command/native/Registry/Session/History gates
 remain open. These are separate SDK tests, not a renewed HTTP/PG matrix.
 
+The subsequent [scoped manual proof transport](../architecture/reviews/2026-10-16-temporal-scoped-manual-transport.md)
+verified the original Registry's async proof after4,096 identities and2,000 SDK
+Updates. It reuses the full original verifier/commit and keeps actual handler end
+independent. Old manual-capable Worker compatibility uses exact original
+configuration and its old Update path. End ACK/native/Session/other Registry and
+History lifecycle gates remain open; these SDK cases do not renew HTTP/PG coverage.
+
 The current installation evidence for the borrowed Temporal HTTP host is recorded
 in [HTTP/Temporal/PG acceptance](../architecture/reviews/2026-10-16-http-temporal-acceptance.md).
 It uses existing `A2AApplication`, `TemporalEngine`, PostgreSQL EffectJournal and

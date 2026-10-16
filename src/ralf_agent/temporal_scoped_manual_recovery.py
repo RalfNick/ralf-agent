@@ -477,7 +477,9 @@ async def reserve_manual(engine, handle, request, payload):
             "payload": detached(payload),
         },
     }
-    result = await handle.execute_update("reserve", strong)
+    from .temporal_scoped_manual_transport import execute
+
+    result = await execute(client, engine.command_registry_id, strong, original=value)
     check()
     if type(result) is dict and set(result) == {"error"}:
         _raise_code(result["error"])
