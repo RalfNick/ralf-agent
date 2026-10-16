@@ -269,6 +269,8 @@ class A2AApplication:
         max_response_bytes=262144,
         enable_user_input=False,
         enable_run_events=False,
+        enable_run_controls=False,
+        recovery_wakeup=None,
     ):  # noqa: ASYNC109
         if not is_sync_callable(engine_for_scope) or not is_async_callable(authenticate):
             raise ValidationError("A2A requires trusted engine and async authentication callbacks")
@@ -279,6 +281,10 @@ class A2AApplication:
             raise ValidationError("A2A user input extension selection must be boolean")
         if type(enable_run_events) is not bool:
             raise ValidationError("A2A event extension selection must be boolean")
+        if type(enable_run_controls) is not bool:
+            raise ValidationError("A2A Run control selection must be boolean")
+        if recovery_wakeup is not None and not is_async_callable(recovery_wakeup):
+            raise ValidationError("Recovery wakeup must be a native async host callback")
         for value in (name, description, version):
             _text(value, "Agent Card text")
         _integer(budget, "A2A budget", 0, 1000000)
@@ -303,6 +309,8 @@ class A2AApplication:
         self._max_response = max_response_bytes
         self._user_input_enabled = enable_user_input
         self._run_events_enabled = enable_run_events
+        self._run_controls_enabled = enable_run_controls
+        self._recovery_wakeup = recovery_wakeup
         self._card = {
             "protocolVersion": PROTOCOL_VERSION,
             "name": name,
@@ -351,6 +359,16 @@ class A2AApplication:
                 {
                     "uri": EXTENSION,
                     "description": "Read-only tasks/events cursor pages",
+                    "required": False,
+                }
+            )
+        if enable_run_controls:
+            from .a2a_controls import EXTENSION
+
+            self._card["capabilities"]["extensions"].append(
+                {
+                    "uri": EXTENSION,
+                    "description": "Original Run controls; resume needs host recovery wakeup",
                     "required": False,
                 }
             )
@@ -527,6 +545,40 @@ class A2AApplication:
         if not isinstance(params, dict):
             raise ValidationError("RPC parameters require an object")
         engine = self._engine(scope)
+        if (
+            method in {"tasks/approve", "tasks/reconcile", "tasks/resume"}
+            and self._run_controls_enabled
+        ):
+            from .a2a_controls import apply_control, control_request
+
+            control_request(method, params)
+            if method == "tasks/resume":
+                if self._recovery_wakeup is None:
+                    raise _RPCError(-32004, "Host recovery wakeup is not configured")
+                await engine.status(params["id"])
+                engine.verify()
+                completed = await _completed(
+                    await self._recovery_wakeup(scope, params["id"]), "A2A recovery wakeup"
+                )
+                if completed is not None:
+                    raise ValidationError("Recovery wakeup must finish to None")
+                engine.verify()
+                task = await self._task_snapshot(engine, await engine.status(params["id"]))
+                task["metadata"]["ralf"]["recoveryHint"] = {"accepted": True, "durable": False}
+                return _task(task)
+            result = await apply_control(engine, method, params)
+            receipt = result["receipt"]
+            if (
+                self._wakeup is not None
+                and receipt["apply_state"] == "applied"
+                and not receipt["outcome"].get("rejected")
+            ):
+                engine.verify()
+                completed = await _completed(await self._wakeup(scope, params["id"]), "A2A wakeup")
+                if completed is not None:
+                    raise ValidationError("A2A wakeup must finish to None")
+                engine.verify()
+            return result
         if method == "tasks/events" and self._run_events_enabled:
             from .a2a_events import event_page
 
@@ -797,7 +849,15 @@ class A2AClient:
         return _agent_card(card, self.url)
 
     async def rpc(self, method, params):
-        if method not in {"message/send", "tasks/get", "tasks/cancel", "tasks/events"}:
+        if method not in {
+            "message/send",
+            "tasks/get",
+            "tasks/cancel",
+            "tasks/events",
+            "tasks/approve",
+            "tasks/reconcile",
+            "tasks/resume",
+        }:
             raise ValidationError("Unsupported A2A polling method")
         _json(params)
         self._next_id += 1
@@ -824,6 +884,13 @@ class A2AClient:
             ):
                 raise A2AError("A2A returned an invalid RPC error")
             raise A2ARemoteError(error["code"])
+        if method in {"tasks/approve", "tasks/reconcile"}:
+            from .a2a_controls import validate_control_response
+
+            try:
+                return validate_control_response(value["result"], method, params)
+            except Exception as exc:
+                raise A2AError("A2A returned an invalid Run control receipt") from exc
         if method == "tasks/events":
             from .a2a_events import validate_event_page
 
@@ -837,6 +904,33 @@ class A2AClient:
         from .a2a_events import event_request
 
         return await self.rpc("tasks/events", event_request(task_id, cursor, limit))
+
+    async def approve_task(self, task_id, action_id, target_digest, *, command_id, approved=True):
+        from .a2a_controls import control_request
+
+        params = {
+            "id": task_id,
+            "actionId": action_id,
+            "targetDigest": target_digest,
+            "commandId": command_id,
+            "approved": approved,
+        }
+        return await self.rpc("tasks/approve", control_request("tasks/approve", params))
+
+    async def reconcile_task(self, task_id, action_id, result, *, command_id):
+        from .a2a_controls import control_request
+
+        params = {"id": task_id, "actionId": action_id, "result": result, "commandId": command_id}
+        return await self.rpc("tasks/reconcile", control_request("tasks/reconcile", params))
+
+    async def resume_task(self, task_id):
+        _text(task_id, "Task identity")
+        task = await self.rpc("tasks/resume", {"id": task_id})
+        if task["id"] != task_id or task.get("metadata", {}).get("ralf", {}).get(
+            "recoveryHint"
+        ) != {"accepted": True, "durable": False}:
+            raise A2AError("A2A returned an invalid recovery hint")
+        return task
 
     async def send_message(self, message_id, input):
         _text(message_id, "Message identity")

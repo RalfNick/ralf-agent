@@ -2,6 +2,8 @@
 
 ## 当前优先级：先保障基础能力
 
+P3-3增量记录：[HTTP事件分页](../architecture/reviews/2026-10-16-http-event-pages.md)、[原审批／核验／恢复唤醒](../architecture/reviews/2026-10-16-http-run-controls.md)。Local控制与重启已有有限证据；累计命令容量及完整所选服务验收尚待，P3-3不标完成。当前状态以交付摘要为准。
+
 当前状态统一见[交付摘要](implementation-status.md#当前交付摘要)：基础SDK本轮范围已收口，复用已有实现和有效证据，不为可选改进延长交付。2026-10-16用户明确批准“允许独立推进P3-3，保留全部验收门槛”；仅调整开发顺序，P3-2及第三阶段整体验收仍开放，P3-4／5／A不自动解锁。Temporal Coding Session性能专项当前后置，原360秒失败、其余未运行项及P3门槛均保留，不将未完成组合列为已支持。以下历史checkpoint只作原版本证据，不覆盖当前摘要。
 
 2026-10-16 P3-2/S2原360秒验收仍未完成（ec0ebe4原首项1 failed／386.753秒）。用户授权的同包600秒独立诊断1 passed／456.329秒：两Turn均succeeded／released，四Tool及效果采纳、物理停止、原正ACK、两root退休和安全清理通过；首submit到第二成功Advance为432.497075秒，不替代360验收或模型质量证据。另已修复根TemporalRuntime注册getter在单次release校验内替换已检查组件／方法的P2缺口：保留原full，以静态descriptor／code及原owner pins封闭出口；新增10项、冻结32模块628 passed、独立安装10模块171 passed，默认完整canonical及原／continued默认History离线兼容通过，425产品／863测试无漂移。该新代码未复跑真实服务，不能借用旧包600诊断判通过。其余十二正常／五故障不解锁，P3-3／4／5／A保持原状态。下一批继续以完整Tool／CONTROL调用定位累计成本，先验证成组收益，再决定原360复验；不扩大范围或修改门槛。详见[整链证据](../architecture/reviews/2026-10-16-coding-session-critical-path.md)及[绑定修复](../architecture/reviews/2026-10-16-temporal-release-reentrancy.md)。仅本地提交，不推送。

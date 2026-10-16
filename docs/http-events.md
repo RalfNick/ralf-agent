@@ -82,7 +82,9 @@ does not prove an already dispatched backend query has stopped immediately; the
 host still owns its request/backend lifecycle. Keep the same authority/storage
 and identity to resume from a saved cursor after restart.
 
-P3-3 is not fully accepted by this increment: hosted approval, reconciliation and
-recovery controls, command-capacity behavior and complete Local/Temporal service
-acceptance remain required. S2 Coding Session and its original 360-second gate stay
-open; this extension does not change their support or execution protocols.
+The later [Run control extension](http-run-controls.md) adds opt-in approval,
+manual reconciliation and host recovery wakeup with Local evidence. It is supplied
+in a separate candidate; the event-only wheel above remains immutable. P3-3 still
+requires cumulative command-capacity behavior and complete selected Local/Temporal
+service acceptance. S2 Coding Session and its original 360-second gate stay open;
+these extensions do not change their support or execution protocols.

@@ -37,6 +37,7 @@ class LocalA2AService:
             engine_for_scope=lambda scope: engine,
             inbox=inbox,
             wakeup=self.wakeup,
+            recovery_wakeup=self.recovery_wakeup,
             **application_options,
         )
 
@@ -56,6 +57,13 @@ class LocalA2AService:
             raise ValidationError("Local service lifecycle must use its coordinator loop")
 
     async def wakeup(self, scope, run_id):
+        await self._wakeup(scope, run_id, recovery=False)
+
+    async def recovery_wakeup(self, scope, run_id):
+        """Resume only the original managed root; controls retain effect authority."""
+        await self._wakeup(scope, run_id, recovery=True)
+
+    async def _wakeup(self, scope, run_id, *, recovery):
         self._check_loop()
         if self._closing:
             raise ValidationError("Local service is closing")
@@ -79,11 +87,14 @@ class LocalA2AService:
             self._wake_requests.add(run_id)
             return
         state = (await self._controls.status(run_id)).state
-        if state not in {
+        ready = {
             "queued",
             "running",
             "waiting_input",
-        }:
+        }
+        if recovery:
+            ready |= {"waiting_approval", "waiting_reconciliation", "outcome_unknown", "cancelling"}
+        if state not in ready:
             # An applied child control can make its owner runnable while an
             # independent sibling still determines the aggregate root pause.
             if (

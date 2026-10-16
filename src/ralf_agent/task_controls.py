@@ -129,6 +129,36 @@ class TaskControlBridge:
             raise ValidationError("Original event reader was not selected")
         return await self._call("events", run_id, after=after, limit=limit)
 
+    def require_run_control(self, name):
+        self._check()
+        if name not in {"approve", "reconcile"}:
+            raise ValidationError("Unsupported optional Run control")
+        method = getattr(self._engine, name, None)
+        predicate = is_async_callable if self._async else is_sync_callable
+        if not predicate(method):
+            raise ValidationError("Run control must use the original control mode")
+        binding = _binding(method)
+        if name in self._bindings and self._bindings[name] != binding:
+            raise DefinitionMismatch("Run control registration changed")
+        self._bindings[name] = binding
+        self._check()
+
+    async def approve(self, run_id, action_id, target_digest, *, command_id, approved=True):
+        if "approve" not in self._bindings:
+            raise ValidationError("Original approval control was not selected")
+        value = await self._call(
+            "approve", run_id, action_id, target_digest, command_id=command_id, approved=approved
+        )
+        self._receipt(value, command_id, "approve", run_id, allow_rejected=True)
+        return copy.deepcopy(value)
+
+    async def reconcile(self, run_id, action_id, result, *, command_id):
+        if "reconcile" not in self._bindings:
+            raise ValidationError("Original reconciliation control was not selected")
+        value = await self._call("reconcile", run_id, action_id, result, command_id=command_id)
+        self._receipt(value, command_id, "reconcile", run_id, allow_rejected=True)
+        return copy.deepcopy(value)
+
     def require_input_discovery(self, *, composite=False):
         """Select optional observation ports without changing the legacy contract."""
         self._check()
