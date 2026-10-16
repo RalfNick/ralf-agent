@@ -54,6 +54,14 @@ resolve defaults before the operation digest, approval and host policy, so the
 approved arguments match execution. Resolved defaults appear in private Run and
 approval records when used; secrets belong in host context/config instead.
 
+When supplying an explicit Schema, declare the Python function's required inputs
+in `required` (or equivalent constraints). The shared proposal boundary also
+rejects a missing required callable argument, even if the Schema admits it;
+it cannot become an approval request or a dispatched tool call. Captured defaults
+and the separately injected host context retain their existing behavior. The
+framework preserves the supplied Schema and existing tool identities, including
+valid `allOf` constraints; it does not rewrite stored approvals or repair old Runs.
+
 To receive the host context, declare context_parameter explicitly:
 
 ```python

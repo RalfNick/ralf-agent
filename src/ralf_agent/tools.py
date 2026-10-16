@@ -184,7 +184,18 @@ class RegisteredTool:
         from .tool_functions import TypedFunctionHandler
 
         if type(self.handler) is TypedFunctionHandler:
-            return self.handler.resolve_arguments(arguments)
+            values = self.handler.resolve_arguments(arguments)
+            # Explicit JSON Schemas can admit inputs the Python callable cannot
+            # accept. Check arity before approval/dispatch without rewriting the
+            # caller's Schema or changing existing tool identities.
+            if any(
+                name != self.handler.context_parameter
+                and parameter.default is inspect.Parameter.empty
+                and name not in values
+                for name, parameter in inspect.signature(self.handler.function).parameters.items()
+            ):
+                raise ValidationError("Typed arguments omit a required callable parameter")
+            return values
         self.validate(arguments)
         return copy.deepcopy(arguments)
 
