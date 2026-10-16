@@ -130,8 +130,16 @@ Actual process/loop exit does not promise continuing Local work; durable accepte
 intent can be explicitly recovered. Runtime task indexes contain active/paused/
 failed-host responsibilities, not an unbounded completed-Run history.
 
-The Local raw stateless submit entry still refuses shared session_id, queue, deadline_at and handoff. dev32 provides explicit [colocated native/sequence Sessions](session-api.md) with durable Turn/rebind; dev33 provides explicit Runtime.from_temporal for native/sequence remote runs. Broader Session/remote facade combinations remain pending. Private per-Run legacy
-Session storage remains; it is not cross-Turn conversation coordination. Default
-polling waits are not streaming dataflow or hosted SSE. CLI still uses its legacy
-entry. Remaining H2b remote Sessions, H3 recommended managed context/memory/RAG and H4 environments
-remain separate deliverables.
+The Local stateless submit entry refuses shared `session_id`, queue and handoff.
+It accepts caller `deadline_at` when the Store declares the required capability;
+see [Local execution policy](local-execution-policy.md). A wait timeout ends
+observation only. Manual Session `deadline_at` and Temporal Facade caller
+`deadline_at` remain outside the delivered scope.
+
+Use explicit [Sessions](session-api.md) for durable Turn coordination; private
+per-Run legacy Session storage does not provide it. Selected remote data and
+[Temporal Sessions](temporal-sessions.md), recommended Local context/memory/RAG
+combinations and environment bindings have shipped within their declared scopes.
+See the [current capability list](remaining-work.md) for the remaining H2–H4
+work. Default polling and Run events do not provide node streaming dataflow or
+hosted SSE; CLI retains its documented command entry.

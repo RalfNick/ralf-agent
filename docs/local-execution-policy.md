@@ -1,6 +1,6 @@
 # Local 持久执行期限
 
-日期：2026-10-14。dev115 提供 `LocalExecutionPolicy`、Local Profile 策略声明和调用方 `deadline_at`，沿原 SQLite Run／Action 权威管理业务期限。本批最终源码、安装、冷恢复与兼容证据见[验收登记](../architecture/reviews/2026-10-14-local-deadlines.md)。部署准入容量仍未交付，第三阶段批次 2 未闭环；范围以[支持矩阵](phase3-support-matrix.md)为准。
+日期：2026-10-14。dev115 提供 `LocalExecutionPolicy`、Local Profile 策略声明和调用方 `deadline_at`，沿原 SQLite Run／Action 权威管理业务期限。本批最终源码、安装、冷恢复与兼容证据见[验收登记](../architecture/reviews/2026-10-14-local-deadlines.md)。dev116 已交付所选[Local 部署准入容量](deployment-admission.md)；第三阶段批次 2 仍未闭环；范围以[支持矩阵](phase3-support-matrix.md)为准。
 
 ## 策略与默认
 
