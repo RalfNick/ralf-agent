@@ -28,6 +28,7 @@ with workflow.unsafe.imports_passed_through():
     from . import temporal_deployment_execution_state as deployment_state
     from .errors import RalfError
     from .orchestration_types import ChildCall
+    from .temporal_deployment_protocol import public_selected as public_deployment
     from .temporal_deployment_protocol import selected as deployment_selected
     from .temporal_parent_completion_state import ACTIVITY as PARENT_COMPLETION_ACTIVITY
     from .temporal_parent_session import ROOT_READ_ACTIVITY
@@ -638,7 +639,19 @@ class TemporalParentWorkflow(TemporalRunWorkflow):
             before = self.state.revision
             receipt = self.state.command(request["command_id"], request["payload"])
             if request["payload"]["kind"] in {"cancel", "drive", "patch"}:
-                if before != self.state.revision:
+                repeated_wake = (
+                    request["payload"]["kind"] == "drive"
+                    and before == self.state.revision
+                    and public_deployment(self.state.manifest)
+                    and getattr(self.state, "deployment_seal", None) is None
+                )
+                if repeated_wake:
+                    # The command receipt stays immutable; this fresh Update is
+                    # also a recovery hint, just as on the native Run Workflow.
+                    if self.state.manifest["kernel"] == "temporal-3":
+                        self.state.memory_recovery_revision += 1
+                    self.state.retry_blocked()
+                if before != self.state.revision or repeated_wake:
                     self._deployment_force_child_reads()
                 if request["payload"]["kind"] == "drive":
                     self._deployment_parent_notification_error = None

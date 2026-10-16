@@ -585,7 +585,36 @@ class TemporalEngine:
 
                 await recover_retirement(self, run_id, closure)
                 return await self.status(run_id)
-        await self._command(run_id, "drive", "drive:" + uuid.uuid4().hex)
+        # A public mechanical wake has fixed content. Reuse its command identity
+        # while sending a fresh SDK Update so the original History wakes again.
+        command_id = "drive:" + (
+            digest([asdict(self.scope), run_id])
+            if public_selected(self._release)
+            else uuid.uuid4().hex
+        )
+        try:
+            await self._command(run_id, "drive", command_id)
+        except IdempotencyConflict:
+            if not public_selected(self._release):
+                raise
+            # Preserve a colliding old command. The original Registry proposes
+            # another identity; registration still performs every normal check.
+            diagnostics = await self.deployment_diagnostics()
+            hint = next(
+                (
+                    item
+                    for item in diagnostics.get("recovery_drive_hints", [])
+                    if item.get("run_id") == run_id
+                ),
+                None,
+            )
+            if (
+                hint is None
+                or hint.get("durable") is not False
+                or hint.get("command_id") == command_id
+            ):
+                raise
+            await self._command(run_id, "drive", hint["command_id"])
         deadline = asyncio.get_running_loop().time() + (
             self.drive_timeout if wait_seconds is None else wait_seconds
         )

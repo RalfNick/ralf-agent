@@ -36,6 +36,7 @@ class PublicDeploymentAdmissionState(DeploymentAdmissionState):
         self.submissions = {}
         self.retirements = {}
         self.control_bindings = {}
+        self.recovery_controls = {}
 
     def _submission(self, request):
         metadata = request["root_admission"]
@@ -151,18 +152,54 @@ class PublicDeploymentAdmissionState(DeploymentAdmissionState):
         binding = self.control_bindings.get(key)
         return _detached(receipt if binding is None else {**receipt, "control_binding": binding})
 
+    def _drive_command(self, scope, target):
+        saved = self.recovery_controls.get(digest([scope, target, "drive"]))
+        if saved is not None:
+            return saved["command_id"]
+        identity = {
+            "kind": "drive",
+            "target": target,
+            "payload_digest": digest({"scope": scope, "kind": "drive"}),
+        }
+        # An old legal command can occupy the usual derived ID. At most N
+        # existing keys can collide, so N+1 deterministic candidates suffice.
+        for index in range(len(self.commands) + 1):
+            candidate = "drive:" + digest([scope, target] if index == 0 else [scope, target, index])
+            previous = self.commands.get(digest([scope, candidate]))
+            if previous is None or previous["identity"] == identity:
+                return candidate
+        raise ValidationError("Temporal recovery command identity is unavailable")
+
     def _control(self, request):
         scope, key, identity, previous = self._control_request(request)
         if previous is not None:
             return self._control_receipt(key)
         if "descendant" in request:
             raise AuthorizationDenied("Descendant control requires original SDK verification")
-        if not any(
-            r["scope"] == scope and r["run_id"] == request["target"] for r in self.roots.values()
-        ):
+        root = next(
+            (
+                r
+                for r in self.roots.values()
+                if r["scope"] == scope and r["run_id"] == request["target"]
+            ),
+            None,
+        )
+        if root is None:
             raise AuthorizationDenied("Deployment control requires its active original root")
+        recovery_slot = None
         if len(self.commands) >= self.capacity:
-            raise ValidationError("Temporal deployment command registry capacity exhausted")
+            recovery_slot = digest([scope, request["target"], request["kind"]])
+            if (
+                request["kind"] not in {"cancel", "drive"}
+                or request["payload_digest"] != digest({"scope": scope, "kind": request["kind"]})
+                or recovery_slot in self.recovery_controls
+                or request["kind"] == "drive"
+                and request["command_id"] != self._drive_command(scope, request["target"])
+            ):
+                raise ValidationError("Temporal deployment command registry capacity exhausted")
+            from .temporal_deployment_execution_state import _root
+
+            _root(root, bound=True)
         receipt = {
             "command_id": request["command_id"],
             "target": request["target"],
@@ -170,6 +207,18 @@ class PublicDeploymentAdmissionState(DeploymentAdmissionState):
             "apply_state": "not_applied",
         }
         self.commands[key] = _detached({"identity": identity, "receipt": receipt})
+        if recovery_slot is not None:
+            # At most two immutable records per accepted root, hence <=2*capacity.
+            # Normal submissions never consume this allowance. No ID is evicted.
+            self.recovery_controls[recovery_slot] = _detached(
+                {
+                    "scope": scope,
+                    "run_id": root["run_id"],
+                    "execution_epoch": root["execution_epoch"],
+                    "kind": request["kind"],
+                    "command_id": request["command_id"],
+                }
+            )
         return _detached(receipt)
 
     def deployment_control(self, request):
@@ -442,6 +491,29 @@ class PublicDeploymentAdmissionState(DeploymentAdmissionState):
 
     def deployment_admission(self, request):
         result = super().deployment_admission(request)
+        hints = []
+        for root in result["held_roots"]:
+            if root["execution_epoch"] is None:
+                continue
+            command_id = self._drive_command(request["scope"], root["run_id"])
+            if command_id != "drive:" + digest([request["scope"], root["run_id"]]):
+                hints.append(
+                    {
+                        "run_id": root["run_id"],
+                        "execution_epoch": root["execution_epoch"],
+                        "command_id": command_id,
+                        "durable": False,
+                    }
+                )
+        if hints:
+            result["recovery_drive_hints"] = hints
+        recovery = [
+            {k: v for k, v in record.items() if k != "scope"}
+            for record in self.recovery_controls.values()
+            if record["scope"] == request["scope"]
+        ]
+        if recovery:
+            result["recovery_controls"] = recovery
         result["retired_roots"] = [
             {
                 "run_id": r["root"]["run_id"],

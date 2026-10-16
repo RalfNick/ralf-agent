@@ -122,7 +122,11 @@ unknown write, original query-based recovery, restart, real HTTP processes and
 owned shutdown with no active drives or handler threads. Native async adapter
 tests use a real Local authority, not a live Temporal service. These controls do
 not consume Inbox entries, so an Inbox at capacity does not block them. The
-execution authority's cumulative command capacity remains a separate open issue.
+execution authority's full cumulative command-capacity requirement remains open.
+A later candidate adds bounded protection for original public Temporal root
+cancel/drive commands; see the [capacity contract](../architecture/specs/temporal-recovery-capacity-contract.md).
+That increment has offline/installed evidence, not live hosted acceptance. It
+does not exempt descendant or new manual reconciliation/approval commands.
 P3-3 still requires that capacity behavior and the selected complete
 Local/Temporal service acceptance. P3-2/S2 and its original 360-second gate remain
 open; this batch changes no Engine or Temporal execution protocol.

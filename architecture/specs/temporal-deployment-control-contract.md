@@ -122,3 +122,9 @@ While its root remains held, a descendant may still require original cancel/driv
 Preserve the actual graph child-approval failure as RED and add ordinary v2 child-approval Service RED. Pure/transport tests must cover ordinary2 on Registry2/3 and Coding3 on Registry3; nested graph/Team/Dynamic and hidden/old-revision intents; one root/one effect/one command; rogue same-Scope raw SDK targets and forged hints; changed Scope/UUID/first/current/ancestor epoch, actual parent, request/Manifest/carrier or call ID; missing pins without mutations; original queue/timeout after alias/Host movement; exact duplicates after retirement and changed command identity; capacity/retirement/close races after await; no caller attestation path; and epoch-pinned final command delivery across reset. Do not claim a completed stage or full R01–R26 gate from this focused repair.
 
 Related contracts: [public first acceptance and retirement](temporal-deployment-public-contract.md), [original dispatch and ancestry](temporal-deployment-dispatch-contract.md), and [Coding ownership and physical close](temporal-deployment-coding-contract.md).
+
+2026-10-16 experimental release addendum: [bounded original-root recovery](temporal-recovery-capacity-contract.md)
+adds root-only cancel/drive protection and repeatable mechanical wake. It does not
+exempt this contract's fresh descendant preparation/commit from command capacity
+or ancestry verification. Matching old selected Workers remain required; the new
+release's source fingerprints do not promise in-place upgrade of old Histories.

@@ -224,6 +224,14 @@ dev119 的 v2 验收记录保持原历史范围。候选 Coding v3 同样沿原 
 
 `drive` 可以先返回原终态，释放验证仍异步进行；用 `await engine.deployment_diagnostics()` 查看原 held／retired 根。Parent 的 `cancel` 回执中 `remote_stop_confirmed=False` 表示尚未确认真实后代停止，不能根据取消回执或父终态认定容量已释放；等待原后代及当前诊断确认结束。若 Action 已完成但 effect ACK 延后，修复原 journal 路由后用原 `drive` 继续 ACK。`reconcile(query=True)` 用于未知效果证据，不是已完成 Action 的 ACK 重试或再次执行工具。该恢复 P2 的实际失败、目标重试和最终公共矩阵通过证据见[验收登记](../architecture/reviews/2026-10-15-temporal-deployment-public.md)。dev119 真实零费用写／ACK 恢复窗口使用测试专用 SQLite 效果证据适配器，其他确定性用例使用默认组件；该批没有 PostgreSQL 调用。这是 dev119 的证据范围，不是 dev120 的存储要求；候选 Coding 使用原具体 PostgresEffectJournal 与借用它的 PostgresRunnerJournal，最终服务验收另行登记。
 
+## P3-3 公有根任务的命令容量保护候选
+
+`dist/p3-recovery-capacity-20261016/` 的独立候选为公有Registry2／3／4原held-bound根保留有限的纯cancel／drive记录。普通累计容量满时，每个原根最多额外一条取消和一条机械唤醒；其他新命令仍按原容量拒绝。`await engine.drive(root_run_id, wait_seconds=0)`复用同一机械身份，每次实际发出fresh SDK Update，旧ID冲突时由原Registry提供有界替代提示。不要把高频轮询当恢复策略；命令条目有限不代表History流量或大小有限。
+
+首次取消仍使用调用方保存的`command_id`。若回复丢失，继续原身份；已经消耗保护取消槽时，可从原`await engine.deployment_diagnostics()`的`recovery_controls`中按原`run_id`和`kind="cancel"`找到该身份，再执行原`engine.cancel(..., command_id=...)`。`recovery_drive_hints`只是只读建议，`durable=False`，既不表示已接受，也不是权限或效果证明；SDK仍经原guard注册。
+
+本候选只补根控制准入与机械唤醒；满容量的descendant控制、人工核验／审批及普通scoped Registry仍未补齐。根取消准入不能证明后代已停，unknown与资源义务继续保留。新所选source inventory指纹已变化，旧selected Run／Registry必须保留原匹配Worker；不自动升级原History或因协议整数相同宣称保护可用。源码／安装18模块各458项、默认对照与保存默认History离线重放通过，尚无本候选实际Temporal／PG服务验收。详见[契约](../architecture/specs/temporal-recovery-capacity-contract.md)与[验收记录](../architecture/reviews/2026-10-16-temporal-recovery-capacity.md)。
+
 ## Temporal 内部 Worker 的原 SDK 门禁
 
 dev117 的[Registry 基础](../architecture/specs/temporal-deployment-admission-contract.md)继续在原 History 持有根占位。dev118 的[调度契约](../architecture/specs/temporal-deployment-dispatch-contract.md)通过内部 `TemporalRuntime(_deployment_admission_policy=policy)` 固定 exact 策略对象，发布完整策略、稳定 Registry 地址和固定源码清单。原 SDK 接受数据在 `request` 旁携带根预留及有界祖先链；原请求、命令和子投影 SHA 不改变。

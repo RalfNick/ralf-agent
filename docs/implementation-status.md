@@ -27,7 +27,7 @@
 | 范围 | 状态与约束 |
 | --- | --- |
 | P3-2 | S1普通Session功能子集已有验收；S2已有真实PG日志与关闭证据，但原360秒仍未通过，当前完整矩阵尚缺。性能专项后置，该未完成组合不列为已支持 |
-| P3-3 | 用户已批准独立推进，保留全部原验收门槛；显式HTTP事件分页及审批／核验／宿主恢复唤醒已有Local证据，累计命令容量及完整所选服务验收仍待，不关闭本项 |
+| P3-3 | 用户已批准独立推进；HTTP控制／事件已有Local证据，公有Temporal原根任务有界保护控制已有离线／安装证据；完整容量与所选真实服务验收仍待，不关闭本项 |
 | P3-4／P3-5／P3-A | 原依赖和验收保持，身份权限／保留、框架恢复与阶段整体未关闭，不新增后端／编排／Runner／部署组合 |
 | R01–R26其余目标 | 保留为长期路线图；外部采用和框架对等比较单独验收，不自动成为本轮实现任务 |
 
@@ -37,7 +37,9 @@
 
 P3-3已有默认关闭的`tasks/events` HTTP分页：原Scope／Run游标、字节前缀返回、原记录连续校验，借用原同步／异步事件端口。事件批次源码非socket 101项与HTTP 3项、独立安装18项与HTTP 3项分别通过，426产品一致，见[事件指南](http-events.md)及[原记录](../architecture/reviews/2026-10-16-http-event-pages.md)。
 
-后续控制批次增加显式`tasks/approve`／`tasks/reconcile`及非持久`tasks/resume`宿主唤醒，复用原命令／Action及执行权威，未修改Engine／Temporal状态机。当前受影响非socket **122项**、真实HTTP **5项**分别通过；独立wheel **32项**、真实HTTP **5项**分别通过，427产品源码／wheel／安装一致。Local实际进程重启、原回执重提、未知写一次核验及owned关闭排空已验证；原生异步端口为Local适配证据。默认Card／普通Temporal声明与基础包对照相同，不代表完整History或真实Temporal／PG验收。新制品独立放置，原基础／事件包不变。见[控制指南](http-run-controls.md)及[本批记录](../architecture/reviews/2026-10-16-http-run-controls.md)。下一批优先解决累计命令容量耗尽后的必要控制入口，再做所选完整服务验收；P3-3未关闭。
+控制批次增加显式`tasks/approve`／`tasks/reconcile`及非持久`tasks/resume`宿主唤醒，复用原命令／Action及执行权威，该批未修改Engine／Temporal状态机。受影响非socket **122项**、真实HTTP **5项**分别通过；独立wheel **32项**、真实HTTP **5项**分别通过，427产品一致。Local实际进程重启、原回执重提、未知写一次核验及owned关闭排空已验证；原生异步端口为Local适配证据。见[控制指南](http-run-controls.md)及[记录](../architecture/reviews/2026-10-16-http-run-controls.md)，不扩称真实Temporal／PG验收。
+
+最新容量批次：公有Temporal Registry2／3／4满容量时，原held-bound根各保留一个纯取消和一个机械唤醒记录；SDK重复drive复用身份，Parent保留停止状态并重新检查子任务，旧ID冲突由原Registry提供有界替代提示。未覆盖满容量的descendant、可变人工控制或普通scoped Registry。源码及独立wheel受影响18模块各 **458 passed**，427产品源码／wheel／安装一致；默认Card／普通Temporal声明对照及原始／续接默认History离线重放通过，所选实验发布指纹已变化，旧selected运行仍须匹配不可变Worker。见[容量契约](../architecture/specs/temporal-recovery-capacity-contract.md)与[验收记录](../architecture/reviews/2026-10-16-temporal-recovery-capacity.md)。没有真实服务／模型调用，不能从根控制准入推断后代物理停止。原制品保持不变，下一批统一剩余容量／恢复契约，再补所选真实服务整链；P3-3未关闭。
 
 ## 历史实现与验收证据
 
