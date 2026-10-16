@@ -1,5 +1,7 @@
 # 第三阶段支持矩阵与收口门槛
 
+最新[公有begin／seal容量恢复](../architecture/reviews/2026-10-16-temporal-deployment-lifecycle-capacity.md)：保持原handler、独占准入与封存复核，坏ACK仍保留Owner。源码／隔离安装各2,381 passed／6 skipped；同包实际3 passed／21.426秒，普通公有2在原Run满2,000 Update后效果ACK、结束、seal、退休、关闭和重启重放通过，两种不可变旧Worker各按端点和匹配SDK验证。原指纹失败已修，单次源码组超时原因未确认、复核通过；旧失败均保留。该子门槛关闭，其他Registry／Session／native与History容量及完整P3-3／P3-2仍开放。
+
 最新[原执行结束运输](../architecture/reviews/2026-10-16-temporal-execution-end-capacity.md)：四个原end handler保留完整证明／原epoch，不新增grant；源码／安装各2,340 passed／6 skipped。同包实际2 passed／1 failed，默认Tool的2,000 Update结束压力与旧Worker兼容通过；公有原end已记录，后续效果ACK的begin仍被容量拒绝、Owner关闭失败。原门槛、失败与未知义务保留；context／Session／native实际压力及其他生命周期未验，完整P3-3不关闭。
 
 

@@ -210,3 +210,12 @@ An accepted cancel or recorded physical end still does not prove deployment
 closure: a later effect-ACK Activity may be blocked on its original begin record
 at the same capacity limit. Keep its Owner and original evidence; do not treat
 HTTP success, Run quiescence or server shutdown as a retirement acknowledgement.
+
+
+The subsequent [public begin/seal repair](../architecture/reviews/2026-10-16-temporal-deployment-lifecycle-capacity.md)
+closes the reproduced ordinary-public2 effect-ACK/retirement path at2,000 original
+Run Updates. Original exclusive calls, end evidence, seal and Registry retirement
+are still independently required. Invalid accepted ACKs retain the original Owner;
+HTTP success or observer timeout cannot clear them. Other service/capacity
+combinations remain governed by the frozen matrix and are not implied by this SDK
+subgate.

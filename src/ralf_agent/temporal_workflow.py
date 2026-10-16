@@ -23,6 +23,7 @@ with workflow.unsafe.imports_passed_through():
         temporal_deployment_coding_registry,  # noqa: F401 -- original scoped close index
         temporal_deployment_coding_state,  # noqa: F401 -- original pure call fencing
         temporal_deployment_control_projection,  # noqa: F401 -- fixed compact Query projector
+        temporal_deployment_lifecycle_transport,  # noqa: F401 -- original public begin/seal
         temporal_deployment_registry,  # noqa: F401 -- preload pure acceptance
         temporal_deployment_session_registry,  # noqa: F401 -- original Session command/claim facts
         temporal_deployment_session_updates,  # noqa: F401 -- Registry-owned SDK commit path
@@ -921,6 +922,12 @@ class TemporalRunWorkflow:
 
         await accept(self, envelope, workflow.info())
 
+    @workflow.signal(name="deployment_lifecycle")
+    async def deployment_lifecycle(self, envelope: dict) -> None:
+        from .temporal_deployment_lifecycle_transport import accept
+
+        await accept(self, envelope, workflow.info())
+
     @workflow.update(name="admit_context_dispatch")
     async def admit_context_dispatch(self, request: dict) -> dict:
         try:
@@ -1204,6 +1211,14 @@ class TemporalRunWorkflow:
         try:
             self.state.authorize(request.get("scope"))
             kind = request["kind"]
+            if kind == "status" and "deployment_lifecycle_observation" in request:
+                from .temporal_deployment_lifecycle_transport import observe
+
+                return {
+                    "deployment_lifecycle_observation": observe(
+                        self, request["deployment_lifecycle_observation"], workflow.info()
+                    )
+                }
             if kind == "status" and "execution_end_observation" in request:
                 from .temporal_execution_end_transport import observe
 

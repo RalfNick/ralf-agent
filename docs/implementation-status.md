@@ -27,11 +27,13 @@
 | 范围 | 状态与约束 |
 | --- | --- |
 | P3-2 | S1普通Session功能子集已有验收；S2已有真实PG日志与关闭证据，但原360秒仍未通过，当前完整矩阵尚缺。性能专项后置，该未完成组合不列为已支持 |
-| P3-3 | 用户已批准独立推进；Local及普通Agent HTTP→Temporal／PG控制、宿主重启和事件游标已有实测；公有普通2已有4096原树取消及根Tool人工核验／结束／ACK证据；默认scoped满容量首次取消、重复drive图恢复及旧Worker兼容已验，默认scoped普通Tool人工核验容量已有有限证据；原Run／图父子必要控制及默认scoped原工具人工证明在2,000 distinct Update后可用；原Tool结束运输已有窄修，公有部署后续效果ACK的begin登记仍在2,000上限失败并保留关闭义务，其他Update／History门槛仍待，本项不关闭 |
+| P3-3 | 用户已批准独立推进；Local及普通Agent HTTP→Temporal／PG控制、宿主重启和事件游标已有实测；公有普通2已有4096原树取消及根Tool人工核验／结束／ACK证据；默认scoped满容量首次取消、重复drive图恢复及旧Worker兼容已验，默认scoped普通Tool人工核验容量已有有限证据；原Run／图父子必要控制及默认scoped原工具人工证明在2,000 distinct Update后可用；原Tool结束运输与公有普通2的begin／seal窄修已实测，满2,000后效果ACK、退休和Owner关闭通过；其他Registry／Session／native及History门槛仍待，本项不关闭 |
 | P3-4／P3-5／P3-A | 原依赖和验收保持，身份权限／保留、框架恢复与阶段整体未关闭，不新增后端／编排／Runner／部署组合 |
 | R01–R26其余目标 | 保留为长期路线图；外部采用和框架对等比较单独验收，不自动成为本轮实现任务 |
 
-**当前结束回执增量：** 四类原结束handler经原Run有界Signal／Query观察，保留Scope、epoch、完整证明和严格ACK；不增加grant／准入或执行权威。源码／独立wheel各 **2,340 passed／6 skipped**，434产品一致；默认发布／保存History兼容和此前14组制品校验通过。同包真实Temporal **2 passed／1 failed／24.730秒**：默认Tool满2,000 Update后的实际结束、重启与旧Worker兼容通过；公有原end事实已入库，但后续效果ACK的begin登记仍触及上限，Owner关闭失败。原断言、失败、8条失败History重放及资源义务保留，不能把Run quiescent当作部署退休；完整P3-3不关闭。详见[窄修与剩余阻塞](../architecture/reviews/2026-10-16-temporal-execution-end-capacity.md)。下一批只处理该原begin的正向证据与关闭路径，预计一批定向排查／必要修复，不扩范围。
+**前批结束回执增量：** 四类原结束handler经原Run有界Signal／Query观察，保留Scope、epoch、完整证明和严格ACK；不增加grant／准入或执行权威。源码／独立wheel各 **2,340 passed／6 skipped**，434产品一致；默认发布／保存History兼容和此前14组制品校验通过。同包真实Temporal **2 passed／1 failed／24.730秒**：默认Tool满2,000 Update后的实际结束、重启与旧Worker兼容通过；公有原end事实已入库，但后续效果ACK的begin登记仍触及上限，Owner关闭失败。原断言、失败、8条失败History重放及资源义务保留，不能把Run quiescent当作部署退休；完整P3-3不关闭。详见[窄修与剩余阻塞](../architecture/reviews/2026-10-16-temporal-execution-end-capacity.md)。下一批只处理该原begin的正向证据与关闭路径，预计一批定向排查／必要修复，不扩范围。
+
+**当前公有生命周期增量：** 原Run／Parent完整begin与seal handler经有界Signal／Query观察，独占grant、封存／子证明和原release复核保持；坏ACK／端口异常保留未知Owner，仅已核验原handler拒绝可清理未启动义务。源码／隔离安装各 **2,381 passed／6 skipped**，435产品一致，默认配置／保存History和此前15组本地制品校验通过。同包真实 **3 passed／21.426秒**：公有普通2满2,000 Update后一次写入、效果ACK、实际结束、seal、根退休、Owner关闭及重启重放通过；原10c旧end和dd543旧公有helper兼容分别通过。后者严格使用旧SDK／Worker重放，不表示当前SDK接受旧selected发布。构造器指纹119失败／2错误已修复，另一次源码180秒组超时原因未确认，单项及同产品全组复核通过；全部原记录保留。详见[当前验收](../architecture/reviews/2026-10-16-temporal-deployment-lifecycle-capacity.md)。下一批先核对冻结P3-3剩余矩阵和已有证据，预计一批审查，不继续无依据扩运输或新组合；完整P3-3／P3-2及后续门槛不变。
 
 后续执行依据为[第三阶段冻结矩阵](phase3-support-matrix.md)；基础交付与完整第三阶段／M1／R01–R26完成严格分开。同一阻塞连续两批无实质进展时，汇总原因、证据缺口与处置方案，停止无新依据的重复微调。
 

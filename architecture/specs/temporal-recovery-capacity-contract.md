@@ -449,3 +449,32 @@ Owner obligation and refusal. Actual default pressure/old-Worker and retained
 public failure have separate evidence in the [batch record](../reviews/2026-10-16-temporal-execution-end-capacity.md).
 Context/Session/native service pressure, remaining lifecycle and full P3-3 are
 not closed by handler/client unit tests.
+
+
+## Original public begin and seal transport
+
+A dedicated `deployment_lifecycle` Signal and optional status observation carry
+only `deployment_call_started` and `deployment_seal` for public2/3/4. Full existing
+Run/Parent handlers remain authoritative: original exclusive attempt/invocation,
+4096-call ledger, irreversible seal and complete child/closure verification are
+unchanged. The release Activity independently rereads/validates original seals
+and namespace before Registry retirement. This is not a new scheduler or generic
+command bus; other lifecycle/grant/Registry operations are not switched.
+
+Scope/payload digest/namespace/original SDK first-current-original epoch and ports
+are pinned.64 observation entries/2MiB envelopes do not evict durable calls or
+business identities. A fresh observation reruns the full handler.30-second wait
+cancellation/timeout/eviction/unknown delivery never proves no-start or permits
+Update fallback. Only exact old snapshots with original SDK identity permit the
+old fixed Update IDs; old selected releases require matching SDK/Worker/replayer.
+
+Local receipt/query/port errors must never masquerade as original begin refusal.
+Only a complete observed handler error or pinned legacy non-retryable SDK
+ApplicationError can yield the internal exact refusal type. Invalid accepted
+ACKs retain Owner obligations and recover the same invocation's begin/end, with
+zero business execution. Persistent invalid ACK remains `CloseIncomplete`.
+
+The [same-wheel public2 pressure](../reviews/2026-10-16-temporal-deployment-lifecycle-capacity.md)
+now covers evidence ACK, seal, root retirement and owned closure after2,000 Run
+Updates. It does not close Registry Update exhaustion, Session/native/other
+pressure combinations, call-ledger capacity or History byte/event bounds.

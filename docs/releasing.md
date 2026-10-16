@@ -132,3 +132,16 @@ SHA256 `9cbea0c142741001ff445ec0179f50195ae1f41e03146a943b81f79c576169f7`，附`
 制品不变，实验发布指纹变化仍须匹配历史Worker。原失败及8条失败History重放、完整
 P3-3／P3-2门槛见[验收记录](../architecture/reviews/2026-10-16-temporal-execution-end-capacity.md)。
 仅本地候选，不推送或发布远端。
+
+
+## P3-3 公有begin／seal容量修复
+
+制品`dist/p3-deployment-lifecycle-final-20261016/ralf_agent-0.1.0.dev120-py3-none-any.whl`，
+SHA256 `e71780943d331351aa47192aca83d4278a55ab027b103ba8141c3da564040a67`，附独立校验与
+验收JSON。源码／隔离安装各2,381 passed／6 skipped，435产品一致；同包实际3 passed／
+21.426秒，原公有普通2满2,000 Run Update后效果ACK、实际结束、封存退休和Owner关闭
+通过。两类旧Worker按各自端点验证；旧selected仍需匹配SDK／Worker／replayer，不放宽
+当前版本校验。默认配置／保存History及此前15组制品校验通过；旧有限候选与原失败
+保持不变。原指纹错误、一次源码组超时与最终复核分开记录，见[验收记录](../architecture/reviews/2026-10-16-temporal-deployment-lifecycle-capacity.md)。
+仅该公有恢复子集完成；完整P3-3、P3-2/S2、Registry／Session／native和其他History门槛
+继续开放。不推送或发布远端。

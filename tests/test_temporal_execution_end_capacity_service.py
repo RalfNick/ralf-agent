@@ -3,6 +3,7 @@
 import asyncio
 import json
 import os
+import sqlite3
 import uuid
 from dataclasses import asdict
 from datetime import timedelta
@@ -175,8 +176,25 @@ def test_actual_original_tool_end_ack_after_2000_updates(tmp_path, public):
                 assert final.workflow["tool_executions"][0]["execution_stopped"] is True
                 assert final.snapshot.state == "cancelled" and write.committed()[0][1] == 1
                 if public:
+                    deployment = await _eventually(
+                        engine.deployment_diagnostics,
+                        lambda value: value["counts"]["held_root_runs"] == 0,
+                    )
                     closure = await engine._view(original.run_id, "deployment_closure")
                     assert all(call["stopped"] for call in closure["calls"].values())
+                    assert closure["seal"] is not None
+                    with sqlite3.connect(journal.path) as db:
+                        effects = db.execute("SELECT state,adopted_digest FROM effects").fetchall()
+                    assert len(effects) == 1 and effects[0][0] == "adopted" and effects[0][1]
+                    (tmp_path / "deployment-retirement.json").write_text(
+                        json.dumps(
+                            {
+                                "registry": deployment,
+                                "closure": closure,
+                                "effect_acknowledged": True,
+                            }
+                        )
+                    )
                 assert await engine.cancel(original.run_id, command_id="original-stop") == receipt
                 for index, target in enumerate(sorted(owned)):
                     history = await client.get_workflow_handle(target).fetch_history()
@@ -192,7 +210,7 @@ def test_actual_original_tool_end_ack_after_2000_updates(tmp_path, public):
                             "histories_replayed": True,
                             "external_model_calls": 0,
                             "public_actual_call": public,
-                            "retirement_capacity_gate_closed": False,
+                            "retirement_capacity_gate_closed": public,
                         }
                     )
                 )

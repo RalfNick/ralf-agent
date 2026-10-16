@@ -59,12 +59,13 @@ def _ack(identity, field, value):
 
 
 def _definitive_refusal(exc):
-    code = (
-        exc.code
-        if isinstance(exc, RalfError)
-        else getattr(getattr(exc, "cause", None), "type", None)
-    )
-    return code in {"definition_mismatch", "validation_error", "authorization_denied"}
+    from .temporal_deployment_lifecycle_transport import LifecycleRefused
+
+    return type(exc) is LifecycleRefused and exc.code in {
+        "definition_mismatch",
+        "validation_error",
+        "authorization_denied",
+    }
 
 
 def wrap_activity(runtime, client, function):
@@ -99,7 +100,6 @@ def wrap_activity(runtime, client, function):
             "request_digest": digest(carrier),
             "manifest_digest": proof["manifest_digest"],
         }
-        handle = client.get_workflow_handle(proof["run_id"], run_id=proof["execution_epoch"])
         owner_proof = {
             "scope": proof["scope"],
             "action_id": digest(
@@ -117,12 +117,17 @@ def wrap_activity(runtime, client, function):
         lifecycle = {"requested": False, "allowed": None}
 
         async def begin():
+            from .temporal_deployment_lifecycle_transport import execute as observe_lifecycle
+
             lifecycle["requested"] = True
             try:
-                granted = await handle.execute_update(
+                granted = await observe_lifecycle(
+                    client,
+                    proof["run_id"],
                     "deployment_call_started",
                     identity,
-                    id="ralf-deployment-call:" + digest(identity),
+                    execution_epoch=proof["execution_epoch"],
+                    legacy_update_id="ralf-deployment-call:" + digest(identity),
                 )
             except Exception as exc:
                 if _definitive_refusal(exc):
@@ -363,9 +368,16 @@ async def _tree(runtime, client, policy, proof, *, seal, seen=None):
         if not seal:
             _reject()
         payload = {"scope": proof["scope"], "children": children}
-        certificate = await client.get_workflow_handle(
-            proof["run_id"], run_id=proof["execution_epoch"]
-        ).execute_update("deployment_seal", payload, id="ralf-deployment-seal:" + digest(payload))
+        from .temporal_deployment_lifecycle_transport import execute as observe_lifecycle
+
+        certificate = await observe_lifecycle(
+            client,
+            proof["run_id"],
+            "deployment_seal",
+            payload,
+            execution_epoch=proof["execution_epoch"],
+            legacy_update_id="ralf-deployment-seal:" + digest(payload),
+        )
     _certificate(certificate, proof)
     if certificate["children"] != children:
         _reject()

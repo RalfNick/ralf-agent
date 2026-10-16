@@ -172,6 +172,18 @@ def _pure_sources():
 
 def _worker_sources():
     return {
+        "deployment_lifecycle_transport": (
+            "temporal_deployment_lifecycle_transport",
+            (
+                "LifecycleRefused.__init__",
+                "_raise_handler_error",
+                "_identity",
+                "accept",
+                "observe",
+                "_receipt",
+                "execute",
+            ),
+        ),
         "execution_end_transport": (
             "temporal_execution_end_transport",
             ("_identity", "accept", "observe", "_receipt", "execute"),
@@ -287,6 +299,7 @@ def _worker_sources():
                 "TemporalRunWorkflow.command",
                 "TemporalRunWorkflow.control_command",
                 "TemporalRunWorkflow.execution_ended",
+                "TemporalRunWorkflow.deployment_lifecycle",
                 "TemporalRunWorkflow.view",
                 "TemporalRunWorkflow.coding_composition_namespace",
                 "TemporalRunWorkflow.coding_composition_child_epoch",
