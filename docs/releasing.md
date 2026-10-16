@@ -21,6 +21,12 @@ python -m agent_app --ticket INC-001
 
 本轮复用固定产品的完整离线源码回归（12,749通过／838配置依赖跳过）、原独立安装62项及其他已登记基础证据；最终wheel已通过隔离安装、版本／入口、starter审批、重复审批、恢复及原命令回读验证，业务只写入一次，结果见 `delivery.json`。wheel与交付记录的SHA-256校验通过。该smoke不改称完整安装矩阵或新的真实模型质量，阶段未验收项保持不变。后续CLI核验便利命令等可选项不进入本轮，现有SDK人工核验可用。
 
+## Temporal 工具结束证据补丁
+
+原 `basic-sdk-b871f61` 制品保留，不替换其哈希。后续发现默认无 `ToolExecutionOwner` 的 Temporal 工具存在P1：超时工具经人工确认效果后，另一个工具成功可能让父任务提前结算。新补丁 `dist/p3-tool-end-20261016/` 的同版本wheel独立校验、安装与验收，细节见[补丁记录](../architecture/reviews/2026-10-16-temporal-unowned-tool-end.md)。使用新建Temporal Run的修复路径时须选择该精确制品，不能只凭 `dev120` 版本号区分。
+
+补丁用 `ralf-unowned-tool-end-evidence-v1` 标记保护新Run，默认Card／普通发布身份保持。无标记旧History为确定性重放保留原行为，**没有自动升级或追溯修复**；重放通过不等于原风险消失。默认Local起步不受本问题影响。无Owner的原工具超时后，即使外部已看到线程退出，没有原History结束回执仍保留义务；没有新增人工清除入口。旧未知Run的安全迁移／处理仍是开放项，不能据本补丁关闭P3-3或P3-5。
+
 ## 1. 准备版本与兼容说明
 
 1. 同步 `pyproject.toml` 和 `src/ralf_agent/__init__.py` 中的包版本。

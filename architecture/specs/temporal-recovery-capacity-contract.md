@@ -311,3 +311,34 @@ collision preservation, repeated actual Workflow handler wake with one command
 record, and Parent cancelling/seal guards. Actual service/History and complete
 P3-3 acceptance must be recorded separately. Root-only pure/transport tests cannot
 close descendant, manual-control or scoped-Registry capacity requirements.
+
+## Ordinary Tool physical-end prerequisite
+
+Effect confirmation and handler termination are separate facts. For a newly marked
+Run without ToolExecutionOwner, unknown Tool A retains its own
+`execution_unconfirmed` fact after operator/query effect adoption and ACK. Tool B
+success cannot clear A. Only a genuine result of the original A Activity clears
+A's fact, without overwriting its already adopted effect. `quiescent` also checks
+these facts independently of the aggregate uncertainty flag. Parent escrow remains
+held until its original child is quiescent. Patch
+`ralf-unowned-tool-end-evidence-v1` preserves no-marker History's original behavior;
+legacy replay is not proof that this old safety defect is repaired. Temporal may
+never deliver an Activity result after its timeout: external observation of thread
+exit is insufficient and this patch adds no administrative clear operation.
+See the [repair and retained limits](../reviews/2026-10-16-temporal-unowned-tool-end.md).
+
+### Scoped manual admission audit — not implemented
+
+A future protected ordinary Tool confirmation must bind original Scope, target,
+SDK History epoch, request and actual adopted Action inventory. Its bound is the
+finite original inventory M under the accepted Agent decision/step constraints;
+zero-credit calls count. No fixed4096-per-Run or `3 * capacity` claim applies to
+manual Actions. The existing selected CONTROL Activity can transport a separate
+read-only verifier; it must not masquerade as Parent registration or drive. A
+Registry's first Worker release is not proof that all scoped targets share its
+queue or Manifest. Recheck original authority identities after awaited proof.
+These are audit constraints, not a delivered extra Registry allowance. Whether a
+particular timed-out dispatch has sufficient original invocation evidence must
+be specified and tested before that allowance is implemented. Native delegated
+receipt/fence paths remain separate. This batch first fixes the physical-end
+prerequisite; full scoped manual admission and Update/History lifecycle remain open.

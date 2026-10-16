@@ -464,6 +464,7 @@ class TemporalRunState:
         self.receipts, self.command_digests, self.event_log = {}, {}, []
         self.reservations, self.pending_acks = {}, []
         self.active_action, self.remote_uncertain = None, False
+        self.tool_end_evidence_version = 0  # Workflow patch preserves old History replay.
         self.reconcile_requests = []
         self.active_reconciliation = None
         self.active_evidence_ack = None
@@ -696,6 +697,7 @@ class TemporalRunState:
             coding_stopped(self)
             and self.active_action is None
             and not self.remote_uncertain
+            and not any(a.get("execution_unconfirmed", False) for a in self.actions)
             and all(value["execution_stopped"] for value in self.tool_executions.values())
             and (
                 self.manifest["kernel"] != "temporal-3"
@@ -1177,6 +1179,12 @@ class TemporalRunState:
 
         coding_unknown(self, action_id)
         action["status"], action["attempts"][0]["status"] = "outcome_unknown", "unknown"
+        if (
+            getattr(self, "tool_end_evidence_version", 0) == 1
+            and action["kind"] == "tool"
+            and "tool_execution_protocol" not in self.manifest
+        ):
+            action["execution_unconfirmed"] = True
         self.reservations[action["attempts"][0]["id"]]["status"] = "unknown"
         self.active_action, self.remote_uncertain = None, True
         if action_id in self.tool_executions:
@@ -1578,6 +1586,20 @@ class TemporalRunState:
             return
         if "delegated_execution" in action:
             action["delegated_execution"]["effect_case"] = "confirmed"
+        if (
+            getattr(self, "tool_end_evidence_version", 0) == 1
+            and "tool_execution_protocol" not in self.manifest
+            and not reconciled
+        ):
+            # A genuine original Activity result proves only its own handler end.
+            # Operator/query evidence and another Tool's success never do.
+            action.pop("execution_unconfirmed", None)
+            self.remote_uncertain = any(
+                a.get("execution_unconfirmed", False)
+                or a["id"] != action_id
+                and a["status"] == "outcome_unknown"
+                for a in self.actions
+            )
         if action["status"] == "completed":
             self._emit(
                 "late_effect_evidence",
@@ -1608,7 +1630,10 @@ class TemporalRunState:
         elif not reconciled:
             # A real completed Activity proves its awaited handler returned. A
             # query/operator receipt alone never proves a lost handler stopped.
-            self.remote_uncertain = any(a["status"] == "outcome_unknown" for a in self.actions)
+            self.remote_uncertain = any(
+                a["status"] == "outcome_unknown" or a.get("execution_unconfirmed", False)
+                for a in self.actions
+            )
         self._emit(
             "effect_reconciled" if reconciled else "tool_result_committed",
             {"action_id": action_id, "source": response.get("source", "tool-handler")},

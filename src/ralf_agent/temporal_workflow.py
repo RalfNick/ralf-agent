@@ -572,6 +572,10 @@ class TemporalRunWorkflow:
     @workflow.run
     async def run(self, accepted: dict) -> None:
         self._check_deployment_initialization()
+        if "tool_execution_protocol" not in self.state.manifest:
+            self.state.tool_end_evidence_version = (
+                1 if workflow.patched("ralf-unowned-tool-end-evidence-v1") else 0
+            )
         policy = self.state.manifest.get("execution_policy", {})
         if policy.get("run_timeout_seconds") is not None:
             asyncio.create_task(self._deadline(policy["run_timeout_seconds"]))
