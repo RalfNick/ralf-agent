@@ -2,7 +2,7 @@
 
 ## 当前优先级：先保障基础能力
 
-P3-3增量记录：[HTTP事件分页](../architecture/reviews/2026-10-16-http-event-pages.md)、[原审批／核验／恢复唤醒](../architecture/reviews/2026-10-16-http-run-controls.md)、[公有Temporal根保护控制](../architecture/reviews/2026-10-16-temporal-recovery-capacity.md)。Local控制与重启已有有限证据；原根保护槽已有离线／安装证据，完整累计容量及所选真实服务验收尚待，P3-3不标完成。当前状态以交付摘要为准。
+P3-3增量记录：[HTTP事件分页](../architecture/reviews/2026-10-16-http-event-pages.md)、[原审批／核验／恢复唤醒](../architecture/reviews/2026-10-16-http-run-controls.md)、[公有Temporal根保护控制](../architecture/reviews/2026-10-16-temporal-recovery-capacity.md)、[原子任务重复唤醒与真实容量失败](../architecture/reviews/2026-10-16-temporal-delegated-recovery.md)。Local控制与重启已有有限证据；原根保护槽已有离线／安装证据。真实服务在4096逻辑容量前触及原History的2000 distinct Update上限，完整累计容量及所选服务验收未通过，P3-3不标完成。当前状态以交付摘要为准。
 
 当前状态统一见[交付摘要](implementation-status.md#当前交付摘要)：基础SDK本轮范围已收口，复用已有实现和有效证据，不为可选改进延长交付。2026-10-16用户明确批准“允许独立推进P3-3，保留全部验收门槛”；仅调整开发顺序，P3-2及第三阶段整体验收仍开放，P3-4／5／A不自动解锁。Temporal Coding Session性能专项当前后置，原360秒失败、其余未运行项及P3门槛均保留，不将未完成组合列为已支持。以下历史checkpoint只作原版本证据，不覆盖当前摘要。
 

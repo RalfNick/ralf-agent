@@ -230,7 +230,9 @@ dev119 的 v2 验收记录保持原历史范围。候选 Coding v3 同样沿原 
 
 首次取消仍使用调用方保存的`command_id`。若回复丢失，继续原身份；已经消耗保护取消槽时，可从原`await engine.deployment_diagnostics()`的`recovery_controls`中按原`run_id`和`kind="cancel"`找到该身份，再执行原`engine.cancel(..., command_id=...)`。`recovery_drive_hints`只是只读建议，`durable=False`，既不表示已接受，也不是权限或效果证明；SDK仍经原guard注册。
 
-本候选只补根控制准入与机械唤醒；满容量的descendant控制、人工核验／审批及普通scoped Registry仍未补齐。根取消准入不能证明后代已停，unknown与资源义务继续保留。新所选source inventory指纹已变化，旧selected Run／Registry必须保留原匹配Worker；不自动升级原History或因协议整数相同宣称保护可用。源码／安装18模块各458项、默认对照与保存默认History离线重放通过，尚无本候选实际Temporal／PG服务验收。详见[契约](../architecture/specs/temporal-recovery-capacity-contract.md)与[验收记录](../architecture/reviews/2026-10-16-temporal-recovery-capacity.md)。
+本候选只补根控制准入与机械唤醒。外部SDK新descendant命令仍受普通容量约束；原Parent内部机械委托已通过原祖先／epoch／held-root校验，不另占全局Registry命令。本批修复其公有重复唤醒，并固定Coding委托的原epoch身份；不新增外部后代权限。源码／安装18模块各458项属于上一候选证据，见[原验收记录](../architecture/reviews/2026-10-16-temporal-recovery-capacity.md)。
+
+后续真实服务4096条容量探针**未通过**：现有Service先达到每条History 2000个不同Update的上限，不能据逻辑保护槽宣称实际控制始终可达。独立真实helper测试只证明普通公有原child的fresh Update／单业务回执，不覆盖满容量整树或原生Coding。人工核验、普通scoped Registry与完整服务验收仍待，unknown及资源义务继续保留。新selected及受影响实验性Coding指纹已变化，旧History须匹配不可变Worker；详见[契约](../architecture/specs/temporal-recovery-capacity-contract.md)和[当前记录](../architecture/reviews/2026-10-16-temporal-delegated-recovery.md)。
 
 ## Temporal 内部 Worker 的原 SDK 门禁
 

@@ -7,7 +7,8 @@ This is one part of P3-3, not completion of its full capacity requirement.
 
 The original deployment Registry retains scoped command identity and immutable
 receipts. Run/Parent Histories retain all business state, effects, stop obligations
-and quota settlement. No control bypasses the Registry or creates a new authority.
+and quota settlement. No new external control bypasses the Registry or creates a
+new authority; the original verified internal delegation remains in place.
 
 Normal cumulative command capacity remains unchanged. When that capacity is full,
 a fresh control of an original **held-bound root** may use one additional `cancel`
@@ -26,8 +27,10 @@ is not silently increased for arbitrary commands. This bounds command identities
 not total Temporal History bytes or Update traffic. Caller backoff and later
 retention work remain necessary.
 
-Fresh descendant controls still require original SDK ancestry verification and
-ordinary command capacity. `approve`, `reconcile`, `send_input`, `patch` and fresh
+Fresh external SDK descendant controls still require original SDK ancestry
+verification and ordinary command capacity. The original Parent's internal
+mechanical delegation is a separate, already authorized path described below.
+`approve`, `reconcile`, `send_input`, `patch` and fresh
 submissions gain no exemption. Private deployment1 and unselected scoped Registries
 retain their old limits. In particular, accepting a root cancellation does not
 prove that a descendant cancellation succeeded, an external handler stopped or an
@@ -67,17 +70,61 @@ can invalidate a suggestion; registration then refuses safely and a later call
 can read a fresh suggestion. No unbounded retry is added. A descendant or old
 Registry without a matching hint keeps its original refusal.
 
+## Original Parent mechanical delegation
+
+The original Parent's control Activity already verifies its original request,
+Scope, source, namespace, held root, child intent, SDK ancestry and execution
+epochs before controlling that child. The Coding bridge similarly verifies its
+original child before invoking its internal command transport. Neither path
+reserves a fresh external descendant command in the global Registry. There is no
+new descendant protection map, caller authorization or authority in this increment.
+
+For public selected releases, ordinary delegation keeps its original logical
+command ID (parent ID/epoch, child ID/epoch, kind). The Coding transport now uses
+owner ID, child ID/original epoch and kind; a mutable child revision is not a
+business command identity. Each sends a fresh SDK Update, so a repeated drive
+reaches the original Workflow handler while retaining the first command receipt.
+Fixed SDK Update IDs would return a cached result without another handler wake.
+Original stop intent and cancellation remain effective; drive does not reopen
+business. Private/unselected branches retain their previous command-ID and SDK
+Update-ID behavior, but their Coding release fingerprints can still change as
+explained below.
+
+Bounded logical command records do **not** bound SDK Updates or History events.
+An actual production-capacity probe on 2026-10-16 hit the existing Service's
+2,000-distinct-Update limit in the original Registry before its 4,096 ordinary
+command allowance. Root protection therefore does not yet guarantee that a new
+necessary control can reach a real exhausted History. The probe remains failed;
+no service limit, command allowance or acceptance deadline was relaxed.
+
+Repeated-wake evidence is separate: a genuine ordinary public child received
+three fresh SDK Updates through the internal helper and recorded one logical
+command. It does not prove native Coding execution, outer Activity authorization
+or full-capacity tree recovery. See the [increment record](../reviews/2026-10-16-temporal-delegated-recovery.md).
+
+Required next evidence must cover transport lifecycle as well as record capacity.
+New business commands may receive safe backpressure. A first manual reconciliation
+of an existing unqueryable unknown Action can be its only recovery route, so
+refusing it forever cannot close the necessary-recovery requirement. Default
+scoped Registries and the selected complete service chain remain unaccepted.
+No alternate transport or Continue-as-New lifecycle is delivered by this change.
+
 ## Compatibility and acceptance
 
 Changed selected source inventories include `temporal.py`,
-`temporal_deployment_registry.py` and `temporal_parent_workflow.py`; they identify a
+`temporal_deployment_registry.py` and `temporal_parent_workflow.py`; this increment
+also changes `temporal_deployment_execution.py` and
+`temporal_coding_composition_control.py`. They identify a
 new experimental release even though the publication integer remains 2/3/4.
 Keep the exact package/release/Worker required by an old selected History.
 Do not replace its immutable Worker, reset its Registry or claim these protection
 semantics for an old Registry merely because its configuration integer matches.
 New independent deployment identities do not resume an old task or clear its
 obligations. Default publication and saved default History checks are distinct
-from selected historical compatibility.
+from selected historical compatibility. The internal Coding command helper is
+also fingerprinted by experimental Coding compositions outside public deployment
+selection. Keeping their legacy branch behavior does not mean those complete
+release fingerprints remain equal; they also need their matching immutable Worker.
 
 Required evidence for this increment: capacity-1 root protection in Registry2/3/4,
 conflict/scope/payload/refusal immutability, bounded repeated IDs, original

@@ -337,16 +337,28 @@ async def _discover(client, scope, run_id, manifest, namespace, *, request=None,
 
 
 async def _command(client, proof, kind, *, owner_id):
-    command_id = (
-        "ralf-parent-stop:" + digest([owner_id, proof["run_id"]])
-        if kind == "cancel"
-        else "ralf-parent-recover:" + digest([owner_id, proof["run_id"], proof["revision"]])
-    )
+    from .temporal_deployment_protocol import public_selected
+
+    public = public_selected(proof.get("manifest"))
+    if public:
+        command_id = "ralf-parent-control:" + digest(
+            [owner_id, proof["run_id"], proof["execution_epoch"], kind]
+        )
+    else:
+        command_id = (
+            "ralf-parent-stop:" + digest([owner_id, proof["run_id"]])
+            if kind == "cancel"
+            else "ralf-parent-recover:" + digest([owner_id, proof["run_id"], proof["revision"]])
+        )
     payload = {"kind": kind, "scope": proof["scope"]}
     await _namespace(client, proof["namespace"])
     result = await client.get_workflow_handle(
         proof["run_id"], run_id=proof["execution_epoch"]
-    ).execute_update("command", {"command_id": command_id, "payload": payload}, id=command_id)
+    ).execute_update(
+        "command",
+        {"command_id": command_id, "payload": payload},
+        **({} if public else {"id": command_id}),
+    )
     await _namespace(client, proof["namespace"])
     return result
 

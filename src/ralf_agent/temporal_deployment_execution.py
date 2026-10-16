@@ -721,6 +721,8 @@ async def control(runtime, client, value, info):
                 "scope": proof["scope"],
             }
         elif mode in {"cancel", "recover"}:
+            from .temporal_deployment_protocol import public_selected
+
             kind = "drive" if mode == "recover" else "cancel"
             command = "ralf-deployment-control:" + digest(
                 [proof["run_id"], proof["execution_epoch"], child["run_id"], epoch, kind]
@@ -728,7 +730,9 @@ async def control(runtime, client, value, info):
             receipt = await handle.execute_update(
                 "command",
                 {"command_id": command, "payload": {"kind": kind, "scope": proof["scope"]}},
-                id=command,
+                # Public mechanical retries must reach the original handler;
+                # fixed SDK Update IDs would return a cached receipt instead.
+                **({} if public_selected(proof["manifest"]) else {"id": command}),
             )
             result = (
                 {"run_id": child["run_id"], "recovery_requested": True}

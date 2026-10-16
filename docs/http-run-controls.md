@@ -126,7 +126,11 @@ execution authority's full cumulative command-capacity requirement remains open.
 A later candidate adds bounded protection for original public Temporal root
 cancel/drive commands; see the [capacity contract](../architecture/specs/temporal-recovery-capacity-contract.md).
 That increment has offline/installed evidence, not live hosted acceptance. It
-does not exempt descendant or new manual reconciliation/approval commands.
+does not exempt fresh external descendant or manual reconciliation/approval
+commands. Original internal Parent delegation does not reserve such a fresh
+Registry command. Its repeated-wake fix is recorded separately; the actual
+4,096-record capacity probe failed at the Service's earlier 2,000-distinct-Update
+limit. See the [current evidence](../architecture/reviews/2026-10-16-temporal-delegated-recovery.md).
 P3-3 still requires that capacity behavior and the selected complete
 Local/Temporal service acceptance. P3-2/S2 and its original 360-second gate remain
 open; this batch changes no Engine or Temporal execution protocol.
