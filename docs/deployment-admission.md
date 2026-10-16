@@ -234,6 +234,8 @@ dev119 的 v2 验收记录保持原历史范围。候选 Coding v3 同样沿原 
 
 后续真实服务4096条容量探针**未通过**：现有Service先达到每条History 2000个不同Update的上限，不能据逻辑保护槽宣称实际控制始终可达。独立真实helper测试只证明普通公有原child的fresh Update／单业务回执，不覆盖满容量整树或原生Coding。人工核验、普通scoped Registry与完整服务验收仍待，unknown及资源义务继续保留。新selected及受影响实验性Coding指纹已变化，旧History须匹配不可变Worker；详见[契约](../architecture/specs/temporal-recovery-capacity-contract.md)和[当前记录](../architecture/reviews/2026-10-16-temporal-delegated-recovery.md)。
 
+其后的[同步预留运输修复](../architecture/reviews/2026-10-16-temporal-reservation-transport.md)只切换公有七类、无descendant的原同步reserve；仍由原Registry校验和采纳。内部64项观察缓存不删除业务去重记录，Signal送达不当接受，观察超时不撤销Run。Session首次预留、后代取证及其他Update沿原路径；不能把该窄修复当完整History生命周期治理或整个P3-3完成。实际并发范围、成功／失败及安装证据以该记录为准。
+
 ## Temporal 内部 Worker 的原 SDK 门禁
 
 dev117 的[Registry 基础](../architecture/specs/temporal-deployment-admission-contract.md)继续在原 History 持有根占位。dev118 的[调度契约](../architecture/specs/temporal-deployment-dispatch-contract.md)通过内部 `TemporalRuntime(_deployment_admission_policy=policy)` 固定 exact 策略对象，发布完整策略、稳定 Registry 地址和固定源码清单。原 SDK 接受数据在 `request` 旁携带根预留及有界祖先链；原请求、命令和子投影 SHA 不改变。

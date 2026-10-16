@@ -109,6 +109,48 @@ refusing it forever cannot close the necessary-recovery requirement. Default
 scoped Registries and the selected complete service chain remain unaccepted.
 No alternate transport or Continue-as-New lifecycle is delivered by this change.
 
+## Synchronous reservation transport repair
+
+The next selected Worker provides `reserve_command` as a narrow original Registry
+Signal, with `view(kind="deployment_reserve_receipt")` observation. It supports
+only public2/3/4 `submit/approve/cancel/reconcile/drive/send_input/patch` reservations
+without `descendant`. The Signal invokes the existing synchronous
+`commands.reserve`; that method still owns all acceptance, identity, conflict,
+capacity and root checks. Session `session_*` reservations, descendant Activity
+verification and other Updates retain their original paths. This is no general
+command transport and does not change ordinary command capacity.
+
+Each SDK attempt carries a fresh bounded `observation_id`, the exact original
+request and its Scope. Both Query and Signal verify original Registry epoch,
+public selection, Scope, policy and namespace. An observation is bound to its
+whole request digest; a live same-Scope observation ID with changed content cannot
+replace its result. The SDK requires an exact version/id/digest/result response
+before sending a Signal. Old or mismatched Workers are refused before delivery;
+there is no automatic Update fallback after an unknown outcome.
+
+Only 64 transport observations are retained, with deterministic oldest eviction.
+They hold this attempt's original reserve result or refusal, not new business
+state. Original commands/submissions/receipts are never evicted. Cache absence
+means unprocessed or evicted and therefore **unknown**, never unaccepted. Signal
+ACK is delivery only. The SDK queries the matching result with bounded backoff
+and a 30-second observation timeout; caller cancellation or timeout does not undo
+acceptance or release a root. A later attempt uses a fresh observation and the
+same business command ID; the original state decides duplicate/conflict. A prior
+refusal is not a permanent cached rejection of future business retries.
+
+Malformed or unsupported Signals create no observation and cannot throw out of
+the handler to poison the Workflow. Authorized original reserve refusals are
+reported by the matching observation, without disabling later valid commands.
+The 2-MiB transport envelope bound leaves room for the original 1-MiB submission
+envelope; business limits remain in their original validation.
+
+Signals still consume History events and can hit service lifecycle limits. This
+repair does not prove every Registry/Run Update remains available indefinitely,
+does not provide Continue-as-New, and does not close the required manual,
+descendant, scoped or complete P3-3 service coverage. The raw Update2000 failure
+and the first Signal4096/180 failure remain separate immutable evidence. Current
+acceptance is recorded in the [reservation review](../reviews/2026-10-16-temporal-reservation-transport.md).
+
 ## Compatibility and acceptance
 
 Changed selected source inventories include `temporal.py`,
@@ -116,6 +158,9 @@ Changed selected source inventories include `temporal.py`,
 also changes `temporal_deployment_execution.py` and
 `temporal_coding_composition_control.py`. They identify a
 new experimental release even though the publication integer remains 2/3/4.
+The synchronous reservation repair additionally changes `temporal_workflow.py`,
+`temporal_deployment_submissions.py` and `temporal_deployment_protocol.py`, pinning
+the new `temporal_reservation_transport.py` in the public source inventory.
 Keep the exact package/release/Worker required by an old selected History.
 Do not replace its immutable Worker, reset its Registry or claim these protection
 semantics for an old Registry merely because its configuration integer matches.

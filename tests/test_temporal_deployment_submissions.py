@@ -56,6 +56,12 @@ class Registry:
             )
         self.state = state_type(POLICY.identity, NAMESPACE, capacity=4096)
         self.version = version
+        self.transport_owner = SimpleNamespace(
+            commands=SimpleNamespace(
+                deployment=self.state, admission_protocol=version, reserve=self.state.reserve
+            ),
+            _check_deployment_registry_epoch=lambda: None,
+        )
 
     @property
     def submissions(self):
@@ -120,6 +126,13 @@ class Handle:
     async def query(self, name, value):
         assert name == "view"
         if self.id == self.client.registry_id:
+            if value["kind"] == "deployment_reserve_receipt":
+                from ralf_agent.temporal_reservation_transport import observe
+
+                try:
+                    return observe(self.client.registry.transport_owner, value)
+                except Exception as exc:
+                    return {"error": getattr(exc, "code", "validation_error")}
             if value["kind"] == "deployment_control":
                 return self.client.registry.state.deployment_control(value)
             if value["kind"] == "deployment_configuration":
@@ -168,6 +181,16 @@ class Handle:
         }
         return sealed(proof)
 
+    async def signal(self, name, value):
+        from ralf_agent.temporal_reservation_transport import accept
+
+        assert self.id == self.client.registry_id and name == "reserve_command"
+        self.client.signals.append(name)
+        accept(self.client.registry.transport_owner, value)
+        if self.client.lose_reserve:
+            self.client.lose_reserve = False
+            raise TimeoutError("Lost reserve delivery reply after actual acceptance")
+
     async def execute_update(self, name, value, **options):
         assert self.id == self.client.registry_id
         self.client.updates.append(name)
@@ -191,6 +214,7 @@ class Client:
         ).registry_id
         self.registry, self.registry_queue, self.runs = None, None, {}
         self.starts, self.updates = [], []
+        self.signals = []
         self.lose_reserve = self.lose_start = False
         self.namespace_uuid = NAMESPACE["id"]
         self.workflow_service = SimpleNamespace(describe_namespace=self.describe_namespace)
@@ -595,7 +619,7 @@ def test_public_request_matches_original_registry_after_default_sdk_json_roundtr
             await module().submit(engine, definition, input_value, command_id="sdk-wire", budget=8)
         ) == handle
         assert len(engine.client.runs) == 1
-        assert engine.client.updates.count("reserve") == 1
+        assert engine.client.signals.count("reserve_command") == 1
         assert definition.tools == (("read",) if with_tools else ())
         assert input_value == {"items": (1, {"pair": ("a", "b")})}
 

@@ -131,6 +131,10 @@ commands. Original internal Parent delegation does not reserve such a fresh
 Registry command. Its repeated-wake fix is recorded separately; the actual
 4,096-record capacity probe failed at the Service's earlier 2,000-distinct-Update
 limit. See the [current evidence](../architecture/reviews/2026-10-16-temporal-delegated-recovery.md).
+The subsequent [synchronous reservation repair](../architecture/reviews/2026-10-16-temporal-reservation-transport.md)
+uses the original Registry's Signal/Query path for selected root reservations.
+Its native SDK evidence does not certify the complete HTTP/Temporal/PG service
+chain or remove other Update lifecycle limits.
 P3-3 still requires that capacity behavior and the selected complete
 Local/Temporal service acceptance. P3-2/S2 and its original 360-second gate remain
 open; this batch changes no Engine or Temporal execution protocol.

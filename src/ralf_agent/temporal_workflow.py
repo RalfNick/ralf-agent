@@ -1381,6 +1381,8 @@ class TemporalRunWorkflow:
 
 with workflow.unsafe.imports_passed_through():
     from .temporal_deployment_admission import registry_id as deployment_registry_id
+    from .temporal_reservation_transport import accept as accept_reservation_signal
+    from .temporal_reservation_transport import observe as observe_reservation_signal
     from .temporal_state import COMMAND_REGISTRY_NAME, TemporalCommandRegistryState
 
 
@@ -1518,6 +1520,10 @@ class TemporalCommandRegistryWorkflow:
                 type=getattr(exc, "code", None) or getattr(exc, "type", "validation_error"),
                 non_retryable=True,
             ) from None
+
+    @workflow.signal(name="reserve_command")
+    def reserve_command(self, envelope: dict) -> None:
+        accept_reservation_signal(self, envelope)
 
     async def _session_verified_update(self, operation, request):
         from .temporal_deployment_session_updates import execute
@@ -1702,6 +1708,8 @@ class TemporalCommandRegistryWorkflow:
             return {"error": getattr(exc, "code", "definition_mismatch")}
         if self.commands.deployment is not None:
             try:
+                if request.get("kind") == "deployment_reserve_receipt":
+                    return observe_reservation_signal(self, request)
                 if request.get("kind") in {
                     "deployment_session_command",
                     "deployment_session_root",

@@ -27,7 +27,7 @@
 | 范围 | 状态与约束 |
 | --- | --- |
 | P3-2 | S1普通Session功能子集已有验收；S2已有真实PG日志与关闭证据，但原360秒仍未通过，当前完整矩阵尚缺。性能专项后置，该未完成组合不列为已支持 |
-| P3-3 | 用户已批准独立推进；HTTP控制／事件已有Local证据，公有根保护与内部重复唤醒已有有限证据；真实容量测试在4096逻辑额度前触及服务2000 distinct Update上限，完整容量与所选服务验收未通过 |
+| P3-3 | 用户已批准独立推进；HTTP控制／事件已有Local证据；新增同步预留运输在所选公有普通2、并发48下完成真实4096容量／原树取消退休；其他History生命周期、人工核验／scoped及完整所选服务整链仍待，本项不关闭 |
 | P3-4／P3-5／P3-A | 原依赖和验收保持，身份权限／保留、框架恢复与阶段整体未关闭，不新增后端／编排／Runner／部署组合 |
 | R01–R26其余目标 | 保留为长期路线图；外部采用和框架对等比较单独验收，不自动成为本轮实现任务 |
 
@@ -41,9 +41,15 @@ P3-3已有默认关闭的`tasks/events` HTTP分页：原Scope／Run游标、字�
 
 根容量批次：公有Temporal Registry2／3／4满容量时，原held-bound根各保留一个纯取消和一个机械唤醒记录；SDK重复drive复用身份，Parent保留停止状态并重新检查子任务，旧ID冲突由原Registry提供有界替代提示。该批源码及独立wheel18模块各 **458 passed**，427产品一致，只有离线／安装证据，见[原记录](../architecture/reviews/2026-10-16-temporal-recovery-capacity.md)。
 
-最新机械恢复批次：原Parent内部向原child委托本来不另占全局Registry命令，外部SDK新descendant控制仍受普通容量约束。修复公有内部固定SDK Update ID造成的重复唤醒失效，以及Coding可变revision制造新业务命令的问题；保持原epoch、验证和停止意图。源码／独立wheel21模块各 **437 passed**；427产品一致，默认Card／普通声明对照及保存原／续接默认History离线重放通过。真实Temporal独立helper探针源码／安装各 **1 passed**，仅证明普通公有原child三次fresh Update、一条业务回执、工具0次；不是原生Coding或外层Activity授权验收。
+机械恢复批次：原Parent内部向原child委托本来不另占全局Registry命令，外部SDK新descendant控制仍受普通容量约束。修复公有内部固定SDK Update ID造成的重复唤醒失效，以及Coding可变revision制造新业务命令的问题；保持原epoch、验证和停止意图。源码／独立wheel21模块各 **437 passed**；427产品一致，默认Card／普通声明对照及保存原／续接默认History离线重放通过。真实Temporal独立helper探针源码／安装各 **1 passed**，仅证明普通公有原child三次fresh Update、一条业务回执、工具0次；不是原生Coding或外层Activity授权验收。
 
-真实4096容量探针两轮均 **1 failed**：首轮测试并发超过服务in-flight 10限制，改为4后仍在原Registry的2000 distinct Update上限失败，早于逻辑容量4096，目标满容量取消／整树退休尚未执行。保留全部失败及owned清理证据，不提高服务上限、不降低原容量或期限。所选及受影响实验性Coding指纹变化，旧History须匹配不可变Worker；新候选与先前冻结制品分开。没有外部模型或PG调用。下一批只处理原回执／History生命周期这一必要缺口，人工核验、普通scoped Registry和完整服务整链仍待；P3-3不关闭。见[当前契约](../architecture/specs/temporal-recovery-capacity-contract.md)和[完整验收记录](../architecture/reviews/2026-10-16-temporal-delegated-recovery.md)。
+原raw Update的真实4096容量探针两轮均 **1 failed**：首轮测试并发超过服务in-flight 10限制，改为4后仍在原Registry的2000 distinct Update上限失败，早于逻辑容量4096，目标满容量取消／整树退休尚未执行。这些失败及owned清理证据不变，见[机械恢复记录](../architecture/reviews/2026-10-16-temporal-delegated-recovery.md)。
+
+**最新同步预留批次：** 公有2／3／4的七类、无descendant同步reserve通过原Registry Signal／Query运输，复用原校验／状态机；64项观察缓存不删除业务身份，Signal送达不当接受，超时／观察取消保持未知。Session与后代验证不切换。源码及独立wheel34模块各 **806 passed**，428产品一致；默认对照及保存原／续接默认History离线重放通过。扩大回归捕获的Session误路由已修复。
+
+最终隔离安装真实公有普通2／原嵌套树、并发48 **1 passed／126.286秒**：4096条确认、新submit拒绝且原权威不变；原root仍running时保护取消变4097，两个原epoch后代取消，实际Provider结束前保留额度，结束后退休；重复回执、三个Run／Parent与Registry重放及owned清理通过。Activity120／整体180期限未调整。短RPC诊断另 **1 passed**；此前Signal并发4超时、源码32错误文本夹具失败、安装32因Activity120已超时而取消too_late，三项失败分别保留，不冒称低并发或所有场景已通过。
+
+新候选`dist/p3-reservation-20261016/`与先前冻结制品分开，所选实验指纹变化，旧History仍须匹配不可变Worker。没有外部模型／PG调用，不关闭完整P3-3。下一批先核对其他Update及既有人工核验／scoped恢复的容量证据，只修必要缺口；不扩展部署组合。详见[当前契约](../architecture/specs/temporal-recovery-capacity-contract.md)及[本批验收](../architecture/reviews/2026-10-16-temporal-reservation-transport.md)。
 
 ## 历史实现与验收证据
 

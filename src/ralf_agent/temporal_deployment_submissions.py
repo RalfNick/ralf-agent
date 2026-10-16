@@ -96,6 +96,15 @@ async def _query(handle, value):
 
 async def _update(handle, name, value):
     try:
+        if (
+            name == "reserve"
+            and value.get("kind")
+            in {"submit", "approve", "cancel", "reconcile", "drive", "send_input", "patch"}
+            and "descendant" not in value
+        ):
+            from .temporal_reservation_transport import reserve
+
+            return await reserve(handle, value)
         return detached(
             await handle.execute_update(
                 name, value, id="ralf-deployment:" + name + ":" + digest(value)
