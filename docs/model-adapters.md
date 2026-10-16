@@ -1,6 +1,8 @@
 # 模型适配、生成参数与流式结果
 
-dev9 提供三个 HTTP 协议与 DeepSeek 非思考模式适配器，全部复用已有 httpx，不需要厂商 SDK。Provider 只调用模型，不执行工具或自动重试。协议回归、在线模型兼容和任务质量是不同的验证结果；当前有本地协议／运行时验证和 dev21 的小范围 DeepSeek 实测；完整模型兼容矩阵及任务质量仍待验收。dev22 新增[原生 Responses／兼容探针](sdk-model-tools.md)。
+内置 HTTP 模型适配器使用 httpx，无需厂商 SDK。先按下表选择协议，通过 SDK 或 Profile 明确配置模型、地址和凭据环境变量；Provider 只提出模型响应，不执行工具或隐藏重试。自定义 Python 工具接入见[SDK 指南](sdk-model-tools.md)。
+
+协议回归、在线模型兼容和业务任务质量分别验收。下表表示适配器的实现范围，不代表所有线上型号均已验证；历史真实任务与当前未验收项见[实现清单](implementation-status.md)，兼容探针见[模型检查](sdk-model-tools.md#bounded-compatibility-checks)。
 
 ## 默认覆盖
 

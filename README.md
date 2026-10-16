@@ -1,6 +1,11 @@
 # Ralf-Agent
 
+Ralf-Agent 是 Python Agent 框架，提供可替换的模型、工具、上下文、记忆和检索组件，以及持久化的任务、审批与恢复。当前版本为 **0.1.0.dev120 开发预览**；支持边界见[实现清单](docs/implementation-status.md)。
+
 先从[基础能力入口](docs/basic-capabilities.md)或[首用教程](docs/getting-started.md)开始：本地 SQLite、单 Agent、自定义模型与工具、基础 Workflow、记忆和 RAG。当前开发优先保障这些链路易用且可靠，高级部署不作为入门前置条件。
+
+<details>
+<summary>版本演进与历史验收记录</summary>
 
 当前 **0.1.0.dev120** 提供可替换模型、工具、上下文、记忆与检索，以及 Local／Temporal 的 Agent、Workflow、Plan／Team 编排。新增[公共 Temporal Coding 部署](docs/temporal-deployment-coding.md)，复用原 History 的审批、效果恢复和共享部署准入；实现、安装和恢复证据见[本批验收](architecture/reviews/2026-10-15-temporal-deployment-coding.md)。项目仍为预览；Session 部署准入、完整服务治理及剩余能力见[能力清单](docs/implementation-status.md)。
 
@@ -103,6 +108,8 @@ dev17 增加 [Temporal 分布式图／团队／动态规划与嵌套编排](docs
 
 dev21 新增[自动来源记忆与受管理模型摘要](docs/managed-memory.md)、[Temporal 自定义上下文](docs/temporal-custom-context.md)和第十八种 memory starter。已完成一轮[真实 DeepSeek 试验](docs/live-model-quality.md)，保留初次失败和不同配置的后续成绩；不代表完整 M1 或跨框架能力对齐。
 
+</details>
+
 ## 快速开始
 
 Python 3.11+，Linux／macOS。本地模式无需 Redis、模型密钥或调度服务。从源码安装：
@@ -112,7 +119,7 @@ git clone https://github.com/RalfNick/ralf-agent.git
 cd ralf-agent
 python3 -m venv .venv
 source .venv/bin/activate
-python -m pip install -e '.[dev]'
+python -m pip install -e .
 ralf --db .ralf/demo.sqlite --format text demo --ticket INC-001
 ```
 
@@ -195,30 +202,14 @@ from ralf_agent import (
     OpenAIChatProvider,
     SQLiteStore,
     ToolRegistry,
-    ToolSpec,
 )
 
 tools = ToolRegistry()
 
 
-def lookup(arguments, context):
-    return {"ticket": arguments["ticket"], "status": "open"}
-
-
-tools.register(
-    ToolSpec(
-        "lookup",
-        "Read a test ticket",
-        {
-            "type": "object",
-            "properties": {"ticket": {"type": "string"}},
-            "required": ["ticket"],
-            "additionalProperties": False,
-        },
-        effect="read_only",
-    ),
-    lookup,
-)
+@tools.tool(effect="read_only", description="Read a test ticket")
+def lookup(ticket: str):
+    return {"ticket": ticket, "status": "open"}
 
 provider = OpenAIChatProvider(model=os.environ["RALF_MODEL"])
 spec = AgentSpec("assistant", "Read the ticket and summarize its status.", ("lookup",))
@@ -236,6 +227,8 @@ asyncio.run(main())
 ```
 
 设置 `OPENAI_API_KEY` 和 `RALF_MODEL` 后运行；真实模型调用产生对应供应商的用量。Provider 支持配置 `base_url` 和 `token_parameter="max_tokens"`，用于符合相同响应／工具调用契约的服务；每个具体服务仍需验证。默认 `max_completion_tokens`，每次只发一次请求，不隐藏重试。
+
+函数参数的类型注解生成输入 Schema；`lookup` 仍可作为普通 Python 函数调用。写工具需明确效果类别、审批及幂等／核验方式；已有显式 `ToolSpec` 注册继续可用，详见[模型与工具 SDK](docs/sdk-model-tools.md)。
 
 顺序工作流使用同一执行引擎：
 
@@ -316,7 +309,10 @@ facts = InMemoryMemory(backend_id="demo-facts:v1")
 
 ## 开发与验证
 
+修改框架或运行测试时，再安装开发依赖：
+
 ```bash
+python -m pip install -e '.[dev]'
 python -m pytest -q
 python -m ruff check .
 python -m ruff format --check .

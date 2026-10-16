@@ -1,9 +1,13 @@
-# Typed tools and native Responses — dev22
+# Python 工具与模型 SDK
 
-This increment begins the accepted model/tool developer roadmap. It adds three
-public APIs without changing ModelResponse, native execution authority or legacy
-provider/tool identities: OpenAIResponsesProvider, infer_tool_schema and
-evaluate_model_compatibility. New factories and a nineteenth starter are additive.
+普通 Python 函数可直接注册为工具，框架负责参数 Schema、默认参数及受管理执行。
+先用下面的 `ToolRegistry.tool` 或 `register_function` 接入业务函数；完整最小 Agent
+见[README](../README.md#编写自己的-agent)。模型协议与配置见[模型接入指南](model-adapters.md)。
+不需要先接入 MCP、沙箱或分布式执行。
+
+下文同时保留 dev22 引入的原生 Responses 适配器和兼容探针说明。
+Responses 推理续接使用独立、显式启用的适配器，见[推理续接指南](responses-reasoning.md)；
+不能将基础适配器拒绝 opaque 状态理解为所有适配器都不支持。
 
 ## Register ordinary Python functions
 
