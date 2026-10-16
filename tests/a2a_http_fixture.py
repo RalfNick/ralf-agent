@@ -66,6 +66,7 @@ def main():
         authenticate=authenticate,
         url=f"http://127.0.0.1:{port}/rpc",
         wakeup=wakeup,
+        enable_run_events=len(sys.argv) > 5 and sys.argv[5] == "events",
     )
 
     async def service(scope, receive, send):

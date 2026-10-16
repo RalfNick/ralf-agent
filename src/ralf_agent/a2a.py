@@ -268,6 +268,7 @@ class A2AApplication:
         max_request_bytes=262144,
         max_response_bytes=262144,
         enable_user_input=False,
+        enable_run_events=False,
     ):  # noqa: ASYNC109
         if not is_sync_callable(engine_for_scope) or not is_async_callable(authenticate):
             raise ValidationError("A2A requires trusted engine and async authentication callbacks")
@@ -276,6 +277,8 @@ class A2AApplication:
             raise ValidationError("A2A requires durable inbox and optional async wakeup")
         if type(enable_user_input) is not bool:
             raise ValidationError("A2A user input extension selection must be boolean")
+        if type(enable_run_events) is not bool:
+            raise ValidationError("A2A event extension selection must be boolean")
         for value in (name, description, version):
             _text(value, "Agent Card text")
         _integer(budget, "A2A budget", 0, 1000000)
@@ -299,6 +302,7 @@ class A2AApplication:
         self._max_request = max_request_bytes
         self._max_response = max_response_bytes
         self._user_input_enabled = enable_user_input
+        self._run_events_enabled = enable_run_events
         self._card = {
             "protocolVersion": PROTOCOL_VERSION,
             "name": name,
@@ -337,6 +341,16 @@ class A2AApplication:
                 {
                     "uri": USER_INPUT_EXTENSION,
                     "description": "Explicit original pending input reply via metadata.ralfInput",
+                    "required": False,
+                }
+            )
+        if enable_run_events:
+            from .a2a_events import EXTENSION
+
+            self._card["capabilities"]["extensions"].append(
+                {
+                    "uri": EXTENSION,
+                    "description": "Read-only tasks/events cursor pages",
                     "required": False,
                 }
             )
@@ -513,6 +527,12 @@ class A2AApplication:
         if not isinstance(params, dict):
             raise ValidationError("RPC parameters require an object")
         engine = self._engine(scope)
+        if method == "tasks/events" and self._run_events_enabled:
+            from .a2a_events import event_page
+
+            return await event_page(
+                engine, params, max_bytes=self._max_response, request_id=request_id
+            )
         if method == "message/send":
             if self._user_input_enabled:
                 engine.require_user_input_controls()
@@ -777,7 +797,7 @@ class A2AClient:
         return _agent_card(card, self.url)
 
     async def rpc(self, method, params):
-        if method not in {"message/send", "tasks/get", "tasks/cancel"}:
+        if method not in {"message/send", "tasks/get", "tasks/cancel", "tasks/events"}:
             raise ValidationError("Unsupported A2A polling method")
         _json(params)
         self._next_id += 1
@@ -804,7 +824,19 @@ class A2AClient:
             ):
                 raise A2AError("A2A returned an invalid RPC error")
             raise A2ARemoteError(error["code"])
+        if method == "tasks/events":
+            from .a2a_events import validate_event_page
+
+            try:
+                return validate_event_page(value["result"], params)
+            except Exception as exc:
+                raise A2AError("A2A returned an invalid event page") from exc
         return _task(value["result"])
+
+    async def get_events(self, task_id, *, cursor=None, limit=100):
+        from .a2a_events import event_request
+
+        return await self.rpc("tasks/events", event_request(task_id, cursor, limit))
 
     async def send_message(self, message_id, input):
         _text(message_id, "Message identity")

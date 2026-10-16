@@ -111,6 +111,24 @@ class TaskControlBridge:
         if "send_input" not in self._bindings:
             raise ValidationError("Selected user input requires original send_input controls")
 
+    def require_event_controls(self):
+        """Opt in to the original reader without expanding legacy required ports."""
+        self._check()
+        method = getattr(self._engine, "events", None)
+        predicate = is_async_callable if self._async else is_sync_callable
+        if not predicate(method):
+            raise ValidationError("Event reads must use the original control mode")
+        binding = _binding(method)
+        if "events" in self._bindings and self._bindings["events"] != binding:
+            raise DefinitionMismatch("Event reader registration changed")
+        self._bindings["events"] = binding
+        self._check()
+
+    async def events(self, run_id, *, after=0, limit=1000):
+        if "events" not in self._bindings:
+            raise ValidationError("Original event reader was not selected")
+        return await self._call("events", run_id, after=after, limit=limit)
+
     def require_input_discovery(self, *, composite=False):
         """Select optional observation ports without changing the legacy contract."""
         self._check()

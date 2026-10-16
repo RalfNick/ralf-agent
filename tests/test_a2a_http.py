@@ -15,6 +15,9 @@ import pytest
 def a2a_http_service(tmp_path, request):
     pytest.importorskip("uvicorn")
     source = Path(__file__).resolve().parents[1] / "src"
+    options = getattr(request, "param", 10000)
+    if isinstance(options, int):
+        options = {"capacity": options}
     listener = socket.socket()
     listener.bind(("127.0.0.1", 0))
     listener.listen(128)
@@ -28,7 +31,8 @@ def a2a_http_service(tmp_path, request):
                 str(tmp_path),
                 str(port),
                 str(listener.fileno()),
-                str(getattr(request, "param", 10000)),
+                str(options.get("capacity", 10000)),
+                "events" if options.get("events") else "legacy",
             ],
             pass_fds=(listener.fileno(),),
             env={"PATH": os.environ.get("PATH", "/usr/bin:/bin"), "PYTHONPATH": str(source)},
@@ -142,3 +146,45 @@ def test_full_inbox_preserves_http_lookup_replay_and_cancellation(a2a_http_servi
         assert database.execute("SELECT count(*) FROM ralf_inbox").fetchone()[0] == 1
     with sqlite3.connect(tmp_path / "runs.db") as database:
         assert database.execute("SELECT count(*) FROM runs").fetchone()[0] == 1
+
+
+@pytest.mark.parametrize("a2a_http_service", [{"capacity": 1, "events": True}], indirect=True)
+def test_true_http_event_cursor_reconnect_keeps_original_business(a2a_http_service, tmp_path):
+    async def run():
+        from ralf_agent import EventCursor
+        from ralf_agent.a2a import A2AClient
+
+        client = A2AClient(a2a_http_service, headers={"Authorization": "Bearer test-owner"})
+        try:
+            task = await client.send_message("original-events", {"wait_for_cancel": True})
+            first = await client.get_events(task["id"], limit=1)
+            assert [record["event"]["seq"] for record in first["events"]] == [1]
+            saved = first["cursor_token"]
+        finally:
+            await client.aclose()
+        client = A2AClient(a2a_http_service, headers={"Authorization": "Bearer test-owner"})
+        try:
+            async with asyncio.timeout(3):
+                while not (tmp_path / "provider-started").exists():  # noqa: ASYNC110 -- independent service process marker
+                    await asyncio.sleep(0.01)
+            assert (await client.get_task(task["id"]))["metadata"]["ralf"]["state"] == "running"
+            page = await client.get_events(task["id"], cursor=saved)
+            assert all(record["event"]["seq"] > 1 for record in page["events"])
+            assert EventCursor.from_token(page["cursor_token"]).after >= 1
+            await client.cancel_task(task["id"], command_id="explicit-cancel")
+            (tmp_path / "provider-release").touch()
+            async with asyncio.timeout(3):
+                while (await client.get_task(task["id"]))["status"]["state"] != "canceled":  # noqa: ASYNC110 -- external authority polling
+                    await asyncio.sleep(0.01)
+            rest = await client.get_events(task["id"], cursor=page["cursor_token"])
+            records = [*first["events"], *page["events"], *rest["events"]]
+            assert [record["event"]["seq"] for record in records] == list(
+                range(1, len(records) + 1)
+            )
+            assert records[-1]["event"]["kind"] == "run_cancelled"
+            assert (await client.get_by_message("original-events"))["id"] == task["id"]
+        finally:
+            (tmp_path / "provider-release").touch()
+            await client.aclose()
+
+    asyncio.run(run())
