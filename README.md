@@ -1,5 +1,7 @@
 # Ralf-Agent
 
+先从[基础能力入口](docs/basic-capabilities.md)或[首用教程](docs/getting-started.md)开始：本地 SQLite、单 Agent、自定义模型与工具、基础 Workflow、记忆和 RAG。当前开发优先保障这些链路易用且可靠，高级部署不作为入门前置条件。
+
 当前 **0.1.0.dev120** 提供可替换模型、工具、上下文、记忆与检索，以及 Local／Temporal 的 Agent、Workflow、Plan／Team 编排。新增[公共 Temporal Coding 部署](docs/temporal-deployment-coding.md)，复用原 History 的审批、效果恢复和共享部署准入；实现、安装和恢复证据见[本批验收](architecture/reviews/2026-10-15-temporal-deployment-coding.md)。项目仍为预览；Session 部署准入、完整服务治理及剩余能力见[能力清单](docs/implementation-status.md)。
 
 dev98 已验收[自动 Facts 索引维护](docs/fact-index-maintenance.md)：原 Graph／Session 中先刷新索引再执行 Agent，提供 SDK／JSON／TOML、可编辑 `memory-index` 模板和原进程恢复。完整冻结源码 8298 passed／617 配置依赖跳过，两套安装各 163 项通过；[验收记录](architecture/reviews/2026-10-13-fact-index-maintenance.md)区分首期 SQLite／Hash 链路与未验收的语义质量、远程维护及完整能力。

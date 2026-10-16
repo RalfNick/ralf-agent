@@ -1,6 +1,6 @@
 # 第一次使用 Ralf-Agent
 
-本文面向 **0.1.0.dev10，M1 核心预览**。需要 Python 3.11+ 和 Linux／macOS。先用离线项目完成提交、审批和恢复，再接入自己的模型与工具。知识问答可从 [RAG 模板教程](recall-and-rag.md) 开始；无需改 Python 的版本配置从 [运行装配模板](runtime-assembly.md) 开始。
+本文面向 **0.1.0.dev120 开发预览**，需要 Python 3.11+。本教程使用本地 SQLite；先用离线项目完成提交、审批和恢复，再接入自己的模型与工具，不需要 Redis、PostgreSQL、Temporal 或 Docker。[基础能力入口](basic-capabilities.md)列出默认组合与定制路径；知识问答可从 [RAG 模板教程](recall-and-rag.md) 开始；无需改 Python 的版本配置从 [运行装配模板](runtime-assembly.md) 开始。其他平台与部署组合的验证范围见[实现清单](implementation-status.md)。
 
 真实模型可用 `ralf init my-model-agent --template model` 生成独立项目，先替换 model/协议/凭据环境变量；配置限制与验证等级见 [模型接入](model-adapters.md)。生成模板不执行收费请求，也不表示账户与型号已验证。
 
@@ -15,7 +15,7 @@
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
-python -m pip install "/path/to/ralf_agent-0.1.0.dev10-py3-none-any.whl"
+python -m pip install "/path/to/ralf_agent-0.1.0.dev120-py3-none-any.whl"
 ralf --version
 ```
 
@@ -81,7 +81,7 @@ ralf --db .ralf/runs.sqlite --format text inspect RUN_ID
 
 接入实际模型时可用 `OpenAIChatProvider` 替换离线 Provider，并在进程环境中提供 `OPENAI_API_KEY` 和模型名。真实调用产生供应商用量；不要把密钥加入 ToolSpec.config、Provider.identity 或版本库。兼容的服务需要单独验证响应和工具调用契约。完整端口要求见 [扩展指南](extending.md)，常用 SDK 调用见 [API 参考](api-reference.md)。
 
-预算 `budget` 使用整数 execution credits，每个真实尝试预留和结算；它不是金额，也不是 Token 上限。当前没有 Temporal、多进程池、MCP、沙箱、向量数据库或企业身份服务。已交付范围和接下来的架构门槛见 [实现清单](implementation-status.md)。
+预算 `budget` 使用整数 execution credits，每个真实尝试预留和结算；它不是金额，也不是 Token 上限。本教程仅使用 Local 默认链路。Temporal、MCP、沙箱和向量检索已有可选实现，各自需要显式配置、依赖及对应的验证条件；不需要为运行本教程先接入它们。已交付范围与未验收项见 [实现清单](implementation-status.md)。
 
 ## 5. 命令使用习惯
 

@@ -1,6 +1,6 @@
 # dev120：剩余能力与架构验收清单
 
-当前收尾优先级（2026-10-15 用户指令）：固定第三阶段范围，按[冻结清单 P3-1 至 P3-5／P3-A](phase3-support-matrix.md#收尾范围冻结2026-10-15-用户指令)依次交付，不自动扩展新功能。dev119 普通部署和 dev120 所选 Coding 部署已验收；当前 Session 准入仍未完成。下方 R01–R26 与历史批次保留全部未完成目标，但不是本阶段自动接单队列；后续项只有用户明确修改范围才进入当前收尾。非阻塞额外适配器／拓扑／重构、跨宿主／HA、流式／多模态及对等比较继续后置，基本身份、保留与框架恢复仍是本阶段必需项。
+当前优先级（2026-10-16 用户指令）：先保障[基础能力](basic-capabilities.md)，避免过度开发。先核验和修复安装、模型与工具、单 Agent、基础 Workflow、上下文、记忆／RAG及恢复；不新增抽象、适配器或部署组合。Temporal Coding Session性能专项后置，原360秒失败和当前 Session 准入未完成状态保留。回到第三阶段时继续按[冻结清单 P3-1 至 P3-5／P3-A](phase3-support-matrix.md#收尾范围冻结2026-10-15-用户指令)收尾，不自动扩展新功能。下方 R01–R26 与历史批次保留全部未完成目标；高级企业治理、额外适配器、跨宿主／HA、流式／多模态及对等比较均不成为本轮基础链路修复的前置条件。
 
 Dev118 已接通内部所选 Worker 的原 Run／Parent SDK 部署准入：实际 namespace UUID／原 epoch／Registry claim 和有界原 Parent 链先于业务派发，Agent／顺序／图／Team／Dynamic／嵌套后代共享一个根槽位。Activity carrier 保留原 handler 请求 SHA，受管理 Context、limits、completion 和 Session 写入阶段已有契约回归；默认发布保持兼容。冻结源码与独立安装各通过 814 项受影响检查、17 项实际 Service；最终验收出处以[本批登记](../architecture/reviews/2026-10-14-temporal-deployment-dispatch.md)为准，不替代阶段全量回归或模型质量证据。
 
