@@ -1,6 +1,24 @@
 # Coding Session 整链成本预算与下一批门槛
 
-本记录基于 `31b846a` 的原 `graph-sequential-sdk` 两 Turn 终态工件。该项仍因原 scenario360 超时失败；本文不关闭 S2／P3-2，不改变原支持矩阵或任何期限。仅离线读取已终态工件，没有新服务、模型、SDK Query 或清理操作。
+最新证据为 `ec0ebe4` 独立安装包的一次原 `graph-sequential-sdk` 两 Turn 验收，仍因原 scenario360 超时失败。下方整链预算基于此前 `31b846a` 的终态工件，不能将两个快照的时间拼接。本文不关闭 S2／P3-2，不改变支持矩阵或任何期限。
+
+## 安全诊断后的原场景复验（2026-10-16）
+
+本批只运行原首项，Tool80／Runner60／approve180／scenario360／first-close60／cleanup40均保持原值，无诊断开关或性能采样。只读取已授权配置中的两个本机服务字段；未调用真实模型，未执行其余十二正常／五故障。425产品／862测试与当前工作区及独立安装一致，运行前后无漂移。
+
+根进程55384已确认exit1：1 failed／0 errors／0 skipped，JUnit suite386.753秒，case386.166秒（均含收尾）。外层360秒取消落在 `scenario → approve → sleep`，不是审批180秒独立超时。本次 `child_control_failed` 安全诊断为0条，上一轮该通用异常没有复现，不能继续将其当作持续超时的根因。
+
+四Tool分别38.020187／38.412823／40.900876／37.940434秒，均SDK Completed、ok:true，候选结果存在，四effect adopted，物理停止正证据且无pending stop。第四Tool于00:26:52.410007Z完成；后Evidence于54.684656Z、Context于58.866625Z、Model于00:27:03.227771Z完成，均ok:true。随后根observe于05.468004Z完成，join注册于05.541057Z调度，10.666764Z返回definition_mismatch，未启动join子任务。
+
+注册跨越超时与关闭：Registry coding-close在00:27:10.355125Z正Completed，根cancel在10.523009Z Accepted，均早于注册拒绝完成；取消时在途CONTROL栈停在原Registry admission Query。该顺序支持关闭后拒绝，不证明关闭前存在独立验证缺陷，也不把瞬时等待栈当作全程耗时归因。初始取消文件mtime只作辅助代理，不当作Temporal事件时间或精确超时触发点。
+
+两Turn各6 start／6 end，全部原Completed ACK为正；Advance分别为succeeded／released和cancelled／released。两root accepted2／retired2／retained0；assembly关闭、Worker退出及安全清理通过，schema未保留、保留原因空。没有完整业务结果文件，**S2仍未通过**。本次未证明性能改善，也不因缺少通用异常而降低原业务成功要求。
+
+同步Runtime指纹pass的设计审查也已停止：同步验证仍会调用组件getter，getter可临时替换helper、命中旧指纹后恢复；仅入口／出口检查无法保留原逐次拒绝行为。将检查放进LRU miss函数也无法防止该函数自身临时替换后污染缓存。未写入产品，未测量该不安全方案。默认与旧History继续沿既定兼容承诺；旧Coding History仍用匹配不可变Worker。
+
+下一步以**完整Tool／CONTROL调用**为成本分析单位，分清同步验证、复制和实际SDK等待的成本；小段Runtime基准不能代替整条调用收益。已有失败证据保留，不重复原场景碰运气，不继续缓存放行或逐个删Query。只有影响当前累计耗时且保留原身份、权限、效果与真实停止责任的变更，才进入下一轮产品验收。
+
+本次终态证据：`/private/tmp/ralf-agent-dev121-session-state/child-diagnostics-normal-terminal-evidence/summary.json`，SHA256 `3b3e26d540b545f648c7d371a85ed3da9eccc57fb2cc0bdf3c26d3665e991377`；34项原输入哈希前后相同。`close-order.json` SHA256 `af24ec603b4730819e106b95f94b45da9d0fa38ee4159d7994282a481f84c6af`。运行工件在 `/private/tmp/ralf-agent-dev121-root/installed-s2-child-diagnostics-normal-sdk`；日志SHA256 `eae62ac7321bb436d3f03e1f940775b4b724fee3ed874d893c9c3e5165eb21ac`。这些临时路径不是公开发行附件，复现仍以仓库中的原测试与外部服务配置要求为准。
 
 ## 原场景的墙钟预算
 
@@ -87,7 +105,7 @@ root deployment proof 的 children 占 743910 字节。完整 closure 中有六�
 
 1. 已完成并否决上述完整proof无损传输预算；不重复测量同一候选或扩大Query协议。
 2. 保留原完整Query、物理／ACK事实以及SDK epoch／namespace／Scope权威。下一产品候选必须从实际同步验证链的成本出发，先给收益与漂移拒绝证据，再进入安装与真实服务验收。
-3. 若转向同步 release 验证归并，先证明实际请求链覆盖和完整身份／代码／配置漂移拒绝等价，再建立一次受控 pass；不回到已否决的通用 getter 缓存、缓存 helper 放行或逐个删 Query。
+3. 广义同步Runtime指纹pass已因getter瞬态替换和LRU污染风险停止。下一步分析完整Tool／CONTROL调用的累计成本，不能再将该pass当作已确定的实现方向，也不回到通用getter缓存或缓存helper放行。
 4. 产品冻结后只补受影响检查、安装兼容和一次原图原期限验收。S2 通过前，其余十二正常／五故障不解锁，P3-3／4／5／A 保持原清单状态。R01–R26 仍为长期路线图，不将本诊断批当作能力完成。
 
 ## 可复核证据

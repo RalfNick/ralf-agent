@@ -1,6 +1,6 @@
 # 第三阶段支持矩阵与收口门槛
 
-2026-10-16 P3-2/S2 仍未完成，最新原图原360秒真实验收为 `31b846a` 的1 failed／390.282秒；原四Tool成功、effect adopted、物理停止及资源安全清理不替代两Turn成功。本批已完成完整proof无损传输预算：载荷减少68.4%–71.6%，但完整CPU平均增加9.013%，按原门槛否决，不加Query协议、不复跑服务。产品只补CONTROL未知失败的安全诊断，保持原回执、重试和取消：新增18项、20个相关模块399 passed，独立安装7模块157 passed，默认完整canonical及原／continued保存History离线兼容通过，425产品／862测试无漂移；独立审查无P1／P2，Ruff／格式／空白检查通过。本批没有新增真实服务或模型验收，旧Coding History仍用匹配不可变Worker。其余十二正常／五故障不解锁，P3-3／4／5／A保持原状态。下一批聚焦同步release验证的单次受控计算边界，先证实际调用覆盖、收益和漂移拒绝，不再扩大传输或逐个删除Query；见[整链预算与决策](../architecture/reviews/2026-10-16-coding-session-critical-path.md)。仅本地提交，不推送。
+2026-10-16 P3-2/S2仍未完成：`ec0ebe4`独立安装包原graph-sequential-sdk两Turn复验1 failed／386.753秒（含收尾），原360秒整体期限取消第二Turn，审批180秒未独立超时。四Tool全部成功、effect adopted且真实停止，末leaf Model也成功；join注册跨超时／关闭后拒绝，未证明新的独立验证缺陷。本次child_control_failed诊断0条，不能再把上轮偶发注册错误作为持续超时根因。两Turn原start/end正ACK完整，Advance分别succeeded与cancelled且均released；两root退休、owned关闭与安全清理通过，425产品／862测试无漂移，不能替代两Turn业务成功。同步Runtime指纹pass因getter瞬态替换及LRU污染风险停止，未纳入产品。下一步以完整Tool／CONTROL调用分析累计成本，保留原所有fresh事实、身份／权限及效果／停止责任；不重复原场景碰运气。其余十二正常／五故障不解锁，P3-3／4／5／A保持原状态；见[整链预算与决策](../architecture/reviews/2026-10-16-coding-session-critical-path.md)。仅本地提交，不推送。
 
 以下为各冻结快照的历史证据；以本段及最新验收记录为当前执行依据。
 

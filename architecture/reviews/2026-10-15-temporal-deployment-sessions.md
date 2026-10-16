@@ -1,6 +1,6 @@
 # 部署 Session 集成与收尾验证
 
-当前后续诊断见[整链成本预算与下一批门槛](2026-10-16-coding-session-critical-path.md)：整链预算和完整wire实验已完成；wire虽减字节但CPU回退，已否决。仅新增CONTROL安全失败日志，相关399项、独立安装157项及默认离线兼容通过。没有新增真实服务运行；本记录中的原S2失败结论不变。
+最新原场景复验见[整链成本预算与下一批门槛](2026-10-16-coding-session-critical-path.md)：ec0ebe4独立安装包1 failed／386.753秒（含收尾），原360秒取消第二Turn；四Tool及末leaf Model成功，join注册跨超时／关闭后拒绝，无child_control_failed。原正ACK、两root退休、owned关闭及安全清理通过，不能替代两Turn业务成功。425产品／862测试无漂移。下面按快照保留历史记录，不覆盖本段当前状态。
 
 ## Activity 根命令定向查询（2026-10-16，实际仍超时）
 
