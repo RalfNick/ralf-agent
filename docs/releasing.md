@@ -1,8 +1,25 @@
 # 预览版本验证与发布
 
-当前代码版本为 **0.1.0.dev9**，固定内核身份为 **local-4**。本轮新增模型协议/参数/能力与完整 SSE，保留公共扩展端口、装配、分页召回、本地 RAG 与两个独立接收阶段。发布检查须登记完整集成与制品结果。这是 M1 核心预览，不能以版本号或本地测试宣称企业部署、Temporal 或真实模型质量已验收。
+当前基础交付包版本为 **0.1.0.dev120 开发预览**，运行时代码固定于 `b871f61`。默认Local链路、现有Provider／工具、上下文、记忆／RAG及审批恢复已按本轮范围收口，见[当前状态](implementation-status.md#当前交付摘要)；完整阶段、真实模型／服务和企业目标分别记录，不由版本号推导完成。下文dev6–dev9条目保留为历史兼容说明，仅在具体变更影响原承诺时按范围补验，不要求每轮重跑整个历史阶段。
 
 本仓库的 CI 执行检查和构建，不自动发布到 PyPI／GitHub Release。以下是维护者的发布流程；发布、推送及权限配置由维护者明确执行或授权，不由文档验证自动触发。目前尚未核验 PyPI 或 GitHub Release 中有对应发行包。
+
+
+## 本轮本地交付
+
+本轮交付物放在仓库的 `dist/basic-sdk-b871f61/`：`ralf_agent-0.1.0.dev120-py3-none-any.whl`、`SHA256SUMS` 与 `delivery.json`。这是本地制品，未推送或发布到远端；当前支持范围只以[当前摘要](implementation-status.md#当前交付摘要)为准。
+
+```bash
+python -m pip install "/ABSOLUTE/PATH/ralf-agent/dist/basic-sdk-b871f61/ralf_agent-0.1.0.dev120-py3-none-any.whl"
+ralf --version
+ralf --format text init my-agent
+cd my-agent
+python -m agent_app --ticket INC-001
+```
+
+完整审批与跨进程恢复按[首用教程](getting-started.md)执行；模型与工具定制从[SDK指南](sdk-model-tools.md)开始。安装前在制品目录执行 `shasum -a 256 -c SHA256SUMS` 核对文件；路径及命令由使用者替换为实际位置。
+
+本轮复用固定产品的完整离线源码回归（12,749通过／838配置依赖跳过）、原独立安装62项及其他已登记基础证据；最终wheel已通过隔离安装、版本／入口、starter审批、重复审批、恢复及原命令回读验证，业务只写入一次，结果见 `delivery.json`。wheel与交付记录的SHA-256校验通过。该smoke不改称完整安装矩阵或新的真实模型质量，阶段未验收项保持不变。后续CLI核验便利命令等可选项不进入本轮，现有SDK人工核验可用。
 
 ## 1. 准备版本与兼容说明
 
@@ -33,12 +50,12 @@ python -m build
 
 ## 3. 在源码目录外安装 wheel
 
-这里 `/path/to/ralf_agent-0.1.0.dev9-py3-none-any.whl` 是实际构建文件的占位路径。使用新的虚拟环境和源码目录外的临时目录，避免 editable install 或 PYTHONPATH 掩盖打包遗漏。
+这里 `/path/to/ralf_agent-0.1.0.dev120-py3-none-any.whl` 是实际构建文件的占位路径。使用新的虚拟环境和源码目录外的临时目录，避免 editable install 或 PYTHONPATH 掩盖打包遗漏。
 
 ```bash
 python3 -m venv /tmp/ralf-wheel-check
 source /tmp/ralf-wheel-check/bin/activate
-python -m pip install "/path/to/ralf_agent-0.1.0.dev9-py3-none-any.whl"
+python -m pip install "/path/to/ralf_agent-0.1.0.dev120-py3-none-any.whl"
 python -m pip check
 mkdir /tmp/ralf-release-smoke
 cd /tmp/ralf-release-smoke

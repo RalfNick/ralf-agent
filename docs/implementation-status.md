@@ -1,5 +1,41 @@
 # Implementation status — 0.1.0.dev120
 
+## 当前交付摘要
+
+更新：2026-10-16。本节是唯一当前状态摘要；历史批次保留在下方，仅作原版本证据引用。R01–R26是长期路线图，不作为本轮基础交付的额外阻塞条件。
+
+**本轮基础SDK范围已收口。** 包版本保持 `0.1.0.dev120`，运行时代码固定于 `b871f61`；后续交付整理仅调整文档及制品。本地wheel、校验与安装方式见[本地交付说明](releasing.md#本轮本地交付)，日常起步见[首用教程](getting-started.md)和[基础能力](basic-capabilities.md)。这是开发预览，尚未核验同版本的公开PyPI／GitHub Release。
+
+| 基础链路 | 已有实现与使用入口 | 本轮结论 |
+| --- | --- | --- |
+| 安装／默认应用 | 独立wheel、离线starter、源码安装 | 最终wheel隔离安装与starter审批／恢复smoke通过，制品校验通过 |
+| 模型／Python工具／单Agent | 多协议Provider、ToolRegistry、AgentSpec／Agent；[模型与工具SDK](sdk-model-tools.md) | 已补工具参数冻结校验；具体线上模型需按其配置验收 |
+| 基础Workflow | 顺序与[静态图](static-workflows.md)，默认编译／解释器可替换 | 已有默认运行、配置与恢复证据 |
+| 上下文／记忆／RAG | 内存／SQLite起步，显式摘要／卸载、Facts及知识检索；[组合指南](recommended-harness.md) | 基础链路及必要替换已有证据；语义质量仅引用冻结参考范围 |
+| 审批／重启／效果核验 | 原命令回读、原Action审批、SDK核验、[恢复与备份演练](recovery-guide.md) | 已验证恢复与重复控制；无法确认的效果和资源义务继续保留 |
+
+### 验收与限制
+
+- 完整离线源码回归：**12,749 passed／838 skipped，零失败／错误**；全量Ruff与1,293文件格式检查通过。425产品／862 Python测试前后哈希一致，另2 JSON夹具与固定提交一致。安装、版本配置、Session、RAG与恢复证据分别见[基础记录](basic-capabilities.md)，不把不同批次相加为同次全绿。
+- 第一阶段四条参考链路在dev99、第二阶段所选环境／执行能力在dev113冻结，按原配置和范围复用。内部安装演练不等于外部独立采用，离线回归不等于真实模型或全部服务验收。
+- SDK的执行credits不是真实费用上限；本地备份演练仅覆盖默认oncall两库。企业身份／ACL、长期保留、完整框架备份恢复、一般流式／多模态及其他未选组合仍未完成，详见[长期清单](remaining-work.md)。
+- 本轮没有未处理的基础交付阻塞。CLI核验快捷入口等可选便利项后置，现有SDK核验和默认实现已满足本轮路径，不为这些改进延长交付。
+
+### 后续阶段
+
+| 范围 | 状态与约束 |
+| --- | --- |
+| P3-2 | S1普通Session功能子集已有验收；S2 Coding Session原360秒仍未通过，Temporal＋PG整体验收尚缺。性能专项后置，该未完成组合不列为已支持 |
+| P3-3／P3-4／P3-5／P3-A | 按原依赖推进最小服务观察／控制、身份权限／保留、框架恢复与阶段验收；未关闭，不新增后端／编排／Runner／部署组合 |
+| R01–R26其余目标 | 保留为长期路线图；外部采用和框架对等比较单独验收，不自动成为本轮实现任务 |
+
+后续执行依据为[第三阶段冻结矩阵](phase3-support-matrix.md)；基础交付与完整第三阶段／M1／R01–R26完成严格分开。同一阻塞连续两批无实质进展时，汇总原因、证据缺口与处置方案，停止无新依据的重复微调。
+
+## 历史实现与验收证据
+
+<details>
+<summary>展开历史记录（“当前／下一步”只描述该记录发布时的状态）</summary>
+
 **当前优先级（2026-10-16 用户指令）：先保障基础能力，避免过度开发。** 先修复安装、模型与工具、单 Agent、基础 Workflow、上下文、记忆／RAG及恢复主链路；已有能力通过默认实现和定制示例复用，不新增封装。Temporal Coding Session性能专项后置；下方失败和所有未验收项保留，不把调整优先级算成门槛完成。起步路径见[基础能力入口](basic-capabilities.md)。
 
 2026-10-16 基础SDK集成回归：`b871f61` 修复工具缺参、默认值及实时签名变化的公共采纳边界，保留原合法Schema／Manifest与审批恢复；首用、Session／配置和默认本地备份步骤已同步。一次完整离线源码回归 **12,749 passed／838 skipped，零失败／错误**，425产品／862 Python测试前后哈希一致，另2个JSON夹具与固定提交一致（合计864测试／夹具），Ruff／格式检查通过。跳过原因及独立安装的有限范围见[基础回归记录](basic-capabilities.md#基础修复的完整离线回归)。本批没有新增真实模型质量／外部服务验收，不覆盖下方保留的S2原360秒失败，也不关闭第三阶段。
@@ -559,3 +595,5 @@ Dev51 adds [pure HTML ingestion](html-ingestion.md): opt-in HtmlDocumentParser a
 Dev52 adds [pure DOCX body ingestion](docx-ingestion.md): canonical UTF-8 WordprocessingML paragraphs/table text, bounded ZIP/XML validation and installed ingest template. Existing text/HTML pipelines and committed receipts remain compatible. Word layout, inherited styles, images, headers/notes and other Office/PDF formats remain outside this adapter; full H3/M1 is open.
 
 Dev53 adds [optional text PDF ingestion](pdf-ingestion.md): lazy pypdf 6.20+ below 7, strict unencrypted page-order text, scoped library limits and installed ingest template. No core dependency or original Text/HTML/DOCX default changes. OCR/layout/real PDF compatibility corpus, global host isolation and full H3/M1 remain open.
+
+</details>

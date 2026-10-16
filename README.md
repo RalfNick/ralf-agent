@@ -2,7 +2,7 @@
 
 Ralf-Agent 是 Python Agent 框架，提供可替换的模型、工具、上下文、记忆和检索组件，以及持久化的任务、审批与恢复。当前版本为 **0.1.0.dev120 开发预览**；支持边界见[实现清单](docs/implementation-status.md)。
 
-先从[基础能力入口](docs/basic-capabilities.md)或[首用教程](docs/getting-started.md)开始：本地 SQLite、单 Agent、自定义模型与工具、基础 Workflow、记忆和 RAG。当前开发优先保障这些链路易用且可靠，高级部署不作为入门前置条件。
+先从[基础能力入口](docs/basic-capabilities.md)或[首用教程](docs/getting-started.md)开始：本地 SQLite、单 Agent、自定义模型与工具、基础 Workflow、记忆和 RAG。本轮基础 SDK 交付已收口；范围、已知限制和后续项统一见[当前状态摘要](docs/implementation-status.md#当前交付摘要)，本地制品见[交付说明](docs/releasing.md#本轮本地交付)。高级部署不作为入门前置条件。
 
 <details>
 <summary>版本演进与历史验收记录</summary>
