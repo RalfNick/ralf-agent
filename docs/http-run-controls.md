@@ -123,18 +123,55 @@ owned shutdown with no active drives or handler threads. Native async adapter
 tests use a real Local authority, not a live Temporal service. These controls do
 not consume Inbox entries, so an Inbox at capacity does not block them. The
 execution authority's full cumulative command-capacity requirement remains open.
-A later candidate adds bounded protection for original public Temporal root
-cancel/drive commands; see the [capacity contract](../architecture/specs/temporal-recovery-capacity-contract.md).
-That increment has offline/installed evidence, not live hosted acceptance. It
-does not exempt fresh external descendant or manual reconciliation/approval
-commands. Original internal Parent delegation does not reserve such a fresh
-Registry command. Its repeated-wake fix is recorded separately; the actual
-4,096-record capacity probe failed at the Service's earlier 2,000-distinct-Update
-limit. See the [current evidence](../architecture/reviews/2026-10-16-temporal-delegated-recovery.md).
-The subsequent [synchronous reservation repair](../architecture/reviews/2026-10-16-temporal-reservation-transport.md)
-uses the original Registry's Signal/Query path for selected root reservations.
-Its native SDK evidence does not certify the complete HTTP/Temporal/PG service
-chain or remove other Update lifecycle limits.
-P3-3 still requires that capacity behavior and the selected complete
-Local/Temporal service acceptance. P3-2/S2 and its original 360-second gate remain
-open; this batch changes no Engine or Temporal execution protocol.
+Later candidates added original public Temporal recovery protection and replaced
+only synchronous root reservation transport with original Registry Signal/Query.
+The original raw Update2000 failure remains historical evidence; the new selected
+ordinary public2 probe reached4096 records and completed original tree cancellation
+and retirement. The [manual protection increment](../architecture/reviews/2026-10-16-temporal-manual-recovery.md)
+also verified one root Tool's manual evidence while actual thread end and effect
+ACK independently retained quota. These are narrow SDK service cases, with their
+own immutable packages and declared concurrency; they do not guarantee every
+Update/History lifecycle, native or default scoped capacity recovery.
+
+The current installation evidence for the borrowed Temporal HTTP host is recorded
+in [HTTP/Temporal/PG acceptance](../architecture/reviews/2026-10-16-http-temporal-acceptance.md).
+It uses existing `A2AApplication`, `TemporalEngine`, PostgreSQL EffectJournal and
+a persistent SQLite Inbox. The host owns its HTTP server, borrowed facade and
+Inbox lifecycle; the original Worker owns all business progression. Close host
+resources **inside lifespan shutdown before acknowledging it**. Uvicorn can
+re-raise a captured termination signal before `serve()` returns; a finalizer only
+after that call does not establish graceful resource closure.
+
+Existing native async assembly can be exposed without another execution engine:
+
+```python
+async def wake_original(scope, run_id):
+    # engine is the original facade, bound to this trusted Scope and release.
+    await engine.drive(run_id, wait_seconds=0)
+
+application = A2AApplication(
+    engine_for_scope=lambda scope: engine,
+    spec=spec,
+    inbox=persistent_inbox,
+    authenticate=authenticate,
+    url="http://127.0.0.1:8000/rpc",
+    enable_run_controls=True,
+    enable_run_events=True,
+    recovery_wakeup=wake_original,
+)
+```
+
+`A2AApplication` borrows these objects; its default lifespan does not close them.
+Use the original host's shutdown ownership; stopping this observer facade must
+not stop an independently owned Temporal Worker or cancel its business Run.
+Restart with the same authority/release/Scope, persistent Inbox and original
+command IDs. Keep matching immutable Workers for selected historical Histories.
+
+Standard `tasks/cancel` returns a Task, while the approval/reconciliation extension
+returns command receipts. Cancelling an already terminal Task keeps the existing
+`-32002` refusal; its native original command receipt remains available through
+the SDK. No new cancellation retry semantics are implied by the HTTP extension.
+
+Full P3-3 still requires remaining cumulative-capacity and selected service gates.
+P3-2/S2 and its original360-second gate remain open; this acceptance adds no new
+Engine, Temporal execution protocol or enterprise identity.

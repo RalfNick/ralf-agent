@@ -437,11 +437,19 @@ class PublicSystem:
                 await handle.terminate(reason="owned public deployment test cleanup")
             assert (await handle.describe()).status != WorkflowExecutionStatus.RUNNING
         registry = self.client.get_workflow_handle(registry_id(self.policy.deployment_id))
-        history = await registry.fetch_history()
-        await replay_temporal_history(history, namespace=self.namespace["name"])
-        (self.directory / "registry-history.json").write_text(history.to_json())
-        await registry.terminate(reason="owned public deployment Registry test cleanup")
-        assert (await registry.describe()).status == WorkflowExecutionStatus.TERMINATED
+        registry_absent = False
+        try:
+            history = await registry.fetch_history()
+        except RPCError as exc:
+            if exc.status != RPCStatusCode.NOT_FOUND or found:
+                raise
+            # Definitive absence is harmless only if no owned Run ever existed.
+            registry_absent = True
+        if not registry_absent:
+            await replay_temporal_history(history, namespace=self.namespace["name"])
+            (self.directory / "registry-history.json").write_text(history.to_json())
+            await registry.terminate(reason="owned public deployment Registry test cleanup")
+            assert (await registry.describe()).status == WorkflowExecutionStatus.TERMINATED
         for engine in self.engines:
             await engine.aclose()
         if self.assembly is not None:
@@ -455,7 +463,8 @@ class PublicSystem:
                 {
                     "closed_runs": sorted(found),
                     "never_started_ids": absent,
-                    "registry_terminated": True,
+                    "registry_terminated": not registry_absent,
+                    **({"registry_absent": True} if registry_absent else {}),
                     "workers_shutdown": len(self.workers),
                 }
             )
@@ -482,7 +491,15 @@ async def public_system(directory, *, hold=False, approval=False, options=None, 
     )
     try:
         yield system
-    finally:
+    except BaseException as primary:
+        try:
+            await system.cleanup()
+        except BaseException as cleanup:
+            raise BaseExceptionGroup(
+                "Original service failure and owned cleanup failure", [primary, cleanup]
+            ) from None
+        raise
+    else:
         await system.cleanup()
 
 

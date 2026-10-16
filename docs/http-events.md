@@ -4,7 +4,7 @@ This opt-in RALF extension uses the existing A2A JSON-RPC endpoint. It reads the
 selected authority's committed Run events. It never drives a Run, submits a business
 cancel, opens another database or starts a background event producer.
 
-The local candidate is `dist/p3-events-20261016/ralf_agent-0.1.0.dev120-py3-none-any.whl`,
+The original event-only candidate is `dist/p3-events-20261016/ralf_agent-0.1.0.dev120-py3-none-any.whl`,
 with `verification.json` and `SHA256SUMS` beside it. The frozen basic SDK wheel in
 `dist/basic-sdk-b871f61/` is unchanged and does not include this extension.
 
@@ -88,3 +88,5 @@ in a separate candidate; the event-only wheel above remains immutable. P3-3 stil
 requires cumulative command-capacity behavior and complete selected Local/Temporal
 service acceptance. S2 Coding Session and its original 360-second gate stay open;
 these extensions do not change their support or execution protocols.
+
+The subsequent [HTTP/Temporal/PG acceptance](../architecture/reviews/2026-10-16-http-temporal-acceptance.md) exercises this same cursor route against the original native async Temporal authority, with actual HTTP host process restart. Its artifact, exact scenarios, PostgreSQL effects and retained failures are recorded separately. This does not turn polling into SSE or certify the full third-stage matrix.
