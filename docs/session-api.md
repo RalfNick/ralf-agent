@@ -1,11 +1,13 @@
-# Durable Local Sessions — dev39 / H2b1–H2b4b
+# Durable Local Sessions
 
-H2b1 provides durable native/sequence conversations; H2b2 adds colocated Local
-Graph (including parallel and direct transform nodes), Team, Dynamic linear-plan/DAG
-and nested definitions with existing capability bindings. Colocated Session and execution records share the same SQLite connection and
-Coordinator. H2b4a adds receipt-backed remote data for native/sequence Turns;
-H2b4b adds explicit remote composite root conversations; Temporal shared Sessions remain unsupported. H2b3 adds host-authorized
-composite root namespaces. Temporal stateless entry has a separate delivered subset.
+Start with one Agent and the default SQLite conversation. A Session serializes
+its Turns, retains their original Run references and supports explicit recovery.
+Colocated Session and execution records share the same SQLite connection and
+Coordinator; the facade does not implement another execution authority.
+
+The later sections cover existing composite and remote data options. Temporal
+has a separate [Session guide](temporal-sessions.md); deployment combinations and
+uncompleted acceptance gates remain in the [support matrix](phase3-support-matrix.md).
 
 ## Open and continue
 
@@ -15,11 +17,24 @@ from ralf_agent import Agent
 # model is an explicitly configured Provider. No model call occurs when opening.
 async with Agent(model=model, db_path=".ralf/runs.sqlite") as agent:
     session = await agent.open_session("customer-42", command_id="open-42")
-    first = await session.run("My order is 123", command_id="turn-1", wait_timeout=10)
-    second = await session.run("What was the order?", command_id="turn-2", wait_timeout=10)
-    print(second.snapshot.state, second.snapshot.result)
+    first = await session.submit("My order is 123", command_id="turn-1")
+    observed = await first.wait()
+    if observed.snapshot.state == "succeeded" and not (await session.status()).busy:
+        second = await session.run("What was the order?", command_id="turn-2", wait_timeout=10)
+        print(second.snapshot.state, second.snapshot.result)
+    else:
+        # Resolve the original Turn's approval, input or recovery before a new Turn.
+        print(observed.snapshot.state, await first.pending())
     ref = session.ref.to_dict()
 ```
+
+For a bounded observation, use `observed = await first.wait(wait_timeout=10)`.
+If `observed.wait_reason == "observation_timeout"`, the original Turn is still
+running: keep `first.ref`, and wait on `first` again or use its existing controls.
+Do not submit the next Turn merely because the wait returned. Approval/input
+pauses likewise require handling the original Run; waiting does not approve it.
+Across a restart, reopen the original Runtime/database and explicitly resume
+the saved RunRef as described in [reconnect](agent-api.md#wait-controls-and-reconnect).
 
 `run` returns WaitResult; use submit for AgentRun with `.turn` (TurnAdmission).
 Each accepted Turn has a stable turn_id, increasing turn_seq, original binding
@@ -49,6 +64,9 @@ Busy rejects durably with the original RunRef and `.receipt`; replaying that sam
 command stays rejected after the blocker completes. A new attempt uses a new ID.
 Busy does not create a second Run or increment seq. Reject receipts identify the
 rejected proposed Run; its original blocker is `busy.run_ref`.
+For example, if `turn-2` was rejected while `turn-1` was still running, finish
+the original Turn, confirm the Session is idle, then retry as `turn-2-retry-1`.
+Replaying `turn-2` retrieves its saved rejection rather than creating work.
 
 Opening fixes the declaration and resolved manifest. Moved defaults never silently
 upgrade existing Sessions. Original receipt replay precedes current model resolution;

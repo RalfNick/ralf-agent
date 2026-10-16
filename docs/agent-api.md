@@ -1,9 +1,13 @@
-# Local Agent API — dev31 / H2a
+# Local Agent API
 
-H2a delivers an async Local stateless application entry, independent task hosting,
-pure observations and retryable closing. Existing Harness remains the pure
-DecisionPolicy; AgentHarness freezes capability declarations and delegates actual
-execution to LocalEngine. dev32 adds the explicit [colocated native/sequence Session H2b1 subset](session-api.md); dev33 adds the [Temporal native/sequence entry](temporal-agent-api.md). dev34 extends this entry to registered Graph/Team/Dynamic/nested definitions; dev35 adds colocated Local composite Session Turns. Full H1/H2, Temporal bindings/shared Sessions and automatic H3 stages remain pending.
+Use Agent for a standalone model/tool application, or share one Runtime between
+Agents. AgentHarness fixes capability declarations and delegates execution to
+LocalEngine; Harness remains a pure decision policy. Waiting observes committed
+state, and closing retains the existing execution/resource ownership rules.
+
+Start with the example below, then add [durable Sessions](session-api.md) or
+existing Workflow definitions when needed. Temporal has its own [entry guide](temporal-agent-api.md).
+Current implementation and acceptance boundaries are listed [separately](implementation-status.md).
 
 ## Standalone Agent
 
@@ -73,12 +77,27 @@ Scope comes from the trusted host; omitting it preserves the builder's local def
 
 ```python
 from ralf_agent import RunRef
+from ralf_agent.types import digest
 
+# Apply only decisions that the caller has explicitly reviewed and approved.
 for item in await handle.pending():
     owner = runtime.attach(RunRef.from_dict(item["ref"]))
     if item["kind"] == "approval":
-        await owner.approve(item["action_id"], item["digest"], command_id="approve-1")
+        approval_id = "approve:" + digest(
+            {
+                "run_id": owner.ref.run_id,
+                "action_id": item["action_id"],
+                "target_digest": item["digest"],
+                "approved": True,
+            }
+        )
+        await owner.approve(item["action_id"], item["digest"], command_id=approval_id)
 ```
+
+Control command IDs are deduplicated across the trusted Scope. Use a distinct,
+stable ID for each decision; retrying that same decision uses the same ID.
+A fixed ID such as `approve-1` cannot approve different actions or later Turns:
+the original receipt belongs to its original Run/action/digest/decision.
 
 RunRef.to_dict/from_dict serializes Scope, original release digest, run_id and an
 opaque authority locator, without clients or credentials. The default locator

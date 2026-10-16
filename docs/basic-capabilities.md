@@ -19,7 +19,7 @@
 | 基础 Workflow | 顺序执行与静态图 | 自定义步骤、依赖、条件与输入绑定；[Workflow](static-workflows.md) |
 | 工具 | Python 工具与默认执行器 | 注册自己的函数、Schema、读写效果和必要审批；[SDK 指南](sdk-model-tools.md)、[执行组件](execution-components.md) |
 | 上下文 | 默认 ContextAssembler；可选现有 managed-data 组合 | 替换上下文策略，按需开启摘要和工具大结果投影；[推荐组合](recommended-harness.md) |
-| 短期与长期记忆 | 内存／SQLite 会话与 Facts | 分开替换会话和事实存储，显式配置 namespace；[记忆扩展](extending.md)、[Session 适配](session-adapter-contracts.md)、[Facts 适配](facts-adapter-contracts.md) |
+| 短期与长期记忆 | 内存／SQLite 会话与 Facts | 从[Session API](session-api.md)与[记忆召回](recall-and-rag.md)开始；按需使用[Session 适配](session-adapter-contracts.md)、[Facts 适配](facts-adapter-contracts.md) |
 | RAG | 本地词法知识检索与现有 RAG 模板 | 替换摄取、Embedding、向量检索和重排组件；[检索与 RAG](recall-and-rag.md)、[知识适配](adapter-contracts.md) |
 | 配置与恢复 | SDK、JSON／TOML Profile，本地 SQLite 执行记录 | 自定义工厂与组件所有权；按原配置恢复任务；[运行装配](runtime-assembly.md)、[恢复指南](recovery-guide.md) |
 
@@ -34,3 +34,5 @@ Temporal Coding Session 的原360秒验收仍未通过，保留为后续收尾�
 2026-10-16 基础回归：现有9个模块214项通过，包括单Agent推荐组合、Harness替换、静态图审批与恢复、模型协议模拟、内存／SQLite记忆与召回，以及独立wheel安装后的starter审批／崩溃恢复和RAG运行。该结果不代表所有模型协议、远程后端或真实语义质量均完成验收；本批没有调用真实模型或外部数据服务。
 
 同日模型／工具接入补验：现有3个模块54项通过，覆盖模型Profile、独立安装后的model模板、类型注解工具与Schema／默认参数及相关拒绝行为。README简化示例另在已有独立安装包中执行两次：原HTTP Provider搭配离线响应夹具，Schema生成、真实Python工具往返、最终成功和相同命令复用通过；第二次执行未新增模型请求。未修改产品代码，不作为真实线上模型兼容或阶段完整验收。
+
+会话／RAG用法补验：独立安装包的4个Local场景确认观察超时后的忙碌回执、继续原Run、跨Turn审批ID与重复批准行为；修正用法下两Turn成功且每轮仅一次SQLite业务写入。另以6个独立进程运行RAG模板，确认文档CAS更新后相同命令复用版本1响应、新命令获取版本2。已修正教程中的两Turn等待与固定审批ID示例；产品实现未变，无外部服务或真实模型调用，不新增阶段通过声明。
