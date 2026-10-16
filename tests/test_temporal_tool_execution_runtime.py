@@ -156,13 +156,35 @@ def test_callback_pins_original_handle_and_refuses_namespace_drift():
 
     from ralf_agent.temporal_tool_execution_activities import callbacks
 
-    _, _, _, request = state_for()
+    _, state, _, request = state_for()
     calls = []
 
     class Handle:
+        async def query(self, name, value):
+            assert name == "view" and value["kind"] == "status"
+            state.authorize(value["scope"])
+            return state.snapshot()
+
+        async def describe(self):
+            from ralf_agent.temporal_state import WORKFLOW_NAME
+
+            return SimpleNamespace(
+                id=state.run_id,
+                run_id=state.epoch,
+                namespace="original",
+                workflow_type=WORKFLOW_NAME,
+                raw_info=SimpleNamespace(first_run_id=state.epoch),
+            )
+
+        async def signal(self, *args, **options):
+            raise AssertionError("An exactly identified legacy Worker must receive no Signal")
+
         async def execute_update(self, name, value, **options):
             calls.append((name, value))
             if name == "tool_execution_ended":
+                from ralf_agent.types import digest
+
+                assert options["id"] == "ralf-tool-ended:" + digest(value)
                 return {"action_id": request["action_id"], "recorded": True}
             return {
                 "run_id": request["run_id"],

@@ -1,5 +1,7 @@
 # 第三阶段支持矩阵与收口门槛
 
+最新[原执行结束运输](../architecture/reviews/2026-10-16-temporal-execution-end-capacity.md)：四个原end handler保留完整证明／原epoch，不新增grant；源码／安装各2,340 passed／6 skipped。同包实际2 passed／1 failed，默认Tool的2,000 Update结束压力与旧Worker兼容通过；公有原end已记录，后续效果ACK的begin仍被容量拒绝、Owner关闭失败。原门槛、失败与未知义务保留；context／Session／native实际压力及其他生命周期未验，完整P3-3不关闭。
+
 
 最新[原Registry人工证明运输](../architecture/reviews/2026-10-16-temporal-scoped-manual-transport.md)：4096身份＋2,000 distinct Update后原普通Tool首次人工核验可达；原异步证明、Action槽、epoch与结束债务保留。源码／安装各1,316项；同包压力passed／126.946秒，旧manual Worker兼容独立1 passed／13.993秒。首轮兼容夹具失败及原RED保留，不称单次全绿。仅该SDK恢复子集验收；首次结束ACK、其他Registry／Session与History生命周期及完整P3-3仍开放，P3-2及后续门槛不变。
 

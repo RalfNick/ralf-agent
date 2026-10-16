@@ -181,6 +181,12 @@ IMPLEMENTATION_FIELDS = {
         "registered_activities",
         "tracked_execution",
         "tracked_callbacks",
+        "end_identity",
+        "end_accept",
+        "end_observe",
+        "end_receipt",
+        "end_execute",
+        "end_operations",
     },
     "runtime": {
         "callbacks",
@@ -294,6 +300,7 @@ def implementation():
     from . import postgres_coding_resources as resources
     from . import temporal_coding_runtime as runtime
     from . import temporal_coding_state as state
+    from . import temporal_execution_end_transport as end_transport
     from . import temporal_tool_execution_activities as callbacks
     from . import temporal_tool_execution_runtime as tools
     from .codex_environment import DockerCodingEnvironment
@@ -313,8 +320,14 @@ def implementation():
                 "registered_activities": registered_activities,
                 "tracked_execution": tools.execute,
                 "tracked_callbacks": callbacks.callbacks,
+                "end_identity": end_transport._identity,
+                "end_accept": end_transport.accept,
+                "end_observe": end_transport.observe,
+                "end_receipt": end_transport._receipt,
+                "end_execute": end_transport.execute,
             }.items()
-        },
+        }
+        | {"end_operations": digest(sorted(end_transport.OPERATIONS))},
         "runtime": {
             name: executable_digest(getattr(runtime, name))
             for name in (

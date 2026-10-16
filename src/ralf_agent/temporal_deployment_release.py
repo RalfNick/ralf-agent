@@ -151,8 +151,15 @@ def wrap_activity(runtime, client, function):
                         raise
             if lifecycle["allowed"] is False:
                 return
-            result = await handle.execute_update(
-                "deployment_call_ended", identity, id="ralf-deployment-call-end:" + digest(identity)
+            from .temporal_execution_end_transport import execute
+
+            result = await execute(
+                client,
+                proof["run_id"],
+                "deployment_call_ended",
+                identity,
+                execution_epoch=proof["execution_epoch"],
+                legacy_update_id="ralf-deployment-call-end:" + digest(identity),
             )
             if result != _ack(identity, "recorded", True):
                 _reject()

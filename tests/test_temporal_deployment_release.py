@@ -106,7 +106,40 @@ def environment(monkeypatch):
     )
 
     class OwnedHandle(Handle):
+        async def describe(self):
+            value = await super().describe()
+            if self.id in client.states:
+                from ralf_agent.temporal_parent_state import PARENT_WORKFLOW_NAME
+                from ralf_agent.temporal_state import WORKFLOW_NAME
+
+                original = client.states[self.id]
+                if not hasattr(value, "raw_info"):
+                    value.raw_info = SimpleNamespace(first_run_id=original.epoch)
+                if not hasattr(value, "workflow_type"):
+                    value.workflow_type = (
+                        PARENT_WORKFLOW_NAME
+                        if client.proofs[self.id]["request"]["definition"]["kind"] == "graph"
+                        else WORKFLOW_NAME
+                    )
+            return value
+
+        async def signal(self, *args, **options):
+            raise AssertionError("An exactly identified legacy Worker must receive no Signal")
+
         async def query(self, name, request):
+            if self.id in client.states and request["kind"] == "status":
+                original = client.states[self.id]
+                assert request["scope"] == original.scope
+                return {
+                    "run_id": original.run_id,
+                    "state": original.state,
+                    "state_revision": 0,
+                    "result": None,
+                    "error": None,
+                    "pending": [],
+                    "actions": copy.deepcopy(original.actions),
+                    "consistency": "authoritative",
+                }
             if self.id == registry_id and request["kind"] == "deployment_submission":
                 original_proof = client.proofs[proof["run_id"]]
                 return {
@@ -152,6 +185,7 @@ def environment(monkeypatch):
                     raise RuntimeError("Original begin was accepted but its response was lost")
                 return result
             if name == "deployment_call_ended":
+                assert options["id"] == "ralf-deployment-call-end:" + digest(request)
                 if client.end_failures:
                     client.end_failures -= 1
                     raise RuntimeError("Original durable ACK unavailable")

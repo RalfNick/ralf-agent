@@ -202,3 +202,11 @@ the SDK. No new cancellation retry semantics are implied by the HTTP extension.
 Full P3-3 still requires remaining cumulative-capacity and selected service gates.
 P3-2/S2 and its original360-second gate remain open; this acceptance adds no new
 Engine, Temporal execution protocol or enterprise identity.
+
+
+The [original execution-end transport repair](../architecture/reviews/2026-10-16-temporal-execution-end-capacity.md)
+protects four existing end handlers independently of the Run's Update count.
+An accepted cancel or recorded physical end still does not prove deployment
+closure: a later effect-ACK Activity may be blocked on its original begin record
+at the same capacity limit. Keep its Owner and original evidence; do not treat
+HTTP success, Run quiescence or server shutdown as a retirement acknowledgement.

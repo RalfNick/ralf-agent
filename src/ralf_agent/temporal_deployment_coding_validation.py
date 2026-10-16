@@ -241,6 +241,7 @@ class CodingValidation:
                         "describe",
                         "fetch_history_events",
                         "execute_update",
+                        "signal",
                     )
                 ],
             ]

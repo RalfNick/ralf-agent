@@ -119,3 +119,16 @@ Worker兼容分别通过，详见[验收记录](../architecture/reviews/2026-10-
 此前13组制品不变。默认发布／保存History兼容通过；所选实验指纹变化仍要求匹配的
 历史Worker。旧manual Worker兼容路径保留其Update上限，没有追溯升级或清除未知义务。
 首次结束ACK等剩余生命周期、完整P3-3及P3-2原失败不关闭。
+
+
+## P3-3 原执行结束运输候选
+
+制品`dist/p3-execution-end-final-20261016/ralf_agent-0.1.0.dev120-py3-none-any.whl`，
+SHA256 `9cbea0c142741001ff445ec0179f50195ae1f41e03146a943b81f79c576169f7`，附`verification.json`／`SHA256SUMS`。
+源码／独立安装各2,340 passed／6 skipped，434产品一致，默认声明和保存History兼容通过。
+它只修复四类原end运输，不增加准入；同包真实Temporal **2 passed／1 failed**，
+公有部署后续效果ACK的begin登记仍在2,000 Update上限失败，Owner未排空，不能作为该
+组合验收通过的发行。默认Tool压力／重启和旧Worker兼容有通过证据；此前14组冻结
+制品不变，实验发布指纹变化仍须匹配历史Worker。原失败及8条失败History重放、完整
+P3-3／P3-2门槛见[验收记录](../architecture/reviews/2026-10-16-temporal-execution-end-capacity.md)。
+仅本地候选，不推送或发布远端。

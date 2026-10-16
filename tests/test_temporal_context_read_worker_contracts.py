@@ -21,11 +21,33 @@ class Client:
         self.handles.append((workflow_id, run_id))
         return self
 
+    async def query(self, name, value):
+        assert name == "view" and value["kind"] == "status"
+        self.state.authorize(value["scope"])
+        return self.state.snapshot()
+
+    async def describe(self):
+        from ralf_agent.temporal_state import WORKFLOW_NAME
+
+        return SimpleNamespace(
+            id=self.state.run_id,
+            run_id=self.state.epoch,
+            namespace=self.namespace,
+            workflow_type=WORKFLOW_NAME,
+            raw_info=SimpleNamespace(first_run_id=self.state.epoch),
+        )
+
+    async def signal(self, *args, **options):
+        raise AssertionError("An exactly identified legacy Worker must receive no Signal")
+
     async def execute_update(self, name, payload, *, id):
         self.updates.append((name, payload, id))
         if name == "admit_context_dispatch":
             return self.state.admit_context_dispatch(payload)
         assert name == "context_execution_ended"
+        from ralf_agent.types import digest
+
+        assert id == "ralf-context-read-ended:" + digest(payload)
         if self.end_response is not None:
             return self.end_response
         return self.state.context_execution_ended(payload)
@@ -73,7 +95,7 @@ def test_end_callback_keeps_original_run_uuid_without_live_activity_context():
         assert (await guard(request))["allowed"] is True
         info.workflow_run_id = "new-activity"
         assert await ended(proof(request)) is None
-        assert client.handles == [(state.run_id, state.epoch)]
+        assert client.handles and set(client.handles) == {(state.run_id, state.epoch)}
         assert client.updates[-1][0] == "context_execution_ended"
         assert not state.quiescent  # Actual end alone cannot consume the response.
         before = state.revision

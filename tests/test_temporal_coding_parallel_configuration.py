@@ -161,12 +161,26 @@ def test_current_root_guard_records_exact_bounded_graph_admission():
     accepted = []
 
     class Registry:
+        async def query(self, name, request):
+            assert name == "view" and request["scope"] == asdict(engine.scope)
+            return {"scope": request["scope"], "capacity": 4096, "accepted_commands": len(accepted)}
+
+        async def signal(self, *args, **kwargs):
+            raise AssertionError("A positively identified legacy Registry receives no Signal")
+
         async def execute_update(self, name, value):
             assert name == "reserve"
             accepted.append(copy.deepcopy(value))
+            return {
+                "command_id": value["command_id"],
+                "target": value["target"],
+                "record_state": "durably_recorded",
+                "apply_state": "not_applied",
+            }
 
     engine = object.__new__(TemporalEngine)
     engine._closed, engine._registry, engine.scope = False, Registry(), Scope()
+    engine.client = SimpleNamespace(namespace="original")
     engine._release = {
         "kernel": "temporal-3",
         "binding_protocol": 23,

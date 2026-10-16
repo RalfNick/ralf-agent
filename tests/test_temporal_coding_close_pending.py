@@ -25,6 +25,64 @@ def environment(monkeypatch, *, publication=4):
         }
     monkeypatch.setattr(fixture, "MANIFEST", manifest)
     client, child_id = fixture.linked_client()
+    # The original close fixture still owns all proof mutations and injected
+    # Update faults. Expose its command port through the current transport.
+    from ralf_agent.temporal_command_transport import accept, observe
+    from ralf_agent.temporal_state import TemporalRunState
+
+    hosts = {}
+
+    def host(run_id):
+        if run_id not in hosts:
+            epoch = client.epochs[run_id]
+            state = SimpleNamespace(
+                scope=fixture.SCOPE, run_id=run_id, epoch=epoch, manifest=manifest
+            )
+            state.authorize = lambda scope: TemporalRunState.authorize(state, scope)
+
+            async def command(request):
+                await fixture.Handle(client, run_id, epoch).execute_update("command", request)
+                return {
+                    "command_id": request["command_id"],
+                    "run_id": run_id,
+                    "kind": request["payload"]["kind"],
+                    "record_state": "durably_recorded",
+                    "apply_state": "applied",
+                    "outcome": {},
+                }
+
+            hosts[run_id] = SimpleNamespace(state=state, command=command)
+        return hosts[run_id]
+
+    def info(run_id):
+        epoch = client.epochs[run_id]
+        return SimpleNamespace(
+            workflow_id=run_id,
+            namespace=client.namespace,
+            run_id=epoch,
+            first_execution_run_id=epoch,
+            original_execution_run_id=epoch,
+        )
+
+    class Handle(fixture.Handle):
+        async def query(self, name, request):
+            if request.get("kind") == "status" and "command_observation" in request:
+                client.calls.append(("query", self.run_id, self.epoch, request))
+                return {
+                    "command_observation": observe(
+                        host(self.run_id), request["command_observation"], info(self.run_id)
+                    )
+                }
+            return await super().query(name, request)
+
+        async def signal(self, name, request):
+            assert name == "control_command"
+            client.calls.append(("signal", self.run_id, self.epoch, name, request))
+            await accept(host(self.run_id), request, info(self.run_id))
+
+    client.get_workflow_handle = lambda workflow_id, **kwargs: Handle(
+        client, workflow_id, kwargs.get("run_id")
+    )
     client.live_owner = True
     client.candidate.update(
         execution_epoch="root-epoch", namespace=fixture.NAMESPACE, close_requested=True

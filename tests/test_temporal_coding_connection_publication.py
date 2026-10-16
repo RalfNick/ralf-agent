@@ -257,6 +257,11 @@ def test_joint_sdk_context_timeout_keeps_original_read_unknown(monkeypatch, bind
     instance = object.__new__(temporal_workflow.TemporalRunWorkflow)
     instance.state, instance.wake_revision = State(), 0
     instance._notify_session = no_session
+    monkeypatch.setattr(
+        temporal_workflow.workflow,
+        "patched",
+        lambda name: name == "ralf-unowned-tool-end-evidence-v1",
+    )
     monkeypatch.setattr(temporal_workflow.workflow, "execute_activity", timeout)
     with pytest.raises(LoopFinished):
         asyncio.run(instance.run({"activity_timeout": 1}))

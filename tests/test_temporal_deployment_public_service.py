@@ -99,6 +99,16 @@ class SDKFaultHandle:
     def __getattr__(self, name):
         return getattr(self.original, name)
 
+    async def signal(self, name, value):
+        if (
+            name == "execution_ended"
+            and value.get("operation") == "deployment_call_ended"
+            and self.client.block_end
+        ):
+            self.client.end_attempted.set()
+            raise self.client.unavailable("injected unavailable original call-end ACK transport")
+        return await self.original.signal(name, value)
+
     async def execute_update(self, name, *args, **kwargs):
         if name == "release_deployment_root" and self.client.block_release:
             self.client.release_attempted.set()

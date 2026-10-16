@@ -58,9 +58,21 @@ def callbacks(client, request, info):
         ):
             raise DefinitionMismatch("Tool end lost original complete Activity identity")
         await check()
-        result = await handle.execute_update(
-            END_UPDATE, detached(value), id="ralf-tool-ended:" + digest(value)
-        )
+        from .temporal_deployment_protocol import public_selected, selected
+        from .temporal_execution_end_transport import execute
+
+        update_id = "ralf-tool-ended:" + digest(value)
+        if selected(fixed["runtime_manifest"]) and not public_selected(fixed["runtime_manifest"]):
+            result = await handle.execute_update(END_UPDATE, detached(value), id=update_id)
+        else:
+            result = await execute(
+                client,
+                workflow_id,
+                END_UPDATE,
+                value,
+                execution_epoch=epoch,
+                legacy_update_id=update_id,
+            )
         await check()
         if result != {"action_id": fixed["action_id"], "recorded": True}:
             raise DefinitionMismatch("Tool end lacks original completed acknowledgement")

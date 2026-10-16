@@ -74,6 +74,19 @@ def environment(monkeypatch):
             assert name == "view" and request["scope"] == parent.scope
             kind = request["kind"]
             identity = self.original.identity
+            if kind == "status" and "command_observation" in request:
+                envelope = request["command_observation"]
+                return {
+                    "command_observation": {
+                        **{
+                            key: envelope[key]
+                            for key in ("version", "scope", "run_id", "namespace", "observation_id")
+                        },
+                        "execution_epoch": "child-epoch",
+                        "request_digest": digest(envelope["request"]),
+                        "result": None,
+                    }
+                }
             if kind == "deployment_admission":
                 proof = deployment.view(parent)
                 if identity == parent.run_id:
@@ -213,6 +226,10 @@ def test_readonly_cold_discovery_cannot_turn_original_proof_into_command_authori
             await composition._command(readonly, proof, "cancel", owner_id=parent.run_id)
         with pytest.raises(DefinitionMismatch):
             await readonly.start_workflow("unexpected-business", id=call["run_id"])
+        with pytest.raises(DefinitionMismatch):
+            await readonly.get_workflow_handle(call["run_id"]).signal(
+                "execution_ended", {"operation": "deployment_call_ended"}
+            )
         assert counts["updates"] == 0
 
     asyncio.run(run())

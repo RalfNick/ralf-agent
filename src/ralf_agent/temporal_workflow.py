@@ -26,6 +26,7 @@ with workflow.unsafe.imports_passed_through():
         temporal_deployment_registry,  # noqa: F401 -- preload pure acceptance
         temporal_deployment_session_registry,  # noqa: F401 -- original Session command/claim facts
         temporal_deployment_session_updates,  # noqa: F401 -- Registry-owned SDK commit path
+        temporal_execution_end_transport,  # noqa: F401 -- original physical end observations
         temporal_manual_recovery,  # noqa: F401 -- original Action recovery proof
         temporal_parent_completion_state,  # noqa: F401 -- preload pure parent release gates
         temporal_parent_state,  # noqa: F401 -- fixed original child addressing
@@ -914,6 +915,12 @@ class TemporalRunWorkflow:
 
         await accept(self, envelope, workflow.info())
 
+    @workflow.signal(name="execution_ended")
+    async def execution_ended(self, envelope: dict) -> None:
+        from .temporal_execution_end_transport import accept
+
+        await accept(self, envelope, workflow.info())
+
     @workflow.update(name="admit_context_dispatch")
     async def admit_context_dispatch(self, request: dict) -> dict:
         try:
@@ -1197,6 +1204,14 @@ class TemporalRunWorkflow:
         try:
             self.state.authorize(request.get("scope"))
             kind = request["kind"]
+            if kind == "status" and "execution_end_observation" in request:
+                from .temporal_execution_end_transport import observe
+
+                return {
+                    "execution_end_observation": observe(
+                        self, request["execution_end_observation"], workflow.info()
+                    )
+                }
             if kind == "status" and "command_observation" in request:
                 from .temporal_command_transport import observe
 

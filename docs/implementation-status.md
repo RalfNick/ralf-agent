@@ -27,9 +27,11 @@
 | 范围 | 状态与约束 |
 | --- | --- |
 | P3-2 | S1普通Session功能子集已有验收；S2已有真实PG日志与关闭证据，但原360秒仍未通过，当前完整矩阵尚缺。性能专项后置，该未完成组合不列为已支持 |
-| P3-3 | 用户已批准独立推进；Local及普通Agent HTTP→Temporal／PG控制、宿主重启和事件游标已有实测；公有普通2已有4096原树取消及根Tool人工核验／结束／ACK证据；默认scoped满容量首次取消、重复drive图恢复及旧Worker兼容已验，默认scoped普通Tool人工核验容量已有有限证据；原Run／图父子必要控制及默认scoped原工具人工证明在2,000 distinct Update后可用；其他Update／History门槛仍待，本项不关闭 |
+| P3-3 | 用户已批准独立推进；Local及普通Agent HTTP→Temporal／PG控制、宿主重启和事件游标已有实测；公有普通2已有4096原树取消及根Tool人工核验／结束／ACK证据；默认scoped满容量首次取消、重复drive图恢复及旧Worker兼容已验，默认scoped普通Tool人工核验容量已有有限证据；原Run／图父子必要控制及默认scoped原工具人工证明在2,000 distinct Update后可用；原Tool结束运输已有窄修，公有部署后续效果ACK的begin登记仍在2,000上限失败并保留关闭义务，其他Update／History门槛仍待，本项不关闭 |
 | P3-4／P3-5／P3-A | 原依赖和验收保持，身份权限／保留、框架恢复与阶段整体未关闭，不新增后端／编排／Runner／部署组合 |
 | R01–R26其余目标 | 保留为长期路线图；外部采用和框架对等比较单独验收，不自动成为本轮实现任务 |
+
+**当前结束回执增量：** 四类原结束handler经原Run有界Signal／Query观察，保留Scope、epoch、完整证明和严格ACK；不增加grant／准入或执行权威。源码／独立wheel各 **2,340 passed／6 skipped**，434产品一致；默认发布／保存History兼容和此前14组制品校验通过。同包真实Temporal **2 passed／1 failed／24.730秒**：默认Tool满2,000 Update后的实际结束、重启与旧Worker兼容通过；公有原end事实已入库，但后续效果ACK的begin登记仍触及上限，Owner关闭失败。原断言、失败、8条失败History重放及资源义务保留，不能把Run quiescent当作部署退休；完整P3-3不关闭。详见[窄修与剩余阻塞](../architecture/reviews/2026-10-16-temporal-execution-end-capacity.md)。下一批只处理该原begin的正向证据与关闭路径，预计一批定向排查／必要修复，不扩范围。
 
 后续执行依据为[第三阶段冻结矩阵](phase3-support-matrix.md)；基础交付与完整第三阶段／M1／R01–R26完成严格分开。同一阻塞连续两批无实质进展时，汇总原因、证据缺口与处置方案，停止无新依据的重复微调。
 

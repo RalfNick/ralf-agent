@@ -2,6 +2,7 @@
 
 import asyncio
 from dataclasses import asdict
+from types import SimpleNamespace
 
 import pytest
 
@@ -296,11 +297,30 @@ def test_current_root_guard_records_all_finite_orchestration_kinds(kind):
     reservations = []
 
     class Registry:
+        async def query(self, name, request):
+            assert name == "view" and request["scope"] == asdict(engine.scope)
+            return {
+                "scope": request["scope"],
+                "capacity": 4096,
+                "accepted_commands": len(reservations),
+            }
+
+        async def signal(self, *args, **kwargs):
+            raise AssertionError("A positively identified legacy Registry receives no Signal")
+
         async def execute_update(self, operation, request):
+            assert operation == "reserve"
             reservations.append(request)
+            return {
+                "command_id": request["command_id"],
+                "target": request["target"],
+                "record_state": "durably_recorded",
+                "apply_state": "not_applied",
+            }
 
     engine = object.__new__(TemporalEngine)
     engine._closed, engine._registry, engine.scope = False, Registry(), Scope()
+    engine.client = SimpleNamespace(namespace="original")
     engine._release = {
         "kernel": "temporal-3",
         "binding_protocol": 23,

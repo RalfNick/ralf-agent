@@ -2088,17 +2088,68 @@ def registered_activities(runtime, client=None):
 
     from .temporal_session_save_state import ACTIVITY as SESSION_SAVE_ACTIVITY
 
+    def session_end_callback(request, info):
+        from .temporal_deployment_protocol import public_selected, selected
+        from .temporal_execution_end_transport import execute
+
+        fixed = detached(request)
+        workflow_id, epoch, namespace = (
+            info.workflow_id,
+            info.workflow_run_id,
+            info.workflow_namespace,
+        )
+        expected = {name: fixed[name] for name in ("scope", "action_id", "release_digest")} | {
+            "request_digest": digest(fixed)
+        }
+
+        async def check():
+            if client is None or workflow_id != fixed["run_id"] or client.namespace != namespace:
+                raise DefinitionMismatch("Session end changed original SDK identity")
+            # This is old end evidence, never a new dispatch authorization.
+            lineage = fixed.get("session_lineage")
+            if lineage is not None:
+                from .temporal_session_activities import namespace_id
+
+                if await namespace_id(client) != lineage["namespace_id"]:
+                    raise DefinitionMismatch("Session end changed original namespace resource")
+            if client.namespace != namespace:
+                raise DefinitionMismatch("Session end namespace changed during verification")
+
+        async def ended(proof):
+            if type(proof) is not dict or digest(proof) != digest(expected):
+                raise DefinitionMismatch("Session end lost original complete request proof")
+            await check()
+            update_id = "ralf-session-end:" + proof["action_id"]
+            if selected(fixed["runtime_manifest"]) and not public_selected(
+                fixed["runtime_manifest"]
+            ):
+                result = await client.get_workflow_handle(workflow_id, run_id=epoch).execute_update(
+                    "session_execution_ended", proof, id=update_id
+                )
+            else:
+                result = await execute(
+                    client,
+                    workflow_id,
+                    "session_execution_ended",
+                    proof,
+                    execution_epoch=epoch,
+                    legacy_update_id=update_id,
+                )
+            await check()
+            if (
+                type(result) is not dict
+                or set(result) != {"action_id", "execution_stopped"}
+                or result["action_id"] != proof["action_id"]
+                or result["execution_stopped"] is not True
+            ):
+                raise DefinitionMismatch("Session end requires original completed acknowledgement")
+
+        return ended
+
     @activity.defn(name=SESSION_SAVE_ACTIVITY)
     async def managed_session(request: dict) -> dict:
         await tree_guard(request)
-
-        async def ended(proof):
-            if client is None:
-                raise ValidationError("Original Session execution proof requires its client")
-            await client.get_workflow_handle(request["run_id"]).execute_update(
-                "session_execution_ended", proof, id="ralf-session-end:" + proof["action_id"]
-            )
-
+        ended = session_end_callback(request, activity.info())
         return await runtime.manage_session(request, dispatch_guard=dispatch_guard, on_end=ended)
 
     from .temporal_parent_session import ROOT_READ_ACTIVITY
@@ -2106,14 +2157,7 @@ def registered_activities(runtime, client=None):
     @activity.defn(name=ROOT_READ_ACTIVITY)
     async def session_root_read(request: dict) -> dict:
         await tree_guard(request)
-
-        async def ended(proof):
-            if client is None:
-                raise ValidationError("Original root reader end requires its client")
-            await client.get_workflow_handle(request["run_id"]).execute_update(
-                "session_execution_ended", proof, id="ralf-session-end:" + proof["action_id"]
-            )
-
+        ended = session_end_callback(request, activity.info())
         result = await runtime.prepare_session_root(
             request, dispatch_guard=dispatch_guard, on_end=ended
         )

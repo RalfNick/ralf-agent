@@ -66,11 +66,21 @@ def callbacks(client, request, info):
         if proof != expected:
             raise DefinitionMismatch("Context read end lost its fixed Activity identity")
         await check()
-        result = await handle.execute_update(
-            END_UPDATE,
-            detached(proof),
-            id="ralf-context-read-ended:" + digest(proof),
-        )
+        from .temporal_deployment_protocol import public_selected, selected
+        from .temporal_execution_end_transport import execute
+
+        update_id = "ralf-context-read-ended:" + digest(proof)
+        if selected(fixed["runtime_manifest"]) and not public_selected(fixed["runtime_manifest"]):
+            result = await handle.execute_update(END_UPDATE, detached(proof), id=update_id)
+        else:
+            result = await execute(
+                client,
+                workflow_id,
+                END_UPDATE,
+                proof,
+                execution_epoch=epoch,
+                legacy_update_id=update_id,
+            )
         await check()
         if (
             type(result) is not dict

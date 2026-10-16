@@ -252,6 +252,9 @@ class _ReadOnlyHandle:
     async def execute_update(self, *args, **kwargs):
         _reject()
 
+    async def signal(self, *args, **kwargs):
+        _reject()
+
 
 class _ReadOnlyClient:
     def __init__(self, client):

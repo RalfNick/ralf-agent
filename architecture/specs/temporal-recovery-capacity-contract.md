@@ -422,3 +422,30 @@ space and does not prove old full-capacity support. See [evidence, failures and
 remaining gates](../reviews/2026-10-16-temporal-scoped-manual-transport.md). Original
 Tool/native/context/session end ACK, public Registry strong proof and History
 lifecycle still require separate closure; fullP3-3 stays open.
+
+
+## Four original execution-end observations
+
+The current default/public Run offers `execution_ended` Signal plus optional
+`status.execution_end_observation` Query for only Tool, context-read, Session I/O
+and public actual-call end handlers. It calls each complete original handler,
+including dynamically selected Parent wake/retirement logic, rather than replacing
+its reducer or returning a saved business receipt. These handlers do not suspend.
+A 64-entry observation cache never removes original grants, end facts or effects.
+
+Full proof, Scope, namespace and original SDK first/current/original epoch are
+mandatory. Session end retains its original four-field proof; the transport pins
+the actual Activity epoch separately and verifies the Session namespace UUID where
+applicable. Typed ACK is required. Delivery, timeout (30 seconds), observation
+cancellation/eviction or unknown result does not clear end debt or permit fallback.
+Only two exact legacy snapshots plus the original SDK identity authorize the old
+fixed Update ID. Private deployment1 keeps its original Updates. Immutable old
+Workers keep their original capacity limits.
+
+This is not begin/grant/seal/retirement transport. An actual end may be recorded
+while a later effect-ACK Activity's original begin remains uncertain at Update
+capacity; Run quiescence alone is not deployment closure. Preserve the original
+Owner obligation and refusal. Actual default pressure/old-Worker and retained
+public failure have separate evidence in the [batch record](../reviews/2026-10-16-temporal-execution-end-capacity.md).
+Context/Session/native service pressure, remaining lifecycle and full P3-3 are
+not closed by handler/client unit tests.
