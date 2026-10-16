@@ -105,6 +105,49 @@ ralf --db .ralf/runs.sqlite --factory agent_app.runtime:create_engine cancel RUN
 
 Store 关闭失败会保留租约、停止旧 Engine 的其他操作；修正组件问题后重试 `close()`。存储已关闭但释放租约失败时，重试只释放租约。不要让新的 Engine 绕过旧持有者锁继续写。
 
+## 默认本地项目的手工备份演练
+
+以下仅适用于首用教程生成的默认离线 `oncall` 项目，POSIX 宿主与原版本工厂。先停止接收新请求，关闭并等待所有原进程／实际 handler 结束；备份及恢复期间不再运行任务。先在可丢弃的测试项目演练，保留原项目代码、安装包和配置。此流程不是在线多库事务备份、跨主机迁移或第三阶段 P3-5 的完整验收。
+
+默认项目的会话／Facts 与执行事实共用 `runs.sqlite`，本地测试业务效果另存于 `runs.sqlite.business.sqlite`。在项目根目录执行以下 Python；目标目录必须不存在，并放在 `.ralf` 外。原工厂取得 Coordinator 后只做备份，不调用 `submit/drive`；其他执行者仍占有租约时拒绝。使用 SQLite backup API 读取包括 WAL 中已提交的数据，不能只复制仍在使用的主文件。
+
+```python
+import os
+import sqlite3
+from contextlib import closing
+from pathlib import Path
+
+from agent_app.runtime import create_engine
+
+db = Path(".ralf/runs.sqlite").resolve()
+backup = Path("private-backup-001").resolve()
+backup.mkdir(mode=0o700)  # 已有目录拒绝；失败／未完成的目录不能用于恢复。
+
+
+def save(connection, target):
+    fd = os.open(target, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o600)
+    os.close(fd)
+    with closing(sqlite3.connect(target)) as destination:
+        connection.backup(destination)
+        if destination.execute("PRAGMA quick_check").fetchall() != [("ok",)]:
+            raise RuntimeError("Backup integrity check failed")
+
+
+business = Path(str(db) + ".business.sqlite")
+for source_path in (db, business):
+    if not source_path.is_file():
+        raise FileNotFoundError(source_path)
+with create_engine(str(db)) as engine:
+    save(engine.store.conn, backup / db.name)
+    with closing(sqlite3.connect(business.as_uri() + "?mode=ro", uri=True)) as source:
+        save(source, backup / business.name)
+print("Both databases backed up:", backup)
+```
+
+恢复须保持原绝对路径、Scope、代码和配置。确认所有原进程已退出后，保留整个旧 `.ralf` 目录供调查，再把两个备份数据库放回原 `.ralf` 路径的新空目录；不要把旧 WAL／SHM 混入恢复目录，不使用硬链接，不在原执行者仍活跃时移动数据库或锁文件。先 `inspect`，再按原 Action／digest 批准或核验并 `resume`。恢复目录不同会改变后端和业务服务身份，备份副本可只读观察，不能当成第二个可同时执行的部署。
+
+这两个数据库仅覆盖默认本地示例。替换 Session/Facts、知识库、Artifact、Workspace 或真实业务服务后，必须另行保留其数据、原身份及一致性责任。尤其不能用旧业务备份覆盖备份后已发生的真实效果；外部系统仍以实际记录为准，缺失本地回执时使用原 effect_key 核验，不能凭旧快照重做写。保留 unknown、原额度及效果证据；完整框架备份、升级与恢复管理仍按[阶段矩阵](phase3-support-matrix.md)验收。
+
 ## 常见拒绝及升级
 
 | 错误 code | 检查方向 |
