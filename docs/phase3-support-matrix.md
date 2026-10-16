@@ -1,6 +1,6 @@
 # 第三阶段支持矩阵与收口门槛
 
-2026-10-16 P3-2/S2仍未完成：`ec0ebe4`独立安装包原graph-sequential-sdk两Turn复验1 failed／386.753秒（含收尾），原360秒整体期限取消第二Turn，审批180秒未独立超时。四Tool全部成功、effect adopted且真实停止，末leaf Model也成功；join注册跨超时／关闭后拒绝，未证明新的独立验证缺陷。本次child_control_failed诊断0条，不能再把上轮偶发注册错误作为持续超时根因。两Turn原start/end正ACK完整，Advance分别succeeded与cancelled且均released；两root退休、owned关闭与安全清理通过，425产品／862测试无漂移，不能替代两Turn业务成功。同步Runtime指纹pass因getter瞬态替换及LRU污染风险停止，未纳入产品。下一步以完整Tool／CONTROL调用分析累计成本，保留原所有fresh事实、身份／权限及效果／停止责任；不重复原场景碰运气。其余十二正常／五故障不解锁，P3-3／4／5／A保持原状态；见[整链预算与决策](../architecture/reviews/2026-10-16-coding-session-critical-path.md)。仅本地提交，不推送。
+2026-10-16 P3-2/S2原360秒验收仍未完成（ec0ebe4原首项1 failed／386.753秒）。用户授权的同包600秒独立诊断1 passed／456.329秒：两Turn均succeeded／released，四Tool及效果采纳、物理停止、原正ACK、两root退休和安全清理通过；首submit到第二成功Advance为432.497075秒，不替代360验收或模型质量证据。另已修复根TemporalRuntime注册getter在单次release校验内替换已检查组件／方法的P2缺口：保留原full，以静态descriptor／code及原owner pins封闭出口；新增10项、冻结32模块628 passed、独立安装10模块171 passed，默认完整canonical及原／continued默认History离线兼容通过，425产品／863测试无漂移。该新代码未复跑真实服务，不能借用旧包600诊断判通过。其余十二正常／五故障不解锁，P3-3／4／5／A保持原状态。下一批继续以完整Tool／CONTROL调用定位累计成本，先验证成组收益，再决定原360复验；不扩大范围或修改门槛。详见[整链证据](../architecture/reviews/2026-10-16-coding-session-critical-path.md)及[绑定修复](../architecture/reviews/2026-10-16-temporal-release-reentrancy.md)。仅本地提交，不推送。
 
 以下为各冻结快照的历史证据；以本段及最新验收记录为当前执行依据。
 

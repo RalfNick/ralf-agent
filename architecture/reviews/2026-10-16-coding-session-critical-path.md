@@ -1,6 +1,24 @@
 # Coding Session 整链成本预算与下一批门槛
 
-最新证据为 `ec0ebe4` 独立安装包的一次原 `graph-sequential-sdk` 两 Turn 验收，仍因原 scenario360 超时失败。下方整链预算基于此前 `31b846a` 的终态工件，不能将两个快照的时间拼接。本文不关闭 S2／P3-2，不改变支持矩阵或任何期限。
+原验收最新证据为 `ec0ebe4` 独立安装包的一次 `graph-sequential-sdk` 两 Turn 验收，仍因原 scenario360 超时失败。随后用户明确授权一次较长窗口独立诊断：600秒诊断通过，不能替代原验收。下方整链预算基于此前 `31b846a` 的终态工件，不能将不同运行的时间拼接。本文不关闭 S2／P3-2，不改变支持矩阵或产品期限。
+
+## 已授权的600秒独立诊断（2026-10-16）
+
+使用同一 `ec0ebe4` 安装包，仅在私有测试副本将唯一 `wait_for(scenario(), timeout=360)` 改为600；原仓库测试、产品、Tool80／Runner60／approve180／first-close60／cleanup40均不变，无性能采样或其他诊断开关。该授权只用于一次独立诊断，不授权修改验收期限。进程89257已终态exit0，1 passed／零失败／错误／跳过；JUnit suite456.329秒、case455.918秒。425产品／862原测试及安装包无漂移，私有副本只有已记录的一处期限差异，运行前后不变。
+
+两Turn均succeeded且released，完整 `session-coding-result.json` 存在，业务写入4次、两seal正、每Turn保存held roots为0。两Turn各6 start／6 end，所有Completed ACK与原identity及语义digest精确相符。四Tool耗时39.819785／37.757408／42.160705／53.224573秒，均SDK Completed、ok:true，结果候选与采纳摘要存在，四effect adopted；原物理停止证据为正、无pending stop／unprepared。assembly关闭、Worker退出与安全清理成功，accepted2／retired2／retained0，schema未保留、保留原因空，无手动删除。这里的原生peer仍是原测试的结构与生命周期夹具，不是新的模型质量或真实Docker daemon验收。
+
+原History时间分开记录：第一Turn submit Accepted→成功Advance Completed ACK为188.289967秒，第二Turn为236.850932秒；第一submit到第二Advance ACK为432.497075秒，排除更早setup和更晚cleanup，不能混为JUnit总时长。较长窗口中第四Tool、其后模型、join、两轮退休及关闭均可完成；结合原360场景的取消／关闭顺序，支持此前末端拒绝是整体取消后的结果。**未证明原360门槛通过，也未唯一定位累计延迟原因**；不同运行的差值不是某个函数或修复的性能收益。
+
+证据目录：`/private/tmp/ralf-agent-dev121-session-state/long-window-terminal-evidence`；43项原输入SHA前后相同。`summary.json` SHA256 `b63c60765d390880214577e3e065c5e9dfdd2307eb8c35a8ddd68f1223afc135`，`turn-timings.json` SHA256 `97e0579ab681214f5158a9a617daa38a452292698e09fc3d3636d4403f9b0250`，业务结果SHA256 `f2971152a871dfd992080c2136a1af343cb45b33dc1469f2c8cd142ccf06a977`。该旧包诊断不覆盖后续release重入修复。
+
+## 真实Runtime的完整CONTROL主体离线剖析
+
+以真实双Runner工厂、BindingCatalog及TemporalRuntime构造100375字节的Coding4／binding23 Manifest，由现有纯State重新生成Session、父子、Registry和所有证明，未事后替换hash或产品校验方法。仅初始化端口和SDK传输使用原测试夹具；SDK读取全部保留，返回值与原child diagnostics／physical proof完整canonical相等，写入0，无真实服务、模型、SQL或native调用。
+
+同一进程的冷CONTROL实例及新CONTROL实例各测一次，profile下CPU分别2.261926／2.309282秒；同线程剖析两次质量检查均通过。每次完整Runtime校验26次、executable_digest30409次、canonical21820次、detached621次；原非Session Query22、Session intent／command各2、History2、Session describe4、namespace25均保持。主要成本包含完整清单重建、JSON编码和深拷贝；这些累计耗时存在嵌套，不能相加。
+
+该测量覆盖CONTROL主体，**未覆盖外层owned call-start/end ACK**，三子任务预闭合且没有显式Runner业务绑定，SDK形状端口也不是真实RPC。因此不把profile秒数或单个类别份额外推到原业务窗口，不据此跳过独立I/O两侧校验。证据：`/private/tmp/ralf-agent-dev121-session-state/full-control-current-profile/summary.json`，SHA256 `d1fd5b1bf33f7061d5c4a4a0150e0369dd7a469bd7af1a0919085bfbbd502a8c`；`runtime-callers.json` SHA256 `1afc5cfbb029f4fc9bb34a5317a8dc0dc47212808a7c9c0b595526a7f4bb4277`。425产品／862测试及物理夹具前后无漂移，原进程21597已exit0。
 
 ## 安全诊断后的原场景复验（2026-10-16）
 

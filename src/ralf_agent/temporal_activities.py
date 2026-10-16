@@ -1086,55 +1086,94 @@ class TemporalRuntime:
             and _binding(self.recall_planner.plan) != self._recall_method
         ):
             raise DefinitionMismatch("Temporal recall planner changed")
-        if (
-            self.binding_catalog is not self._catalog_pin
-            or self.stage_policy is not self._stage_pin
-        ):
-            raise DefinitionMismatch("Temporal capability owner changed")
-        if self._manifest["kernel"] == "temporal-3" and any(
-            self.providers.get(n) is not p for n, p in self._provider_pins.items()
-        ):
-            raise DefinitionMismatch("Temporal provider instance changed")
-        if self._manifest["kernel"] == "temporal-3":
-            if any(
-                _binding(self.providers[n].complete) != b
-                for n, b in self._provider_method_pins.items()
-            ):
-                raise DefinitionMismatch("Temporal provider method changed")
-            if self.binding_catalog is not None and any(
-                self.binding_catalog._entries.get(k, (None,))[0] is not c
-                for k, c in self._catalog_objects.items()
-            ):
-                raise DefinitionMismatch("Temporal catalog instance changed")
-            if any(
-                _binding(getattr(component, method, None)) != original
-                for component, method, original in self._catalog_method_pins
-            ):
-                raise DefinitionMismatch("Temporal catalog method changed")
-        context, assemble, validator = self._context_binding
-        current_validator = getattr(self.context, "validate_request", None)
-        if (
-            self.context is not context
-            or _binding(self.context.assemble) != assemble
-            or (None if current_validator is None else _binding(current_validator)) != validator
-        ):
-            raise DefinitionMismatch("Context registration changed")
 
-        if self._knowledge_binding is not None:
-            knowledge, references, validate = self._knowledge_binding
-            if self.knowledge is not knowledge or (
-                _binding(knowledge.references),
-                _binding(knowledge.validate),
-            ) != (references, validate):
-                raise DefinitionMismatch("Knowledge registration changed")
-
-        for attribute, registry, name, component, method, binding in self._registrations:
+        def check_capability_bindings():
             if (
-                getattr(self, attribute) is not registry
-                or registry.get(name) is not component
-                or _binding(getattr(component, method)) != binding
+                self.binding_catalog is not self._catalog_pin
+                or self.stage_policy is not self._stage_pin
             ):
-                raise DefinitionMismatch("Orchestration registration changed")
+                raise DefinitionMismatch("Temporal capability owner changed")
+            if self._manifest["kernel"] == "temporal-3" and any(
+                self.providers.get(n) is not p for n, p in self._provider_pins.items()
+            ):
+                raise DefinitionMismatch("Temporal provider instance changed")
+            if self._manifest["kernel"] == "temporal-3":
+                if any(
+                    _binding(self.providers[n].complete) != b
+                    for n, b in self._provider_method_pins.items()
+                ):
+                    raise DefinitionMismatch("Temporal provider method changed")
+                if self.binding_catalog is not None and any(
+                    self.binding_catalog._entries.get(k, (None,))[0] is not c
+                    for k, c in self._catalog_objects.items()
+                ):
+                    raise DefinitionMismatch("Temporal catalog instance changed")
+                if any(
+                    _binding(getattr(component, method, None)) != original
+                    for component, method, original in self._catalog_method_pins
+                ):
+                    raise DefinitionMismatch("Temporal catalog method changed")
+            context, assemble, validator = self._context_binding
+            current_validator = getattr(self.context, "validate_request", None)
+            if (
+                self.context is not context
+                or _binding(self.context.assemble) != assemble
+                or (None if current_validator is None else _binding(current_validator)) != validator
+            ):
+                raise DefinitionMismatch("Context registration changed")
+
+            if self._knowledge_binding is not None:
+                knowledge, references, validate = self._knowledge_binding
+                if self.knowledge is not knowledge or (
+                    _binding(knowledge.references),
+                    _binding(knowledge.validate),
+                ) != (references, validate):
+                    raise DefinitionMismatch("Knowledge registration changed")
+
+            for attribute, registry, name, component, method, binding in self._registrations:
+                if (
+                    getattr(self, attribute) is not registry
+                    or registry.get(name) is not component
+                    or _binding(getattr(component, method)) != binding
+                ):
+                    raise DefinitionMismatch("Orchestration registration changed")
+
+        check_capability_bindings()
+
+        def static_port(component, name):
+            # Reading a descriptor must not invoke another plugin getter while
+            # checking whether the preceding getter changed an earlier port.
+            from types import FunctionType, MethodType
+
+            raw = inspect.getattr_static(component, name, None)
+            targets, functions, seen = [raw], [], set()
+            while targets:
+                target = targets.pop()
+                if target is None or id(target) in seen:
+                    continue
+                seen.add(id(target))
+                if type(target) is FunctionType:
+                    wrapped = dict.get(target.__dict__, "__wrapped__")
+                    functions.append((target, target.__code__, wrapped))
+                    targets.append(wrapped)
+                else:
+                    functions.append((target, None, None))
+                    if type(target) in (MethodType, staticmethod, classmethod):
+                        targets.append(target.__func__)
+                    elif type(target) is property:
+                        targets.extend((target.fget, target.fset, target.fdel))
+                    else:
+                        targets.append(inspect.getattr_static(type(target), "__call__", None))
+            return raw, functions
+
+        ports = [(self._context_binding[0], name) for name in ("assemble", "validate_request")]
+        if self._manifest["kernel"] == "temporal-3":
+            ports.extend((provider, "complete") for provider in self._provider_pins.values())
+            ports.extend((component, method) for component, method, _ in self._catalog_method_pins)
+        if self._knowledge_binding is not None:
+            ports.extend((self._knowledge_binding[0], name) for name in ("references", "validate"))
+        ports.extend((component, method) for _, _, _, component, method, _ in self._registrations)
+        port_pins = [(component, name, static_port(component, name)) for component, name in ports]
         if digest(orchestration_identity(self.teams, self.planners, self.verifiers)) != digest(
             self._orchestration
         ):
@@ -1149,7 +1188,79 @@ class TemporalRuntime:
             expected = {key: value for key, value in expected.items() if key != "orchestration"}
         if expected is not None and digest(expected) != digest(self._manifest):
             raise DefinitionMismatch("Worker registration differs from this Run's pinned release")
-        return self.manifest
+        # Identity/registration getters above are integrator code. A matching
+        # declaration does not prove they left the previously checked owners or
+        # callable bindings intact. Check after copying the public result too,
+        # without evaluating those identity getters again.
+        result = self.manifest
+        check_capability_bindings()
+        for component, name, (raw, functions) in port_pins:
+            current, live_functions = static_port(component, name)
+            if (
+                current is not raw
+                or len(live_functions) != len(functions)
+                or any(
+                    any(
+                        current is not original
+                        for current, original in zip(live, fixed, strict=True)
+                    )
+                    for live, fixed in zip(live_functions, functions, strict=True)
+                )
+            ):
+                raise DefinitionMismatch("Temporal callable changed during release validation")
+        if self._manifest["kernel"] == "temporal-3":
+            # The callback-based checks have finished. Inspect the real registry
+            # contents directly, including owners changed by the final getter.
+            if (
+                type(self.providers) is not dict
+                or len(self.providers) != len(self._provider_pins)
+                or any(
+                    dict.get(self.providers, name) is not provider
+                    for name, provider in self._provider_pins.items()
+                )
+            ):
+                raise DefinitionMismatch("Temporal provider instance changed")
+            if self.binding_catalog is not None:
+                entries = inspect.getattr_static(self.binding_catalog, "_entries", None)
+                if type(entries) is not dict or len(entries) != len(self._catalog_objects):
+                    raise DefinitionMismatch("Temporal catalog instance changed")
+                for key, component in self._catalog_objects.items():
+                    entry = dict.get(entries, key)
+                    if type(entry) is not tuple or len(entry) != 2 or entry[0] is not component:
+                        raise DefinitionMismatch("Temporal catalog instance changed")
+        if any(
+            current is not original
+            for current, original in (
+                (self._deployment_admission_policy, self._deployment_admission_policy_pin),
+                (self._deployment_public_execution, self._deployment_public_execution_pin),
+                (self._deployment_execution_owner, self._deployment_execution_owner_pin),
+                (self.user_input_policies, self._user_input_registry),
+                (self.parent_completion_policies, self._parent_completion_registry),
+                (self.model_history, self._model_history_pin),
+                (self.model_continuation, self._model_continuation_pin),
+                (self.artifact_bindings, self._artifact_bindings_pin),
+                (self.context_execution, self._context_execution_owner),
+                (self.session_store, self._session_owner),
+                (self.session_topology, self._session_topology_owner),
+                (self.session_execution, self._session_execution_owner),
+                (self.tool_execution, self._tool_execution_owner),
+                (self.harness, self._harness_owner),
+                (self.verifier, self._verifier_owner),
+                (self.limits, self._limits_owner),
+                (self.facts, self._facts_owner),
+                (self.recall_policy, self._recall_owners[0]),
+                (self.recall_planner, self._recall_owners[1]),
+                (self.binding_catalog, self._catalog_pin),
+                (self.stage_policy, self._stage_pin),
+                (self.context, self._context_binding[0]),
+                (
+                    self.knowledge,
+                    None if self._knowledge_binding is None else self._knowledge_binding[0],
+                ),
+            )
+        ):
+            raise DefinitionMismatch("Temporal resource owner changed during release validation")
+        return result
 
     async def propose_limits(self, request: dict) -> dict:
         from .temporal_limits import evaluate

@@ -1,6 +1,6 @@
 # 部署 Session 集成与收尾验证
 
-最新原场景复验见[整链成本预算与下一批门槛](2026-10-16-coding-session-critical-path.md)：ec0ebe4独立安装包1 failed／386.753秒（含收尾），原360秒取消第二Turn；四Tool及末leaf Model成功，join注册跨超时／关闭后拒绝，无child_control_failed。原正ACK、两root退休、owned关闭及安全清理通过，不能替代两Turn业务成功。425产品／862测试无漂移。下面按快照保留历史记录，不覆盖本段当前状态。
+当前仍未关闭原360秒S2门槛。ec0ebe4已获授权的600秒独立诊断两Turn完整成功、退休及清理通过，但不代替原验收；详见[整链记录](2026-10-16-coding-session-critical-path.md)。另本批修复[根Runtime注册回调重入](2026-10-16-temporal-release-reentrancy.md)：相关628项、独立安装171项及默认离线兼容通过，未将旧包真实诊断当作新修复服务证据。以下按快照保留历史记录，不覆盖当前结论。
 
 ## Activity 根命令定向查询（2026-10-16，实际仍超时）
 
