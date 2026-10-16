@@ -27,7 +27,7 @@
 | 范围 | 状态与约束 |
 | --- | --- |
 | P3-2 | S1普通Session功能子集已有验收；S2已有真实PG日志与关闭证据，但原360秒仍未通过，当前完整矩阵尚缺。性能专项后置，该未完成组合不列为已支持 |
-| P3-3 | 用户已批准独立推进；Local及普通Agent HTTP→Temporal／PG控制、宿主重启和事件游标已有实测；公有普通2已有4096原树取消及根Tool人工核验／结束／ACK证据；默认scoped满容量首次取消、重复drive图恢复及旧Worker兼容已验，scoped人工核验及其他Update／History门槛仍待，本项不关闭 |
+| P3-3 | 用户已批准独立推进；Local及普通Agent HTTP→Temporal／PG控制、宿主重启和事件游标已有实测；公有普通2已有4096原树取消及根Tool人工核验／结束／ACK证据；默认scoped满容量首次取消、重复drive图恢复及旧Worker兼容已验，默认scoped普通Tool人工核验容量已有有限证据；其他Update／History门槛仍待，本项不关闭 |
 | P3-4／P3-5／P3-A | 原依赖和验收保持，身份权限／保留、框架恢复与阶段整体未关闭，不新增后端／编排／Runner／部署组合 |
 | R01–R26其余目标 | 保留为长期路线图；外部采用和框架对等比较单独验收，不自动成为本轮实现任务 |
 
@@ -63,11 +63,15 @@ P3-3已有默认关闭的`tasks/events` HTTP分页：原Scope／Run游标、字�
 
 **当前默认scoped机械恢复批次：** 原Registry提供稳定drive身份与有界碰撞替代，满容量每个原submit目标保留一次drive；默认Parent重复恢复经Temporal patch保持旧History语义。容量候选源码／安装各1,169项，安装后真实Session图满4096恢复及不可变旧Worker重放 **2 passed／133.942秒**；原保存检查两次失败后，同一drive恢复成功，根消息只写一次，Turn释放及owned关闭通过。首轮1失败／1通过的测试观察错误及原记录保留。
 
-最终包仅补hint Query的SDK NOT_FOUND→RALF NotFound，其他错误不变；源码／安装各 **1,171 passed**，430产品一致，默认发布与保存History兼容通过。实际空Scope **1 passed／0.840秒**，Registry未创建；先前成功路径经代码对照限定复用，不合并为最终包同次完整矩阵。完整P3-3仍开放；随后原Action审查发现下述默认工具结束证据P1，先修复这一恢复安全前提；scoped人工核验容量尚未实施。native无需另增Registry槽，其原候选／fence和其他Update生命周期门槛保留。详见[本批验收](../architecture/reviews/2026-10-16-temporal-scoped-drive.md)。
+最终包仅补hint Query的SDK NOT_FOUND→RALF NotFound，其他错误不变；源码／安装各 **1,171 passed**，430产品一致，默认发布与保存History兼容通过。实际空Scope **1 passed／0.840秒**，Registry未创建；先前成功路径经代码对照限定复用，不合并为最终包同次完整矩阵。完整P3-3仍开放；随后原Action审查发现下述默认工具结束证据P1，先修复这一恢复安全前提；该批scoped人工核验容量尚未实施，由下述增量补证。native无需另增Registry槽，其原候选／fence和其他Update生命周期门槛保留。详见[本批验收](../architecture/reviews/2026-10-16-temporal-scoped-drive.md)。
 
 **最新默认工具结束证据修复：** scoped人工容量审查先复现P1：默认无Owner的Tool A超时并人工确认效果后，Tool B成功会错误清除A的实际结束义务。新Run通过Temporal patch逐Action保留义务，其他工具／核验不能代为清除；父任务保持原额度。源码／独立安装各 **1,176 passed**，430产品一致、默认发布及保存History兼容通过；同包真实Temporal **2 passed／19.339秒**，分别是新Run保护验证与旧基础包风险基线，含线程实际结束、Worker重启、原回执、History重放及owned关闭。首轮测试启动竞态2失败保留，未改产品或期限复验。
 
-**旧无标记History没有追溯修复**，原基础wheel保持不变；旧行为重放通过不代表安全。新包 `dist/p3-tool-end-20261016/` 仅保护新标记Run；无Owner超时线程即使实际退出，缺原History结束回执仍保留义务，不新增人工清除接口。默认Local不受影响。scoped人工容量未实施，完整P3-3及旧Run处理门槛仍开放，P3-2原360秒失败与后续阶段不变。详见[本批记录](../architecture/reviews/2026-10-16-temporal-unowned-tool-end.md)和[精确制品说明](releasing.md#temporal-工具结束证据补丁)。
+**旧无标记History没有追溯修复**，原基础wheel保持不变；旧行为重放通过不代表安全。新包 `dist/p3-tool-end-20261016/` 仅保护新标记Run；无Owner超时线程即使实际退出，缺原History结束回执仍保留义务，不新增人工清除接口。默认Local不受影响。该批scoped人工容量未实施，由下述增量补证；完整P3-3及旧Run处理门槛仍开放，P3-2原360秒失败与后续阶段不变。详见[本批记录](../architecture/reviews/2026-10-16-temporal-unowned-tool-end.md)和[精确制品说明](releasing.md#temporal-工具结束证据补丁)。
+
+**最新scoped原Action人工恢复容量：** 普通预留明确拒绝后，原Registry经现有CONTROL只读核验原SDK启动／排程、Scope、请求、Action和执行epoch，再为原普通Tool保留唯一确认槽；重复回执携带原epoch绑定，作用仍由原Run采纳。Scheduled-only不当作执行或停止证据，Owner仍需原grant，native和旧无标记不安全Run不获豁免。总身份上界为3C+M原Action库存，不声称每Run固定4096。
+
+最终源码／独立安装各 **1,233 passed**，431产品一致、默认发布与保存History兼容通过。安装后真实默认scoped图child满4096核验、重复回执、父额度保留、线程结束、Worker重启、三History重放及owned关闭 **1 passed／129.402秒**。首次121.445秒因既有child的depth启动字段被拒，第二次123.039秒因测试变量覆盖启动函数失败，均保留；仅必要格式兼容与测试修正，原180秒及其他门槛不变。最终制品 `dist/p3-scoped-manual-final-20261016/`；此前11组已验收制品哈希不变。源码／安装／SDK服务不合并为HTTP／PG矩阵；无真实模型调用。完整P3-3、Run／Registry其他Update与History生命周期、旧Run处理仍开放，P3-2原失败及P3-4／5／A不变。见[验收记录](../architecture/reviews/2026-10-16-temporal-scoped-manual-recovery.md)。下一批只核对剩余必要控制生命周期，预计一批定向复现及必要修复，不扩展后端或部署组合。
 
 ## 历史实现与验收证据
 

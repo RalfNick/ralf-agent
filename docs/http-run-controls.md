@@ -138,9 +138,12 @@ verified first cancellation after4096 normal reservations and exact old Worker
 compatibility. It covers a zero-dispatch SDK case. The subsequent
 [scoped mechanical recovery increment](../architecture/reviews/2026-10-16-temporal-scoped-drive.md)
 also verified one repeatable drive identity recovering an original Session graph
-save after two inspection failures at capacity. Scoped manual confirmation and
-other Update/History lifecycle gates remain open. These SDK cases do not extend
-the HTTP/PG case matrix below.
+save after two inspection failures at capacity. The [scoped manual increment](../architecture/reviews/2026-10-16-temporal-scoped-manual-recovery.md)
+verifies one original graph-child ordinary Tool confirmation at4096 records,
+repeated epoch-bound receipt and independent end-debt retention across Worker
+restart. Old unsafe no-marker unknowns gain no allowance; native/other
+Update/History lifecycle gates remain open. These SDK cases do not extend the
+HTTP/PG case matrix below.
 
 The current installation evidence for the borrowed Temporal HTTP host is recorded
 in [HTTP/Temporal/PG acceptance](../architecture/reviews/2026-10-16-http-temporal-acceptance.md).

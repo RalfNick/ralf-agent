@@ -66,6 +66,11 @@ async def select(runtime, value):
 
 
 async def control(runtime, client, value, info=None):
+    if type(value) is dict and value.get("mode") == "scoped_manual":
+        from .temporal_scoped_manual_recovery import verify
+
+        return await verify(runtime, client, value, info)
+
     from .temporal_deployment_coding_state import selected as coding_selected
     from .temporal_deployment_control_transport import REQUEST_FIELDS, execute
     from .temporal_deployment_protocol import selected as deployment_selected

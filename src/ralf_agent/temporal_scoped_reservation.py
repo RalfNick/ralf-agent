@@ -95,8 +95,16 @@ def _receipt(value, request):
         "record_state": "durably_recorded",
         "apply_state": "not_applied",
     }
-    if type(value) is not dict or value != expected:
+    if (
+        type(value) is not dict
+        or set(value) not in (set(expected), {*expected, "control_binding"})
+        or any(value[k] != v for k, v in expected.items())
+    ):
         raise DefinitionMismatch("Original scoped reservation receipt changed")
+    if "control_binding" in value:
+        from .temporal_scoped_manual_recovery import binding
+
+        binding(value["control_binding"], request, None)
     return value
 
 

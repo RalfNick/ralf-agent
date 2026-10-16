@@ -28,6 +28,7 @@ with workflow.unsafe.imports_passed_through():
         temporal_manual_recovery,  # noqa: F401 -- original Action recovery proof
         temporal_parent_completion_state,  # noqa: F401 -- preload pure parent release gates
         temporal_parent_state,  # noqa: F401 -- fixed original child addressing
+        temporal_scoped_manual_recovery,  # noqa: F401 -- scoped original Action proof
         temporal_scoped_reservation,  # noqa: F401 -- scoped reservation observations
         temporal_session_identity,  # noqa: F401 -- preload pure Session addressing
         temporal_startup_options,  # noqa: F401 -- preload pure public acceptance validation
@@ -1500,6 +1501,49 @@ class TemporalCommandRegistryWorkflow:
     async def reserve(self, request: dict) -> dict:
         try:
             self._check_deployment_registry_epoch()
+            if self.commands.deployment is None and type(request) is dict and "recovery" in request:
+                from .errors import DefinitionMismatch
+                from .temporal_parent_state import CONTROL_ACTIVITY
+                from .temporal_scoped_manual_recovery import commit, configuration, prepare
+
+                original = configuration(self.commands, workflow.info())
+                prepared = prepare(self.commands, request)
+                if (
+                    request["recovery"]["registry_execution_epoch"]
+                    != original["registry_execution_epoch"]
+                    or request["recovery"]["namespace"] != original["namespace"]
+                ):
+                    raise DefinitionMismatch("Manual control requires original Registry History")
+                if "receipt" in prepared:
+                    return prepared["receipt"]
+                response = await workflow.execute_activity(
+                    CONTROL_ACTIVITY,
+                    {
+                        "mode": "scoped_manual",
+                        "scope": request["scope"],
+                        "registry_execution_epoch": original["registry_execution_epoch"],
+                        "namespace": original["namespace"],
+                        **prepared,
+                    },
+                    task_queue=workflow.info().task_queue,
+                    start_to_close_timeout=timedelta(seconds=30),
+                    schedule_to_close_timeout=timedelta(seconds=65),
+                    retry_policy=RetryPolicy(maximum_attempts=1),
+                )
+                if configuration(self.commands, workflow.info()) != original:
+                    raise DefinitionMismatch("Original Registry changed during manual proof")
+                if (
+                    type(response) is not dict
+                    or set(response) != {"ok", "result"}
+                    or response["ok"] is not True
+                ):
+                    raise ApplicationError(
+                        "Original scoped Action proof unavailable",
+                        type=response.get("code", "definition_mismatch")
+                        if type(response) is dict
+                        else "definition_mismatch",
+                    )
+                return commit(self.commands, request, response["result"])
             if (
                 self.commands.deployment is not None
                 and self.commands.admission_protocol in (2, 3, 4)
@@ -1791,6 +1835,10 @@ class TemporalCommandRegistryWorkflow:
         if request.get("scope") != self.commands.scope:
             return {"error": "authorization_denied"}
         try:
+            if request.get("kind") == "scoped_manual_configuration":
+                from .temporal_scoped_manual_recovery import configuration
+
+                return configuration(self.commands, workflow.info())
             if request.get("kind") == "scoped_drive_command":
                 return self.commands.scoped_drive_command(request)
             if request.get("kind") == "coding_composition_candidates":

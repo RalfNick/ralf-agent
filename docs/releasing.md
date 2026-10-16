@@ -23,9 +23,13 @@ python -m agent_app --ticket INC-001
 
 ## Temporal 工具结束证据补丁
 
-原 `basic-sdk-b871f61` 制品保留，不替换其哈希。后续发现默认无 `ToolExecutionOwner` 的 Temporal 工具存在P1：超时工具经人工确认效果后，另一个工具成功可能让父任务提前结算。新补丁 `dist/p3-tool-end-20261016/` 的同版本wheel独立校验、安装与验收，细节见[补丁记录](../architecture/reviews/2026-10-16-temporal-unowned-tool-end.md)。使用新建Temporal Run的修复路径时须选择该精确制品，不能只凭 `dev120` 版本号区分。
+原 `basic-sdk-b871f61` 制品保留，不替换其哈希。后续发现默认无 `ToolExecutionOwner` 的 Temporal 工具存在P1：超时工具经人工确认效果后，另一个工具成功可能让父任务提前结算。新补丁 `dist/p3-tool-end-20261016/` 的同版本wheel独立校验、安装与验收，细节见[补丁记录](../architecture/reviews/2026-10-16-temporal-unowned-tool-end.md)。该批证据绑定该精确制品，后续增量按各自验收选择；不能只凭 `dev120` 版本号区分。
 
 补丁用 `ralf-unowned-tool-end-evidence-v1` 标记保护新Run，默认Card／普通发布身份保持。无标记旧History为确定性重放保留原行为，**没有自动升级或追溯修复**；重放通过不等于原风险消失。默认Local起步不受本问题影响。无Owner的原工具超时后，即使外部已看到线程退出，没有原History结束回执仍保留义务；没有新增人工清除入口。旧未知Run的安全迁移／处理仍是开放项，不能据本补丁关闭P3-3或P3-5。
+
+## P3-3 scoped 人工恢复增量
+
+后续已验收制品 `dist/p3-scoped-manual-final-20261016/ralf_agent-0.1.0.dev120-py3-none-any.whl`，SHA256 `4c90e3312f611676e6bc12d126810511621dffe1b2bff6949638766692c417ac`，附 `verification.json`／`SHA256SUMS`。它包含上述新Run结束证据修复，并补原普通Tool在默认scoped满容量后的有限人工核验路径。源码／隔离安装各1,233项及实际SDK图child验收见[本批记录](../architecture/reviews/2026-10-16-temporal-scoped-manual-recovery.md)。默认Local基础制品仍冻结，P3-3／其他阶段未关闭，旧不安全Run未追溯升级；所选实验发布指纹变化后，旧History仍使用原匹配Worker。中间候选与失败包不作为交付物替代此精确制品。
 
 ## 1. 准备版本与兼容说明
 

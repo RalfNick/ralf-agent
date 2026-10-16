@@ -293,7 +293,17 @@ class TemporalEngine:
             from .temporal_scoped_reservation import KINDS, reserve
 
             if kind in KINDS:
-                await reserve(self._registry, reservation, namespace=self.client.namespace)
+                try:
+                    recorded = await reserve(
+                        self._registry, reservation, namespace=self.client.namespace
+                    )
+                except ValidationError:
+                    if kind != "reconcile" or payload.get("query") is not False:
+                        raise
+                    from .temporal_scoped_manual_recovery import reserve_manual
+
+                    recorded = await reserve_manual(self, self._registry, reservation, payload)
+                return recorded.get("control_binding")
             else:
                 # Sessions have their own existing reservation/receipt contract.
                 await self._registry.execute_update("reserve", reservation)
@@ -507,7 +517,28 @@ class TemporalEngine:
                 await self._view(run_id, "status")
         else:
             await self._view(run_id, "status")
-            await self._guard(kind, command_id, run_id, payload)
+            client, scope, release = self.client, asdict(self.scope), self.release
+            binding = await self._guard(kind, command_id, run_id, payload)
+            if binding is not None:
+                from .temporal_scoped_manual_recovery import binding as scoped_binding
+
+                binding = scoped_binding(
+                    binding, {"scope": scope, "kind": kind, "target": run_id}, client.namespace
+                )
+                await self._view(
+                    run_id, "status", _execution_epoch=binding["target_execution_epoch"]
+                )
+                from .temporal_session_activities import namespace_id
+
+                if await namespace_id(client) != binding["namespace"]["id"]:
+                    raise DefinitionMismatch("Original scoped manual namespace changed")
+                if (
+                    self.client is not client
+                    or client.namespace != binding["namespace"]["name"]
+                    or asdict(self.scope) != scope
+                    or self.release != release
+                ):
+                    raise DefinitionMismatch("Original scoped manual binding changed")
         try:
             handle = (
                 self._handle(run_id)

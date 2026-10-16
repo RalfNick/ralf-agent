@@ -1,7 +1,7 @@
 # Temporal recovery under command pressure
 
 2026-10-16 · Experimental selected deployment publications 2/3/4 and the
-explicitly limited default scoped cancellation below.
+explicitly limited default scoped cancellation, wake and ordinary manual controls below.
 This is one part of P3-3, not completion of its full capacity requirement.
 
 ## Authority and bounded allowance
@@ -327,18 +327,38 @@ never deliver an Activity result after its timeout: external observation of thre
 exit is insufficient and this patch adds no administrative clear operation.
 See the [repair and retained limits](../reviews/2026-10-16-temporal-unowned-tool-end.md).
 
-### Scoped manual admission audit — not implemented
+### Default scoped ordinary manual admission
 
-A future protected ordinary Tool confirmation must bind original Scope, target,
-SDK History epoch, request and actual adopted Action inventory. Its bound is the
-finite original inventory M under the accepted Agent decision/step constraints;
-zero-credit calls count. No fixed4096-per-Run or `3 * capacity` claim applies to
-manual Actions. The existing selected CONTROL Activity can transport a separate
-read-only verifier; it must not masquerade as Parent registration or drive. A
-Registry's first Worker release is not proof that all scoped targets share its
-queue or Manifest. Recheck original authority identities after awaited proof.
-These are audit constraints, not a delivered extra Registry allowance. Whether a
-particular timed-out dispatch has sufficient original invocation evidence must
-be specified and tested before that allowance is implemented. Native delegated
-receipt/fence paths remain separate. This batch first fixes the physical-end
-prerequisite; full scoped manual admission and Update/History lifecycle remain open.
+The current increment implements the audited ordinary Action protection through
+original Registry `reserve` Update and its existing CONTROL Activity. Ordinary
+Signal/Query admission is attempted first; only a definitive manual refusal can
+request this proof. Signals refuse caller recovery metadata. Exact legacy scoped
+configuration retains its original capacity refusal; unknown transport outcomes
+never switch paths.
+
+The read-only verifier binds original Registry SDK identity, namespace name/UUID,
+original submit command/target/request digest, target SDK Start/epoch and original
+ordinary unknown Action. It compares the complete canonical Tool envelope with
+its original Tool Activity Scheduled input. Standard child `depth` initialization
+is accepted alongside the native five fields; arbitrary extra initialization is
+refused. Targets may have different queues/releases from the Registry Worker.
+Started is recorded if present, never required or treated as physical termination.
+Owner selection still requires original dispatch grant/request/invocation. Native
+delegated Actions are excluded. Unowned protection requires the original safety
+patch marker and per-Action end debt; old unsafe no-marker Runs are not upgraded.
+
+After awaited proof, the original Registry atomically rechecks full-Scope command
+identity, original submit, target's first verified epoch and Action slot. One
+immutable confirmation slot per `(Scope,target,epoch,Action)` covers every caller
+ID/result. Exact repeats return the original epoch binding without proving the
+Action again, including after original effect adoption. The SDK checks Scope,
+namespace name/UUID and pins actual command application to that original epoch.
+No confirmation proves handler stop, effect ACK or retirement.
+
+Let M be original SDK-verified ordinary Action inventory across original accepted
+Run Histories. Extra manual identities are at most M, including zero-cost Tools;
+normal/cancel/drive remain at most3C, total at most3C+M. There is no fixed4096-per-Run
+or Update/History bound. No identity is evicted. Strong proof transport and Run
+application still use Updates. Session/other Update lifecycle, native fence and
+legacy unsafe handling remain open. The [batch record](../reviews/2026-10-16-temporal-scoped-manual-recovery.md)
+separates source, installed and actual service evidence; full P3-3 stays open.

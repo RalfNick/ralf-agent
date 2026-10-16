@@ -1738,6 +1738,9 @@ class TemporalCommandRegistryState:
         self.scope, self.capacity, self.identities = detached(scope), capacity, {}
         self.scoped_cancellations = {}
         self.scoped_drives = {}
+        self.scoped_manual_slots = {}
+        self.scoped_manual_bindings = {}
+        self.scoped_manual_epochs = {}
         self.composition_submissions = {}
 
     def scoped_drive_command(self, request):
@@ -1768,6 +1771,8 @@ class TemporalCommandRegistryState:
     def reserve(self, request):
         if self.deployment is not None:
             return self.deployment.reserve(request)
+        if "recovery" in request:
+            raise DefinitionMismatch("Scoped manual proof requires its verified Update")
         if request.get("scope") != self.scope:
             raise AuthorizationDenied("Command registry belongs to another trusted scope")
         for key in ("command_id", "kind", "target", "payload_digest"):
@@ -1779,6 +1784,10 @@ class TemporalCommandRegistryState:
             raise IdempotencyConflict(
                 "Scoped command ID already identifies different content or target"
             )
+        if previous is not None and command_id in self.scoped_manual_bindings:
+            from .temporal_scoped_manual_recovery import receipt
+
+            return receipt(self, request)
         if previous is None:
             protected = None
             if len(self.identities) >= self.capacity:
