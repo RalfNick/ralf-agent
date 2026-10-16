@@ -18,8 +18,19 @@ from ralf_agent.storage import SQLiteStore
 class Provider:
     identity = {"kind": "loopback-test", "version": "1"}
 
+    def __init__(self, directory):
+        self.directory = directory
+
     async def complete(self, messages, tools):
         request = json.loads(messages[-1]["content"])["a2a"]["message"]["parts"][0]["data"]["input"]
+        if request.get("wait_for_cancel"):
+            (self.directory / "provider-started").touch()
+            try:
+                async with asyncio.timeout(10):
+                    while not (self.directory / "provider-release").exists():  # noqa: ASYNC110 -- signal from the independent HTTP test process
+                        await asyncio.sleep(0.01)
+            finally:
+                (self.directory / "provider-ended").touch()
         if request.get("wait"):
             await asyncio.sleep(0.05)
         return ModelResponse(output={"echo": request})
@@ -28,9 +39,13 @@ class Provider:
 def main():
     directory, port, fd = Path(sys.argv[1]), int(sys.argv[2]), int(sys.argv[3])
     runtime = LocalEngine(
-        SQLiteStore(directory / "runs.db"), providers={"default": Provider()}, tools=ToolRegistry()
+        SQLiteStore(directory / "runs.db"),
+        providers={"default": Provider(directory)},
+        tools=ToolRegistry(),
     )
-    inbox = SQLiteInbox(directory / "inbox.db")
+    inbox = SQLiteInbox(
+        directory / "inbox.db", max_entries=int(sys.argv[4]) if len(sys.argv) > 4 else 10000
+    )
     active = set()
 
     async def authenticate(headers):

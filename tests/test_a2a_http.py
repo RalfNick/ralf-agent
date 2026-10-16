@@ -1,6 +1,7 @@
 import asyncio
 import os
 import socket
+import sqlite3
 import subprocess
 import sys
 import time
@@ -11,7 +12,7 @@ import pytest
 
 
 @pytest.fixture
-def a2a_http_service(tmp_path):
+def a2a_http_service(tmp_path, request):
     pytest.importorskip("uvicorn")
     source = Path(__file__).resolve().parents[1] / "src"
     listener = socket.socket()
@@ -27,6 +28,7 @@ def a2a_http_service(tmp_path):
                 str(tmp_path),
                 str(port),
                 str(listener.fileno()),
+                str(getattr(request, "param", 10000)),
             ],
             pass_fds=(listener.fileno(),),
             env={"PATH": os.environ.get("PATH", "/usr/bin:/bin"), "PYTHONPATH": str(source)},
@@ -92,3 +94,51 @@ def test_true_http_native_tasks_dedup_cancel_and_unknown_lookup(a2a_http_service
             await client.aclose()
 
     asyncio.run(check())
+
+
+@pytest.mark.parametrize("a2a_http_service", [1], indirect=True)
+def test_full_inbox_preserves_http_lookup_replay_and_cancellation(a2a_http_service, tmp_path):
+    """P3-3 preparation: existing controls remain reachable at receipt capacity."""
+    from ralf_agent.a2a import A2AClient, A2ARemoteError
+
+    async def check():
+        client = A2AClient(a2a_http_service, headers={"Authorization": "Bearer test-owner"})
+        try:
+            original = await client.send_message("held", {"wait_for_cancel": True})
+            assert original["status"]["state"] in {"submitted", "working"}
+            async with asyncio.timeout(3):
+                while not (tmp_path / "provider-started").exists():  # noqa: ASYNC110 -- signal from the independent service process
+                    await asyncio.sleep(0.01)
+            with pytest.raises(A2ARemoteError) as full:
+                await client.send_message("overflow", {"wait_for_cancel": True})
+            assert full.value.rpc_code == -32603
+            assert (await client.send_message("held", {"wait_for_cancel": True}))["id"] == original[
+                "id"
+            ]
+            assert (await client.get_by_message("held"))["id"] == original["id"]
+            assert (await client.get_task(original["id"]))["status"]["state"] in {
+                "submitted",
+                "working",
+            }
+            canceled = await client.cancel_task(original["id"], command_id="cancel-at-capacity")
+            assert canceled["metadata"]["ralf"]["state"] == "cancelling"
+            assert not (tmp_path / "provider-ended").exists()
+            (tmp_path / "provider-release").touch()
+            async with asyncio.timeout(3):
+                while canceled["status"]["state"] != "canceled":  # noqa: ASYNC110 -- external HTTP authority has no local completion event
+                    await asyncio.sleep(0.01)
+                    canceled = await client.get_task(original["id"])
+            assert (await client.get_by_message("held"))["status"]["state"] == "canceled"
+            assert (await client.send_message("held", {"wait_for_cancel": True}))["id"] == original[
+                "id"
+            ]
+            assert (tmp_path / "provider-ended").exists()
+        finally:
+            (tmp_path / "provider-release").touch()
+            await client.aclose()
+
+    asyncio.run(check())
+    with sqlite3.connect(tmp_path / "inbox.db") as database:
+        assert database.execute("SELECT count(*) FROM ralf_inbox").fetchone()[0] == 1
+    with sqlite3.connect(tmp_path / "runs.db") as database:
+        assert database.execute("SELECT count(*) FROM runs").fetchone()[0] == 1
