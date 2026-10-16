@@ -21,3 +21,11 @@ New runtime behavior should have a failing regression test before implementation
 Keep one authoritative scheduler, stable Action identities and explicit outcome_unknown handling. Do not silently add SDK/business retries or approve a changed operation. A new backend/Runner needs a capability report and applicable contract tests before it is described as supported.
 
 Use focused branches and pull requests describing the concrete behavior, validation and remaining capability limits. Never commit `.env`, credentials, runtime databases or generated package artifacts.
+
+## License
+
+Ralf-Agent is licensed under the [Apache License 2.0](LICENSE). Unless explicitly
+stated otherwise, contributions intentionally submitted for inclusion in this
+project are provided under the same license, as described in Section 5. Preserve
+applicable copyright and attribution notices, including [NOTICE](NOTICE), when
+incorporating third-party material.

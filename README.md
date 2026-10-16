@@ -1,5 +1,7 @@
 # Ralf-Agent
 
+[![License: Apache-2.0](https://img.shields.io/badge/License-Apache--2.0-blue.svg)](LICENSE)
+
 Ralf-Agent 是 Python Agent 框架，提供可替换的模型、工具、上下文、记忆和检索组件，以及持久化的任务、审批与恢复。当前版本为 **0.1.0.dev120 开发预览**；支持边界见[实现清单](docs/implementation-status.md)。
 
 先从[基础能力入口](docs/basic-capabilities.md)或[首用教程](docs/getting-started.md)开始：本地 SQLite、单 Agent、自定义模型与工具、基础 Workflow、记忆和 RAG。本轮基础 SDK 交付已收口；范围、已知限制和后续项统一见[当前状态摘要](docs/implementation-status.md#当前交付摘要)，本地制品见[交付说明](docs/releasing.md#本轮本地交付)。高级部署不作为入门前置条件。
@@ -343,8 +345,6 @@ python examples/evaluate.py
 - [授权与关闭 Review](architecture/reviews/2026-10-05-authorization-shutdown.md)、[可靠性与架构门槛](architecture/reviews/2026-10-05-reliability-boundaries.md)、[扩展性 Review](architecture/reviews/2026-10-05-runtime-extensibility.md)。dev6 使用 `local-4`，Manifest 增加 Harness／Executor 身份；dev3–dev5 的 `local-3` Run 可观察、取消及人工核验，继续执行需要原版本与原配置。dev3 起的提交请求摘要未变，相同请求可以找回原回执；这不表示可以用新内核执行旧 Run。dev1／dev2 的历史提交重放需要原版本。运行及命令摘要尚不支持自动迁移。
 - [变更记录](CHANGELOG.md)、[贡献说明](CONTRIBUTING.md)、[发布流程](docs/releasing.md)和[安全反馈](SECURITY.md)。
 
-SDK、运行时和基础治理按 [Apache-2.0](LICENSE) 开源。外部模型／Harness 的服务和许可独立适用。
-
 并行节点隔离上下文、共享预算与分支审批／恢复见[有界并行 Workflow](docs/parallel-workflows.md)。
 
 [并行 Workflow Review](architecture/reviews/2026-10-06-parallel-workflow.md)记录 dev12 的执行隔离、资源静止、回调核验修复和独立审查证据。
@@ -375,3 +375,12 @@ Dev74增加[MCP HTTP JSON／POST SSE](docs/mcp-http.md)，接入原ToolSource与
 Dev75增加[只读Workspace Port与文件／内存默认实现](docs/workspace.md)，沿原工具与async装配接入；[子集验收](architecture/reviews/2026-10-11-workspace-read.md)通过。环境绑定与Sandbox仍开放。
 
 Dev76子集已验收接通[每Agent只读Workspace绑定](docs/workspace.md)：复用原工具授权和资源，不增加执行权威；[安装与最终验收](architecture/reviews/2026-10-11-workspace-bindings.md)已通过；后续写入、Skills和本地Sandbox子集按各批验收记录交付，完整环境能力仍开放。
+
+## 开源协议
+
+Ralf-Agent 采用 [Apache License 2.0](LICENSE)，允许在遵守协议的前提下商业使用、修改和再分发。
+再分发时须提供许可证副本、保留适用的版权和归属声明，并对修改的文件作出显著说明；
+第三方归属信息见 [NOTICE](NOTICE)。完整权利、条件与免责声明以许可证原文为准。
+
+外部模型服务、模型权重和第三方依赖分别适用各自的许可或服务条款。
+贡献许可说明见 [CONTRIBUTING.md](CONTRIBUTING.md#license)。

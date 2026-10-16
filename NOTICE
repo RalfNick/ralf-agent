@@ -1,3 +1,12 @@
+Ralf-Agent
+Copyright 2026 Ralf-Agent contributors
+
+Licensed under the Apache License, Version 2.0.
+See LICENSE for the full license text.
+
+Third-party attributions
+------------------------
+
 The Codex App Server schema subset in
 src/ralf_agent/_codex_protocol_schema.json and _codex_control_schema.json
 are derived from schemas generated
