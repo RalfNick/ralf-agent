@@ -145,3 +145,10 @@ SHA256 `e71780943d331351aa47192aca83d4278a55ab027b103ba8141c3da564040a67`，附�
 保持不变。原指纹错误、一次源码组超时与最终复核分开记录，见[验收记录](../architecture/reviews/2026-10-16-temporal-deployment-lifecycle-capacity.md)。
 仅该公有恢复子集完成；完整P3-3、P3-2/S2、Registry／Session／native和其他History门槛
 继续开放。不推送或发布远端。
+
+### 同一制品的独立HTTP／PG补证
+
+上述435文件制品未重建。其原安装包的HTTP／Temporal／PostgreSQL三场景独立
+**3 passed／26.847秒**，受影响离线47项通过，产品／测试输入不变。此前16组制品
+及其原验收JSON／SHA256SUMS均保持有效；新证据见[冻结范围核对](../architecture/reviews/2026-10-16-phase3-control-evidence-audit.md)。
+这不关闭完整P3-3，也不替代原S2失败、模型质量或外部采用验收。

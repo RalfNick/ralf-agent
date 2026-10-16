@@ -86,3 +86,11 @@ proofs and actual service evidence. P3-4/5/A are not unlocked. Next batch audits
 one such capacity boundary and implements only a reproduced blocker; estimate
 one focused review/fix batch, with service acceptance scheduled from its actual
 scope. No credible total-project percentage or full completion date is inferred.
+
+## Separate current-wheel confirmation
+
+The 435-file `0fedebe` wheel was independently installed and rerun against the
+same existing three HTTP/Temporal/PG cases: **3 passed / 26.847s**, with 47 affected
+offline checks passing. This is separate evidence, not a rewrite of the original
+429-file candidate or its failures. See the [frozen-scope audit](2026-10-16-phase3-control-evidence-audit.md)
+for exact artifact, cleanup, retained warning and remaining capacity gaps.

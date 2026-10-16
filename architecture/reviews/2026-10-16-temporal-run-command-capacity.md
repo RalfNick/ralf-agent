@@ -6,7 +6,7 @@ P3-4/5/A are not unlocked.
 
 ## Reproduced blocker and bounded repair
 
-On the immutable prior accepted scoped-manual installation, one native Run waited
+On the immutable prior accepted scoped-manual installation, one ordinary Agent Run waited
 for approval.2,000 fresh SDK Updates repeated a single logical drive; its first
 SDK cancel then failed with Temporal's distinct-Update limit. The original
 Registry was not full and only one logical drive existed. Actual RED:
@@ -61,7 +61,7 @@ History replay are checked independently.
 ## Verification
 
 Source affected60-module regression: **1,272 passed/25.029s**, no failures/errors/
-skips. New39 cases cover native/Parent complete handlers, repeat recovery/seals,
+skips. New39 cases cover ordinary Agent/Parent complete handlers, repeat recovery/seals,
 observation eviction/conflicts, typed replies, positive legacy detection, epoch/
 namespace and changed port refusals, and no post-Signal fallback on timeout or
 cancellation. Existing delegated-control fakes now implement the same genuine
@@ -89,7 +89,7 @@ exact source, installation and case snapshots; no prior artifact is overwritten.
 
 Three actual SDK scenarios passed on this same wheel in independent runs:
 
-- Native case: **passed/14.198s** (testcase time). Original History has exactly
+- Ordinary Agent case (original test parameter `native`, not a Coding Runner): **passed/14.198s** (testcase time). Original History has exactly
   2,000 accepted/completed Updates, followed by original control Signals. First
   cancel applies; repeated original receipt, Worker restart, two History replays
   and owned cleanup pass. No Tool dispatch occurs.
@@ -100,7 +100,7 @@ Three actual SDK scenarios passed on this same wheel in independent runs:
   separately. Parent and child control Signals, restarted Worker/original receipt,
   three History replays and owned closure pass. No Tool dispatch occurs.
 - Immutable basic SDK old Worker: **passed/9.247s** (testcase time). Current SDK
-  controls the original parent and native child through positively discovered
+  controls the original parent and ordinary Agent child through positively discovered
   legacy Updates. Both Run Histories and Registry contain zero Signals. Repeated
   commands/drive, current-code replay, owned History closure and the separate old
   Worker process shutdown pass. This proves API compatibility, not removal of the
@@ -113,7 +113,7 @@ wait. Second runner: **1 failed/2 passed,33.265s**; both parent and child reache
 2,000 Updates, but the test incorrectly required immediate physical stop in the
 parent's cancellation receipt. Preserve production's correct `False`, then check
 actual descendant cancellation/quiescence separately. Only that failed graph case
-is rerun; unchanged native/legacy passes retain their own frozen case snapshots.
+is rerun; unchanged ordinary Agent/legacy passes retain their own frozen case snapshots.
 Both failed runners retain Histories and successful owned cleanup, with no product
 or deadline change. The original180-second per-pressure-case bound stays intact.
 
@@ -127,7 +127,7 @@ Evidence roots under `/private/tmp/ralf-agent-`:
 `p3-run-command-20261016` (source/RED), `p3-run-command-install-20261016`
 (isolated package), `p3-run-command-red-20261016` (immutable prior-package failure),
 `p3-run-command-live-20261016` and `p3-run-command-live-v2-20261016` (retained failed
-runners; latter includes accepted native/legacy cases), and
+runners; latter includes accepted ordinary Agent/legacy cases), and
 `p3-run-command-live-v3-20261016` (accepted graph, verification and evidence hashes).
 Product and copied tests stay immutable during each run. This batch uses no
 external model/PG call and makes no service/Docker configuration change. It does

@@ -27,9 +27,18 @@
 | 范围 | 状态与约束 |
 | --- | --- |
 | P3-2 | S1普通Session功能子集已有验收；S2已有真实PG日志与关闭证据，但原360秒仍未通过，当前完整矩阵尚缺。性能专项后置，该未完成组合不列为已支持 |
-| P3-3 | 用户已批准独立推进；Local及普通Agent HTTP→Temporal／PG控制、宿主重启和事件游标已有实测；公有普通2已有4096原树取消及根Tool人工核验／结束／ACK证据；默认scoped满容量首次取消、重复drive图恢复及旧Worker兼容已验，默认scoped普通Tool人工核验容量已有有限证据；原Run／图父子必要控制及默认scoped原工具人工证明在2,000 distinct Update后可用；原Tool结束运输与公有普通2的begin／seal窄修已实测，满2,000后效果ACK、退休和Owner关闭通过；其他Registry／Session／native及History门槛仍待，本项不关闭 |
+| P3-3 | 用户已批准独立推进；Local及普通Agent HTTP→Temporal／PG控制、宿主重启和事件游标已有实测；公有普通2已有4096原树取消及根Tool人工核验／结束／ACK证据；默认scoped满容量首次取消、重复drive图恢复及旧Worker兼容已验，默认scoped普通Tool人工核验容量已有有限证据；原Run／图父子必要控制及默认scoped原工具人工证明在2,000 distinct Update后可用；原Tool结束运输与公有普通2的begin／seal窄修已实测，满2,000后效果ACK、退休和Owner关闭通过；Public Registry及所选native Coding的必要恢复仍缺压力证据；Session／Turn门槛归P3-2，任意History规模不作无限运行承诺。本项不关闭 |
 | P3-4／P3-5／P3-A | 原依赖和验收保持，身份权限／保留、框架恢复与阶段整体未关闭，不新增后端／编排／Runner／部署组合 |
 | R01–R26其余目标 | 保留为长期路线图；外部采用和框架对等比较单独验收，不自动成为本轮实现任务 |
+
+**当前证据核对：** 运行时代码仍为 `0fedebe`，未新增功能或重建wheel。原435文件制品的隔离安装HTTP／Temporal／PostgreSQL复验 **3 passed／26.847秒**，审批和未知写各写一次、取消零写；六个宿主关闭、原事件游标、根退休和三个测试schema清理通过，受影响离线检查47项通过。此前16组制品校验有效，原失败保留。详见[冻结范围审查](../architecture/reviews/2026-10-16-phase3-control-evidence-audit.md)。
+
+**当前剩余与下一批：** P3-3基本服务控制已交付，累计命令容量只按已测子集验收；Public Registry强人工证明／根退休、所选native Coding恢复仍缺压力证据。下一批先验证原Registry满2,000 distinct Update后的根退休，复现前不扩运输；预计一批定向探针，是否修复依实际结果。Session／Turn容量仍归P3-2，后置不等于通过。后续执行依据为[第三阶段冻结矩阵](phase3-support-matrix.md)，不新增后端、编排或平台范围。
+
+## 历史实现与验收证据
+
+<details>
+<summary>展开历史记录（“当前／下一步”只描述该记录发布时的状态）</summary>
 
 **前批结束回执增量：** 四类原结束handler经原Run有界Signal／Query观察，保留Scope、epoch、完整证明和严格ACK；不增加grant／准入或执行权威。源码／独立wheel各 **2,340 passed／6 skipped**，434产品一致；默认发布／保存History兼容和此前14组制品校验通过。同包真实Temporal **2 passed／1 failed／24.730秒**：默认Tool满2,000 Update后的实际结束、重启与旧Worker兼容通过；公有原end事实已入库，但后续效果ACK的begin登记仍触及上限，Owner关闭失败。原断言、失败、8条失败History重放及资源义务保留，不能把Run quiescent当作部署退休；完整P3-3不关闭。详见[窄修与剩余阻塞](../architecture/reviews/2026-10-16-temporal-execution-end-capacity.md)。下一批只处理该原begin的正向证据与关闭路径，预计一批定向排查／必要修复，不扩范围。
 
@@ -81,10 +90,6 @@ P3-3已有默认关闭的`tasks/events` HTTP分页：原Scope／Run游标、字�
 
 **原Registry人工证明运输收尾：** 旧不可变包在4096身份＋2,000次Update后，原工具首次人工核验真实失败（1 failed／121.330秒）。新窄修复用原异步reserve／CONTROL证明、原子Action槽和原epoch；64观察中pending不驱逐，未知送达不回退。源码／隔离安装62模块各 **1,316 passed**，433产品一致。同包压力场景 **passed／126.946秒**；旧manual Worker兼容独立 **1 passed／13.993秒**，零新manual Signal。首轮兼容夹具失败及六个失败原History诊断回放保留，不拼成单次完整全绿。新制品`dist/p3-manual-transport-20261016/`，此前13组制品不变，见[记录](../architecture/reviews/2026-10-16-temporal-scoped-manual-transport.md)。仅此门槛子集闭环；已授予Tool／native／Session的首次结束ACK、其他Registry证明及History生命周期仍待，完整P3-3／P3-2不关闭。下一批优先复现原已授予Tool的结束ACK，预计一批定向复现、必要窄修和恢复验收，不增加功能或部署组合。
 
-## 历史实现与验收证据
-
-<details>
-<summary>展开历史记录（“当前／下一步”只描述该记录发布时的状态）</summary>
 
 **当前优先级（2026-10-16 用户指令）：先保障基础能力，避免过度开发。** 先修复安装、模型与工具、单 Agent、基础 Workflow、上下文、记忆／RAG及恢复主链路；已有能力通过默认实现和定制示例复用，不新增封装。Temporal Coding Session性能专项后置；下方失败和所有未验收项保留，不把调整优先级算成门槛完成。起步路径见[基础能力入口](basic-capabilities.md)。
 

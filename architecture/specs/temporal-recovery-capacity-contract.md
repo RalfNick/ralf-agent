@@ -388,8 +388,9 @@ other command kinds, native grants/end evidence, Session and Registry strong pro
 are unchanged. Existing public internal child controls retain their original proof
 and post-await checks around the same helper.
 
-Same-wheel actual native/graph-child pressure and immutable old Worker compatibility
-have separate passing case evidence; neither complete P3-3 nor all SDK Update/
+Same-wheel actual ordinary Agent/graph-child pressure and immutable old Worker compatibility
+have separate passing case evidence. The test parameter `native` is an ordinary
+AgentSpec, not native Coding or a Runner. Neither complete P3-3 nor all SDK Update/
 History lifecycle is closed. See [record and retained failures](../reviews/2026-10-16-temporal-run-command-capacity.md).
 
 

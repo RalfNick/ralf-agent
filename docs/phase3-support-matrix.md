@@ -1,5 +1,12 @@
 # 第三阶段支持矩阵与收口门槛
 
+当前状态见[唯一交付摘要](implementation-status.md#当前交付摘要)及[本轮证据核对](../architecture/reviews/2026-10-16-phase3-control-evidence-audit.md)。基础SDK已冻结；用户已明确允许独立推进P3-3并保留全部验收门槛。当前435文件wheel的HTTP／Temporal／PG三场景3 passed／26.847秒；基本控制、重启与事件游标已交付，必要恢复的累计命令容量仍仅按已测子集验收，完整P3-3保持开放。
+
+下一批仅验证普通公有2原Registry满2,000 distinct Update后的根退休；源码风险尚未复现，不预先扩运输。P3-2/S2原360秒失败继续后置／开放，P3-4／5／A不解锁。Session／Turn仍归P3-2；不把任意History规模或全拓扑压力测试加入本轮。仅本地提交，不推送。
+
+<details>
+<summary>此前批次摘要（“最新／下一批”仅描述对应快照）</summary>
+
 最新[公有begin／seal容量恢复](../architecture/reviews/2026-10-16-temporal-deployment-lifecycle-capacity.md)：保持原handler、独占准入与封存复核，坏ACK仍保留Owner。源码／隔离安装各2,381 passed／6 skipped；同包实际3 passed／21.426秒，普通公有2在原Run满2,000 Update后效果ACK、结束、seal、退休、关闭和重启重放通过，两种不可变旧Worker各按端点和匹配SDK验证。原指纹失败已修，单次源码组超时原因未确认、复核通过；旧失败均保留。该子门槛关闭，其他Registry／Session／native与History容量及完整P3-3／P3-2仍开放。
 
 最新[原执行结束运输](../architecture/reviews/2026-10-16-temporal-execution-end-capacity.md)：四个原end handler保留完整证明／原epoch，不新增grant；源码／安装各2,340 passed／6 skipped。同包实际2 passed／1 failed，默认Tool的2,000 Update结束压力与旧Worker兼容通过；公有原end已记录，后续效果ACK的begin仍被容量拒绝、Owner关闭失败。原门槛、失败与未知义务保留；context／Session／native实际压力及其他生命周期未验，完整P3-3不关闭。
@@ -7,7 +14,7 @@
 
 最新[原Registry人工证明运输](../architecture/reviews/2026-10-16-temporal-scoped-manual-transport.md)：4096身份＋2,000 distinct Update后原普通Tool首次人工核验可达；原异步证明、Action槽、epoch与结束债务保留。源码／安装各1,316项；同包压力passed／126.946秒，旧manual Worker兼容独立1 passed／13.993秒。首轮兼容夹具失败及原RED保留，不称单次全绿。仅该SDK恢复子集验收；首次结束ACK、其他Registry／Session与History生命周期及完整P3-3仍开放，P3-2及后续门槛不变。
 
-最新[原Run必要控制运输](../architecture/reviews/2026-10-16-temporal-run-command-capacity.md)：旧包2,000次Update后首次取消失败已实证；窄修复用原Run／Parent完整handler，仅替换cancel／drive／人工核验运输。源码／安装各1,272项；同包native、旧Worker兼容分别通过，图父子各2,000次后取消、整树停止、重启和三History独立1 passed／16.672秒。两次夹具失败及动态导入warning保留；不是单次完整矩阵通过。其他Update／History、旧不安全Run和完整P3-3继续开放；P3-2及全部后续门槛不变。
+最新[原Run必要控制运输](../architecture/reviews/2026-10-16-temporal-run-command-capacity.md)：旧包2,000次Update后首次取消失败已实证；窄修复用原Run／Parent完整handler，仅替换cancel／drive／人工核验运输。源码／安装各1,272项；同包普通Agent（测试参数native，并非Coding Runner）、旧Worker兼容分别通过，图父子各2,000次后取消、整树停止、重启和三History独立1 passed／16.672秒。两次夹具失败及动态导入warning保留；不是单次完整矩阵通过。其他Update／History、旧不安全Run和完整P3-3继续开放；P3-2及全部后续门槛不变。
 
 最新[scoped原Action人工恢复容量](../architecture/reviews/2026-10-16-temporal-scoped-manual-recovery.md)：原Registry满4096后可证明并确认原普通Tool，重复回执绑定原epoch；结束债务与效果分开，Owner/native/旧无标记门禁保持。源码／安装各1,233项，真实同包图child1 passed／129.402秒，含线程、父额度、重启、三History及owned关闭；两次原服务失败保留。仅该SDK容量子集验收，其他Update／History、旧Run及完整P3-3仍开放，P3-2原失败和后续门槛不变。
 
@@ -71,6 +78,9 @@ P3-3增量记录：[HTTP事件分页](../architecture/reviews/2026-10-16-http-ev
 
 日期：2026-10-15。第二阶段在本地提交 `695175e`／`0.1.0.dev113` 冻结；第三阶段按本矩阵推进 R21–R24 服务化与治理。dev120 编排基线为 `c52d54c`，S1 普通 Session 已在 `4fdd5ae`、`8e33b9a` 本地提交；S2 显式预览在 `ff58574` 本地提交。第一阶段 dev99 的业务质量、第二阶段的所选编排与执行证据继续按原范围引用。S1 普通 Session 功能子集已完成验收；S2 的 Agent／sequence 两 Turn 有独立通过证据，但此前v20正常首项图编排与本次CPU-only诊断均未过原360秒整体期限；各自关闭／保留证据分记于上方，整项仍失败，其余十二项及故障门槛未运行。逐快照结果见[当前验收记录](../architecture/reviews/2026-10-15-temporal-deployment-sessions.md)，不合并为完整通过。Temporal＋PG 集成、P3-2 与第三阶段尚未关闭，下面的目标不能当成交付清单。
 
+
+</details>
+
 ## 收尾范围冻结（2026-10-15 用户指令）
 
 用户要求：“加快进度，固定第三阶段范围，优先收尾，别再不断扩展新功能”。本节是当前执行范围；下方既有支持矩阵保留其安全与验收约束，候选开发历史不新增交付义务。R01–R26 是长期路线图，不作为本阶段自动扩展来源。第一阶段 dev99、第二阶段 dev113 和 dev120 已验收范围保持冻结，仅在变更确实影响其验收结论时补验。
@@ -121,7 +131,7 @@ P3-3增量记录：[HTTP事件分页](../architecture/reviews/2026-10-16-http-ev
 | --- | --- | --- |
 | 1：期限配置 | Temporal 现有 `TemporalExecutionPolicy` 接入 Profile／SDK／JSON／TOML 和自定义工厂；省略保持原默认，非法内置配置在组件 I/O 前拒绝；实际服务验证审批重启、原到期时间、批准／过期、晚到证据和 owned 关闭；安装后复验 | dev114 已通过策略入口、默认兼容、配置／替换和 owned 清理；源码／安装各 4 项实际 Temporal／PG 场景及各 313 项受影响回归（2 项其他远程配置跳过）通过，见[策略配置](temporal-execution-policy.md)与[验收登记](../architecture/reviews/2026-10-14-temporal-policy-profiles.md) |
 | 2：Local 期限与容量 | 所选 Local 链路补 Run／审批期限；观察等待与业务期限分离；准入额度原子获取，关闭／恢复释放责任明确；活动、未知效果和实际未结束处理器不得被过期或清理释放 | dev115 已补 Local 持久期限与审批过期，见[指南](local-execution-policy.md)和[本批登记](../architecture/reviews/2026-10-14-local-deadlines.md)；dev116 已补 Local 全 DB／每 Scope 持久根准入，见[指南](deployment-admission.md)及[登记](../architecture/reviews/2026-10-14-local-admission.md)；dev117／dev118 已接通原 Registry 与内部 Worker SDK 门禁，见[登记](../architecture/reviews/2026-10-14-temporal-deployment-dispatch.md)。dev119 已实现普通公共 v2 Engine／Profile、原接受信封与不确定启动恢复、真实 Activity 义务及原树校验后安全退休；源码与独立安装各 953 项受影响、27 项公共实际服务及 17 项私有 v1 服务零失败／错误／跳过；默认发布、原 History 兼容和 owned 清理通过，见[验收记录](../architecture/reviews/2026-10-15-temporal-deployment-public.md)。内部 v1 继续只占位；dev120已接通所选Coding准入与物理关闭；S1 普通 Session 功能子集已验收，S2 所选 Coding Session 与 Temporal＋PG 集成仍为必需项。现有单 Run／Runner 限制不能替代部署准入；批次 2 未关闭 |
-| 3：观察与服务控制 | 持久 HTTP 事件游标与断连续接；审批、核验和恢复沿原身份与幂等命令；断连只结束观察；统一诊断和明确关闭／移交责任 | 原事件分页、订阅与 A2A polling 已有；完整 hosted 观察及管理链路待补齐 |
+| 3：观察与服务控制 | 持久 HTTP 事件游标与断连续接；审批、核验和恢复沿原身份与幂等命令；断连只结束观察；统一诊断和明确关闭／移交责任 | 原SDK／HTTP控制、Local进程重启及普通公有2 HTTP→Temporal／PG审批／核验／取消、事件游标和owned关闭已实测。累计命令容量按原权威逐项取证，完整P3-3未关闭；见[当前审查](../architecture/reviews/2026-10-16-phase3-control-evidence-audit.md) |
 | 4：身份、权限与保留 | 宿主认证结果形成可信调用者；资源 ACL、Scope 与每 Agent 能力绑定取交集；跨 Scope 控制／事件读取拒绝；审计脱敏；保留清理保护活动 Run、原效果与恢复所需证据 | 可信 Scope／工具授权及 namespace 保护已有；服务身份映射、完整资源 ACL、审计与保留尚未闭环 |
 | 5：恢复与升级 | 安装后备份／恢复所选服务组合；核对原业务身份、版本与效果证据；故障窗口、迁移失败与回退可诊断；依赖服务／Worker 的拥有与关闭分别检查 | 进程重启、原 Worker 恢复及私有证据保留已有；框架级备份恢复、迁移和恢复管理待补齐 |
 
