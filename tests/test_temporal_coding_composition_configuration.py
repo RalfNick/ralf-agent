@@ -256,13 +256,25 @@ def test_root_guard_only_records_selected_original_graph_admission(version, kind
     requests = []
 
     class Registry:
+        async def query(self, operation, request):
+            return {"scope": request["scope"], "capacity": 4096, "accepted_commands": 0}
+
         async def execute_update(self, operation, request):
             assert operation == "reserve"
             requests.append(request)
+            return {
+                "command_id": request["command_id"],
+                "target": request["target"],
+                "record_state": "durably_recorded",
+                "apply_state": "not_applied",
+            }
 
     engine = object.__new__(TemporalEngine)
     engine._closed, engine._registry = False, Registry()
     engine.scope = Scope()
+    from types import SimpleNamespace
+
+    engine.client = SimpleNamespace(namespace="default")
     engine._release = {"kernel": "temporal-3", "binding_protocol": version}
     if version == 23:
         engine._release["coding_composition_protocol"] = {"version": 7}
@@ -488,8 +500,16 @@ def test_owned_submit_keeps_original_submission_under_mechanical_owner():
             return await operation()
 
     class Registry:
+        async def query(self, name, value):
+            return {"scope": value["scope"], "capacity": 4096, "accepted_commands": 0}
+
         async def execute_update(self, name, value):
-            return {"accepted": True}
+            return {
+                "command_id": value["command_id"],
+                "target": value["target"],
+                "record_state": "durably_recorded",
+                "apply_state": "not_applied",
+            }
 
     class Handle:
         async def query(self, name, value):
@@ -502,6 +522,8 @@ def test_owned_submit_keeps_original_submission_under_mechanical_owner():
             }
 
     class Client:
+        namespace = "default"
+
         def get_workflow_handle(self, run_id):
             return Handle()
 

@@ -32,6 +32,7 @@ PUBLIC_SOURCE_FILES = SOURCE_FILES + (
     "temporal_deployment_submissions.py",
     "temporal_reservation_transport.py",
     "temporal_manual_recovery.py",
+    "temporal_scoped_reservation.py",
     "temporal_context_execution.py",
     "tools.py",
     "temporal_assembly_lifecycle.py",

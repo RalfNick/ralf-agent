@@ -28,6 +28,7 @@ with workflow.unsafe.imports_passed_through():
         temporal_manual_recovery,  # noqa: F401 -- original Action recovery proof
         temporal_parent_completion_state,  # noqa: F401 -- preload pure parent release gates
         temporal_parent_state,  # noqa: F401 -- fixed original child addressing
+        temporal_scoped_reservation,  # noqa: F401 -- scoped reservation observations
         temporal_session_identity,  # noqa: F401 -- preload pure Session addressing
         temporal_startup_options,  # noqa: F401 -- preload pure public acceptance validation
         temporal_tool_execution,  # noqa: F401 -- preload fixed Tool protocol
@@ -1553,6 +1554,12 @@ class TemporalCommandRegistryWorkflow:
     def reserve_command(self, envelope: dict) -> None:
         accept_reservation_signal(self, envelope)
 
+    @workflow.signal(name="reserve_scoped_command")
+    def reserve_scoped_command(self, envelope: dict) -> None:
+        from .temporal_scoped_reservation import accept
+
+        accept(self, envelope, workflow.info())
+
     async def _session_verified_update(self, operation, request):
         from .temporal_deployment_session_updates import execute
 
@@ -1734,6 +1741,13 @@ class TemporalCommandRegistryWorkflow:
             self._check_deployment_registry_epoch()
         except Exception as exc:
             return {"error": getattr(exc, "code", "definition_mismatch")}
+        if request.get("kind") == "scoped_reserve_receipt":
+            from .temporal_scoped_reservation import observe
+
+            try:
+                return observe(self, request, workflow.info())
+            except Exception as exc:
+                return {"error": getattr(exc, "code", "validation_error")}
         if self.commands.deployment is not None:
             try:
                 if request.get("kind") == "deployment_reserve_receipt":

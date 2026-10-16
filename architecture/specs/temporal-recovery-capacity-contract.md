@@ -1,6 +1,7 @@
-# Public Temporal root recovery under command pressure
+# Temporal recovery under command pressure
 
-2026-10-16 · Experimental selected deployment publications 2/3/4.
+2026-10-16 · Experimental selected deployment publications 2/3/4 and the
+explicitly limited default scoped cancellation below.
 This is one part of P3-3, not completion of its full capacity requirement.
 
 ## Authority and bounded allowance
@@ -33,8 +34,9 @@ verification and ordinary command capacity, except the verified manual Action
 protection below. The original Parent's internal
 mechanical delegation is a separate, already authorized path described below.
 `approve`, query-based `reconcile`, `send_input`, `patch` and fresh
-submissions gain no exemption. Private deployment1 and unselected scoped Registries
-retain their old limits. In particular, accepting a root cancellation does not
+submissions gain no exemption. Private deployment1 retains its old limits;
+default scoped Registries have only the separate allowance below.
+In particular, accepting a root cancellation does not
 prove that a descendant cancellation succeeded, an external handler stopped or an
 unknown effect was reconciled. All existing evidence and resource obligations
 continue to apply.
@@ -205,6 +207,42 @@ separate from closing-Assembly maintenance, scoped Registry recovery, native
 Coding proof and other Update lifecycle gates; full P3-3 stays open. Evidence is
 recorded in the [manual recovery review](../reviews/2026-10-16-temporal-manual-recovery.md).
 
+## Default scoped first cancellation
+
+The next default Worker retains normal scoped admission at4096 records. At that
+limit, one fresh pure `cancel` reservation per original submitted target may be
+accepted. Its payload digest must equal `{scope, kind: "cancel"}`; the target
+must appear in an original `submit` record. Same-Scope command identity/conflict
+checks still happen first. The first protected ID is immutable; another fresh ID,
+changed payload, unregistered target or a different control cannot claim its slot.
+No original record is deleted. Additional records are bounded by original submit
+targets, at most `capacity`, so total records are at most `2 * capacity`.
+
+This original logical target record is not a deployment held-root proof or a
+physical-stop certificate. Registry acceptance remains `not_applied`; the original
+Run applies cancellation and retains its existing stopping/effect obligations.
+Default scoped `drive`, manual recovery, native Coding and other fresh commands
+gain no capacity exemption. Sessions retain their original Update transport and
+limits. This does not provide indefinite Run/Registry History availability.
+
+For the seven synchronous Run reservation kinds, the current SDK uses only the
+original scoped Registry's `reserve_scoped_command` Signal and matching
+`view(kind="scoped_reserve_receipt")` Query. The existing `commands.reserve` is
+still the single admission authority. Scope, namespace, original Registry SDK
+epoch and complete request digest bind each observation. The64-entry observation
+cache never evicts business identities. Delivery is not acceptance; absent or
+evicted observations are unknown. The30-second bounded observer may stop without
+undoing a reservation; retry uses the original business command ID.
+
+Before any Signal, the SDK may positively identify an old default Worker by its
+exact legacy scoped configuration Query response, then use its original Update
+contract. Unknown, malformed or foreign responses are refused. There is never an
+Update fallback after Signal delivery, timeout or caller cancellation. Old Workers
+retain their old capacity and Service Update limits; this compatibility path does
+not retrofit the new cancellation allowance. Selected public Workers retain their
+separate pinned protocol. Actual capacity, old Worker and History evidence is
+recorded in the [scoped cancellation review](../reviews/2026-10-16-temporal-scoped-cancellation.md).
+
 ## Compatibility and acceptance
 
 Changed selected source inventories include `temporal.py`,
@@ -217,6 +255,9 @@ The synchronous reservation repair additionally changes `temporal_workflow.py`,
 the new `temporal_reservation_transport.py` in the public source inventory.
 Manual protection additionally pins `temporal_manual_recovery.py`; its SDK,
 Registry, Activity and Query changes require the matching new selected Worker.
+The scoped increment also pins `temporal_scoped_reservation.py` in selected source
+inventories. Default Card/publication equality and saved default History replay
+must be checked separately from selected fingerprint compatibility.
 Keep the exact package/release/Worker required by an old selected History.
 Do not replace its immutable Worker, reset its Registry or claim these protection
 semantics for an old Registry merely because its configuration integer matches.

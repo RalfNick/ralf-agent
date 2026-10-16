@@ -1711,6 +1711,7 @@ class TemporalCommandRegistryState:
             self.scope = None
             return
         self.scope, self.capacity, self.identities = detached(scope), capacity, {}
+        self.scoped_cancellations = {}
         self.composition_submissions = {}
 
     def reserve(self, request):
@@ -1728,8 +1729,20 @@ class TemporalCommandRegistryState:
                 "Scoped command ID already identifies different content or target"
             )
         if previous is None:
+            protected_cancel = False
             if len(self.identities) >= self.capacity:
-                raise ValidationError("Temporal scoped command registry capacity exhausted")
+                protected_cancel = (
+                    identity["kind"] == "cancel"
+                    and identity["payload_digest"]
+                    == digest({"scope": self.scope, "kind": "cancel"})
+                    and identity["target"] not in self.scoped_cancellations
+                    and any(
+                        item["kind"] == "submit" and item["target"] == identity["target"]
+                        for item in self.identities.values()
+                    )
+                )
+                if not protected_cancel:
+                    raise ValidationError("Temporal scoped command registry capacity exhausted")
             metadata = request.get("coding_composition")
             if metadata is not None:
                 from .session_types import sha
@@ -1755,6 +1768,8 @@ class TemporalCommandRegistryState:
                     "namespace": None,
                 }
             self.identities[command_id] = identity
+            if protected_cancel:
+                self.scoped_cancellations[identity["target"]] = command_id
         return {
             "command_id": command_id,
             "target": identity["target"],

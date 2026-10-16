@@ -766,6 +766,12 @@ def test_root_admission_consumes_actual_engine_guard_metadata(namespace):
             return registry.bind_composition_submission(**arguments)
 
         async def query(self, name, payload):
+            if payload.get("kind") == "scoped_reserve_receipt":
+                return {
+                    "scope": SCOPE,
+                    "capacity": registry.capacity,
+                    "accepted_commands": len(registry.identities),
+                }
             return registry.composition_admission(
                 *(
                     payload[key]
@@ -783,6 +789,7 @@ def test_root_admission_consumes_actual_engine_guard_metadata(namespace):
         _release=MANIFEST,
         release=MANIFEST,
         scope=Scope(**SCOPE),
+        client=client,
     )
     value = {
         "scope": SCOPE,

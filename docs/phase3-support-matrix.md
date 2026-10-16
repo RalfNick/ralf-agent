@@ -2,6 +2,8 @@
 
 ## 当前优先级：先保障基础能力
 
+最新[默认scoped首次取消修复](../architecture/reviews/2026-10-16-temporal-scoped-cancellation.md)：源码／隔离安装各1,131项，430产品一致；真实Temporal两场景2 passed／123.093秒。满4096正常记录仍可首次取消原目标并重取原回执；旧基础Worker精确识别后保持Update且零Signal，实际History重放和owned关闭通过。Session保留原运输；默认发布和保存History兼容通过。scoped drive／人工核验、native及其他Run／Registry Update生命周期仍待，完整P3-3与P3-2不关闭。旧失败及全部门槛保留，不解锁P3-4／5／A。
+
 P3-3增量记录：[HTTP事件分页](../architecture/reviews/2026-10-16-http-event-pages.md)、[原审批／核验／恢复唤醒](../architecture/reviews/2026-10-16-http-run-controls.md)、[公有Temporal根保护控制](../architecture/reviews/2026-10-16-temporal-recovery-capacity.md)、[原子任务重复唤醒与真实容量失败](../architecture/reviews/2026-10-16-temporal-delegated-recovery.md)。Local控制与重启已有有限证据；原根保护槽已有离线／安装证据。真实服务在4096逻辑容量前触及原History的2000 distinct Update上限，完整累计容量及所选服务验收未通过，P3-3不标完成。当前状态以交付摘要为准。
 
 后续[同步预留Signal／Query窄修](../architecture/reviews/2026-10-16-temporal-reservation-transport.md)保持原权威、4096容量和原恢复断言；源码／安装各806项通过，最终安装普通公有2／并发48整链1 passed／126.286秒，保留Activity120／整体180及原后代停止／实际结束／退休门槛。仅覆盖所选同步reserve，不切换Session／后代验证或其他Update生命周期。原raw Update及本批三个失败均保留，不将新运输证据外推为完整P3-3。

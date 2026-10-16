@@ -290,10 +290,13 @@ class TemporalEngine:
                     "manifest_digest": digest(self.release),
                     "request_digest": digest(payload),
                 }
-            await self._registry.execute_update(
-                "reserve",
-                reservation,
-            )
+            from .temporal_scoped_reservation import KINDS, reserve
+
+            if kind in KINDS:
+                await reserve(self._registry, reservation, namespace=self.client.namespace)
+            else:
+                # Sessions have their own existing reservation/receipt contract.
+                await self._registry.execute_update("reserve", reservation)
         except sdk[1] as exc:
             cause = exc.cause
             if isinstance(cause, sdk[4]):

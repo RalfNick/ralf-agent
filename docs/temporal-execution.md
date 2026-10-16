@@ -110,6 +110,15 @@ Continue-As-New, retention, cross-deployment quotas, recovery administration,
 enterprise identity and deployment failover remain unimplemented. Use separate
 queues/retained registrations for trials and inspect actual History/service state.
 
+The current default scoped Worker preserves one first pure cancellation of an
+original submitted target after normal command capacity is full. Synchronous Run
+reservations use the original Registry's bounded Signal/Query observations;
+confirmed legacy Workers keep their original Update path and limits. Session
+commands retain their original transport. This narrow cancellation allowance
+does not cover scoped drive/manual recovery or guarantee unlimited History.
+See the [capacity contract](../architecture/specs/temporal-recovery-capacity-contract.md#default-scoped-first-cancellation)
+for identity, retry, compatibility and remaining gates.
+
 
 In dev16 the same facade can be borrowed by A2AApplication with PostgresInbox; see [async handoff](async-handoff.md). Workflow state is initialized before Queries/Updates can arrive. Actual dev15 Run/registry History replay remains compatible. dev17 extends the execution subset through an explicit orchestration release; native identities remain unchanged.
 
