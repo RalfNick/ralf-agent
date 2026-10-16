@@ -145,6 +145,14 @@ restart. Old unsafe no-marker unknowns gain no allowance; native/other
 Update/History lifecycle gates remain open. These SDK cases do not extend the
 HTTP/PG case matrix below.
 
+The [original Run transport repair](../architecture/reviews/2026-10-16-temporal-run-command-capacity.md)
+subsequently verified necessary SDK cancel/drive/manual reconciliation transport
+through the same Run's Signal/Query. Native and graph parent/child retain cancel
+after2,000 distinct Updates; full handlers, immutable receipts and original History
+remain authoritative. Old Worker compatibility uses positively discovered Updates
+and retains that old limit. Other command/native/Registry/Session/History gates
+remain open. These are separate SDK tests, not a renewed HTTP/PG matrix.
+
 The current installation evidence for the borrowed Temporal HTTP host is recorded
 in [HTTP/Temporal/PG acceptance](../architecture/reviews/2026-10-16-http-temporal-acceptance.md).
 It uses existing `A2AApplication`, `TemporalEngine`, PostgreSQL EffectJournal and

@@ -225,6 +225,9 @@ def test_actual_old_scoped_worker_uses_confirmed_legacy_update_and_replays(tmp_p
                 )
                 diag = await engine.diagnostics(original.run_id)
                 owned_runs.update(c["run_id"] for c in diag.workflow["children"])
+                for child in diag.workflow["children"]:
+                    for _ in range(2):
+                        await engine._command(child["run_id"], "drive", "old-child-drive")
                 for _ in range(3):
                     await engine._command(original.run_id, "drive", "old-repeated-drive")
                 events = await engine.events(original.run_id)
@@ -253,6 +256,10 @@ def test_actual_old_scoped_worker_uses_confirmed_legacy_update_and_replays(tmp_p
                 for index, target in enumerate(sorted(owned_runs)):
                     original_history = await client.get_workflow_handle(target).fetch_history()
                     await replay_temporal_history(original_history, namespace=namespace["name"])
+                    assert not any(
+                        e.HasField("workflow_execution_signaled_event_attributes")
+                        for e in original_history.events
+                    )
                     assert not any(
                         b"ralf-scoped-parent-repeat-drive-v1" in p.data
                         for e in original_history.events

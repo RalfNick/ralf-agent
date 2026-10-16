@@ -545,9 +545,22 @@ class TemporalEngine:
                 if binding is None
                 else self._handle(run_id, execution_epoch=binding["target_execution_epoch"])
             )
-            receipt = await handle.execute_update(
-                "command", {"command_id": command_id, "payload": payload}
-            )
+            from .temporal_command_transport import execute, supports
+            from .temporal_deployment_protocol import selected
+
+            if supports(payload) and (
+                public_selected(self._release) or not selected(self._release)
+            ):
+                receipt = await execute(
+                    self.client,
+                    run_id,
+                    {"command_id": command_id, "payload": payload},
+                    execution_epoch=None if binding is None else binding["target_execution_epoch"],
+                )
+            else:
+                receipt = await handle.execute_update(
+                    "command", {"command_id": command_id, "payload": payload}
+                )
         except sdk[1] as exc:
             cause = exc.cause
             if isinstance(cause, sdk[4]):

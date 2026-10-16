@@ -98,3 +98,14 @@ dev9 制品还需验证三个 HTTP/SSE 协议和 DeepSeek 固定 non-thinking �
 变更固定身份或存储格式前，先实现迁移／拒绝策略与真实恢复测试。未知业务效果先核验；回滚程序版本并不自动回滚数据库或远端写入。修复发布不能依赖删除执行日志来获得干净状态。
 
 dev12 制品还需在源码外运行 `ralf init my-parallel --template parallel`，验证历史 Profile 恢复、分支 Session／审批、共享预算与五个崩溃窗口；旧 dev11 native/v1/v2 请求／Manifest 保持精确，dev11 续跑 v3 在派发前拒绝。检查终态资源尚未静止时仍保留 Session 预留，原生授权回调核验不会再次派发。
+
+## P3-3 原Run必要控制增量
+
+制品`dist/p3-run-command-20261016/ralf_agent-0.1.0.dev120-py3-none-any.whl`，SHA256
+`185b1d23c5967ba29daad647be9d56f9a3ac36559150dc9ac14d275165c900b2`，附独立
+`verification.json`／`SHA256SUMS`。它包含前批修复及本次原Run必要控制运输窄修。
+源码／隔离安装各1,272项；相同wheel三个实际SDK场景分别通过，原失败、warning及
+各自运行快照详见[验收记录](../architecture/reviews/2026-10-16-temporal-run-command-capacity.md)。
+此前12组制品不变。默认Card／普通发布与保存History兼容通过；所选实验指纹变化，
+历史所选发布仍需精确匹配Worker。不可变旧Worker只保留原Update兼容路径及其上限，
+没有追溯修复或未知义务清除。完整P3-3、原P3-2失败及后续门槛均未关闭。

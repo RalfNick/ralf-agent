@@ -1,6 +1,8 @@
 # 第三阶段支持矩阵与收口门槛
 
 
+最新[原Run必要控制运输](../architecture/reviews/2026-10-16-temporal-run-command-capacity.md)：旧包2,000次Update后首次取消失败已实证；窄修复用原Run／Parent完整handler，仅替换cancel／drive／人工核验运输。源码／安装各1,272项；同包native、旧Worker兼容分别通过，图父子各2,000次后取消、整树停止、重启和三History独立1 passed／16.672秒。两次夹具失败及动态导入warning保留；不是单次完整矩阵通过。其他Update／History、旧不安全Run和完整P3-3继续开放；P3-2及全部后续门槛不变。
+
 最新[scoped原Action人工恢复容量](../architecture/reviews/2026-10-16-temporal-scoped-manual-recovery.md)：原Registry满4096后可证明并确认原普通Tool，重复回执绑定原epoch；结束债务与效果分开，Owner/native/旧无标记门禁保持。源码／安装各1,233项，真实同包图child1 passed／129.402秒，含线程、父额度、重启、三History及owned关闭；两次原服务失败保留。仅该SDK容量子集验收，其他Update／History、旧Run及完整P3-3仍开放，P3-2原失败和后续门槛不变。
 
 最新[默认无Owner工具结束证据修复](../architecture/reviews/2026-10-16-temporal-unowned-tool-end.md)：新标记Run逐Action保留物理结束义务，人工效果确认和其他Tool成功不能使父任务提前结算。源码／独立安装各1,176项；真实同包2 passed／19.339秒，其中新Run为保护证据，旧基础Worker仅为已知风险基线，含重启、原回执、History及owned关闭。首轮观察竞态2失败保留。旧无标记Run未追溯修复；默认Local不受影响。该批scoped人工容量未实施，随后由上述增量补证；其他Update／History及完整P3-3继续开放，P3-2原失败和全部门槛不变。

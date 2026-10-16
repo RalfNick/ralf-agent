@@ -352,13 +352,17 @@ async def _command(client, proof, kind, *, owner_id):
         )
     payload = {"kind": kind, "scope": proof["scope"]}
     await _namespace(client, proof["namespace"])
-    result = await client.get_workflow_handle(
-        proof["run_id"], run_id=proof["execution_epoch"]
-    ).execute_update(
-        "command",
-        {"command_id": command_id, "payload": payload},
-        **({} if public else {"id": command_id}),
-    )
+    request = {"command_id": command_id, "payload": payload}
+    if public:
+        from .temporal_command_transport import execute
+
+        result = await execute(
+            client, proof["run_id"], request, execution_epoch=proof["execution_epoch"]
+        )
+    else:
+        result = await client.get_workflow_handle(
+            proof["run_id"], run_id=proof["execution_epoch"]
+        ).execute_update("command", request, id=command_id)
     await _namespace(client, proof["namespace"])
     return result
 

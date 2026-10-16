@@ -727,13 +727,13 @@ async def control(runtime, client, value, info):
             command = "ralf-deployment-control:" + digest(
                 [proof["run_id"], proof["execution_epoch"], child["run_id"], epoch, kind]
             )
-            receipt = await handle.execute_update(
-                "command",
-                {"command_id": command, "payload": {"kind": kind, "scope": proof["scope"]}},
-                # Public mechanical retries must reach the original handler;
-                # fixed SDK Update IDs would return a cached receipt instead.
-                **({} if public_selected(proof["manifest"]) else {"id": command}),
-            )
+            request = {"command_id": command, "payload": {"kind": kind, "scope": proof["scope"]}}
+            if public_selected(proof["manifest"]):
+                from .temporal_command_transport import execute
+
+                receipt = await execute(client, call["run_id"], request, execution_epoch=epoch)
+            else:
+                receipt = await handle.execute_update("command", request, id=command)
             result = (
                 {"run_id": child["run_id"], "recovery_requested": True}
                 if mode == "recover"

@@ -18,6 +18,7 @@ with workflow.unsafe.imports_passed_through():
         coding_create_inventory,  # noqa: F401 -- preload fixed pure native inventory
         temporal_coding_composition_state,  # noqa: F401 -- original selected physical proof
         temporal_coding_state,  # noqa: F401 -- preload original pure native gates
+        temporal_command_transport,  # noqa: F401 -- original Run control observations
         temporal_context_read_state,  # noqa: F401 -- preload original pure read gates
         temporal_deployment_coding_registry,  # noqa: F401 -- original scoped close index
         temporal_deployment_coding_state,  # noqa: F401 -- original pure call fencing
@@ -906,6 +907,12 @@ class TemporalRunWorkflow:
                 non_retryable=True,
             ) from None
 
+    @workflow.signal(name="control_command")
+    async def control_command(self, envelope: dict) -> None:
+        from .temporal_command_transport import accept
+
+        await accept(self, envelope, workflow.info())
+
     @workflow.update(name="admit_context_dispatch")
     async def admit_context_dispatch(self, request: dict) -> dict:
         try:
@@ -1189,6 +1196,14 @@ class TemporalRunWorkflow:
         try:
             self.state.authorize(request.get("scope"))
             kind = request["kind"]
+            if kind == "status" and "command_observation" in request:
+                from .temporal_command_transport import observe
+
+                return {
+                    "command_observation": observe(
+                        self, request["command_observation"], workflow.info()
+                    )
+                }
             if kind == "deployment_coding_validation":
                 return self.deployment_coding_validation(request)
             if kind == "deployment_admission":

@@ -24,6 +24,7 @@ FILES = {
     "temporal_activities.py",
     "temporal_state.py",
     "temporal_workflow.py",
+    "temporal_command_transport.py",
     "temporal_parent_workflow.py",
     "temporal_parent_state.py",
     "temporal_control_activities.py",

@@ -27,7 +27,7 @@
 | 范围 | 状态与约束 |
 | --- | --- |
 | P3-2 | S1普通Session功能子集已有验收；S2已有真实PG日志与关闭证据，但原360秒仍未通过，当前完整矩阵尚缺。性能专项后置，该未完成组合不列为已支持 |
-| P3-3 | 用户已批准独立推进；Local及普通Agent HTTP→Temporal／PG控制、宿主重启和事件游标已有实测；公有普通2已有4096原树取消及根Tool人工核验／结束／ACK证据；默认scoped满容量首次取消、重复drive图恢复及旧Worker兼容已验，默认scoped普通Tool人工核验容量已有有限证据；其他Update／History门槛仍待，本项不关闭 |
+| P3-3 | 用户已批准独立推进；Local及普通Agent HTTP→Temporal／PG控制、宿主重启和事件游标已有实测；公有普通2已有4096原树取消及根Tool人工核验／结束／ACK证据；默认scoped满容量首次取消、重复drive图恢复及旧Worker兼容已验，默认scoped普通Tool人工核验容量已有有限证据；原Run／图父子必要控制在2,000 distinct Update后可用；其他Update／History门槛仍待，本项不关闭 |
 | P3-4／P3-5／P3-A | 原依赖和验收保持，身份权限／保留、框架恢复与阶段整体未关闭，不新增后端／编排／Runner／部署组合 |
 | R01–R26其余目标 | 保留为长期路线图；外部采用和框架对等比较单独验收，不自动成为本轮实现任务 |
 
@@ -72,6 +72,8 @@ P3-3已有默认关闭的`tasks/events` HTTP分页：原Scope／Run游标、字�
 **最新scoped原Action人工恢复容量：** 普通预留明确拒绝后，原Registry经现有CONTROL只读核验原SDK启动／排程、Scope、请求、Action和执行epoch，再为原普通Tool保留唯一确认槽；重复回执携带原epoch绑定，作用仍由原Run采纳。Scheduled-only不当作执行或停止证据，Owner仍需原grant，native和旧无标记不安全Run不获豁免。总身份上界为3C+M原Action库存，不声称每Run固定4096。
 
 最终源码／独立安装各 **1,233 passed**，431产品一致、默认发布与保存History兼容通过。安装后真实默认scoped图child满4096核验、重复回执、父额度保留、线程结束、Worker重启、三History重放及owned关闭 **1 passed／129.402秒**。首次121.445秒因既有child的depth启动字段被拒，第二次123.039秒因测试变量覆盖启动函数失败，均保留；仅必要格式兼容与测试修正，原180秒及其他门槛不变。最终制品 `dist/p3-scoped-manual-final-20261016/`；此前11组已验收制品哈希不变。源码／安装／SDK服务不合并为HTTP／PG矩阵；无真实模型调用。完整P3-3、Run／Registry其他Update与History生命周期、旧Run处理仍开放，P3-2原失败及P3-4／5／A不变。见[验收记录](../architecture/reviews/2026-10-16-temporal-scoped-manual-recovery.md)。下一批只核对剩余必要控制生命周期，预计一批定向复现及必要修复，不扩展后端或部署组合。
+
+**原Run控制运输收尾：** 旧不可变包在同一Run重复2,000次Update后首次取消真实失败（1 failed／9.642秒）。新窄修仅以原Run Signal／Query传输cancel、drive、人工reconcile，完整复用Run／Parent handler和原回执；64观察缓存不删除业务身份，送达后未知不回退。源码／隔离安装60模块各 **1,272 passed**，432产品一致。相同wheel的单Agent和旧Worker兼容分别通过；图父子各2,000次Update后取消、整树停止、重启、原回执及三History回放独立 **1 passed／16.672秒**。两次测试夹具失败和一条动态导入warning保留，不拼成单次完整全绿。默认发布／保存History兼容及此前12组制品哈希通过。交付制品`dist/p3-run-command-20261016/`，详见[记录](../architecture/reviews/2026-10-16-temporal-run-command-capacity.md)。仅此必要控制子集闭环；native／end-ACK、Registry强核验、Session和History生命周期仍待，完整P3-3／P3-2及后续门槛保持。下一批只核对这些剩余入口中实际阻塞必需取消／恢复的路径，不新增功能。
 
 ## 历史实现与验收证据
 

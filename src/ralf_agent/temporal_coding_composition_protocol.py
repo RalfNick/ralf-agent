@@ -172,6 +172,18 @@ def _pure_sources():
 
 def _worker_sources():
     return {
+        "run_command_transport": (
+            "temporal_command_transport",
+            (
+                "supports",
+                "_identity",
+                "accept",
+                "observe",
+                "_legacy_snapshot",
+                "_receipt",
+                "execute",
+            ),
+        ),
         "publication": (
             "temporal_activities",
             (
@@ -265,6 +277,7 @@ def _worker_sources():
                 "TemporalRunWorkflow.run",
                 "TemporalRunWorkflow._deadline",
                 "TemporalRunWorkflow.command",
+                "TemporalRunWorkflow.control_command",
                 "TemporalRunWorkflow.view",
                 "TemporalRunWorkflow.coding_composition_namespace",
                 "TemporalRunWorkflow.coding_composition_child_epoch",

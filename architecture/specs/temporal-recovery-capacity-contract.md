@@ -358,7 +358,36 @@ No confirmation proves handler stop, effect ACK or retirement.
 Let M be original SDK-verified ordinary Action inventory across original accepted
 Run Histories. Extra manual identities are at most M, including zero-cost Tools;
 normal/cancel/drive remain at most3C, total at most3C+M. There is no fixed4096-per-Run
-or Update/History bound. No identity is evicted. Strong proof transport and Run
-application still use Updates. Session/other Update lifecycle, native fence and
+or Update/History bound. No identity is evicted. At that scoped-manual snapshot, strong proof transport and Run
+application still use Updates; the following increment changes necessary Run commands only. Session/other Update lifecycle, native fence and
 legacy unsafe handling remain open. The [batch record](../reviews/2026-10-16-temporal-scoped-manual-recovery.md)
 separates source, installed and actual service evidence; full P3-3 stays open.
+
+
+## Necessary original Run command transport
+
+Registry capacity and original Run distinct-Update limits are independent. The
+current SDK uses original Run Signal/Query observations only for default/public
+`cancel`, `drive` and `reconcile(query=False)`. Each fresh observation invokes the
+complete original `Run.command`/`Parent.command`, including repeated-wake and seal
+rules; it must not return a saved business receipt without executing that handler.
+Retransmission of one observation is deduplicated.64 bounded observations never
+evict business identity or constitute a History event/byte bound.
+
+Full Scope/request digest and original SDK namespace/workflow/first/original epoch
+are checked. The observer pins ports/epoch; validates typed original receipt;
+waits at most30 seconds. Delivery, timeout, cancellation or cache eviction can leave
+acceptance unknown. After Signal, no fallback Update or new business ID is allowed.
+A new observation of the same original business command may retry the observation.
+
+Only an exact legacy status snapshot, original SDK type/first epoch/namespace and
+second epoch-pinned status authorize old Worker Update compatibility. Generic
+validation_error/unknown replies never do. Immutable old Workers retain their
+original Update limit. Private deployment1/private composition retain old transport;
+other command kinds, native grants/end evidence, Session and Registry strong proof
+are unchanged. Existing public internal child controls retain their original proof
+and post-await checks around the same helper.
+
+Same-wheel actual native/graph-child pressure and immutable old Worker compatibility
+have separate passing case evidence; neither complete P3-3 nor all SDK Update/
+History lifecycle is closed. See [record and retained failures](../reviews/2026-10-16-temporal-run-command-capacity.md).

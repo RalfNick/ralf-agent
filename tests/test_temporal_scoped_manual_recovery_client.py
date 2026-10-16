@@ -62,7 +62,28 @@ def fixture(*, fault=None):
             self.epoch = epoch
 
         async def query(self, *args):
-            return {}
+            return {
+                "run_id": request["target"],
+                "state": "waiting_reconciliation",
+                "state_revision": 1,
+                "result": None,
+                "error": None,
+                "pending": [],
+                "actions": [],
+                "consistency": "authoritative",
+            }
+
+        async def signal(self, *args):
+            pytest.fail("explicit legacy fixture must not receive Signals")
+
+        async def describe(self):
+            return NS(
+                id=request["target"],
+                run_id="original-epoch",
+                namespace="default",
+                raw_info=NS(first_run_id="original-epoch"),
+                workflow_type="ralf.temporal.run.v1",
+            )
 
         async def execute_update(self, name, value):
             calls.append(("command", self.epoch))

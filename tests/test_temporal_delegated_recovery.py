@@ -48,6 +48,35 @@ def sdk_commands(client, original_node):
         def __getattr__(self, name):
             return getattr(self.handle, name)
 
+        async def signal(self, name, envelope):
+            from ralf_agent.temporal_command_transport import accept
+
+            assert name == "control_command"
+            await accept(original_node, envelope, self.info())
+
+        def info(self):
+            return SimpleNamespace(
+                workflow_id=original_node.state.run_id,
+                run_id=original_node.state.epoch,
+                first_execution_run_id=original_node.state.epoch,
+                original_execution_run_id=original_node.state.epoch,
+                namespace=client.namespace,
+            )
+
+        async def query(self, name, request):
+            if name == "view" and "command_observation" in request:
+                from ralf_agent.temporal_command_transport import observe
+
+                return {
+                    "command_observation": observe(
+                        original_node, request["command_observation"], self.info()
+                    )
+                }
+            return await self.handle.query(name, request)
+
+        async def describe(self):
+            return await self.handle.describe()
+
         async def execute_update(self, name, request, **options):
             if name != "command":
                 return await self.handle.execute_update(name, request, **options)
