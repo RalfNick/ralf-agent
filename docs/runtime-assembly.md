@@ -1,6 +1,6 @@
 # 可替换端口与版本化配置装配
 
-dev8 建立公共端口及版本化配置，dev9 增加模型协议，dev10 增加串行静态图；dev11 交付受管理 Tool 节点与一次性 POSIX MCP stdio，dev12 交付有界并行图。默认仍是本地单 Coordinator；当前通过显式 SDK 已提供独立 Temporal 执行；本地多进程池、HTTP／持久 MCP 和 CLI 沙箱尚未交付。配置版本固定与运行中热更新分开。
+先用一个 JSON／TOML 文件装配已有的模型、工具、上下文和数据组件。默认使用本地 SQLite 与单 Coordinator；本教程不要求远程数据库或调度服务。配置文件选择显式注册的组件，不能替代运行中的组件或新增执行权威；旧任务按已接受的版本恢复。
 
 ## 1. 无需修改 Python 的离线开始路径
 
@@ -14,6 +14,14 @@ ralf --config runtime.toml run --spec agent.toml --input question --command-id q
 模板生成运行配置、Agent 声明与可编辑工厂。默认 Provider 是明确标记的 offline-echo，返回输入与版本标签；它验证装配和恢复，没有模型推理、网络或收费调用。
 
 `runtime.toml` 保留 assistant 的 1／2 两个版本。仅修改 `[default]` 的 version 到 2：新命令使用 config-v2，之前提交的 Run 仍使用 config-v1。相同 command_id 和请求始终找回原回执，不把原 Run 升级。
+
+config 模板的应用入口默认使用固定命令 ID `config-demo`。改输入或希望用新默认执行一项新任务时，显式提供新的 ID：
+
+```sh
+python -m agent_app --input '另一项任务' --command-id task-002
+```
+
+相同 ID、相同输入是重放；相同 ID 改输入会返回 `idempotency_conflict`。同一输入需要按新版本重新执行时也应使用新 ID，不要改写旧 Profile。model 模板默认 ID 为 `model-demo`，遵循同一规则。
 
 ```sh
 python -m agent_app --input pending --command-id pending-001 --submit-only
@@ -43,7 +51,7 @@ adapter = "bounded-recall"
 max_pages = 1
 ```
 
-JSON 使用同样的 schema_version/default/profiles 结构。Profile 只包含 name、version、providers、components；每个组件只包含 adapter 和可选 config。配置是有限 JSON；重复 JSON 键、未知字段和未注册适配器被拒绝。配置文件上限 1 MB，不执行 Python、不动态导入插件，也不使用 eval。
+JSON 使用同样的 schema_version/default/profiles 结构。本节 schema_version=1 的基础 Profile 包含 name、version、providers、components；每个组件包含 adapter 和可选 config。每 Agent 的 binding_components 使用已有 schema_version=2 声明，不能直接放入版本1目录。配置是有限 JSON；重复 JSON 键、未知字段和未注册适配器被拒绝。配置文件上限 1 MB，不执行 Python、不动态导入插件，也不使用 eval。
 
 `RuntimeProfile` 保存独立配置快照，读取 providers/components 返回副本。`RuntimeCatalog.register` 不允许相同 name/version 对应不同内容；`set_default` 只改变新任务选择。原 Run 保存 profile 身份摘要，`resolve` 必须精确匹配。应保留原声明、原适配器代码版本与原数据；Catalog 不归档 Python 代码、外部服务或数据库，也不自动迁移它们。
 
@@ -51,7 +59,7 @@ JSON 使用同样的 schema_version/default/profiles 结构。Profile 只包含 
 
 | 配置位置 | 内置 adapter | 说明 |
 | --- | --- | --- |
-| providers.ALIAS | offline-echo / chat-completions / deepseek-chat / anthropic-messages / gemini-content | 离线回显与明确模型协议；原生能力及限制见模型指南 |
+| providers.ALIAS | offline-echo / 已交付的模型协议适配器 | 离线回显与明确模型协议；adapter 名称、能力及限制见[模型指南](model-adapters.md) |
 | components.tools | empty | 无工具；自己的 Python 工具通过注册工厂提供 |
 | components.context_assembler | default | ContextAssembler，当前不接受配置参数 |
 | components.harness | native | NativeHarness |
@@ -88,7 +96,7 @@ builder = RuntimeBuilder(registry)
 
 Chat adapter 接收 model、base_url、max_output_tokens、token_parameter、timeout 和 api_key_env。api_key_env 默认 OPENAI_API_KEY；指定其他变量后，不回退到默认变量。密钥只在构造时从环境取得，不进入 Profile 或 Run Manifest。内嵌 api_key 等未知字段在构造前拒绝。
 
-dev9 还接收生成参数、stream 和能力限制，提供三个新增 adapter；默认参数缺省保持旧 Chat identity。 dev21 的 chat-completions／deepseek-chat 还接受显式布尔 `json_mode=true`，在非流式请求中发送原生 JSON-object 格式；必须在提示中要求 JSON，不能与 `stream=true` 或显式 `.stream()` 合用。缺省保持既有身份；JSON 模式不代替输出 Schema 或业务正确性校验。凭据、原生 protocol 与真实 model 模板见 [模型指南](model-adapters.md)。Gemini tools=True 在构造前拒绝，不会通过能力声明启用未实现行为。
+模型适配器还提供各自支持的生成参数、stream 和能力限制；省略配置保持原默认身份。chat-completions／deepseek-chat 接受显式布尔 `json_mode=true`，在非流式请求中发送原生 JSON-object 格式；必须在提示中要求 JSON，不能与 `stream=true` 或显式 `.stream()` 合用。JSON 模式不代替输出 Schema 或业务正确性校验。凭据、协议与 model 模板见[模型指南](model-adapters.md)。`gemini-content` 文本适配器不能通过 tools=true 启用函数；需要工具时选择已有的 `gemini-functions` 并按[续接指南](model-continuation.md)显式配置。
 
 自定义工厂也应使用环境或应用的凭据服务；配置声明属于需要保留的非秘密数据。SDK 无法识别自定义任意字段是否含秘密，不能把秘密塞进自定义 config。接入真实 Provider 后可能产生收费调用；真实模型的小规模测试结果见[质量报告](live-model-quality.md)；离线模板不会自行发起模型调用。
 
@@ -122,7 +130,7 @@ dev8 保留 local-4、执行 Schema v1、默认 Manifest 与调用方摘要。�
 
 默认 SQLiteRunReader 在激活运行实例前查询 submit／approve／cancel／reconcile 原回执，按可信 Scope 和完整调用参数校验。重放不会关闭正在执行的新版本，也不要求旧 profile 仍可装配；参数变化仍报 idempotency_conflict。自定义 RunReader 可实现 CommandReceiptReader 获得控制回执的独立读取；仅实现基础端口时，控制请求交给原实例处理。diagnostics 是可选能力，缺失时 CLI 仍输出普通结果。
 
-Workflow 支持原有顺序入口和静态图；图节点、条件、输入映射、纯变换、受管理 Tool 节点及有界并行已交付。Provider SSE 的完整响应收集与能力预检在 dev9 交付；这不等于 SDK 实时流或数据流编排。一次性 POSIX MCP stdio 已交付；循环、HTTP／持久 MCP、CLI 沙箱和企业身份仍未交付；子 Run、多 Agent 与独立 Temporal 已在后续增量交付，见文末链接。实际外部后端必须另做契约验证。
+本教程的顺序与静态图使用 Local 默认执行。已有 Tool 节点、有界并行、动态规划、Team 与独立 Temporal 按对应指南显式装配，不能仅换一个数据适配器就切换执行后端。MCP HTTP、CLI 工具和沙箱也已有各自的接入范围，见[实现清单](implementation-status.md)；不把某一适配器的支持扩大为所有部署均可用。Provider SSE 不等于 Workflow 数据流编排，实际外部后端仍需按组合验证。
 
 ## 图工作流组件
 

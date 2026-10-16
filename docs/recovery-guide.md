@@ -1,6 +1,6 @@
 # 审批、重启与未知效果恢复
 
-适用版本：0.1.0.dev9／local-4。两个接收／采纳窗口已有本地真实进程回归证据，完整 M1 验收仍未完成。恢复使用原数据库、Scope 和工厂，包括原 Harness／ToolExecutor、可选 Recall／Knowledge／planner 身份。使用 --config 时保留原 profile 声明、适配器代码及数据，见 [运行装配](runtime-assembly.md)。执行日志与业务效果证据应一起保留；取消和关闭不会撤销远端操作。
+本指南介绍当前 Local／SQLite 的基本观察、审批与恢复；各历史版本必须遵守其原执行协议，不保证任意旧 Run 都可由当前内核续跑。完整阶段验收状态见[实现清单](implementation-status.md)。恢复使用原数据库、Scope 和工厂，包括原 Harness／ToolExecutor、可选 Recall／Knowledge／planner 身份。使用 --config 时保留原 Profile 声明、适配器代码及数据，见[运行装配](runtime-assembly.md)；Temporal 使用其[独立执行指南](temporal-execution.md)。执行日志与业务效果证据应一起保留；取消和关闭不会撤销远端操作。
 
 ## 先观察，再继续
 
@@ -23,6 +23,15 @@ ralf --db .ralf/runs.sqlite events RUN_ID --after 0 --limit 100
 | succeeded / failed / cancelled | 检查 actions 中是否仍有 outcome_unknown；Run 终态不代表所有外部效果已确定 |
 
 `inspect` 的建议描述下一步；读取成功或 CLI 退出码 0 不代表 Run 已成功完成，应以 `state/result/error` 为准。
+
+使用 Profile 配置时，观察命令不需要先装配模型；即使当前配置文件不可用，仍可用同一绝对 `--db` 执行 `status/inspect/events`。继续执行则必须恢复原 Run 对应的 Profile 和组件，不能拿新默认替代缺失的旧版本。示例：
+
+```bash
+ralf --db /ABSOLUTE/PATH/runs.sqlite --format text inspect RUN_ID
+ralf --db /ABSOLUTE/PATH/runs.sqlite --config /ABSOLUTE/PATH/runtime.toml resume RUN_ID
+```
+
+持久 Session／Turn 的观察超时、忙碌状态及恢复见[Session 指南](session-api.md)；显式用户提问使用[原问题的输入控制](user-input.md)回答，重新提交一个任务不能代替回答原问题。
 
 recorded_evidence 表示已收到、已耐久保存但尚未采纳的模型响应或工具观察，unresolved_effects 表示仍未确认的写。前者恢复时使用原证据，不重新调用原请求；后续活跃步骤可以继续执行。终态 Run 也可以采纳保存的证据与结算费用，终态保持不变。not_dispatched 则是本次调用在实际开始前被拒绝；它不抹掉历史 Attempt 的未知效果或额度。
 
