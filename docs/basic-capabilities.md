@@ -48,3 +48,5 @@ Temporal Coding Session 的原360秒验收仍未通过，保留为后续收尾�
 2026-10-16 复现：Python 函数需要参数，但显式 Schema 漏写 `required` 时，Local 会生成无法执行的审批请求，Temporal 模型 Activity 也会采纳该缺参提案。现于原 `RegisteredTool.resolve_arguments` 边界，在 Schema／默认值解析后拒绝缺少函数必填参数的输入；不修改用户 Schema、工具身份或执行权威。默认值、宿主 context、bound method 和 keyword-only 参数保留原语义，接入说明见[工具 SDK](sdk-model-tools.md)。
 
 新增12项回归覆盖缺参拒绝、合法顶层／组合 Schema 原身份、默认值及原审批关闭重开恢复；原命令／批准回读后只发生一次业务写入。源码10模块178项通过，wheel 安装后5模块86项通过，产品425文件与源码逐项一致；安装检查在 checkout 外执行，无源码导入路径，复用现有依赖。Ruff、格式和空白检查通过。Temporal 证据仅为模型 Activity 的公共参数采纳，不是实际 Service／History 验收；本批未调用真实模型或外部服务，也不关闭新的阶段门槛。
+
+后续复核又复现注册后新增 `__defaults__`／`__kwdefaults__` 会让缺参检查放行的问题。现改为检查合并原已捕获默认值后的全部非 context 参数，不依据后来变化的 Python 默认值决定参数能否缺省；原 Schema／工具身份不变。4项新增／参数化用例先失败后通过，相关源码12模块209项、独立安装7模块117项全部通过，包含原审批恢复、重复批准以及真实同步线程取消／关闭检查；425产品文件与安装包逐项一致，Ruff／格式／空白检查通过。验证范围不扩展到真实模型、实际 Temporal Service 或第三阶段门槛。

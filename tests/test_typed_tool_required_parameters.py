@@ -47,7 +47,7 @@ class MissingArgumentProvider:
         return ModelResponse(tool_calls=(ToolCall("lookup", {}, "call"),))
 
 
-def required_tool():
+def required_tool(*, mutate_defaults=False):
     tools = ToolRegistry()
 
     def lookup(record_id: str):
@@ -63,14 +63,17 @@ def required_tool():
             "additionalProperties": False,
         },
     )
+    if mutate_defaults:
+        lookup.__defaults__ = ("replacement-target",)
     return tools
 
 
-def test_local_refuses_missing_callable_argument_before_approval(tmp_path):
+@pytest.mark.parametrize("mutate_defaults", [False, True])
+def test_local_refuses_missing_callable_argument_before_approval(tmp_path, mutate_defaults):
     with LocalEngine(
         SQLiteStore(tmp_path / "runs.sqlite"),
         providers={"default": MissingArgumentProvider()},
-        tools=required_tool(),
+        tools=required_tool(mutate_defaults=mutate_defaults),
     ) as engine:
         run = engine.submit(AgentSpec("lookup", "Lookup", ("lookup",)), "find", command_id="one")
         result = asyncio.run(engine.drive(run.run_id))
@@ -79,11 +82,13 @@ def test_local_refuses_missing_callable_argument_before_approval(tmp_path):
         assert all(action["kind"] == "model" for action in result.actions)
 
 
-def test_temporal_model_activity_refuses_missing_callable_argument():
+@pytest.mark.parametrize("mutate_defaults", [False, True])
+def test_temporal_model_activity_refuses_missing_callable_argument(mutate_defaults):
     from ralf_agent.temporal_activities import TemporalRuntime
 
     runtime = TemporalRuntime(
-        providers={"default": MissingArgumentProvider()}, tools=required_tool()
+        providers={"default": MissingArgumentProvider()},
+        tools=required_tool(mutate_defaults=mutate_defaults),
     )
     result = asyncio.run(
         runtime.complete_model(
@@ -96,6 +101,37 @@ def test_temporal_model_activity_refuses_missing_callable_argument():
     )
     assert result["ok"] is False
     assert not result.get("tool_calls")
+
+
+@pytest.mark.parametrize("keyword_only", [False, True])
+def test_added_live_defaults_cannot_supply_originally_required_arguments(keyword_only):
+    def positional(record_id: str):
+        return record_id
+
+    def keyword(*, record_id: str):
+        return record_id
+
+    lookup = keyword if keyword_only else positional
+    tools = ToolRegistry()
+    tools.register_function(
+        lookup,
+        name="lookup",
+        effect="read_only",
+        input_schema={
+            "type": "object",
+            "properties": {"record_id": {"type": "string"}},
+            "additionalProperties": False,
+        },
+    )
+    original = tools.manifests(["lookup"])
+    if keyword_only:
+        lookup.__kwdefaults__ = {"record_id": "replacement-target"}
+    else:
+        lookup.__defaults__ = ("replacement-target",)
+    assert tools.manifests(["lookup"]) == original
+    with pytest.raises(ValidationError):
+        tools.get("lookup").resolve_arguments({})
+    assert tools.get("lookup").resolve_arguments({"record_id": "A-1"}) == {"record_id": "A-1"}
 
 
 @pytest.mark.parametrize("composite", [False, True])
