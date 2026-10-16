@@ -1787,6 +1787,8 @@ class TemporalCommandRegistryWorkflow:
         if request.get("scope") != self.commands.scope:
             return {"error": "authorization_denied"}
         try:
+            if request.get("kind") == "scoped_drive_command":
+                return self.commands.scoped_drive_command(request)
             if request.get("kind") == "coding_composition_candidates":
                 return self.commands.composition_candidates(request["manifest_digest"])
             if request.get("kind") == "coding_composition_admission":

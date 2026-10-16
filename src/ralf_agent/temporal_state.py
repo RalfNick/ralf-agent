@@ -1712,7 +1712,33 @@ class TemporalCommandRegistryState:
             return
         self.scope, self.capacity, self.identities = detached(scope), capacity, {}
         self.scoped_cancellations = {}
+        self.scoped_drives = {}
         self.composition_submissions = {}
+
+    def scoped_drive_command(self, request):
+        self._require_scoped_mode()
+        if request.get("scope") != self.scope:
+            raise AuthorizationDenied("Scoped recovery belongs to another trusted Scope")
+        target = request.get("target")
+        text(target, "Recovery target")
+        if len(target) > 1024:
+            raise ValidationError("Recovery target exceeds its allowance")
+        identity = {
+            "kind": "drive",
+            "target": target,
+            "payload_digest": digest({"scope": self.scope, "kind": "drive"}),
+        }
+        saved = self.scoped_drives.get(target)
+        for index in range(len(self.identities) + 1):
+            candidate = saved or "drive:" + digest(
+                [self.scope, target] if index == 0 else [self.scope, target, index]
+            )
+            previous = self.identities.get(candidate)
+            if previous is None or previous == identity:
+                return detached(
+                    {"version": 1, "scope": self.scope, "target": target, "command_id": candidate}
+                )
+        raise ValidationError("Original scoped recovery identity unavailable")
 
     def reserve(self, request):
         if self.deployment is not None:
@@ -1729,20 +1755,29 @@ class TemporalCommandRegistryState:
                 "Scoped command ID already identifies different content or target"
             )
         if previous is None:
-            protected_cancel = False
+            protected = None
             if len(self.identities) >= self.capacity:
-                protected_cancel = (
-                    identity["kind"] == "cancel"
+                slots = {
+                    "cancel": self.scoped_cancellations,
+                    "drive": self.scoped_drives,
+                }.get(identity["kind"])
+                allowed = (
+                    slots is not None
                     and identity["payload_digest"]
-                    == digest({"scope": self.scope, "kind": "cancel"})
-                    and identity["target"] not in self.scoped_cancellations
+                    == digest({"scope": self.scope, "kind": identity["kind"]})
+                    and identity["target"] not in slots
+                    and (
+                        identity["kind"] != "drive"
+                        or command_id == self.scoped_drive_command(request)["command_id"]
+                    )
                     and any(
                         item["kind"] == "submit" and item["target"] == identity["target"]
                         for item in self.identities.values()
                     )
                 )
-                if not protected_cancel:
+                if not allowed:
                     raise ValidationError("Temporal scoped command registry capacity exhausted")
+                protected = slots
             metadata = request.get("coding_composition")
             if metadata is not None:
                 from .session_types import sha
@@ -1768,8 +1803,8 @@ class TemporalCommandRegistryState:
                     "namespace": None,
                 }
             self.identities[command_id] = identity
-            if protected_cancel:
-                self.scoped_cancellations[identity["target"]] = command_id
+            if protected is not None:
+                protected[identity["target"]] = command_id
         return {
             "command_id": command_id,
             "target": identity["target"],

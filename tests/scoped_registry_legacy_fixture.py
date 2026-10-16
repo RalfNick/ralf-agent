@@ -1,4 +1,4 @@
-"""Run only the original immutable basic SDK Registry, with explicit owned stop."""
+"""Run the original immutable SDK Registry/Parent, with explicit owned stop."""
 
 import asyncio
 import json
@@ -8,11 +8,17 @@ import sys
 from pathlib import Path
 
 from temporalio.client import Client
-from temporalio.worker import Worker
 
 import ralf_agent
-from ralf_agent.temporal import _workflow_runner
-from ralf_agent.temporal_workflow import TemporalCommandRegistryWorkflow
+from ralf_agent.temporal import build_temporal_worker
+from ralf_agent.temporal_activities import TemporalRuntime
+
+
+class Provider:
+    identity = {"kind": "legacy-scoped-drive", "version": "1"}
+
+    async def complete(self, messages, tools):
+        return ralf_agent.ModelResponse(output="original answer")
 
 
 async def main():
@@ -23,14 +29,14 @@ async def main():
     )
     stop = asyncio.Event()
     asyncio.get_running_loop().add_signal_handler(signal.SIGTERM, stop.set)
-    worker = Worker(
-        client,
-        task_queue=queue,
-        workflows=[TemporalCommandRegistryWorkflow],
-        workflow_runner=_workflow_runner(),
-    )
+    runtime = TemporalRuntime(providers={"default": Provider()}, tools=ralf_agent.ToolRegistry())
+    worker = build_temporal_worker(client, task_queue=queue, runtime=runtime)
     async with worker:
-        (directory / "ready.json").write_text(json.dumps({"package_file": ralf_agent.__file__}))
+        (directory / "ready.json").write_text(
+            json.dumps(
+                {"package_file": ralf_agent.__file__, "release": runtime.orchestration_release}
+            )
+        )
         await stop.wait()
     (directory / "closed.json").write_text(
         json.dumps(

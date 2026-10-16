@@ -642,8 +642,14 @@ class TemporalParentWorkflow(TemporalRunWorkflow):
                 repeated_wake = (
                     request["payload"]["kind"] == "drive"
                     and before == self.state.revision
-                    and public_deployment(self.state.manifest)
                     and getattr(self.state, "deployment_seal", None) is None
+                    and (
+                        public_deployment(self.state.manifest)
+                        or (
+                            not deployment_selected(self.state.manifest)
+                            and workflow.patched("ralf-scoped-parent-repeat-drive-v1")
+                        )
+                    )
                 )
                 if repeated_wake:
                     # The command receipt stays immutable; this fresh Update is

@@ -27,7 +27,7 @@
 | 范围 | 状态与约束 |
 | --- | --- |
 | P3-2 | S1普通Session功能子集已有验收；S2已有真实PG日志与关闭证据，但原360秒仍未通过，当前完整矩阵尚缺。性能专项后置，该未完成组合不列为已支持 |
-| P3-3 | 用户已批准独立推进；Local及普通Agent HTTP→Temporal／PG控制、宿主重启和事件游标已有实测；公有普通2已有4096原树取消及根Tool人工核验／结束／ACK证据；默认scoped满容量首次取消及旧Worker兼容已验，其他History生命周期与scoped恢复／native门槛仍待，本项不关闭 |
+| P3-3 | 用户已批准独立推进；Local及普通Agent HTTP→Temporal／PG控制、宿主重启和事件游标已有实测；公有普通2已有4096原树取消及根Tool人工核验／结束／ACK证据；默认scoped满容量首次取消、重复drive图恢复及旧Worker兼容已验，scoped人工核验及其他Update／History门槛仍待，本项不关闭 |
 | P3-4／P3-5／P3-A | 原依赖和验收保持，身份权限／保留、框架恢复与阶段整体未关闭，不新增后端／编排／Runner／部署组合 |
 | R01–R26其余目标 | 保留为长期路线图；外部采用和框架对等比较单独验收，不自动成为本轮实现任务 |
 
@@ -57,9 +57,13 @@ P3-3已有默认关闭的`tasks/events` HTTP分页：原Scope／Run游标、字�
 
 **当前HTTP／Temporal／PG验收：** 未改产品代码，复用`5646260`不可变wheel。安装后真实审批、未知写人工确认和显式取消 **3 passed／21.370秒**；六个HTTP子进程依次关闭／重启，原Inbox、Scope、命令回执和事件游标保留。审批／核验各真实PG写一次并adopted，取消零写；原Run／Registry重放、退休和owned关闭通过，最终测试schema已只读确认删除。源码与安装受影响检查各 **47 passed**，429产品及旧制品无漂移。首轮2失败保留，其未完成PG证据继续保留；修复的是测试lifespan和原异常保留，不新增执行封装。详见[本轮记录](../architecture/reviews/2026-10-16-http-temporal-acceptance.md)。下一批只核对其余必要容量恢复边界，预计一批定向审查／必要修复；不关闭完整P3-3或解锁P3-4／5／A。
 
-**当前默认scoped取消修复：** 原Registry满正常容量后，每个原submit目标最多保留一次纯cancel，原身份不删，总记录至多正常容量两倍。七类同步Run预留使用原Registry的有界Signal／Query；Session保留原Update，仅精确识别旧Worker后才走其旧Update，Signal后未知／超时／等待取消均不回退。源码／隔离wheel51模块各 **1,131 passed**，430产品一致；默认Card／普通发布等值及保存原／续接History重放通过。
+**默认scoped取消批次：** 原Registry满正常容量后，每个原submit目标最多保留一次纯cancel，原身份不删，总记录至多正常容量两倍。七类同步Run预留使用原Registry的有界Signal／Query；Session保留原Update，仅精确识别旧Worker后才走其旧Update，Signal后未知／超时／等待取消均不回退。源码／隔离wheel51模块各 **1,131 passed**，430产品一致；默认Card／普通发布等值及保存原／续接History重放通过。
 
-安装后真实Temporal两场景 **2 passed／123.093秒**：默认4096正常记录拒新提交，原首次取消变4097，重复回执、新ID拒绝、quiescent及Run／Registry重放通过；不可变基础SDK旧Worker使用Update且零Signal，实际History可重放。owned关闭通过，无模型／PG调用。开发期6项SDK夹具失败和3项Session误路由RED保留，已修复；旧Worker测试的失败清理亦已补齐。旧制品不变，完整P3-3及P3-2原门槛不关闭；scoped drive／人工核验、native及其他Update生命周期继续待验。详见[本批记录](../architecture/reviews/2026-10-16-temporal-scoped-cancellation.md)。下一步只审查剩余必要恢复路径的可复现阻塞，不扩展功能。
+安装后真实Temporal两场景 **2 passed／123.093秒**：默认4096正常记录拒新提交，原首次取消变4097，重复回执、新ID拒绝、quiescent及Run／Registry重放通过；不可变基础SDK旧Worker使用Update且零Signal，实际History可重放。owned关闭通过，无模型／PG调用。开发期6项SDK夹具失败和3项Session误路由RED保留，已修复；旧Worker测试的失败清理亦已补齐。旧制品不变，完整P3-3及P3-2原门槛不关闭；该批未验的drive由下述增量补证；scoped人工核验与其他Update生命周期继续待验。详见[本批记录](../architecture/reviews/2026-10-16-temporal-scoped-cancellation.md)。下一步只审查剩余必要恢复路径的可复现阻塞，不扩展功能。
+
+**当前默认scoped机械恢复批次：** 原Registry提供稳定drive身份与有界碰撞替代，满容量每个原submit目标保留一次drive；默认Parent重复恢复经Temporal patch保持旧History语义。容量候选源码／安装各1,169项，安装后真实Session图满4096恢复及不可变旧Worker重放 **2 passed／133.942秒**；原保存检查两次失败后，同一drive恢复成功，根消息只写一次，Turn释放及owned关闭通过。首轮1失败／1通过的测试观察错误及原记录保留。
+
+最终包仅补hint Query的SDK NOT_FOUND→RALF NotFound，其他错误不变；源码／安装各 **1,171 passed**，430产品一致，默认发布与保存History兼容通过。实际空Scope **1 passed／0.840秒**，Registry未创建；先前成功路径经代码对照限定复用，不合并为最终包同次完整矩阵。完整P3-3仍开放；下一批先核对原Action证据与上界，最小修复满容量scoped普通Tool人工核验。native无需另增Registry槽，其原候选／fence和其他Update生命周期门槛保留。详见[本批验收](../architecture/reviews/2026-10-16-temporal-scoped-drive.md)。
 
 ## 历史实现与验收证据
 

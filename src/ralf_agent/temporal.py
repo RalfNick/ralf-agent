@@ -587,44 +587,53 @@ class TemporalEngine:
 
     async def drive(self, run_id, *, wait_seconds=None):
         from .temporal_deployment_protocol import public_selected
+        from .temporal_scoped_reservation import drive_command
 
-        if public_selected(self._release):
+        public = public_selected(self._release)
+        scoped_command = None if public else await drive_command(self, run_id)
+        if public:
             closure = await self._view(run_id, "deployment_closure")
             if closure.get("seal") is not None:
                 from .temporal_deployment_submissions import recover_retirement
 
                 await recover_retirement(self, run_id, closure)
                 return await self.status(run_id)
-        # A public mechanical wake has fixed content. Reuse its command identity
+        # A mechanical wake has fixed content. Reuse its command identity
         # while sending a fresh SDK Update so the original History wakes again.
-        command_id = "drive:" + (
-            digest([asdict(self.scope), run_id])
-            if public_selected(self._release)
-            else uuid.uuid4().hex
+        command_id = (
+            "drive:" + digest([asdict(self.scope), run_id])
+            if public
+            else scoped_command or "drive:" + uuid.uuid4().hex
         )
         try:
             await self._command(run_id, "drive", command_id)
         except IdempotencyConflict:
-            if not public_selected(self._release):
-                raise
-            # Preserve a colliding old command. The original Registry proposes
-            # another identity; registration still performs every normal check.
-            diagnostics = await self.deployment_diagnostics()
-            hint = next(
-                (
-                    item
-                    for item in diagnostics.get("recovery_drive_hints", [])
-                    if item.get("run_id") == run_id
-                ),
-                None,
-            )
-            if (
-                hint is None
-                or hint.get("durable") is not False
-                or hint.get("command_id") == command_id
-            ):
-                raise
-            await self._command(run_id, "drive", hint["command_id"])
+            if not public:
+                if scoped_command is None:
+                    raise
+                replacement = await drive_command(self, run_id)
+                if replacement is None or replacement == command_id:
+                    raise
+            else:
+                # Preserve a colliding old command. The original Registry proposes
+                # another identity; registration still performs every normal check.
+                diagnostics = await self.deployment_diagnostics()
+                hint = next(
+                    (
+                        item
+                        for item in diagnostics.get("recovery_drive_hints", [])
+                        if item.get("run_id") == run_id
+                    ),
+                    None,
+                )
+                if (
+                    hint is None
+                    or hint.get("durable") is not False
+                    or hint.get("command_id") == command_id
+                ):
+                    raise
+                replacement = hint["command_id"]
+            await self._command(run_id, "drive", replacement)
         deadline = asyncio.get_running_loop().time() + (
             self.drive_timeout if wait_seconds is None else wait_seconds
         )

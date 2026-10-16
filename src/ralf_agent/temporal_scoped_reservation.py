@@ -100,6 +100,60 @@ def _receipt(value, request):
     return value
 
 
+def _legacy_configuration(value, scope):
+    return (
+        type(value) is dict
+        and set(value) == {"scope", "capacity", "accepted_commands"}
+        and value["scope"] == scope
+        and type(value["capacity"]) is int
+        and 1 <= value["capacity"] <= 4096
+        and type(value["accepted_commands"]) is int
+        and 0 <= value["accepted_commands"] <= value["capacity"]
+    )
+
+
+async def drive_command(engine, run_id):
+    """Read a suggestion only; normal reservation still validates its identity."""
+    import asyncio
+    import re
+    from dataclasses import asdict
+
+    from .temporal import _sdk
+    from .temporal_state import text
+
+    if engine._closed:
+        raise ValidationError("TemporalEngine is closed")
+    text(run_id, "Run ID")
+    scope = asdict(engine.scope)
+    handle = engine._registry or engine.client.get_workflow_handle(engine.command_registry_id)
+    sdk = _sdk()
+    try:
+        async with asyncio.timeout(30):
+            value = await handle.query(
+                "view", {"kind": "scoped_drive_command", "scope": scope, "target": run_id}
+            )
+    except sdk[6] as exc:
+        if exc.status == sdk[7].NOT_FOUND:
+            from .errors import NotFound
+
+            raise NotFound("Temporal command registry was not found") from None
+        raise
+    if _legacy_configuration(value, scope):
+        return None
+    if (
+        type(value) is not dict
+        or set(value) != {"version", "scope", "target", "command_id"}
+        or type(value["version"]) is not int
+        or value["version"] != 1
+        or value["scope"] != scope
+        or value["target"] != run_id
+        or type(value["command_id"]) is not str
+        or re.fullmatch("drive:[a-f0-9]{64}", value["command_id"]) is None
+    ):
+        raise DefinitionMismatch("Original scoped recovery suggestion unavailable")
+    return value["command_id"]
+
+
 async def reserve(handle, request, *, namespace):
     import asyncio
     from uuid import uuid4
@@ -141,15 +195,7 @@ async def reserve(handle, request, *, namespace):
         first = await handle.query("view", envelope)
         # Old default Workers answer unknown views with this exact scoped
         # configuration. Identify them before any Signal; never guess on errors.
-        if (
-            type(first) is dict
-            and set(first) == {"scope", "capacity", "accepted_commands"}
-            and first["scope"] == request["scope"]
-            and type(first["capacity"]) is int
-            and 1 <= first["capacity"] <= 4096
-            and type(first["accepted_commands"]) is int
-            and 0 <= first["accepted_commands"] <= first["capacity"]
-        ):
+        if _legacy_configuration(first, request["scope"]):
             return _receipt(await handle.execute_update("reserve", request), request)
         first = observation(first)
         envelope["execution_epoch"] = first["execution_epoch"]

@@ -216,13 +216,15 @@ must appear in an original `submit` record. Same-Scope command identity/conflict
 checks still happen first. The first protected ID is immutable; another fresh ID,
 changed payload, unregistered target or a different control cannot claim its slot.
 No original record is deleted. Additional records are bounded by original submit
-targets, at most `capacity`, so total records are at most `2 * capacity`.
+targets, at most `capacity`. With the separate drive allowance below, total
+records are at most `3 * capacity`: normal records plus at most one cancel and one
+drive protection per original submit target.
 
 This original logical target record is not a deployment held-root proof or a
 physical-stop certificate. Registry acceptance remains `not_applied`; the original
 Run applies cancellation and retains its existing stopping/effect obligations.
-Default scoped `drive`, manual recovery, native Coding and other fresh commands
-gain no capacity exemption. Sessions retain their original Update transport and
+Default scoped manual recovery, native Coding and other fresh commands gain no
+capacity exemption here. Sessions retain their original Update transport and
 limits. This does not provide indefinite Run/Registry History availability.
 
 For the seven synchronous Run reservation kinds, the current SDK uses only the
@@ -242,6 +244,40 @@ retain their old capacity and Service Update limits; this compatibility path doe
 not retrofit the new cancellation allowance. Selected public Workers retain their
 separate pinned protocol. Actual capacity, old Worker and History evidence is
 recorded in the [scoped cancellation review](../reviews/2026-10-16-temporal-scoped-cancellation.md).
+
+### Repeatable original scoped wake
+
+The current default Registry also protects one pure `drive` per original submit
+target after normal capacity is full. Its pure `scoped_drive_command` view suggests
+the stable `drive:` identity derived from Scope/target. Existing conflicting IDs
+are retained; at most `N+1` deterministic candidates are needed for `N` original
+records. The suggestion mutates nothing and is not acceptance. The original
+reservation still enforces identity, Scope, pure payload, original submit and
+one-slot checks. Arbitrary new drive IDs cannot consume extra protection.
+
+The current SDK reuses that identity and sends a fresh Run Update for each wake.
+Only a definitive identity conflict permits one fresh suggestion/read and one
+retry; uncertain outcomes do not. A positively known old Worker's exact legacy
+configuration retains the original UUID drive behavior and limits. Closed facades
+and invalid Run IDs are rejected before reading a suggestion. SDK NOT_FOUND on
+that Query retains the RALF NotFound contract without creating a Registry; other
+transport errors, timeout and cancellation propagate unchanged.
+
+Run already retries recovery after repeated drive receipts. Default scoped Parent
+now likewise requests existing memory/session recovery and fresh child observation,
+while returning its original immutable receipt. The Temporal patch
+`ralf-scoped-parent-repeat-drive-v1` preserves old History replay: no marker means
+the old repeated-Parent behavior during replay. Public Parent retains its delivered
+path; private deployment1 is unchanged. Stop intent and seals are preserved;
+recovering evidence never reopens business or proves handler stop by itself.
+
+Actual full-capacity original Session graph recovery and old immutable Parent
+History evidence are recorded in the [scoped wake review](../reviews/2026-10-16-temporal-scoped-drive.md).
+This repairs logical command pressure, not the Run's distinct-Update ceiling or
+History compaction. Scoped ordinary manual confirmation remains a necessary open
+gate. Native grant/receipt/stop already use original Run Updates, so they do not
+need a new Registry native slot. Without the original fenced candidate, arbitrary
+native manual results must still be refused and unknown obligations retained.
 
 ## Compatibility and acceptance
 

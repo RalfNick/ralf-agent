@@ -2,6 +2,8 @@
 
 ## 当前优先级：先保障基础能力
 
+最新[默认scoped机械恢复](../architecture/reviews/2026-10-16-temporal-scoped-drive.md)：原Registry满4096时，同一drive恢复原Session图两次检查失败，根消息只写一次；容量候选实际2 passed／133.942秒，含不可变旧Parent无新patch重放和owned关闭。最终错误转换包源码／安装各1,171项，独立实际空Scope1 passed／0.840秒；代码对照限定复用未受影响成功证据，不称同包同次矩阵。scoped人工核验和其他Update／History生命周期仍待，P3-2／3不关闭，不解锁P3-4／5／A。
+
 最新[默认scoped首次取消修复](../architecture/reviews/2026-10-16-temporal-scoped-cancellation.md)：源码／隔离安装各1,131项，430产品一致；真实Temporal两场景2 passed／123.093秒。满4096正常记录仍可首次取消原目标并重取原回执；旧基础Worker精确识别后保持Update且零Signal，实际History重放和owned关闭通过。Session保留原运输；默认发布和保存History兼容通过。scoped drive／人工核验、native及其他Run／Registry Update生命周期仍待，完整P3-3与P3-2不关闭。旧失败及全部门槛保留，不解锁P3-4／5／A。
 
 P3-3增量记录：[HTTP事件分页](../architecture/reviews/2026-10-16-http-event-pages.md)、[原审批／核验／恢复唤醒](../architecture/reviews/2026-10-16-http-run-controls.md)、[公有Temporal根保护控制](../architecture/reviews/2026-10-16-temporal-recovery-capacity.md)、[原子任务重复唤醒与真实容量失败](../architecture/reviews/2026-10-16-temporal-delegated-recovery.md)。Local控制与重启已有有限证据；原根保护槽已有离线／安装证据。真实服务在4096逻辑容量前触及原History的2000 distinct Update上限，完整累计容量及所选服务验收未通过，P3-3不标完成。当前状态以交付摘要为准。

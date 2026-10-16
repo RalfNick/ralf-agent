@@ -135,9 +135,12 @@ Update/History lifecycle, native or default scoped capacity recovery.
 
 A later [default scoped cancellation repair](../architecture/reviews/2026-10-16-temporal-scoped-cancellation.md)
 verified first cancellation after4096 normal reservations and exact old Worker
-compatibility. It covers a zero-dispatch SDK case; scoped drive/manual recovery,
-native paths and other Update/History lifecycle gates remain open. It does not
-extend the HTTP/PG case matrix below.
+compatibility. It covers a zero-dispatch SDK case. The subsequent
+[scoped mechanical recovery increment](../architecture/reviews/2026-10-16-temporal-scoped-drive.md)
+also verified one repeatable drive identity recovering an original Session graph
+save after two inspection failures at capacity. Scoped manual confirmation and
+other Update/History lifecycle gates remain open. These SDK cases do not extend
+the HTTP/PG case matrix below.
 
 The current installation evidence for the borrowed Temporal HTTP host is recorded
 in [HTTP/Temporal/PG acceptance](../architecture/reviews/2026-10-16-http-temporal-acceptance.md).

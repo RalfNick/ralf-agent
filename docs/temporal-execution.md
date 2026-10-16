@@ -114,8 +114,11 @@ The current default scoped Worker preserves one first pure cancellation of an
 original submitted target after normal command capacity is full. Synchronous Run
 reservations use the original Registry's bounded Signal/Query observations;
 confirmed legacy Workers keep their original Update path and limits. Session
-commands retain their original transport. This narrow cancellation allowance
-does not cover scoped drive/manual recovery or guarantee unlimited History.
+commands retain their original transport. The default scoped Registry also
+provides one repeatable pure drive identity per original submitted target.
+Default Parent repeats recover original evidence under a Temporal History patch;
+old Workers retain their original drive behavior. It does not cover scoped manual
+confirmation or guarantee unlimited History.
 See the [capacity contract](../architecture/specs/temporal-recovery-capacity-contract.md#default-scoped-first-cancellation)
 for identity, retry, compatibility and remaining gates.
 
