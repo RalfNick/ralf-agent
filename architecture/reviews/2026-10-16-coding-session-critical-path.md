@@ -20,6 +20,25 @@
 
 该测量覆盖CONTROL主体，**未覆盖外层owned call-start/end ACK**，三子任务预闭合且没有显式Runner业务绑定，SDK形状端口也不是真实RPC。因此不把profile秒数或单个类别份额外推到原业务窗口，不据此跳过独立I/O两侧校验。证据：`/private/tmp/ralf-agent-dev121-session-state/full-control-current-profile/summary.json`，SHA256 `d1fd5b1bf33f7061d5c4a4a0150e0369dd7a469bd7af1a0919085bfbbd502a8c`；`runtime-callers.json` SHA256 `1afc5cfbb029f4fc9bb34a5317a8dc0dc47212808a7c9c0b595526a7f4bb4277`。425产品／862测试及物理夹具前后无漂移，原进程21597已exit0。
 
+## 绑定修复后的成本候选复核
+
+`04c512c` 已本地提交；本次产品与测试未修改，没有重跑真实服务或原360秒场景。上述CONTROL profile来自 `ec0ebe4` 安装包，**不包含后续release出口绑定复核**；可以用于定位调用形状，不能充当当前版本的计时或性能回归证明。
+
+| 候选 | 已核实的边界 | 本批决策 |
+| --- | --- | --- |
+| 定义解码／图拓扑归并 | 原完整CONTROL中Graph.from_dict合计约6.96ms、definition_tree约0.881ms、agent_paths约0.764ms；各累计窗口可能嵌套 | 不实施。这些调用并非足以解释整链超额的主要成本 |
+| Session字段投影 | selected_session_data累计约0.164秒，含effective_manifest深复制；公开投影还执行其他role／Artifact配置的原拒绝检查 | 不直接只取Session配置；不能用省略其他检查换取收益，也不把该累计值与子项相加 |
+| 原节点describe与admission Query并发 | 两项最初读取互不依赖；随后namespace、Registry／Start、父节点第二次刷新和最终独立全组仍有顺序要求 | 暂不实施。缺本次逐RPC耗时，最多隐藏每节点两项等待中较短者，尚无显著收益证据 |
+| 纯内置数据快速复制 | 含任意subclass／custom时整树回原deepcopy，能保留原custom memo／回调次序；exact-only仍有递归拒绝差异 | 否决，不替换detached或通用deepcopy |
+
+复制反例已实际执行：Python3.12.7、默认recursion_limit1000、600层exact dict可通过原canonical；原deepcopy抛RecursionError，私有快速复制却接受。混合custom回退不能解决这个exact-only反例。证据 `/private/tmp/ralf-agent-dev121-root/exact-json-clone-probe/result.json`，SHA256 `fa3af89e469059d6b20bf3c4832578b2dd57d7626f136ed597afadd7b64ef838`，含脚本、原型及原profile输入哈希。该反例不是吞吐基准，不作360秒性能结论；私有原型未进入产品。
+
+纯代码库存bulk与已否决的广义ContextVar pass需要区分：先解析并固定所有输入、进入guard后只处理exact不可变值，理论上能排除组件getter重入；但当前 `_constant` 的isinstance检查及LRU key计算之前仍可能遇到自定义co_consts，不能把“最终unknown拒绝”当作此前没有回调。**当前并无获准的bulk实现**；若后续采用，须先证明完整常量树与defaults快照纯度、独立入口和helper漂移拒绝，随后测完整调用收益，不先修改产品再补论据。也不据本次release修复归并 `_policy` 的两次full检查。
+
+完整Tool正向成本证据仍缺：正确入口为原owned Activity→Tool执行→CodingRuntime→Runner.execute_history。现成离线Connection只支持初始化，真正begin/resource/effect事务会明确拒绝；现成Authority单测还使用简化验证，不能冒充完整原链。因此不新造SQL仿真、替换journal或no-op验证来补“完整Tool”成绩。后续必须复用已授权PG与原SDK／Runner边界，或明确仅报告更窄的测量范围。没有消费第二次600秒诊断，也没有运行其余十二正常／五故障。
+
+本批关闭的阶段门槛为0；当前唯一集成阻塞仍是原图两Turn在360秒内成功及原关闭要求。产品验证继续引用 `04c512c` 的628项受影响回归、171项安装后验证和默认历史兼容，不能说本次又运行了一遍。下一批先解决完整调用的可观测范围与成组收益证据，再决定是否进入产品修复及原验收，不扩展功能或支持矩阵。
+
 ## 安全诊断后的原场景复验（2026-10-16）
 
 本批只运行原首项，Tool80／Runner60／approve180／scenario360／first-close60／cleanup40均保持原值，无诊断开关或性能采样。只读取已授权配置中的两个本机服务字段；未调用真实模型，未执行其余十二正常／五故障。425产品／862测试与当前工作区及独立安装一致，运行前后无漂移。
