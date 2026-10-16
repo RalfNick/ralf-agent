@@ -3,6 +3,7 @@
 import asyncio
 import copy
 import inspect
+import json
 import threading
 from collections.abc import Callable
 from contextvars import ContextVar
@@ -185,12 +186,11 @@ class RegisteredTool:
 
         if type(self.handler) is TypedFunctionHandler:
             values = self.handler.resolve_arguments(arguments)
-            # Captured defaults are already merged; every remaining parameter
-            # must be supplied. Live Python defaults must not fill a hole after
-            # approval, nor alter the caller's Schema or existing tool identity.
+            # The frozen Schema declares exactly the original non-context
+            # parameters. Captured defaults are already merged; live signature
+            # metadata and detached descriptors must not change this check.
             if any(
-                name != self.handler.context_parameter and name not in values
-                for name in inspect.signature(self.handler.function).parameters
+                name not in values for name in json.loads(self.handler._schema_json)["properties"]
             ):
                 raise ValidationError("Typed arguments omit a required callable parameter")
             return values

@@ -49,6 +49,9 @@ registration's identity. Source-less Python code has a normalized bytecode diges
 Captured owner/global dependencies still require explicit version/config identity.
 Changing the original function's `__defaults__` or `__kwdefaults__` after registration
 cannot supply an omitted required argument; execution uses the captured defaults.
+Parameter completeness also uses the frozen declaration, not a later `__signature__`
+or a mutable descriptor copy. Signature metadata cannot hide required inputs or
+introduce additional requirements into an already registered tool.
 Register a new definition when changing the intended defaults.
 Explicit Schemas must be closed object Schemas declaring exactly the callable
 parameters, with each default checked against its parameter Schema. Effective

@@ -2,6 +2,7 @@
 
 import asyncio
 import copy
+import inspect
 from dataclasses import asdict
 
 import pytest
@@ -47,7 +48,7 @@ class MissingArgumentProvider:
         return ModelResponse(tool_calls=(ToolCall("lookup", {}, "call"),))
 
 
-def required_tool(*, mutate_defaults=False):
+def required_tool(*, mutate_defaults=False, mutate_signature=False):
     tools = ToolRegistry()
 
     def lookup(record_id: str):
@@ -65,15 +66,21 @@ def required_tool(*, mutate_defaults=False):
     )
     if mutate_defaults:
         lookup.__defaults__ = ("replacement-target",)
+    if mutate_signature:
+        lookup.__signature__ = inspect.Signature()
     return tools
 
 
-@pytest.mark.parametrize("mutate_defaults", [False, True])
-def test_local_refuses_missing_callable_argument_before_approval(tmp_path, mutate_defaults):
+@pytest.mark.parametrize(
+    "mutate_defaults,mutate_signature", [(False, False), (True, False), (True, True)]
+)
+def test_local_refuses_missing_callable_argument_before_approval(
+    tmp_path, mutate_defaults, mutate_signature
+):
     with LocalEngine(
         SQLiteStore(tmp_path / "runs.sqlite"),
         providers={"default": MissingArgumentProvider()},
-        tools=required_tool(mutate_defaults=mutate_defaults),
+        tools=required_tool(mutate_defaults=mutate_defaults, mutate_signature=mutate_signature),
     ) as engine:
         run = engine.submit(AgentSpec("lookup", "Lookup", ("lookup",)), "find", command_id="one")
         result = asyncio.run(engine.drive(run.run_id))
@@ -82,13 +89,17 @@ def test_local_refuses_missing_callable_argument_before_approval(tmp_path, mutat
         assert all(action["kind"] == "model" for action in result.actions)
 
 
-@pytest.mark.parametrize("mutate_defaults", [False, True])
-def test_temporal_model_activity_refuses_missing_callable_argument(mutate_defaults):
+@pytest.mark.parametrize(
+    "mutate_defaults,mutate_signature", [(False, False), (True, False), (True, True)]
+)
+def test_temporal_model_activity_refuses_missing_callable_argument(
+    mutate_defaults, mutate_signature
+):
     from ralf_agent.temporal_activities import TemporalRuntime
 
     runtime = TemporalRuntime(
         providers={"default": MissingArgumentProvider()},
-        tools=required_tool(mutate_defaults=mutate_defaults),
+        tools=required_tool(mutate_defaults=mutate_defaults, mutate_signature=mutate_signature),
     )
     result = asyncio.run(
         runtime.complete_model(
@@ -132,6 +143,26 @@ def test_added_live_defaults_cannot_supply_originally_required_arguments(keyword
     with pytest.raises(ValidationError):
         tools.get("lookup").resolve_arguments({})
     assert tools.get("lookup").resolve_arguments({"record_id": "A-1"}) == {"record_id": "A-1"}
+
+
+@pytest.mark.parametrize("signature", ["hidden", "extra", "invalid"])
+def test_registered_defaults_do_not_depend_on_live_signature_metadata(signature):
+    def lookup(record_id: str = "A-1"):
+        return record_id
+
+    tools = ToolRegistry()
+    tools.register_function(lookup, effect="read_only")
+    original = tools.manifests(["lookup"])
+    lookup.__signature__ = {
+        "hidden": inspect.Signature(),
+        "extra": inspect.Signature([inspect.Parameter("ghost", inspect.Parameter.KEYWORD_ONLY)]),
+        "invalid": "not-a-python-signature",
+    }[signature]
+    tool = tools.get("lookup")
+    # A detached descriptor is also not the original parameter declaration.
+    tool.spec.input_schema["properties"].clear()
+    assert tool.resolve_arguments({}) == {"record_id": "A-1"}
+    assert tools.manifests(["lookup"]) == original
 
 
 @pytest.mark.parametrize("composite", [False, True])
