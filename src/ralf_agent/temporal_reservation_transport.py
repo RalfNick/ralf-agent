@@ -20,6 +20,7 @@ def _identity(owner, envelope):
         envelope["kind"] != "deployment_reserve_receipt"
         or type(request) is not dict
         or "descendant" in request
+        or "recovery" in request
         or request.get("kind")
         not in {"submit", "approve", "cancel", "reconcile", "drive", "send_input", "patch"}
     ):

@@ -101,6 +101,7 @@ async def _update(handle, name, value):
             and value.get("kind")
             in {"submit", "approve", "cancel", "reconcile", "drive", "send_input", "patch"}
             and "descendant" not in value
+            and "recovery" not in value
         ):
             from .temporal_reservation_transport import reserve
 
@@ -689,7 +690,7 @@ async def recover_retirement(engine, run_id, closure):
     return detached(certificate)
 
 
-def _control_result(value, command_id, target, scope, namespace, *, expected=None):
+def _control_result(value, command_id, target, scope, namespace, *, expected=None, manual=False):
     fields = {"command_id", "target", "record_state", "apply_state"}
     if type(value) is not dict or set(value) not in (fields, fields | {"control_binding"}):
         _reject()
@@ -719,11 +720,13 @@ def _control_result(value, command_id, target, scope, namespace, *, expected=Non
     )
     if (
         type(binding["version"]) is not int
-        or binding["version"] != 1
+        or binding["version"] not in ((1, 2) if manual else (1,))
         or binding["scope"] != scope
         or binding["namespace"] != namespace
         or binding["target"] != target
-        or binding["root_run_id"] == target
+        or (binding["root_run_id"] == target) != (binding["version"] == 2)
+        or binding["version"] == 2
+        and binding["root_execution_epoch"] != binding["target_execution_epoch"]
     ):
         _reject()
     from .temporal_deployment_execution import _text
@@ -739,6 +742,7 @@ async def guard(engine, kind, command_id, target, payload):
     from . import temporal_deployment_execution as execution
 
     payload = detached(payload)
+    manual = kind == "reconcile" and payload.get("query") is False
     payload_digest = digest(payload)
     policy, client, scope = _policy(engine), engine.client, asdict(engine.scope)
     namespace = await _namespace(engine, client, scope, policy)
@@ -762,7 +766,7 @@ async def guard(engine, kind, command_id, target, payload):
     )
     await _recheck(engine, client, scope, namespace, policy)
     if previous is not None:
-        return _control_result(previous, command_id, target, scope, namespace)
+        return _control_result(previous, command_id, target, scope, namespace, manual=manual)
     description = await client.get_workflow_handle(target).describe()
     epoch = description.run_id
     execution._text(epoch)
@@ -816,13 +820,37 @@ async def guard(engine, kind, command_id, target, payload):
             "root_execution_epoch": proof["admission"]["lineage"][0]["parent_execution_epoch"],
         }
     await _recheck(engine, client, scope, namespace, policy)
-    result = await _update(
-        handle,
-        "reserve",
-        request,
-    )
+    try:
+        result = await _update(handle, "reserve", request)
+    except ValidationError:
+        if not manual:
+            raise
+        # Ordinary admission remains unchanged. Only a definitive refusal can
+        # request this stronger original-Action proof, never a transport timeout.
+        from .temporal_manual_recovery import manual_payload
+
+        manual_payload(payload, scope)
+        request.pop("descendant", None)
+        request["recovery"] = {
+            "root_command_id": proof["admission"]["root"]["command_id"],
+            "execution_epoch": epoch,
+            "payload": payload,
+        }
+        expected = {
+            "target_execution_epoch": epoch,
+            "root_run_id": proof["admission"]["root"]["run_id"],
+            "root_execution_epoch": (
+                proof["admission"]["lineage"][0]["parent_execution_epoch"]
+                if proof["admission"]["lineage"]
+                else epoch
+            ),
+        }
+        await _recheck(engine, client, scope, namespace, policy)
+        result = await _update(handle, "reserve", request)
     await _recheck(engine, client, scope, namespace, policy)
-    return _control_result(result, command_id, target, scope, namespace, expected=expected)
+    return _control_result(
+        result, command_id, target, scope, namespace, expected=expected, manual=manual
+    )
 
 
 async def diagnostics(engine):

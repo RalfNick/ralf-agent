@@ -25,6 +25,7 @@ with workflow.unsafe.imports_passed_through():
         temporal_deployment_registry,  # noqa: F401 -- preload pure acceptance
         temporal_deployment_session_registry,  # noqa: F401 -- original Session command/claim facts
         temporal_deployment_session_updates,  # noqa: F401 -- Registry-owned SDK commit path
+        temporal_manual_recovery,  # noqa: F401 -- original Action recovery proof
         temporal_parent_completion_state,  # noqa: F401 -- preload pure parent release gates
         temporal_parent_state,  # noqa: F401 -- fixed original child addressing
         temporal_session_identity,  # noqa: F401 -- preload pure Session addressing
@@ -1188,6 +1189,28 @@ class TemporalRunWorkflow:
                 return deployment_state.view(self.state)
             if kind == "deployment_closure":
                 return deployment_release_state.view(self.state)
+            if kind == "deployment_manual_recovery":
+                from .errors import DefinitionMismatch
+                from .temporal_deployment_admission import _exact
+                from .temporal_manual_recovery import action_proof
+
+                _exact(request, {"kind", "scope", "payload"})
+                info = workflow.info()
+                if (
+                    info.workflow_id != self.state.run_id
+                    or info.namespace != getattr(self.state, "deployment_namespace", None)
+                    or any(
+                        getattr(info, name, None) != self.state.epoch
+                        for name in (
+                            "run_id",
+                            "first_execution_run_id",
+                            "original_execution_run_id",
+                        )
+                    )
+                    or getattr(self.state, "deployment_original_epoch", None) != self.state.epoch
+                ):
+                    raise DefinitionMismatch("Manual proof requires its original SDK History")
+                return action_proof(self.state, request["payload"])
             if kind == "deployment_coding_call_candidate":
                 from .temporal_deployment_admission import _exact
 
@@ -1476,7 +1499,7 @@ class TemporalCommandRegistryWorkflow:
                 self.commands.deployment is not None
                 and self.commands.admission_protocol in (2, 3, 4)
                 and type(request) is dict
-                and "descendant" in request
+                and ("descendant" in request or "recovery" in request)
             ):
                 prepared = self.commands.prepare_deployment_control(request)
                 if "receipt" in prepared:
@@ -1485,13 +1508,18 @@ class TemporalCommandRegistryWorkflow:
                 response = await workflow.execute_activity(
                     DEPLOYMENT_RELEASE_ACTIVITY,
                     {
-                        "mode": "control",
+                        "mode": "manual_control" if "manual_payload" in prepared else "control",
                         "scope": prepared["request"]["scope"],
                         "root": prepared["root"],
                         "target": prepared["request"]["target"],
                         "target_execution_epoch": prepared["target_execution_epoch"],
                         "manifest": envelope["manifest"],
                         "registry_execution_epoch": workflow.info().run_id,
+                        **(
+                            {"payload": prepared["manual_payload"]}
+                            if "manual_payload" in prepared
+                            else {}
+                        ),
                     },
                     task_queue=envelope["task_queue"],
                     start_to_close_timeout=timedelta(seconds=envelope["activity_timeout"]),

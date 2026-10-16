@@ -37,6 +37,7 @@ class PublicDeploymentAdmissionState(DeploymentAdmissionState):
         self.retirements = {}
         self.control_bindings = {}
         self.recovery_controls = {}
+        self.manual_recoveries = {}
 
     def _submission(self, request):
         metadata = request["root_admission"]
@@ -131,6 +132,7 @@ class PublicDeploymentAdmissionState(DeploymentAdmissionState):
         if type(request) is not dict or set(request) not in (
             _REQUEST_FIELDS,
             _REQUEST_FIELDS | {"descendant"},
+            _REQUEST_FIELDS | {"recovery"},
         ):
             raise ValidationError("Invalid public deployment control fields")
         scope = self._authority(request)
@@ -174,7 +176,7 @@ class PublicDeploymentAdmissionState(DeploymentAdmissionState):
         scope, key, identity, previous = self._control_request(request)
         if previous is not None:
             return self._control_receipt(key)
-        if "descendant" in request:
+        if "descendant" in request or "recovery" in request:
             raise AuthorizationDenied("Descendant control requires original SDK verification")
         root = next(
             (
@@ -236,7 +238,22 @@ class PublicDeploymentAdmissionState(DeploymentAdmissionState):
         scope, _, _, previous = self._control_request(request)
         if previous is not None:
             return {"receipt": self._control_receipt(digest([scope, request["command_id"]]))}
-        descendant = request.get("descendant")
+        manual = request.get("recovery")
+        if manual is not None:
+            from .temporal_manual_recovery import manual_payload
+
+            _exact(manual, {"root_command_id", "execution_epoch", "payload"})
+            payload = manual_payload(manual["payload"], scope)
+            if request["kind"] != "reconcile" or request["payload_digest"] != digest(payload):
+                raise DefinitionMismatch("Manual control payload changed")
+            slot = digest(
+                [scope, request["target"], manual["execution_epoch"], payload["action_id"]]
+            )
+            if slot in self.manual_recoveries:
+                raise IdempotencyConflict("Original Action already has its manual confirmation")
+            descendant = {k: manual[k] for k in ("root_command_id", "execution_epoch")}
+        else:
+            descendant = request.get("descendant")
         _exact(descendant, {"root_command_id", "execution_epoch"})
         for value in descendant.values():
             _text(value)
@@ -256,7 +273,11 @@ class PublicDeploymentAdmissionState(DeploymentAdmissionState):
             or root["command_id"] != descendant["root_command_id"]
             or root["run_id"]
             != root_run_id(self.policy["deployment_id"], scope, root["command_id"])
-            or request["target"] == root["run_id"]
+            or manual is None
+            and request["target"] == root["run_id"]
+            or manual is not None
+            and request["target"] == root["run_id"]
+            and descendant["execution_epoch"] != root["execution_epoch"]
         ):
             raise DefinitionMismatch("Descendant control changed its original root identity")
         record = self.submissions.get(root_key)
@@ -303,7 +324,7 @@ class PublicDeploymentAdmissionState(DeploymentAdmissionState):
                 },
             }
         )
-        if len(self.commands) >= self.capacity:
+        if manual is None and len(self.commands) >= self.capacity:
             raise ValidationError("Temporal deployment command registry capacity exhausted")
         return _detached(
             {
@@ -311,6 +332,7 @@ class PublicDeploymentAdmissionState(DeploymentAdmissionState):
                 "root": root,
                 "submission": submission,
                 "target_execution_epoch": descendant["execution_epoch"],
+                **({"manual_payload": payload, "manual_slot": slot} if manual is not None else {}),
             }
         )
 
@@ -318,8 +340,23 @@ class PublicDeploymentAdmissionState(DeploymentAdmissionState):
         prepared = self.prepare_deployment_control(request)
         if "receipt" in prepared:
             return prepared["receipt"]
+        manual = "manual_payload" in prepared
+        if manual:
+            from .temporal_manual_recovery import validate_proof
+
+            _exact(verification, {"binding", "action"})
+            validate_proof(
+                verification["action"],
+                scope=prepared["request"]["scope"],
+                run_id=prepared["request"]["target"],
+                epoch=prepared["target_execution_epoch"],
+                manifest_digest=prepared["root"]["manifest_digest"],
+                action_id=prepared["manual_payload"]["action_id"],
+            )
+            verification = verification["binding"]
         _exact(verification, CONTROL_BINDING_FIELDS)
-        if type(verification["version"]) is not int or verification["version"] != 1:
+        version = 2 if manual and prepared["request"]["target"] == prepared["root"]["run_id"] else 1
+        if type(verification["version"]) is not int or verification["version"] != version:
             raise ValidationError("Invalid original descendant control binding version")
         _scope(verification["scope"])
         _namespace(verification["namespace"])
@@ -327,7 +364,7 @@ class PublicDeploymentAdmissionState(DeploymentAdmissionState):
             _text(verification[name])
         root = prepared["root"]
         expected = {
-            "version": 1,
+            "version": version,
             "scope": prepared["request"]["scope"],
             "namespace": root["namespace"],
             "target": prepared["request"]["target"],
@@ -355,6 +392,8 @@ class PublicDeploymentAdmissionState(DeploymentAdmissionState):
         # Preparation rechecked the held root and capacity after SDK verification.
         self.commands[key] = command
         self.control_bindings[key] = binding
+        if manual:
+            self.manual_recoveries[prepared["manual_slot"]] = key
         return self._control_receipt(key)
 
     def deployment_submission(self, request):

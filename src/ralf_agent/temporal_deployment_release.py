@@ -455,7 +455,7 @@ async def execute(runtime, client, value, info):
             id="ralf-deployment-release:" + digest(certificate) + ":" + uuid4().hex,
         )
         execution._actual(client, info, run_id=proof["run_id"], epoch=proof["execution_epoch"])
-    elif mode == "control":
+    elif mode in {"control", "manual_control"}:
         proof, result = await _verify_control(runtime, client, policy, value, info)
     elif mode == "verify":
         _exact(
@@ -560,6 +560,7 @@ async def _control_epoch(client, namespace, run_id, epoch, *, registry=False):
 async def _verify_control(runtime, client, policy, value, info):
     from .temporal_deployment_execution_state import _root
 
+    manual = value.get("mode") == "manual_control"
     execution._exact(
         value,
         {
@@ -570,7 +571,8 @@ async def _verify_control(runtime, client, policy, value, info):
             "target_execution_epoch",
             "manifest",
             "registry_execution_epoch",
-        },
+        }
+        | ({"payload"} if manual else set()),
     )
     runtime.validate_release(value["manifest"])
     root = value["root"]
@@ -580,7 +582,8 @@ async def _verify_control(runtime, client, policy, value, info):
         root["registry_id"] != registry
         or root["scope"] != value["scope"]
         or root["manifest_digest"] != digest(value["manifest"])
-        or root["run_id"] == value["target"]
+        or not manual
+        and root["run_id"] == value["target"]
     ):
         _reject()
     execution._actual(client, info, run_id=registry, epoch=value["registry_execution_epoch"])
@@ -623,9 +626,17 @@ async def _verify_control(runtime, client, policy, value, info):
         value["target_execution_epoch"],
         required=True,
     )
-    if not proof["admission"]["lineage"] or proof["admission_receipt"]["root"] != root:
+    if (
+        not manual
+        and not proof["admission"]["lineage"]
+        or proof["admission_receipt"]["root"] != root
+    ):
         _reject()
-    original = await execution._ancestry(runtime, client, policy, proof, read_only=True)
+    original = (
+        await execution._ancestry(runtime, client, policy, proof, read_only=True)
+        if proof["admission"]["lineage"]
+        else proof
+    )
     if (
         original["run_id"] != root["run_id"]
         or original["execution_epoch"] != root["execution_epoch"]
@@ -636,6 +647,24 @@ async def _verify_control(runtime, client, policy, value, info):
         or original["namespace"] != root["namespace"]
     ):
         _reject()
+    if manual:
+        from .temporal_manual_recovery import manual_payload, validate_proof
+
+        payload = manual_payload(value["payload"], value["scope"])
+        action = await client.get_workflow_handle(
+            proof["run_id"], run_id=proof["execution_epoch"]
+        ).query(
+            "view",
+            {"kind": "deployment_manual_recovery", "scope": value["scope"], "payload": payload},
+        )
+        validate_proof(
+            action,
+            scope=value["scope"],
+            run_id=proof["run_id"],
+            epoch=proof["execution_epoch"],
+            manifest_digest=proof["manifest_digest"],
+            action_id=payload["action_id"],
+        )
     epochs = [(proof["run_id"], proof["execution_epoch"])] + [
         (link["parent_run_id"], link["parent_execution_epoch"])
         for link in proof["admission"]["lineage"]
@@ -647,7 +676,7 @@ async def _verify_control(runtime, client, policy, value, info):
     )
     execution._actual(client, info, run_id=registry, epoch=value["registry_execution_epoch"])
     result = {
-        "version": 1,
+        "version": 2 if manual and proof["run_id"] == original["run_id"] else 1,
         "scope": value["scope"],
         "namespace": root["namespace"],
         "target": proof["run_id"],
@@ -655,7 +684,7 @@ async def _verify_control(runtime, client, policy, value, info):
         "root_run_id": original["run_id"],
         "root_execution_epoch": original["execution_epoch"],
     }
-    return proof, result
+    return proof, {"binding": result, "action": action} if manual else result
 
 
 def registered_activity(runtime, client):

@@ -236,8 +236,9 @@ class SQLiteEffectEvidence:
 class CommittedThreadWrite:
     """A real zero-cost write commits before its trusted sync thread blocks."""
 
-    def __init__(self, path):
+    def __init__(self, path, *, hold_seconds=45):
         self.path = str(path)
+        self.hold_seconds = hold_seconds
         self.started, self.release, self.ended = (threading.Event() for _ in range(3))
         with sqlite3.connect(self.path) as db:
             db.execute(
@@ -254,7 +255,7 @@ class CommittedThreadWrite:
             )
         self.started.set()
         try:
-            assert self.release.wait(45), "owned sync write was not allowed to end"
+            assert self.release.wait(self.hold_seconds), "owned sync write was not allowed to end"
             return result
         finally:
             self.ended.set()

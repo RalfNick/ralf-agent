@@ -20,17 +20,19 @@ identity conflicts are checked before capacity and current root availability.
 Original records are never deleted, overwritten or made reusable after retirement.
 
 Each accepted root first consumed a normal command record. Thus there can be at
-most `capacity` accepted roots over the Registry lifetime, at most `2 * capacity`
-protection records, and at most `3 * capacity` total command records. The protection
+most `capacity` accepted roots over the Registry lifetime and at most `2 * capacity`
+root protection records. Including the Action protection below, total command
+records are at most `3 * capacity + M`. The protection
 index is similarly bounded. Counts still report actual records; the normal limit
 is not silently increased for arbitrary commands. This bounds command identities,
 not total Temporal History bytes or Update traffic. Caller backoff and later
 retention work remain necessary.
 
 Fresh external SDK descendant controls still require original SDK ancestry
-verification and ordinary command capacity. The original Parent's internal
+verification and ordinary command capacity, except the verified manual Action
+protection below. The original Parent's internal
 mechanical delegation is a separate, already authorized path described below.
-`approve`, `reconcile`, `send_input`, `patch` and fresh
+`approve`, query-based `reconcile`, `send_input`, `patch` and fresh
 submissions gain no exemption. Private deployment1 and unselected scoped Registries
 retain their old limits. In particular, accepting a root cancellation does not
 prove that a descendant cancellation succeeded, an external handler stopped or an
@@ -114,7 +116,7 @@ No alternate transport or Continue-as-New lifecycle is delivered by this change.
 The next selected Worker provides `reserve_command` as a narrow original Registry
 Signal, with `view(kind="deployment_reserve_receipt")` observation. It supports
 only public2/3/4 `submit/approve/cancel/reconcile/drive/send_input/patch` reservations
-without `descendant`. The Signal invokes the existing synchronous
+without `descendant` or asynchronous `recovery` proof metadata. The Signal invokes the existing synchronous
 `commands.reserve`; that method still owns all acceptance, identity, conflict,
 capacity and root checks. Session `session_*` reservations, descendant Activity
 verification and other Updates retain their original paths. This is no general
@@ -151,6 +153,58 @@ descendant, scoped or complete P3-3 service coverage. The raw Update2000 failure
 and the first Signal4096/180 failure remain separate immutable evidence. Current
 acceptance is recorded in the [reservation review](../reviews/2026-10-16-temporal-reservation-transport.md).
 
+## Original Action manual confirmation
+
+The next selected Worker adds a narrow protected manual `reconcile(query=False)`
+reservation for an original unknown ordinary Tool Action, on a root or descendant.
+The SDK first uses ordinary admission unchanged. Only a definitive validation
+refusal may request the stronger proof path; observation timeout, caller
+cancellation and identity/authorization failures never trigger that retry.
+Normal-capacity legacy manual evidence, including completed late evidence,
+therefore keeps its original behavior.
+
+The original Registry's asynchronous `reserve` verifies its held-bound original
+root and saved submission, then invokes its original release Activity. The Activity
+verifies original Registry/target SDK epochs, namespace, Scope, manifest and full
+descendant ancestry. It reads `deployment_manual_recovery` from the epoch-pinned
+original Run. This pure Query requires an unsealed admitted History, an unknown
+ordinary Tool Action, original dispatch and a matching **allowed actual Tool
+Activity** in `deployment_calls`, with its original attempt ID, full carrier digest,
+manifest and epoch. If ToolExecutionOwner is selected, its original grant,
+invocation and complete Tool request digest must also match. Default ordinary
+Tools do not acquire a new Owner requirement. Native delegated Coding Actions
+are excluded from this proof, retaining their existing normal-capacity behavior.
+
+After the Activity, the Registry rechecks root availability, global scoped command
+identity and the Action slot before committing. Caller proof objects cannot take
+the synchronous Signal/reserve path. Root manual bindings use version2 to pin the
+same root/target SDK epoch; descendant bindings remain version1. Only manual
+reconcile accepts a root binding. No direct external command bypass is added.
+
+There is one immutable protected manual slot per `(Scope, target, original epoch,
+Action ID)`, shared across caller command IDs, attempts and results. The first
+verified registration wins; another fresh ID cannot reserve it again. Exact old
+receipts remain discoverable before reading the current target, including after
+retirement; changed payloads retain their original conflict. Manual payloads are
+plain finite JSON with an explicit result and at most1MiB, including their fields.
+
+Let `M` be the number of original ordinary Tool Actions with matching allowed
+actual-call records across the original accepted trees. Each Action maps to a
+distinct immutable Activity ID in its Run's4096-entry actual-call ledger; retries
+do not create Action slots. Original finite child/depth policy and at most
+`capacity` accepted roots bound those trees. Thus extra manual records are at
+most `M`; zero-cost Tools do not evade this bound. This is not a History-byte or
+Update-traffic bound. No business command or actual-call record is evicted.
+
+The Registry receipt is only `not_applied`. The original Run alone adopts manual
+evidence and handles races: a real receipt arriving after proof is retained and
+late evidence cannot overwrite it; an irreversible seal still rejects new work.
+Manual evidence never implies handler stop, effect ACK or root retirement. Their
+original independent obligations continue. The current active-Worker probe is
+separate from closing-Assembly maintenance, scoped Registry recovery, native
+Coding proof and other Update lifecycle gates; full P3-3 stays open. Evidence is
+recorded in the [manual recovery review](../reviews/2026-10-16-temporal-manual-recovery.md).
+
 ## Compatibility and acceptance
 
 Changed selected source inventories include `temporal.py`,
@@ -161,6 +215,8 @@ new experimental release even though the publication integer remains 2/3/4.
 The synchronous reservation repair additionally changes `temporal_workflow.py`,
 `temporal_deployment_submissions.py` and `temporal_deployment_protocol.py`, pinning
 the new `temporal_reservation_transport.py` in the public source inventory.
+Manual protection additionally pins `temporal_manual_recovery.py`; its SDK,
+Registry, Activity and Query changes require the matching new selected Worker.
 Keep the exact package/release/Worker required by an old selected History.
 Do not replace its immutable Worker, reset its Registry or claim these protection
 semantics for an old Registry merely because its configuration integer matches.

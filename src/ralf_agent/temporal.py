@@ -483,7 +483,14 @@ class TemporalEngine:
                     type(binding) is not dict
                     or set(binding) != CONTROL_BINDING_FIELDS
                     or type(binding["version"]) is not int
-                    or binding["version"] != 1
+                    or binding["version"] not in (1, 2)
+                    or binding["version"] == 2
+                    and (
+                        kind != "reconcile"
+                        or values.get("query") is not False
+                        or binding["root_run_id"] != run_id
+                        or binding["root_execution_epoch"] != binding["target_execution_epoch"]
+                    )
                     or binding["scope"] != scope
                     or binding["target"] != run_id
                 ):

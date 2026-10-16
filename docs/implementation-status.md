@@ -27,7 +27,7 @@
 | 范围 | 状态与约束 |
 | --- | --- |
 | P3-2 | S1普通Session功能子集已有验收；S2已有真实PG日志与关闭证据，但原360秒仍未通过，当前完整矩阵尚缺。性能专项后置，该未完成组合不列为已支持 |
-| P3-3 | 用户已批准独立推进；HTTP控制／事件已有Local证据；新增同步预留运输在所选公有普通2、并发48下完成真实4096容量／原树取消退休；其他History生命周期、人工核验／scoped及完整所选服务整链仍待，本项不关闭 |
+| P3-3 | 用户已批准独立推进；HTTP控制／事件已有Local证据；公有普通2已有真实4096原树取消／退休及新增根Tool人工核验／实际结束／ACK证据；其他History生命周期、scoped、native及完整所选服务整链仍待，本项不关闭 |
 | P3-4／P3-5／P3-A | 原依赖和验收保持，身份权限／保留、框架恢复与阶段整体未关闭，不新增后端／编排／Runner／部署组合 |
 | R01–R26其余目标 | 保留为长期路线图；外部采用和框架对等比较单独验收，不自动成为本轮实现任务 |
 
@@ -45,11 +45,15 @@ P3-3已有默认关闭的`tasks/events` HTTP分页：原Scope／Run游标、字�
 
 原raw Update的真实4096容量探针两轮均 **1 failed**：首轮测试并发超过服务in-flight 10限制，改为4后仍在原Registry的2000 distinct Update上限失败，早于逻辑容量4096，目标满容量取消／整树退休尚未执行。这些失败及owned清理证据不变，见[机械恢复记录](../architecture/reviews/2026-10-16-temporal-delegated-recovery.md)。
 
-**最新同步预留批次：** 公有2／3／4的七类、无descendant同步reserve通过原Registry Signal／Query运输，复用原校验／状态机；64项观察缓存不删除业务身份，Signal送达不当接受，超时／观察取消保持未知。Session与后代验证不切换。源码及独立wheel34模块各 **806 passed**，428产品一致；默认对照及保存原／续接默认History离线重放通过。扩大回归捕获的Session误路由已修复。
+**同步预留批次：** 公有2／3／4的七类、无descendant同步reserve通过原Registry Signal／Query运输，复用原校验／状态机；64项观察缓存不删除业务身份，Signal送达不当接受，超时／观察取消保持未知。Session与后代验证不切换。源码及独立wheel34模块各 **806 passed**，428产品一致；默认对照及保存原／续接默认History离线重放通过。扩大回归捕获的Session误路由已修复。
 
 最终隔离安装真实公有普通2／原嵌套树、并发48 **1 passed／126.286秒**：4096条确认、新submit拒绝且原权威不变；原root仍running时保护取消变4097，两个原epoch后代取消，实际Provider结束前保留额度，结束后退休；重复回执、三个Run／Parent与Registry重放及owned清理通过。Activity120／整体180期限未调整。短RPC诊断另 **1 passed**；此前Signal并发4超时、源码32错误文本夹具失败、安装32因Activity120已超时而取消too_late，三项失败分别保留，不冒称低并发或所有场景已通过。
 
-新候选`dist/p3-reservation-20261016/`与先前冻结制品分开，所选实验指纹变化，旧History仍须匹配不可变Worker。没有外部模型／PG调用，不关闭完整P3-3。下一批先核对其他Update及既有人工核验／scoped恢复的容量证据，只修必要缺口；不扩展部署组合。详见[当前契约](../architecture/specs/temporal-recovery-capacity-contract.md)及[本批验收](../architecture/reviews/2026-10-16-temporal-reservation-transport.md)。
+新候选`dist/p3-reservation-20261016/`与先前冻结制品分开，所选实验指纹变化，旧History仍须匹配不可变Worker。没有外部模型／PG调用，不关闭完整P3-3。该批尚未覆盖的人工核验由下述增量补证；其他Update及scoped恢复门槛继续保留，不扩展部署组合。详见[当前契约](../architecture/specs/temporal-recovery-capacity-contract.md)及[本批验收](../architecture/reviews/2026-10-16-temporal-reservation-transport.md)。
+
+**当前人工核验增量：** 公有2／3／4普通容量拒绝后，原Registry可验证原未知普通Tool Action并保留唯一人工确认槽；完整Scope／SDK epoch／祖先与实际调用账本绑定，原Run独立采纳。默认普通Tool无需新增Owner，有Owner时保留原grant检查；正常容量行为不变。零费用、抢槽、重复／冲突、重置、伪造证据、迟到真实回执及等待取消边界已有回归。源码／隔离wheel38模块各 **900 passed**，429产品一致，默认对照与保存History重放通过。
+
+安装后真实公有普通2／显式Owner根Tool在4096容量下 **1 passed／121.59秒**：人工确认前后只写一次，线程实际结束及效果ACK分别保护根额度，恢复后退休；重复回执、Run／Registry重放与owned清理通过。原整体180秒及S2门槛不变；无模型／PG调用。默认无Owner及后代为本批离线／SDK证据，不外推完整服务矩阵。新候选`dist/p3-manual-20261016/`与旧制品分开；其他Update生命周期、scoped／native及完整P3-3仍开放。详见[人工恢复记录](../architecture/reviews/2026-10-16-temporal-manual-recovery.md)。
 
 ## 历史实现与验收证据
 
