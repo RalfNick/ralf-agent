@@ -846,7 +846,9 @@ async def guard(engine, kind, command_id, target, payload):
             ),
         }
         await _recheck(engine, client, scope, namespace, policy)
-        result = await _update(handle, "reserve", request)
+        from .temporal_public_manual_transport import reserve as reserve_manual
+
+        result = await reserve_manual(handle, request)
     await _recheck(engine, client, scope, namespace, policy)
     return _control_result(
         result, command_id, target, scope, namespace, expected=expected, manual=manual

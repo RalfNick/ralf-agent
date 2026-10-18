@@ -288,8 +288,35 @@ def test_sdk_manual_fallback_preserves_normal_admission_and_duplicate_before_tar
         await transport.guard(engine, "reconcile", "normal", target, payload)
         assert not any("recovery" in call[-1] for call in client.calls if call[0] == "update")
         client.registry.state.capacity = len(client.registry.state.commands)
+        client.manual_observations = {}
 
         class RecoveryHandle(Handle):
+            @property
+            def run_id(self):
+                return self.epoch
+
+            async def query(self, name, value):
+                if value["kind"] == "deployment_manual_observation":
+                    envelope = value["manual_observation"]
+                    return {
+                        **{k: copy.deepcopy(v) for k, v in envelope.items() if k != "request"},
+                        "request_digest": digest(envelope["request"]),
+                        "result": copy.deepcopy(
+                            client.manual_observations.get(envelope["observation_id"])
+                        ),
+                    }
+                return await super().query(name, value)
+
+            async def signal(self, name, envelope):
+                if name != "reserve_public_manual":
+                    return await super().signal(name, envelope)
+                assert self.id == client.registry_id
+                receipt = await self.execute_update("reserve", envelope["request"])
+                client.manual_observations[envelope["observation_id"]] = {
+                    "ok": True,
+                    "receipt": receipt,
+                }
+
             async def execute_update(self, name, value, **options):
                 if name == "reserve" and "recovery" in value:
                     prepared = client.registry.state.prepare_deployment_control(value)

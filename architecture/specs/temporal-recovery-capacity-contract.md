@@ -496,3 +496,31 @@ Update fallback. A fresh observation may recheck the same original certificate.
 Historical selected deployments keep their matching immutable SDK/Worker and
 original Update handler; stable default compatibility is checked independently.
 See [reproduction and acceptance](../reviews/2026-10-18-temporal-registry-retirement-capacity.md).
+
+## Original public strong-manual observation
+
+After the ordinary reservation definitively refuses capacity, the public SDK's
+existing strong-manual branch may observe the original Registry2/3/4 through
+`reserve_public_manual` and `view.deployment_manual_observation`. Ordinary
+reservations and fresh descendant commands keep their original transport and
+backpressure. Unknown delivery or an arbitrary SDK error never enters this branch.
+
+The Signal calls the complete asynchronous `Registry.reserve` handler. Original
+preparation, SDK `manual_control` proof, post-await epoch/capacity checks and atomic
+original-Action slot commit remain authoritative. The SDK retains its final
+binding check and complete control-result validation. No new Action, capacity
+exemption, execution grant or independent state machine is introduced.
+
+Each observation binds the full Scope, namespace name/UUID, deployment policy,
+original standalone Registry epoch, original target/root and exact manual payload
+digest. The SDK pins handle identity and query/signal/describe ports. Observations
+are limited to 64 entries and 2 MiB envelopes; pending proofs cannot be evicted.
+The 30-second observer deadline, cancellation, cache saturation, lost replies or
+malformed receipts never authorize an Update fallback or confirm an effect. A
+cancelled observer does not cancel the original verifier; retry uses the original
+command/Action identity and the complete handler's idempotency checks.
+
+The original Update handler stays available. Historical selected publications
+require matching immutable SDK/Worker; this does not provide a generic legacy
+transport. Stable defaults and saved default Histories are checked separately.
+See [reproduction and acceptance](../reviews/2026-10-18-temporal-public-manual-capacity.md).

@@ -27,13 +27,13 @@
 | 范围 | 状态与约束 |
 | --- | --- |
 | P3-2 | S1普通Session功能子集已有验收；S2已有真实PG日志与关闭证据，但原360秒仍未通过，当前完整矩阵尚缺。性能专项后置，该未完成组合不列为已支持 |
-| P3-3 | 用户已批准独立推进。Local与先前435文件包的HTTP→Temporal／PG控制、重启和游标已有有限证据；所选Run／图父子／scoped原工具恢复子集按原制品验收。本批436文件包补齐普通公有2原Registry满2,000 Update后的根退休、额度释放、重启重放及owned关闭。公有强人工核验证明和所选native Coding的必要恢复仍缺压力证据；Session／Turn归P3-2。本项不关闭 |
+| P3-3 | 用户已批准独立推进。Local与先前435文件包的HTTP→Temporal／PG控制、重启和游标已有有限证据；所选Run／图父子／scoped原工具恢复及436文件包原Registry退休按原制品验收。本批437文件包补齐公有原Action强人工证明在4,096逻辑身份＋2,000 Registry Update后的人工核验、实际结束／效果ACK、根退休及Worker重启。所选native Coding必要恢复仍缺压力证据；Session／Turn归P3-2。本项不关闭 |
 | P3-4／P3-5／P3-A | 原依赖和验收保持，身份权限／保留、框架恢复与阶段整体未关闭，不新增后端／编排／Runner／部署组合 |
 | R01–R26其余目标 | 保留为长期路线图；外部采用和框架对等比较单独验收，不自动成为本轮实现任务 |
 
-**当前增量：** 已修复原Registry累计2,000次Update后，业务已结束但根无法退休的可复现阻塞。只调整原完整release handler的观察运输，完整SDK证明、post-await检查、原子释放和未知义务保持。隔离安装125模块 **2,404 passed／6 skipped**；源码首轮8项socket权限失败、其余2,396通过，原8项授权环境复验通过，保留分批记录。默认发布／保存History兼容通过，436产品一致，此前16组制品不变。相同wheel真实Temporal **3 passed／28.621秒**，含原Registry与Run压力、一次业务写、重启重放和owned关闭。详见[本批验收](../architecture/reviews/2026-10-18-temporal-registry-retirement-capacity.md)。本批未重新验收HTTP／PG或模型质量。
+**当前增量：** 已修复原公有Registry同时满4,096逻辑身份和2,000次Update后，原Action强人工核验被拒绝的可复现阻塞。仅原普通准入明确拒绝后的强核验分支调整观察运输，完整异步reserve／SDK证明、post-await检查、原Action槽及最终回执校验保持；正常准入和新后代不获豁免。源码／隔离安装127模块各 **2,429 passed／6 skipped**，437产品／911测试输入固定；默认发布／保存History兼容及此前17组制品校验通过。同一wheel真实Temporal **1 passed／127.745秒**，含一次业务写、原人工回执、实际结束与效果ACK分别保留额度、根退休、Worker重启、History重放和owned关闭。详见[本批验收](../architecture/reviews/2026-10-18-temporal-public-manual-capacity.md)；本批没有新HTTP／PG或模型质量验收。
 
-**当前剩余与下一批：** 本批只关闭原Registry根退休子门槛。下一批先对公有原Action强人工核验在Registry累计容量后的路径做定向取证，只有复现必需恢复阻塞才修复；预计一批探针及按证据确定的窄修，不扩后端／编排／平台。所选native Coding压力仍待；P3-2/S2原360秒失败继续后置／开放，P3-4／5／A不解锁。执行依据为[冻结矩阵](phase3-support-matrix.md)。
+**当前剩余与下一批：** 本批只关闭公有原Action强人工证明的组合容量子门槛。下一批核对所选native Coding已有停止／回执采纳路径和压力证据，只对原必要恢复做定向取证；复现前不扩运输或新增功能，预计一批探针，是否修复依实际结果。P3-3仍开放；P3-2/S2原360秒失败继续后置／开放，P3-4／5／A不解锁。执行依据为[冻结矩阵](phase3-support-matrix.md)。
 
 ## 历史实现与验收证据
 

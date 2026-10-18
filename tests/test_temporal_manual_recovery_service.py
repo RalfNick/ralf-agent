@@ -27,6 +27,14 @@ pytestmark = pytest.mark.skipif(
 
 
 def test_actual_full_registry_manual_evidence_retains_physical_and_ack_obligations(tmp_path):
+    _case(tmp_path, pressure_updates=False)
+
+
+def test_actual_public_manual_after_2000_registry_updates(tmp_path):
+    _case(tmp_path, pressure_updates=True)
+
+
+def _case(tmp_path, *, pressure_updates):
     async def run():
         # A new pressure probe needs a physical handler held across4096 reservations.
         # Existing45s/120s write probes and all original S2 limits remain unchanged.
@@ -78,6 +86,42 @@ def test_actual_full_registry_manual_evidence_retains_physical_and_ack_obligatio
                 assert (await system.engine.deployment_diagnostics())["counts"][
                     "command_records"
                 ] == COMMAND_REGISTRY_CAPACITY
+                if pressure_updates:
+                    history = await registry.fetch_history()
+                    already = sum(
+                        e.HasField("workflow_execution_update_accepted_event_attributes")
+                        for e in history.events
+                    )
+                    assert 1 <= already < 2000
+                    for update_start in range(already, 2000, 8):
+                        await asyncio.gather(
+                            *[
+                                registry.execute_update("reserve", requests[0])
+                                for _ in range(update_start, min(update_start + 8, 2000))
+                            ]
+                        )
+                    history = await registry.fetch_history()
+                    accepted = sum(
+                        e.HasField("workflow_execution_update_accepted_event_attributes")
+                        for e in history.events
+                    )
+                    completed = sum(
+                        e.HasField("workflow_execution_update_completed_event_attributes")
+                        for e in history.events
+                    )
+                    assert accepted == completed == 2000
+                    (tmp_path / "pressure-history.json").write_text(history.to_json())
+                    (tmp_path / "pressure.json").write_text(
+                        json.dumps(
+                            {
+                                "logical_commands": COMMAND_REGISTRY_CAPACITY,
+                                "accepted_updates": accepted,
+                                "completed_updates": completed,
+                                "physical_calls": write.committed()[0][1],
+                                "original_thread_ended": write.ended.is_set(),
+                            }
+                        )
+                    )
                 await system.engine.cancel(original.run_id, command_id="full-stop")
                 unknown = await _eventually(
                     lambda: system.engine.diagnostics(original.run_id),
@@ -122,12 +166,49 @@ def test_actual_full_registry_manual_evidence_retains_physical_and_ack_obligatio
                         {
                             "capacity": COMMAND_REGISTRY_CAPACITY,
                             "physical_calls": 1,
+                            "registry_updates_before_manual": 2000 if pressure_updates else None,
                             "held_until_actual_end_and_ack": True,
                             "duplicate_receipt_equal": True,
                             "root_history_replayed": True,
                             "external_model_calls": 0,
                         },
                         indent=2,
+                    )
+                )
+            async with system.worker():
+                assert (
+                    await system.engine.reconcile(
+                        original.run_id, action["id"], genuine, command_id="manual-at-capacity"
+                    )
+                    == receipt
+                )
+                await system.count(0)
+                assert write.committed() == [(genuine, 1)]
+                assert await system.evidence(original.run_id) == 1
+                history = await registry.fetch_history()
+                if pressure_updates:
+                    assert (
+                        sum(
+                            e.HasField("workflow_execution_update_accepted_event_attributes")
+                            for e in history.events
+                        )
+                        == 2000
+                    )
+                    assert any(
+                        e.HasField("workflow_execution_signaled_event_attributes")
+                        and e.workflow_execution_signaled_event_attributes.signal_name
+                        == "reserve_public_manual"
+                        for e in history.events
+                    )
+                (tmp_path / "restart.json").write_text(
+                    json.dumps(
+                        {
+                            "original_receipt_equal": True,
+                            "physical_calls": 1,
+                            "held_roots": 0,
+                            "history_replayed": True,
+                            "registry_update_count_unchanged": pressure_updates,
+                        }
                     )
                 )
         await journal.aclose()

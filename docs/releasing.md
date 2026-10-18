@@ -164,3 +164,17 @@ SHA256 `7a2dc32ab734956b5998bb9cb48d36e575fd60025e6aee9f605560d36cc06cd6`，
 兼容和此前16组制品校验通过。只关闭该根退休子门槛；本批没有新HTTP／PG、模型质量
 或native Coding压力验收，历史selected仍用匹配SDK／Worker。完整P3-3／P3-2及后续
 门槛保持开放，详见[验收记录](../architecture/reviews/2026-10-18-temporal-registry-retirement-capacity.md)。
+
+
+## P3-3 公有原Action强人工证明容量修复
+
+制品 `dist/p3-public-manual-20261018/ralf_agent-0.1.0.dev120-py3-none-any.whl`，
+SHA256 `6dad78871e44f579109838e45a6f8b7cc98ebc1938cc80570532e0a108748e23`，
+附独立 `verification.json`／`SHA256SUMS`。437产品文件与源码／隔离安装一致，911测试
+输入固定；源码和安装各2,429 passed／6配置依赖跳过。相同wheel真实Temporal
+1 passed／127.745秒：原Registry4,096逻辑身份＋2,000 Update后首次强人工核验、
+实际结束与效果ACK分别保护额度、原回执、根退休及Worker重启／History重放通过。
+使用相同CLI、原服务默认值和新自有数据库，原180秒场景期限保持，服务已关闭。
+默认声明／保存History和此前17组制品校验通过。只关闭该恢复子门槛，没有新PG／HTTP、
+模型质量或native Coding压力验收。旧selected仍用匹配SDK／Worker，完整P3-3、P3-2原
+失败及后续门槛保留；详见[验收记录](../architecture/reviews/2026-10-18-temporal-public-manual-capacity.md)。仅本地提交，不推送或发布远端。

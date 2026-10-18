@@ -172,6 +172,10 @@ def _pure_sources():
 
 def _worker_sources():
     return {
+        "public_manual_transport": (
+            "temporal_public_manual_transport",
+            ("_identity", "accept", "observe", "reserve"),
+        ),
         "deployment_retirement_transport": (
             "temporal_deployment_retirement_transport",
             ("_identity", "accept", "observe", "execute"),
@@ -311,6 +315,7 @@ def _worker_sources():
                 "TemporalCommandRegistryWorkflow.__init__",
                 "TemporalCommandRegistryWorkflow.reserve",
                 "TemporalCommandRegistryWorkflow.reserve_scoped_manual",
+                "TemporalCommandRegistryWorkflow.reserve_public_manual",
                 "TemporalCommandRegistryWorkflow.retire_deployment_root",
                 "TemporalCommandRegistryWorkflow.release_deployment_root",
                 "TemporalCommandRegistryWorkflow.view",

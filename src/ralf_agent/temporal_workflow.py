@@ -32,6 +32,7 @@ with workflow.unsafe.imports_passed_through():
         temporal_manual_recovery,  # noqa: F401 -- original Action recovery proof
         temporal_parent_completion_state,  # noqa: F401 -- preload pure parent release gates
         temporal_parent_state,  # noqa: F401 -- fixed original child addressing
+        temporal_public_manual_transport,  # noqa: F401 -- original public Action verification
         temporal_scoped_manual_recovery,  # noqa: F401 -- scoped original Action proof
         temporal_scoped_manual_transport,  # noqa: F401 -- original async manual observations
         temporal_scoped_reservation,  # noqa: F401 -- scoped reservation observations
@@ -1661,6 +1662,12 @@ class TemporalCommandRegistryWorkflow:
 
         await accept(self, envelope, workflow.info())
 
+    @workflow.signal(name="reserve_public_manual")
+    async def reserve_public_manual(self, envelope: dict) -> None:
+        from .temporal_public_manual_transport import accept
+
+        await accept(self, envelope, workflow.info())
+
     @workflow.signal(name="retire_deployment_root")
     async def retire_deployment_root(self, envelope: dict) -> None:
         from .temporal_deployment_retirement_transport import accept
@@ -1863,6 +1870,12 @@ class TemporalCommandRegistryWorkflow:
                     if request.get("scope") != request["retirement_observation"]["scope"]:
                         return {"error": "authorization_denied"}
                     return observe(self, request["retirement_observation"], workflow.info())
+                if request.get("kind") == "deployment_manual_observation":
+                    from .temporal_public_manual_transport import observe
+
+                    if request.get("scope") != request["manual_observation"]["scope"]:
+                        return {"error": "authorization_denied"}
+                    return observe(self, request["manual_observation"], workflow.info())
                 if request.get("kind") == "deployment_reserve_receipt":
                     return observe_reservation_signal(self, request)
                 if request.get("kind") in {
