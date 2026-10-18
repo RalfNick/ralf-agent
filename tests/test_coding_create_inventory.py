@@ -59,6 +59,18 @@ def test_explicit_inventory_is_complete_and_detached():
     assert set(inventory.inventory()["process_methods"]) == set(PROCESS_METHODS)
 
 
+def test_code_cache_purity_gate_is_in_live_inventory(monkeypatch):
+    from ralf_agent import component_fingerprint
+
+    inventory = module()
+    before = inventory.inventory()
+    monkeypatch.setattr(component_fingerprint, "_cacheable_constant", changed)
+    after = inventory.inventory()
+    assert (
+        before["fingerprint"]["_cacheable_constant"] != after["fingerprint"]["_cacheable_constant"]
+    )
+
+
 @pytest.mark.parametrize("name", PROCESS_FUNCTIONS)
 def test_each_process_function_mutation_changes_inventory(monkeypatch, name):
     from ralf_agent import coding_process_wait

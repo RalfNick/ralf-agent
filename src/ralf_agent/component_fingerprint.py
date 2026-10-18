@@ -14,7 +14,7 @@ from .types import canonical, digest
 
 
 def _constant(value):
-    if isinstance(value, types.CodeType):
+    if type(value) is types.CodeType:
         return _code(value)
     if type(value) is bytes:
         return {"bytes": value.hex()}
@@ -22,13 +22,19 @@ def _constant(value):
         return {"complex": [value.real, value.imag]}
     if value is Ellipsis:
         return {"ellipsis": True}
-    if type(value) in {tuple, frozenset}:
+    if type(value) is tuple or type(value) is frozenset:
         values = [_constant(v) for v in value]
         return {
             "kind": type(value).__name__,
             "values": sorted(values, key=canonical) if type(value) is frozenset else values,
         }
-    if value is None or type(value) in {str, int, float, bool}:
+    if (
+        value is None
+        or type(value) is str
+        or type(value) is int
+        or type(value) is float
+        or type(value) is bool
+    ):
         return value
     raise ValidationError("Context implementation contains unsupported executable constants")
 
@@ -177,15 +183,67 @@ _DEFAULT_CACHE_CHARS = 8192
 
 def _simple_defaults(defaults, keyword_defaults):
     # Complex JSON remains on the original path, including numeric dictionary keys.
-    if type(defaults) not in (tuple, type(None)) or type(keyword_defaults) not in (
-        dict,
-        type(None),
+    if (defaults is not None and type(defaults) is not tuple) or (
+        keyword_defaults is not None and type(keyword_defaults) is not dict
     ):
         return False
-    return all(type(value) in _DEFAULT_PRIMITIVES for value in defaults or ()) and all(
-        type(key) is str and type(value) in _DEFAULT_PRIMITIVES
+    return all(
+        any(type(value) is primitive for primitive in _DEFAULT_PRIMITIVES)
+        for value in defaults or ()
+    ) and all(
+        type(key) is str and any(type(value) is primitive for primitive in _DEFAULT_PRIMITIVES)
         for key, value in (keyword_defaults or {}).items()
     )
+
+
+def _cacheable_constant(value, depth=0):
+    """Inspect exact immutable data before CodeType hashing can run callbacks.
+
+    CodeType accepts arbitrary constants and some metadata subclasses. Even a
+    cache miss hashes those objects before calling the pinned digest helper.
+    Anything outside this bounded data tree stays on the original uncached path.
+    """
+    if depth > 64:
+        return False
+    kind = type(value)
+    if (
+        value is None
+        or value is Ellipsis
+        or kind is str
+        or kind is int
+        or kind is float
+        or kind is bool
+        or kind is bytes
+        or kind is complex
+    ):
+        return True
+    if kind is tuple or kind is frozenset:
+        return all(_cacheable_constant(item, depth + 1) for item in value)
+    if kind is not types.CodeType:
+        return False
+    if not all(
+        type(item) is int
+        for item in (
+            value.co_argcount,
+            value.co_posonlyargcount,
+            value.co_kwonlyargcount,
+            value.co_nlocals,
+            value.co_stacksize,
+            value.co_flags,
+            value.co_firstlineno,
+        )
+    ) or not all(
+        type(item) is bytes for item in (value.co_code, value.co_linetable, value.co_exceptiontable)
+    ):
+        return False
+    if not all(type(item) is str for item in (value.co_name, value.co_filename, value.co_qualname)):
+        return False
+    if not all(
+        type(names) is tuple and all(type(name) is str for name in names)
+        for names in (value.co_names, value.co_varnames, value.co_freevars, value.co_cellvars)
+    ):
+        return False
+    return type(value.co_consts) is tuple and _cacheable_constant(value.co_consts, depth + 1)
 
 
 def _cache_helpers():
@@ -198,6 +256,7 @@ def _cache_helpers():
             if getattr(method, "__kwdefaults__", None) is None
             else dict(method.__kwdefaults__),
             getattr(method, "__closure__", None),
+            getattr(method, "__wrapped__", None),
         )
         for method in (
             _constant,
@@ -213,6 +272,7 @@ def _cache_helpers():
             _cached_defaults_digest,
             getattr(_cached_defaults_digest, "__wrapped__", None),
             _simple_defaults,
+            _cacheable_constant,
         )
     ) + ((types, types.CodeType), _DEFAULT_PRIMITIVES, _DEFAULT_CACHE_CHARS)
 
@@ -230,6 +290,7 @@ def executable_digest(method):
             and inspect.isfunction(target)
             and target.__closure__ is None
             and getattr(target, "__wrapped__", None) is None
+            and _cacheable_constant(target.__code__)
         ):
             if target.__defaults__ is None and target.__kwdefaults__ is None:
                 return _cached_plain_digest(target.__code__)

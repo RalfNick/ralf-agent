@@ -33,11 +33,13 @@
 | P3-A | 用户授权的独立候选验证已收口：全量13,374通过／891配置跳过、安装275、同包原服务25；阶段整体仍待P3-2/S2，未完成保持 |
 | R01–R26其余目标 | 保留为长期路线图；外部采用和框架对等比较单独验收，不自动成为本轮实现任务 |
 
-**当前增量：** 本批仅在隔离源码副本试验Coding4提交末端Scope校验合并，仓库产品／930测试及442产品安装包不变。正确wire输入上的原实现2个预期RED／2个既有拒绝与回退GREEN，原型四项通过；带明确双Runner绑定的真实Runtime完整CONTROL无profile A/B/B/A，各四次调用，确认合并分支每次命中2处。合并CPU中位仅约减少3.36%，未达预先固定的10%门槛，**原型否决，不增加Scope API或构建新包，不重跑原360**。结果与失效夹具记录见[本批证据及受限批处理提案](../architecture/reviews/2026-10-18-s2-scoped-validation-and-batch-proposal.md)。下一步先有界验证固定纯代码库存的分段批处理是否可保留alias／helper漂移与LRU污染拒绝，不引入权限或观察缓存；证明失败则不实现。S2及剩余17项继续开放，完整关闭门槛未变化。
+**当前增量：** 固定纯代码库存预检发现原指纹缓存可在键哈希回调中被自恢复helper欺骗：已改变函数返回旧摘要。已以原15 RED和默认值独立1 RED复现，最小修复在两LRU之前检查exact-type完整code树、收紧默认值类型资格，并沿原机制固定新helper／CREATE live inventory；核心四模块129 passed，一次独立审查无阻断。442产品／931测试新wheel `9d01d2…`已构建，438模块受影响源码6469 passed／694配置skipped、隔离安装517 passed／17配置skipped，默认材料／两份原History及starter一次写入恢复已通过。完整CONTROL主体无profile ABBA保持各版本结果／proof和SDK计数，但CPU中位**增加22.083%**，这是正确性代价，不能算提速或S2通过。见[复现、修复及成本记录](../architecture/reviews/2026-10-19-s2-fingerprint-cache-purity.md)。原分段批处理暂停，不增加业务能力或权限／观察缓存，不无依据复跑原360；S2、剩余17项及阶段门槛未关闭。
+
+**上一原型：** 隔离Scope合并四项通过，完整CONTROL确认命中，但CPU中位仅减少3.36%，不足预设10%，已否决；不增加Scope API。见[保留证据及受限提案](../architecture/reviews/2026-10-18-s2-scoped-validation-and-batch-proposal.md)。
 
 **最近实际S2证据：** 同包原360查询种类诊断仍1 failed／零错误／零跳过、JUnit436.204秒含收尾；三Tool成功／3写入、两root中1退休1保留，Session／Assembly关闭未确认，原schema和失败数据保留、自有服务停止。1,164次Coding validation处理器约58.733 CPU秒（含收尾）；原Registry held-bound State的只读Query重放证明每次Manifest验证触发37组指纹集合、5928次executable_digest。见[实际热点与离线证据](../architecture/reviews/2026-10-18-s2-query-mix-and-published-validation.md)，不与本批离线CPU拼接为服务收益。
 
-**当前代码候选证据：** Runner解析重复pin及所有权getter之后的身份／receiver漂移已修复，保留getter前后检查；日志JSON字符扫描仅作等价替换。最终442产品wheel（`c58a3b…`）受影响372模块 **5607 passed／638配置skipped**、隔离安装 **379 passed／17配置skipped**，source／wheel／site字节一致，默认完整材料、两份History重放及starter一次写入恢复通过。此前两轮启动竞态失败保留，以慢启动RED补测试就绪前提，产品期限不变。完整CONTROL主体无profile CPU中位减少约3.9%，不能外推性能验收。该包无监控的原360首项仍 **1 failed／零跳过，JUnit396.272秒含收尾**；两root退休和安全关闭通过。见[修复与原门槛记录](../architecture/reviews/2026-10-18-s2-runner-binding-cost.md)。不将旧候选全量证据算作新包全量通过，本次诊断未重复未变化代码的回归。
+**上一代码候选及实际S2证据：** Runner解析重复pin及所有权getter之后的身份／receiver漂移已修复，保留getter前后检查；日志JSON字符扫描仅作等价替换。最终442产品wheel（`c58a3b…`）受影响372模块 **5607 passed／638配置skipped**、隔离安装 **379 passed／17配置skipped**，source／wheel／site字节一致，默认完整材料、两份History重放及starter一次写入恢复通过。此前两轮启动竞态失败保留，以慢启动RED补测试就绪前提，产品期限不变。完整CONTROL主体无profile CPU中位减少约3.9%，不能外推性能验收。该包无监控的原360首项仍 **1 failed／零跳过，JUnit396.272秒含收尾**；两root退休和安全关闭通过。见[修复与原门槛记录](../architecture/reviews/2026-10-18-s2-runner-binding-cost.md)。不将旧候选全量证据算作新包全量通过，本次诊断未重复未变化代码的回归。
 
 **前批S2证据：** Parent严格Sandbox查询晚导入已以SDK Importer复现并提前加载既有helper，原包相关118项和Temporal4331项通过；该包原360复验及独立同期限CPU诊断仍超时，外层CONTROL完整成本未单独归因，见[原记录](../architecture/reviews/2026-10-18-s2-parent-query-preload.md)。全部原失败及门槛保留。
 

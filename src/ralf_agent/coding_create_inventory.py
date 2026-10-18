@@ -73,6 +73,7 @@ def inventory_fields():
             "_super_capture",
             "_function",
             "_plain_digest",
+            "_cacheable_constant",
             "_cache_helpers",
             "executable_digest",
         ),
