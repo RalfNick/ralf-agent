@@ -8,7 +8,7 @@
 
 前批外层owned Activity诊断记账经RED→GREEN后，同包原360仍失败（JUnit396.842秒含收尾），该次关闭证明通过，捕获exclusive CPU164.187秒，约180.081秒未归因；[原证据](../architecture/reviews/2026-10-18-s2-owned-activity-cost.md)按其范围保留。
 
-本批仍无产品／测试修改。查询种类诊断同包原360 **1 failed／零跳过，JUnit436.204秒含收尾**，三Tool成功／3写入、两root中1退休1保留，Session／Assembly关闭未确认，原schema及已停止失败服务数据保留。8,007次Query中Coding validation的1,164次约58.733 CPU秒（含收尾），比先前准入Query更应优先定位。原Registry held-bound State两次只读Query完整重放及命令／状态不变通过；每次一次Manifest验证触发37次composition指纹集合、5928次executable_digest。下一候选仅审已发布调用内重复验证，仍需原独立入口／helper漂移拒绝与完整调用收益证据，不授权删校验或跨请求缓存。失效诊断亦保留，见[证据与边界](../architecture/reviews/2026-10-18-s2-query-mix-and-published-validation.md)。前批RawValue原型因合法字典拦截器回归已否决，见[原记录](../architecture/reviews/2026-10-18-s2-sdk-query-cost.md)。其余十二正常／五故障不解锁，P3-2及P3-A整体未完成。仅本地提交，不推送。
+2026-10-19本批仍无仓库产品／测试修改。隔离Scope合并原型四项通过，完整已发布Runtime／双Runner明确绑定的CONTROL无profile ABBA确认分支命中，CPU中位约减少3.36%，不足预设10%，原型已否决；不增加Scope API、不构建包或重跑原360。下一步仅有界验证固定纯代码库存的分段批处理及拒绝契约，见[证据和约束](../architecture/reviews/2026-10-18-s2-scoped-validation-and-batch-proposal.md)。最近同包原360诊断仍1 failed／436.204秒含收尾，三Tool成功／3写入、1 root退休／1保留、关闭未确认，原schema和已停止失败服务数据保留；[实际查询证据](../architecture/reviews/2026-10-18-s2-query-mix-and-published-validation.md)不被局部离线结果替代。其余十二正常／五故障不解锁，P3-2及P3-A整体未完成；门槛和范围保持，只有本地提交、不推送。
 
 <details>
 <summary>此前批次摘要（“最新／下一批”仅描述对应快照）</summary>

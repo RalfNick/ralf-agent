@@ -2,7 +2,7 @@
 
 ## 当前交付摘要
 
-更新：2026-10-18。本节是唯一当前状态摘要；历史批次保留在下方，仅作原版本证据引用。R01–R26是长期路线图，不作为本轮基础交付的额外阻塞条件。
+更新：2026-10-19。本节是唯一当前状态摘要；历史批次保留在下方，仅作原版本证据引用。R01–R26是长期路线图，不作为本轮基础交付的额外阻塞条件。
 
 **基础SDK交付已冻结。** 原交付包版本为 `0.1.0.dev120`，运行时代码固定于 `b871f61`，原制品保持不变；后续P3-3增量单独记录，不套用旧包验收。本地wheel、校验与安装方式见[本地交付说明](releasing.md#本轮本地交付)，日常起步见[首用教程](getting-started.md)和[基础能力](basic-capabilities.md)。这是开发预览，尚未核验同版本的公开PyPI／GitHub Release。
 
@@ -33,7 +33,9 @@
 | P3-A | 用户授权的独立候选验证已收口：全量13,374通过／891配置跳过、安装275、同包原服务25；阶段整体仍待P3-2/S2，未完成保持 |
 | R01–R26其余目标 | 保留为长期路线图；外部采用和框架对等比较单独验收，不自动成为本轮实现任务 |
 
-**当前增量：** 本批仍无产品／测试修改。查询种类诊断经自检及原History十查询核对后，同包原360 **1 failed／零错误／零跳过，JUnit436.204秒含收尾**；三Tool成功／3次写入、两root中1退休1保留，Session／Assembly关闭未确认，原schema和失败数据保留，自有服务已停止。8,007次Query处理器CPU中，1,164次`deployment_coding_validation`约58.733秒，原RawValue准入查询目标仅约3.441秒；这些含收尾，不等于业务关键路径。原Registry History的held-bound根两次只读Query完整重放通过，状态及原SDK命令不变；无cProfile时各约108ms、922B响应。独立计数确认每Query一次validate_manifest触发37次composition指纹集合、5928次executable_digest。热点转向已发布Manifest的重复校验，下一候选仍须保留原独立入口／漂移拒绝，证明完整调用收益后才进入产品。失效cProfile和私有探针失败保留，见[本批证据](../architecture/reviews/2026-10-18-s2-query-mix-and-published-validation.md)。S2及剩余17项仍未完成，未解锁矩阵。前批约92%CPU边界与RawValue原型因破坏合法字典拦截器契约被否决，按[原范围](../architecture/reviews/2026-10-18-s2-sdk-query-cost.md)保留，不继续添加特例guard。
+**当前增量：** 本批仅在隔离源码副本试验Coding4提交末端Scope校验合并，仓库产品／930测试及442产品安装包不变。正确wire输入上的原实现2个预期RED／2个既有拒绝与回退GREEN，原型四项通过；带明确双Runner绑定的真实Runtime完整CONTROL无profile A/B/B/A，各四次调用，确认合并分支每次命中2处。合并CPU中位仅约减少3.36%，未达预先固定的10%门槛，**原型否决，不增加Scope API或构建新包，不重跑原360**。结果与失效夹具记录见[本批证据及受限批处理提案](../architecture/reviews/2026-10-18-s2-scoped-validation-and-batch-proposal.md)。下一步先有界验证固定纯代码库存的分段批处理是否可保留alias／helper漂移与LRU污染拒绝，不引入权限或观察缓存；证明失败则不实现。S2及剩余17项继续开放，完整关闭门槛未变化。
+
+**最近实际S2证据：** 同包原360查询种类诊断仍1 failed／零错误／零跳过、JUnit436.204秒含收尾；三Tool成功／3写入、两root中1退休1保留，Session／Assembly关闭未确认，原schema和失败数据保留、自有服务停止。1,164次Coding validation处理器约58.733 CPU秒（含收尾）；原Registry held-bound State的只读Query重放证明每次Manifest验证触发37组指纹集合、5928次executable_digest。见[实际热点与离线证据](../architecture/reviews/2026-10-18-s2-query-mix-and-published-validation.md)，不与本批离线CPU拼接为服务收益。
 
 **当前代码候选证据：** Runner解析重复pin及所有权getter之后的身份／receiver漂移已修复，保留getter前后检查；日志JSON字符扫描仅作等价替换。最终442产品wheel（`c58a3b…`）受影响372模块 **5607 passed／638配置skipped**、隔离安装 **379 passed／17配置skipped**，source／wheel／site字节一致，默认完整材料、两份History重放及starter一次写入恢复通过。此前两轮启动竞态失败保留，以慢启动RED补测试就绪前提，产品期限不变。完整CONTROL主体无profile CPU中位减少约3.9%，不能外推性能验收。该包无监控的原360首项仍 **1 failed／零跳过，JUnit396.272秒含收尾**；两root退休和安全关闭通过。见[修复与原门槛记录](../architecture/reviews/2026-10-18-s2-runner-binding-cost.md)。不将旧候选全量证据算作新包全量通过，本次诊断未重复未变化代码的回归。
 
