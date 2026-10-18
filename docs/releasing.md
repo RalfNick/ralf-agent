@@ -31,6 +31,14 @@ python -m agent_app --ticket INC-001
 
 后续已验收制品 `dist/p3-scoped-manual-final-20261016/ralf_agent-0.1.0.dev120-py3-none-any.whl`，SHA256 `4c90e3312f611676e6bc12d126810511621dffe1b2bff6949638766692c417ac`，附 `verification.json`／`SHA256SUMS`。它包含上述新Run结束证据修复，并补原普通Tool在默认scoped满容量后的有限人工核验路径。源码／隔离安装各1,233项及实际SDK图child验收见[本批记录](../architecture/reviews/2026-10-16-temporal-scoped-manual-recovery.md)。默认Local基础制品仍冻结，P3-3／其他阶段未关闭，旧不安全Run未追溯升级；所选实验发布指纹变化后，旧History仍使用原匹配Worker。中间候选与失败包不作为交付物替代此精确制品。
 
+## P3-4 身份与脱敏审计增量
+
+本地制品 `dist/p3-service-audit-20261018/ralf_agent-0.1.0.dev120-py3-none-any.whl`，
+SHA256 `101e537100f0531e6cc3fdde31713b24ba83969644c0640bc05c63cba5097ba3`，附`verification.json`与`SHA256SUMS`。
+原基础／P3-3制品不覆盖。本批默认关闭审计，原Card、普通发布身份及保存默认History兼容通过。
+有限源码／安装／实际HTTP证据及4项已复现的原输入夹具失败分别登记于[验收记录](../architecture/reviews/2026-10-18-p3-service-audit.md)。
+安全保留和所选远程身份／审计尚未完成；不宣称完整P3-4或强制耐久审计。仅本地提交，不推送／发布。
+
 ## 1. 准备版本与兼容说明
 
 1. 同步 `pyproject.toml` 和 `src/ralf_agent/__init__.py` 中的包版本。

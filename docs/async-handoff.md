@@ -146,3 +146,7 @@ process exits after submit but before completion, another process replays the sa
 message to recover the original authority receipt. Two HTTP processes and two Temporal
 workers have actual process-death/dedup/History replay tests. This composition preserves
 Temporal's Agent/sequence subset: it does not add distributed DAG/Team/RAG/nesting.
+
+## 可选脱敏审计
+
+`A2AApplication(..., audit=ServiceAudit(...))` 与 `LocalA2AService` 可复用同一观察入口。默认有界内存sink、同步替换、HMAC关联与故障语义见[服务审计](service-audit.md)。审计不是执行证据，不改变原Scope授权和资源所有权。

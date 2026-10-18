@@ -23,6 +23,7 @@ from .errors import AuthorizationDenied, IdempotencyConflict, NotFound, RalfErro
 from .handoff import _completed, call_inbox, validate_inbox
 from .messaging import MessageEnvelope, _integer, _json, _text
 from .ports import is_async_callable, is_sync_callable
+from .service_audit import ServiceAudit
 from .task_controls import TaskControlBridge
 from .tool_sources import ToolDescriptor, ToolSourceError
 from .types import Scope, canonical, digest, submission_request
@@ -271,6 +272,7 @@ class A2AApplication:
         enable_run_events=False,
         enable_run_controls=False,
         recovery_wakeup=None,
+        audit=None,
     ):  # noqa: ASYNC109
         if not is_sync_callable(engine_for_scope) or not is_async_callable(authenticate):
             raise ValidationError("A2A requires trusted engine and async authentication callbacks")
@@ -290,6 +292,9 @@ class A2AApplication:
         _integer(budget, "A2A budget", 0, 1000000)
         _integer(max_request_bytes, "Request byte limit", 1024, 262144)
         _integer(max_response_bytes, "Response byte limit", 1024, 262144)
+        if audit is not None and type(audit) is not ServiceAudit:
+            raise ValidationError("Service audit requires ServiceAudit")
+        self._audit = audit
         self._engine_for_scope = engine_for_scope
         self._authenticate = authenticate
         from .agent_harness import AgentHarness
@@ -692,6 +697,9 @@ class A2AApplication:
             await self._reply(send, 404, {"error": "not_found"})
             return
         request_id = None
+        trusted, method, task_id, message_id = None, None, None, None
+        command_id = None
+        outcome = "internal_error"
         try:
             async with asyncio.timeout(self._timeout):
                 headers = {
@@ -705,6 +713,7 @@ class A2AApplication:
                 while True:
                     event = await receive()
                     if event["type"] == "http.disconnect":
+                        outcome = "disconnected"
                         return
                     if event["type"] != "http.request":
                         raise ValidationError("Invalid HTTP request event")
@@ -726,26 +735,51 @@ class A2AApplication:
                 ):
                     raise _RPCError(-32600, "Invalid request")
                 request_id = request["id"]
-                result = await self._rpc(
-                    trusted, request["method"], request.get("params", {}), request_id
-                )
+                method = request["method"]
+                params = request.get("params", {})
+                if self._audit is not None and isinstance(params, dict):
+                    task_id = params.get("id") if type(params.get("id")) is str else None
+                    command_id = params.get("commandId")
+                    metadata = params.get("metadata", {})
+                    if command_id is None and isinstance(metadata, dict):
+                        command_id = metadata.get("ralfCommandId")
+                    if type(command_id) is not str:
+                        command_id = None
+                    message = params.get("message", {})
+                    if isinstance(message, dict):
+                        message_id = message.get("messageId")
+                        if type(message_id) is not str:
+                            message_id = None
+                result = await self._rpc(trusted, method, params, request_id)
+                if self._audit is not None and isinstance(result, dict):
+                    resolved_task = result.get("id", result.get("taskId"))
+                    if type(resolved_task) is str:
+                        task_id = resolved_task
+                    receipt = result.get("receipt")
+                    if isinstance(receipt, dict) and type(receipt.get("command_id")) is str:
+                        command_id = receipt["command_id"]
                 response = {"jsonrpc": "2.0", "id": request_id, "result": result}
+                outcome = "rpc_ok"
         except AuthorizationDenied:
+            outcome = "unauthorized"
             await self._reply(send, 401, {"error": "unauthorized"})
             return
         except _RPCError as exc:
+            outcome = "invalid_request" if exc.code in {-32700, -32600, -32602} else "rpc_error"
             response = {
                 "jsonrpc": "2.0",
                 "id": request_id,
                 "error": {"code": exc.code, "message": exc.message},
             }
         except NotFound:
+            outcome = "not_found"
             response = {
                 "jsonrpc": "2.0",
                 "id": request_id,
                 "error": {"code": -32001, "message": "Task not found"},
             }
         except (ValidationError, IdempotencyConflict):
+            outcome = "invalid_request"
             response = {
                 "jsonrpc": "2.0",
                 "id": request_id,
@@ -754,12 +788,28 @@ class A2AApplication:
                     "message": "Invalid parameters or message identity conflict",
                 },
             }
-        except Exception:
+        except asyncio.CancelledError:
+            outcome = "cancelled"
+            raise
+        except Exception as exc:
+            if isinstance(exc, TimeoutError):
+                outcome = "timeout"
             response = {
                 "jsonrpc": "2.0",
                 "id": request_id,
                 "error": {"code": -32603, "message": "Internal error"},
             }
+        finally:
+            if self._audit is not None:
+                self._audit.record(
+                    scope=trusted,
+                    method=method,
+                    outcome=outcome,
+                    request_id=request_id,
+                    task_id=task_id,
+                    message_id=message_id,
+                    command_id=command_id,
+                )
         await self._reply(send, 200, response)
 
 

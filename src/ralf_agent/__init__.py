@@ -315,6 +315,7 @@ from .runtime_router import CommandReceiptReader, ProfiledEngine, RunReader, SQL
 from .semantic_memory import SemanticMemoryStore
 from .semantic_recall import TaskRecallPlanner
 from .semantic_selection import OrderedReferenceSelector
+from .service_audit import AuditRecord, AuditSink, InMemoryAuditSink, ServiceAudit
 from .service_lifecycle import LocalA2AService
 from .session_adapter_contract import (
     SessionAdapterFixture,
@@ -666,6 +667,10 @@ __all__ += [
     "PostgresInbox",
     "PostgresOutbox",
     "LocalA2AService",
+    "AuditRecord",
+    "AuditSink",
+    "InMemoryAuditSink",
+    "ServiceAudit",
     "AsyncTaskControls",
     "SyncTaskControls",
     "TaskControlBridge",
