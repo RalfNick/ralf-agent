@@ -6,7 +6,9 @@
 
 当前S2仍未关闭：最终442产品wheel `c58a3b…`受影响372模块5607 passed／638配置skipped，安装379 passed／17配置skipped，默认材料与History兼容通过；只修复Runner绑定复核及等价字符扫描，未扩能力。原360首项1 failed／零跳过、JUnit396.272秒含收尾，四Tool成功／4次业务写入；第二Turn仍被整体取消。两root退休、Session／Assembly关闭、Worker退出与原正证明清理成立；导出／Temporal数据及本批已停止失败容器保留，旧资源未动。[原证据](../architecture/reviews/2026-10-18-s2-runner-binding-cost.md)保留早先失败和测试就绪修正。
 
-本批未改产品或测试，仅补外层owned Activity诊断：首轮监控递归栈错误不作归因，frame修复有效RED→GREEN后同包原360诊断1 failed／零跳过、JUnit396.842秒含收尾，关闭证明仍通过。修正后的计账质量通过，被选边界exclusive CPU164.187秒，尚有约180.081秒进程CPU未归因；原History十个只读Query有效通过，但不等于全进程解释。下一步仅补SDK activation／转换等具体缺口，不盲改复制、指纹或采纳边界；见[证据](../architecture/reviews/2026-10-18-s2-owned-activity-cost.md)。其余十二正常／五故障不解锁，P3-2及P3-A整体未完成。仅本地提交，不推送。
+前批外层owned Activity诊断记账经RED→GREEN后，同包原360仍失败（JUnit396.842秒含收尾），该次关闭证明通过，捕获exclusive CPU164.187秒，约180.081秒未归因；[原证据](../architecture/reviews/2026-10-18-s2-owned-activity-cost.md)按其范围保留。
+
+本批仍无产品／测试修改。SDK边界诊断捕获约92.1%进程CPU，将约101.771秒收窄至Workflow内部回调；转换栈约5.611秒，主事件循环45.612秒及未捕获27.806秒仍保留缺口。同包原360诊断1 failed／零跳过、JUnit432.636秒含收尾，四Tool成功／4次写入、两root退休，但Session关闭未确认，schema和已停止失败容器／持久数据保留。隔离准入Query编码原型无profile ABBA的80个结果与Payload字节一致、该Query CPU中位减少约42.7%；仅单一已完成根和默认Converter。独立审查复现合法Workflow查询拦截器的字典返回契约被RawValue破坏，原型已否决；不继续添加特例guard，未进入产品，不将字节一致或局部收益视为整链通过。见[完整证据与准入](../architecture/reviews/2026-10-18-s2-sdk-query-cost.md)。其余十二正常／五故障不解锁，P3-2及P3-A整体未完成。仅本地提交，不推送。
 
 <details>
 <summary>此前批次摘要（“最新／下一批”仅描述对应快照）</summary>
