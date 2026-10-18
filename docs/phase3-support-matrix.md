@@ -1,11 +1,16 @@
 # 第三阶段支持矩阵与收口门槛
 
+当前状态见[唯一交付摘要](implementation-status.md#当前交付摘要)和[P3-3冻结范围收口](../architecture/reviews/2026-10-18-p3-3-closeout.md)。**所选P3-3最小服务控制与必要恢复已验收。** HTTP控制／持久游标／断连续接／背压，以及累计容量下原任务的取消、机械恢复、效果采纳、实际停止、封存退休与owned关闭按原制品逐项取证；满2,000 Update的原Parent在未封存时也能沿原History推进。20组既有制品校验通过。本批未改产品或重新运行服务，不合并不同批次为同次全绿。
+
+P3-2/S2原360秒失败继续后置／开放；Session／Turn仍归P3-2。P3-4／5／A保留原依赖和验收，不自动解锁。原P3-4只读盘点已完成，复用现有认证／Scope路由与授权交集；独立推进审计／安全保留及所选越权验证的开发，需要明确调整顺序。原SDK并发封存拒绝、未测外部首次采纳和任意History等边界继续保留，不延长本次已满足的P3-3。仅本地提交，不推送。
+
+<details>
+<summary>此前批次摘要（“最新／下一批”仅描述对应快照）</summary>
+
 当前状态见[唯一交付摘要](implementation-status.md#当前交付摘要)和[已封存Coding父级资源关闭验收](../architecture/reviews/2026-10-18-coding-parent-capacity-probe.md)。当前438文件包真实Temporal／PG正常＋压力2 passed／171.032秒；原Parent满2,000 Update后，完整只读核验原封存并跳过冗余子证明写入，效果、实际停止、退休、重启／History及owned关闭通过。源码／安装各2,526 passed／6跳过。原Handler／Agent运输和封存保护不变，未增加Parent协议。先前HTTP等证据按原制品引用，不合并为同次矩阵。
 
 下一批只做冻结P3-3的证据收口核对，不新增能力或预先扩运输。未封存首次采纳容量、任意History与实际Docker／模型质量不由本例证明。P3-2/S2原360秒失败继续后置／开放；Session／Turn仍归P3-2。完整P3-3与P3-4／5／A保持原门槛。仅本地提交，不推送。
 
-<details>
-<summary>此前批次摘要（“最新／下一批”仅描述对应快照）</summary>
 
 当前状态见[唯一交付摘要](implementation-status.md#当前交付摘要)和[Coding原Run恢复验收](../architecture/reviews/2026-10-18-temporal-coding-recovery-capacity.md)。基础SDK冻结，P3-3获准独立推进。同一438文件安装包真实Temporal／PG2 passed／58.684秒：原单Agent Coding满2,000 Update后停止／回执、显式取消、PG效果ACK、根退休、原stop ACK重启与History重放通过。进程peer不代表实际Docker／模型；先前HTTP／其他压力证据按原制品引用，不合并为本批服务矩阵。
 
@@ -103,7 +108,7 @@ P3-3增量记录：[HTTP事件分页](../architecture/reviews/2026-10-16-http-ev
 | --- | --- | --- |
 | P3-1 | 已有 Local／Temporal Run 与审批期限 | dev114／115 已交付；复用原证据，不重开功能建设 |
 | P3-2 | 部署容量准入的 Session 收尾 | **进行中，未完整验收。** Local、普通 Temporal 与所选 Coding 部署沿 dev116–120 复用；S1 普通 Session 功能子集已验收；S2 第二阶段已选 Coding Session 已实现、实际 SDK 门槛仍待通过，Temporal＋PG 集成仍待。纯状态／模拟传输测试与跳过项不算实际 SDK 验收。完成原 Turn／命令去重、重启、取消、实际停止、未知义务、容量安全释放、安装及约定兼容后关闭；不增加会话种类、编排拓扑或新调度器 |
-| P3-3 | 最小服务控制与持久观察 | 复用原 SDK／A2A，交付提交、查询、审批、取消、核验／恢复及 HTTP 事件游标续接；断连不取消业务，背压有界。累计命令容量耗尽不得令已有任务失去必要取消／恢复入口；不建设 Web 控制台或新传输协议 |
+| P3-3 | 最小服务控制与持久观察 | 复用原 SDK／A2A，交付提交、查询、审批、取消、核验／恢复及 HTTP 事件游标续接；断连不取消业务，背压有界。累计命令容量耗尽不得令已有任务失去必要取消／恢复入口；不建设 Web 控制台或新传输协议。**2026-10-18所选范围已验收**，见[收口核对](../architecture/reviews/2026-10-18-p3-3-closeout.md) |
 | P3-4 | 最小身份、权限、审计与保留 | 可信宿主认证结果映射调用者／Scope，复用资源授权交集；越权控制／事件读取拒绝、审计脱敏、完成数据清理保护活动树、原效果、幂等及恢复证据。复用既有数据后端，不开发 OIDC 联邦或通用权限平台 |
 | P3-5 | 所选部署的备份恢复与升级责任 | 安装后验证既有所选 SQLite／Temporal／PG 数据、原版本 Worker、业务身份和效果证据的备份／恢复；升级失败可诊断并有可操作回退路径。活动及 unknown 义务须安全保留，不能以复制文件或清理占位冒充恢复；不开发通用迁移框架或跨宿主灾备 |
 | P3-A | 阶段整体交付 | 固定最终候选，安装后验证提交→观察／断连→审批／期限→重启／重复控制→权限拒绝→关闭／恢复；完成阶段完整回归、安装、约定兼容、文档和本地提交。失败／跳过／外部待验证项独立记录，不虚报完成 |
@@ -141,7 +146,7 @@ P3-3增量记录：[HTTP事件分页](../architecture/reviews/2026-10-16-http-ev
 | --- | --- | --- |
 | 1：期限配置 | Temporal 现有 `TemporalExecutionPolicy` 接入 Profile／SDK／JSON／TOML 和自定义工厂；省略保持原默认，非法内置配置在组件 I/O 前拒绝；实际服务验证审批重启、原到期时间、批准／过期、晚到证据和 owned 关闭；安装后复验 | dev114 已通过策略入口、默认兼容、配置／替换和 owned 清理；源码／安装各 4 项实际 Temporal／PG 场景及各 313 项受影响回归（2 项其他远程配置跳过）通过，见[策略配置](temporal-execution-policy.md)与[验收登记](../architecture/reviews/2026-10-14-temporal-policy-profiles.md) |
 | 2：Local 期限与容量 | 所选 Local 链路补 Run／审批期限；观察等待与业务期限分离；准入额度原子获取，关闭／恢复释放责任明确；活动、未知效果和实际未结束处理器不得被过期或清理释放 | dev115 已补 Local 持久期限与审批过期，见[指南](local-execution-policy.md)和[本批登记](../architecture/reviews/2026-10-14-local-deadlines.md)；dev116 已补 Local 全 DB／每 Scope 持久根准入，见[指南](deployment-admission.md)及[登记](../architecture/reviews/2026-10-14-local-admission.md)；dev117／dev118 已接通原 Registry 与内部 Worker SDK 门禁，见[登记](../architecture/reviews/2026-10-14-temporal-deployment-dispatch.md)。dev119 已实现普通公共 v2 Engine／Profile、原接受信封与不确定启动恢复、真实 Activity 义务及原树校验后安全退休；源码与独立安装各 953 项受影响、27 项公共实际服务及 17 项私有 v1 服务零失败／错误／跳过；默认发布、原 History 兼容和 owned 清理通过，见[验收记录](../architecture/reviews/2026-10-15-temporal-deployment-public.md)。内部 v1 继续只占位；dev120已接通所选Coding准入与物理关闭；S1 普通 Session 功能子集已验收，S2 所选 Coding Session 与 Temporal＋PG 集成仍为必需项。现有单 Run／Runner 限制不能替代部署准入；批次 2 未关闭 |
-| 3：观察与服务控制 | 持久 HTTP 事件游标与断连续接；审批、核验和恢复沿原身份与幂等命令；断连只结束观察；统一诊断和明确关闭／移交责任 | 原SDK／HTTP控制、Local进程重启及普通公有2 HTTP→Temporal／PG审批／核验／取消、事件游标和owned关闭已实测。累计命令容量按原权威逐项取证，完整P3-3未关闭；见[当前审查](../architecture/reviews/2026-10-16-phase3-control-evidence-audit.md) |
+| 3：观察与服务控制 | 持久 HTTP 事件游标与断连续接；审批、核验和恢复沿原身份与幂等命令；断连只结束观察；统一诊断和明确关闭／移交责任 | **所选P3-3已验收。** HTTP控制／持久游标／断连续接和容量下原任务必要取消／恢复按各原制品取证，含原图在未封存时推进、实际停止／退休和owned关闭；见[收口核对](../architecture/reviews/2026-10-18-p3-3-closeout.md)。不是同次全服务矩阵 |
 | 4：身份、权限与保留 | 宿主认证结果形成可信调用者；资源 ACL、Scope 与每 Agent 能力绑定取交集；跨 Scope 控制／事件读取拒绝；审计脱敏；保留清理保护活动 Run、原效果与恢复所需证据 | 可信 Scope／工具授权及 namespace 保护已有；服务身份映射、完整资源 ACL、审计与保留尚未闭环 |
 | 5：恢复与升级 | 安装后备份／恢复所选服务组合；核对原业务身份、版本与效果证据；故障窗口、迁移失败与回退可诊断；依赖服务／Worker 的拥有与关闭分别检查 | 进程重启、原 Worker 恢复及私有证据保留已有；框架级备份恢复、迁移和恢复管理待补齐 |
 

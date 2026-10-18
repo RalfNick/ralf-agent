@@ -133,7 +133,7 @@ R06／R09／R13／R15–R20，按场景分期，不自动进入当前第一阶�
 
 当前执行按[第三阶段支持矩阵](phase3-support-matrix.md)的五批门槛推进。dev114 首批接通原 Temporal 期限策略配置，见[配置指南](temporal-execution-policy.md)与[验收登记](../architecture/reviews/2026-10-14-temporal-policy-profiles.md)。dev115 补 Local 持久期限与原链路恢复，见[本批登记](../architecture/reviews/2026-10-14-local-deadlines.md)。dev116 补 Local 原 Store 部署容量，见[本批登记](../architecture/reviews/2026-10-14-local-admission.md)；dev117 原 Registry History 基础之上，dev118 补内部 Worker 的真实 Run／Parent SDK 准入和后代共享根占位，见[登记](../architecture/reviews/2026-10-14-temporal-deployment-dispatch.md)。冻结源码与独立安装各通过 814 项受影响检查、17 项实际 Service，最终出处分别登记；本批不宣称新的阶段全量回归或模型质量。
 
-dev119 已验收普通公共部署，dev120 已验收所选 Coding 部署和物理关闭；相关历史段落不再作为重新建设的依据。P3-2 仅续接既有普通／Coding SDK Session coordinator 准入和必要的安全释放集成。随后依次关闭 P3-3 最小服务观察／控制、P3-4 身份权限／保留、P3-5 框架备份恢复及 P3-A 总验收；不扩展环境或编排矩阵。全部固定门槛通过后冻结第三阶段、交付本轮，R01–R26 剩余目标保留为后续路线图。
+dev119 已验收普通公共部署，dev120 已验收所选 Coding 部署和物理关闭；相关历史段落不再作为重新建设的依据。P3-2 仅续接既有普通／Coding SDK Session coordinator 准入和必要的安全释放集成。P3-3最小服务观察／控制及必要恢复已按[2026-10-18收口核对](../architecture/reviews/2026-10-18-p3-3-closeout.md)验收；P3-2/S2性能门槛仍后置／开放，P3-4身份权限／保留、P3-5框架备份恢复及P3-A总验收保持原依赖，不自动解锁。独立推进P3-4须明确调整顺序；不扩展环境或编排矩阵。全部固定门槛通过后冻结第三阶段、交付本轮，R01–R26 剩余目标保留为后续路线图。
 
 ## 范围与报告
 
