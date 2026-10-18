@@ -95,6 +95,7 @@ def environment(monkeypatch):
     client.end_failures = 0
     client.begin_failure = False
     client.retirements = []
+    client.retirement_results = {}
     registry_id = client.registry.registry_id
     client.descriptions[registry_id] = SimpleNamespace(
         id=registry_id,
@@ -103,7 +104,12 @@ def environment(monkeypatch):
         parent_id=None,
         parent_run_id=None,
         raw_info=SimpleNamespace(first_run_id="registry-epoch"),
+        workflow_type="ralf.temporal.commands.v1",
     )
+
+    from ralf_agent.temporal_state import COMMAND_REGISTRY_NAME
+
+    client.descriptions[registry_id].workflow_type = COMMAND_REGISTRY_NAME
 
     class OwnedHandle(Handle):
         async def describe(self):
@@ -122,9 +128,6 @@ def environment(monkeypatch):
                         else WORKFLOW_NAME
                     )
             return value
-
-        async def signal(self, *args, **options):
-            raise AssertionError("An exactly identified legacy Worker must receive no Signal")
 
         async def query(self, name, request):
             if self.id in client.states and request["kind"] == "status":
@@ -154,6 +157,15 @@ def environment(monkeypatch):
                     "run_receipt": None,
                     "execution_epoch": original_proof["execution_epoch"],
                 }
+            if self.id == registry_id and request["kind"] == "deployment_retirement_observation":
+                envelope = request["retirement_observation"]
+                return {
+                    **{k: copy.deepcopy(v) for k, v in envelope.items() if k != "request"},
+                    "request_digest": digest(envelope["request"]),
+                    "result": copy.deepcopy(
+                        client.retirement_results.get(envelope["observation_id"])
+                    ),
+                }
             if self.id == registry_id and request["kind"] == "deployment_configuration":
                 return {
                     "version": 2,
@@ -176,6 +188,13 @@ def environment(monkeypatch):
                 }
             return await super().query(name, request)
 
+        async def signal(self, name, envelope):
+            assert name == "retire_deployment_root" and self.id == registry_id
+            receipt = await self.execute_update(
+                "release_deployment_root", envelope["request"], id=envelope["observation_id"]
+            )
+            client.retirement_results[envelope["observation_id"]] = {"ok": True, "receipt": receipt}
+
         async def execute_update(self, name, request, **options):
             client.updates.append((self.id, self.epoch, name, copy.deepcopy(request)))
             if name == "deployment_call_started":
@@ -194,7 +213,13 @@ def environment(monkeypatch):
                 return release.seal(client.states[self.id], request)
             if name == "release_deployment_root":
                 client.retirements.append(copy.deepcopy(request))
-                return {"run_id": request["run_id"], "retired": True}
+                return {
+                    "root": copy.deepcopy(
+                        client.proofs[request["run_id"]]["admission_receipt"]["root"]
+                    ),
+                    "certificate": copy.deepcopy(request["certificate"]),
+                    "released": True,
+                }
             return await super().execute_update(name, request, **options)
 
     client.get_workflow_handle = lambda workflow_id, **options: OwnedHandle(
@@ -333,7 +358,7 @@ def test_release_reads_original_closure_and_seals_before_registry_retirement(mon
             },
             info,
         )
-        assert result == {"run_id": state.run_id, "retired": True}
+        assert result["released"] is True and result["root"]["run_id"] == state.run_id
         assert state.deployment_seal is not None
         assert client.retirements[0]["certificate"] == state.deployment_seal
         assert [item[2] for item in client.updates][-2:] == [
@@ -557,55 +582,47 @@ def test_whole_loop_cancellation_keeps_actual_thread_and_original_end_obligation
         asyncio.run(runtime._deployment_execution_owner.aclose(wait_timeout=2))
 
 
-def test_release_retry_uses_fresh_sdk_update_after_cached_verification_failure(monkeypatch):
-    """A failed SDK Update is durable by ID; the original certificate is retryable."""
-    from temporalio.client import WorkflowUpdateFailedError
-    from temporalio.exceptions import ApplicationError
+def test_release_retry_reobserves_same_certificate_after_original_verification_failure(monkeypatch):
+    """A failed observation cannot poison a fresh proof of the original certificate."""
+    from ralf_agent.errors import RalfError
 
     async def run():
         runtime, client, state, _, info = environment(monkeypatch)
         get_handle = client.get_workflow_handle
-        outcomes, attempts, requests = {}, [], []
+        attempts, requests = [], []
         verification_attempts = 0
         committed = None
 
-        class DeduplicatingHandle:
+        class ObservedHandle:
             def __init__(self, original):
                 self.original = original
 
             def __getattr__(self, name):
                 return getattr(self.original, name)
 
-            async def execute_update(self, name, request, **options):
+            async def signal(self, name, envelope):
                 nonlocal verification_attempts, committed
-                if name != "release_deployment_root":
-                    return await self.original.execute_update(name, request, **options)
-                update_id = options["id"]
-                attempts.append(update_id)
-                requests.append(copy.deepcopy(request))
-                if update_id not in outcomes:
-                    if committed is not None:
-                        # Original Registry semantic idempotency survives new SDK IDs.
-                        outcomes[update_id] = copy.deepcopy(committed)
+                assert name == "retire_deployment_root"
+                key = envelope["observation_id"]
+                attempts.append(key)
+                requests.append(copy.deepcopy(envelope["request"]))
+                if committed is not None:
+                    client.retirement_results[key] = {
+                        "ok": True,
+                        "receipt": copy.deepcopy(committed),
+                    }
+                else:
+                    verification_attempts += 1
+                    if verification_attempts == 1:
+                        client.retirement_results[key] = {
+                            "ok": False,
+                            "error": "deployment_release_failed",
+                        }
                     else:
-                        verification_attempts += 1
-                        if verification_attempts == 1:
-                            outcomes[update_id] = WorkflowUpdateFailedError(
-                                ApplicationError(
-                                    "Original verification Activity timed out",
-                                    type="deployment_release_failed",
-                                    non_retryable=True,
-                                )
-                            )
-                        else:
-                            committed = await self.original.execute_update(name, request, **options)
-                            outcomes[update_id] = copy.deepcopy(committed)
-                outcome = outcomes[update_id]
-                if isinstance(outcome, BaseException):
-                    raise outcome
-                return copy.deepcopy(outcome)
+                        await self.original.signal(name, envelope)
+                        committed = copy.deepcopy(client.retirement_results[key]["receipt"])
 
-        client.get_workflow_handle = lambda *args, **options: DeduplicatingHandle(
+        client.get_workflow_handle = lambda *args, **options: ObservedHandle(
             get_handle(*args, **options)
         )
         value = {
@@ -614,11 +631,11 @@ def test_release_retry_uses_fresh_sdk_update_after_cached_verification_failure(m
             "run_id": state.run_id,
             "execution_epoch": state.epoch,
         }
-        with pytest.raises(WorkflowUpdateFailedError):
+        with pytest.raises(RalfError):
             await module().execute(runtime, client, value, info)
         certificate = copy.deepcopy(state.deployment_seal)
-        expected = {"run_id": state.run_id, "retired": True}
-        assert await module().execute(runtime, client, value, info) == expected
+        expected = await module().execute(runtime, client, value, info)
+        assert expected["released"] is True
         assert await module().execute(runtime, client, value, info) == expected
         assert len(attempts) == len(set(attempts)) == 3
         assert verification_attempts == 2 and len(client.retirements) == 1

@@ -77,3 +77,10 @@ indefinite operation and old unmarked Tool safety defects are not newly delivere
 capabilities. Old selected releases require matching immutable Workers and retained
 unknown handling. P3-3 is not complete; P3-2's original failure and all later gates
 remain unchanged. This batch is a local documentation/evidence commit only.
+
+## Subsequent retirement evidence, 2026-10-18
+
+The recommended original Registry-pressure probe subsequently reproduced the
+retirement blocker. The [bounded repair and same-wheel acceptance](2026-10-18-temporal-registry-retirement-capacity.md)
+close only that subset. The original audit and its 435-file HTTP/PG evidence remain
+unchanged; public strong manual proof and native Coding pressure remain open.

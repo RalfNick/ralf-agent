@@ -479,3 +479,20 @@ The [same-wheel public2 pressure](../reviews/2026-10-16-temporal-deployment-life
 now covers evidence ACK, seal, root retirement and owned closure after2,000 Run
 Updates. It does not close Registry Update exhaustion, Session/native/other
 pressure combinations, call-ledger capacity or History byte/event bounds.
+
+## Original public Registry retirement observation
+
+The public root release Activity observes the original Registry's full
+`release_deployment_root` handler through a fixed Signal/Query transport. Original
+certificate preparation, asynchronous SDK verifier, post-await original-epoch
+check and atomic commit remain the only release authority. This path adds no
+admission allowance and does not generalize to manual proof or Session controls.
+
+The full Scope, policy, namespace UUID, original SDK Registry epoch and exact
+root/certificate bind each observation. At most 64 observations are retained;
+pending proof work cannot be evicted. Delivery, observer cancellation, timeout,
+cache saturation or malformed replies remain uncertain and never authorize
+Update fallback. A fresh observation may recheck the same original certificate.
+Historical selected deployments keep their matching immutable SDK/Worker and
+original Update handler; stable default compatibility is checked independently.
+See [reproduction and acceptance](../reviews/2026-10-18-temporal-registry-retirement-capacity.md).

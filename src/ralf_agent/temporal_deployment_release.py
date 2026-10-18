@@ -468,11 +468,9 @@ async def execute(runtime, client, value, info):
             _reject()
         certificate = await _tree(runtime, client, policy, proof, seal=True)
         root = proof["admission_receipt"]["root"]
-        result = await client.get_workflow_handle(root["registry_id"]).execute_update(
-            "release_deployment_root",
-            _binding(root, policy, certificate),
-            id="ralf-deployment-release:" + digest(certificate) + ":" + uuid4().hex,
-        )
+        from .temporal_deployment_retirement_transport import execute as retire_original
+
+        result = await retire_original(client, root, _binding(root, policy, certificate))
         execution._actual(client, info, run_id=proof["run_id"], epoch=proof["execution_epoch"])
     elif mode in {"control", "manual_control"}:
         proof, result = await _verify_control(runtime, client, policy, value, info)

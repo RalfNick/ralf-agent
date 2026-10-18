@@ -152,3 +152,15 @@ SHA256 `e71780943d331351aa47192aca83d4278a55ab027b103ba8141c3da564040a67`，附�
 **3 passed／26.847秒**，受影响离线47项通过，产品／测试输入不变。此前16组制品
 及其原验收JSON／SHA256SUMS均保持有效；新证据见[冻结范围核对](../architecture/reviews/2026-10-16-phase3-control-evidence-audit.md)。
 这不关闭完整P3-3，也不替代原S2失败、模型质量或外部采用验收。
+
+## P3-3 原Registry退休容量修复
+
+制品 `dist/p3-registry-retirement-20261018/ralf_agent-0.1.0.dev120-py3-none-any.whl`，
+SHA256 `7a2dc32ab734956b5998bb9cb48d36e575fd60025e6aee9f605560d36cc06cd6`，
+附独立 `verification.json`／`SHA256SUMS`。436产品文件与源码／隔离安装一致，安装
+2,404 passed／6配置依赖跳过；源码8项socket沙箱失败的原样复验及分批证据单独保留。
+相同wheel真实Temporal3 passed／28.621秒，含原Registry满2,000 Update后安全退休、
+原Run压力及默认Tool结束，均有重启／History／owned关闭证据。默认发布／保存History
+兼容和此前16组制品校验通过。只关闭该根退休子门槛；本批没有新HTTP／PG、模型质量
+或native Coding压力验收，历史selected仍用匹配SDK／Worker。完整P3-3／P3-2及后续
+门槛保持开放，详见[验收记录](../architecture/reviews/2026-10-18-temporal-registry-retirement-capacity.md)。

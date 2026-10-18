@@ -16,7 +16,7 @@ from ralf_agent.governance import DeploymentAdmissionPolicy
 from ralf_agent.temporal import TemporalEngine, build_temporal_worker, replay_temporal_history
 from ralf_agent.temporal_activities import TemporalRuntime
 from ralf_agent.types import digest
-from tests.test_temporal_deployment_admission_service import _clients
+from tests.test_temporal_deployment_admission_service import _clients, _request
 from tests.test_temporal_deployment_dispatch_service import _eventually
 from tests.test_temporal_deployment_public_service import (
     CommittedThreadWrite,
@@ -71,8 +71,12 @@ class RecordedHandle:
         return await self.original.signal(name, value)
 
 
-@pytest.mark.parametrize("public", [False, True], ids=["tool", "public-tool-and-call"])
-def test_actual_original_tool_end_ack_after_2000_updates(tmp_path, public):
+@pytest.mark.parametrize(
+    ("public", "registry_pressure"),
+    [(False, False), (True, False), (True, True)],
+    ids=["tool", "public-tool-and-call", "public-registry-retirement"],
+)
+def test_actual_original_tool_end_ack_after_2000_updates(tmp_path, public, registry_pressure):
     async def run():
         from temporalio.client import WorkflowExecutionStatus
         from temporalio.service import RPCError, RPCStatusCode
@@ -82,14 +86,13 @@ def test_actual_original_tool_end_ack_after_2000_updates(tmp_path, public):
         scope = Scope("execution-end-pressure", queue)
         write = CommittedThreadWrite(tmp_path / "business.sqlite")
         journal = SQLiteEffectEvidence(tmp_path / "evidence.sqlite")
+        policy = DeploymentAdmissionPolicy(queue, max_active_root_runs=1)
         runtime = TemporalRuntime(
             providers={"default": WriteProvider()},
             tools=write.tools(),
             tool_execution=ToolExecutionOwner(version="end-pressure-1"),
             journal=journal,
-            admission_policy=DeploymentAdmissionPolicy(queue, max_active_root_runs=1)
-            if public
-            else None,
+            admission_policy=policy if public else None,
         )
         engine = TemporalEngine(
             client,
@@ -116,7 +119,10 @@ def test_actual_original_tool_end_ack_after_2000_updates(tmp_path, public):
                 )
                 assert await asyncio.to_thread(write.started.wait, 10)
                 assert write.committed()[0][1] == 1 and not write.ended.is_set()
-                handle = client.get_workflow_handle(original.run_id)
+                pressure_target = (
+                    engine.command_registry_id if registry_pressure else original.run_id
+                )
+                handle = client.get_workflow_handle(pressure_target)
                 history = await handle.fetch_history()
                 already = sum(
                     e.HasField("workflow_execution_update_accepted_event_attributes")
@@ -127,13 +133,45 @@ def test_actual_original_tool_end_ack_after_2000_updates(tmp_path, public):
                     "command_id": "one-drive",
                     "payload": {"kind": "drive", "scope": asdict(scope)},
                 }
+                if registry_pressure:
+                    request = _request(
+                        policy.identity,
+                        namespace,
+                        asdict(scope),
+                        "one-drive",
+                        kind="drive",
+                        target=original.run_id,
+                    )
                 for start in range(already, 2000, 8):
                     await asyncio.gather(
                         *[
-                            handle.execute_update("command", request)
+                            handle.execute_update(
+                                "reserve" if registry_pressure else "command", request
+                            )
                             for _ in range(start, min(start + 8, 2000))
                         ]
                     )
+                pressure = await handle.fetch_history()
+                accepted = sum(
+                    e.HasField("workflow_execution_update_accepted_event_attributes")
+                    for e in pressure.events
+                )
+                completed = sum(
+                    e.HasField("workflow_execution_update_completed_event_attributes")
+                    for e in pressure.events
+                )
+                assert accepted == completed == 2000
+                (tmp_path / "pressure-history.json").write_text(pressure.to_json())
+                (tmp_path / "pressure.json").write_text(
+                    json.dumps(
+                        {
+                            "target": pressure_target,
+                            "registry_pressure": registry_pressure,
+                            "accepted_updates": accepted,
+                            "completed_updates": completed,
+                        }
+                    )
+                )
                 before = await engine.diagnostics(original.run_id)
                 assert (
                     not before.workflow["quiescent"]
@@ -186,6 +224,21 @@ def test_actual_original_tool_end_ack_after_2000_updates(tmp_path, public):
                     with sqlite3.connect(journal.path) as db:
                         effects = db.execute("SELECT state,adopted_digest FROM effects").fetchall()
                     assert len(effects) == 1 and effects[0][0] == "adopted" and effects[0][1]
+                    if registry_pressure:
+                        retired_history = await handle.fetch_history()
+                        assert (
+                            sum(
+                                e.HasField("workflow_execution_update_accepted_event_attributes")
+                                for e in retired_history.events
+                            )
+                            == 2000
+                        )
+                        assert any(
+                            e.HasField("workflow_execution_signaled_event_attributes")
+                            and e.workflow_execution_signaled_event_attributes.signal_name
+                            == "retire_deployment_root"
+                            for e in retired_history.events
+                        )
                     (tmp_path / "deployment-retirement.json").write_text(
                         json.dumps(
                             {
@@ -204,6 +257,7 @@ def test_actual_original_tool_end_ack_after_2000_updates(tmp_path, public):
                     json.dumps(
                         {
                             "sdk_update_limit": 2000,
+                            "registry_pressure": registry_pressure,
                             "business_calls": 1,
                             "actual_end_acknowledged": True,
                             "original_cancel_receipt": True,

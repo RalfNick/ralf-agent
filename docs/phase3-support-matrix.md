@@ -1,11 +1,16 @@
 # 第三阶段支持矩阵与收口门槛
 
+当前状态见[唯一交付摘要](implementation-status.md#当前交付摘要)和[原Registry退休验收](../architecture/reviews/2026-10-18-temporal-registry-retirement-capacity.md)。基础SDK冻结，P3-3获准独立推进。相同436文件安装包真实Temporal3 passed／28.621秒，原Registry满2,000 Update后已完成业务仍能安全退休；原Run压力／结束ACK、Worker重启、原回执和History重放通过。先前HTTP／Temporal／PG证据继续按435文件包的范围引用，不合并为本批服务矩阵。
+
+下一批仅验证公有原Action强人工核验的Registry压力路径；源码风险不预先算作缺陷，不为未复现问题扩运输。所选native Coding仍缺压力证据，完整P3-3保持开放。P3-2/S2原360秒失败后置／开放，Session／Turn仍归P3-2，P3-4／5／A不解锁。仅本地提交，不推送。
+
+<details>
+<summary>此前批次摘要（“最新／下一批”仅描述对应快照）</summary>
+
 当前状态见[唯一交付摘要](implementation-status.md#当前交付摘要)及[本轮证据核对](../architecture/reviews/2026-10-16-phase3-control-evidence-audit.md)。基础SDK已冻结；用户已明确允许独立推进P3-3并保留全部验收门槛。当前435文件wheel的HTTP／Temporal／PG三场景3 passed／26.847秒；基本控制、重启与事件游标已交付，必要恢复的累计命令容量仍仅按已测子集验收，完整P3-3保持开放。
 
 下一批仅验证普通公有2原Registry满2,000 distinct Update后的根退休；源码风险尚未复现，不预先扩运输。P3-2/S2原360秒失败继续后置／开放，P3-4／5／A不解锁。Session／Turn仍归P3-2；不把任意History规模或全拓扑压力测试加入本轮。仅本地提交，不推送。
 
-<details>
-<summary>此前批次摘要（“最新／下一批”仅描述对应快照）</summary>
 
 最新[公有begin／seal容量恢复](../architecture/reviews/2026-10-16-temporal-deployment-lifecycle-capacity.md)：保持原handler、独占准入与封存复核，坏ACK仍保留Owner。源码／隔离安装各2,381 passed／6 skipped；同包实际3 passed／21.426秒，普通公有2在原Run满2,000 Update后效果ACK、结束、seal、退休、关闭和重启重放通过，两种不可变旧Worker各按端点和匹配SDK验证。原指纹失败已修，单次源码组超时原因未确认、复核通过；旧失败均保留。该子门槛关闭，其他Registry／Session／native与History容量及完整P3-3／P3-2仍开放。
 

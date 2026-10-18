@@ -25,6 +25,7 @@ with workflow.unsafe.imports_passed_through():
         temporal_deployment_control_projection,  # noqa: F401 -- fixed compact Query projector
         temporal_deployment_lifecycle_transport,  # noqa: F401 -- original public begin/seal
         temporal_deployment_registry,  # noqa: F401 -- preload pure acceptance
+        temporal_deployment_retirement_transport,  # noqa: F401 -- original Registry retirement
         temporal_deployment_session_registry,  # noqa: F401 -- original Session command/claim facts
         temporal_deployment_session_updates,  # noqa: F401 -- Registry-owned SDK commit path
         temporal_execution_end_transport,  # noqa: F401 -- original physical end observations
@@ -1660,6 +1661,12 @@ class TemporalCommandRegistryWorkflow:
 
         await accept(self, envelope, workflow.info())
 
+    @workflow.signal(name="retire_deployment_root")
+    async def retire_deployment_root(self, envelope: dict) -> None:
+        from .temporal_deployment_retirement_transport import accept
+
+        await accept(self, envelope, workflow.info())
+
     async def _session_verified_update(self, operation, request):
         from .temporal_deployment_session_updates import execute
 
@@ -1850,6 +1857,12 @@ class TemporalCommandRegistryWorkflow:
                 return {"error": getattr(exc, "code", "validation_error")}
         if self.commands.deployment is not None:
             try:
+                if request.get("kind") == "deployment_retirement_observation":
+                    from .temporal_deployment_retirement_transport import observe
+
+                    if request.get("scope") != request["retirement_observation"]["scope"]:
+                        return {"error": "authorization_denied"}
+                    return observe(self, request["retirement_observation"], workflow.info())
                 if request.get("kind") == "deployment_reserve_receipt":
                     return observe_reservation_signal(self, request)
                 if request.get("kind") in {

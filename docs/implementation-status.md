@@ -2,7 +2,7 @@
 
 ## 当前交付摘要
 
-更新：2026-10-16。本节是唯一当前状态摘要；历史批次保留在下方，仅作原版本证据引用。R01–R26是长期路线图，不作为本轮基础交付的额外阻塞条件。
+更新：2026-10-18。本节是唯一当前状态摘要；历史批次保留在下方，仅作原版本证据引用。R01–R26是长期路线图，不作为本轮基础交付的额外阻塞条件。
 
 **基础SDK交付已冻结。** 原交付包版本为 `0.1.0.dev120`，运行时代码固定于 `b871f61`，原制品保持不变；后续P3-3增量单独记录，不套用旧包验收。本地wheel、校验与安装方式见[本地交付说明](releasing.md#本轮本地交付)，日常起步见[首用教程](getting-started.md)和[基础能力](basic-capabilities.md)。这是开发预览，尚未核验同版本的公开PyPI／GitHub Release。
 
@@ -27,18 +27,23 @@
 | 范围 | 状态与约束 |
 | --- | --- |
 | P3-2 | S1普通Session功能子集已有验收；S2已有真实PG日志与关闭证据，但原360秒仍未通过，当前完整矩阵尚缺。性能专项后置，该未完成组合不列为已支持 |
-| P3-3 | 用户已批准独立推进；Local及普通Agent HTTP→Temporal／PG控制、宿主重启和事件游标已有实测；公有普通2已有4096原树取消及根Tool人工核验／结束／ACK证据；默认scoped满容量首次取消、重复drive图恢复及旧Worker兼容已验，默认scoped普通Tool人工核验容量已有有限证据；原Run／图父子必要控制及默认scoped原工具人工证明在2,000 distinct Update后可用；原Tool结束运输与公有普通2的begin／seal窄修已实测，满2,000后效果ACK、退休和Owner关闭通过；Public Registry及所选native Coding的必要恢复仍缺压力证据；Session／Turn门槛归P3-2，任意History规模不作无限运行承诺。本项不关闭 |
+| P3-3 | 用户已批准独立推进。Local与先前435文件包的HTTP→Temporal／PG控制、重启和游标已有有限证据；所选Run／图父子／scoped原工具恢复子集按原制品验收。本批436文件包补齐普通公有2原Registry满2,000 Update后的根退休、额度释放、重启重放及owned关闭。公有强人工核验证明和所选native Coding的必要恢复仍缺压力证据；Session／Turn归P3-2。本项不关闭 |
 | P3-4／P3-5／P3-A | 原依赖和验收保持，身份权限／保留、框架恢复与阶段整体未关闭，不新增后端／编排／Runner／部署组合 |
 | R01–R26其余目标 | 保留为长期路线图；外部采用和框架对等比较单独验收，不自动成为本轮实现任务 |
 
-**当前证据核对：** 运行时代码仍为 `0fedebe`，未新增功能或重建wheel。原435文件制品的隔离安装HTTP／Temporal／PostgreSQL复验 **3 passed／26.847秒**，审批和未知写各写一次、取消零写；六个宿主关闭、原事件游标、根退休和三个测试schema清理通过，受影响离线检查47项通过。此前16组制品校验有效，原失败保留。详见[冻结范围审查](../architecture/reviews/2026-10-16-phase3-control-evidence-audit.md)。
+**当前增量：** 已修复原Registry累计2,000次Update后，业务已结束但根无法退休的可复现阻塞。只调整原完整release handler的观察运输，完整SDK证明、post-await检查、原子释放和未知义务保持。隔离安装125模块 **2,404 passed／6 skipped**；源码首轮8项socket权限失败、其余2,396通过，原8项授权环境复验通过，保留分批记录。默认发布／保存History兼容通过，436产品一致，此前16组制品不变。相同wheel真实Temporal **3 passed／28.621秒**，含原Registry与Run压力、一次业务写、重启重放和owned关闭。详见[本批验收](../architecture/reviews/2026-10-18-temporal-registry-retirement-capacity.md)。本批未重新验收HTTP／PG或模型质量。
 
-**当前剩余与下一批：** P3-3基本服务控制已交付，累计命令容量只按已测子集验收；Public Registry强人工证明／根退休、所选native Coding恢复仍缺压力证据。下一批先验证原Registry满2,000 distinct Update后的根退休，复现前不扩运输；预计一批定向探针，是否修复依实际结果。Session／Turn容量仍归P3-2，后置不等于通过。后续执行依据为[第三阶段冻结矩阵](phase3-support-matrix.md)，不新增后端、编排或平台范围。
+**当前剩余与下一批：** 本批只关闭原Registry根退休子门槛。下一批先对公有原Action强人工核验在Registry累计容量后的路径做定向取证，只有复现必需恢复阻塞才修复；预计一批探针及按证据确定的窄修，不扩后端／编排／平台。所选native Coding压力仍待；P3-2/S2原360秒失败继续后置／开放，P3-4／5／A不解锁。执行依据为[冻结矩阵](phase3-support-matrix.md)。
 
 ## 历史实现与验收证据
 
 <details>
 <summary>展开历史记录（“当前／下一步”只描述该记录发布时的状态）</summary>
+
+**当前证据核对：** 运行时代码仍为 `0fedebe`，未新增功能或重建wheel。原435文件制品的隔离安装HTTP／Temporal／PostgreSQL复验 **3 passed／26.847秒**，审批和未知写各写一次、取消零写；六个宿主关闭、原事件游标、根退休和三个测试schema清理通过，受影响离线检查47项通过。此前16组制品校验有效，原失败保留。详见[冻结范围审查](../architecture/reviews/2026-10-16-phase3-control-evidence-audit.md)。
+
+**当前剩余与下一批：** P3-3基本服务控制已交付，累计命令容量只按已测子集验收；Public Registry强人工证明／根退休、所选native Coding恢复仍缺压力证据。下一批先验证原Registry满2,000 distinct Update后的根退休，复现前不扩运输；预计一批定向探针，是否修复依实际结果。Session／Turn容量仍归P3-2，后置不等于通过。后续执行依据为[第三阶段冻结矩阵](phase3-support-matrix.md)，不新增后端、编排或平台范围。
+
 
 **前批结束回执增量：** 四类原结束handler经原Run有界Signal／Query观察，保留Scope、epoch、完整证明和严格ACK；不增加grant／准入或执行权威。源码／独立wheel各 **2,340 passed／6 skipped**，434产品一致；默认发布／保存History兼容和此前14组制品校验通过。同包真实Temporal **2 passed／1 failed／24.730秒**：默认Tool满2,000 Update后的实际结束、重启与旧Worker兼容通过；公有原end事实已入库，但后续效果ACK的begin登记仍触及上限，Owner关闭失败。原断言、失败、8条失败History重放及资源义务保留，不能把Run quiescent当作部署退休；完整P3-3不关闭。详见[窄修与剩余阻塞](../architecture/reviews/2026-10-16-temporal-execution-end-capacity.md)。下一批只处理该原begin的正向证据与关闭路径，预计一批定向排查／必要修复，不扩范围。
 
