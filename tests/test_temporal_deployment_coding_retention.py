@@ -56,7 +56,36 @@ async def update(events, name, request, response=None, *, failed=False, pending=
         events.append(done)
 
 
-async def scenario(*, retired=True, pending=False, writes=None, fault=None, unused=False):
+async def signal(events, name, value):
+    event = HistoryEvent(event_id=len(events) + 1)
+    attrs = event.workflow_execution_signaled_event_attributes
+    attrs.signal_name = name
+    attrs.input.payloads.extend(await DataConverter.default.encode([value]))
+    events.append(event)
+
+
+async def release_activity(events, request, response, *, fault=None):
+    scheduled = HistoryEvent(event_id=len(events) + 1)
+    attrs = scheduled.activity_task_scheduled_event_attributes
+    attrs.activity_id = "original-release"
+    attrs.activity_type.name = "ralf.temporal.deployment-release.v2"
+    attrs.task_queue.name = "original"
+    attrs.input.payloads.extend(await DataConverter.default.encode([request]))
+    events.append(scheduled)
+    if fault == "missing_activity_completion":
+        return
+    completed = HistoryEvent(event_id=len(events) + 1)
+    attrs = completed.activity_task_completed_event_attributes
+    attrs.scheduled_event_id = scheduled.event_id
+    if fault == "activity_schedule":
+        attrs.scheduled_event_id += 100
+    attrs.result.payloads.extend(await DataConverter.default.encode([response]))
+    events.append(completed)
+
+
+async def scenario(
+    *, retired=True, pending=False, writes=None, fault=None, unused=False, transport="updates"
+):
     from tests.temporal_deployment_coding_retention import deletion_evidence
 
     wrapper, state, request, root, _ = bound_registry()
@@ -127,7 +156,7 @@ async def scenario(*, retired=True, pending=False, writes=None, fault=None, unus
             },
         )
     ]
-    if not unused:
+    if not unused and transport == "updates":
         await update(events, "reserve", request, reserve, pending=fault == "pending_reserve")
         if retired or pending:
             await update(
@@ -138,6 +167,93 @@ async def scenario(*, retired=True, pending=False, writes=None, fault=None, unus
                 pending=pending,
                 failed=fault == "failed_release",
             )
+    elif not unused:
+        envelope = {
+            "kind": "deployment_reserve_receipt",
+            "scope": root["scope"],
+            "observation_id": "reserve-observation",
+            "request": copy.deepcopy(request),
+        }
+        if fault == "reservation_namespace":
+            envelope["request"]["namespace"]["id"] = "22222222-2222-2222-2222-222222222222"
+        if fault == "reservation_submission":
+            envelope["request"]["root_admission"]["submission"]["activity_timeout"] += 1
+        if fault != "missing_reserve_signal":
+            await signal(events, "reserve_command", envelope)
+        if fault == "missing_acceptance_rejected_update":
+            from ralf_agent.errors import IdempotencyConflict
+
+            conflicting = copy.deepcopy(request)
+            conflicting["payload_digest"] = "f" * 64
+            with pytest.raises(IdempotencyConflict):
+                wrapper.reserve(conflicting)
+            assert state.roots[digest([root["scope"], root["command_id"]])] == root
+            await update(events, "reserve", conflicting, failed=True)
+        if fault == "untracked_reserve_signal":
+            unknown = copy.deepcopy(envelope)
+            unknown["observation_id"] = "another-reservation"
+            unknown["request"]["command_id"] = "untracked"
+            unknown["request"]["target"] = "untracked-root"
+            await signal(events, "reserve_command", unknown)
+        binding = {k: v for k, v in release_request.items() if k != "certificate"}
+        if transport == "signals_record":
+            run_receipt = {
+                "command_id": root["command_id"],
+                "run_id": root["run_id"],
+                "kind": "submit",
+                "record_state": "durably_recorded",
+                "apply_state": "applied",
+                "outcome": {"state_revision": 0},
+            }
+            accepted = {
+                "reservation": {k: v for k, v in reserve.items() if k != "submission"},
+                "submission": reserve["submission"],
+                "run_receipt": run_receipt,
+                "execution_epoch": root["execution_epoch"],
+            }
+            if fault == "accepted_submission":
+                accepted["submission"] = copy.deepcopy(accepted["submission"])
+                accepted["submission"]["activity_timeout"] += 1
+            if fault == "accepted_receipt":
+                accepted["run_receipt"] = {**run_receipt, "run_id": "other"}
+            name, value, response = (
+                "record_deployment_submission",
+                {**binding, "receipt": run_receipt},
+                accepted,
+            )
+        else:
+            name, value, response = "bind_deployment_root", binding, root
+        if fault == "accepted_epoch":
+            value = {**value, "execution_epoch": "other"}
+        if fault not in {"missing_acceptance", "missing_acceptance_rejected_update"}:
+            await update(
+                events,
+                name,
+                value,
+                response,
+                pending=fault == "pending_acceptance",
+                failed=fault == "failed_acceptance",
+            )
+        retirement = {
+            "version": 1,
+            "scope": root["scope"],
+            "namespace": state.namespace,
+            "registry_id": state.registry_id,
+            "execution_epoch": "registry-original",
+            "observation_id": "retirement-observation",
+            "request": copy.deepcopy(release_request),
+        }
+        if fault == "retirement_registry_epoch":
+            retirement["execution_epoch"] = "replacement"
+        if fault == "retirement_namespace":
+            retirement["namespace"] = {
+                **state.namespace,
+                "id": "22222222-2222-2222-2222-222222222222",
+            }
+        if fault == "retirement_certificate":
+            retirement["request"]["certificate"]["closure_digest"] = "d" * 64
+        if retired and fault != "missing_retirement_signal":
+            await signal(events, "retire_deployment_root", retirement)
     targets = set() if unused else {root["run_id"]}
     if fault in {"rejected_target", "unknown_target"}:
         from ralf_agent.temporal_deployment_admission import root_run_id
@@ -178,6 +294,31 @@ async def scenario(*, retired=True, pending=False, writes=None, fault=None, unus
             },
         )
     ]
+    if transport != "updates":
+        initial = (
+            await DataConverter.default.decode(
+                root_events[0].workflow_execution_started_event_attributes.input.payloads
+            )
+        )[0]
+        initial.update(
+            activity_timeout=reserve["submission"]["activity_timeout"],
+            deployment_admission={"version": 1, "root": reserve["root_admission"], "lineage": []},
+        )
+        root_events = [await started(root["run_id"], root["execution_epoch"], initial)]
+        root_events[0].workflow_execution_started_event_attributes.task_queue.name = "original"
+        activity_request = {
+            "mode": "release",
+            "scope": root["scope"],
+            "run_id": root["run_id"],
+            "execution_epoch": root["execution_epoch"],
+        }
+        if fault == "activity_epoch":
+            activity_request["execution_epoch"] = "replacement"
+        activity_result = {"ok": True, "result": result}
+        if fault == "failed_activity":
+            activity_result = {"ok": False, "code": "deployment_release_failed"}
+        if retired and fault != "missing_release_activity":
+            await release_activity(root_events, activity_request, activity_result, fault=fault)
     archived = []
 
     class Client:
@@ -193,6 +334,8 @@ async def scenario(*, retired=True, pending=False, writes=None, fault=None, unus
                 async def describe(self, **options):
                     value = description(identity, root["execution_epoch"])
                     value.workflow_type = "ralf.temporal.run.v1"
+                    value.namespace = state.namespace["name"]
+                    value.task_queue = "original"
                     if fault == "root_reset":
                         value.raw_description.workflow_execution_info.first_run_id = "first-other"
                     if fault == "root_read_failure":
@@ -290,6 +433,68 @@ def test_zero_cost_unadopted_write_vetoes_even_completed_retirement():
 def test_never_used_positive_scoped_close_needs_no_root_or_empty_pg_inference():
     gate, _, archived = asyncio.run(scenario(unused=True))
     assert gate["deletion_allowed"] and gate["accepted_roots"] == [] and archived == []
+
+
+@pytest.mark.parametrize("transport", ["signals_record", "signals_bind"])
+def test_signal_submission_requires_completed_original_acceptance_and_release(transport):
+    gate, root, archived = asyncio.run(scenario(transport=transport))
+    assert gate["deletion_allowed"], gate
+    assert gate["retired_roots"][0]["run_id"] == root["run_id"]
+    assert archived == [root["run_id"]]
+
+
+@pytest.mark.parametrize("transport", ["signals_record", "signals_bind"])
+def test_conflicting_failed_update_cannot_clear_unconfirmed_submit_signal(transport):
+    gate, _, archived = asyncio.run(
+        scenario(
+            retired=False,
+            transport=transport,
+            fault="missing_acceptance_rejected_update",
+        )
+    )
+    assert not gate["deletion_allowed"], gate
+    assert "target_acceptance_unresolved" in gate["reasons"]
+    assert gate["accepted_roots"] == [] and archived == []
+
+
+@pytest.mark.parametrize("transport", ["signals_record", "signals_bind"])
+@pytest.mark.parametrize(
+    "fault",
+    [
+        "missing_reserve_signal",
+        "missing_acceptance",
+        "pending_acceptance",
+        "failed_acceptance",
+        "accepted_epoch",
+        "reservation_namespace",
+        "reservation_submission",
+        "missing_retirement_signal",
+        "retirement_registry_epoch",
+        "retirement_namespace",
+        "retirement_certificate",
+        "missing_release_activity",
+        "missing_activity_completion",
+        "activity_schedule",
+        "activity_epoch",
+        "failed_activity",
+        "scope",
+        "certificate",
+        "epoch",
+        "root_reset",
+        "registry_reset",
+        "unknown_target",
+        "untracked_reserve_signal",
+    ],
+)
+def test_signal_or_incomplete_receipts_never_authorize_fixture_deletion(transport, fault):
+    gate, _, _ = asyncio.run(scenario(transport=transport, fault=fault))
+    assert not gate["deletion_allowed"], gate
+
+
+@pytest.mark.parametrize("fault", ["accepted_submission", "accepted_receipt"])
+def test_completed_submission_record_must_match_original_signal(fault):
+    gate, _, _ = asyncio.run(scenario(transport="signals_record", fault=fault))
+    assert not gate["deletion_allowed"], gate
 
 
 @pytest.mark.parametrize(

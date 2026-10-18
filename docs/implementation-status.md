@@ -27,13 +27,13 @@
 | 范围 | 状态与约束 |
 | --- | --- |
 | P3-2 | S1普通Session功能子集已有验收；S2已有真实PG日志与关闭证据，但原360秒仍未通过，当前完整矩阵尚缺。性能专项后置，该未完成组合不列为已支持 |
-| P3-3 | 用户已批准独立推进。Local与先前435文件包的HTTP→Temporal／PG控制、重启和游标已有有限证据；所选Run／图父子／scoped原工具恢复及436文件包原Registry退休按原制品验收。本批437文件包补齐公有原Action强人工证明在4,096逻辑身份＋2,000 Registry Update后的人工核验、实际结束／效果ACK、根退休及Worker重启。所选native Coding必要恢复仍缺压力证据；Session／Turn归P3-2。本项不关闭 |
+| P3-3 | 用户已批准独立推进。Local与先前435文件包的HTTP→Temporal／PG控制、重启和游标已有有限证据；Run／图父子、scoped人工证明、公有原Registry退休和强人工证明按原制品验收。本批438文件包补原单Agent Coding Run满2,000 Update后的回执／停止、显式取消、效果ACK、额度退休及Worker重启。Coding父级采纳等必要压力证据仍需核对；Session／Turn归P3-2。本项不关闭 |
 | P3-4／P3-5／P3-A | 原依赖和验收保持，身份权限／保留、框架恢复与阶段整体未关闭，不新增后端／编排／Runner／部署组合 |
 | R01–R26其余目标 | 保留为长期路线图；外部采用和框架对等比较单独验收，不自动成为本轮实现任务 |
 
-**当前增量：** 已修复原公有Registry同时满4,096逻辑身份和2,000次Update后，原Action强人工核验被拒绝的可复现阻塞。仅原普通准入明确拒绝后的强核验分支调整观察运输，完整异步reserve／SDK证明、post-await检查、原Action槽及最终回执校验保持；正常准入和新后代不获豁免。源码／隔离安装127模块各 **2,429 passed／6 skipped**，437产品／911测试输入固定；默认发布／保存History兼容及此前17组制品校验通过。同一wheel真实Temporal **1 passed／127.745秒**，含一次业务写、原人工回执、实际结束与效果ACK分别保留额度、根退休、Worker重启、History重放和owned关闭。详见[本批验收](../architecture/reviews/2026-10-18-temporal-public-manual-capacity.md)；本批没有新HTTP／PG或模型质量验收。
+**当前增量：** 已修复原Coding Run满2,000 Update后停止回执被拒绝、owned关闭失败的实证阻塞。只将原回执／恢复性停止／进程停止证明交给原完整Handler观察，业务phase grant保持原Update背压。源码／隔离安装129模块各 **2,454 passed／6 skipped**；后续仅测试夹具与服务断言变化另验 **88项／0跳过**，不合并为同次全量回归。438产品与wheel／安装字节固定，默认发布／保存History兼容及此前18组制品校验通过。同包真实Temporal／PG **2 passed／58.684秒**，含正常stop基线及2,000 Update后的原停止／效果ACK、显式取消／重复回执、单thread＋turn、根退休、Worker重启和owned关闭。最终review的清理脚本P2经两种冲突Update复现修复，未确认Signal独立保留义务。原正常续跑压力失败与所有夹具失败保留；新业务调用满容量仍可能被拒绝。详见[本批验收](../architecture/reviews/2026-10-18-temporal-coding-recovery-capacity.md)；本批进程peer的Docker清单／Provider为结构化实现，不是实际Docker执行或模型质量。
 
-**当前剩余与下一批：** 本批只关闭公有原Action强人工证明的组合容量子门槛。下一批核对所选native Coding已有停止／回执采纳路径和压力证据，只对原必要恢复做定向取证；复现前不扩运输或新增功能，预计一批探针，是否修复依实际结果。P3-3仍开放；P3-2/S2原360秒失败继续后置／开放，P3-4／5／A不解锁。执行依据为[冻结矩阵](phase3-support-matrix.md)。
+**当前剩余与下一批：** 只关闭原单Coding Run必要取消／恢复子门槛。下一批核对既有所选Coding父级采纳的原停止／结束路径，在同一原图场景做必要压力取证；只修复实际阻塞，不扩拓扑或业务授权。预计一批定向探针，是否修复依结果。P3-3仍开放，P3-2/S2原360秒失败继续后置／开放，P3-4／5／A不解锁。执行依据为[冻结矩阵](phase3-support-matrix.md)。
 
 ## 历史实现与验收证据
 

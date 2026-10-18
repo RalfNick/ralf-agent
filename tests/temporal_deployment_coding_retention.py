@@ -45,6 +45,126 @@ def root_identity(value):
     return {key: copy.deepcopy(value[key]) for key in ("run_id", "scope", "execution_epoch")}
 
 
+def signal_reservation(request, result, registry, policy, namespace):
+    """A later completed Registry handler attests the Signal's immutable reservation."""
+    from ralf_agent.temporal_deployment_admission import _REQUEST_FIELDS
+    from ralf_agent.temporal_deployment_execution_state import _root
+
+    require(set(request) == _REQUEST_FIELDS | {"root_admission"})
+    require(request["kind"] == "submit" and request["admission_policy"] == policy)
+    require(request["namespace"] == namespace)
+    metadata = request["root_admission"]
+    require(set(metadata) == {"version", "manifest_digest", "submission"})
+    require(type(metadata["version"]) is int and metadata["version"] == 2)
+    require(
+        set(result)
+        == {"command_id", "target", "record_state", "apply_state", "root_admission", "submission"}
+    )
+    root, submission = result["root_admission"], result["submission"]
+    _root(root)
+    require(
+        result["command_id"] == request["command_id"]
+        and result["target"] == request["target"]
+        and result["record_state"] == "durably_recorded"
+        and result["apply_state"] == "not_applied"
+        and root["registry_id"] == registry
+        and root["namespace"] == namespace
+        and root["scope"] == request["scope"]
+        and root["command_id"] == request["command_id"]
+        and root["run_id"]
+        == request["target"]
+        == root_run_id(policy["deployment_id"], request["scope"], request["command_id"])
+        and root["request_digest"] == request["payload_digest"]
+        and root["manifest_digest"] == metadata["manifest_digest"]
+        and submission == metadata["submission"]
+        and set(submission) == {"version", "request", "manifest", "activity_timeout", "task_queue"}
+        and type(submission["version"]) is int
+        and submission["version"] == 1
+        and digest(submission["request"]) == root["request_digest"]
+        and digest(submission["manifest"]) == root["manifest_digest"]
+    )
+    return {"root": copy.deepcopy(root), "submission": copy.deepcopy(submission)}
+
+
+def release_receipt(request, result, policy, namespace):
+    from ralf_agent.temporal_deployment_admission import _BIND_FIELDS
+    from ralf_agent.temporal_deployment_execution_state import _root
+
+    require(set(request) == _BIND_FIELDS | {"certificate"})
+    require(request["admission_policy"] == policy and request["namespace"] == namespace)
+    require(set(result) == {"root", "certificate", "released"} and result["released"] is True)
+    root, certificate = result["root"], result["certificate"]
+    _root(root, bound=True)
+    require(root["registry_id"] == registry_id(policy["deployment_id"]))
+    require(set(certificate) == CERTIFICATE_FIELDS)
+    require(type(certificate["version"]) is int and certificate["version"] == 1)
+    require(
+        certificate["proof_digest"]
+        == digest({k: v for k, v in certificate.items() if k != "proof_digest"})
+    )
+    require(certificate["terminal_state"] in {"succeeded", "failed", "cancelled"})
+    require(request["certificate"] == certificate)
+    require(all(request[k] == root[k] for k in _BIND_FIELDS - {"admission_policy"}))
+    require(
+        all(
+            certificate[k] == root[k]
+            for k in (
+                "scope",
+                "command_id",
+                "run_id",
+                "request_digest",
+                "manifest_digest",
+                "execution_epoch",
+                "namespace",
+            )
+        )
+    )
+    require(certificate["original_execution_epoch"] == root["execution_epoch"])
+
+
+async def root_release_receipt(
+    client, history, root, submission, epoch, signals, policy, namespace
+):
+    """A completed original release Activity, never Signal delivery, proves retirement."""
+    schedules, completed, result = {}, set(), None
+    for event in history.events:
+        if event.HasField("activity_task_scheduled_event_attributes"):
+            attrs = event.activity_task_scheduled_event_attributes
+            if attrs.activity_type.name == "ralf.temporal.deployment-release.v2":
+                request = await decoded(client, attrs.input.payloads)
+                require(
+                    request
+                    == {
+                        "mode": "release",
+                        "scope": root["scope"],
+                        "run_id": root["run_id"],
+                        "execution_epoch": epoch,
+                    }
+                )
+                require(attrs.task_queue.name == submission["task_queue"])
+                schedules[event.event_id] = request
+        elif event.HasField("activity_task_completed_event_attributes"):
+            attrs = event.activity_task_completed_event_attributes
+            if attrs.scheduled_event_id not in schedules:
+                continue
+            require(attrs.scheduled_event_id not in completed)
+            completed.add(attrs.scheduled_event_id)
+            response = await decoded(client, attrs.result.payloads)
+            if response.get("ok") is not True:
+                continue
+            require(set(response) == {"ok", "result"})
+            receipt = response["result"]
+            matching = [request for request in signals if request["run_id"] == root["run_id"]]
+            require(matching)
+            # Every correlated retirement Signal must name the same immutable proof.
+            for request in matching:
+                release_receipt(request, receipt, policy, namespace)
+            require(receipt["root"] == {**root, "state": "held-bound", "execution_epoch": epoch})
+            require(result is None or result == receipt)
+            result = copy.deepcopy(receipt)
+    return result
+
+
 async def deletion_evidence(
     client,
     description,
@@ -66,7 +186,7 @@ async def deletion_evidence(
         "reasons": [],
         "registry_execution_epoch": None,
     }
-    accepted, released, rejected = {}, {}, set()
+    accepted, released, rejected, signaled_targets = {}, {}, set(), set()
     close_observed, session_close = False, False
     version, sessions = None, {}
     try:
@@ -89,7 +209,7 @@ async def deletion_evidence(
             }
         )
         report["registry_execution_epoch"] = epoch
-        updates, completions = {}, {}
+        updates, completions, reservations, retirement_signals = {}, {}, [], []
         for event in history.events:
             if event.HasField("workflow_execution_update_accepted_event_attributes"):
                 updates[event.event_id] = (
@@ -99,6 +219,37 @@ async def deletion_evidence(
                 done = event.workflow_execution_update_completed_event_attributes
                 require(done.accepted_event_id not in completions)
                 completions[done.accepted_event_id] = done
+            elif event.HasField("workflow_execution_signaled_event_attributes"):
+                attrs = event.workflow_execution_signaled_event_attributes
+                if attrs.signal_name == "reserve_command":
+                    envelope = await decoded(client, attrs.input.payloads)
+                    value = envelope["request"]
+                    if value.get("kind") == "submit":
+                        require(set(envelope) == {"kind", "scope", "observation_id", "request"})
+                        require(envelope["kind"] == "deployment_reserve_receipt")
+                        require(envelope["scope"] == value["scope"])
+                        reservations.append((event.event_id, value))
+                        signaled_targets.add(value["target"])
+                elif attrs.signal_name == "retire_deployment_root":
+                    envelope = await decoded(client, attrs.input.payloads)
+                    require(
+                        set(envelope)
+                        == {
+                            "version",
+                            "scope",
+                            "namespace",
+                            "registry_id",
+                            "execution_epoch",
+                            "observation_id",
+                            "request",
+                        }
+                    )
+                    require(type(envelope["version"]) is int and envelope["version"] == 1)
+                    require(envelope["registry_id"] == description.id)
+                    require(envelope["execution_epoch"] == epoch)
+                    require(envelope["namespace"] == namespace)
+                    require(envelope["scope"] == envelope["request"]["scope"])
+                    retirement_signals.append(envelope["request"])
         for event_id, request in updates.items():
             name = request.input.name
             if name not in {
@@ -107,6 +258,8 @@ async def deletion_evidence(
                 "release_deployment_root",
                 "close_deployment_coding_submissions",
                 "close_deployment_sessions",
+                "record_deployment_submission",
+                "bind_deployment_root",
             }:
                 continue
             value = await decoded(client, request.input.args.payloads)
@@ -127,7 +280,86 @@ async def deletion_evidence(
                     rejected.add(value["target"])
                 continue
             result = await decoded(client, done.outcome.success.payloads)
-            if name in {"reserve", "reserve_session_root"}:
+            if name in {"record_deployment_submission", "bind_deployment_root"}:
+                identity = value["run_id"]
+                if identity in accepted:
+                    continue  # Existing Update/Session acceptance remains authoritative.
+                from ralf_agent.temporal_deployment_admission import _BIND_FIELDS
+
+                require(
+                    set(value)
+                    == _BIND_FIELDS
+                    | ({"receipt"} if name == "record_deployment_submission" else set())
+                )
+                candidates = [
+                    request
+                    for signal_id, request in reservations
+                    if signal_id < event_id and request["target"] == identity
+                ]
+                require(candidates)
+                if name == "record_deployment_submission":
+                    require(
+                        set(result)
+                        == {"reservation", "submission", "run_receipt", "execution_epoch"}
+                    )
+                    receipt = result["run_receipt"]
+                    require(receipt == value["receipt"])
+                    require(
+                        set(receipt)
+                        == {
+                            "command_id",
+                            "run_id",
+                            "kind",
+                            "record_state",
+                            "apply_state",
+                            "outcome",
+                        }
+                    )
+                    require(
+                        receipt["command_id"] == value["command_id"]
+                        and receipt["run_id"] == identity
+                    )
+                    require(
+                        receipt["kind"] == "submit"
+                        and receipt["record_state"] == "durably_recorded"
+                    )
+                    require(
+                        receipt["apply_state"] == "applied" and type(receipt["outcome"]) is dict
+                    )
+                    require(result["execution_epoch"] == value["execution_epoch"])
+                    reservation = {**result["reservation"], "submission": result["submission"]}
+                else:
+                    require(result["state"] == "held-bound")
+                    reservation = {
+                        "command_id": result["command_id"],
+                        "target": result["run_id"],
+                        "record_state": "durably_recorded",
+                        "apply_state": "not_applied",
+                        "root_admission": {
+                            **result,
+                            "state": "held-unbound",
+                            "execution_epoch": None,
+                        },
+                        "submission": candidates[0]["root_admission"]["submission"],
+                    }
+                    require(result["execution_epoch"] == value["execution_epoch"])
+                require(type(value["execution_epoch"]) is str and bool(value["execution_epoch"]))
+                saved = None
+                for request in candidates:
+                    current = signal_reservation(
+                        request, reservation, description.id, policy, namespace
+                    )
+                    require(
+                        all(
+                            value[k] == current["root"][k]
+                            for k in _BIND_FIELDS - {"admission_policy", "execution_epoch"}
+                        )
+                    )
+                    require(saved is None or saved == current)
+                    saved = current
+                saved["accepted_execution_epoch"] = value["execution_epoch"]
+                accepted[identity] = saved
+            elif name in {"reserve", "reserve_session_root"}:
                 root = result["root_admission"]
                 require(
                     root["version"] == 1
@@ -255,7 +487,9 @@ async def deletion_evidence(
         report["evidence_exception_type"] = type(error).__name__
     if not close_observed:
         report["reasons"].append("scoped_close_unconfirmed")
-    if targets - set(accepted) - rejected - set(sessions):
+    if targets - set(accepted) - rejected - set(sessions) or signaled_targets - set(accepted) - set(
+        sessions
+    ):
         report["reasons"].append("target_acceptance_unresolved")
     if version == 4 and not session_close:
         report["reasons"].append("scoped_session_close_unconfirmed")
@@ -282,6 +516,17 @@ async def deletion_evidence(
                 and payload["request"] == submission["request"]
                 and payload["manifest"] == submission["manifest"]
             )
+            if "accepted_execution_epoch" in saved:
+                require(epoch == saved["accepted_execution_epoch"])
+                require(
+                    info.workflow_type == "ralf.temporal.run.v1"
+                    and info.namespace == namespace["name"]
+                )
+                require(info.task_queue == started.task_queue.name == submission["task_queue"])
+                require(payload["activity_timeout"] == submission["activity_timeout"])
+                require(
+                    payload["deployment_admission"] == {"version": 1, "root": root, "lineage": []}
+                )
             if "intent" in saved:
                 origin = saved["session_origin"]
                 require(
@@ -305,6 +550,19 @@ async def deletion_evidence(
                     == {"version": 2, "root": root, "lineage": [], "session_origin": origin}
                 )
             release = released.get(identity)
+            if release is None:
+                release = await root_release_receipt(
+                    client,
+                    root_history,
+                    root,
+                    submission,
+                    epoch,
+                    retirement_signals,
+                    policy,
+                    namespace,
+                )
+                if release is not None:
+                    released[identity] = release
             if release is not None:
                 require(
                     {

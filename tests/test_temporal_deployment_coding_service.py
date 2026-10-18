@@ -2219,8 +2219,18 @@ def test_actual_zero_credit_dispatched_deadline_unknown_keeps_deployment_quota(
 def test_actual_original_native_tool_deployment_and_effect_ack_gates_are_independent(
     tmp_path, monkeypatch, boundary
 ):
+    _native_ack_case(tmp_path, monkeypatch, boundary, pressure=False)
+
+
+def test_actual_original_coding_stop_receipt_after_2000_updates(tmp_path, monkeypatch):
+    _native_ack_case(tmp_path, monkeypatch, "native-stop", pressure=True)
+
+
+def _native_ack_case(tmp_path, monkeypatch, boundary, *, pressure):
     async def scenario():
-        async with coding_system(tmp_path, monkeypatch) as system, system.worker():
+        async with coding_system(tmp_path, monkeypatch) as system, system.worker() as first_worker:
+            if pressure:
+                await system.effect_ack_gate(True)
             if boundary == "effect":
                 await system.effect_ack_gate(True)
             else:
@@ -2244,15 +2254,97 @@ def test_actual_original_native_tool_deployment_and_effect_ack_gates_are_indepen
                 await _eventually(
                     lambda: asyncio.sleep(0, result=marker.exists()), bool, seconds=80
                 )
+            if pressure:
+                from temporalio.converter import DataConverter
+
+                assert boundary == "native-stop"
+                start = asyncio.get_running_loop().time()
+                handle = system.client.get_workflow_handle(leaf)
+                epoch = (await handle.describe()).run_id
+                history = await handle.fetch_history()
+                approvals = []
+                for event in history.events:
+                    if event.HasField("workflow_execution_signaled_event_attributes"):
+                        attrs = event.workflow_execution_signaled_event_attributes
+                        if attrs.signal_name == "control_command":
+                            (envelope,) = await DataConverter.default.decode(attrs.input.payloads)
+                            if envelope["request"]["payload"]["kind"] == "approve":
+                                approvals.append(envelope["request"])
+                    elif event.HasField("workflow_execution_update_accepted_event_attributes"):
+                        attrs = event.workflow_execution_update_accepted_event_attributes
+                        if attrs.accepted_request.input.name == "command":
+                            (request,) = await DataConverter.default.decode(
+                                attrs.accepted_request.input.args.payloads
+                            )
+                            if request["payload"]["kind"] == "approve":
+                                approvals.append(request)
+                assert len(approvals) == 1
+                accepted = sum(
+                    e.HasField("workflow_execution_update_accepted_event_attributes")
+                    for e in history.events
+                )
+                assert 1 <= accepted < 2000
+                for fill_start in range(accepted, 2000, 8):
+                    receipts = await asyncio.gather(
+                        *[
+                            handle.execute_update("command", approvals[0])
+                            for _ in range(fill_start, min(fill_start + 8, 2000))
+                        ]
+                    )
+                    assert all(r == receipts[0] for r in receipts)
+                    (tmp_path / "pressure-progress.json").write_text(
+                        json.dumps({"accepted_updates": min(fill_start + 8, 2000)})
+                    )
+                history = await handle.fetch_history()
+                accepted = sum(
+                    e.HasField("workflow_execution_update_accepted_event_attributes")
+                    for e in history.events
+                )
+                completed = sum(
+                    e.HasField("workflow_execution_update_completed_event_attributes")
+                    for e in history.events
+                )
+                elapsed = asyncio.get_running_loop().time() - start
+                assert accepted == completed == 2000
+                assert (await handle.describe()).run_id == epoch
+                assert (tmp_path / "hold-native-stop").exists() and elapsed < 30
+                (tmp_path / "pressure-history.json").write_text(history.to_json())
+                (tmp_path / "pressure.json").write_text(
+                    json.dumps(
+                        {
+                            "accepted_updates": accepted,
+                            "completed_updates": completed,
+                            "original_execution_epoch": epoch,
+                            "original_approval_repeated": True,
+                            "hold_gate_seconds_unchanged": 30,
+                            "pressure_seconds": elapsed,
+                        }
+                    )
+                )
             view = await system.view(leaf, "deployment_closure")
             assert view["seal"] is None and not view["ready"]
             await system.count(1)
             before = copy.deepcopy(system.lines("native-submissions.jsonl"))
             assert [v["method"] for v in before] == ["thread/start", "turn/start"]
+            if pressure:
+                cancel = await system.engine.cancel(original.run_id, command_id="pressure-stop")
+                assert (
+                    await system.engine.cancel(original.run_id, command_id="pressure-stop")
+                    == cancel
+                )
             if boundary == "effect":
                 await system.effect_ack_gate(False)
             else:
                 (tmp_path / (prefix + boundary)).unlink()
+            if pressure:
+                await _eventually(
+                    lambda: system.engine.events(leaf),
+                    lambda events: any(e.kind == "effect_journal_ack_deferred" for e in events),
+                    seconds=80,
+                )
+                await system.count(1)
+                assert (await system.view(leaf, "deployment_closure"))["seal"] is None
+                await system.effect_ack_gate(False)
             if boundary == "tool-end":
                 assert await system.runtime.wait_context_executions(wait_timeout=60) is True
             elif boundary == "deployment-end":
@@ -2265,7 +2357,9 @@ def test_actual_original_native_tool_deployment_and_effect_ack_gates_are_indepen
             details = await _eventually(
                 lambda: system.view(leaf),
                 lambda d: any(
-                    a["id"] == action_id and a["status"] in {"completed", "outcome_unknown"}
+                    a["id"] == action_id
+                    and a["status"]
+                    in ({"completed"} if pressure else {"completed", "outcome_unknown"})
                     for a in d["snapshot"]["actions"]
                 ),
                 seconds=80,
@@ -2292,13 +2386,98 @@ def test_actual_original_native_tool_deployment_and_effect_ack_gates_are_indepen
             )
             final = await system.view(leaf)
             action = next(a for a in final["snapshot"]["actions"] if a["id"] == action_id)
-            assert final["snapshot"]["state"] == "succeeded" and action["status"] == "completed"
+            assert final["snapshot"]["state"] == ("cancelled" if pressure else "succeeded")
+            assert action["status"] == "completed"
             recorded = await system.capture()
             effects = recorded["ralf_temporal_effects"]
             assert len(effects) == 1 and effects[0]["state"] == "adopted"
             assert effects[0]["adopted_result_digest"] == digest(action["result"])
             evidence = recorded["ralf_temporal_effect_evidence"]
             assert len(evidence) == 1 and evidence[0]["effect_key"] == effects[0]["effect_key"]
+            if pressure:
+                history = await system.client.get_workflow_handle(leaf).fetch_history()
+                assert (
+                    sum(
+                        e.HasField("workflow_execution_update_accepted_event_attributes")
+                        for e in history.events
+                    )
+                    == 2000
+                )
+                assert [v["method"] for v in before] == ["thread/start", "turn/start"]
+                (tmp_path / "pressure-result.json").write_text(
+                    json.dumps(
+                        {
+                            "held_roots": 0,
+                            "effect_adopted": True,
+                            "physical_stopped": True,
+                            "original_submissions_unchanged": True,
+                            "run_history_replayed": True,
+                            "model_calls": 0,
+                            "structural_native_peer": True,
+                        }
+                    )
+                )
+                await first_worker.shutdown()
+                assert first_worker.is_shutdown and not first_worker.is_running
+                restarted = build_temporal_worker(
+                    first_worker.config()["client"],
+                    task_queue=system.queue,
+                    runtime=system.runtime,
+                    release=system.release,
+                    graceful_shutdown_timeout=timedelta(seconds=1),
+                )
+                system.workers.append(restarted)
+                async with restarted:
+                    from ralf_agent.temporal_coding_recovery_transport import execute
+
+                    stops = []
+                    for event in history.events:
+                        if event.HasField("workflow_execution_signaled_event_attributes"):
+                            attrs = event.workflow_execution_signaled_event_attributes
+                            if attrs.signal_name == "coding_recovery":
+                                (envelope,) = await DataConverter.default.decode(
+                                    attrs.input.payloads
+                                )
+                                if (
+                                    envelope["operation"] == "coding_receipt"
+                                    and envelope["proof"].get("kind") == "stop"
+                                ):
+                                    stops.append(envelope)
+                    assert stops
+                    original_stop = stops[0]
+                    observed = await system.client.get_workflow_handle(leaf).query(
+                        "view",
+                        {
+                            "kind": "status",
+                            "scope": asdict(system.scope),
+                            "coding_recovery_observation": original_stop,
+                        },
+                    )
+                    receipt = observed["coding_recovery_observation"]["result"]
+                    assert receipt["ok"] is True
+                    repeated = await execute(
+                        system.client,
+                        leaf,
+                        "coding_receipt",
+                        original_stop["proof"],
+                        execution_epoch=epoch,
+                    )
+                    assert repeated == receipt["receipt"]
+                    await system.count(0)
+                    assert system.lines("native-submissions.jsonl") == before
+                    await system.evidence(original.run_id)
+                    await system.assembly.aclose(wait_timeout=60)
+                (tmp_path / "pressure-restart.json").write_text(
+                    json.dumps(
+                        {
+                            "original_stop_receipt_equal": True,
+                            "held_roots": 0,
+                            "submissions_unchanged": True,
+                            "history_replayed": True,
+                            "owned_assembly_closed": True,
+                        }
+                    )
+                )
 
     asyncio.run(asyncio.wait_for(scenario(), 240))
 

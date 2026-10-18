@@ -524,3 +524,31 @@ The original Update handler stays available. Historical selected publications
 require matching immutable SDK/Worker; this does not provide a generic legacy
 transport. Stable defaults and saved default Histories are checked separately.
 See [reproduction and acceptance](../reviews/2026-10-18-temporal-public-manual-capacity.md).
+
+## Original Coding receipt and stop observations
+
+The original Coding Run may receive only `coding_receipt`, `admit_coding_stop`
+and `coding_owner_stopped` through fixed `coding_recovery` Signal / status Query
+observations. The complete existing handler, pure request/claim/phase/owner
+validation and original wake behavior remain authoritative. The callback retains
+its validation and port checks before/after I/O. `admit_coding_phase` uses its
+original Update; observation does not create new business permission.
+
+Scope, namespace, release, original Run/first/original epoch and exact operation/
+proof digest bind the observation; original reducers validate Action, request and
+invocation identities. The client verifies the SDK Workflow type/epoch and pins
+query/signal/describe ports. At most 64 entries and 2 MiB envelopes are retained;
+pending handlers cannot be evicted. A 30-second observer deadline, cancellation,
+lost reply, saturated cache or malformed acknowledgement never permits Update
+fallback. Recovery does not certify an effect or physical stop before its complete
+original handler accepts the proof.
+
+Worker discovery fixes transport functions, allowed operations and the Workflow
+source/reader; History validates supplied metadata and pure rules without optional
+SDK imports or source I/O. Historical selected publications retain matching
+immutable SDK/Worker. Stable defaults are checked independently.
+
+The single-Run receipt path is separate from Coding parent adoption, new grants,
+Session controls and Registry pressure. Acceptance only covers its recorded
+scenario and does not establish unlimited History operation. See the
+[reproduction and acceptance](../reviews/2026-10-18-temporal-coding-recovery-capacity.md).

@@ -27,12 +27,19 @@ class Validator:
 
 
 def test_closed_deployment_grant_cancels_original_run_but_still_allows_stop(monkeypatch):
-    from ralf_agent import temporal_deployment_coding_validation
+    from ralf_agent import temporal_coding_recovery_transport, temporal_deployment_coding_validation
 
     monkeypatch.setattr(temporal_deployment_coding_validation, "CodingValidation", Validator)
     _, request = setup()
     request["runtime_manifest"] = {"deployment_admission_protocol": {"version": 3}}
     captured = []
+
+    async def recover(client, run_id, name, payload, *, execution_epoch):
+        assert run_id == "r" and execution_epoch == "epoch"
+        captured.append((name, payload))
+        return {"admitted": True}
+
+    monkeypatch.setattr(temporal_coding_recovery_transport, "execute", recover)
 
     class Handle:
         async def execute_update(self, name, payload, **options):

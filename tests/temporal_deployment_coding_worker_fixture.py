@@ -759,7 +759,59 @@ class FaultHandle:
             result = await self._query(name, *args, **options)
             if observation is not None:
                 observation.update(self.owner.timing.query_summary(result))
+            envelope = (
+                args[0].get("coding_recovery_observation")
+                if args and type(args[0]) is dict
+                else None
+            )
+            if envelope is not None:
+                completed = result.get("coding_recovery_observation", {}).get("result")
+                if (
+                    completed is not None
+                    and completed.get("ok") is True
+                    and envelope["operation"] == "coding_receipt"
+                ):
+                    self._after_coding_receipt(envelope["proof"])
             return result
+
+    async def signal(self, name, payload, **options):
+        if name == "coding_recovery" and payload.get("operation") == "coding_receipt":
+            await self._before_coding_receipt(payload["proof"])
+        return await self.original.signal(name, payload, **options)
+
+    async def _before_coding_receipt(self, payload):
+        if payload.get("kind") != "stop":
+            return
+        from temporalio.service import RPCError, RPCStatusCode
+
+        directory = self.owner.directory
+        if (directory / "block-native-stop").exists():
+            (directory / "block-native-stop.attempted").touch()
+            raise RPCError(
+                "Controlled original Coding ACK transport unavailable",
+                RPCStatusCode.UNAVAILABLE,
+                b"",
+            )
+        gate = directory / "hold-native-stop"
+        if gate.exists():
+            (directory / "hold-native-stop.attempted").touch()
+            async with asyncio.timeout(30):
+                while gate.exists():  # noqa: ASYNC110 -- original bounded test-owned gate.
+                    await asyncio.sleep(0.05)
+
+    def _after_coding_receipt(self, payload):
+        if payload.get("kind") in {"turn", "result_candidate"}:
+            flag = self.owner.directory / (
+                "crash-after-turn" if payload["kind"] == "turn" else "crash-after-candidate"
+            )
+            if flag.exists():
+                flag.unlink()
+                (self.owner.directory / "actual-worker-crash.json").write_text(
+                    json.dumps(
+                        {"pid": os.getpid(), "workflow_id": self.original.id, "payload": payload}
+                    )
+                )
+                os._exit(71)
 
     async def _query(self, name, *args, **options):
         from temporalio.service import RPCError, RPCStatusCode
@@ -813,8 +865,8 @@ class FaultHandle:
             "deployment_coding_call_stopped": "block-cold-call",
             "release_deployment_root": "block-release",
         }.get(name)
-        if name == "coding_receipt" and payload.get("kind") == "stop":
-            flag = "block-native-stop"
+        if name == "coding_receipt":
+            await self._before_coding_receipt(payload)
         if name == "deployment_call_ended":
             # Isolate the original Coding Tool carrier, not unrelated Model/ACK calls.
             if payload.get("activity_name") == "ralf.temporal.tool.v1":
@@ -826,15 +878,6 @@ class FaultHandle:
                 RPCStatusCode.UNAVAILABLE,
                 b"",
             )
-        if name == "coding_receipt" and payload.get("kind") == "stop":
-            gate = self.owner.directory / "hold-native-stop"
-            if gate.exists():
-                (self.owner.directory / "hold-native-stop.attempted").touch()
-                # Delay this original ACK without discarding its execution stack.
-                # This test-only bound never changes Runner or Activity deadlines.
-                async with asyncio.timeout(30):
-                    while gate.exists():  # noqa: ASYNC110 -- bounded, test-owned gate.
-                        await asyncio.sleep(0.05)
         result = await self.original.execute_update(name, payload, **options)
         if name == "release_deployment_root":
             flag = self.owner.directory / "lose-release-reply"
@@ -850,18 +893,8 @@ class FaultHandle:
                     RPCStatusCode.UNAVAILABLE,
                     b"",
                 )
-        if name == "coding_receipt" and payload.get("kind") in {"turn", "result_candidate"}:
-            flag = self.owner.directory / (
-                "crash-after-turn" if payload["kind"] == "turn" else "crash-after-candidate"
-            )
-            if flag.exists():
-                flag.unlink()
-                (self.owner.directory / "actual-worker-crash.json").write_text(
-                    json.dumps(
-                        {"pid": os.getpid(), "workflow_id": self.original.id, "payload": payload}
-                    )
-                )
-                os._exit(71)
+        if name == "coding_receipt":
+            self._after_coding_receipt(payload)
         return result
 
 

@@ -28,6 +28,7 @@ SOURCE_FILES = (
 
 
 PUBLIC_SOURCE_FILES = SOURCE_FILES + (
+    "temporal_coding_recovery_transport.py",
     "temporal_public_manual_transport.py",
     "temporal_deployment_retirement_transport.py",
     "temporal_deployment_lifecycle_transport.py",

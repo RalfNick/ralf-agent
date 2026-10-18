@@ -148,7 +148,11 @@ def callbacks(client, request, info, runtime):
             return await handle.query(name, payload)
 
         async def update(name, payload):
+            from .temporal_coding_recovery_transport import OPERATIONS, execute
             from .temporal_coding_state import CODING_GRANT
+
+            if name in OPERATIONS:
+                return await execute(client, workflow_id, name, payload, execution_epoch=epoch)
 
             if name == CODING_GRANT and validation is not None:
                 from .temporal_deployment_coding_bridge import grant_allowed

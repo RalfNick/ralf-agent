@@ -187,6 +187,14 @@ IMPLEMENTATION_FIELDS = {
         "end_receipt",
         "end_execute",
         "end_operations",
+        "recovery_identity",
+        "recovery_accept",
+        "recovery_observe",
+        "recovery_receipt",
+        "recovery_execute",
+        "recovery_operations",
+        "recovery_workflow_source",
+        "recovery_source_reader",
     },
     "runtime": {
         "callbacks",
@@ -298,6 +306,7 @@ def implementation():
     from . import coding_execution_rules as rules
     from . import coding_resource_fingerprint as policy
     from . import postgres_coding_resources as resources
+    from . import temporal_coding_recovery_transport as recovery_transport
     from . import temporal_coding_runtime as runtime
     from . import temporal_coding_state as state
     from . import temporal_execution_end_transport as end_transport
@@ -325,9 +334,19 @@ def implementation():
                 "end_observe": end_transport.observe,
                 "end_receipt": end_transport._receipt,
                 "end_execute": end_transport.execute,
+                "recovery_identity": recovery_transport._identity,
+                "recovery_accept": recovery_transport.accept,
+                "recovery_observe": recovery_transport.observe,
+                "recovery_receipt": recovery_transport._receipt,
+                "recovery_execute": recovery_transport.execute,
+                "recovery_source_reader": recovery_transport.workflow_source,
             }.items()
         }
-        | {"end_operations": digest(sorted(end_transport.OPERATIONS))},
+        | {
+            "end_operations": digest(sorted(end_transport.OPERATIONS)),
+            "recovery_operations": digest(sorted(recovery_transport.OPERATIONS)),
+            "recovery_workflow_source": recovery_transport.workflow_source(),
+        },
         "runtime": {
             name: executable_digest(getattr(runtime, name))
             for name in (

@@ -17,6 +17,7 @@ with workflow.unsafe.imports_passed_through():
     from . import (
         coding_create_inventory,  # noqa: F401 -- preload fixed pure native inventory
         temporal_coding_composition_state,  # noqa: F401 -- original selected physical proof
+        temporal_coding_recovery_transport,  # noqa: F401 -- original receipt/stop observations
         temporal_coding_state,  # noqa: F401 -- preload original pure native gates
         temporal_command_transport,  # noqa: F401 -- original Run control observations
         temporal_context_read_state,  # noqa: F401 -- preload original pure read gates
@@ -992,6 +993,12 @@ class TemporalRunWorkflow:
                 non_retryable=True,
             ) from None
 
+    @workflow.signal(name="coding_recovery")
+    async def coding_recovery(self, envelope: dict) -> None:
+        from .temporal_coding_recovery_transport import accept
+
+        await accept(self, envelope, workflow.info())
+
     @workflow.update(name="coding_owner_stopped")
     async def coding_owner_stopped(self, proof: dict) -> dict:
         try:
@@ -1213,6 +1220,14 @@ class TemporalRunWorkflow:
         try:
             self.state.authorize(request.get("scope"))
             kind = request["kind"]
+            if kind == "status" and "coding_recovery_observation" in request:
+                from .temporal_coding_recovery_transport import observe
+
+                return {
+                    "coding_recovery_observation": observe(
+                        self, request["coding_recovery_observation"], workflow.info()
+                    )
+                }
             if kind == "status" and "deployment_lifecycle_observation" in request:
                 from .temporal_deployment_lifecycle_transport import observe
 

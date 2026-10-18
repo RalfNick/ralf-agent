@@ -172,6 +172,10 @@ def _pure_sources():
 
 def _worker_sources():
     return {
+        "coding_recovery_transport": (
+            "temporal_coding_recovery_transport",
+            ("_identity", "accept", "observe", "_receipt", "execute", "workflow_source"),
+        ),
         "public_manual_transport": (
             "temporal_public_manual_transport",
             ("_identity", "accept", "observe", "reserve"),
@@ -307,6 +311,10 @@ def _worker_sources():
                 "TemporalRunWorkflow.command",
                 "TemporalRunWorkflow.control_command",
                 "TemporalRunWorkflow.execution_ended",
+                "TemporalRunWorkflow.coding_recovery",
+                "TemporalRunWorkflow.coding_receipt",
+                "TemporalRunWorkflow.admit_coding_stop",
+                "TemporalRunWorkflow.coding_owner_stopped",
                 "TemporalRunWorkflow.deployment_lifecycle",
                 "TemporalRunWorkflow.view",
                 "TemporalRunWorkflow.coding_composition_namespace",

@@ -178,3 +178,18 @@ SHA256 `6dad78871e44f579109838e45a6f8b7cc98ebc1938cc80570532e0a108748e23`，
 默认声明／保存History和此前17组制品校验通过。只关闭该恢复子门槛，没有新PG／HTTP、
 模型质量或native Coding压力验收。旧selected仍用匹配SDK／Worker，完整P3-3、P3-2原
 失败及后续门槛保留；详见[验收记录](../architecture/reviews/2026-10-18-temporal-public-manual-capacity.md)。仅本地提交，不推送或发布远端。
+
+
+## P3-3 原Coding回执与停止容量修复
+
+制品 `dist/p3-coding-recovery-final-20261018/ralf_agent-0.1.0.dev120-py3-none-any.whl`，
+SHA256 `62837413eaab1764d00f6ee70ee0565c8f9e00c541eca4992c3988da68ff5426`，
+附独立 `verification.json`／`SHA256SUMS`。438产品与源码／隔离安装一致；源码及安装
+129模块各2,454 passed／6配置跳过，之后测试夹具增量另验88项（0跳过）。
+相同wheel实际Temporal／PG 2 passed／58.684秒，覆盖正常原stop和原单Agent
+Coding满2,000 Update后的必要取消／恢复、PG采纳、原stop ACK重启、退休及安全关闭。
+源码／安装后的服务及清理夹具修订分开记录，不声称913测试文件跨所有批次不变。
+默认发布／保存History与此前18组制品校验通过。原失败及失败服务卷仍保留；正常满容量
+续跑的新grant未升级，不外推实际Docker、模型质量、Coding父级压力或完整P3-3。
+历史selected使用匹配SDK／Worker；P3-2及后续门槛保持。详见[本批验收](../architecture/reviews/2026-10-18-temporal-coding-recovery-capacity.md)。
+仅本地提交，不推送或发布远端。
