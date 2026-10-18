@@ -29,17 +29,22 @@
 | P3-2 | S1普通Session功能子集已有验收；S2已有真实PG日志与关闭证据，但原360秒仍未通过，当前完整矩阵尚缺。性能专项后置，该未完成组合不列为已支持 |
 | P3-3 | **冻结所选范围已验收。** 最小服务控制、持久HTTP游标／断连续接、有界背压及原任务必要取消／恢复已按各原制品取证；见[收口核对](../architecture/reviews/2026-10-18-p3-3-closeout.md)。不等于同版本全服务矩阵或第三阶段完成 |
 | P3-4 | **冻结最小范围已验收。** 可信Scope／资源交集、所选越权拒绝、可替换脱敏审计、Local工作消息压缩及原封存树下PG冗余效果副本清理；见[门槛核对](../architecture/reviews/2026-10-18-temporal-effect-retention.md#p3-4门槛核对与后续)，不等于完整企业权限或Run遗忘 |
-| P3-5／P3-A | 原依赖和验收保持，框架恢复与阶段整体未关闭，不新增后端／编排／Runner／部署组合 |
+| P3-5 | **冻结最小范围已验收。** 所选Local／Temporal／PG原数据备份恢复、原身份及匹配Worker、错误版本／发布拒绝与回退；见[逐项核对](../architecture/reviews/2026-10-18-framework-backup-restore.md)。不外推自动Schema降级、生产Temporal灾备或全部组合 |
+| P3-A | 整体候选未验收，原依赖保持，不自动解锁 |
 | R01–R26其余目标 | 保留为长期路线图；外部采用和框架对等比较单独验收，不自动成为本轮实现任务 |
 
-**当前增量：** 新增显式`TemporalEngine.compact_effect_evidence`，沿原Scope／namespace UUID／epoch／发布和完整封存树，仅清理与已采纳PG主回执完全相同的冗余evidence。保留主效果、冲突、History、幂等及实际停止证明；每Action独立事务、分页有界，无新Update／Signal。review发现的SQL等待间namespace UUID复核空白已有效RED→GREEN修复，并以实际DELETE后回滚验证。最终442产品wheel（`1f8efac…`）源码／隔离安装受影响12模块各 **234 passed／22配置skipped**；同包真实PG20＋Temporal2＋HTTP身份审计2共 **24 passed／零跳过，JUnit 38.162秒**。原回执冷SDK重取、一次写入、原History不变及重放、原根退休和owned关闭通过；默认Card／发布及原／continued默认History兼容通过。见[本批验收与P3-4核对](../architecture/reviews/2026-10-18-temporal-effect-retention.md)和[使用指南](temporal-retention.md)。不把不同批次或跳过项拼为全矩阵。
+**当前增量：** P3-5复用原442产品wheel（`1f8efac…`），无产品代码改动。默认Local原文档两库备份恢复源码／隔离安装各 **3 passed／零跳过**；同包真实Temporal／PG **1 passed／零跳过，JUnit 17.635秒**，一个三阶段场景完成两次全数据备份→新空数据库／新目录恢复。原namespace UUID／epoch／Scope／发布／队列／policy、owner／非默认ACL、命令与效果证据保持；审批后真实写入丢响应，第二次恢复仍unknown与held=1，核验／采纳后业务calls=1、原History与Registry重放、seal／退休和三个Worker关闭通过。错误Provider／发布拒绝后回到原工厂／Worker可继续。已核对备份哈希、私有权限与成功自有资源关闭，原两次夹具失败及失败资源保留。见[验收记录](../architecture/reviews/2026-10-18-framework-backup-restore.md)和[操作说明](framework-backup-restore.md)。没有重建wheel、重复全suite或新模型评测。
 
-**当前剩余与下一步：** P3-3与P3-4冻结最小范围已关闭；PG非规范／冲突证据和Local未选复杂组合继续保留，强制耐久审计、完整Run遗忘及任意历史迁移不由本批交付。4项既有Temporal输入夹具失败继续保留未通过。P3-2/S2原360秒失败后置／开放，全部原门槛不变；P3-5所选框架备份恢复与P3-A整体候选尚未完成，按原依赖推进，不自动解锁或新建扩展专项。基础SDK／dev99／dev113保持冻结，R01–R26和外部采用独立验收。仅本地提交，不推送。
+**当前剩余与下一步：** P3-3／P3-4／P3-5冻结最小范围已关闭，均限定各原制品和已测路径；P3-2/S2原360秒失败仍后置／开放，600秒诊断不替代原门槛。P3-A整体候选的完整回归、安装及约定兼容尚未验收，原依赖保持，不自动解锁或标阶段完成。4项既有Temporal输入夹具失败继续保留未通过；下一批先核对P3-A原准入与证据缺口，不扩后端／拓扑／平台。基础SDK／dev99／dev113保持冻结；长期R01–R26、真实外部采用和框架比较独立验收。仅本地提交，不推送。
 
 ## 历史实现与验收证据
 
 <details>
 <summary>展开历史记录（“当前／下一步”只描述该记录发布时的状态）</summary>
+
+**当前增量：** 新增显式`TemporalEngine.compact_effect_evidence`，沿原Scope／namespace UUID／epoch／发布和完整封存树，仅清理与已采纳PG主回执完全相同的冗余evidence。保留主效果、冲突、History、幂等及实际停止证明；每Action独立事务、分页有界，无新Update／Signal。review发现的SQL等待间namespace UUID复核空白已有效RED→GREEN修复，并以实际DELETE后回滚验证。最终442产品wheel（`1f8efac…`）源码／隔离安装受影响12模块各 **234 passed／22配置skipped**；同包真实PG20＋Temporal2＋HTTP身份审计2共 **24 passed／零跳过，JUnit 38.162秒**。原回执冷SDK重取、一次写入、原History不变及重放、原根退休和owned关闭通过；默认Card／发布及原／continued默认History兼容通过。见[本批验收与P3-4核对](../architecture/reviews/2026-10-18-temporal-effect-retention.md)和[使用指南](temporal-retention.md)。不把不同批次或跳过项拼为全矩阵。
+
+**当前剩余与下一步：** P3-3与P3-4冻结最小范围已关闭；PG非规范／冲突证据和Local未选复杂组合继续保留，强制耐久审计、完整Run遗忘及任意历史迁移不由本批交付。4项既有Temporal输入夹具失败继续保留未通过。P3-2/S2原360秒失败后置／开放，全部原门槛不变；用户已进一步允许独立推进原P3-5：核对原SQLite两库、完整Temporal持久数据及PG效果／业务数据恢复、原身份和不可变Worker、错误升级拒绝与回退；不新增通用备份平台。P3-A整体候选尚未完成，不自动解锁或新建扩展专项。基础SDK／dev99／dev113保持冻结，R01–R26和外部采用独立验收。仅本地提交，不推送。
 
 **前批证据：** 原440产品wheel（`068b901…`）的真实HTTP／Temporal／PG双身份审计2项通过（28.494秒），资源交集另52项；原四个根证书及实际call停止证明通过。没有产品改动或新wheel，详见[远程验收记录](../architecture/reviews/2026-10-18-temporal-scope-audit.md)。它是当时所选路径的证据，不覆盖后续442产品的PG清理实现。
 
