@@ -4,7 +4,7 @@
 
 **2026-10-18收口：** [所选P3-3最小服务控制与必要恢复已验收](../architecture/reviews/2026-10-18-p3-3-closeout.md)。原始HTTP／容量／Coding记录及20组制品校验已归并；未封存Parent的必要取消与机械恢复由原History推进，已封存资源关闭复用完整原封存校验。原S2/P3-2、P3-4／5／A及长期目标仍开放；用户已明确允许独立推进原P3-4，保留S2原失败与全部验收门槛；P3-5／A不自动解锁。
 
-**P3-4现有基础与真实缺口：** 原认证／Scope路由、TaskControlBridge与工具／资源授权交集保持。新增可替换的[脱敏审计](service-audit.md)，默认有界内存sink；双有效身份同库串行路由及实际HTTP源码／安装拒绝与一次写入已验证，详见[本批记录](../architecture/reviews/2026-10-18-p3-service-audit.md)。审计不等于耐久合规日志，Local证明不外推Temporal／PG；最初4项原Temporal输入夹具失败已在修改前源码复现，保留未通过。新增[默认Local工作消息压缩](local-retention.md)，普通成功Agent的冗余副本可沿原事务手动清理；复杂恢复组合拒绝，全部执行／效果／幂等证据保留。它不等于完整Run遗忘；所选远程身份／审计及保留仍待，测试schema删除不是产品清理。
+**P3-4现有基础与真实缺口：** 原认证／Scope路由、TaskControlBridge与工具／资源授权交集保持。新增可替换的[脱敏审计](service-audit.md)，默认有界内存sink；双有效身份同库串行路由及实际HTTP源码／安装拒绝与一次写入已验证，详见[本批记录](../architecture/reviews/2026-10-18-p3-service-audit.md)。审计不等于耐久合规日志，Local证明不外推Temporal／PG；最初4项原Temporal输入夹具失败已在修改前源码复现，保留未通过。新增[默认Local工作消息压缩](local-retention.md)，普通成功Agent的冗余副本可沿原事务手动清理；复杂恢复组合拒绝，全部执行／效果／幂等证据保留。它不等于完整Run遗忘；所选普通Agent远程身份／审计已用同一440产品包实际2项验收，见[记录](../architecture/reviews/2026-10-18-temporal-scope-audit.md)；PG完成数据安全保留仍待，测试schema删除不是产品清理。
 
 **独立限制：** SDK `drive` 的预查询可能与父级不可逆封存并发，随后收到 `definition_mismatch`；原状态和证据保留，本批未改SDK／Workflow或声称修复。P3-2/S2、P3-4身份权限／保留、P3-5备份恢复、P3-A整体验收及长期R01–R26保持原范围和依赖。以下Dev段落为各自历史快照。
 

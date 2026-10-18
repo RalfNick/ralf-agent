@@ -2,7 +2,7 @@
 
 当前状态见[唯一交付摘要](implementation-status.md#当前交付摘要)和[P3-3冻结范围收口](../architecture/reviews/2026-10-18-p3-3-closeout.md)。**所选P3-3最小服务控制与必要恢复已验收。** HTTP控制／持久游标／断连续接／背压，以及累计容量下原任务的取消、机械恢复、效果采纳、实际停止、封存退休与owned关闭按原制品逐项取证；满2,000 Update的原Parent在未封存时也能沿原History推进。20组既有制品校验通过。本批未改产品或重新运行服务，不合并不同批次为同次全绿。
 
-P3-2/S2原360秒失败继续后置／开放；Session／Turn仍归P3-2。2026-10-18用户已明确允许独立推进P3-4，保留全部验收门槛；复用现有认证／Scope路由与授权交集，补齐所选越权验证、脱敏审计与安全保留。P3-5／A保持原依赖与验收，不自动解锁。首批身份／审计子集已实现并有限验收，默认Local工作消息压缩已有有限验收，完整P3-4仍缺所选远程身份／审计与保留证据，见[审计记录](../architecture/reviews/2026-10-18-p3-service-audit.md)。原SDK并发封存拒绝、未测外部首次采纳和任意History等边界继续保留，不延长本次已满足的P3-3。仅本地提交，不推送。
+P3-2/S2原360秒失败继续后置／开放；Session／Turn仍归P3-2。2026-10-18用户已明确允许独立推进P3-4，保留全部验收门槛；复用现有认证／Scope路由与授权交集，补齐所选越权验证、脱敏审计与安全保留。P3-5／A保持原依赖与验收，不自动解锁。首批身份／审计子集已实现并有限验收，默认Local工作消息压缩已有有限验收，所选普通Temporal远程身份／审计已有同包真实2项证据，完整P3-4仍缺PG完成数据安全保留，见[审计记录](../architecture/reviews/2026-10-18-p3-service-audit.md)。原SDK并发封存拒绝、未测外部首次采纳和任意History等边界继续保留，不延长本次已满足的P3-3。仅本地提交，不推送。
 
 <details>
 <summary>此前批次摘要（“最新／下一批”仅描述对应快照）</summary>
@@ -147,7 +147,7 @@ P3-3增量记录：[HTTP事件分页](../architecture/reviews/2026-10-16-http-ev
 | 1：期限配置 | Temporal 现有 `TemporalExecutionPolicy` 接入 Profile／SDK／JSON／TOML 和自定义工厂；省略保持原默认，非法内置配置在组件 I/O 前拒绝；实际服务验证审批重启、原到期时间、批准／过期、晚到证据和 owned 关闭；安装后复验 | dev114 已通过策略入口、默认兼容、配置／替换和 owned 清理；源码／安装各 4 项实际 Temporal／PG 场景及各 313 项受影响回归（2 项其他远程配置跳过）通过，见[策略配置](temporal-execution-policy.md)与[验收登记](../architecture/reviews/2026-10-14-temporal-policy-profiles.md) |
 | 2：Local 期限与容量 | 所选 Local 链路补 Run／审批期限；观察等待与业务期限分离；准入额度原子获取，关闭／恢复释放责任明确；活动、未知效果和实际未结束处理器不得被过期或清理释放 | dev115 已补 Local 持久期限与审批过期，见[指南](local-execution-policy.md)和[本批登记](../architecture/reviews/2026-10-14-local-deadlines.md)；dev116 已补 Local 全 DB／每 Scope 持久根准入，见[指南](deployment-admission.md)及[登记](../architecture/reviews/2026-10-14-local-admission.md)；dev117／dev118 已接通原 Registry 与内部 Worker SDK 门禁，见[登记](../architecture/reviews/2026-10-14-temporal-deployment-dispatch.md)。dev119 已实现普通公共 v2 Engine／Profile、原接受信封与不确定启动恢复、真实 Activity 义务及原树校验后安全退休；源码与独立安装各 953 项受影响、27 项公共实际服务及 17 项私有 v1 服务零失败／错误／跳过；默认发布、原 History 兼容和 owned 清理通过，见[验收记录](../architecture/reviews/2026-10-15-temporal-deployment-public.md)。内部 v1 继续只占位；dev120已接通所选Coding准入与物理关闭；S1 普通 Session 功能子集已验收，S2 所选 Coding Session 与 Temporal＋PG 集成仍为必需项。现有单 Run／Runner 限制不能替代部署准入；批次 2 未关闭 |
 | 3：观察与服务控制 | 持久 HTTP 事件游标与断连续接；审批、核验和恢复沿原身份与幂等命令；断连只结束观察；统一诊断和明确关闭／移交责任 | **所选P3-3已验收。** HTTP控制／持久游标／断连续接和容量下原任务必要取消／恢复按各原制品取证，含原图在未封存时推进、实际停止／退休和owned关闭；见[收口核对](../architecture/reviews/2026-10-18-p3-3-closeout.md)。不是同次全服务矩阵 |
-| 4：身份、权限与保留 | 宿主认证结果形成可信调用者；资源 ACL、Scope 与每 Agent 能力绑定取交集；跨 Scope 控制／事件读取拒绝；审计脱敏；保留清理保护活动 Run、原效果与恢复所需证据 | 可信Scope与资源交集复用；双有效身份Local同库串行路由及可替换脱敏审计已有源码／安装／真实HTTP证据；默认SQLite普通成功Agent冗余工作副本可沿原事务清理；复杂组合、所选远程证据与完整P3-4仍待 |
+| 4：身份、权限与保留 | 宿主认证结果形成可信调用者；资源 ACL、Scope 与每 Agent 能力绑定取交集；跨 Scope 控制／事件读取拒绝；审计脱敏；保留清理保护活动 Run、原效果与恢复所需证据 | 可信Scope与资源交集复用；双有效身份Local同库串行路由及可替换脱敏审计已有源码／安装／真实HTTP证据；默认SQLite普通成功Agent冗余工作副本可沿原事务清理；所选普通Temporal身份／审计实际2项通过；PG完成数据保留、未选复杂组合及完整P3-4仍待 |
 | 5：恢复与升级 | 安装后备份／恢复所选服务组合；核对原业务身份、版本与效果证据；故障窗口、迁移失败与回退可诊断；依赖服务／Worker 的拥有与关闭分别检查 | 进程重启、原 Worker 恢复及私有证据保留已有；框架级备份恢复、迁移和恢复管理待补齐 |
 
 **已提交基线 checkpoint（dev120／`c52d54c`）：** 所选公共Coding准入门槛已完成，见[本批验收](../architecture/reviews/2026-10-15-temporal-deployment-coding.md)。同一416产品字节的v30完整离线11847 passed／804 skipped、安装／dev119默认原History兼容通过；后测试修订另有92项定向通过。实际normal原矩阵13通过／1失败保留，修订后的并行owned-close normal单项复验1通过（152.70秒）；是两次运行，不称同次14全绿。目标停止故障实际命中，原未知效果／额度及恢复资料继续保留。该基线明确拒绝公共SDK Session coordinator。
