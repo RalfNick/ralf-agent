@@ -174,6 +174,7 @@ def test_original_ancestry_identity_is_checked_before_any_seal_exemption(
     closed_tree, monkeypatch, fault
 ):
     client = closed_tree
+    original_namespace = copy.deepcopy(fixture.NAMESPACE)
     child = client.proofs[client.leaf_id]
     if fault == "namespace":
         child["request"]["coding_parent"]["namespace"]["id"] = (
@@ -189,3 +190,4 @@ def test_original_ancestry_identity_is_checked_before_any_seal_exemption(
     with pytest.raises(DefinitionMismatch):
         asyncio.run(adopt_ancestry(runtime, client))
     assert adoptions == [] and not any(event[0] == "verified-seal" for event in events)
+    assert fixture.NAMESPACE == original_namespace

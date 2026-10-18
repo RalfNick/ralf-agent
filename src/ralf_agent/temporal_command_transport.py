@@ -126,6 +126,7 @@ def _legacy_snapshot(value, run_id):
             "running",
             "waiting_approval",
             "waiting_reconciliation",
+            "outcome_unknown",
             "waiting_input",
             "cancelling",
             "cancelled",

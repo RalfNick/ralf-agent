@@ -84,7 +84,7 @@ def tree(monkeypatch, namespace):
         link = {
             "version": 1,
             "scope": fixture.SCOPE,
-            "namespace": fixture.NAMESPACE,
+            "namespace": copy.deepcopy(fixture.NAMESPACE),
             "parent_run_id": parent_id,
             "parent_execution_epoch": parent["execution_epoch"],
             "parent_request_digest": parent["request_digest"],

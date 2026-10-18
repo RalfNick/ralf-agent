@@ -735,8 +735,9 @@ def test_legacy_joint_six_does_not_recreate_unadmitted_context_timeout(managed):
 @pytest.mark.parametrize("joint", [6, 7])
 @pytest.mark.parametrize("error_kind", ["timeout", "application"])
 @pytest.mark.parametrize("managed", [False, True])
+@pytest.mark.parametrize("tool_end_evidence", [False, True])
 def test_workflow_plain_context_maps_only_new_joint_seven_sdk_timeout_to_unknown(
-    monkeypatch, joint, error_kind, managed
+    monkeypatch, joint, error_kind, managed, tool_end_evidence
 ):
     pytest.importorskip("temporalio")
     from temporalio.exceptions import ActivityError, ApplicationError, TimeoutError, TimeoutType
@@ -777,6 +778,10 @@ def test_workflow_plain_context_maps_only_new_joint_seven_sdk_timeout_to_unknown
     async def no_session():
         return None
 
+    def patched(change_id):
+        assert change_id == "ralf-unowned-tool-end-evidence-v1"
+        return tool_end_evidence  # Replay without the marker and new History.
+
     async def failing_activity(*args, **kwargs):
         cause = (
             TimeoutError(
@@ -803,6 +808,7 @@ def test_workflow_plain_context_maps_only_new_joint_seven_sdk_timeout_to_unknown
         )
         instance.state, instance.wake_revision = State(), 0
         instance._notify_session = no_session
+        monkeypatch.setattr(temporal_workflow.workflow, "patched", patched)
         monkeypatch.setattr(temporal_workflow.workflow, "execute_activity", failing_activity)
         with pytest.raises(LoopFinished):
             await instance.run({"activity_timeout": 1})

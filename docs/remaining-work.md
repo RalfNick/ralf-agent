@@ -2,11 +2,11 @@
 
 当前交付与优先级统一见[唯一当前状态摘要](implementation-status.md#当前交付摘要)。基础SDK本轮范围已收口，第一／二阶段维持原冻结证据；下列R01–R26为长期清单，历史批次的“下一步”不覆盖当前排期。第三阶段仍按[冻结矩阵](phase3-support-matrix.md)推进，S2原失败与验收要求保留，性能专项后置，不列为已支持；可选CLI便利入口等不延长基础交付。
 
-**2026-10-18收口：** [所选P3-3最小服务控制与必要恢复已验收](../architecture/reviews/2026-10-18-p3-3-closeout.md)。原始HTTP／容量／Coding记录及20组制品校验已归并；未封存Parent的必要取消与机械恢复由原History推进，已封存资源关闭复用完整原封存校验。随后P3-4／P3-5已按各原最小范围有限验收；原S2/P3-2、P3-A及长期目标仍开放，全部原失败和门槛保留，P3-A不自动解锁。
+**2026-10-18收口：** [所选P3-3最小服务控制与必要恢复已验收](../architecture/reviews/2026-10-18-p3-3-closeout.md)。原始HTTP／容量／Coding记录及20组制品校验已归并；未封存Parent的必要取消与机械恢复由原History推进，已封存资源关闭复用完整原封存校验。随后P3-4／P3-5已按各原最小范围有限验收；原S2/P3-2、P3-A整体及长期目标仍开放，全部原失败和门槛保留。用户已允许独立候选验收，仅调整顺序，见[当前记录](../architecture/reviews/2026-10-18-candidate-verification.md)。
 
 **P3-4冻结最小范围已验收：** 原认证／Scope路由、TaskControlBridge与资源交集保持；可替换[脱敏审计](service-audit.md)、双有效身份Local／Temporal所选越权拒绝、[Local工作消息压缩](local-retention.md)和[原封存树下PG冗余效果副本清理](temporal-retention.md)均有产品入口及有限验收。最终442产品包源码／安装各234 passed／22配置skipped，同包真实服务24 passed／零跳过；[逐项核对](../architecture/reviews/2026-10-18-temporal-effect-retention.md#p3-4门槛核对与后续)保留原制品、故障与恢复证据。主效果、冲突／未知、幂等和实际停止证明不删，实际DELETE后UUID不符回滚。审计仍是best-effort、维护不等于Run遗忘，未选Local复杂组合拒绝，不外推全矩阵／企业完整权限。
 
-**独立限制与下一步：** SDK `drive` 的预查询可能与父级不可逆封存并发，随后收到 `definition_mismatch`；原状态和证据保留。最初4项Temporal输入夹具失败按修改前基线保留未通过。P3-2/S2原360秒失败继续后置／开放；P3-5所选Local／Temporal／PG原数据恢复与版本回退已按[有限范围验收](../architecture/reviews/2026-10-18-framework-backup-restore.md)，原制品不变；P3-A整体验收未完成，按原依赖推进，不自动解锁。长期R01–R26、外部采用、强制耐久合规审计与通用数据治理保持原范围。以下Dev段落为各自历史快照。
+**独立限制与下一步：** SDK `drive` 的预查询可能与父级不可逆封存并发，随后收到 `definition_mismatch`；原状态和证据保留。最初4项Temporal输入夹具失败已在本次候选中定向修复，历史失败保留，最终完整离线回归13,374通过／891配置跳过，安装275项通过；首轮24项夹具失败及修复记录保留。P3-2/S2原360秒失败继续后置／开放；P3-5所选Local／Temporal／PG原数据恢复与版本回退已按[有限范围验收](../architecture/reviews/2026-10-18-framework-backup-restore.md)，原制品不变；P3-A整体仍未完成；用户已允许独立候选回归、安装、约定兼容及原服务核对，S2原门槛保持。长期R01–R26、外部采用、强制耐久合规审计与通用数据治理保持原范围。以下Dev段落为各自历史快照。
 
 Dev118 已接通内部所选 Worker 的原 Run／Parent SDK 部署准入：实际 namespace UUID／原 epoch／Registry claim 和有界原 Parent 链先于业务派发，Agent／顺序／图／Team／Dynamic／嵌套后代共享一个根槽位。Activity carrier 保留原 handler 请求 SHA，受管理 Context、limits、completion 和 Session 写入阶段已有契约回归；默认发布保持兼容。冻结源码与独立安装各通过 814 项受影响检查、17 项实际 Service；最终验收出处以[本批登记](../architecture/reviews/2026-10-14-temporal-deployment-dispatch.md)为准，不替代阶段全量回归或模型质量证据。
 
@@ -92,8 +92,9 @@ dev85 已验收：源码5520 passed／447配置跳过、核心安装171、旧84�
 
 RALF 已有可运行的通用 SDK 预览：模型／工具循环、顺序与图编排、动态 DAG、
 受管理多 Agent、远程数据适配及有限 Temporal 分布式执行。dev99四条参考业务链路与dev113第二阶段所选环境／执行组合已经验收。
-当前剩余主链路为期限与容量治理、托管观察／服务控制、企业身份权限及运维恢复；
-每Agent／Session及智能数据的高级可选组合继续按长期清单登记，不覆盖当前阶段边界。
+第三阶段冻结主链路当前只剩P3-2/S2与P3-A整体收口：S2原性能失败后置，独立候选回归／安装／约定兼容已有限收口，P3-A整体不因此完成。
+原期限、所选最小服务控制／身份审计／安全保留及备份恢复已有各自有限验收，不能笼统再列为未实现；
+完整企业治理、每Agent／Session及智能数据的高级可选组合继续按长期清单登记，不覆盖本阶段边界。
 H1a–H1f、Local stateless H2a、同库原生／顺序 H2b1／复合会话 H2b2 和 Temporal 原生／顺序入口 H2c1／已注册高级编排入口 H2c2 已交付；完整 H1/H2 尚未完成，H3–H5 有可复用基础但未达到各自交付门槛。
 完整 M1、AgentScope 目标业务链路对齐及企业正式可用均不能标为完成。
 

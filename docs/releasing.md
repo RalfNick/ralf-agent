@@ -248,3 +248,22 @@ Parent运输候选不作为交付物。最终仅一个产品模块复用原完�
 新的[P3-3收口审查](../architecture/reviews/2026-10-18-p3-3-closeout.md)是独立的冻结要求
 归并结论。P3-2/S2原失败及P3-4／5／A依赖保持，完整第三阶段、R01–R26及企业可用
 不由一个门槛推定。仅本地提交，不推送或发布远端。
+
+
+## P3-A 独立候选验证（2026-10-18）
+
+候选 `dist/p3-candidate-20261018/ralf_agent-0.1.0.dev120-py3-none-any.whl`，
+SHA256 `26546603a6bd9370dfc0bca71f48ecc83310ba3d52a8259fd1847d3a62e61ade`。
+基础交付和此前各包不覆盖；同dev120按SHA区分。442产品仅一处SDK修复：允许
+原Update-only Worker的合法`outcome_unknown` Parent接收必要取消，原完整
+Scope／namespace／epoch／两次查询及typed回执检查保持。
+
+受影响源码123项、隔离安装126项均零失败／跳过；同包真实PG／Temporal／HTTP与
+两次全数据恢复25项通过（52.825秒）。默认发布材料、两份原保存History、
+首用审批／重复回执／跨进程恢复通过，业务只写一次。首轮完整回归13,341通过／891跳过／24失败；仅补SDK观察、Workflow patch与namespace隔离夹具后，最终源码272项及安装275项通过。产品未再变化，最终930测试／20额外输入固定，第二轮完整回归13,374通过／891配置跳过、零失败／错误（JUnit 2224.610秒）。制品附`verification.json`、最终与首轮测试输入清单及`SHA256SUMS`，原失败保留。
+旧不可变Worker同原任务取消RED→GREEN及零Signal取证通过，三份完整原History
+由匹配Worker重放；其原执行停止未知不因人工效果核验清除，完整脚本的后续父级
+quiescent等待失败保留。详见[候选记录](../architecture/reviews/2026-10-18-candidate-verification.md)。
+
+用户明确授权独立候选验收。P3-2/S2原360秒失败、P3-A整体及第三阶段未完成保持；
+没有新功能矩阵、模型质量或任意History迁移声明。仅本地提交，不推送或发布远端。

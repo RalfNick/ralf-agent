@@ -101,6 +101,19 @@ def environment(monkeypatch):
             return getattr(self.original, name)
 
         async def query(self, name, value):
+            if value["kind"] == "status":
+                assert value["scope"] == proof.intent["scope"]
+                assert self.original.epoch == client.business_epoch
+                return {
+                    "run_id": proof.intent["run_id"],
+                    "state": "succeeded",
+                    "state_revision": 0,
+                    "result": None,
+                    "error": None,
+                    "pending": [],
+                    "actions": [],
+                    "consistency": "authoritative",
+                }
             if value["kind"] == "deployment_admission" and self.original is not None:
                 client.events.append("original-sdk-proof")
             if value["kind"] == "deployment_admission" and isinstance(
@@ -108,6 +121,9 @@ def environment(monkeypatch):
             ):
                 return client.registry_state.deployment_admission(value)
             return await self.original.query(name, value)
+
+        async def signal(self, name, value):
+            raise AssertionError("An original legacy Worker must retain Updates, not Signals")
 
         async def execute_update(self, name, value, **options):
             if name == "deployment_call_started":

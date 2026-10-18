@@ -2,6 +2,7 @@
 
 import asyncio
 from dataclasses import asdict
+from types import SimpleNamespace
 
 import pytest
 
@@ -17,6 +18,7 @@ def _optional_sdk():
 def test_verified_descendant_command_uses_original_epoch_after_reset(monkeypatch):
     from ralf_agent import temporal_deployment_submissions as transport
     from ralf_agent.temporal import TemporalEngine
+    from ralf_agent.temporal_state import WORKFLOW_NAME
 
     async def run():
         events = []
@@ -36,8 +38,33 @@ def test_verified_descendant_command_uses_original_epoch_after_reset(monkeypatch
                 self.client, self.epoch = client, epoch
 
             async def query(self, name, value):
+                assert name == "view" and value["kind"] == "status"
+                assert value["scope"] == asdict(scope)
                 events.append(("observe", self.epoch))
-                return {"state": "waiting_approval"}
+                # Positive legacy discovery requires the full scoped snapshot.
+                return {
+                    "run_id": "child",
+                    "state": "waiting_approval",
+                    "state_revision": 1,
+                    "result": None,
+                    "error": None,
+                    "pending": [],
+                    "actions": [],
+                    "consistency": "authoritative",
+                }
+
+            async def describe(self):
+                events.append(("describe", self.epoch))
+                return SimpleNamespace(
+                    id="child",
+                    namespace=self.client.namespace,
+                    run_id=self.epoch,
+                    workflow_type=WORKFLOW_NAME,
+                    raw_info=SimpleNamespace(first_run_id=self.epoch),
+                )
+
+            async def signal(self, *args, **options):
+                raise AssertionError("The original Update-only Worker cannot accept Signals")
 
             async def execute_update(self, name, value):
                 events.append(("command", self.epoch))
@@ -87,6 +114,11 @@ def test_verified_descendant_command_uses_original_epoch_after_reset(monkeypatch
         assert receipt.run_id == "child"
         assert ("command", "original-child-epoch") in events
         assert ("command", "reset-child-epoch") not in events
+        # The guarded status and both legacy discovery reads stay pinned.
+        assert events.count(("observe", "original-child-epoch")) == 3
+        assert events.index(("describe", "original-child-epoch")) < events.index(
+            ("command", "original-child-epoch")
+        )
         assert events.index(("verify", "original-child-epoch")) < events.index(
             ("observe", "original-child-epoch")
         )

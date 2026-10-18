@@ -55,6 +55,25 @@ def setup(monkeypatch):
     return owner, wrapped, original, runtime, client, info, request, calls
 
 
+def legacy_handles(monkeypatch, client):
+    """Keep the original old-Worker status/epoch proof and Update handlers."""
+    original_handle = client.get_workflow_handle
+
+    class Handle:
+        def __init__(self, original):
+            self.original = original
+
+        def __getattr__(self, name):
+            return getattr(self.original, name)
+
+        async def signal(self, name, value):
+            raise AssertionError("An original legacy Worker must retain Updates, not Signals")
+
+    monkeypatch.setattr(
+        client, "get_workflow_handle", lambda *a, **kw: Handle(original_handle(*a, **kw))
+    )
+
+
 @pytest.mark.parametrize("mode", ["release", "verify"])
 def test_original_maintenance_is_owned_while_business_admission_closed(monkeypatch, mode):
     async def run():
@@ -214,6 +233,7 @@ def test_closing_original_control_keeps_universal_proof_and_end_ack(monkeypatch,
 
     async def run():
         runtime, client, state, proof, info, _ = environment(monkeypatch)
+        legacy_handles(monkeypatch, client)
         runtime.orchestration_release = runtime.manifest
         runtime.parent_completion_policies = {}
         info.activity_type = "ralf.temporal.control.v1"
@@ -299,6 +319,7 @@ def test_closing_original_native_stop_keeps_sdk_guard_stop_and_end_ack(monkeypat
 
     async def run():
         runtime, client, state, proof, info, _ = environment(monkeypatch)
+        legacy_handles(monkeypatch, client)
         runtime.orchestration_release = runtime.manifest
         runtime.parent_completion_policies = {}
         runtime.model_continuation = False

@@ -5,7 +5,7 @@ from dataclasses import asdict
 from types import SimpleNamespace
 
 from ralf_agent import ModelResponse, ToolCall, ToolRegistry, ToolSpec
-from ralf_agent.errors import IdempotencyConflict
+from ralf_agent.errors import AuthorizationDenied, IdempotencyConflict
 from ralf_agent.temporal import TemporalEngine
 from ralf_agent.temporal_activities import TemporalRuntime
 from ralf_agent.temporal_state import (
@@ -98,8 +98,10 @@ class StateClient:
             await self.start_gate.wait()
             await self.advance(id)
 
-    def get_workflow_handle(self, run_id):
-        return StateHandle(self, run_id)
+    def get_workflow_handle(self, workflow_id, *, run_id=None):
+        if run_id is not None and run_id != workflow_id + ":original-epoch":
+            raise RPCError()
+        return StateHandle(self, workflow_id)
 
     async def advance(self, run_id):
         if self.hold_execution:
@@ -135,8 +137,40 @@ class StateHandle:
     def __init__(self, client, run_id):
         self.client, self.run_id = client, run_id
 
+    async def signal(self, name, value):
+        raise AssertionError("The Update-only fixture Worker must not receive Signals")
+
+    async def describe(self):
+        from ralf_agent.temporal_parent_state import PARENT_WORKFLOW_NAME, TemporalParentState
+        from ralf_agent.temporal_state import WORKFLOW_NAME
+
+        if self.run_id not in self.client.states:
+            raise RPCError()
+        epoch = self.run_id + ":original-epoch"
+        return SimpleNamespace(
+            id=self.run_id,
+            namespace=self.client.namespace,
+            run_id=epoch,
+            raw_info=SimpleNamespace(first_run_id=epoch),
+            workflow_type=PARENT_WORKFLOW_NAME
+            if isinstance(self.client.states[self.run_id], TemporalParentState)
+            else WORKFLOW_NAME,
+        )
+
     async def query(self, name, value):
         assert name == "view"
+        if self.run_id in self.client.registries:
+            # This network double represents the original Update-only Worker.
+            # Its unknown views return the exact scoped configuration used by
+            # the SDK to identify that Worker before sending any Signal.
+            registry = self.client.registries[self.run_id]
+            if value.get("scope") != registry.scope:
+                raise AuthorizationDenied("Command registry belongs to another trusted scope")
+            return {
+                "scope": dict(registry.scope),
+                "capacity": registry.capacity,
+                "accepted_commands": len(registry.identities),
+            }
         if self.run_id not in self.client.states:
             raise RPCError()
         state = self.client.states[self.run_id]

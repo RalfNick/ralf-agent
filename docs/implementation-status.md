@@ -18,7 +18,7 @@
 
 - 基础冻结快照完整离线源码回归：**12,749 passed／838 skipped，零失败／错误**；全量Ruff与1,293文件格式检查通过。425产品／862 Python测试前后哈希一致，另2 JSON夹具与固定提交一致。安装、版本配置、Session、RAG与恢复证据分别见[基础记录](basic-capabilities.md)，不把不同批次相加为同次全绿。
 - 第一阶段四条参考链路在dev99、第二阶段所选环境／执行能力在dev113冻结，按原配置和范围复用。内部安装演练不等于外部独立采用，离线回归不等于真实模型或全部服务验收。
-- SDK的执行credits不是真实费用上限；本地备份演练仅覆盖默认oncall两库。企业身份／ACL、长期保留、完整框架备份恢复、一般流式／多模态及其他未选组合仍未完成，详见[长期清单](remaining-work.md)。
+- SDK的执行credits不是真实费用上限。P3-4最小身份／审计／安全保留与P3-5所选Local／Temporal／PG恢复已按下表有限验收；完整企业身份／ACL、通用长期治理、生产Temporal灾备、任意Schema降级、一般流式／多模态及其他未选组合仍未完成，详见[长期清单](remaining-work.md)。
 - 默认Local基础交付范围保持冻结。后续审查发现原Temporal默认无Owner工具存在结束证据P1，修复及旧History限制见下方最新批次；原制品不可据此声称已修复。CLI核验快捷入口等可选便利项后置。
 - 后续准备仅补现有路径证据：Local HTTP在Inbox容量满后仍可查询、原消息重提和取消；原模型调用实际结束前保留`cancelling`。受影响39项、同一交付wheel独立HTTP 2项通过，425产品文件未变化。此证据仅覆盖Inbox容量，不覆盖执行权威的累计命令容量，也不关闭P3-2／P3-3，见[验收准备记录](../architecture/reviews/2026-10-16-http-capacity-controls.md)。
 
@@ -30,17 +30,22 @@
 | P3-3 | **冻结所选范围已验收。** 最小服务控制、持久HTTP游标／断连续接、有界背压及原任务必要取消／恢复已按各原制品取证；见[收口核对](../architecture/reviews/2026-10-18-p3-3-closeout.md)。不等于同版本全服务矩阵或第三阶段完成 |
 | P3-4 | **冻结最小范围已验收。** 可信Scope／资源交集、所选越权拒绝、可替换脱敏审计、Local工作消息压缩及原封存树下PG冗余效果副本清理；见[门槛核对](../architecture/reviews/2026-10-18-temporal-effect-retention.md#p3-4门槛核对与后续)，不等于完整企业权限或Run遗忘 |
 | P3-5 | **冻结最小范围已验收。** 所选Local／Temporal／PG原数据备份恢复、原身份及匹配Worker、错误版本／发布拒绝与回退；见[逐项核对](../architecture/reviews/2026-10-18-framework-backup-restore.md)。不外推自动Schema降级、生产Temporal灾备或全部组合 |
-| P3-A | 整体候选未验收，原依赖保持，不自动解锁 |
+| P3-A | 用户授权的独立候选验证已收口：全量13,374通过／891配置跳过、安装275、同包原服务25；阶段整体仍待P3-2/S2，未完成保持 |
 | R01–R26其余目标 | 保留为长期路线图；外部采用和框架对等比较单独验收，不自动成为本轮实现任务 |
 
-**当前增量：** P3-5复用原442产品wheel（`1f8efac…`），无产品代码改动。默认Local原文档两库备份恢复源码／隔离安装各 **3 passed／零跳过**；同包真实Temporal／PG **1 passed／零跳过，JUnit 17.635秒**，一个三阶段场景完成两次全数据备份→新空数据库／新目录恢复。原namespace UUID／epoch／Scope／发布／队列／policy、owner／非默认ACL、命令与效果证据保持；审批后真实写入丢响应，第二次恢复仍unknown与held=1，核验／采纳后业务calls=1、原History与Registry重放、seal／退休和三个Worker关闭通过。错误Provider／发布拒绝后回到原工厂／Worker可继续。已核对备份哈希、私有权限与成功自有资源关闭，原两次夹具失败及失败资源保留。见[验收记录](../architecture/reviews/2026-10-18-framework-backup-restore.md)和[操作说明](framework-backup-restore.md)。没有重建wheel、重复全suite或新模型评测。
+**当前增量：** 用户已允许独立候选验收，保留S2与阶段未完成。原输入网络夹具补齐旧Worker识别所需的配置观察／原epoch，并明确禁止Signal；进一步复现并修复SDK误拒绝旧Parent合法`outcome_unknown`时的必要取消。完整Scope／namespace／原epoch与两次查询保持，取消仍保留未知效果／预算。新442产品候选（`2654660…`）首轮完整回归13,341 passed／891 skipped／24 failed，已定位缺失SDK端口、Workflow patch桩及测试共享namespace污染并修复。最终受影响源码 **272 passed／零跳过**，隔离安装 **275 passed／零跳过**；同包真实PG／Temporal／HTTP及备份恢复 **25 passed／零跳过，JUnit 52.825秒**，全部成功自有服务关闭。默认Card／完整发布及两份原History重放、首用审批／重复回执／跨进程恢复通过。产品未再变化，固定最终930测试及20额外输入的第二轮完整无排除回归 **13,374 passed／891 skipped，零失败／错误，JUnit 2224.610秒**；整轮输入不变。首轮失败与跳过原因保留，不拼接局部结果。见[候选验证记录](../architecture/reviews/2026-10-18-candidate-verification.md)。
 
-**当前剩余与下一步：** P3-3／P3-4／P3-5冻结最小范围已关闭，均限定各原制品和已测路径；P3-2/S2原360秒失败仍后置／开放，600秒诊断不替代原门槛。P3-A整体候选的完整回归、安装及约定兼容尚未验收，原依赖保持，不自动解锁或标阶段完成。4项既有Temporal输入夹具失败继续保留未通过；下一批先核对P3-A原准入与证据缺口，不扩后端／拓扑／平台。基础SDK／dev99／dev113保持冻结；长期R01–R26、真实外部采用和框架比较独立验收。仅本地提交，不推送。
+**当前剩余与下一步：** P3-3／P3-4／P3-5冻结最小范围已关闭，限定各原制品和已测路径；P3-2/S2原360秒失败继续后置／开放，600秒诊断不替代门槛。原4项输入夹具失败已定向闭环，历史失败保留；独立候选完整回归、安装与约定兼容已收口，P3-A整体仍待S2。原SDK不消费外部handler结束标记时，人工核验只能结清效果，不能清掉实际停止义务；旧Parent按原契约保留停止未知，不改称完整旧生命周期通过。基础SDK／dev99／dev113保持冻结，长期R01–R26、外部采用和框架比较独立验收。仅本地提交，不推送。
 
 ## 历史实现与验收证据
 
 <details>
 <summary>展开历史记录（“当前／下一步”只描述该记录发布时的状态）</summary>
+
+**当前增量：** P3-5复用原442产品wheel（`1f8efac…`），无产品代码改动。默认Local原文档两库备份恢复源码／隔离安装各 **3 passed／零跳过**；同包真实Temporal／PG **1 passed／零跳过，JUnit 17.635秒**，一个三阶段场景完成两次全数据备份→新空数据库／新目录恢复。原namespace UUID／epoch／Scope／发布／队列／policy、owner／非默认ACL、命令与效果证据保持；审批后真实写入丢响应，第二次恢复仍unknown与held=1，核验／采纳后业务calls=1、原History与Registry重放、seal／退休和三个Worker关闭通过。错误Provider／发布拒绝后回到原工厂／Worker可继续。已核对备份哈希、私有权限与成功自有资源关闭，原两次夹具失败及失败资源保留。见[验收记录](../architecture/reviews/2026-10-18-framework-backup-restore.md)和[操作说明](framework-backup-restore.md)。没有重建wheel、重复全suite或新模型评测。
+
+**当前剩余与下一步：** P3-3／P3-4／P3-5冻结最小范围已关闭，均限定各原制品和已测路径；P3-2/S2原360秒失败仍后置／开放，600秒诊断不替代原门槛。P3-A整体候选的完整回归、安装及约定兼容尚未验收，原依赖保持，不自动解锁或标阶段完成。4项既有Temporal输入夹具失败继续保留未通过；下一批先核对P3-A原准入与证据缺口，不扩后端／拓扑／平台。基础SDK／dev99／dev113保持冻结；长期R01–R26、真实外部采用和框架比较独立验收。仅本地提交，不推送。
+
 
 **当前增量：** 新增显式`TemporalEngine.compact_effect_evidence`，沿原Scope／namespace UUID／epoch／发布和完整封存树，仅清理与已采纳PG主回执完全相同的冗余evidence。保留主效果、冲突、History、幂等及实际停止证明；每Action独立事务、分页有界，无新Update／Signal。review发现的SQL等待间namespace UUID复核空白已有效RED→GREEN修复，并以实际DELETE后回滚验证。最终442产品wheel（`1f8efac…`）源码／隔离安装受影响12模块各 **234 passed／22配置skipped**；同包真实PG20＋Temporal2＋HTTP身份审计2共 **24 passed／零跳过，JUnit 38.162秒**。原回执冷SDK重取、一次写入、原History不变及重放、原根退休和owned关闭通过；默认Card／发布及原／continued默认History兼容通过。见[本批验收与P3-4核对](../architecture/reviews/2026-10-18-temporal-effect-retention.md)和[使用指南](temporal-retention.md)。不把不同批次或跳过项拼为全矩阵。
 

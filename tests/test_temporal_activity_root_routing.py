@@ -189,6 +189,19 @@ def test_fresh_closed_root_admission_keeps_original_cancel_path(monkeypatch):
             }
         )
         cls = type(e.client.get_workflow_handle(e.call["run_id"]))
+        original_query = cls.query
+
+        async def query(self, name, value):
+            if value["kind"] == "status":
+                assert name == "view"
+                state = e.client.states[self.identity]
+                state.authorize(value["scope"])
+                # This Update-only Worker returns its complete original status.
+                return state.snapshot()
+            return await original_query(self, name, value)
+
+        async def signal(self, *args, **options):
+            raise AssertionError("The original Update-only Worker cannot accept Signals")
 
         async def update(self, name, value, **options):
             e.probe.writes.append((self.identity, name, value))
@@ -197,6 +210,8 @@ def test_fresh_closed_root_admission_keeps_original_cancel_path(monkeypatch):
             # nevertheless retain the existing cancellation attempt on close.
             return e.client.states[self.identity].command(value["command_id"], value["payload"])
 
+        monkeypatch.setattr(cls, "query", query)
+        monkeypatch.setattr(cls, "signal", signal, raising=False)
         monkeypatch.setattr(cls, "execute_update", update)
         with release.activity_context(e.runtime, e.client, e.proof, e.request):
             with pytest.raises(DefinitionMismatch):

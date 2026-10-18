@@ -132,8 +132,15 @@ def test_failed_signal_keeps_same_pending_token_without_marking_sent_or_reacquir
     assert len(sent) == 2
 
 
-def test_run_loop_checks_postretirement_notification_before_passive_wait(monkeypatch):
+@pytest.mark.parametrize("tool_end_evidence", [False, True])
+def test_run_loop_checks_postretirement_notification_before_passive_wait(
+    monkeypatch, tool_end_evidence
+):
     instance, observer, sent, _ = original(monkeypatch)
+
+    def patched(change_id):
+        assert change_id == "ralf-unowned-tool-end-evidence-v1"
+        return tool_end_evidence  # Replay without the marker and new History.
 
     async def admitted(activity_timeout):
         return True
@@ -153,6 +160,7 @@ def test_run_loop_checks_postretirement_notification_before_passive_wait(monkeyp
     instance._ensure_deployment_admission = admitted
     instance._notify_deployment_parent = parent
     instance._ensure_deployment_retirement = retired
+    monkeypatch.setattr(product.workflow, "patched", patched)
     monkeypatch.setattr(product.workflow, "wait_condition", wait)
     with pytest.raises(asyncio.CancelledError):
         asyncio.run(instance.run({"activity_timeout": 30}))
