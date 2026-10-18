@@ -1153,6 +1153,12 @@ class LocalEngine:
             apply,
         )
 
+    def compact_messages(self, run_id, *, command_id):
+        """Compact one settled default Agent's redundant message projection."""
+        from .local_retention import compact_messages
+
+        return compact_messages(self, run_id, command_id=command_id)
+
     def cancel(self, run_id, *, command_id):
         self._authorized(run_id)
 

@@ -307,3 +307,5 @@ See [binding examples and refusal matrix](agent-bindings.md); Agent/Runtime Faca
 `TemporalProfile`／`TemporalProfileCatalog.from_file` 是纯不可变声明和版本查找；`TemporalRuntimeBuilder.abuild` 复用明确工厂与原执行权威，返回 `TemporalRuntimeAssembly`。Assembly 提供固定 `profile/scope/release/capabilities`、`start_worker/create_engine/aclose` 与执行前 `detach_components`。Owned 清理、Scope／队列绑定、线程及原通知排空、远程数据和默认关闭开关见[完整指南](temporal-profiles.md)。
 
 `AuditRecord`／`AuditSink`、`InMemoryAuditSink` 与 `ServiceAudit` 提供可选的有界RPC脱敏观察；`A2AApplication(..., audit=...)` 默认关闭，`LocalA2AService`透传同一选项。替换与持久性边界见[服务审计](service-audit.md)。
+
+`LocalEngine.compact_messages(run_id, *, command_id)` 在原SQLite事务中压缩一个普通成功Agent的冗余工作消息，返回原CommandReceipt；原效果／回执／事件保留，复杂恢复组合明确拒绝。边界见[Local保留](local-retention.md)。

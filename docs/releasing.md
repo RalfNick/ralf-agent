@@ -39,6 +39,14 @@ SHA256 `101e537100f0531e6cc3fdde31713b24ba83969644c0640bc05c63cba5097ba3`，附`
 有限源码／安装／实际HTTP证据及4项已复现的原输入夹具失败分别登记于[验收记录](../architecture/reviews/2026-10-18-p3-service-audit.md)。
 安全保留和所选远程身份／审计尚未完成；不宣称完整P3-4或强制耐久审计。仅本地提交，不推送／发布。
 
+## P3-4 默认Local保留增量
+
+本地制品 `dist/p3-local-retention-20261018/ralf_agent-0.1.0.dev120-py3-none-any.whl`，
+SHA256 `068b90130f25dd9a7a3ada5ec7e55d2c5f3cae6831231a938f6eb3622c149111`，附验证及校验清单。
+源码／隔离安装各245项通过，旧已安装SDK可读压缩原库；使用限制及证据见[验收记录](../architecture/reviews/2026-10-18-local-retention.md)。
+这是显式工作副本逻辑压缩，原动作／效果／幂等与恢复证据不删除，完整P3-4仍开放。
+上批审计及HTTP证据仍绑定原439文件wheel，不拼为本440文件同次实际服务验证。
+
 ## 1. 准备版本与兼容说明
 
 1. 同步 `pyproject.toml` 和 `src/ralf_agent/__init__.py` 中的包版本。
