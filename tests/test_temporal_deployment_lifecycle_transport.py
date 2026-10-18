@@ -2,6 +2,7 @@
 
 import asyncio
 import copy
+import warnings
 from importlib import import_module
 from types import SimpleNamespace as NS
 
@@ -49,6 +50,74 @@ def fixture(monkeypatch, *, parent=False, operation="deployment_call_started"):
 
 def api():
     return import_module("ralf_agent.temporal_deployment_lifecycle_transport")
+
+
+@pytest.mark.parametrize("parent", [False, True])
+def test_original_begin_query_loads_before_strict_sandbox_activation(monkeypatch, parent):
+    from temporalio.worker.workflow_sandbox._importer import Importer
+    from temporalio.worker.workflow_sandbox._restrictions import RestrictionContext
+
+    from ralf_agent.temporal import _workflow_runner
+
+    original_owner, info, envelope = fixture(monkeypatch, parent=parent)
+    expected = {"deployment_lifecycle_observation": api().observe(original_owner, envelope, info)}
+    before = copy.deepcopy(vars(original_owner.state))
+    context = RestrictionContext()
+    importer = Importer(_workflow_runner().restrictions, context)
+    with importer.applied():
+        product = import_module(
+            "ralf_agent.temporal_parent_workflow" if parent else "ralf_agent.temporal_workflow"
+        )
+        cls = product.TemporalParentWorkflow if parent else product.TemporalRunWorkflow
+        owner = object.__new__(cls)
+        owner.state, owner.wake_revision = original_owner.state, 0
+        context.is_runtime = context.in_activation = True
+        try:
+            with warnings.catch_warnings():
+                warnings.simplefilter("error", UserWarning)
+                observed = owner.view(
+                    {
+                        "kind": "status",
+                        "scope": owner.state.scope,
+                        "deployment_lifecycle_observation": envelope,
+                    }
+                )
+        finally:
+            context.is_runtime = context.in_activation = False
+    assert observed == expected
+    assert vars(owner.state) == before and not getattr(
+        owner, "_deployment_lifecycle_observations", {}
+    )
+
+
+@pytest.mark.parametrize(
+    "observation",
+    ["command_observation", "execution_end_observation", "coding_recovery_observation"],
+)
+def test_parent_rejects_other_observations_without_late_sandbox_import(monkeypatch, observation):
+    from temporalio.worker.workflow_sandbox._importer import Importer
+    from temporalio.worker.workflow_sandbox._restrictions import RestrictionContext
+
+    from ralf_agent.temporal import _workflow_runner
+
+    original_owner, _, _ = fixture(monkeypatch, parent=True)
+    before = copy.deepcopy(vars(original_owner.state))
+    context = RestrictionContext()
+    importer = Importer(_workflow_runner().restrictions, context)
+    with importer.applied():
+        product = import_module("ralf_agent.temporal_parent_workflow")
+        owner = object.__new__(product.TemporalParentWorkflow)
+        owner.state, owner.wake_revision = original_owner.state, 0
+        context.is_runtime = context.in_activation = True
+        try:
+            with warnings.catch_warnings(record=True) as captured:
+                warnings.simplefilter("always", UserWarning)
+                result = owner.view({"kind": "status", "scope": owner.state.scope, observation: {}})
+        finally:
+            context.is_runtime = context.in_activation = False
+    assert "error" in result
+    assert not captured, "Original observation handling must load before activation"
+    assert vars(owner.state) == before
 
 
 @pytest.mark.parametrize("parent", [False, True])

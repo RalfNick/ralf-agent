@@ -18,11 +18,15 @@ with workflow.unsafe.imports_passed_through():
         parent_completion,
         parent_completion_protocol,
         temporal_coding_composition_state,
+        temporal_coding_recovery_transport,
+        temporal_command_transport,
         temporal_context_read_protocol,
         temporal_context_read_state,
         temporal_deployment_control_projection,
         temporal_deployment_control_transport,
+        temporal_deployment_lifecycle_transport,
         temporal_deployment_release_state,
+        temporal_execution_end_transport,
         temporal_startup_options,
     )
     from . import temporal_deployment_execution_state as deployment_state
