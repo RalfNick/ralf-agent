@@ -57,7 +57,24 @@ class PostgresEffectJournal(_PostgresAdapter):
         return {"kind": "postgres-effect-journal", "version": "1", "backend_id": self.backend_id}
 
     async def initialize(self):
-        await self._initialize(_SCHEMA)
+        from .postgres_effect_retention import TABLES
+
+        await self._initialize(_SCHEMA, tables=TABLES)
+
+    async def _compact_adopted_evidence(
+        self, scope, run_id, *, limit=100, after_effect_key=None, verify, namespace_check=None
+    ):
+        from .postgres_effect_retention import compact
+
+        return await compact(
+            self,
+            scope,
+            run_id,
+            limit=limit,
+            after_effect_key=after_effect_key,
+            verify=verify,
+            namespace_check=namespace_check,
+        )
 
     async def _record(self, prefix):
         row = await self._execute(

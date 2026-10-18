@@ -425,6 +425,14 @@ class TemporalEngine:
     async def status(self, run_id):
         return _snapshot(await self._view(run_id, "status"))
 
+    async def compact_effect_evidence(self, run_id, *, runtime, limit=100, after_effect_key=None):
+        """Remove exact receipt copies only under the original full sealed tree."""
+        from .temporal_retention import compact_effect_evidence
+
+        return await compact_effect_evidence(
+            self, run_id, runtime=runtime, limit=limit, after_effect_key=after_effect_key
+        )
+
     async def events(self, run_id, *, after=0, limit=1000):
         if type(after) is not int or after < 0 or type(limit) is not int or not 1 <= limit <= 10000:
             raise ValidationError("Events require non-negative after and limit from 1 to 10000")

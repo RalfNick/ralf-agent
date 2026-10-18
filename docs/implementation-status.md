@@ -28,18 +28,20 @@
 | --- | --- |
 | P3-2 | S1普通Session功能子集已有验收；S2已有真实PG日志与关闭证据，但原360秒仍未通过，当前完整矩阵尚缺。性能专项后置，该未完成组合不列为已支持 |
 | P3-3 | **冻结所选范围已验收。** 最小服务控制、持久HTTP游标／断连续接、有界背压及原任务必要取消／恢复已按各原制品取证；见[收口核对](../architecture/reviews/2026-10-18-p3-3-closeout.md)。不等于同版本全服务矩阵或第三阶段完成 |
-| P3-4 | 2026-10-18用户明确允许独立推进最小身份权限、脱敏审计与安全保留；全部门槛保留，尚未验收 |
+| P3-4 | **冻结最小范围已验收。** 可信Scope／资源交集、所选越权拒绝、可替换脱敏审计、Local工作消息压缩及原封存树下PG冗余效果副本清理；见[门槛核对](../architecture/reviews/2026-10-18-temporal-effect-retention.md#p3-4门槛核对与后续)，不等于完整企业权限或Run遗忘 |
 | P3-5／P3-A | 原依赖和验收保持，框架恢复与阶段整体未关闭，不新增后端／编排／Runner／部署组合 |
 | R01–R26其余目标 | 保留为长期路线图；外部采用和框架对等比较单独验收，不自动成为本轮实现任务 |
 
-**当前增量：** P3-4所选普通Agent的远程双身份／审计链路已补实际证据：相同440产品wheel（`068b901…`），真实HTTP／Temporal／PostgreSQL两个场景 **2 passed／零跳过，28.494秒**。两位有效调用者各自正常运行，七类外Scope读取／控制401，原状态／事件／PG与业务写入不变；宿主重启后原回执和message映射可重取，每个effect写一次、原根退休与History重放、4个HTTP宿主和独立服务关闭通过。资源授权交集隔离安装另验 **52 passed**；四个原封存证书及实际call结束证明复核通过。没有产品改动或新wheel，原439／440制品不覆盖。见[远程验收记录](../architecture/reviews/2026-10-18-temporal-scope-audit.md)。不外推通用认证平台、所有编排或模型质量。
+**当前增量：** 新增显式`TemporalEngine.compact_effect_evidence`，沿原Scope／namespace UUID／epoch／发布和完整封存树，仅清理与已采纳PG主回执完全相同的冗余evidence。保留主效果、冲突、History、幂等及实际停止证明；每Action独立事务、分页有界，无新Update／Signal。review发现的SQL等待间namespace UUID复核空白已有效RED→GREEN修复，并以实际DELETE后回滚验证。最终442产品wheel（`1f8efac…`）源码／隔离安装受影响12模块各 **234 passed／22配置skipped**；同包真实PG20＋Temporal2＋HTTP身份审计2共 **24 passed／零跳过，JUnit 38.162秒**。原回执冷SDK重取、一次写入、原History不变及重放、原根退休和owned关闭通过；默认Card／发布及原／continued默认History兼容通过。见[本批验收与P3-4核对](../architecture/reviews/2026-10-18-temporal-effect-retention.md)和[使用指南](temporal-retention.md)。不把不同批次或跳过项拼为全矩阵。
 
-**当前剩余与下一步：** P3-3冻结范围已关闭；P3-4已有默认Local与所选普通Temporal的身份／脱敏审计证据，SQLite工作副本可手动压缩。完整P3-4仍缺PG完成数据安全保留产品入口与验收。下一批沿原完整封存树和固定数据集，清理与已采纳主回执完全一致的冗余副本，保留主效果、冲突证据、幂等与恢复证明；不清History或业务数据库，不新增统一purger。4项既有Temporal输入夹具失败继续保留未通过，不属于本批所选输入场景。P3-2/S2原360秒失败后置／开放，全部门槛不变；P3-5／A不自动解锁。基础SDK／dev99／dev113保持冻结，R01–R26和外部采用独立验收。仅本地提交，不推送。
+**当前剩余与下一步：** P3-3与P3-4冻结最小范围已关闭；PG非规范／冲突证据和Local未选复杂组合继续保留，强制耐久审计、完整Run遗忘及任意历史迁移不由本批交付。4项既有Temporal输入夹具失败继续保留未通过。P3-2/S2原360秒失败后置／开放，全部原门槛不变；P3-5所选框架备份恢复与P3-A整体候选尚未完成，按原依赖推进，不自动解锁或新建扩展专项。基础SDK／dev99／dev113保持冻结，R01–R26和外部采用独立验收。仅本地提交，不推送。
 
 ## 历史实现与验收证据
 
 <details>
 <summary>展开历史记录（“当前／下一步”只描述该记录发布时的状态）</summary>
+
+**前批证据：** 原440产品wheel（`068b901…`）的真实HTTP／Temporal／PG双身份审计2项通过（28.494秒），资源交集另52项；原四个根证书及实际call停止证明通过。没有产品改动或新wheel，详见[远程验收记录](../architecture/reviews/2026-10-18-temporal-scope-audit.md)。它是当时所选路径的证据，不覆盖后续442产品的PG清理实现。
 
 **当前增量：** P3-4新增默认Local的显式 `compact_messages`，沿原SQLite Coordinator与命令事务压缩一个普通成功Agent的冗余工作消息；输入、最终结果、全部Actions／效果／commands／events和其他表保留。活动／真实线程未结束／unknown及复杂恢复组合拒绝，保存故障整体回滚，Scope在release检查后再次核对。源码／隔离wheel受影响11模块各 **245 passed、零跳过**；440产品字节一致，旧439文件已安装SDK可读压缩原库、重取原回执且模型／工具零重执行，默认Card／普通完整发布身份不变。见[验收记录](../architecture/reviews/2026-10-18-local-retention.md)和[使用指南](local-retention.md)。逻辑压缩不等于Run遗忘、物理缩库或隐私擦除。本批没有真实Temporal／PG或模型调用；上批身份／审计与HTTP按其原制品复用。
 

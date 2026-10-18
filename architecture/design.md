@@ -484,6 +484,12 @@ Janitor 只清理已结束且没有有效引用、租约或恢复需求的资源
 
 停止或升级时先停止接收新任务，再排空或持久停泊正在执行的工作，释放执行环境。统一入口按[关闭契约](specs/agent-facade-session-contract.md#7-facade关闭与资源所有权)区分执行宿主和客户端：借用资源不关闭；默认drain保留稳定待办及Session占用；超时返回CloseIncomplete，实际handler未退出或存储关闭失败时保留必要归属。控制台提供未知效果、死信、卡住运行及孤儿资源的核验与恢复入口，操作经过授权并记录。
 
+P3-4当前维护实现限于显式、有界的冗余副本清理：[Local工作消息压缩](../docs/local-retention.md)
+沿原SQLite事务，Temporal／PG的[效果副本清理](../docs/temporal-retention.md)沿原完整封存树
+与原target锁；不建立新的执行权威。主效果、冲突、命令、History和真实停止证明保留。
+PG每Action独立事务，提交前重查原namespace UUID，整页允许部分提交并安全重试；
+此有限实现不等于完整Run遗忘、物理缩库、强制耐久审计或备份恢复。
+
 ### 12.4 备份恢复
 
 企业恢复设计覆盖 PostgreSQL 控制／效果记录、Temporal 持久化与产物内容，记录备份恢复点、版本和密钥依赖。不能只恢复一个数据库就假设任务与业务事实一致。

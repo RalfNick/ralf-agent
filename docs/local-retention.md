@@ -45,4 +45,5 @@ reservations和其他表。Session／Facts／Knowledge／Artifact数据不清理
 
 未选择的组合需继续保留原数据；不能绕过原权威直接改JSON或按TTL删除events／commands。
 Temporal History、PostgreSQL主效果回执及资源证明均不由此入口清理。
-所选远程保留、安全备份恢复及完整P3-4仍须单独完成，见[当前清单](remaining-work.md)。
+所选远程保留由[Temporal／PG独立维护入口](temporal-retention.md)提供，不沿本地消息事务删除。
+安全备份恢复与阶段整体验收仍待，见[当前清单](remaining-work.md)。
