@@ -193,3 +193,20 @@ Coding满2,000 Update后的必要取消／恢复、PG采纳、原stop ACK重启�
 续跑的新grant未升级，不外推实际Docker、模型质量、Coding父级压力或完整P3-3。
 历史selected使用匹配SDK／Worker；P3-2及后续门槛保持。详见[本批验收](../architecture/reviews/2026-10-18-temporal-coding-recovery-capacity.md)。
 仅本地提交，不推送或发布远端。
+
+
+## P3-3 已封存Coding父级资源关闭修复
+
+制品 `dist/p3-coding-parent-sealed-20261018/ralf_agent-0.1.0.dev120-py3-none-any.whl`，
+SHA256 `196c9877afe600598f4b29f27c4378d0ed11bf4064579a0f3720eea7734e77dd`，附独立 `verification.json`／`SHA256SUMS`。
+438产品及916测试文件在最终源码／隔离安装／实际验证中固定；131模块源码和安装
+各2,526 passed／6配置跳过。默认发布和保存原／续接History兼容通过；此前19组制品
+校验不变。同包真实Temporal／PG正常及已封存Parent2,000 Update压力2 passed／
+171.032秒，原回执、PG采纳、实际停止、退休、Worker重启／History与owned关闭通过；
+94项夹具／清理单独通过。失败候选、SDK并发封存drive竞态及失败卷保持；已放弃的
+Parent运输候选不作为交付物。最终仅一个产品模块复用原完整只读封存验证，无Parent
+协议／业务授权扩展。历史所选发布仍需匹配SDK／Worker，原基础制品不替换。
+
+只关闭已封存原Parent资源关闭子门槛；未封存首次采纳、任意History、实际Docker、
+模型质量及完整P3-3／P3-2／后续阶段不由此推定。见[验收记录](../architecture/reviews/2026-10-18-coding-parent-capacity-probe.md)。
+下一批仅核对冻结P3-3证据。仅本地提交，不推送或发布远端。

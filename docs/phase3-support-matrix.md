@@ -1,11 +1,16 @@
 # 第三阶段支持矩阵与收口门槛
 
+当前状态见[唯一交付摘要](implementation-status.md#当前交付摘要)和[已封存Coding父级资源关闭验收](../architecture/reviews/2026-10-18-coding-parent-capacity-probe.md)。当前438文件包真实Temporal／PG正常＋压力2 passed／171.032秒；原Parent满2,000 Update后，完整只读核验原封存并跳过冗余子证明写入，效果、实际停止、退休、重启／History及owned关闭通过。源码／安装各2,526 passed／6跳过。原Handler／Agent运输和封存保护不变，未增加Parent协议。先前HTTP等证据按原制品引用，不合并为同次矩阵。
+
+下一批只做冻结P3-3的证据收口核对，不新增能力或预先扩运输。未封存首次采纳容量、任意History与实际Docker／模型质量不由本例证明。P3-2/S2原360秒失败继续后置／开放；Session／Turn仍归P3-2。完整P3-3与P3-4／5／A保持原门槛。仅本地提交，不推送。
+
+<details>
+<summary>此前批次摘要（“最新／下一批”仅描述对应快照）</summary>
+
 当前状态见[唯一交付摘要](implementation-status.md#当前交付摘要)和[Coding原Run恢复验收](../architecture/reviews/2026-10-18-temporal-coding-recovery-capacity.md)。基础SDK冻结，P3-3获准独立推进。同一438文件安装包真实Temporal／PG2 passed／58.684秒：原单Agent Coding满2,000 Update后停止／回执、显式取消、PG效果ACK、根退休、原stop ACK重启与History重放通过。进程peer不代表实际Docker／模型；先前HTTP／其他压力证据按原制品引用，不合并为本批服务矩阵。
 
 下一批仅核对所选Coding父级采纳的原停止／结束压力证据；源码风险不预先算作缺陷，不扩运输或拓扑。正常续跑满容量的新模型grant仍可能受背压，原失败保留。完整P3-3保持开放。P3-2/S2原360秒失败后置／开放，Session／Turn仍归P3-2，P3-4／5／A不解锁。仅本地提交，不推送。
 
-<details>
-<summary>此前批次摘要（“最新／下一批”仅描述对应快照）</summary>
 
 当前状态见[唯一交付摘要](implementation-status.md#当前交付摘要)及[本轮证据核对](../architecture/reviews/2026-10-16-phase3-control-evidence-audit.md)。基础SDK已冻结；用户已明确允许独立推进P3-3并保留全部验收门槛。当前435文件wheel的HTTP／Temporal／PG三场景3 passed／26.847秒；基本控制、重启与事件游标已交付，必要恢复的累计命令容量仍仅按已测子集验收，完整P3-3保持开放。
 

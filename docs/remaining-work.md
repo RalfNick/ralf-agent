@@ -2,6 +2,10 @@
 
 当前交付与优先级统一见[唯一当前状态摘要](implementation-status.md#当前交付摘要)。基础SDK本轮范围已收口，第一／二阶段维持原冻结证据；下列R01–R26为长期清单，历史批次的“下一步”不覆盖当前排期。第三阶段仍按[冻结矩阵](phase3-support-matrix.md)推进，S2原失败与验收要求保留，性能专项后置，不列为已支持；可选CLI便利入口等不延长基础交付。
 
+**2026-10-18子门槛：** [已封存Coding父级资源关闭](../architecture/reviews/2026-10-18-coding-parent-capacity-probe.md)通过。最终仅复用完整原封存校验，消除满2,000 Update／子证明投影变化后的冗余写；原Handler、封存保护及未封存路径不变。P3-3下一步仅冻结范围证据核对，不据本例认定未封存首次采纳或任意History容量已支持。
+
+**独立限制：** SDK `drive` 的预查询可能与父级不可逆封存并发，随后收到 `definition_mismatch`；原状态和证据保留，本批未改SDK／Workflow或声称修复。P3-2/S2、P3-4身份权限／保留、P3-5备份恢复、P3-A整体验收及长期R01–R26保持原范围和依赖。以下Dev段落为各自历史快照。
+
 Dev118 已接通内部所选 Worker 的原 Run／Parent SDK 部署准入：实际 namespace UUID／原 epoch／Registry claim 和有界原 Parent 链先于业务派发，Agent／顺序／图／Team／Dynamic／嵌套后代共享一个根槽位。Activity carrier 保留原 handler 请求 SHA，受管理 Context、limits、completion 和 Session 写入阶段已有契约回归；默认发布保持兼容。冻结源码与独立安装各通过 814 项受影响检查、17 项实际 Service；最终验收出处以[本批登记](../architecture/reviews/2026-10-14-temporal-deployment-dispatch.md)为准，不替代阶段全量回归或模型质量证据。
 
 批次 2 的必需下一项是公共 Engine／Profile 装配、不确定启动／重复回执恢复、Coding 物理关闭与 Session coordinator 准入，以及原树、零金额／unknown、辅助阶段和真实 handler 闭合后的幂等安全释放。当前公共入口与所选 Coding／coordinator 路径仍拒绝，held claim 没有释放操作；这些门槛不能因内部 SDK 派发通过而删去。完整所选矩阵验收、后续服务观察／控制、身份 ACL、保留与框架恢复继续开放。以下 dev 段落为历史范围。

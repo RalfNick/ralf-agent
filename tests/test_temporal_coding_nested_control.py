@@ -257,6 +257,7 @@ def test_resource_proof_climbs_exact_original_ancestors(tree):
     tree.calls.clear()
     asyncio.run(
         fixture.module()._adopt_resource_ancestry(
+            fixture.runtime(),
             tree,
             tree.proofs[tree.leaf_id],
             {"root": tree.proofs["root"]},
@@ -277,7 +278,12 @@ def test_resource_ancestry_cannot_use_foreign_root_epoch(tree):
     with pytest.raises(CloseIncomplete):
         asyncio.run(
             fixture.module()._adopt_resource_ancestry(
-                tree, tree.proofs[tree.leaf_id], {"root": root}, fixture.MANIFEST, fixture.NAMESPACE
+                fixture.runtime(),
+                tree,
+                tree.proofs[tree.leaf_id],
+                {"root": root},
+                fixture.MANIFEST,
+                fixture.NAMESPACE,
             )
         )
     assert not any(c[0] == "adopt" for c in tree.calls)

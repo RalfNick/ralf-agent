@@ -518,10 +518,14 @@ async def deletion_evidence(
             )
             if "accepted_execution_epoch" in saved:
                 require(epoch == saved["accepted_execution_epoch"])
-                require(
-                    info.workflow_type == "ralf.temporal.run.v1"
-                    and info.namespace == namespace["name"]
-                )
+                workflow_type = {
+                    "agent": "ralf.temporal.run.v1",
+                    "sequence": "ralf.temporal.run.v1",
+                    "graph": "ralf.temporal.parent.v1",
+                    "team": "ralf.temporal.parent.v1",
+                    "dynamic": "ralf.temporal.parent.v1",
+                }[submission["request"]["definition"]["kind"]]
+                require(info.workflow_type == workflow_type and info.namespace == namespace["name"])
                 require(info.task_queue == started.task_queue.name == submission["task_queue"])
                 require(payload["activity_timeout"] == submission["activity_timeout"])
                 require(

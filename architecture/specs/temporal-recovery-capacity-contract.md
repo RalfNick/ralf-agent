@@ -552,3 +552,24 @@ The single-Run receipt path is separate from Coding parent adoption, new grants,
 Session controls and Registry pressure. Acceptance only covers its recorded
 scenario and does not establish unlimited History operation. See the
 [reproduction and acceptance](../reviews/2026-10-18-temporal-coding-recovery-capacity.md).
+
+## Resource closure beneath an already sealed Coding Parent
+
+Final resource ancestry still validates original namespace/epoch/request links,
+accepted root, a fresh physically stopped child and the resource's independent
+pending-stop obligation. If the existing read-only `_deployment_sealed`
+verification confirms the complete original Parent certificate and closure,
+there is no new child epoch or stop fact to adopt. Skip those two redundant
+writes, then retain the fresh Parent proof and physical-stop check. A later child
+projection revision must not rewrite the immutable fact already sealed by its
+Parent, nor consume another Update merely to acknowledge that old closure.
+
+A bare seal field, terminal state or adopted PG effect is insufficient. Any
+namespace, SDK epoch, certificate, actual-call or complete-closure error remains
+an obligation. Unsealed parents keep their original complete Update handlers.
+The immutable-seal mutation guard, original Agent recovery operations, business
+grants, budgets and execution authority are unchanged. Existing composition
+executable and public source inventories cover the changed ancestry helper.
+Acceptance is limited to the recorded original sealed-Parent scenario, not
+unsealed first adoption at arbitrary capacity or unlimited History operation.
+See [the Parent capacity record](../reviews/2026-10-18-coding-parent-capacity-probe.md).

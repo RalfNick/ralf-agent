@@ -1032,7 +1032,7 @@ async def _close_subtree(runtime, client, parent, manifest, namespace, *, _tree=
     return refreshed
 
 
-async def _adopt_resource_ancestry(client, leaf, roots, manifest, namespace):
+async def _adopt_resource_ancestry(runtime, client, leaf, roots, manifest, namespace):
     """Close evidence climbs only verified immediate edges to an accepted root."""
     chain = await _ancestry(client, leaf, manifest, namespace)
     if not chain:
@@ -1054,8 +1054,11 @@ async def _adopt_resource_ancestry(client, leaf, roots, manifest, namespace):
             raise CloseIncomplete(
                 {"coding_composition": "original resource descendant closure pending"}
             )
-        await _adopt(client, parent, current, epoch=True)
-        await _adopt(client, parent, current)
+        # A verified original seal already contains this child's stop evidence.
+        # Re-submitting a newer projection would try to mutate that sealed fact.
+        if not await _deployment_sealed(runtime, client, parent, namespace):
+            await _adopt(client, parent, current, epoch=True)
+            await _adopt(client, parent, current)
         current = await _proof(
             client,
             parent["scope"],
@@ -1419,7 +1422,9 @@ async def close(runtime, *, client, scope, candidates=None):
                             "Unlinked original resource requires a standalone Agent"
                         )
                 elif manifest.get("binding_protocol") == 23:
-                    await _adopt_resource_ancestry(client, leaf, roots, manifest, namespace)
+                    await _adopt_resource_ancestry(
+                        runtime, client, leaf, roots, manifest, namespace
+                    )
                 else:
                     root = roots.get(link["parent_run_id"])
                     if root is None:

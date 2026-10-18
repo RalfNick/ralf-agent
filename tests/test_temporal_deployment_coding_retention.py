@@ -84,11 +84,62 @@ async def release_activity(events, request, response, *, fault=None):
 
 
 async def scenario(
-    *, retired=True, pending=False, writes=None, fault=None, unused=False, transport="updates"
+    *,
+    retired=True,
+    pending=False,
+    writes=None,
+    fault=None,
+    unused=False,
+    transport="updates",
+    parent=False,
 ):
     from tests.temporal_deployment_coding_retention import deletion_evidence
 
     wrapper, state, request, root, _ = bound_registry()
+    if parent:
+        from ralf_agent import AgentSpec, GraphNode, GraphWorkflowSpec
+        from ralf_agent.temporal_activities import TemporalRuntime
+        from ralf_agent.temporal_coding_composition_protocol import publish
+        from ralf_agent.types import submission_request
+        from tests.test_temporal_deployment_coding_registry import coding_request, registry
+        from tests.test_temporal_engine import Provider
+        from tests.test_temporal_engine import registry as tools
+
+        wrapper, request = registry(), coding_request()
+        state = wrapper.deployment
+        submission = request["root_admission"]["submission"]
+        submission["request"] = submission_request(
+            GraphWorkflowSpec("g", [GraphNode("a", agent=AgentSpec("a", "answer"))]),
+            "original",
+            budget=8,
+        )
+        submission["manifest"] = publish(
+            submission["manifest"], SimpleNamespace(coding_execution=True, coding_composition=True)
+        )
+        submission["manifest"]["orchestration"] = TemporalRuntime(
+            providers={"default": Provider()}, tools=tools()
+        ).orchestration_release["orchestration"]
+        request["payload_digest"] = digest(submission["request"])
+        request["root_admission"]["manifest_digest"] = digest(submission["manifest"])
+        unbound = wrapper.reserve(request)["root_admission"]
+        root = wrapper.bind_deployment_root(
+            {
+                "scope": request["scope"],
+                "admission_policy": state.policy,
+                "namespace": state.namespace,
+                **{
+                    k: unbound[k]
+                    for k in (
+                        "command_id",
+                        "run_id",
+                        "request_digest",
+                        "manifest_digest",
+                        "proof_digest",
+                    )
+                },
+                "execution_epoch": "original-epoch",
+            }
+        )
     reserve = wrapper.reserve(request)
     certificate = {
         "version": 1,
@@ -333,7 +384,13 @@ async def scenario(
             class Handle:
                 async def describe(self, **options):
                     value = description(identity, root["execution_epoch"])
-                    value.workflow_type = "ralf.temporal.run.v1"
+                    value.workflow_type = (
+                        "ralf.temporal.parent.v1" if parent else "ralf.temporal.run.v1"
+                    )
+                    if fault == "root_workflow_type":
+                        value.workflow_type = (
+                            "ralf.temporal.run.v1" if parent else "ralf.temporal.parent.v1"
+                        )
                     value.namespace = state.namespace["name"]
                     value.task_queue = "original"
                     if fault == "root_reset":
@@ -441,6 +498,17 @@ def test_signal_submission_requires_completed_original_acceptance_and_release(tr
     assert gate["deletion_allowed"], gate
     assert gate["retired_roots"][0]["run_id"] == root["run_id"]
     assert archived == [root["run_id"]]
+
+
+@pytest.mark.parametrize("transport", ["signals_record", "signals_bind"])
+@pytest.mark.parametrize("parent", [False, True], ids=["agent", "graph"])
+def test_signal_acceptance_requires_declared_root_workflow_type(transport, parent):
+    gate, _, _ = asyncio.run(scenario(transport=transport, parent=parent))
+    assert gate["deletion_allowed"], gate
+    wrong, _, _ = asyncio.run(
+        scenario(transport=transport, parent=parent, fault="root_workflow_type")
+    )
+    assert not wrong["deletion_allowed"], wrong
 
 
 @pytest.mark.parametrize("transport", ["signals_record", "signals_bind"])
