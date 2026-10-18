@@ -81,3 +81,47 @@ def test_saved_record_requires_original_scope_effect_and_binding():
     invalid["turn_id"] = "not-submitted"
     with pytest.raises(DefinitionMismatch):
         validate_record(canonical(invalid), key, binding)
+
+
+@pytest.mark.parametrize(
+    "value",
+    [" x ", "x\x7f", "x\x80", "x\x9f", "x\ud7ff", "x\ue000", "x\U00010000", "x\U0010ffff"],
+)
+def test_native_handle_text_preserves_legal_unicode_boundaries(value):
+    from ralf_agent.runner_journal_state import _text
+
+    assert _text(value, "Native handle") == value
+
+
+@pytest.mark.parametrize(
+    "character", [chr(n) for n in range(32)] + ["\ud800", "\udbff", "\udc00", "\udfff"]
+)
+def test_native_handle_text_rejects_controls_and_all_surrogate_boundaries(character):
+    from ralf_agent.runner_journal_state import _text
+
+    with pytest.raises(ValidationError):
+        _text("x" + character, "Native handle")
+
+
+@pytest.mark.parametrize("value", ["\x00\t\n\x1f", "\ud7ff\ue000", "\U00010000\U0010ffff"])
+def test_runner_evidence_values_keep_escaped_controls_and_unicode(value):
+    from ralf_agent.runner_journal_state import _json
+
+    encoded = _json({"value": value}, "Evidence")
+    assert json.loads(encoded) == {"value": value}
+
+
+@pytest.mark.parametrize("value", ["\ud800", "\udbff", "\udc00", "\udfff"])
+def test_runner_evidence_rejects_nested_unpaired_surrogates(value):
+    from ralf_agent.runner_journal_state import _json
+
+    with pytest.raises(ValidationError):
+        _json({"nested": [{"value": "x" + value}]}, "Evidence")
+
+
+def test_runner_evidence_unicode_byte_limit_is_independent_of_character_limit():
+    from ralf_agent.runner_journal_state import _json
+
+    assert json.loads(_json({"v": "é"}, "Evidence", limit=10)) == {"v": "é"}
+    with pytest.raises(ValidationError):
+        _json({"v": "é"}, "Evidence", limit=9)

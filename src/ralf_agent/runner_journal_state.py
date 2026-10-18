@@ -6,6 +6,7 @@ business work, schedule execution, or interpret a cancellation as stop proof.
 
 import json
 import math
+import re
 
 from .errors import DefinitionMismatch, IdempotencyConflict, ValidationError
 from .types import canonical
@@ -21,7 +22,7 @@ def _text(value, label, *, limit=1024):
         type(value) is not str
         or not value.strip()
         or len(value) > limit
-        or any(ord(c) < 32 or 0xD800 <= ord(c) <= 0xDFFF for c in value)
+        or re.search(r"[\x00-\x1f\ud800-\udfff]", value) is not None
     ):
         raise ValidationError(f"{label} requires bounded nonempty text")
     return value
@@ -48,7 +49,7 @@ def _json(value, label, *, limit=_MAX_JSON):
                 raise ValidationError(f"{label} exceeds JSON structural limits")
             pending.extend((child, depth + 1) for child in item)
         elif type(item) is str:
-            if len(item) > limit or any(0xD800 <= ord(c) <= 0xDFFF for c in item):
+            if len(item) > limit or re.search(r"[\ud800-\udfff]", item) is not None:
                 raise ValidationError(f"{label} exceeds JSON text limits")
         elif type(item) is int:
             if not -(2**63) <= item < 2**63:

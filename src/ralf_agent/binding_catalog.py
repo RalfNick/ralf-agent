@@ -205,10 +205,12 @@ class BindingCatalog:
         if role == "runner":
             from .binding_runner import check_runner_binding
 
-            check_runner_binding(
+            identity = check_runner_binding(
                 component, self._runner_pins[(role, selection.component_id, selection.version)]
             )
-        if digest(component_identity(role, component)) != digest(record["identity"]):
+        else:
+            identity = component_identity(role, component)
+        if digest(identity) != digest(record["identity"]):
             raise DefinitionMismatch("Registered binding component identity changed")
         if role == "artifacts":
             view = component.select(selection.selector, scope)

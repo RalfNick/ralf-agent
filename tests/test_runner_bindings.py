@@ -118,6 +118,64 @@ def test_runner_catalog_pins_actual_resource_and_methods_without_io(drift):
     assert runner.calls == other.calls == []
 
 
+@pytest.mark.parametrize("method", ["execute", "reconcile", "stop_existing", "aclose"])
+def test_catalog_resolution_does_not_repin_a_receiver_changed_by_late_identity_getter(method):
+    class WatchedRunner(BorrowedRunner):
+        @property
+        def identity(self):
+            if getattr(self, "reads_until_replacement", 0):
+                self.reads_until_replacement -= 1
+                if self.reads_until_replacement == 0:
+                    setattr(self, method, getattr(other, method))
+            return self.declaration
+
+        @identity.setter
+        def identity(self, value):
+            self.declaration = value
+
+    runner, other = WatchedRunner(), WatchedRunner()
+    catalog = BindingCatalog(scope=Scope())
+    catalog.register("runner", "original", "1", runner)
+    # Original-pin checks read twice; a redundant new registration reads again
+    # and can bless a different same-class receiver under identical JSON metadata.
+    runner.reads_until_replacement = 3
+    try:
+        actual, record = catalog.resolve("runner", BindingSelection.ref("original", "1"), Scope())
+    except DefinitionMismatch:
+        pass
+    else:
+        assert actual is runner
+        assert getattr(actual, method).__self__ is runner
+        assert record["component_id"] == "original"
+    assert runner.calls == other.calls == []
+
+
+@pytest.mark.parametrize("method", ["execute", "reconcile", "stop_existing", "aclose"])
+@pytest.mark.parametrize("read", [1, 2])
+def test_original_runner_pin_rejects_receiver_drift_from_ownership_getter(method, read):
+    from ralf_agent.binding_runner import check_runner_binding, pin_runner_binding
+
+    class WatchedRunner(BorrowedRunner):
+        @property
+        def active_operations(self):
+            if getattr(self, "reads_until_replacement", 0):
+                self.reads_until_replacement -= 1
+                if self.reads_until_replacement == 0:
+                    setattr(self, method, getattr(other, method))
+            return self.active
+
+        @active_operations.setter
+        def active_operations(self, value):
+            self.active = value
+
+    runner, other = WatchedRunner(), WatchedRunner()
+    pin = pin_runner_binding(runner)
+    runner.reads_until_replacement = read
+    with pytest.raises(DefinitionMismatch):
+        check_runner_binding(runner, pin)
+    assert runner.calls == other.calls == []
+
+
 def test_runner_catalog_rejects_selector_and_lazy_lifecycle():
     catalog = BindingCatalog(scope=Scope())
     runner = BorrowedRunner()
@@ -281,3 +339,52 @@ def test_explicit_manifest_releases_only_runner_declarations_and_sequence_keeps_
         )
         assert legacy["kernel"] == "local-bindings-1" and "runner_binding_protocol" not in legacy
     assert first.calls == second.calls == []
+
+
+@pytest.mark.parametrize("method", ["execute", "reconcile", "stop_existing", "aclose"])
+def test_ownership_getter_cannot_conceal_preexisting_receiver_replacement(method):
+    from ralf_agent.binding_runner import check_runner_binding, pin_runner_binding
+
+    class RestoringRunner(BorrowedRunner):
+        @property
+        def active_operations(self):
+            if getattr(self, "restore", False):
+                setattr(self, method, getattr(type(self), method).__get__(self, type(self)))
+            return self.active
+
+        @active_operations.setter
+        def active_operations(self, value):
+            self.active = value
+
+    runner, other = RestoringRunner(), RestoringRunner()
+    pin = pin_runner_binding(runner)
+    setattr(runner, method, getattr(other, method))
+    runner.restore = True
+    with pytest.raises(DefinitionMismatch):
+        check_runner_binding(runner, pin)
+    assert runner.calls == other.calls == []
+
+
+@pytest.mark.parametrize("field", ["kind", "version", "label"])
+@pytest.mark.parametrize("read", [1, 2])
+def test_ownership_getter_cannot_drift_original_catalog_identity(field, read):
+    class MutatingRunner(BorrowedRunner):
+        @property
+        def active_operations(self):
+            if getattr(self, "remaining", 0):
+                self.remaining -= 1
+                if self.remaining == 0:
+                    self.identity[field] = "changed"
+            return self.active
+
+        @active_operations.setter
+        def active_operations(self, value):
+            self.active = value
+
+    runner = MutatingRunner()
+    catalog = BindingCatalog(scope=Scope())
+    catalog.register("runner", "original", "1", runner)
+    runner.remaining = read
+    with pytest.raises(DefinitionMismatch):
+        catalog.resolve("runner", BindingSelection.ref("original", "1"), Scope())
+    assert runner.calls == []

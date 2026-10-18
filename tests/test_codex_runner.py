@@ -120,7 +120,7 @@ def test_workspace_artifacts_use_fenced_owned_namespace_and_exclude_hidden_metad
     asyncio.run(scenario())
 
 
-def native_fixture(tmp_path, mode="completed"):
+def native_fixture(tmp_path, mode="completed", *, startup_delay=0):
     from tests.test_codex_environment import FAKE_DOCKER
 
     control = json.loads(Path(__file__).with_name("codex_control_fixture.json").read_text())
@@ -166,9 +166,10 @@ def native_fixture(tmp_path, mode="completed"):
     if mode == "empty":
         turn["items"][0]["text"] = ""
     cli = tmp_path / "codex_rpc_docker_fixture"
+    startup = f" time.sleep({startup_delay!r})\n" if startup_delay else ""
     business = f"""
  control={control!r};thread_response={response!r};turn={turn!r};mode={mode!r}
- counts=root/'native-submissions.jsonl'
+{startup} counts=root/'native-submissions.jsonl'
  workspace=pathlib.Path(next(m['Source'] for m in s['containers'][cid]['Mounts'] if m['Destination']=='/workspace'))
  def send(value):print(json.dumps(value),flush=True)
  for line in sys.stdin:
@@ -219,7 +220,7 @@ def native_fixture(tmp_path, mode="completed"):
     return cli
 
 
-def original_engine(tmp_path, *, mode="completed", timeout=3):
+def original_engine(tmp_path, *, mode="completed", timeout=3, startup_delay=0):
     from ralf_agent import AgentSpec, LocalEngine, ModelResponse, ToolCall, ToolRegistry
     from ralf_agent.delegated_coding import register_coding_tool
     from ralf_agent.storage import SQLiteStore
@@ -228,7 +229,7 @@ def original_engine(tmp_path, *, mode="completed", timeout=3):
     root = tmp_path / "coding"
     root.mkdir(mode=0o700)
     journal = RunnerJournal(str(tmp_path / "runner.sqlite"), identity={"dependency": "fixture"})
-    cli = native_fixture(tmp_path, mode)
+    cli = native_fixture(tmp_path, mode, startup_delay=startup_delay)
     resource = CodexCodingRunner(
         root,
         journal=journal,
@@ -363,16 +364,25 @@ def test_native_uncertainty_is_fenced_and_cold_reconcile_never_restarts(tmp_path
         engine.close()
 
 
-def test_caller_cancellation_waits_actual_native_resource_retirement(tmp_path):
-    engine, run_id, resource, journal = original_engine(tmp_path, mode="hang_turn")
+@pytest.mark.parametrize("startup_delay", [0, 1.6])
+def test_caller_cancellation_waits_actual_native_resource_retirement(tmp_path, startup_delay):
+    engine, run_id, resource, journal = original_engine(
+        tmp_path, mode="hang_turn", startup_delay=startup_delay
+    )
 
     async def scenario():
         waiting = await engine.drive(run_id)
         pending = waiting.pending[0]
         engine.approve(run_id, pending["action_id"], pending["digest"], command_id="approve")
         driving = asyncio.create_task(engine.drive(run_id))
+        counter = tmp_path / "native-submissions.jsonl"
+        # Observe an original native Thread before timing the next native frame;
+        # process startup is bounded by the fixture's unchanged three seconds.
+        async with asyncio.timeout(3):
+            while not counter.exists():  # noqa: ASYNC110 - bounded real native readiness
+                assert not driving.done(), "Driver ended before original native submission"
+                await asyncio.sleep(0.005)
         for _ in range(300):
-            counter = tmp_path / "native-submissions.jsonl"
             if counter.exists() and len(counter.read_text().splitlines()) == 2:
                 break
             await asyncio.sleep(0.005)

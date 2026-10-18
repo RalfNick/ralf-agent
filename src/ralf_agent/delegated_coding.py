@@ -55,6 +55,14 @@ class CodingToolHandler:
             active = self._runner.active_operations
             if type(active) is not int or active < 0:
                 raise DefinitionMismatch("Coding resource ownership count is invalid")
+            # The ownership getter may change identity or receivers. Preserve
+            # the entry checks and verify both again after that callback.
+            if _json(self._runner.identity, "Coding resource identity") != self._identity_json:
+                raise DefinitionMismatch("Original Coding resource identity changed")
+            for name, expected in self._bindings.items():
+                method = getattr(self._runner, name, None)
+                if not is_async_callable(method) or not _same_binding(_binding(method), expected):
+                    raise DefinitionMismatch("Original Coding resource implementation changed")
         except (AttributeError, TypeError, ValueError) as exc:
             if isinstance(exc, DefinitionMismatch):
                 raise

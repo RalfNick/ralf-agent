@@ -25,14 +25,25 @@ def transport_type():
 
 
 def peer(
-    tmp_path, *, initial=None, login=None, notifications=None, barrier=None, extra="", **limits
+    tmp_path,
+    *,
+    initial=None,
+    login=None,
+    notifications=None,
+    barrier=None,
+    extra="",
+    ready=None,
+    startup_delay=0,
+    **limits,
 ):
     script = tmp_path / "auth_peer.py"
     traffic = tmp_path / "traffic.jsonl"
     # The peer validates secret wire input in memory; its log records methods only.
     script.write_text(
         "import json,sys,os,time\n"
-        "def send(value): print(json.dumps(value),flush=True)\n"
+        + (f"time.sleep({startup_delay!r})\n" if startup_delay else "")
+        + (f"open({str(ready)!r},'w').write('ready')\n" if ready is not None else "")
+        + "def send(value): print(json.dumps(value),flush=True)\n"
         "def read():\n"
         " value=json.loads(sys.stdin.readline())\n"
         f" with open({str(traffic)!r},'a') as log: log.write(json.dumps({{'method':value['method'],'pid':os.getpid()}})+'\\n')\n"
@@ -257,14 +268,19 @@ async def wait_for_file(path):
 @pytest.mark.parametrize("termination", ["timeout", "cancel", "disconnect"])
 def test_auth_failure_stops_original_process_without_retry(tmp_path, stage, termination):
     marker = tmp_path / "entered"
+    ready = tmp_path / "peer-ready"
     block = f"open({str(marker)!r},'w').write('ready')\n"
     block += "sys.exit(0)\n" if termination == "disconnect" else "time.sleep(30)\n"
     rpc, traffic = peer(
-        tmp_path, **{stage: block}, request_timeout=0.12 if termination == "timeout" else 3
+        tmp_path,
+        **{stage: block},
+        ready=ready,
+        request_timeout=0.12 if termination == "timeout" else 3,
     )
 
     async def scenario():
         await rpc.start()
+        await wait_for_file(ready)
         try:
             authentication = asyncio.create_task(rpc.authenticate_api_key(CANARY))
             await wait_for_file(marker)
@@ -470,18 +486,22 @@ def test_auth_traffic_after_business_reply_in_same_batch_fails_that_call(tmp_pat
     asyncio.run(scenario())
 
 
+@pytest.mark.parametrize("startup_delay", [0, 0.2])
 @pytest.mark.parametrize("termination", ["cancel", "timeout"])
 def test_incomplete_cleanup_retains_original_owner_and_cancellation_identity(
-    tmp_path, monkeypatch, termination
+    tmp_path, monkeypatch, termination, startup_delay
 ):
     import signal
 
     from ralf_agent.codex_rpc import CodexRPCCloseIncomplete
 
     marker = tmp_path / "entered"
+    ready = tmp_path / "peer-ready"
     rpc, _ = peer(
         tmp_path,
         initial=f"open({str(marker)!r},'w').write('ready')\ntime.sleep(30)\n",
+        ready=ready,
+        startup_delay=startup_delay,
         request_timeout=0.12 if termination == "timeout" else 3,
     )
     original_killpg = os.killpg
@@ -498,6 +518,7 @@ def test_incomplete_cleanup_retains_original_owner_and_cancellation_identity(
 
     async def scenario():
         await rpc.start()
+        await wait_for_file(ready)
         original_pid = rpc.pid
         authentication = asyncio.create_task(rpc.authenticate_api_key(CANARY))
         await wait_for_file(marker)

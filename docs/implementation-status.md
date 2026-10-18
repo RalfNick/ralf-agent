@@ -33,7 +33,9 @@
 | P3-A | 用户授权的独立候选验证已收口：全量13,374通过／891配置跳过、安装275、同包原服务25；阶段整体仍待P3-2/S2，未完成保持 |
 | R01–R26其余目标 | 保留为长期路线图；外部采用和框架对等比较单独验收，不自动成为本轮实现任务 |
 
-**当前增量：** 用户已恢复S2原门槛。当前442产品候选首项复现Parent观察查询在严格Sandbox下晚导入被拒绝；仅提前加载四个既有helper，新增SDK Importer回归完成RED→GREEN，相关源码／隔离安装各118通过，扩大319个Temporal模块4331通过／617配置跳过。修复包原360秒复验仍在第二Turn被整体取消，JUnit441.066秒含收尾，Session关闭证据不足，失败数据保留；其余十二正常／五故障未解锁。独立原360诊断亦超时（JUnit392.751秒含收尾），记录发布复核4672次／CPU约162秒，嵌套清单重建约145秒；该监控不作性能验收，外层CONTROL完整CPU仍缺。见[本批记录](../architecture/reviews/2026-10-18-s2-parent-query-preload.md)。不将上一候选全量证据算作修复包全量通过。
+**当前增量：** S2按用户恢复授权继续原门槛。修复Runner解析重复pin时可采纳同类外部receiver及所有权getter之后的身份／方法漂移，保留getter前后检查；另仅等价替换日志JSON的字符扫描。最终442产品wheel（`c58a3b…`）受影响372模块 **5607 passed／638配置skipped**、隔离安装 **379 passed／17配置skipped**，source／wheel／site字节一致，默认完整材料、两份History重放及starter一次写入恢复通过。此前两轮各一项启动竞态失败保留，以慢启动RED补测试就绪前提，产品期限不变。完整CONTROL主体无profile CPU中位减少约3.9%，不能外推性能验收。同包原360秒首项仍 **1 failed／零跳过，JUnit396.272秒含收尾**：四个Tool成功、业务写入4次，但第二Turn仍在必要后续推进期间被整体取消；2 roots退休、Session／Assembly关闭、Worker退出及本批schema正证明清理通过，失败容器停止保留，导出与Temporal持久数据保留。其余十二正常／五故障未解锁。见[本批记录及成本证据缺口](../architecture/reviews/2026-10-18-s2-runner-binding-cost.md)。不将旧候选的全量证据算作新包全量通过。
+
+**前批S2证据：** Parent严格Sandbox查询晚导入已以SDK Importer复现并提前加载既有helper，原包相关118项和Temporal4331项通过；该包原360复验及独立同期限CPU诊断仍超时，外层CONTROL完整成本未单独归因，见[原记录](../architecture/reviews/2026-10-18-s2-parent-query-preload.md)。全部原失败及门槛保留。
 
 **上一候选验收证据：** 用户已允许独立候选验收，保留S2与阶段未完成。原输入网络夹具补齐旧Worker识别所需的配置观察／原epoch，并明确禁止Signal；进一步复现并修复SDK误拒绝旧Parent合法`outcome_unknown`时的必要取消。完整Scope／namespace／原epoch与两次查询保持，取消仍保留未知效果／预算。新442产品候选（`2654660…`）首轮完整回归13,341 passed／891 skipped／24 failed，已定位缺失SDK端口、Workflow patch桩及测试共享namespace污染并修复。最终受影响源码 **272 passed／零跳过**，隔离安装 **275 passed／零跳过**；同包真实PG／Temporal／HTTP及备份恢复 **25 passed／零跳过，JUnit 52.825秒**，全部成功自有服务关闭。默认Card／完整发布及两份原History重放、首用审批／重复回执／跨进程恢复通过。产品未再变化，固定最终930测试及20额外输入的第二轮完整无排除回归 **13,374 passed／891 skipped，零失败／错误，JUnit 2224.610秒**；整轮输入不变。首轮失败与跳过原因保留，不拼接局部结果。见[候选验证记录](../architecture/reviews/2026-10-18-candidate-verification.md)。
 

@@ -4,6 +4,8 @@
 
 2026-10-18用户明确恢复P3-2/S2，按原360秒首项→其余十二正常／五故障推进，原失败和全部门槛保留；见[执行记录](superpowers/plans/2026-10-18-s2-resume.md)。Session／Turn仍归P3-2。2026-10-18用户允许独立推进的**P3-4冻结最小范围已验收**：原认证／Scope与资源交集、所选越权拒绝、可替换脱敏审计、Local工作消息压缩及原完整封存树下PG冗余效果副本清理。最终442产品wheel受影响源码／安装各234 passed／22配置skipped，同包真实PG／Temporal／HTTP共24 passed／零跳过；[门槛核对及限制](../architecture/reviews/2026-10-18-temporal-effect-retention.md#p3-4门槛核对与后续)保留各原制品归属。2026-10-18用户进一步允许独立推进的**P3-5所选最小范围已验收**：Local源码／安装各3项、相同442产品wheel真实Temporal／PG两次全数据恢复1项通过，原身份／回执／unknown／停止／退休和错误发布回退保持，见[逐项核对](../architecture/reviews/2026-10-18-framework-backup-restore.md)。全部失败和门槛保留；用户随后明确允许独立候选验收，见[本批记录](../architecture/reviews/2026-10-18-candidate-verification.md)，S2与阶段未完成保持。4项原输入夹具失败已定向修复，最终候选完整回归13,374 passed／891配置skipped、隔离安装275通过；原SDK并发封存拒绝、未测外部首次采纳与任意History等边界继续保留，不新增全拓扑或通用治理专项。仅本地提交，不推送。
 
+本批S2仍未关闭：最终442产品wheel `c58a3b…`受影响372模块5607 passed／638配置skipped，安装379 passed／17配置skipped，默认材料与History兼容通过；只修复Runner绑定复核及等价字符扫描，未扩能力。原360首项1 failed／零跳过、JUnit396.272秒含收尾，四Tool成功／4次业务写入；第二Turn仍被整体取消。两root退休、Session／Assembly关闭、Worker退出与原正证明清理成立；导出／Temporal数据及本批已停止失败容器保留，旧资源未动。原其余十二正常／五故障不解锁，P3-2及P3-A整体未完成。下一步先补完整Tool／外层owned CONTROL成本归因，不以主体3.9%局部收益替代验收；[证据](../architecture/reviews/2026-10-18-s2-runner-binding-cost.md)保留早先失败和测试就绪修正。仅本地提交，不推送。
+
 <details>
 <summary>此前批次摘要（“最新／下一批”仅描述对应快照）</summary>
 
