@@ -8,7 +8,7 @@
 
 前批外层owned Activity诊断记账经RED→GREEN后，同包原360仍失败（JUnit396.842秒含收尾），该次关闭证明通过，捕获exclusive CPU164.187秒，约180.081秒未归因；[原证据](../architecture/reviews/2026-10-18-s2-owned-activity-cost.md)按其范围保留。
 
-本批仍无产品／测试修改。SDK边界诊断捕获约92.1%进程CPU，将约101.771秒收窄至Workflow内部回调；转换栈约5.611秒，主事件循环45.612秒及未捕获27.806秒仍保留缺口。同包原360诊断1 failed／零跳过、JUnit432.636秒含收尾，四Tool成功／4次写入、两root退休，但Session关闭未确认，schema和已停止失败容器／持久数据保留。隔离准入Query编码原型无profile ABBA的80个结果与Payload字节一致、该Query CPU中位减少约42.7%；仅单一已完成根和默认Converter。独立审查复现合法Workflow查询拦截器的字典返回契约被RawValue破坏，原型已否决；不继续添加特例guard，未进入产品，不将字节一致或局部收益视为整链通过。见[完整证据与准入](../architecture/reviews/2026-10-18-s2-sdk-query-cost.md)。其余十二正常／五故障不解锁，P3-2及P3-A整体未完成。仅本地提交，不推送。
+本批仍无产品／测试修改。查询种类诊断同包原360 **1 failed／零跳过，JUnit436.204秒含收尾**，三Tool成功／3写入、两root中1退休1保留，Session／Assembly关闭未确认，原schema及已停止失败服务数据保留。8,007次Query中Coding validation的1,164次约58.733 CPU秒（含收尾），比先前准入Query更应优先定位。原Registry held-bound State两次只读Query完整重放及命令／状态不变通过；每次一次Manifest验证触发37次composition指纹集合、5928次executable_digest。下一候选仅审已发布调用内重复验证，仍需原独立入口／helper漂移拒绝与完整调用收益证据，不授权删校验或跨请求缓存。失效诊断亦保留，见[证据与边界](../architecture/reviews/2026-10-18-s2-query-mix-and-published-validation.md)。前批RawValue原型因合法字典拦截器回归已否决，见[原记录](../architecture/reviews/2026-10-18-s2-sdk-query-cost.md)。其余十二正常／五故障不解锁，P3-2及P3-A整体未完成。仅本地提交，不推送。
 
 <details>
 <summary>此前批次摘要（“最新／下一批”仅描述对应快照）</summary>
