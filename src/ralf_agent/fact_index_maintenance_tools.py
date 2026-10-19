@@ -8,7 +8,6 @@ Generic CAS/port failures retain pending intent and their original typed refusal
 """
 
 import copy
-import inspect
 import json
 from dataclasses import asdict
 
@@ -21,6 +20,7 @@ from .errors import (
     ValidationError,
 )
 from .fact_index_generation import GenerationSourceChanged
+from .ports import is_async_callable
 from .tool_execution import ToolExecutionOwner
 from .tool_sources import ToolDescriptor
 from .tools import _callable_identity
@@ -77,13 +77,10 @@ class FactIndexMaintenanceToolSource:
         if type(max_pages) is not int or not 1 <= max_pages <= 256:
             raise ValidationError("Maintenance pages must be an integer from 1 through 256")
         for name in ("source_snapshot", "rebuild_for_snapshot"):
-            if not inspect.iscoroutinefunction(getattr(index, name, None)):
+            if not is_async_callable(getattr(index, name, None)):
                 raise ValidationError("Maintenance requires original async generation operations")
         catalog = getattr(index, "original_catalog", None)
-        if any(
-            not inspect.iscoroutinefunction(getattr(catalog, name, None))
-            for name in ("load", "save")
-        ):
+        if any(not is_async_callable(getattr(catalog, name, None)) for name in ("load", "save")):
             raise ValidationError("Maintenance requires the original async CAS catalog")
         self._index = self._index_ref = index
         self._catalog = self._catalog_ref = catalog

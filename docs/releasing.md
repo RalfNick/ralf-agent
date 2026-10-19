@@ -1,12 +1,34 @@
 # 预览版本验证与发布
 
-当前推荐 **0.1.0.dev122 的 Local 基础 SDK 本地预览制品**。本批修复 dev121 审查确认的审批、等待、语义绑定、Embedding 与 HTTP 响应边界问题，并修正已有 CI 门禁；不增加后端或编排能力。函数指纹专项、S2、完整第三阶段与 R01–R26 的状态保持。
+当前推荐 **0.1.0.dev123 的 Local 基础 SDK 本地预览制品**。本批统一已有公共适配器的异步 callable 校验，补组合恢复、安装与所选服务证据，并整理排障入口；不增加后端、编排或依赖。函数指纹专项、S2、完整第三阶段与 R01–R26 的状态保持。
 
 CI 检查与构建不自动发布到 PyPI／GitHub Release。本轮只生成本地制品，未推送、上传或核验公开发行；历史制品及其证据保留。
 
 ## 本轮本地交付
 
-推荐目录为 `dist/basic-sdk-dev122/`：
+推荐目录为 `dist/basic-sdk-dev123/`：
+
+- `ralf_agent-0.1.0.dev123-py3-none-any.whl`：已验证的安装包。
+- `ralf_agent-0.1.0.dev123.tar.gz`：包含源码、测试、文档与连续示例。
+- `delivery.json`：精确 SHA、工作区来源和有限验证范围。
+- `SHA256SUMS`：目录校验清单。
+
+```bash
+cd /ABSOLUTE/PATH/ralf-agent/dist/basic-sdk-dev123
+shasum -a 256 -c SHA256SUMS
+python -m pip install ./ralf_agent-0.1.0.dev123-py3-none-any.whl
+ralf --version
+```
+
+版本应为 `0.1.0.dev123`。先按[首用教程](getting-started.md)完成审批和重启，再按[连续教程](support-journey.md)加入已有能力；遇到失败按[现象与错误码](recovery-guide.md#按现象定位下一步)定位。扩展模式见[扩展指南](extending.md)。
+
+[本批验收](../architecture/reviews/2026-10-19-dev123-sdk-stabilization.md)分别记录受影响源码 379 项、安装 160 项、两条 starter、既有服务 24 项及独立 CI 适配器门禁 11 项。局部结果有重叠，不作为全量验收或真实模型成绩；本机执行相同门禁不等于 GitHub Actions 已运行。服务仅使用本批新建的本地 Temporal／PostgreSQL，关闭记录随制品保留。
+
+不覆盖 dev122 或其他历史目录。包版本、Run Release、SQLite Schema 和 Temporal Worker 身份分别管理；本批不改存储格式，也不新增旧 History／函数指纹兼容资格。已接受任务保留原匹配组件和 Worker，替换方法形状仍须保持原资源及来源契约，不能静默重绑。函数指纹和 S2 继续后置，不恢复专项。
+
+## 历史基础 SDK 制品（dev122）
+
+原目录为 `dist/basic-sdk-dev122/`：
 
 - `ralf_agent-0.1.0.dev122-py3-none-any.whl`：已验证的安装包。
 - `ralf_agent-0.1.0.dev122.tar.gz`：包含源码、测试、文档与连续示例。

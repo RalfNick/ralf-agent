@@ -101,6 +101,10 @@ jobs:
           python -m agent_app run --mode core --format json --command-id CI-EXTERNAL-FACTS-CORE
           python -m agent_app run --mode pipeline --format toml --async --command-id CI-EXTERNAL-FACTS-PIPELINE
           python -m agent_app run --mode managed --borrowed --command-id CI-EXTERNAL-FACTS-MANAGED
+      - name: Installed async adapter combinations outside checkout
+        working-directory: ${{ runner.temp }}
+        run: |
+          python -m pytest -q -W error -p no:cacheprovider -c /dev/null "$RUNNER_TEMP/session-contracts/tests/test_async_adapter_combinations.py"
       - name: Installed ModelProvider replacements outside checkout
         working-directory: ${{ runner.temp }}
         run: |

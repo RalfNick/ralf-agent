@@ -1,12 +1,12 @@
 """MCP tool normalization; transport and execution authority are independent."""
 
 import copy
-import inspect
 from typing import Protocol
 
 from jsonschema import Draft202012Validator
 
 from .errors import ValidationError
+from .ports import is_async_callable
 from .tool_sources import ToolDescriptor, ToolSourceError, _identity
 from .types import canonical
 
@@ -55,7 +55,7 @@ async def list_mcp_tools(transport):
 class MCPToolSource:
     def __init__(self, transport):
         _identity(transport)
-        if not inspect.iscoroutinefunction(getattr(transport, "request", None)):
+        if not is_async_callable(getattr(transport, "request", None)):
             raise ValidationError("MCP transport requires an async request method")
         self.transport = transport
 

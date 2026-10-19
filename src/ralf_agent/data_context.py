@@ -5,7 +5,6 @@ calling assemble never writes, reads or deletes an artifact.
 """
 
 import copy
-import inspect
 from dataclasses import asdict
 
 from .artifacts import ArtifactReference
@@ -13,7 +12,7 @@ from .context_budget import _positive
 from .context_pipeline import _groups
 from .errors import DefinitionMismatch, ValidationError
 from .managed_context import ManagedContextPipeline
-from .ports import validate_component_identity
+from .ports import is_async_callable, validate_component_identity
 from .task_controls import _binding
 from .tools import _callable_identity
 from .types import Scope, canonical, digest
@@ -50,7 +49,7 @@ class ManagedDataContext(ManagedContextPipeline):
         self._target_identity = validate_component_identity(
             artifacts,
             ("put", "get"),
-            synchronous=not inspect.iscoroutinefunction(artifacts.put),
+            synchronous=not is_async_callable(artifacts.put),
             label="Artifact store",
         )
         self._target = artifacts
@@ -87,7 +86,7 @@ class ManagedDataContext(ManagedContextPipeline):
             or validate_component_identity(
                 self.artifacts,
                 ("put", "get"),
-                synchronous=not inspect.iscoroutinefunction(self.artifacts.put),
+                synchronous=not is_async_callable(self.artifacts.put),
                 label="Artifact store",
             )
             != self._target_identity

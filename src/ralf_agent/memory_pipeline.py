@@ -8,6 +8,7 @@ from dataclasses import asdict
 from .errors import DefinitionMismatch, RalfError, ValidationError
 from .memory import memory_call
 from .memory_extraction import MemoryAdmissionPolicy, RuleMemoryExtractor
+from .ports import is_async_callable
 from .recall import RecallPage, RecallQuery
 from .task_controls import _binding
 from .types import canonical, digest
@@ -46,7 +47,7 @@ class MemoryPipeline:
             if not callable(method):
                 raise ValidationError("Automatic memory requires CAS and bounded recall/validation")
             self._methods[name] = _binding(method)
-        if not inspect.iscoroutinefunction(getattr(self.extractor, "extract", None)):
+        if not is_async_callable(getattr(self.extractor, "extract", None)):
             raise ValidationError("Memory extractor requires an async extract method")
         self._extract_binding = _binding(self.extractor.extract)
         self._policy_binding = _binding(self.policy.validate)

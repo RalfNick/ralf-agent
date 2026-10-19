@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.0.dev123 — SDK adapter consistency
+
+- Use the shared native-async callable check for existing ToolSource/MCP, memory extraction, managed Artifact, Local Engine control and Facts maintenance ports; preserve their original result, identity and ownership contracts. Async-only ports still reject sync coroutine factories; Artifact stores retain their existing all-sync or all-async modes.
+- Exercise actual adapter dispatch, approval/restart, grounded memory deduplication, Artifact evidence and generation maintenance; clarify first-use failure and recovery guidance. No new execution capability or dependency.
+- Retain fingerprint qualification and S2 deferral. Exact offline, installed and selected service evidence is recorded separately in the batch acceptance.
+
 ## 0.1.0.dev122 — Review contract fixes
 
 - Reject non-boolean Local approval decisions before accepting commands; report failed hosts before nonterminal facade wait results.

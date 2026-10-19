@@ -2,6 +2,25 @@
 
 本指南介绍当前 Local／SQLite 的基本观察、审批与恢复；各历史版本必须遵守其原执行协议，不保证任意旧 Run 都可由当前内核续跑。完整阶段验收状态见[实现清单](implementation-status.md)。恢复使用原数据库、Scope 和工厂，包括原 Harness／ToolExecutor、可选 Recall／Knowledge／planner 身份。使用 --config 时保留原 Profile 声明、适配器代码及数据，见[运行装配](runtime-assembly.md)；Temporal 使用其[独立执行指南](temporal-execution.md)。执行日志与业务效果证据应一起保留；取消和关闭不会撤销远端操作。
 
+## 按现象定位下一步
+
+CLI／示例会收敛输出公开错误码，避免泄露服务异常、凭据或业务正文。下面区分异常、等待结果和业务状态；它们不是同一种失败。
+
+| 看到的结果 | 含义与下一步 |
+| --- | --- |
+| `validation_error` | 先核对必需参数、Schema 和扩展方法模式。真实模型必须显式选择 provider／model；异步专用端口使用 `async def` 或 `async __call__`，同步函数返回 coroutine 会被拒绝。按[扩展指南](extending.md#先选择扩展方式)检查当前支持入口 |
+| `idempotency_conflict` | 同一 command_id 对应了不同请求。恢复时找回原输入、定义、budget 和 Session；确定是新任务时才使用新命令，不改旧回执 |
+| `definition_mismatch` | 当前组件／Profile／来源与原 Run 不符。先观察原任务，再恢复原匹配配置和实现；模型别名、namespace 或新默认不能替代历史发布 |
+| `session_busy` | 使用 SDK 异常 `SessionBusy.run_ref` 找回占用的原 Turn，先完成审批／核验；不用新 Run 绕过占用 |
+| `session_binding_mismatch` | 当前 Session 绑定或引用不匹配，先恢复原绑定／引用；需要新绑定时按[Session API](session-api.md)在 idle 后显式 rebind。此错误本身不代表已有 Turn 占用 |
+| `execution_host_failed` | 托管 drive 或期限观察器停止。保留原 Run；修复宿主后显式 resume。存储恢复、再次 wait 或查询状态不会自动重启执行 |
+| `coordinator_busy`／`close_incomplete` | 原执行者或实际处理器仍有责任。检查原宿主与未完成调用，对原 Runtime 重试关闭；不要删除锁文件或强行释放租约 |
+| `provider_error`／`memory_backend_error` | 检查原服务连接、授权、协议及后端可用性，保留原 command／Action。超时不证明下游未接受请求，避免以新命令重复业务写入 |
+| `wait_reason=observation_timeout` | 只结束此次观察。用原 Run 继续查询／等待；只有显式 cancel 或业务期限才申请取消业务 |
+| `waiting_approval`／`waiting_reconciliation` | 分别检查原审批内容或实际业务效果，按下文处理；等待本身不表示框架出错 |
+
+排障记录保留包版本、绝对数据目录、Run／Action ID、command_id 和错误码。凭据留在环境或宿主管理中；不要把 API key、DSN 密码和完整客户上下文放进 issue、截图或恢复命令。
+
 ## 先观察，再继续
 
 对生成项目，在项目根目录运行；这里 `RUN_ID` 为实际运行 ID：

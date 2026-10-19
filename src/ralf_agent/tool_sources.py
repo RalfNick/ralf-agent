@@ -10,7 +10,7 @@ from jsonschema import Draft202012Validator
 from jsonschema.exceptions import SchemaError
 
 from .errors import DefinitionMismatch, RalfError, ValidationError
-from .ports import _complete_sync_none, is_sync_callable
+from .ports import _complete_sync_none, is_async_callable, is_sync_callable
 from .tools import ToolRegistry, ToolSpec
 from .types import InvocationContext, canonical, credits, digest
 
@@ -192,7 +192,7 @@ async def register_tool_source(registry, source, *, policies, prefix=""):
     ):
         raise ValidationError("Select remote tools with explicit ToolPolicy values")
     for method in ("list_tools", "call_tool"):
-        if not inspect.iscoroutinefunction(getattr(source, method, None)):
+        if not is_async_callable(getattr(source, method, None)):
             raise ValidationError("Tool source methods must be async")
     identity = _identity(source)
     descriptors = await source.list_tools()

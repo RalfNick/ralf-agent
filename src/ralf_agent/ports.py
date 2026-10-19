@@ -236,7 +236,7 @@ def validate_engine(engine):
         if not callable(method):
             raise ValidationError(f"ExecutionEngine requires {name}")
         if name in {"drive", "wait_for_threads"}:
-            if not inspect.iscoroutinefunction(method):
+            if not is_async_callable(method):
                 raise ValidationError(f"ExecutionEngine.{name} must be async")
         elif not is_sync_callable(method):
             raise ValidationError(f"ExecutionEngine.{name} must be synchronous")

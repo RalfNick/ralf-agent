@@ -1,6 +1,6 @@
 # Ralf-Agent 扩展指南
 
-版本：0.1.0.dev122；更新：2026-10-19。面向 SDK／适配器开发者。本指南描述执行、装配、召回和知识端口；当前扩展组件与限制见 [实现清单](implementation-status.md)，企业适配与完整 M1 仍未验收。
+版本：0.1.0.dev123；更新：2026-10-19。面向 SDK／适配器开发者。本指南描述执行、装配、召回和知识端口；当前扩展组件与限制见 [实现清单](implementation-status.md)，企业适配与完整 M1 仍未验收。
 
 完整目标要求每层交付公共契约、默认实现、替换示例和共同验收，见[通用框架能力矩阵](../architecture/viewpoints/framework-capabilities.md)。静态图／并行、动态规划／团队和远程数据已有实现，分别见[静态 Workflow](static-workflows.md)、[编排](orchestration.md)与[远程数据](remote-data.md)。默认实现不一定默认启用；每 Agent 能力绑定、推荐组合与 Local/Temporal 契约差异见[整体审查](../architecture/reviews/2026-10-08-agent-framework-alignment.md)。下表以本地装配契约为主，Temporal 支持范围单独声明。
 
@@ -47,6 +47,10 @@ CLI 的 `--factory`／底层 ExecutionEngine 可按公共端口替换；高层 L
 同步返回 `None` 表示检查已经执行并完成授权。上下文管理器、awaitable、generator、True／False、字典等不能表示授权；框架不进入它们，也不调用它们的任意生命周期方法。对已识别的 coroutine／generator 仅做关闭清理，然后报配置错误。人工审批的 `approved` 则必须是布尔值：`False` 拒绝，`True` 批准；字符串、数字或 `None` 在 Local 命令接受前拒绝，不做真值转换。
 
 Local、Temporal、Binding 和运行装配共用 `ralf_agent.ports.validate_component_identity` 的组件身份与方法形状检查：identity 必须是非空有限 JSON 对象，采纳的是独立副本；检查不调用组件方法。异步端口接受 `async def` 方法或具有 `async def __call__` 的 callable 对象，同步返回 coroutine 的普通函数不满足异步端口。同步纯策略拒绝 coroutine／generator／async-generator 方法；身份或方法读取失败报告配置错误。组件被实际调用后，其返回值与恢复身份仍由各执行边界分别校验。
+
+dev123 将同一异步判断用于已有 ToolSource／MCPTransport、MemoryPipeline.extractor、ManagedDataContext Artifact、基础 ExecutionEngine 的 drive／wait_for_threads，以及 Facts 索引维护的生成／CAS 操作。替换组件仍需满足原身份、参数、已完成返回值、来源和关闭契约；支持 callable 不授予执行权限，也不表示可以替换所有 Facade 或 vendor 客户端。流式生成器、线程桥和具体数据库客户端保留各自声明的模式。
+
+Artifact 的 put／get 可以成组使用同步或异步实现，不能混用。本批验证了异步 callable 组的实际卸载与读取，以及混合模式拒绝；不将其解释为所有同步 Artifact 返回值的预先拒绝。同步存储仍沿用既有 memory_call 的调用和等待语义。
 
 默认 `LocalEngine(SQLiteStore(path), ...)` 会创建 POSIX 文件租约和共享 SQLite 记忆。自定义存储通过端口接入，不需要 `.conn`／`.path`；同时显式注入 `coordinator`、`session_store`、`memory_store`。当前 ExecutionStore 方法是 Coordinator 线程内的同步事务操作；远程数据库需单独验证延迟、原子性和失败语义。
 

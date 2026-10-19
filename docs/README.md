@@ -15,7 +15,7 @@
 | [基础能力](basic-capabilities.md) | 默认组件及定制路径、基础交付边界 |
 | [模型与 Python 工具 SDK](sdk-model-tools.md) | 接入真实模型，注册自己的函数工具 |
 | [示例与 starter](../examples/README.md) | 选择离线示例和安装包内工程模板 |
-| [恢复与排障](recovery-guide.md) | 审批、配置不匹配、未知写效果和关闭失败 |
+| [恢复与排障](recovery-guide.md) | 按错误码／状态定位；审批、配置不匹配、未知写效果和关闭失败 |
 
 ## Agent、模型与工具
 
