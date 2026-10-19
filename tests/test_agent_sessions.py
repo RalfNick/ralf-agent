@@ -34,6 +34,10 @@ def test_ordered_turns_keep_history_and_original_receipts(kind, tmp_path):
             session = await agent.open_session("customer", command_id="open")
             first = await session.submit("first task", command_id="one")
             assert (await first.wait(wait_timeout=1)).snapshot.state == "succeeded"
+            async with asyncio.timeout(1):
+                # Session exposes polling, not a completion Event.
+                while (await session.status()).busy:  # noqa: ASYNC110
+                    await asyncio.sleep(0)
             again = await session.submit("first task", command_id="one")
             assert (
                 again.ref == first.ref
@@ -42,6 +46,10 @@ def test_ordered_turns_keep_history_and_original_receipts(kind, tmp_path):
             )
             second = await session.submit("second task", command_id="two")
             assert (await second.wait(wait_timeout=1)).snapshot.state == "succeeded"
+            async with asyncio.timeout(1):
+                # Session exposes polling, not a completion Event.
+                while (await session.status()).busy:  # noqa: ASYNC110
+                    await asyncio.sleep(0)
             assert first.turn.turn_seq == 1 and second.turn.turn_seq == 2
             assert [turn.turn_seq for turn in await session.turns()] == [1, 2]
             assert "first answer" in r.types.canonical(provider.messages[1])

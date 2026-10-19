@@ -281,6 +281,7 @@ def test_uncertain_create_is_reconciled_or_stops_before_next_version(tmp_path, m
     wheel, sdist = tmp_path / "one.whl", tmp_path / "one.tar.gz"
     wheel.write_bytes(b"wheel")
     sdist.write_bytes(b"sdist")
+    stage_declared_gate(wrapper, tmp_path, (wheel, sdist), monkeypatch)
     output = tmp_path / "matrix"
     assert (
         wrapper.main(
@@ -326,3 +327,276 @@ def test_container_absence_requires_explicit_daemon_evidence(monkeypatch, absent
     else:
         with pytest.raises(RuntimeError, match="container_state_unknown"):
             wrapper.lookup_owned("owned", "token")
+
+
+@pytest.fixture
+def linux_wrapper():
+    spec = importlib.util.spec_from_file_location(
+        "linux_release_gate", ROOT / "tools/run_release_gate_linux.py"
+    )
+    wrapper = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(wrapper)
+    return wrapper
+
+
+@pytest.fixture
+def worker_inputs():
+    return {
+        name: hashlib.sha256((ROOT / "tools" / name).read_bytes()).hexdigest()
+        for name in (
+            "release_gate.py",
+            "run_release_gate_linux.py",
+            "release_gate_manifest.json",
+            "release_gate_requirements.lock",
+        )
+    }
+
+
+@pytest.fixture
+def worker_report(gate, worker_inputs):
+    spec = gate.read_spec()
+    return {
+        "status": "passed_selected_scope",
+        "phase": "complete",
+        "version": spec["version"],
+        "artifacts": spec["artifacts"].copy(),
+        "test_corrections": {
+            entry["path"]: {key: entry[key] for key in ("before_sha256", "after_sha256")}
+            for entry in spec.get("test_corrections", [])
+        },
+        "runner_sha256": worker_inputs["release_gate.py"],
+        "manifest_sha256": worker_inputs["release_gate_manifest.json"],
+        "requirements_sha256": worker_inputs["release_gate_requirements.lock"],
+        "platform": {"system": "Linux", "machine": "aarch64", "python_minor": "3.11"},
+        "python": "3.11.17",
+        "tests": {
+            name: {"tests": value["count"], "failures": 0, "errors": 0, "skipped": 0}
+            for name, value in spec["tests"].items()
+        },
+        "starter": {"cases": 2, "business_writes_per_case": 1},
+        "linux_resources": {
+            "memory_max": "2147483648",
+            "memory_swap_max": "0",
+            "cpu_max": "200000 100000",
+            "memory_peak": 1024,
+            "memory_events": {"oom": 0, "oom_kill": 0, "oom_group_kill": 0},
+        },
+    }
+
+
+def test_worker_report_must_match_current_gate_request(
+    linux_wrapper, gate, worker_inputs, worker_report
+):
+    assert linux_wrapper.verify_report(
+        worker_report, gate.read_spec(), "3.11", worker_inputs, gate.read_spec()["artifacts"]
+    )
+
+
+@pytest.mark.parametrize(
+    ("path", "value"),
+    [
+        (("artifacts",), {"different.whl": "wrong"}),
+        (("runner_sha256",), "wrong"),
+        (("manifest_sha256",), "wrong"),
+        (("requirements_sha256",), "wrong"),
+        (("status",), "failed"),
+        (("phase",), "main"),
+        (("version",), "0.1.0.dev120"),
+        (("platform", "machine"), "x86_64"),
+        (("platform", "system"), "Darwin"),
+        (("platform", "python_minor"), "3.12"),
+        (("python",), "3.12.15"),
+        (("tests", "main", "skipped"), 1),
+        (("tests", "related", "tests"), 0),
+        (("starter", "cases"), 1),
+        (("starter", "business_writes_per_case"), True),
+        (("linux_resources", "memory_max"), "max"),
+        (("linux_resources", "memory_swap_max"), "1"),
+        (("linux_resources", "cpu_max"), "max 100000"),
+        (("linux_resources", "memory_events", "oom_kill"), 1),
+        (("linux_resources", "memory_events", "oom_group_kill"), 1),
+        (("linux_resources", "memory_peak"), True),
+        (("linux_resources",), None),
+        (("linux_resources", "memory_peak"), 0),
+        (("linux_resources", "memory_peak"), -1),
+        (("linux_resources", "memory_peak"), 2147483649),
+        (("linux_resources", "memory_peak"), float("nan")),
+        (("linux_resources", "memory_events"), []),
+        (("linux_resources", "memory_events", "oom"), False),
+        (("linux_resources", "memory_events", "oom_group_kill"), False),
+    ],
+)
+def test_passed_worker_report_with_mismatched_identity_or_results_is_rejected(
+    linux_wrapper, gate, worker_inputs, worker_report, path, value
+):
+    target = worker_report
+    for key in path[:-1]:
+        target = target[key]
+    target[path[-1]] = value
+    assert not linux_wrapper.verify_report(
+        worker_report, gate.read_spec(), "3.11", worker_inputs, gate.read_spec()["artifacts"]
+    )
+
+
+@pytest.mark.parametrize("mismatch", ["architecture", "artifacts"])
+def test_matrix_rejects_other_architecture_even_when_worker_says_passed(
+    linux_wrapper, worker_report, tmp_path, monkeypatch, mismatch
+):
+    containers = {}
+
+    def call(*args, **kwargs):
+        if args[1:3] == ("image", "inspect"):
+            return json.dumps([{"Architecture": "arm64", "Os": "linux"}])
+        if args[1] == "create":
+            name = args[args.index("--name") + 1]
+            token = args[args.index("--label") + 1].split("=", 1)[1]
+            output = next(
+                a.split("src=", 1)[1].split(",dst=", 1)[0] for a in args if "dst=/output" in a
+            )
+            from copy import deepcopy
+
+            report = deepcopy(worker_report)
+            report["platform"] = {
+                "system": "Linux",
+                "machine": "x86_64" if mismatch == "architecture" else "aarch64",
+                "python_minor": Path(output).name,
+            }
+            report["python"] = Path(output).name + ".17"
+            dest = Path(output) / "gate"
+            dest.mkdir()
+            (dest / "report.json").write_text(json.dumps(report))
+            containers[name] = {
+                "Id": name,
+                "Config": {"Labels": {"ralf.release-gate": token}},
+                "State": {"Running": False, "OOMKilled": False},
+                "HostConfig": {"NetworkMode": "none"},
+            }
+            return name
+        if args[1] == "inspect":
+            return json.dumps([containers[args[2]]])
+        if args[1] == "wait":
+            return "0"
+        if args[1] in ("start", "rm"):
+            return ""
+        raise AssertionError(args)
+
+    monkeypatch.setattr(linux_wrapper, "call", call)
+    monkeypatch.setattr(linux_wrapper, "lookup_owned", lambda name, token: containers[name])
+    monkeypatch.setattr(
+        linux_wrapper.subprocess,
+        "run",
+        lambda *a, **k: subprocess.CompletedProcess(a, 0, "log", ""),
+    )
+    wheel, sdist = tmp_path / "one.whl", tmp_path / "one.tar.gz"
+    wheel.write_bytes(b"wheel")
+    sdist.write_bytes(b"sdist")
+    if mismatch == "architecture":
+        declared = stage_declared_gate(linux_wrapper, tmp_path, (wheel, sdist), monkeypatch)
+        worker_report["artifacts"] = declared["artifacts"]
+        worker_report["manifest_sha256"] = hashlib.sha256(
+            (linux_wrapper.HERE / "release_gate_manifest.json").read_bytes()
+        ).hexdigest()
+    output = tmp_path / "matrix"
+    code = linux_wrapper.main(
+        [
+            "--wheel",
+            str(wheel),
+            "--sdist",
+            str(sdist),
+            "--wheelhouse",
+            str(tmp_path),
+            "--output",
+            str(output),
+        ]
+    )
+    assert code == 1
+    rows = json.loads((output / "matrix.json").read_text())
+    if mismatch == "architecture":
+        assert len(rows) == 3 and all(
+            not row["passed"] and row["container_removed"] for row in rows
+        )
+    else:
+        assert rows == [] and not containers
+        assert (
+            json.loads((output / "matrix-error.json").read_text())["error"]
+            == "artifact_sha256_mismatch"
+        )
+    provenance = json.loads((output / "matrix-input.json").read_text())
+    assert (
+        provenance["tools"]["run_release_gate_linux.py"]
+        == hashlib.sha256((ROOT / "tools/run_release_gate_linux.py").read_bytes()).hexdigest()
+    )
+
+
+@pytest.fixture
+def correction_case(tmp_path):
+    original, corrected = b"one\n", b"two\n"
+    path = tmp_path / "tests/test_case.py"
+    path.parent.mkdir()
+    path.write_bytes(original)
+    rule = {
+        "path": "tests/test_case.py",
+        "before_sha256": hashlib.sha256(original).hexdigest(),
+        "after_sha256": hashlib.sha256(corrected).hexdigest(),
+        "replacements": [{"before": "one", "after": "two"}],
+    }
+    return path, rule, {rule["path"]: rule["before_sha256"]}
+
+
+def test_frozen_test_correction_requires_exact_before_and_after(gate, tmp_path, correction_case):
+    path, rule, original = correction_case
+    applied = gate.apply_test_corrections(tmp_path, {"test_corrections": [rule]}, original)
+    assert path.read_bytes() == b"two\n"
+    assert applied == {rule["path"]: {key: rule[key] for key in ("before_sha256", "after_sha256")}}
+
+
+@pytest.mark.parametrize("change", ["source", "before", "after", "matches", "escape", "unlisted"])
+def test_test_correction_drift_fails_without_rewriting_inputs(
+    gate, tmp_path, correction_case, change
+):
+    path, rule, original = correction_case
+    if change == "source":
+        path.write_bytes(b"source drift\n")
+    elif change == "before":
+        rule["before_sha256"] = "wrong"
+    elif change == "after":
+        rule["after_sha256"] = "wrong"
+    elif change == "matches":
+        rule["replacements"][0]["before"] = "absent"
+    elif change == "escape":
+        rule["path"] = "../escape.py"
+    else:
+        original.clear()
+    before = path.read_bytes()
+    with pytest.raises(gate.GateError):
+        gate.apply_test_corrections(tmp_path, {"test_corrections": [rule]}, original)
+    assert path.read_bytes() == before
+    assert not (tmp_path.parent / "escape.py").exists()
+
+
+def stage_declared_gate(wrapper, tmp_path, artifacts, monkeypatch):
+    """Declare fake artifacts only in isolated lifecycle unit tests, never real QA."""
+    import shutil
+
+    target = tmp_path / "unit-gate"
+    target.mkdir()
+    for name in (
+        "release_gate.py",
+        "run_release_gate_linux.py",
+        "release_gate_manifest.json",
+        "release_gate_requirements.lock",
+    ):
+        shutil.copy2(ROOT / "tools" / name, target / name)
+    spec = json.loads((target / "release_gate_manifest.json").read_text())
+    spec["artifacts"] = {p.name: hashlib.sha256(p.read_bytes()).hexdigest() for p in artifacts}
+    (target / "release_gate_manifest.json").write_text(json.dumps(spec, indent=2) + "\n")
+    monkeypatch.setattr(wrapper, "HERE", target)
+    return spec
+
+
+def test_worker_report_cannot_borrow_original_identity_for_other_actual_artifacts(
+    linux_wrapper, gate, worker_inputs, worker_report
+):
+    assert not linux_wrapper.verify_report(
+        worker_report, gate.read_spec(), "3.11", worker_inputs, {"other.whl": "different"}
+    )

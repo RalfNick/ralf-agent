@@ -1,7 +1,10 @@
 """Serial cached ARM64 Docker execution of release_gate.py; never pulls images."""
 
 import argparse
+import hashlib
 import json
+import platform
+import re
 import shutil
 import subprocess
 import uuid
@@ -39,6 +42,63 @@ def lookup_owned(identifier, token):
     return values[0]
 
 
+def verify_report(report, spec, minor, inputs, artifacts):
+    try:
+        if artifacts != spec["artifacts"]:
+            return False
+        expected = {
+            "status": "passed_selected_scope",
+            "phase": "complete",
+            "version": spec["version"],
+            "artifacts": artifacts,
+            "test_corrections": {
+                rule["path"]: {key: rule[key] for key in ("before_sha256", "after_sha256")}
+                for rule in spec.get("test_corrections", [])
+            },
+            "runner_sha256": inputs["release_gate.py"],
+            "manifest_sha256": inputs["release_gate_manifest.json"],
+            "requirements_sha256": inputs["release_gate_requirements.lock"],
+            "platform": {"system": "Linux", "machine": "aarch64", "python_minor": minor},
+            "tests": {
+                name: {"tests": phase["count"], "failures": 0, "errors": 0, "skipped": 0}
+                for name, phase in spec["tests"].items()
+            },
+            "starter": {"cases": spec["starter_cases"], "business_writes_per_case": 1},
+        }
+        actual = {name: report[name] for name in expected}
+        if json.dumps(actual, sort_keys=True, allow_nan=False) != json.dumps(
+            expected, sort_keys=True, allow_nan=False
+        ):
+            return False
+        if not re.fullmatch(re.escape(minor) + r"\.\d+", report["python"]):
+            return False
+        resources = report["linux_resources"]
+        if any(
+            resources[name] != value
+            for name, value in {
+                "memory_max": "2147483648",
+                "memory_swap_max": "0",
+                "cpu_max": "200000 100000",
+            }.items()
+        ):
+            return False
+        peak = resources["memory_peak"]
+        events = resources["memory_events"]
+        if type(events) is not dict:
+            return False
+        return (
+            type(peak) is int
+            and 0 < peak <= 2147483648
+            and all(
+                type(events.get(name)) is int and events[name] == 0 for name in ("oom", "oom_kill")
+            )
+            and type(events.get("oom_group_kill", 0)) is int
+            and events.get("oom_group_kill", 0) == 0
+        )
+    except (KeyError, TypeError, ValueError):
+        return False
+
+
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     for name in ("wheel", "sdist", "wheelhouse", "output"):
@@ -53,10 +113,42 @@ def main(argv=None):
     inputs.mkdir()
     gate = inputs / "gate"
     gate.mkdir()
-    for name in ("release_gate.py", "release_gate_manifest.json", "release_gate_requirements.lock"):
+    for name in (
+        "release_gate.py",
+        "run_release_gate_linux.py",
+        "release_gate_manifest.json",
+        "release_gate_requirements.lock",
+    ):
         shutil.copy2(HERE / name, gate / name)
     for source in (args.wheel, args.sdist):
         shutil.copy2(source.resolve(), inputs / source.name)
+    tool_inputs = {
+        path.name: hashlib.sha256(path.read_bytes()).hexdigest() for path in gate.iterdir()
+    }
+    actual_artifacts = {
+        source.name: hashlib.sha256((inputs / source.name).read_bytes()).hexdigest()
+        for source in (args.wheel, args.sdist)
+    }
+    (root / "matrix-input.json").write_text(
+        json.dumps(
+            {
+                "tools": tool_inputs,
+                "artifacts": actual_artifacts,
+                "host": {"system": platform.system(), "machine": platform.machine()},
+                "platform": "linux/arm64",
+                "artifact_source_commit": spec["artifact_source_commit"],
+                "limits": spec["linux_container_limits"],
+            },
+            indent=2,
+        )
+        + "\n"
+    )
+    if actual_artifacts != spec["artifacts"]:
+        error = {"phase": "artifact_verification", "error": "artifact_sha256_mismatch"}
+        (root / "matrix-error.json").write_text(json.dumps(error, indent=2) + "\n")
+        (root / "matrix.json").write_text("[]\n")
+        print(json.dumps(error), flush=True)
+        return 1
     results = []
     for minor, image in spec["linux_arm64_images"].items():
         output = root / minor
@@ -126,11 +218,11 @@ def main(argv=None):
             print(json.dumps({"python": minor, "phase": "offline-gate-started"}), flush=True)
             code = int(call("docker", "wait", container, timeout=900))
             report = json.loads((output / "gate/report.json").read_text())
-            row["passed"] = (
-                code == 0
-                and report["status"] == "passed_selected_scope"
-                and report["platform"]["python_minor"] == minor
+            row["passed"] = code == 0 and verify_report(
+                report, spec, minor, tool_inputs, actual_artifacts
             )
+            if not row["passed"]:
+                raise RuntimeError("gate_report_identity_or_result_mismatch")
         except Exception as error:
             row["error"] = str(error)
         finally:

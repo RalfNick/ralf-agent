@@ -31,7 +31,11 @@ async with Agent(model=model, db_path=".ralf/runs.sqlite") as agent:
 For a bounded observation, use `observed = await first.wait(wait_timeout=10)`.
 If `observed.wait_reason == "observation_timeout"`, the original Turn is still
 running: keep `first.ref`, and wait on `first` again or use its existing controls.
-Do not submit the next Turn merely because the wait returned. Approval/input
+Do not submit the next Turn merely because the wait returned. Even a terminal Run
+can briefly leave the Session busy while its host or existing obligations settle.
+Observe `session.status()` until idle before the next Turn; a successful snapshot
+does not release the lane. If busy persists, inspect the original Run and pending
+work rather than bypassing the lane or repeatedly submitting new commands. Approval/input
 pauses likewise require handling the original Run; waiting does not approve it.
 Across a restart, reopen the original Runtime/database and explicitly resume
 the saved RunRef as described in [reconnect](agent-api.md#wait-controls-and-reconnect).

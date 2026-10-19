@@ -134,6 +134,38 @@ def extract_checks(sdist, target, version):
     return {name: hashlib.sha256(value).hexdigest() for name, value in contents.items()}
 
 
+def apply_test_corrections(target, spec, original_tests):
+    pending, applied = [], {}
+    for rule in spec.get("test_corrections", []):
+        name = rule["path"]
+        relative = PurePosixPath(name)
+        if (
+            relative.is_absolute()
+            or ".." in relative.parts
+            or not relative.parts
+            or relative.parts[0] != "tests"
+            or name in applied
+            or original_tests.get(name) != rule["before_sha256"]
+        ):
+            raise GateError("test_correction_input_mismatch")
+        path = target.joinpath(*relative.parts)
+        if file_digest(path) != rule["before_sha256"]:
+            raise GateError("test_correction_input_mismatch")
+        text = path.read_text(encoding="utf-8")
+        for edit in rule["replacements"]:
+            if not edit["before"] or text.count(edit["before"]) != 1:
+                raise GateError("test_correction_match_mismatch")
+            text = text.replace(edit["before"], edit["after"], 1)
+        data = text.encode("utf-8")
+        if hashlib.sha256(data).hexdigest() != rule["after_sha256"]:
+            raise GateError("test_correction_result_mismatch")
+        pending.append((path, data))
+        applied[name] = {key: rule[key] for key in ("before_sha256", "after_sha256")}
+    for path, data in pending:
+        path.write_bytes(data)
+    return applied
+
+
 def prepare_artifacts(wheel, sdist, target, spec):
     for artifact in (wheel, sdist):
         if spec["artifacts"].get(artifact.name) != file_digest(artifact):
@@ -156,7 +188,8 @@ def prepare_artifacts(wheel, sdist, target, spec):
     tests = extract_checks(sdist, target, spec["version"])
     if digest(tests) != spec["test_tree_sha256"]:
         raise GateError("test_tree_mismatch")
-    return {"products": products, "tests": tests}
+    corrections = apply_test_corrections(target, spec, tests)
+    return {"products": products, "tests": tests, "test_corrections": corrections}
 
 
 def command(args, log, cwd, env):
@@ -225,6 +258,7 @@ def execute(args, output, result, spec):
         checks = work / "checks"
         result["phase"] = "artifact_verification"
         inputs = prepare_artifacts(args.wheel, args.sdist, checks, spec)
+        result["test_corrections"] = inputs["test_corrections"]
         (output / "input-files.json").write_text(json.dumps(inputs, indent=2) + "\n")
         lock = HERE / "release_gate_requirements.lock"
         result["requirements_sha256"] = file_digest(lock)

@@ -94,5 +94,23 @@
     "3.11": "sha256:0a310eeecf4e1f5a0743f9a6520c90c88d089c903ca5fd283f501e3a805f5f89",
     "3.12": "sha256:34386ef0cb081344d7ec1c103ba398e6e9f64e9ab3a1509accc92a4e24a07258",
     "3.13": "sha256:a1165e272e578941b84abc79e4ab38a0305cd12803a5c4247979ac7655f4d641"
-  }
+  },
+  "test_corrections": [
+    {
+      "path": "tests/test_agent_sessions.py",
+      "before_sha256": "b04de6c6106bd7e39ca429b4441d3b991c7d8f287171aef60dad22b5ce7c4685",
+      "after_sha256": "46d3eb8b57f8422fe84a7f59c09fcc17c8354b0e87b8e9846ba14171928fd40e",
+      "reason": "Run terminal observation does not promise Session lane idle; wait for the documented idle condition before the next Turn. No SDK behavior or test identity change.",
+      "replacements": [
+        {
+          "before": "            assert (await first.wait(wait_timeout=1)).snapshot.state == \"succeeded\"",
+          "after": "            assert (await first.wait(wait_timeout=1)).snapshot.state == \"succeeded\"\n            async with asyncio.timeout(1):\n                # Session exposes polling, not a completion Event.\n                while (await session.status()).busy:  # noqa: ASYNC110\n                    await asyncio.sleep(0)"
+        },
+        {
+          "before": "            assert (await second.wait(wait_timeout=1)).snapshot.state == \"succeeded\"",
+          "after": "            assert (await second.wait(wait_timeout=1)).snapshot.state == \"succeeded\"\n            async with asyncio.timeout(1):\n                # Session exposes polling, not a completion Event.\n                while (await session.status()).busy:  # noqa: ASYNC110\n                    await asyncio.sleep(0)"
+        }
+      ]
+    }
+  ]
 }

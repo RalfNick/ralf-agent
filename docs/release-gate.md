@@ -6,6 +6,7 @@
 
 - `tools/release_gate_manifest.json` 固定a1的wheel／sdist SHA、442个产品与939个测试／示例输入树摘要、311个基础及16个恢复node身份摘要，以及明确排除的一项Temporal测试。
 - `tools/release_gate_requirements.lock` 固定17个第三方依赖的版本及官方PyPI wheel SHA256；二进制依赖按实际平台选择，禁止源码构建或联网补包。
+- 原sdist先按原SHA和939文件原输入树验证。`test_corrections`仅对`test_agent_sessions.py`的两处等待加上有界Session空闲观察，固定替换前／后SHA并在报告披露；不改SDK、311／16的node身份、业务断言或S2期限。原测试3.12失败保留，校正后结果单独验收。
 - 固定两条原starter检查：正常审批恢复、业务提交后进程死亡恢复；两例均须只写一次。基础／恢复pytest使用`-W error`，starter复用原子进程的默认warning行为，不扩称完整资源泄漏专项。
 - 原a1制品仍来自`ba7bc46`，不重建、不覆盖。维护脚本使用当前仓库版本，报告分别记录脚本／manifest／锁文件摘要，不能把工具提交当作原包源码提交。
 
@@ -44,6 +45,47 @@ done
 
 缺包、版本或哈希不符时门禁失败，不回退网络或不同版本。Linux镜像需事先按manifest里的精确digest准备；矩阵脚本使用`--pull=never`，不自动下载镜像。
 
+## 离线准备与搬运镜像
+
+manifest 中的 `linux_arm64_images` 是本次 Docker 存储里的固定镜像引用，不应把裸 `sha256:...` 当作可下载的仓库名称。其他机器可从已有验证环境导出三个镜像，携带归档及校验文件，再加载到目标 Docker。不要改成可移动的 `python:3.11` 等标签来绕过固定身份。
+
+在已有三份缓存的机器上执行，先把 `/ABS` 换成自己的路径；已有归档不覆盖：
+
+```bash
+python3.12 - <<'PYEXPORT'
+import hashlib
+import json
+from pathlib import Path
+import subprocess
+
+archive = Path("/ABS/linux-arm64-images.tar")
+if archive.exists():
+    raise FileExistsError(archive)
+spec = json.loads(Path("tools/release_gate_manifest.json").read_text())
+subprocess.run([
+    "docker", "image", "save", "--platform", "linux/arm64",
+    "--output", str(archive), *spec["linux_arm64_images"].values(),
+], check=True)
+with archive.open("rb") as stream:
+    digest = hashlib.file_digest(stream, "sha256").hexdigest()
+archive.with_suffix(".tar.sha256").write_text(f"{digest}  {archive.name}\n")
+PYEXPORT
+```
+
+将两份文件复制到目标机器同一目录，先核对 SHA，再加载。不同操作系统使用自己的 SHA256 校验工具；以下适用于本轮 Mac 环境：
+
+```bash
+cd /ABS
+shasum -a256 -c linux-arm64-images.tar.sha256
+docker image load --input linux-arm64-images.tar
+```
+
+随后仍须按原 manifest 验证镜像与平台；加载本身不算平台验收。Docker 的仓库／索引引用和按平台检查返回的配置 ID 可以不同，记录二者即可，不能把二者强行当成同一种摘要。目标 Docker 若无法解析原固定引用，应保留失败，不修改 manifest 来伪造同一资格。
+
+离线复验还需要原 wheel、原 sdist、四份维护工具／输入文件及锁定 wheelhouse；不用携带整个历史 `dist/`。只复制 `release_gate.py` 不足以复验。镜像导出／加载是标准 Docker 操作，不接入 SDK、不获取模型凭据；真实门禁容器仍保持 `network=none`。
+
+本轮当前 Docker 的导出／加载回环结果见收尾验收，不外推不同 Docker 存储格式或未测宿主。官方仓库连接超时和匿名 AMD64 镜像下载失败单独保留；尚无 AMD64 原生或模拟通过证据，也未执行远端 CI。
+
 ## 执行
 
 只读查看固定范围，不运行测试或创建目录：
@@ -76,8 +118,10 @@ python3.12 tools/run_release_gate_linux.py \
 
 门禁从固定sdist提取测试到临时目录，建立无system-site-packages的venv，只安装wheelhouse中的哈希锁定依赖和指定wheel。实际导入路径、版本、442产品文件及最小可选依赖状态都须匹配。
 
+校正只在原sdist校验后应用，每段原文必须唯一且整个文件前后摘要匹配；不接受已漂移或重复应用的测试输入，不重建原a1包。采纳报告同时核对这份校正记录，不能把校正后的通过当作原测试输入通过。
+
 收集阶段必须与311／16的**完整node身份**匹配，不能靠相同数量放行。执行阶段要求pytest返回0、JUnit存在且真实case数量匹配，失败／错误／skip均为0；不得只检查最终回答。starter另检查两例业务写入一次。Linux还须匹配资源上限并无OOM。
 
-`report.json`默认失败，只有所有步骤通过才写`passed_selected_scope`并退出0。报告保存当前phase、输入／脚本／锁摘要、平台和结果；JUnit、原日志、依赖及pip安装来源另存。容器矩阵还保存image、created／exited、网络与资源状态。临时venv会清理；报告及固定输入足以重建，不是执行恢复检查点。
+`report.json`默认失败，只有所有步骤通过才写`passed_selected_scope`并退出0。报告保存当前phase、输入／脚本／锁摘要、平台和结果；JUnit、原日志、依赖及pip安装来源另存。容器矩阵还在创建前保存`matrix-input.json`与包装器快照，记录四份工具摘要、实际制品摘要、宿主信息和资源声明；创建容器前先核对实际复制制品与manifest，错误时保存matrix-error.json且不创建容器；采纳报告再绑定这些实际摘要，并重新核对工具摘要、架构、测试校正、311／16／2结果及资源／OOM，不仅检查passed字符串。另存image、created／exited、网络与资源状态。临时venv会清理；报告及固定输入足以重建，不是执行恢复检查点。
 
 失败后保留原输出，新尝试使用新目录。更新制品、测试集合或依赖须显式审查manifest／lock及新的实际证据，不能改摘要来隐藏失败。发布门禁通过只证明该制品在该平台的所选基础范围，不关闭S2、完整第三阶段、模型质量、其他服务或历史兼容资格。公开发行仍按[发布流程](releasing.md)另行授权。

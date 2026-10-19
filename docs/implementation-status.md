@@ -6,7 +6,9 @@
 
 **当前交付：0.1.0a1 Local 基础 SDK Alpha 本地候选。** 首版范围已冻结，见[Alpha说明](releases/0.1.0a1.md)。产品行为沿用fc128b8，仅发行版本与材料调整。固定源码393项、独立安装160项及两条starter通过；Linux ARM64三版本各311项基础／16项恢复及两条starter通过，零失败／错误／跳过／OOM。本候选验收单独见[本批记录](../architecture/reviews/2026-10-19-alpha1-release-candidate.md)。尚未公开发布，函数指纹和S2继续后置。
 
-**发布门禁维护（本批）。** 原 a1 制品与产品字节保持固定，新增[离线发布门禁及平台矩阵](release-gate.md)，将制品 SHA、依赖锁、311／16 项完整 node 身份、两条 starter 及实际平台回执作为放行条件。维护工具单测和临时 sdist 解包测试分别 **34 passed**，不把它们合并为 SDK 覆盖。Mac 3.12／Linux ARM64 3.11–3.13各 **311＋16 passed**，两条 starter 各写一次，零失败／错误／跳过；Linux最终轮最高290.93 MiB、零OOM。资源、原失败及工具版本分别记录于[本批验收](../architecture/reviews/2026-10-19-release-gate.md)；AMD64／远端 CI／Windows不列为通过。本批仅维护工具、测试和文档，不新增 SDK 能力或重新构建推荐制品；函数指纹和 S2 继续后置。
+**首版维护收尾（本批）。** 用户确认仅继续首版冻结范围。补Linux报告完整身份／实际输入预检、创建前来源记录及离线镜像导出／加载；发现原Session用例混同Run终态与lane空闲，仅修测试并在门禁manifest固定校正前后SHA，原a1 wheel／sdist和442产品字节不变。源码及checkout外原wheel安装各92项通过；Mac3.12和Linux ARM64三版本最终各311＋16项及两条starter通过，Linux最高290.82MiB、零OOM；原3.12测试失败与显式校正后结果分别记录于[本批验收](../architecture/reviews/2026-10-19-alpha1-maintenance-closeout.md)。首版可执行维护项与外部待办见[收尾表](releases/0.1.0a1.md#首版收尾状态)：AMD64镜像准备网络超时，远端CI／公开发行／独立采用未验收，函数指纹和S2继续后置。
+
+**前批发布门禁维护。** 原 a1 制品与产品字节保持固定，新增[离线发布门禁及平台矩阵](release-gate.md)，将制品 SHA、依赖锁、311／16 项完整 node 身份、两条 starter 及实际平台回执作为放行条件。维护工具单测和临时 sdist 解包测试分别 **34 passed**，不把它们合并为 SDK 覆盖。Mac 3.12／Linux ARM64 3.11–3.13各 **311＋16 passed**，两条 starter 各写一次，零失败／错误／跳过；Linux最终轮最高290.93 MiB、零OOM。资源、原失败及工具版本分别记录于[本批验收](../architecture/reviews/2026-10-19-release-gate.md)；AMD64／远端 CI／Windows不列为通过。本批仅维护工具、测试和文档，不新增 SDK 能力或重新构建推荐制品；函数指纹和 S2 继续后置。
 
 **上一推荐制品：dev123 Local 基础 SDK 本地预览。** 该批统一六处已有公共适配器的异步 callable 判断，保持原身份、审批、返回值和所有权契约；补审批重启、记忆提炼、产物卸载与索引维护的替换组合测试，以及按现象排障入口。受影响源码 **379 passed**，checkout 外安装 **160 passed**；同一 wheel 的既有 Temporal／PostgreSQL／HTTP 门禁 **24 passed**，均零失败／错误／跳过，分别取证、不相加为全量覆盖。实际服务关闭通过；这些仅覆盖所选审计／安全保留路径。详情见[dev123验收](../architecture/reviews/2026-10-19-dev123-sdk-stabilization.md)，制品见发布指南的历史dev123段落。不新增能力；函数指纹专项、S2、真实模型质量、完整第三阶段和长期路线图状态保持。
 
