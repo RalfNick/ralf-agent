@@ -2,7 +2,7 @@
 
 [文档目录](README.md) · [安装](installation.md) · [扩展方式](extending.md#先选择扩展方式)
 
-本文面向 dev121 的 Local 基础 SDK。先按[首用教程](getting-started.md)用现有 starter 完成审批与恢复，再使用同一个工单 `INC-001` 学习组件组合。这里没有新的框架入口或适配器，只有应用代码。
+本文面向 dev122 的 Local 基础 SDK。先按[首用教程](getting-started.md)用现有 starter 完成审批与恢复，再使用同一个工单 `INC-001` 学习组件组合。这里没有新的框架入口或适配器，只有应用代码。
 
 ## 准备同一个应用文件
 

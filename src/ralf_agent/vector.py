@@ -6,7 +6,6 @@ bound returned evidence, not embedding fees or corpus scan work.
 
 import copy
 import heapq
-import inspect
 import json
 import math
 import threading
@@ -17,6 +16,7 @@ from typing import Protocol
 
 from .errors import DefinitionMismatch, ValidationError
 from .memory import memory_call
+from .ports import is_async_callable
 from .retrieval import (
     Chunk,
     DocumentRecord,
@@ -310,7 +310,7 @@ class VectorRetriever:
             callable(getattr(index, name, None)) for name in ("upsert", "search", "delete_document")
         ):
             raise ValidationError("Vector index must implement its configured port")
-        if not inspect.iscoroutinefunction(getattr(embedding, "embed", None)):
+        if not is_async_callable(getattr(embedding, "embed", None)):
             raise ValidationError("EmbeddingProvider.embed must be async")
         if _index_identity(index)["dimensions"] != _embedding_identity(embedding)["dimensions"]:
             raise ValidationError("Embedding and vector index dimensions do not match")

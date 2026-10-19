@@ -1,6 +1,6 @@
 # Ralf-Agent 扩展指南
 
-版本：0.1.0.dev121；更新：2026-10-19。面向 SDK／适配器开发者。本指南描述执行、装配、召回和知识端口；当前扩展组件与限制见 [实现清单](implementation-status.md)，企业适配与完整 M1 仍未验收。
+版本：0.1.0.dev122；更新：2026-10-19。面向 SDK／适配器开发者。本指南描述执行、装配、召回和知识端口；当前扩展组件与限制见 [实现清单](implementation-status.md)，企业适配与完整 M1 仍未验收。
 
 完整目标要求每层交付公共契约、默认实现、替换示例和共同验收，见[通用框架能力矩阵](../architecture/viewpoints/framework-capabilities.md)。静态图／并行、动态规划／团队和远程数据已有实现，分别见[静态 Workflow](static-workflows.md)、[编排](orchestration.md)与[远程数据](remote-data.md)。默认实现不一定默认启用；每 Agent 能力绑定、推荐组合与 Local/Temporal 契约差异见[整体审查](../architecture/reviews/2026-10-08-agent-framework-alignment.md)。下表以本地装配契约为主，Temporal 支持范围单独声明。
 
@@ -44,7 +44,7 @@ CLI 的 `--factory`／底层 ExecutionEngine 可按公共端口替换；高层 L
 | CoordinatorLease | `coordinator=` | 同一执行权威只允许一个持有者，活跃调用结束前不能交出归属 |
 | 当前工具授权 | `policy=` | 可信宿主同步授权函数，只允许返回 None；拒绝抛 AuthorizationDenied，任何其他返回值均拒绝 |
 
-同步返回 `None` 表示检查已经执行并完成授权。上下文管理器、awaitable、generator、True／False、字典等不能表示授权；框架不进入它们，也不调用它们的任意生命周期方法。对已识别的 coroutine／generator 仅做关闭清理，然后报配置错误。
+同步返回 `None` 表示检查已经执行并完成授权。上下文管理器、awaitable、generator、True／False、字典等不能表示授权；框架不进入它们，也不调用它们的任意生命周期方法。对已识别的 coroutine／generator 仅做关闭清理，然后报配置错误。人工审批的 `approved` 则必须是布尔值：`False` 拒绝，`True` 批准；字符串、数字或 `None` 在 Local 命令接受前拒绝，不做真值转换。
 
 Local、Temporal、Binding 和运行装配共用 `ralf_agent.ports.validate_component_identity` 的组件身份与方法形状检查：identity 必须是非空有限 JSON 对象，采纳的是独立副本；检查不调用组件方法。异步端口接受 `async def` 方法或具有 `async def __call__` 的 callable 对象，同步返回 coroutine 的普通函数不满足异步端口。同步纯策略拒绝 coroutine／generator／async-generator 方法；身份或方法读取失败报告配置错误。组件被实际调用后，其返回值与恢复身份仍由各执行边界分别校验。
 
@@ -84,6 +84,8 @@ from ralf_agent import ThreadedMemoryAdapter
 `expires_at` 使用 Unix 秒，仅接受 `None` 或可表示为有限浮点数的 int／float；`None` 表示永不过期，过去时间合法，NaN／无穷／布尔／字符串等在写入前拒绝，不改变 CAS 版本。
 
 `facts(scope, namespace)` 只返回当前 Scope 下未过期的已确认事实；`put_fact(..., expected_version)` 不静默覆盖其他写入。本地内存／SQLite 及 dev14 Redis／PostgreSQL 提供 read_page/recall 与事实校验。未实现新端口时 Legacy 桥仍全量读取，不能宣称底层有界。默认模型输入行为保留，需要显式配置 `MemoryRecallPolicy()` 才启用分页。知识库、检索器、向量索引和 Embedding 分别替换；见[召回与 RAG](recall-and-rag.md)及[真实远程适配器](remote-data.md)。
+
+Facts 的 `recall` 默认按游标分页。已有语义排序后端声明可选 `recall_mode="window"`，表示一次请求使用完整 `scan_limit` 候选窗口，输出不超过 `max_items`／`max_chars`，不接受或返回游标。`FactsBindingResource` 通过该结构化元数据保留原查询窗口，不要求继承内置语义类；添加来源信息后仍遵守字符上限，超限结果省略且计入 `skipped`，不自动扩大查询或补发请求。非默认模式进入资源身份并在调用前后校验，旧游标后端无需修改。
 
 ## 3. 身份与不可变发布
 

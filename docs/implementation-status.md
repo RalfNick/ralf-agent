@@ -1,10 +1,10 @@
-# Implementation status — 0.1.0.dev121
+# Implementation status — 0.1.0.dev122
 
 ## 当前交付摘要
 
 更新：2026-10-19。本节是唯一当前状态摘要；历史批次保留在下方，仅作原版本证据引用。R01–R26是长期路线图，不作为本轮基础交付的额外阻塞条件。
 
-**当前推荐版本：dev121 Local 基础 SDK 本地预览。** 本批统一新制品版本和安装入口，并复用现有能力补连续工单示例与扩展方式说明；精确制品与验证范围见[本地交付](releasing.md#本轮本地交付)和[验收记录](../architecture/reviews/2026-10-19-dev121-basic-delivery.md)。19模块源码290通过，checkout外最终wheel安装82通过，原starter两项独立审批／进程恢复各写一次；442产品文件与源码一致。仅所选Local基础范围，不外推全量回归、线上模型或所有服务。未新增执行功能，函数指纹和 S2 继续后置。
+**当前推荐版本：dev122 Local 基础 SDK 本地预览。** 本批修复上轮确认的六项边界问题：Local 审批严格布尔、非终态等待报告失败宿主、scoped 语义召回完整窗口、Embedding 异步 callable 一致性、A2A 错误字节上限与 CI 安装目录；补原服务审计／安全清理门禁。源码、安装和有限恢复结果见[本批验收](../architecture/reviews/2026-10-19-dev122-review-fixes.md)，精确制品见[本地交付](releasing.md#本轮本地交付)。不新增执行能力；旧游标身份保持，scoped 语义资源采用新身份。函数指纹、S2、真实服务／模型及整体阶段不增加验收结论。
 
 **基础SDK交付已冻结。** 原交付包版本为 `0.1.0.dev120`，运行时代码固定于 `b871f61`，原制品保持不变；后续P3-3增量单独记录，不套用旧包验收。本地wheel、校验与安装方式见[本地交付说明](releasing.md#本轮本地交付)，日常起步见[首用教程](getting-started.md)和[基础能力](basic-capabilities.md)。这是开发预览，尚未核验同版本的公开PyPI／GitHub Release。
 

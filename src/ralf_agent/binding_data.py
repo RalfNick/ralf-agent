@@ -39,6 +39,13 @@ def data_namespace_options(namespaces, default_namespace):
     return tuple(namespaces)
 
 
+def _recall_mode(backend):
+    mode = getattr(backend, "recall_mode", "cursor")
+    if type(mode) is not str or mode not in {"cursor", "window"}:
+        raise ValidationError("Facts recall_mode must be cursor or window")
+    return mode
+
+
 def facts_identity(backend):
     if isinstance(backend, FactsView):
         raise ValidationError(
@@ -47,7 +54,8 @@ def facts_identity(backend):
     identity = text(getattr(backend, "backend_id", None), "Facts backend identity")
     if not callable(getattr(backend, "facts", None)):
         raise ValidationError("Facts backend must implement facts")
-    return {"backend_id": identity}
+    mode = _recall_mode(backend)
+    return {"backend_id": identity, **({"recall_mode": mode} if mode != "cursor" else {})}
 
 
 def _namespace(selector, scope, namespaces, default):
@@ -87,7 +95,9 @@ class FactsBindingResource:
 
     def select(self, selector, scope):
         namespace = _namespace(selector, scope, self.namespaces, self.default_namespace)
-        return FactsView(self.backend, scope, namespace, self.backend.backend_id)
+        return FactsView(
+            self.backend, scope, namespace, self.backend.backend_id, _recall_mode(self.backend)
+        )
 
 
 @dataclass(frozen=True)
@@ -96,6 +106,7 @@ class FactsView:
     scope: Scope
     namespace: str
     original_backend_id: str
+    original_recall_mode: str = "cursor"
 
     @property
     def backend_id(self):
@@ -103,7 +114,15 @@ class FactsView:
 
     @property
     def resource(self):
-        return {"backend_id": self.backend_id, "namespace": self.namespace}
+        return {
+            "backend_id": self.backend_id,
+            "namespace": self.namespace,
+            **(
+                {"recall_mode": self.original_recall_mode}
+                if self.original_recall_mode != "cursor"
+                else {}
+            ),
+        }
 
     def _check(self, scope, logical_namespace):
         text(logical_namespace, "Logical Facts namespace")
@@ -111,6 +130,8 @@ class FactsView:
             raise AuthorizationDenied("Facts view belongs to another trusted Scope")
         if self.backend_id != self.original_backend_id:
             raise DefinitionMismatch("The actual Facts backend changed")
+        if _recall_mode(self.backend) != self.original_recall_mode:
+            raise DefinitionMismatch("The selected Facts recall mode changed")
 
     def _source(self, value):
         return {
@@ -142,6 +163,8 @@ class FactsView:
         self._check(scope, namespace)
         if not isinstance(query, RecallQuery):
             raise ValidationError("Facts recall requires RecallQuery")
+        if self.original_recall_mode == "window":
+            return await self._recall_window(scope, namespace, query)
         binding = _binding(self.backend_id, scope, "scoped-facts-v1", self.namespace, query)
         state = _decode_cursor(query.cursor, binding)
         raw_cursor, snapshot = None, None
@@ -215,6 +238,36 @@ class FactsView:
             skipped,
             snapshot,
             bounded,
+        )
+
+    async def _recall_window(self, scope, namespace, query):
+        if query.cursor is not None:
+            raise ValidationError("Window Facts recall does not support cursors")
+        delegated = replace(query)
+        page = await self._call(self.backend.recall, scope, self.namespace, delegated)
+        self._check(scope, namespace)
+        if not isinstance(page, RecallPage):
+            raise ValidationError("Facts recall must return RecallPage")
+        page = RecallPage(**asdict(page))
+        if (
+            page.next_cursor is not None
+            or len(page.items) > query.max_items
+            or page.scanned > query.scan_limit
+            or page.used_chars > query.max_chars
+        ):
+            raise ValidationError("Window Facts backend exceeded the delegated recall allowance")
+        items = []
+        for item in self._annotate(page.items):
+            if len(canonical([*items, item])) <= query.max_chars:
+                items.append(item)
+        return RecallPage(
+            items,
+            None,
+            len(canonical(items)),
+            page.scanned,
+            page.skipped + len(page.items) - len(items),
+            page.snapshot_id,
+            page.backend_bounded,
         )
 
     async def validate_facts(self, scope, namespace, items):

@@ -112,6 +112,14 @@ def _loads(raw):
     return value
 
 
+def _response_limit_error(request_id):
+    return {
+        "jsonrpc": "2.0",
+        "id": request_id,
+        "error": {"code": -32603, "message": "Response exceeds configured limit"},
+    }
+
+
 def _part(part):
     if not isinstance(part, dict):
         raise ValidationError("A2A parts require objects")
@@ -656,16 +664,10 @@ class A2AApplication:
     async def _reply(self, send, status, value):
         encoded = canonical(value).encode("utf-8")
         if len(encoded) > self._max_response:
-            status, encoded = (
-                200,
-                canonical(
-                    {
-                        "jsonrpc": "2.0",
-                        "id": value.get("id"),
-                        "error": {"code": -32603, "message": "Response exceeds configured limit"},
-                    }
-                ).encode(),
-            )
+            status = 200
+            encoded = canonical(_response_limit_error(value.get("id"))).encode("utf-8")
+            if len(encoded) > self._max_response:
+                encoded = canonical(_response_limit_error(None)).encode("utf-8")
         await send(
             {
                 "type": "http.response.start",
@@ -734,6 +736,11 @@ class A2AApplication:
                     or not isinstance(request.get("method"), str)
                 ):
                     raise _RPCError(-32600, "Invalid request")
+                if (
+                    len(canonical(_response_limit_error(request["id"])).encode("utf-8"))
+                    > self._max_response
+                ):
+                    raise _RPCError(-32600, "Request identity exceeds response limit")
                 request_id = request["id"]
                 method = request["method"]
                 params = request.get("params", {})

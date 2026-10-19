@@ -78,6 +78,36 @@ class ExplicitEmbedding:
         return [table[text] for text in texts]
 
 
+def test_vector_retriever_accepts_native_async_callable_embedding(index):
+    module = api()
+    retrieval = importlib.import_module("ralf_agent.retrieval")
+
+    class Embed:
+        async def __call__(self, texts):
+            return await ExplicitEmbedding().embed(texts)
+
+    class CallableEmbedding:
+        identity = {"kind": "callable-embedding", "version": "1"}
+        dimensions = 2
+        embed = Embed()
+
+    async def run():
+        with retrieval.InMemoryKnowledgeStore() as store:
+            store.put(Scope(), "n", retrieval.Document("a", "apple"), expected_version=0)
+            store.put(Scope(), "n", retrieval.Document("b", "banana"), expected_version=0)
+            retriever = module.VectorRetriever(store, index, CallableEmbedding())
+            await retriever.index_document(Scope(), "n", "a")
+            await retriever.index_document(Scope(), "n", "b")
+            result = await retriever.retrieve(
+                Scope(), "n", retrieval.RetrievalQuery("query", limit=1)
+            )
+            assert [item.document_id for item in result.items] == ["a"]
+            assert result.items[0].score == pytest.approx(1.0)
+            await retriever.validate(Scope(), "n", result.items)
+
+    asyncio.run(run())
+
+
 def test_vector_retriever_hydrates_authority_and_never_revives_stale_hits(index):
     module = api()
     retrieval = importlib.import_module("ralf_agent.retrieval")

@@ -1077,6 +1077,8 @@ class LocalEngine:
 
     def approve(self, run_id, action_id, target_digest, *, command_id, approved=True):
         self._authorized(run_id)
+        if type(approved) is not bool:
+            raise ValidationError("Approval requires a boolean")
 
         def apply():
             if "local_deadlines" in self._authorized(run_id):

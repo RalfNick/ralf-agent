@@ -1,13 +1,34 @@
 # 预览版本验证与发布
 
-当前推荐 **0.1.0.dev121 的 Local 基础 SDK 本地预览制品**，使用下方唯一目录及校验记录。源码包含 `37e6c28` 的公共组件修复；本批不增加后端或编排能力，不代表第三阶段、函数指纹专项、S2 或完整 R01–R26 已验收。历史 dev120 制品和原始证据保留，不覆盖旧包，也不推荐用它们替代当前基础起步包。
+当前推荐 **0.1.0.dev122 的 Local 基础 SDK 本地预览制品**。本批修复 dev121 审查确认的审批、等待、语义绑定、Embedding 与 HTTP 响应边界问题，并修正已有 CI 门禁；不增加后端或编排能力。函数指纹专项、S2、完整第三阶段与 R01–R26 的状态保持。
 
-本仓库的 CI 执行检查和构建，不自动发布到 PyPI／GitHub Release。以下是维护者的发布流程；发布、推送及权限配置由维护者明确执行或授权，不由文档验证自动触发。目前尚未核验 PyPI 或 GitHub Release 中有对应发行包。
-
+CI 检查与构建不自动发布到 PyPI／GitHub Release。本轮只生成本地制品，未推送、上传或核验公开发行；历史制品及其证据保留。
 
 ## 本轮本地交付
 
-推荐目录为 `dist/basic-sdk-dev121/`：
+推荐目录为 `dist/basic-sdk-dev122/`：
+
+- `ralf_agent-0.1.0.dev122-py3-none-any.whl`：已验证的安装包。
+- `ralf_agent-0.1.0.dev122.tar.gz`：包含源码、测试、文档与连续示例。
+- `delivery.json`：精确 SHA、工作区来源和有限验证范围。
+- `SHA256SUMS`：目录校验清单。
+
+```bash
+cd /ABSOLUTE/PATH/ralf-agent/dist/basic-sdk-dev122
+shasum -a 256 -c SHA256SUMS
+python -m pip install ./ralf_agent-0.1.0.dev122-py3-none-any.whl
+ralf --version
+```
+
+版本应为 `0.1.0.dev122`。先按[首用教程](getting-started.md)运行审批／恢复，再按[连续教程](support-journey.md)逐步增加能力。[本批验收](../architecture/reviews/2026-10-19-dev122-review-fixes.md)区分源码、安装、回归和实际服务证据，不将不同范围拼成全量验收。
+
+不同可安装候选使用独立版本和目录，不覆盖 dev121。包版本、Run Release、SQLite Schema 和 Temporal Worker 身份分别管理。**本批 scoped 语义 Facts 资源新增窗口模式身份**，旧任务须保留原匹配环境，不能静默重绑；普通游标资源身份保持。不新增旧 History／函数指纹兼容资格，也不恢复 S2。
+
+以下各段保留对应历史制品的原始范围。
+
+## 历史基础 SDK 制品（dev121）
+
+原目录为 `dist/basic-sdk-dev121/`：
 
 - `ralf_agent-0.1.0.dev121-py3-none-any.whl`：安装用包。
 - `ralf_agent-0.1.0.dev121.tar.gz`：包含文档和连续示例的源码包。

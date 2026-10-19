@@ -42,6 +42,9 @@ def _fact_text(record):
 
 
 class SemanticMemoryStore:
+    # Ranking consumes one complete candidate window, not a cursor page.
+    recall_mode = "window"
+
     def __init__(
         self,
         backend,

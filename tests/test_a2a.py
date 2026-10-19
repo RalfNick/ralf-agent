@@ -10,7 +10,7 @@ from ralf_agent.storage import SQLiteStore
 from .helpers import ScriptedProvider
 
 
-def make_app(tmp_path, responses=(), *, wakeup=None, inbox_factory=None):
+def make_app(tmp_path, responses=(), *, wakeup=None, inbox_factory=None, max_response_bytes=262144):
     from ralf_agent.a2a import A2AApplication
     from ralf_agent.handoff import SQLiteInbox
 
@@ -33,8 +33,78 @@ def make_app(tmp_path, responses=(), *, wakeup=None, inbox_factory=None):
         authenticate=auth,
         url="http://test/rpc",
         wakeup=wakeup,
+        max_response_bytes=max_response_bytes,
     )
     return app, runtime, inbox
+
+
+@pytest.mark.parametrize("request_id", ["x" * 4000, "界" * 1000], ids=["ascii", "utf8"])
+def test_oversized_rpc_id_is_bounded_and_rejected_before_submission(tmp_path, request_id):
+    async def run():
+        app, engine, inbox = make_app(tmp_path, max_response_bytes=1024)
+        try:
+            request = {
+                "jsonrpc": "2.0",
+                "id": request_id,
+                "method": "message/send",
+                "params": {
+                    "message": {
+                        "kind": "message",
+                        "role": "user",
+                        "messageId": "bounded-message",
+                        "parts": [{"kind": "data", "data": {"question": "q"}}],
+                    }
+                },
+            }
+            async with httpx.AsyncClient(transport=httpx.ASGITransport(app=app)) as http:
+                response = await http.post(
+                    "http://test/rpc", json=request, headers={"Authorization": "Bearer trusted"}
+                )
+                assert len(response.content) <= 1024
+                assert response.json()["id"] is None
+                assert response.json()["error"]["code"] == -32600
+                assert inbox.pending(Scope()) == []
+                assert engine.providers["default"].calls == 0
+                request["id"] = 7
+                accepted = await http.post(
+                    "http://test/rpc", json=request, headers={"Authorization": "Bearer trusted"}
+                )
+                assert accepted.json()["id"] == 7
+                assert accepted.json()["result"]["status"]["state"] == "submitted"
+        finally:
+            engine.close()
+            inbox.close()
+
+    asyncio.run(run())
+
+
+def test_oversized_result_keeps_small_rpc_id_in_bounded_error(tmp_path):
+    async def run():
+        app, engine, inbox = make_app(
+            tmp_path, [ModelResponse(output="x" * 3000)], max_response_bytes=1024
+        )
+        try:
+            handle = engine.submit(AgentSpec("agent", "Answer"), "q", command_id="s")
+            assert (await engine.drive(handle.run_id)).state == "succeeded"
+            async with httpx.AsyncClient(transport=httpx.ASGITransport(app=app)) as http:
+                response = await http.post(
+                    "http://test/rpc",
+                    headers={"Authorization": "Bearer trusted"},
+                    json={
+                        "jsonrpc": "2.0",
+                        "id": "original",
+                        "method": "tasks/get",
+                        "params": {"id": handle.run_id},
+                    },
+                )
+                assert len(response.content) <= 1024
+                assert response.json()["id"] == "original"
+                assert response.json()["error"]["code"] == -32603
+        finally:
+            engine.close()
+            inbox.close()
+
+    asyncio.run(run())
 
 
 def test_native_run_send_get_cancel_and_authenticated_scope(tmp_path):

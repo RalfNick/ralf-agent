@@ -76,6 +76,9 @@ version gates. Capability discovery does not replace admission-time validation.
 - submit/resume and explicit controls wake the hosted authority. A failed host
   reports ExecutionHostFailed on both root and child waits, retaining the original Run; fix the original
   component and explicitly resume. Queries never choose a new model/release.
+  Failed hosts take precedence over nonterminal pause/control wait results; a
+  committed terminal snapshot remains observable. Restoring a transient storage
+  fault alone does not restart a failed deadline observer: explicitly resume.
 - status/events/diagnostics expose durable evidence; they do not create new work.
 - `await handle.pending()` discovers original approval/reconciliation owners,
   including nested children. Attach that returned RunRef to apply the control;

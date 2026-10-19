@@ -2,6 +2,7 @@
 
 import asyncio
 import time
+from contextlib import contextmanager
 
 import pytest
 
@@ -21,6 +22,77 @@ async def eventually(predicate):
         if asyncio.get_running_loop().time() >= deadline:
             pytest.fail("The original Local deadline authority did not advance")
         await asyncio.sleep(0.002)
+
+
+@pytest.mark.parametrize("kind", ["agent", "team"])
+def test_default_wait_reports_failed_deadline_host_after_transient_store_recovery(tmp_path, kind):
+    class TransientStore(r.SQLiteStore):
+        fail_transactions = False
+
+        @contextmanager
+        def transaction(self):
+            if self.fail_transactions:
+                raise OSError("Transient offline transaction failure")
+            with super().transaction():
+                yield
+
+    async def scenario():
+        writes = []
+
+        class Provider:
+            identity = {"kind": "transient-deadline-test", "version": "1"}
+
+            async def complete(self, messages, tools):
+                return r.ModelResponse(tool_calls=(r.ToolCall("change", {}),))
+
+        tools = r.ToolRegistry()
+        tools.register(
+            r.ToolSpec(
+                "change",
+                "Change",
+                {"type": "object"},
+                effect="unqueryable_write",
+                requires_approval=True,
+            ),
+            lambda arguments, context: writes.append(context.effect_key),
+        )
+        store = TransientStore(tmp_path / "transient.sqlite")
+        engine = r.LocalEngine(
+            store,
+            providers={"default": Provider()},
+            tools=tools,
+            execution_policy=LocalExecutionPolicy(approval_timeout_seconds=0.15),
+        )
+        runtime = r.Runtime(engine, owned=True)
+        root = None
+        try:
+            definition = r.AgentSpec("writer", "Change", ("change",))
+            if kind == "team":
+                definition = r.TeamSpec("team", {"worker": definition})
+            root = await runtime.create_agent(definition).submit("q", command_id="s")
+            assert (await root.wait(wait_timeout=1)).snapshot.state == "waiting_approval"
+            targets = [root]
+            if kind == "team":
+                targets.append(runtime.attach(r.RunRef.from_dict((await root.pending())[0]["ref"])))
+            store.fail_transactions = True
+            await eventually(lambda: root.ref.run_id in engine._deadline_failures)
+            store.fail_transactions = False
+            for target in targets:
+                assert (await target.status()).state == "waiting_approval"
+                with pytest.raises(ExecutionHostFailed):
+                    await target.wait(wait_timeout=0)
+            assert writes == []
+            await runtime.resume(root.ref)
+            await eventually(lambda: engine.status(root.ref.run_id).state == "failed")
+            result = await root.wait(wait_timeout=1)
+            assert result.snapshot.error["code"] == "approval_expired" and writes == []
+        finally:
+            store.fail_transactions = False
+            if root is not None and engine._deadline_failures:
+                await runtime.resume(root.ref)
+            await runtime.aclose(close_timeout=2)
+
+    asyncio.run(scenario())
 
 
 @pytest.mark.parametrize("cancel_observer", [False, True], ids=["timeout", "cancel-wait"])

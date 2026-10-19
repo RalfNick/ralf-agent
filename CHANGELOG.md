@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.0.dev122 — Review contract fixes
+
+- Reject non-boolean Local approval decisions before accepting commands; report failed hosts before nonterminal facade wait results.
+- Preserve the full candidate window of scoped semantic Facts recall through optional structural recall-mode metadata; keep legacy cursor bindings unchanged and account for provenance within output bounds. Existing scoped semantic releases must retain their original environment rather than be rebound silently.
+- Accept native async callable Embedding ports consistently; reject oversized JSON-RPC IDs before business acceptance and bound fallback responses.
+- Correct installed CI test paths and add existing scoped audit/retention service gates. No new execution features, model-quality claims, fingerprint qualification or S2 acceptance.
+
 ## 0.1.0.dev121 — Local basic SDK delivery
 
 - Give the current basic SDK a distinct installable version and one recommended artifact directory; preserve historical dev120 wheels and their exact evidence.

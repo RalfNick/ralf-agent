@@ -522,11 +522,14 @@ class AgentRun:
         while True:
             snapshot = await self.status()
             observed_at = time.time()
-            if snapshot.state in TERMINAL or not terminal_only and snapshot.state in PAUSED:
+            if snapshot.state in TERMINAL:
+                return WaitResult(self.ref, snapshot, "state_reached", time.time())
+            self._runtime._check_wait_errors(self.ref, root)
+            if not terminal_only and snapshot.state in PAUSED:
                 return WaitResult(self.ref, snapshot, "state_reached", time.time())
             if not terminal_only and await self._input_available():
+                self._runtime._check_wait_errors(self.ref, root)
                 return WaitResult(self.ref, snapshot, "control_available", observed_at)
-            self._runtime._check_wait_errors(self.ref, root)
             if deadline is not None and loop.time() >= deadline:
                 return WaitResult(self.ref, snapshot, "observation_timeout", time.time())
             await asyncio.sleep(

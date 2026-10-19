@@ -94,6 +94,15 @@ Hash 仅是显式离线基线，新的语义 Profile／工厂拒绝 Hash 自动�
 JSON／TOML 使用原嵌套声明语言；FactsBindingResource 可在外层提供每 Agent 授权 namespace，
 适配器自身不递归包裹资源。使用 `abuild`，错误内置配置在建库前拒绝，不发送 bootstrap 请求。
 
+dev122 修复了该 namespace 包装将候选窗口缩为一条的问题。`SemanticMemoryStore`
+声明 `recall_mode="window"`；绑定视图单次传递完整查询及扫描额度，保留多条排名结果，
+并在添加来源信息后再次执行字符限额。过大的结果省略且计入 `skipped`，不补查或生成分页游标。
+第三方窗口后端可使用同一元数据；未声明时保持原游标契约。
+
+此修复改变已选择窗口模式的资源发布身份。dev121 已接受的 scoped 语义任务应保留原环境、
+数据与匹配组件，不能在升级时静默重绑；新任务使用修复后的发布。旧游标资源身份保持。
+本批不增加旧 Temporal History 兼容、语义质量或完整分布式组合的验收结论。
+
 SDK 资源借用，由调用方关闭。工厂后端和新组合的 ManagedEmbeddingProvider 由原装配 ledger 拥有；
 新 Embedding 资源明确记录传输与响应流实际释放，失败／重复取消可重试 `aclose`，并阻止新请求。
 owned HTTP 不读取环境代理／CA覆盖；有这些宿主配置时使用 SDK 注入自管客户端／EmbeddingProvider。

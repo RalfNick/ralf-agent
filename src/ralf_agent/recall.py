@@ -147,6 +147,13 @@ class FixedRecallPlanner:
 
 
 class RecallMemoryStore(Protocol):
+    """Bounded recall; optional recall_mode='window' declares no pagination.
+
+    Cursor mode is the legacy default. A window backend ranks candidates using
+    the complete scan_limit, returns up to max_items and never returns a cursor.
+    Scoped bindings preserve this distinction without requiring inheritance.
+    """
+
     backend_id: str
 
     def recall(self, scope: Scope, namespace: str, query: RecallQuery) -> RecallPage: ...
@@ -159,6 +166,8 @@ class AsyncPaginatedSessionStore(Protocol):
 
 
 class AsyncRecallMemoryStore(Protocol):
+    """Native async recall with the same optional recall_mode metadata."""
+
     backend_id: str
 
     async def recall(self, scope: Scope, namespace: str, query: RecallQuery) -> RecallPage: ...
