@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.0a1 — Local SDK Alpha candidate (not published)
+
+- Freeze the first Local SDK Alpha scope and experimental boundaries; align package, CLI, installation and release documentation. No runtime capability, dependency or storage-format change.
+- Include dev123 adapter fixes and Linux per-frame Artifact recovery assertions with explicit SQLite fixture cleanup in the source distribution; keep original failure evidence intact.
+- Build and validate a separate candidate wheel and sdist. Exact scope and results are recorded in docs/releases/0.1.0a1.md and the candidate acceptance; no public upload, new historical compatibility qualification or model-quality claim.
+- Function-fingerprint qualification and S2 remain deferred with their original failures and acceptance requirements.
+
 ## 0.1.0.dev123 — SDK adapter consistency
 
 - Use the shared native-async callable check for existing ToolSource/MCP, memory extraction, managed Artifact, Local Engine control and Facts maintenance ports; preserve their original result, identity and ownership contracts. Async-only ports still reject sync coroutine factories; Artifact stores retain their existing all-sync or all-async modes.

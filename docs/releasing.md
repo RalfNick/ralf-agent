@@ -1,12 +1,25 @@
 # 预览版本验证与发布
 
-当前推荐 **0.1.0.dev123 的 Local 基础 SDK 本地预览制品**。本批统一已有公共适配器的异步 callable 校验，补组合恢复、安装与所选服务证据，并整理排障入口；不增加后端、编排或依赖。函数指纹专项、S2、完整第三阶段与 R01–R26 的状态保持。
+当前推荐 **0.1.0a1 Local 基础 SDK Alpha 本地候选**。首版范围、实验性能力和平台边界见[Alpha说明](releases/0.1.0a1.md)。基于fc128b8，只统一发行版本和材料，不新增运行时能力；函数指纹专项、S2、完整第三阶段与R01–R26状态保持。
 
 CI 检查与构建不自动发布到 PyPI／GitHub Release。本轮只生成本地制品，未推送、上传或核验公开发行；历史制品及其证据保留。
 
 ## 本轮本地交付
 
-推荐目录为 `dist/basic-sdk-dev123/`：
+候选目录为 `dist/alpha1-candidate/`，包含 `ralf_agent-0.1.0a1-py3-none-any.whl`、`ralf_agent-0.1.0a1.tar.gz`、`delivery.json`、`SHA256SUMS`及有限验收证据。原dev123及更早制品不可覆盖。当前仅本地候选，不是公开PyPI或GitHub Release。
+
+```bash
+cd /ABSOLUTE/PATH/ralf-agent/dist/alpha1-candidate
+shasum -a 256 -c SHA256SUMS
+python -m pip install ./ralf_agent-0.1.0a1-py3-none-any.whl
+ralf --version
+```
+
+版本应为`0.1.0a1`。验证记录见[候选验收](../architecture/reviews/2026-10-19-alpha1-release-candidate.md)；首用、连续教程和扩展指南保持原入口。包版本、Run Release、Schema与Worker身份分别管理，本候选不授予额外历史恢复资格。发布前后仍按本文第4节人工核验权限、Tag、精确制品和公开安装；本次不执行这些外部动作。
+
+## 历史基础 SDK 制品（dev123）
+
+原目录为 `dist/basic-sdk-dev123/`：
 
 - `ralf_agent-0.1.0.dev123-py3-none-any.whl`：已验证的安装包。
 - `ralf_agent-0.1.0.dev123.tar.gz`：包含源码、测试、文档与连续示例。
@@ -152,12 +165,12 @@ python -m build
 
 ## 3. 在源码目录外安装 wheel
 
-这里 `/path/to/ralf_agent-0.1.0.dev121-py3-none-any.whl` 是实际构建文件的占位路径。使用新的虚拟环境和源码目录外的临时目录，避免 editable install 或 PYTHONPATH 掩盖打包遗漏。
+这里 `/path/to/ralf_agent-0.1.0a1-py3-none-any.whl` 是实际构建文件的占位路径。使用新的虚拟环境和源码目录外的临时目录，避免 editable install 或 PYTHONPATH 掩盖打包遗漏。
 
 ```bash
 python3 -m venv /tmp/ralf-wheel-check
 source /tmp/ralf-wheel-check/bin/activate
-python -m pip install "/path/to/ralf_agent-0.1.0.dev121-py3-none-any.whl"
+python -m pip install "/path/to/ralf_agent-0.1.0a1-py3-none-any.whl"
 python -m pip check
 mkdir /tmp/ralf-release-smoke
 cd /tmp/ralf-release-smoke

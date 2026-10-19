@@ -8,7 +8,7 @@ Ralf-Agent 把模型决策、工具调用、人工审批和业务结果保存为
 
 [快速开始](#快速开始) · [文档目录](docs/README.md) · [示例](examples/README.md) · [贡献指南](CONTRIBUTING.md) · [更新记录](CHANGELOG.md)
 
-> 当前为 **0.1.0.dev123 开发预览**，API 与部署能力仍在演进。使用范围以[实现清单](docs/implementation-status.md)为准；不同后端与组合的验证范围分别记录。默认本地入门无需模型密钥、Redis、Temporal 或 Docker。
+> 当前为 **0.1.0a1 Alpha 本地候选**，API 与部署能力仍在演进。使用范围以[实现清单](docs/implementation-status.md)为准；不同后端与组合的验证范围分别记录。首版冻结范围、平台及未验收项见[Alpha说明](docs/releases/0.1.0a1.md)，本候选尚未公开发布。默认本地入门无需模型密钥、Redis、Temporal 或 Docker。
 
 ## 为什么使用 Ralf-Agent
 
