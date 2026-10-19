@@ -4,6 +4,8 @@ include tools/verify_codex_seccomp.py tools/codex-seccomp-provenance.json
 recursive-include architecture *.md
 recursive-include docs *.md
 recursive-include examples *.py
+recursive-include examples *.md
+recursive-include .github *.md *.yml
 recursive-include tests *.py
 include tests/codex_control_fixture.json
 include tests/fixtures/codex_environment_local105.json

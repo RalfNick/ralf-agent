@@ -1,6 +1,8 @@
 # 常用 API 与 CLI 参考
 
-版本：0.1.0.dev69；local-4 与已启用绑定的版本身份分别固定。公开 API 为预览契约；静态图、有限规划／团队和真实数据适配器有行为证据，完整 M1 未完成。已交付边界见[实现清单](implementation-status.md)，适配器要求见[扩展指南](extending.md)。以下为常用入口，不替代端口契约。
+[文档目录](README.md) · [核心概念](concepts.md) · [扩展指南](extending.md)
+
+本页汇总常用 SDK 与 CLI 入口，公开 API 仍为预览契约，不替代各专题和端口契约。Local 内核与已启用绑定的版本身份分别固定；当前支持范围见[实现清单](implementation-status.md)，具体配置及生命周期以链接的专题指南为准。下文保留标注开发版本的演进说明。
 
 ## Local 应用入口
 
@@ -61,7 +63,7 @@ from ralf_agent import (
 | `load_spec(path)` | 严格 JSON/TOML Agent、sequence、graph、team 或 dynamic 声明；见[静态 Workflow](static-workflows.md)及[编排](orchestration.md) |
 | `Scope(workspace="default", principal="local-owner")` | 可信宿主传入的作用域；不是企业身份认证 |
 | `OpenAIChatProvider(model, ...)` | 异步 Chat Completions；base_url/timeout/token_parameter、temperature/top_p/stop/seed、stream/capabilities 可配置；密钥通过 api_key 或环境传入 |
-| `DeepSeekChatProvider`／`AnthropicProvider`／`GeminiProvider` | 明确非思考 preset、原生 Messages 文本/工具、原生 Gemini 文本；签名工具与多模态不支持 |
+| `DeepSeekChatProvider`／`AnthropicProvider`／`GeminiProvider` | 分别接入对应模型协议；思考模式、函数工具与原生续接按[模型接入](model-adapters.md)、[DeepSeek 思考](deepseek-thinking.md)及[续接指南](model-continuation.md)显式配置 |
 | `ModelCapabilities`／`StreamingModelProvider`／`ModelStreamEvent` | text/tools/streaming 布尔能力；stream 是异步迭代 text 片段与唯一完整 response，提前结束须 aclose |
 | `ModelResponse(output=..., tool_calls=..., usage=...)` | Provider 决策数据；工具提案使用 `ToolCall(name, arguments, call_id=None)` |
 
@@ -149,7 +151,7 @@ tools.register(
 
 handler 接收 JSON 参数和 InvocationContext。Context 提供 scope、run_id、action_id、attempt_id、effect_key 和 execution_epoch。业务重试／核验使用原 effect_key；effect 可选 read_only、idempotent_write、queryable_write、unqueryable_write。需要审批时设置 `requires_approval=True`，核验函数通过 `register(..., reconciler=...)` 注入。SDK 不隐藏业务重试。
 
-`policy(scope, tool_spec, arguments) -> None` 必须同步完成授权。拒绝抛 `ralf_agent.errors.AuthorizationDenied`；True／False、上下文对象、awaitable 等返回值一律拒绝。工具仍为可信宿主 Python 代码，当前没有沙箱。
+`policy(scope, tool_spec, arguments) -> None` 必须同步完成授权。拒绝抛 `ralf_agent.errors.AuthorizationDenied`；True／False、上下文对象、awaitable 等返回值一律拒绝。默认 Python 工具为可信宿主代码；隔离执行需要显式配置 [Sandbox 工具源](sandbox.md)，不自动隔离任意 Python handler。
 
 | 记忆方法 | 契约 |
 | --- | --- |
