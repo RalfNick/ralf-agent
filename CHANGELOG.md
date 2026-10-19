@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.0.dev121 — Local basic SDK delivery
+
+- Give the current basic SDK a distinct installable version and one recommended artifact directory; preserve historical dev120 wheels and their exact evidence.
+- Add one support-ticket walkthrough reusing existing Provider/tools, durable Session, local lexical RAG, explicit Facts and sequential Workflow; offline by default, live models opt in.
+- Clarify structural ports, inheritance-based managed stages and currently restricted facade/backend extensions. No new execution features; fingerprint qualification and S2 remain deferred.
+
 ## Unreleased — Basic SDK reliability and usage
 
 - Fix Runtime capability discovery for custom ExecutionStore adapters without optional Session extensions; version-only declarations no longer advertise unsupported Sessions. Share component identity and sync/async callable validation across Local, Temporal, bindings and assembly while retaining their execution authorities and existing validator entry signatures. Fingerprint qualification and S2 remain deferred.

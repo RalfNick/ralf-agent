@@ -10,6 +10,8 @@
 2. 按[模型与工具 SDK](sdk-model-tools.md)接入真实模型和自己的 Python 工具。
 3. 按业务需要选择[基础 Harness](recommended-harness.md)、[Workflow](static-workflows.md)或[RAG 模板](recall-and-rag.md)。
 
+希望沿用同一应用时，按[连续工单教程](support-journey.md)依次加入真实模型、Session、RAG、显式 Facts 和顺序 Workflow；[扩展方式表](extending.md#先选择扩展方式)区分端口替换、继承扩展与当前限制。
+
 离线 Provider 用于验证框架装配与执行行为；真实任务效果按模型、工具和业务数据单独验证。已有真实参考任务的冻结证据继续按[验收清单](remaining-work.md)记录的范围引用。
 
 ## 默认实现与替换入口

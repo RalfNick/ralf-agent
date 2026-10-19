@@ -1,8 +1,22 @@
 # Ralf-Agent 扩展指南
 
-版本：0.1.0.dev120；更新：2026-10-19。面向 SDK／适配器开发者。本指南描述执行、装配、召回和知识端口；当前扩展组件与限制见 [实现清单](implementation-status.md)，企业适配与完整 M1 仍未验收。
+版本：0.1.0.dev121；更新：2026-10-19。面向 SDK／适配器开发者。本指南描述执行、装配、召回和知识端口；当前扩展组件与限制见 [实现清单](implementation-status.md)，企业适配与完整 M1 仍未验收。
 
 完整目标要求每层交付公共契约、默认实现、替换示例和共同验收，见[通用框架能力矩阵](../architecture/viewpoints/framework-capabilities.md)。静态图／并行、动态规划／团队和远程数据已有实现，分别见[静态 Workflow](static-workflows.md)、[编排](orchestration.md)与[远程数据](remote-data.md)。默认实现不一定默认启用；每 Agent 能力绑定、推荐组合与 Local/Temporal 契约差异见[整体审查](../architecture/reviews/2026-10-08-agent-framework-alignment.md)。下表以本地装配契约为主，Temporal 支持范围单独声明。
+
+## 先选择扩展方式
+
+从[连续工单示例](support-journey.md)开始即可完成基础定制，不需要实现所有端口。
+
+| 方式 | 当前适用范围 | 开发者需要承担什么 |
+| --- | --- | --- |
+| 结构化端口替换 | Provider、纯 Harness／Context、工具执行器、Session／Facts／Knowledge／Embedding／Vector 等明确端口 | 实现对应方法、身份、Scope／CAS／来源与生命周期；使用现有注入或注册工厂 |
+| 继承扩展 | 受管理记忆 `ManagedMemoryPolicy`、受管理上下文 `ManagedContextPipeline` 及其已声明钩子 | 保留阶段证据、来源准入、预算和恢复约束；不是仅实现同名方法即可替换 |
+| 当前受限 | Local／Temporal Facade 的具体 Engine、Artifact 绑定后的 managed Context、其余未支持的受管理阶段 | 使用已有支持入口；不能靠适配数据库或删除类型检查获得新执行后端／组合 |
+
+例如，自定义普通 `ContextBuilder` 可直接注入 `context_assembler`；只有需要原受管理阶段或显式 Artifact 绑定时，才需要满足 managed Context 契约。自定义长期记忆后端与替换自动提炼策略也是两件事：前者按存储端口接入，后者仍遵守 `ManagedMemoryPolicy` 的准入约束。
+
+CLI 的 `--factory`／底层 ExecutionEngine 可按公共端口替换；高层 Local Runtime 当前仍要求 LocalEngine，Temporal Facade 要求 TemporalEngine。不要把底层端口可替换理解为所有 Facade 已支持任意执行器。优先针对实际业务扩展需求验证，保留明确拒绝，避免通过继承内部状态机改变执行权威。
 
 ## 1. 装配组件
 

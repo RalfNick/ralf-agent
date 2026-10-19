@@ -17,6 +17,8 @@ ralf --version
 
 基础运行依赖为 `httpx` 和 `jsonschema`。默认 SQLite、离线 Demo 与独立 starter 不需要模型密钥或外部服务。安装后按[首用教程](getting-started.md)完成提交、审批与恢复。
 
+上面的 clone 命令演示源码安装方式，不保证远端已包含本地候选版本。本轮 dev121 尚未推送／公开发布；要复现本轮交付请使用下方精确 wheel，或当前对应的本地源码，并核对 `ralf --version`。
+
 ## 从本地 wheel 安装
 
 在独立虚拟环境中，把占位路径替换为实际制品路径：
@@ -24,12 +26,12 @@ ralf --version
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
-python -m pip install "/path/to/ralf_agent-0.1.0.dev120-py3-none-any.whl"
+python -m pip install "/path/to/ralf_agent-0.1.0.dev121-py3-none-any.whl"
 ralf --version
 ralf init my-agent
 ```
 
-已记录的本地制品与校验方法见[发布指南](releasing.md)。本项目文档尚未核验公开 PyPI／GitHub Release 中的对应发行包，推荐使用源码或明确获得的 wheel。wheel 包含独立工程生成器，仓库 `examples/` 通过源码获取。
+当前推荐 dev121 的 Local 基础 SDK 本地制品，目录及 SHA 校验见[发布指南](releasing.md#本轮本地交付)。旧 dev120 各目录属于历史候选，不要仅按同名 wheel 选择。本项目文档尚未核验公开 PyPI／GitHub Release 中的对应发行包，推荐使用源码或明确获得的 wheel。wheel 包含独立工程生成器，仓库 `examples/` 通过源码获取。
 
 ## 按需安装可选依赖
 

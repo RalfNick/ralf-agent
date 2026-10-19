@@ -26,6 +26,8 @@
 
 ## 运行源码示例
 
+想在同一业务中逐步增加能力，下载／复制 [support_journey.py](support_journey.py)，按[连续上手教程](../docs/support-journey.md)运行。它只导入已安装 SDK，也可在源码仓库外独立执行；默认离线。
+
 先按[安装指南](../docs/installation.md)从源码安装 SDK，再在仓库根目录运行：
 
 | 示例 | 命令 | 预期行为 |

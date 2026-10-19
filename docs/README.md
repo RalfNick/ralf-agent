@@ -10,6 +10,7 @@
 | --- | --- |
 | [安装与环境](installation.md) | 源码／wheel 安装、可选依赖和安装排障 |
 | [第一次使用](getting-started.md) | 生成独立工程，完成提交、审批、跨进程恢复 |
+| [一个工单逐步加入能力](support-journey.md) | 同一应用接模型、Session、RAG、Facts 和 Workflow |
 | [核心概念](concepts.md) | 理解 Agent、Run、Action、Session、记忆和执行权威 |
 | [基础能力](basic-capabilities.md) | 默认组件及定制路径、基础交付边界 |
 | [模型与 Python 工具 SDK](sdk-model-tools.md) | 接入真实模型，注册自己的函数工具 |

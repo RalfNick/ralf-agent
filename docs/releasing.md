@@ -1,11 +1,37 @@
 # 预览版本验证与发布
 
-当前基础交付包版本为 **0.1.0.dev120 开发预览**，运行时代码固定于 `b871f61`。默认Local链路、现有Provider／工具、上下文、记忆／RAG及审批恢复已按本轮范围收口，见[当前状态](implementation-status.md#当前交付摘要)；完整阶段、真实模型／服务和企业目标分别记录，不由版本号推导完成。下文dev6–dev9条目保留为历史兼容说明，仅在具体变更影响原承诺时按范围补验，不要求每轮重跑整个历史阶段。
+当前推荐 **0.1.0.dev121 的 Local 基础 SDK 本地预览制品**，使用下方唯一目录及校验记录。源码包含 `37e6c28` 的公共组件修复；本批不增加后端或编排能力，不代表第三阶段、函数指纹专项、S2 或完整 R01–R26 已验收。历史 dev120 制品和原始证据保留，不覆盖旧包，也不推荐用它们替代当前基础起步包。
 
 本仓库的 CI 执行检查和构建，不自动发布到 PyPI／GitHub Release。以下是维护者的发布流程；发布、推送及权限配置由维护者明确执行或授权，不由文档验证自动触发。目前尚未核验 PyPI 或 GitHub Release 中有对应发行包。
 
 
 ## 本轮本地交付
+
+推荐目录为 `dist/basic-sdk-dev121/`：
+
+- `ralf_agent-0.1.0.dev121-py3-none-any.whl`：安装用包。
+- `ralf_agent-0.1.0.dev121.tar.gz`：包含文档和连续示例的源码包。
+- `delivery.json`：精确制品 SHA、源码输入、安装验证和未验收范围。
+- `SHA256SUMS`：该目录的文件校验清单。
+
+```bash
+cd /ABSOLUTE/PATH/ralf-agent/dist/basic-sdk-dev121
+shasum -a 256 -c SHA256SUMS
+python -m pip install ./ralf_agent-0.1.0.dev121-py3-none-any.whl
+ralf --version
+```
+
+`ralf --version` 应为 `0.1.0.dev121`，也可用 `python -m pip show ralf-agent` 核对安装元数据。安装后先按[首用教程](getting-started.md)验证审批与重启，再按[连续工单教程](support-journey.md)增加能力。没有公开发布到 PyPI／GitHub Release，本地提交不等于公开发行。
+
+本候选已完成19模块源码290项、最终wheel独立安装82项及两项原starter审批／进程恢复；精确SHA和限制见[本批验收](../architecture/reviews/2026-10-19-dev121-basic-delivery.md)。这些是分别取证的有限范围，不合并为同次全量通过。
+
+每个推荐的不同可安装版本使用唯一版本号。后续修改使用新的预览版本，不在当前目录覆盖已验证的 wheel；历史 dev120 同版本多候选只作为内部实验记录，通过原目录和 SHA 定位。
+
+包版本、Run Release、SQLite Schema 和 Temporal Worker 身份是不同概念。升级安装不能改写旧 Run：保留旧数据、原组件和匹配 Worker，按[恢复指南](recovery-guide.md)与[备份／回退](framework-backup-restore.md)操作。此包没有执行新的旧 History／函数指纹兼容专项，不能据包版本递增声称所有历史任务可直接续跑；S2 及完整分布式组合仍后置。
+
+以下各段为历史制品证据，不能视为本包同次验证结果。
+
+## 历史基础 SDK 制品（dev120）
 
 本轮交付物放在仓库的 `dist/basic-sdk-b871f61/`：`ralf_agent-0.1.0.dev120-py3-none-any.whl`、`SHA256SUMS` 与 `delivery.json`。这是本地制品，未推送或发布到远端；当前支持范围只以[当前摘要](implementation-status.md#当前交付摘要)为准。
 
@@ -83,12 +109,12 @@ python -m build
 
 ## 3. 在源码目录外安装 wheel
 
-这里 `/path/to/ralf_agent-0.1.0.dev120-py3-none-any.whl` 是实际构建文件的占位路径。使用新的虚拟环境和源码目录外的临时目录，避免 editable install 或 PYTHONPATH 掩盖打包遗漏。
+这里 `/path/to/ralf_agent-0.1.0.dev121-py3-none-any.whl` 是实际构建文件的占位路径。使用新的虚拟环境和源码目录外的临时目录，避免 editable install 或 PYTHONPATH 掩盖打包遗漏。
 
 ```bash
 python3 -m venv /tmp/ralf-wheel-check
 source /tmp/ralf-wheel-check/bin/activate
-python -m pip install "/path/to/ralf_agent-0.1.0.dev120-py3-none-any.whl"
+python -m pip install "/path/to/ralf_agent-0.1.0.dev121-py3-none-any.whl"
 python -m pip check
 mkdir /tmp/ralf-release-smoke
 cd /tmp/ralf-release-smoke

@@ -8,7 +8,7 @@ Ralf-Agent 把模型决策、工具调用、人工审批和业务结果保存为
 
 [快速开始](#快速开始) · [文档目录](docs/README.md) · [示例](examples/README.md) · [贡献指南](CONTRIBUTING.md) · [更新记录](CHANGELOG.md)
 
-> 当前为 **0.1.0.dev120 开发预览**，API 与部署能力仍在演进。使用范围以[实现清单](docs/implementation-status.md)为准；不同后端与组合的验证范围分别记录。默认本地入门无需模型密钥、Redis、Temporal 或 Docker。
+> 当前为 **0.1.0.dev121 开发预览**，API 与部署能力仍在演进。使用范围以[实现清单](docs/implementation-status.md)为准；不同后端与组合的验证范围分别记录。默认本地入门无需模型密钥、Redis、Temporal 或 Docker。
 
 ## 为什么使用 Ralf-Agent
 
@@ -98,6 +98,7 @@ asyncio.run(main())
 | 你想做什么 | 从这里开始 |
 | --- | --- |
 | 理解 Run、Action、Session 和恢复 | [核心概念](docs/concepts.md)、[恢复指南](docs/recovery-guide.md) |
+| 在同一应用中逐步加入能力 | [连续工单教程](docs/support-journey.md) |
 | 接入模型与自己的工具 | [SDK 指南](docs/sdk-model-tools.md)、[模型适配](docs/model-adapters.md)、[MCP 工具](docs/managed-tools.md) |
 | 配置多轮会话、记忆与知识问答 | [Session](docs/session-api.md)、[记忆与 RAG](docs/recall-and-rag.md)、[推荐 Harness](docs/recommended-harness.md) |
 | 组合工作流与多个 Agent | [静态图](docs/static-workflows.md)、[并行工作流](docs/parallel-workflows.md)、[Plan／Team](docs/orchestration.md) |
