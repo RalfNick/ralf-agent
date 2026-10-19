@@ -18,6 +18,7 @@
 
 ### 验收与限制
 
+- dev123 Linux ARM64／Debian 基础 SDK 定向修复复验通过：Python 3.11–3.13 在原镜像／依赖、2 CPU／2 GiB／无额外 swap 下串行运行，每版本 **311 项基础＋16 项独立恢复通过**，两条 starter 各写一次，零失败／错误／跳过／OOM；内存最高261.28 MiB。原308项全部保留，新增3项受控崩溃回归。两项发现均为测试／夹具问题：Artifact 按独立 frame 的实际调用和派发身份校验，SQLite 显式关闭且不屏蔽警告；442产品文件及原wheel／sdist不变。首轮3.11的306通过／2失败、3.13的307通过／1失败及中间失败原样保留；见[首轮记录](../architecture/reviews/2026-10-19-dev123-linux-basic-validation.md)与[修复复验](../architecture/reviews/2026-10-19-dev123-linux-test-fixes.md)。仅所选矩阵，不外推全量、AMD64／原生Ubuntu或阶段验收；函数指纹和S2后置，无新功能或推送。
 - 基础冻结快照完整离线源码回归：**12,749 passed／838 skipped，零失败／错误**；全量Ruff与1,293文件格式检查通过。425产品／862 Python测试前后哈希一致，另2 JSON夹具与固定提交一致。安装、版本配置、Session、RAG与恢复证据分别见[基础记录](basic-capabilities.md)，不把不同批次相加为同次全绿。
 - 第一阶段四条参考链路在dev99、第二阶段所选环境／执行能力在dev113冻结，按原配置和范围复用。内部安装演练不等于外部独立采用，离线回归不等于真实模型或全部服务验收。
 - SDK的执行credits不是真实费用上限。P3-4最小身份／审计／安全保留与P3-5所选Local／Temporal／PG恢复已按下表有限验收；完整企业身份／ACL、通用长期治理、生产Temporal灾备、任意Schema降级、一般流式／多模态及其他未选组合仍未完成，详见[长期清单](remaining-work.md)。

@@ -5,11 +5,13 @@ import os
 import sqlite3
 import subprocess
 import sys
+from contextlib import closing
 from pathlib import Path
 
 import pytest
 
 import ralf_agent
+from tests.context_crash_assertions import assert_context_crash_effects
 
 
 @pytest.mark.parametrize("kind", ["parallel", "team", "dynamic-dag", "nested"])
@@ -33,10 +35,8 @@ def test_relevant_context_restores_original_summary_and_effects(tmp_path, kind, 
             timeout=30,
         )
         assert result.returncode == expected, result.stderr
-    with sqlite3.connect(tmp_path / "business.sqlite") as db:
-        counts = dict(db.execute("SELECT kind,COUNT(*) FROM calls GROUP BY kind"))
-    assert counts["tool"] == 8 and counts["summary"] == 4 and counts["artifact"] == 1
-    with sqlite3.connect(tmp_path / "runs.sqlite") as db:
+    assert_context_crash_effects(tmp_path)
+    with closing(sqlite3.connect(tmp_path / "runs.sqlite")) as db:
         runs = [json.loads(row[0]) for row in db.execute("SELECT data FROM runs")]
 
     def snapshots_in(value):

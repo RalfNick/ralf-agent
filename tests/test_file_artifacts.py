@@ -11,6 +11,7 @@ import pytest
 
 from ralf_agent import Scope
 from ralf_agent.errors import BudgetExceeded, DefinitionMismatch, NotFound, ValidationError
+from tests.context_crash_assertions import assert_context_crash_effects
 
 
 def api():
@@ -380,8 +381,6 @@ with FileArtifactStore(sys.argv[1],capacity=1) as store:
 def test_composite_file_offload_recovers_without_repeating_business_or_artifact_write(
     tmp_path, kind, window
 ):
-    import sqlite3
-
     fixture = Path(__file__).with_name("composite_context_crash_fixture.py")
     for mode, expected in (("crash", 77), ("resume", 0)):
         outcome = subprocess.run(
@@ -392,10 +391,7 @@ def test_composite_file_offload_recovers_without_repeating_business_or_artifact_
             timeout=30,
         )
         assert outcome.returncode == expected, outcome.stderr
-    with sqlite3.connect(tmp_path / "business.sqlite") as db:
-        counts = dict(db.execute("SELECT kind,COUNT(*) FROM calls GROUP BY kind"))
-    assert counts["tool"] == 8 and counts["summary"] == 4 and counts["artifact"] == 1
-    assert list((tmp_path / "file-artifacts").glob("*.json"))
+    assert_context_crash_effects(tmp_path, file_artifacts=True)
 
 
 def test_temporal_file_stage_receipt_survives_resource_reopen(tmp_path):

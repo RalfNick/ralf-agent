@@ -1,6 +1,7 @@
 import asyncio
 import copy
 import json
+from contextlib import closing
 
 import pytest
 
@@ -19,6 +20,7 @@ from ralf_agent import (
     WorkflowSpec,
 )
 from ralf_agent.errors import DefinitionMismatch
+from tests.context_crash_assertions import assert_context_crash_effects
 from tests.test_managed_data_context import context
 from tests.test_managed_memory_stage import engine, schema
 
@@ -190,7 +192,9 @@ def test_terminal_parallel_run_recovers_received_summary_accounting(tmp_path, mo
     "window",
     ["artifact_commit", "context_preparation_response_received", "context_preparation_adopted"],
 )
-def test_actual_composite_process_death_restores_without_repeating_effects(tmp_path, kind, window):
+def test_actual_composite_process_death_restores_without_repeating_effects(
+    tmp_path, kind, window, *, rendezvous=False
+):
     import os
     import sqlite3
     import subprocess
@@ -205,24 +209,57 @@ def test_actual_composite_process_death_restores_without_repeating_effects(tmp_p
         ),
     }
     first = subprocess.run(
-        [sys.executable, str(fixture), str(tmp_path), kind, window, "crash"],
+        [
+            sys.executable,
+            str(fixture),
+            str(tmp_path),
+            kind,
+            window,
+            "crash",
+            *(["rendezvous"] if rendezvous else []),
+        ],
         env=env,
         capture_output=True,
         text=True,
         timeout=30,
     )
     assert first.returncode == 77, first.stderr
+    if rendezvous:
+        with closing(sqlite3.connect(tmp_path / "business.sqlite")) as db:
+            assert db.execute("SELECT COUNT(*) FROM calls WHERE kind='artifact'").fetchone()[0] == (
+                1 if window == "artifact_commit" else 2
+            )
     second = subprocess.run(
-        [sys.executable, str(fixture), str(tmp_path), kind, window, "resume"],
+        [
+            sys.executable,
+            str(fixture),
+            str(tmp_path),
+            kind,
+            window,
+            "resume",
+            *(["rendezvous"] if rendezvous else []),
+        ],
         env=env,
         capture_output=True,
         text=True,
         timeout=30,
     )
     assert second.returncode == 0, second.stderr
-    with sqlite3.connect(tmp_path / "business.sqlite") as db:
-        counts = dict(db.execute("SELECT kind,COUNT(*) FROM calls GROUP BY kind").fetchall())
-    assert counts["tool"] == 8 and counts["summary"] == 4 and counts["artifact"] == 1
+    counts = assert_context_crash_effects(tmp_path)
+    if rendezvous:
+        assert counts["artifact"] == (1 if window == "artifact_commit" else 2)
+
+
+@pytest.mark.parametrize(
+    "window",
+    ["artifact_commit", "context_preparation_response_received", "context_preparation_adopted"],
+)
+def test_parallel_contention_recovers_each_original_frame_without_repeating_its_put(
+    tmp_path, window
+):
+    test_actual_composite_process_death_restores_without_repeating_effects(
+        tmp_path, "parallel", window, rendezvous=True
+    )
 
 
 def test_missing_entire_parallel_frame_rejects_surviving_model_evidence(tmp_path):
