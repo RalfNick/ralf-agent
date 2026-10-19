@@ -8,6 +8,8 @@
 
 前批外层owned Activity诊断记账经RED→GREEN后，同包原360仍失败（JUnit396.842秒含收尾），该次关闭证明通过，捕获exclusive CPU164.187秒，约180.081秒未归因；[原证据](../architecture/reviews/2026-10-18-s2-owned-activity-cost.md)按其范围保留。
 
+2026-10-19用户要求**函数指纹相关验证后置**，先保存结果，反馈的网络安全请求来源未核实。私有身份键原型不进入产品，两个审查P2待主线复核，完整ABBA未完成；[后置记录](../architecture/reviews/2026-10-19-s2-fingerprint-validation-deferred.md)列明恢复入口。后续目标续跑不自动恢复本专项，S2及全部原门槛继续开放。
+
 2026-10-19固定纯代码库存预检复现既有指纹LRU键回调缺口，暂停批处理，只修复两入口的完整code树资格、默认值类型身份比较及新helper pin／CREATE live inventory。核心129 passed及一次独立审查通过；442产品／931测试新wheel `9d01d2…`438模块源码6469 passed／694配置skipped，安装517 passed／17配置skipped、默认材料／两份History和starter一次写入恢复通过。无profile完整CONTROL ABBA的CPU中位增加22.083%，正确性修复不作为性能通过，不无依据重跑原360；见[本批记录](../architecture/reviews/2026-10-19-s2-fingerprint-cache-purity.md)。前批Scope原型收益3.36%不足预设10%，仍否决，不复活新Scope API或权限缓存。最近c58同包原360诊断仍1 failed／436.204秒含收尾，三Tool成功／3写入、1 root退休／1保留、关闭未确认，原schema和已停止失败服务数据保留；[原实际查询证据](../architecture/reviews/2026-10-18-s2-query-mix-and-published-validation.md)不被本批离线结果替代。其余十二正常／五故障不解锁，P3-2及P3-A整体未完成；门槛和范围保持，仅本地提交、不推送。
 
 <details>
