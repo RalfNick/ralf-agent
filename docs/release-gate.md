@@ -1,0 +1,83 @@
+# 可复现的 Local SDK 发布门禁
+
+本门禁是仓库维护工具，不增加SDK功能，也不执行上传、Tag、推送或公开发布。它复用[0.1.0a1冻结范围](releases/0.1.0a1.md)，验证显式指定的已安装制品；不自动运行全量测试。函数指纹专项、S2及原失败／门槛保持后置。
+
+## 固定输入
+
+- `tools/release_gate_manifest.json` 固定a1的wheel／sdist SHA、442个产品与939个测试／示例输入树摘要、311个基础及16个恢复node身份摘要，以及明确排除的一项Temporal测试。
+- `tools/release_gate_requirements.lock` 固定17个第三方依赖的版本及官方PyPI wheel SHA256；二进制依赖按实际平台选择，禁止源码构建或联网补包。
+- 固定两条原starter检查：正常审批恢复、业务提交后进程死亡恢复；两例均须只写一次。基础／恢复pytest使用`-W error`，starter复用原子进程的默认warning行为，不扩称完整资源泄漏专项。
+- 原a1制品仍来自`ba7bc46`，不重建、不覆盖。维护脚本使用当前仓库版本，报告分别记录脚本／manifest／锁文件摘要，不能把工具提交当作原包源码提交。
+
+## 平台矩阵
+
+| 目标 | Python | 资源／执行条件 | 资格 |
+| --- | --- | --- | --- |
+| Linux ARM64／Debian12缓存镜像 | 3.11、3.12、3.13 | cgroup v2、2CPU／2GiB、无额外swap、`network=none`；串行 | 本批三版本各311＋16及两条starter通过，零失败／错误／跳过／OOM；见[本批记录](../architecture/reviews/2026-10-19-release-gate.md) |
+| macOS ARM64 | 3.12 | 本地隔离venv；不声称Linux容器的资源限制 | 本批311＋16及两条starter通过，独立记录 |
+| Linux AMD64 | 3.11、3.12、3.13 | 同一门禁及相同容器资源条件 | 允许后续执行，**尚未验收**；未提供或冒用ARM64镜像作为AMD64证据 |
+| Windows、其他Python／平台 | 未选 | 门禁在安装前拒绝 | 未验收 |
+
+manifest里的平台条目只声明允许执行，实际通过报告才形成该平台的有限证据。远端CI尚未执行；本机通过不等于GitHub Actions通过。现有`ci.yml`的广泛回归不是本门禁，当前任务不执行它。
+
+## 准备依赖wheelhouse
+
+在有网络的准备阶段，使用受信任Python／pip下载锁定依赖。门禁自身只执行离线安装。以下路径均替换为自己的绝对路径：
+
+```bash
+python3.12 -m pip download --index-url https://pypi.org/simple \
+  --only-binary=:all: --no-deps --require-hashes \
+  -r tools/release_gate_requirements.lock -d /ABS/wheelhouse
+```
+
+Mac上准备Linux ARM64三版本时还需匹配原manylinux标签，避免漏掉二进制依赖：
+
+```bash
+for minor in 3.11 3.12 3.13; do
+  python3.12 -m pip download --index-url https://pypi.org/simple \
+    --only-binary=:all: --no-deps --require-hashes \
+    --platform manylinux_2_17_aarch64 --python-version "$minor" \
+    --implementation cp --abi "cp${minor/./}" \
+    -r tools/release_gate_requirements.lock -d /ABS/wheelhouse
+done
+```
+
+缺包、版本或哈希不符时门禁失败，不回退网络或不同版本。Linux镜像需事先按manifest里的精确digest准备；矩阵脚本使用`--pull=never`，不自动下载镜像。
+
+## 执行
+
+只读查看固定范围，不运行测试或创建目录：
+
+```bash
+python3.12 tools/release_gate.py --plan
+```
+
+macOS ARM64／Python3.12直接执行单个平台：
+
+```bash
+python3.12 tools/release_gate.py \
+  --wheel /ABS/ralf_agent-0.1.0a1-py3-none-any.whl \
+  --sdist /ABS/ralf_agent-0.1.0a1.tar.gz \
+  --wheelhouse /ABS/wheelhouse --output /ABS/new-macos-evidence
+```
+
+Linux ARM64三版本按manifest的缓存镜像严格串行运行：
+
+```bash
+python3.12 tools/run_release_gate_linux.py \
+  --wheel /ABS/ralf_agent-0.1.0a1-py3-none-any.whl \
+  --sdist /ABS/ralf_agent-0.1.0a1.tar.gz \
+  --wheelhouse /ABS/wheelhouse --output /ABS/new-linux-matrix
+```
+
+输出目录必须不存在，已有成功或失败记录均不覆盖。矩阵脚本只挂载维护工具、制品、wheelhouse与输出，容器不联网、不挂载源码／Git／宿主凭据／Docker socket；先确认前一容器实际结束，再启动下一版本。创建前先保存唯一名称／归属标签，客户端超时也按名称核对，只控制归属匹配的容器。保存日志／退出状态后移除；创建结果、归属或停止状态无法确认时中止后续版本。超时后暂时查不到容器不等于创建已结束，须按保留名称再次核对。
+
+## 放行与证据
+
+门禁从固定sdist提取测试到临时目录，建立无system-site-packages的venv，只安装wheelhouse中的哈希锁定依赖和指定wheel。实际导入路径、版本、442产品文件及最小可选依赖状态都须匹配。
+
+收集阶段必须与311／16的**完整node身份**匹配，不能靠相同数量放行。执行阶段要求pytest返回0、JUnit存在且真实case数量匹配，失败／错误／skip均为0；不得只检查最终回答。starter另检查两例业务写入一次。Linux还须匹配资源上限并无OOM。
+
+`report.json`默认失败，只有所有步骤通过才写`passed_selected_scope`并退出0。报告保存当前phase、输入／脚本／锁摘要、平台和结果；JUnit、原日志、依赖及pip安装来源另存。容器矩阵还保存image、created／exited、网络与资源状态。临时venv会清理；报告及固定输入足以重建，不是执行恢复检查点。
+
+失败后保留原输出，新尝试使用新目录。更新制品、测试集合或依赖须显式审查manifest／lock及新的实际证据，不能改摘要来隐藏失败。发布门禁通过只证明该制品在该平台的所选基础范围，不关闭S2、完整第三阶段、模型质量、其他服务或历史兼容资格。公开发行仍按[发布流程](releasing.md)另行授权。

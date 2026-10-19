@@ -6,6 +6,8 @@
 
 **当前交付：0.1.0a1 Local 基础 SDK Alpha 本地候选。** 首版范围已冻结，见[Alpha说明](releases/0.1.0a1.md)。产品行为沿用fc128b8，仅发行版本与材料调整。固定源码393项、独立安装160项及两条starter通过；Linux ARM64三版本各311项基础／16项恢复及两条starter通过，零失败／错误／跳过／OOM。本候选验收单独见[本批记录](../architecture/reviews/2026-10-19-alpha1-release-candidate.md)。尚未公开发布，函数指纹和S2继续后置。
 
+**发布门禁维护（本批）。** 原 a1 制品与产品字节保持固定，新增[离线发布门禁及平台矩阵](release-gate.md)，将制品 SHA、依赖锁、311／16 项完整 node 身份、两条 starter 及实际平台回执作为放行条件。维护工具单测和临时 sdist 解包测试分别 **34 passed**，不把它们合并为 SDK 覆盖。Mac 3.12／Linux ARM64 3.11–3.13各 **311＋16 passed**，两条 starter 各写一次，零失败／错误／跳过；Linux最终轮最高290.93 MiB、零OOM。资源、原失败及工具版本分别记录于[本批验收](../architecture/reviews/2026-10-19-release-gate.md)；AMD64／远端 CI／Windows不列为通过。本批仅维护工具、测试和文档，不新增 SDK 能力或重新构建推荐制品；函数指纹和 S2 继续后置。
+
 **上一推荐制品：dev123 Local 基础 SDK 本地预览。** 该批统一六处已有公共适配器的异步 callable 判断，保持原身份、审批、返回值和所有权契约；补审批重启、记忆提炼、产物卸载与索引维护的替换组合测试，以及按现象排障入口。受影响源码 **379 passed**，checkout 外安装 **160 passed**；同一 wheel 的既有 Temporal／PostgreSQL／HTTP 门禁 **24 passed**，均零失败／错误／跳过，分别取证、不相加为全量覆盖。实际服务关闭通过；这些仅覆盖所选审计／安全保留路径。详情见[dev123验收](../architecture/reviews/2026-10-19-dev123-sdk-stabilization.md)，制品见发布指南的历史dev123段落。不新增能力；函数指纹专项、S2、真实模型质量、完整第三阶段和长期路线图状态保持。
 
 **历史基础SDK冻结参考。** 原交付包版本为 `0.1.0.dev120`，运行时代码固定于 `b871f61`，原制品保持不变；后续P3-3增量单独记录，不套用旧包验收。本地wheel、校验与安装方式见[本地交付说明](releasing.md#本轮本地交付)，日常起步见[首用教程](getting-started.md)和[基础能力](basic-capabilities.md)。这是开发预览，尚未核验同版本的公开PyPI／GitHub Release。

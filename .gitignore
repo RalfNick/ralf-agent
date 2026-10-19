@@ -11,6 +11,7 @@ build/
 *.db
 *.db-*
 *.lock
+!tools/release_gate_requirements.lock
 *.coordinator
 .env
 .superpowers/

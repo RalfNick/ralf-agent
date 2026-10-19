@@ -17,6 +17,8 @@ ralf --version
 
 版本应为`0.1.0a1`。验证记录见[候选验收](../architecture/reviews/2026-10-19-alpha1-release-candidate.md)；首用、连续教程和扩展指南保持原入口。包版本、Run Release、Schema与Worker身份分别管理，本候选不授予额外历史恢复资格。发布前后仍按本文第4节人工核验权限、Tag、精确制品和公开安装；本次不执行这些外部动作。
 
+重复验证使用[固定发布门禁与平台矩阵](release-gate.md)，显式提供原制品与哈希锁定wheelhouse；脚本本身不执行发布。原a1制品仍绑定ba7bc46，维护工具的提交和运行报告单独定位。
+
 ## 历史基础 SDK 制品（dev123）
 
 原目录为 `dist/basic-sdk-dev123/`：
@@ -149,19 +151,18 @@ dev9 保留 dev8 默认 Manifest 和缺省 Chat identity。实际制品验证需
 
 ## 2. 在干净检出中验证
 
+首版a1使用已冻结的有限门禁；先按[门禁指南](release-gate.md)准备wheelhouse，再在对应平台执行。以下只读计划不会运行测试：
+
 ```bash
-python3 -m venv .venv
-source .venv/bin/activate
-python -m pip install -e '.[dev]'
-python -m pytest -q
+python3.12 tools/release_gate.py --plan
 python -m ruff check .
 python -m ruff format --check .
 git diff --check
-python examples/evaluate.py
-python -m build
 ```
 
-使用干净构建目录，确保本次 `dist` 里只有将要发布的版本；不要用 `dist/*` 混入历史 wheel。离线评测检验运行时审批／恢复／业务写入契约，不构成真实模型质量基线。记录源码 commit、测试环境和构建产物 SHA-256。
+实际放行须执行带明确`--wheel`、`--sdist`、`--wheelhouse`和全新`--output`的门禁，不能以`--plan`代替。函数指纹专项和S2仍后置；广泛源码回归、真实服务和模型评测另行授权及记录，不自动作为本门禁步骤。
+
+后续新候选使用干净构建目录，不用`dist/*`混入历史wheel，也不覆盖已验收的a1包。新制品或测试集合变化须同步审查manifest／lock和实际门禁证据。记录源码提交、维护工具提交、平台、依赖和制品SHA；离线门禁不构成真实模型质量成绩。
 
 ## 3. 在源码目录外安装 wheel
 
