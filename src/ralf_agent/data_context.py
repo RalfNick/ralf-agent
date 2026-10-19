@@ -13,6 +13,7 @@ from .context_budget import _positive
 from .context_pipeline import _groups
 from .errors import DefinitionMismatch, ValidationError
 from .managed_context import ManagedContextPipeline
+from .ports import validate_component_identity
 from .task_controls import _binding
 from .tools import _callable_identity
 from .types import Scope, canonical, digest
@@ -36,8 +37,6 @@ class ManagedDataContext(ManagedContextPipeline):
         reference_chars=1024,
         **kwargs,
     ):
-        from .engine import LocalEngine
-
         self.artifacts = artifacts
         self.scope = Scope() if scope is None else scope
         if not isinstance(self.scope, Scope):
@@ -48,11 +47,11 @@ class ManagedDataContext(ManagedContextPipeline):
         self.tool_result_chars = _positive(tool_result_chars, "Tool projection threshold", 1048576)
         self.preview_chars = _positive(preview_chars, "Tool preview limit", 32768)
         self.reference_chars = _positive(reference_chars, "Reference excerpt limit", 32768)
-        self._target_identity = LocalEngine._component_identity(
+        self._target_identity = validate_component_identity(
             artifacts,
             ("put", "get"),
-            not inspect.iscoroutinefunction(artifacts.put),
-            "Artifact store",
+            synchronous=not inspect.iscoroutinefunction(artifacts.put),
+            label="Artifact store",
         )
         self._target = artifacts
         self._target_hooks = {n: _binding(getattr(artifacts, n)) for n in ("put", "get")}
@@ -81,17 +80,15 @@ class ManagedDataContext(ManagedContextPipeline):
             raise ValidationError("Artifact identity must declare its actual backend_id")
 
     def check(self):
-        from .engine import LocalEngine
-
         super().check()
         if (
             self.artifacts is not self._target
             or self.artifacts.backend_id != self._target_identity["backend_id"]
-            or LocalEngine._component_identity(
+            or validate_component_identity(
                 self.artifacts,
                 ("put", "get"),
-                not inspect.iscoroutinefunction(self.artifacts.put),
-                "Artifact store",
+                synchronous=not inspect.iscoroutinefunction(self.artifacts.put),
+                label="Artifact store",
             )
             != self._target_identity
             or any(_binding(getattr(self.artifacts, n)) != b for n, b in self._target_hooks.items())

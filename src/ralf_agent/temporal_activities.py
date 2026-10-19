@@ -18,7 +18,7 @@ from .model_evidence import (
     validate_model_usage,
     validate_received_response,
 )
-from .ports import is_async_callable, is_sync_callable
+from .ports import is_sync_callable, validate_component_identity
 from .temporal_state import (
     ACK_ACTIVITY,
     MODEL_ACTIVITY,
@@ -43,16 +43,9 @@ def _register_evidence_wrapper(runtime, client, original, wrapped):
 
 
 def component_identity(component, methods, *, synchronous=False):
-    identity = getattr(component, "identity", None)
-    if not isinstance(identity, dict) or not identity:
-        raise ValidationError("Temporal components require an explicit non-empty JSON identity")
-    for name in methods:
-        method = getattr(component, name, None)
-        if not (is_sync_callable(method) if synchronous else is_async_callable(method)):
-            raise ValidationError(
-                f"Temporal component {name} must be {'synchronous' if synchronous else 'async'}"
-            )
-    return detached(identity)
+    return validate_component_identity(
+        component, methods, synchronous=synchronous, label="Temporal component"
+    )
 
 
 def _close_lazy(value, seen=None):

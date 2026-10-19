@@ -5,7 +5,7 @@ from dataclasses import asdict
 
 from .binding_types import BindingSelection, text
 from .errors import AuthorizationDenied, DefinitionMismatch, ValidationError
-from .ports import is_sync_callable
+from .ports import validate_component_identity
 from .types import Scope, canonical, digest
 
 SELECTABLE_ROLES = frozenset(
@@ -31,8 +31,6 @@ SELECTABLE_ROLES = frozenset(
 
 
 def component_identity(role, component):
-    from .engine import LocalEngine
-
     if role == "model_history":
         from .model_history import model_history_registration
 
@@ -94,9 +92,9 @@ def component_identity(role, component):
             else facts_identity(component)
         )
     if role == "context":
-        if not is_sync_callable(getattr(component, "assemble", None)):
-            raise ValidationError("Context assemble must be synchronous")
-        return LocalEngine._component_identity(component, ("assemble",), True, "Context")
+        return validate_component_identity(
+            component, ("assemble",), synchronous=True, label="Context"
+        )
     if role == "knowledge":
         from .binding_data import KnowledgeBindingResource, KnowledgeView
         from .recall import _integer
@@ -107,19 +105,21 @@ def component_identity(role, component):
             raise ValidationError("Register the original Knowledge context or resource, not a view")
         _integer(getattr(component, "limit", None), "Knowledge reference limit", 1)
         _integer(getattr(component, "max_chars", None), "Knowledge character limit", 2)
-        return LocalEngine._component_identity(
-            component, ("references", "validate"), False, "Knowledge"
-        )
+        return validate_component_identity(component, ("references", "validate"), label="Knowledge")
     if role == "decision_policy":
-        return LocalEngine._component_identity(
-            component, ("prepare", "propose"), True, "Decision policy"
+        return validate_component_identity(
+            component, ("prepare", "propose"), synchronous=True, label="Decision policy"
         )
     if role == "provider":
-        return LocalEngine._component_identity(component, ("complete",), False, "Provider")
+        return validate_component_identity(component, ("complete",), label="Provider")
     if role == "verifier":
-        return LocalEngine._component_identity(component, ("verify",), True, "Completion verifier")
+        return validate_component_identity(
+            component, ("verify",), synchronous=True, label="Completion verifier"
+        )
     if role == "limits":
-        return LocalEngine._component_identity(component, ("propose",), True, "Agent limits")
+        return validate_component_identity(
+            component, ("propose",), synchronous=True, label="Agent limits"
+        )
     if role == "stage_policy":
         from .managed_memory import stage_identity
 

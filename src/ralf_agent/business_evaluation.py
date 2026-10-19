@@ -307,8 +307,10 @@ async def evaluate_business(
         "cost_usd": None,
     }
     if completion_verifier is not None:
-        identity = LocalEngine._component_identity(
-            completion_verifier, ("verify",), True, "Completion verifier"
+        from .ports import validate_component_identity
+
+        identity = validate_component_identity(
+            completion_verifier, ("verify",), synchronous=True, label="Completion verifier"
         )
         report["completion_verifier"] = {
             "kind": identity.get("kind"),

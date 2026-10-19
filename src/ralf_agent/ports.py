@@ -1,13 +1,22 @@
 """Version 1 local runtime ports; no SQL, credentials or scheduling in adapters."""
 
+import copy
 import inspect
 from collections.abc import Callable
 from contextlib import AbstractContextManager
 from typing import Protocol, runtime_checkable
 
-from .errors import ValidationError
+from .errors import RalfError, ValidationError
 from .executors import DispatchEnvelope, EffectObservation
-from .types import CommandReceipt, RunDiagnostics, RunEvent, RunHandle, RunSnapshot, Scope
+from .types import (
+    CommandReceipt,
+    RunDiagnostics,
+    RunEvent,
+    RunHandle,
+    RunSnapshot,
+    Scope,
+    canonical,
+)
 
 
 class SessionResourceAdmission(Protocol):
@@ -249,6 +258,32 @@ def is_async_callable(method):
         inspect.iscoroutinefunction(item)
         for item in (method, getattr(method, "__call__", None))  # noqa: B004
     )
+
+
+def validate_component_identity(component, methods, *, synchronous=False, label="Component"):
+    """Snapshot a finite identity and validate ports without calling them.
+
+    Shared by execution, binding and assembly; this grants no execution authority
+    and performs no model, tool or storage I/O.
+    """
+    try:
+        identity = component.identity
+        if not isinstance(identity, dict) or not identity:
+            raise ValidationError(f"{label} requires a non-empty JSON identity")
+        canonical(identity)
+        predicate = is_sync_callable if synchronous else is_async_callable
+        for name in methods:
+            method = getattr(component, name, None)
+            if not callable(method):
+                raise ValidationError(f"{label} does not implement {name}")
+            if not predicate(method):
+                mode = "synchronous" if synchronous else "an async method"
+                raise ValidationError(f"{label}.{name} must be {mode}")
+        return copy.deepcopy(identity)
+    except RalfError:
+        raise
+    except Exception as exc:
+        raise ValidationError(f"Cannot validate {label} configuration") from exc
 
 
 @runtime_checkable

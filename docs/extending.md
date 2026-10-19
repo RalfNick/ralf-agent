@@ -1,6 +1,6 @@
 # Ralf-Agent 扩展指南
 
-版本：0.1.0.dev23；日期：2026-10-08。面向 SDK／适配器开发者。本指南描述执行、装配、召回和知识端口；当前扩展组件与限制见 [实现清单](implementation-status.md)，企业适配与完整 M1 仍未验收。
+版本：0.1.0.dev120；更新：2026-10-19。面向 SDK／适配器开发者。本指南描述执行、装配、召回和知识端口；当前扩展组件与限制见 [实现清单](implementation-status.md)，企业适配与完整 M1 仍未验收。
 
 完整目标要求每层交付公共契约、默认实现、替换示例和共同验收，见[通用框架能力矩阵](../architecture/viewpoints/framework-capabilities.md)。静态图／并行、动态规划／团队和远程数据已有实现，分别见[静态 Workflow](static-workflows.md)、[编排](orchestration.md)与[远程数据](remote-data.md)。默认实现不一定默认启用；每 Agent 能力绑定、推荐组合与 Local/Temporal 契约差异见[整体审查](../architecture/reviews/2026-10-08-agent-framework-alignment.md)。下表以本地装配契约为主，Temporal 支持范围单独声明。
 
@@ -32,7 +32,11 @@
 
 同步返回 `None` 表示检查已经执行并完成授权。上下文管理器、awaitable、generator、True／False、字典等不能表示授权；框架不进入它们，也不调用它们的任意生命周期方法。对已识别的 coroutine／generator 仅做关闭清理，然后报配置错误。
 
+Local、Temporal、Binding 和运行装配共用 `ralf_agent.ports.validate_component_identity` 的组件身份与方法形状检查：identity 必须是非空有限 JSON 对象，采纳的是独立副本；检查不调用组件方法。异步端口接受 `async def` 方法或具有 `async def __call__` 的 callable 对象，同步返回 coroutine 的普通函数不满足异步端口。同步纯策略拒绝 coroutine／generator／async-generator 方法；身份或方法读取失败报告配置错误。组件被实际调用后，其返回值与恢复身份仍由各执行边界分别校验。
+
 默认 `LocalEngine(SQLiteStore(path), ...)` 会创建 POSIX 文件租约和共享 SQLite 记忆。自定义存储通过端口接入，不需要 `.conn`／`.path`；同时显式注入 `coordinator`、`session_store`、`memory_store`。当前 ExecutionStore 方法是 Coordinator 线程内的同步事务操作；远程数据库需单独验证延迟、原子性和失败语义。
+
+基础 ExecutionStore 不要求实现持久 Session 扩展。`Runtime.capabilities` 对缺少该扩展的存储返回空的 `session_definitions`／`remote_session_definitions` 和 `session_storage=None`；已有基础 Run 执行仍可用。只有声明同步 `create_session_admission` 工厂时才报告持久 Session，额外组合仍按原 `session_admission_version` 门槛报告。此查询不会创建 Session 或调用工厂。
 
 Session ID 在 submit 中可省略（None，此时采用 Run ID）；显式指定时必须是非空、非纯空白字符串。默认 Session 后端的 read/append 也要求该字符串契约，不接受数字或隐式字符串转换。合法名字保留原值，不裁剪、大小写折叠或重写，以保持请求摘要和历史身份。自定义 Session 适配器应遵循同一契约。
 

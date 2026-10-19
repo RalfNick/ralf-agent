@@ -19,7 +19,7 @@ from .memory import InMemoryMemory, SQLiteMemory
 from .model_native import AnthropicProvider, GeminiProvider
 from .model_protocol import ModelCapabilities
 from .model_responses import OpenAIResponsesProvider
-from .ports import is_async_callable, validate_engine
+from .ports import is_async_callable, validate_component_identity, validate_engine
 from .ports import is_sync_callable as _synchronous
 from .providers import DeepSeekChatProvider, OpenAIChatProvider
 from .recall import FixedRecallPlanner, MemoryRecallPolicy, RecallQuery
@@ -855,7 +855,7 @@ class RuntimeBuilder:
         try:
             built_providers = {name: construct(prepared) for name, prepared in providers.items()}
             for provider in built_providers.values():
-                LocalEngine._component_identity(provider, ("complete",), False, "Provider")
+                validate_component_identity(provider, ("complete",), label="Provider")
             context.providers = MappingProxyType(built_providers)
             context.tools = (
                 construct(components.pop("tools")) if "tools" in components else ToolRegistry()
@@ -937,7 +937,7 @@ class RuntimeBuilder:
                 name: await construct(prepared) for name, prepared in providers.items()
             }
             for provider in built_providers.values():
-                LocalEngine._component_identity(provider, ("complete",), False, "Provider")
+                validate_component_identity(provider, ("complete",), label="Provider")
             context.providers = MappingProxyType(built_providers)
             context.tools = (
                 await construct(components.pop("tools"))

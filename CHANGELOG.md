@@ -2,6 +2,7 @@
 
 ## Unreleased — Basic SDK reliability and usage
 
+- Fix Runtime capability discovery for custom ExecutionStore adapters without optional Session extensions; version-only declarations no longer advertise unsupported Sessions. Share component identity and sync/async callable validation across Local, Temporal, bindings and assembly while retaining their execution authorities and existing validator entry signatures. Fingerprint qualification and S2 remain deferred.
 - Reject typed tool proposals that omit required callable inputs before approval or dispatch, even when an explicit Schema admits them. Validate against the original frozen parameter declaration and captured defaults; later Python signature/default metadata cannot change the accepted arguments. Existing valid Schemas, tool Manifests and approval recovery retain their identities.
 - Correct first-use examples for observation timeouts, durable Session busy receipts, per-Action approval command IDs, configuration recovery and RAG updates. A repeated command retrieves its original receipt; a new task or refreshed answer needs a new command identity.
 - Document and exercise a manual backup/recovery drill for the default offline Local starter, including its separate business-effect database. This is a limited application procedure, not framework-wide backup, migration or a completed phase-three gate.

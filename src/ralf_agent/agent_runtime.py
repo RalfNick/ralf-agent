@@ -15,6 +15,7 @@ from .errors import (
     RuntimeClosed,
     ValidationError,
 )
+from .ports import is_sync_callable
 from .run_supervisor import PAUSED, TERMINAL, RunTaskSupervisor
 from .runtime_lifecycle import RuntimeInstance
 from .types import digest
@@ -108,35 +109,28 @@ class Runtime:
 
     @property
     def capabilities(self):
+        store = self._local.store
+        sessions = is_sync_callable(getattr(store, "create_session_admission", None))
+        version = getattr(store, "session_admission_version", 1)
+        composite = sessions and type(version) is int and version in {2, 3, 4, 5}
+        namespaces = sessions and type(version) is int and version in {3, 4, 5}
+        remote = sessions and type(version) is int and version in {4, 5}
         return {
             "schema_version": 1,
             "local_hosting": True,
             "observation_only_wait": True,
-            "shared_sessions": callable(
-                getattr(self._local.store, "create_session_admission", None)
-            ),
-            "durable_turns": callable(getattr(self._local.store, "create_session_admission", None)),
-            "session_definitions": ["agent", "sequence"]
-            + (
-                ["graph", "team", "dynamic"]
-                if type(getattr(self._local.store, "session_admission_version", 1)) is int
-                and self._local.store.session_admission_version in {2, 3, 4, 5}
+            "shared_sessions": sessions,
+            "durable_turns": sessions,
+            "session_definitions": (
+                ["agent", "sequence"] + (["graph", "team", "dynamic"] if composite else [])
+                if sessions
                 else []
             ),
-            "session_storage": "colocated-sqlite",
-            "conversation_namespaces": type(
-                getattr(self._local.store, "session_admission_version", 1)
-            )
-            is int
-            and self._local.store.session_admission_version in {3, 4, 5},
+            "session_storage": "colocated-sqlite" if sessions else None,
+            "conversation_namespaces": namespaces,
             "remote_session_definitions": ["agent", "sequence"]
-            + (
-                ["graph", "team", "dynamic"]
-                if self._local.store.session_admission_version == 5
-                else []
-            )
-            if type(getattr(self._local.store, "session_admission_version", 1)) is int
-            and self._local.store.session_admission_version in {4, 5}
+            + (["graph", "team", "dynamic"] if version == 5 else [])
+            if remote
             else [],
             "queue": False,
             "deadline": self._local._deadline_store_pin is not None,

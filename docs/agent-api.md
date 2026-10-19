@@ -61,6 +61,13 @@ Per-Agent bindings and actual limits remain with the authority. Runtime supports
 preserves existing loop-bound async factories and owned cleanup.
 Scope comes from the trusted host; omitting it preserves the builder's local default.
 
+`runtime.capabilities` describes optional hosting and Session extensions without
+creating resources. A basic custom ExecutionStore can host Runs without durable
+Sessions: `shared_sessions`/`durable_turns` are false, Session definition lists are
+empty, and `session_storage` is None. A synchronous admission factory enables the
+base Session declaration; advanced combinations still require their existing
+version gates. Capability discovery does not replace admission-time validation.
+
 ## Wait, controls and reconnect
 
 - wait/status/attach only read committed facts. Timeout returns

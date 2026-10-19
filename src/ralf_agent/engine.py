@@ -44,6 +44,7 @@ from .ports import (
     _complete_sync_none,
     _invoke_sync_none,
     is_sync_callable,
+    validate_component_identity,
 )
 from .tools import (
     ThreadExecutionTracker,
@@ -338,13 +339,9 @@ class LocalEngine:
                 if any(not callable(getattr(backend, name, None)) for name in methods):
                     raise ValidationError("Memory backend does not implement its configured port")
             self.context = ContextAssembler() if context_assembler is None else context_assembler
-            if (
-                not callable(getattr(self.context, "assemble", None))
-                or not isinstance(getattr(self.context, "identity", None), dict)
-                or not self.context.identity
-            ):
-                raise ValidationError("Context assembler requires identity and assemble")
-            canonical(self.context.identity)
+            validate_component_identity(
+                self.context, ("assemble",), synchronous=True, label="Context"
+            )
             self._bindings._pin_artifact_ports(self.context)
             from .local_admission import initialize, refresh
 
@@ -531,31 +528,7 @@ class LocalEngine:
 
     @staticmethod
     def _component_identity(component, methods, synchronous, label):
-        try:
-            identity = component.identity
-            if not isinstance(identity, dict) or not identity:
-                raise ValidationError(f"{label} requires a non-empty JSON identity")
-            canonical(identity)
-            for name in methods:
-                method = getattr(component, name, None)
-                if not callable(method):
-                    raise ValidationError(f"{label} does not implement {name}")
-                if synchronous:
-                    candidates = (method, getattr(method, "__call__", None))  # noqa: B004
-                    if any(
-                        inspect.iscoroutinefunction(value)
-                        or inspect.isasyncgenfunction(value)
-                        or inspect.isgeneratorfunction(value)
-                        for value in candidates
-                    ):
-                        raise ValidationError(f"{label}.{name} must be synchronous")
-                elif not inspect.iscoroutinefunction(method):
-                    raise ValidationError(f"{label}.{name} must be an async method")
-            return copy.deepcopy(identity)
-        except RalfError:
-            raise
-        except Exception as exc:
-            raise ValidationError(f"Cannot validate {label} configuration") from exc
+        return validate_component_identity(component, methods, synchronous=synchronous, label=label)
 
     @staticmethod
     def _component_result(value, expected, label):
@@ -689,12 +662,11 @@ class LocalEngine:
             )
             if provider is None:
                 raise DefinitionMismatch(f"Model provider not configured: {step['provider']}")
-            if not inspect.iscoroutinefunction(getattr(provider, "complete", None)):
-                raise ValidationError("ModelProvider.complete must be an async method")
-            if not isinstance(getattr(provider, "identity", None), dict) or not provider.identity:
-                raise ValidationError("ModelProvider.identity must be a non-empty JSON object")
+            provider_identity = validate_component_identity(
+                provider, ("complete",), label="ModelProvider"
+            )
             self._check_provider_method(provider)
-            providers[step["provider"]] = copy.deepcopy(provider.identity)
+            providers[step["provider"]] = provider_identity
             continuation = provider_continuation_identity(provider)
             if continuation is not None and not self.model_continuation:
                 raise ValidationError("This Provider requires explicit model continuation")
@@ -714,7 +686,9 @@ class LocalEngine:
             "providers": providers,
             "session_backend": sessions.backend_id if sessions is not None else None,
             "memory_backend": memory.backend_id if memory is not None else None,
-            "context_builder": copy.deepcopy(context.identity),
+            "context_builder": validate_component_identity(
+                context, ("assemble",), synchronous=True, label="Context"
+            ),
             "harness": self._component_identity(harness, ("prepare", "propose"), True, "Harness"),
             "tool_executor": self._component_identity(
                 self.tool_executor, ("execute", "reconcile"), False, "Executor"

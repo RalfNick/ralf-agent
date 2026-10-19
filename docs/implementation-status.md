@@ -33,9 +33,11 @@
 | P3-A | 用户授权的独立候选验证已收口：全量13,374通过／891配置跳过、安装275、同包原服务25；阶段整体仍待P3-2/S2，未完成保持 |
 | R01–R26其余目标 | 保留为长期路线图；外部采用和框架对等比较单独验收，不自动成为本轮实现任务 |
 
-**当前安排：** 2026-10-19用户要求函数指纹验证先记录、后续再验证，并反馈触发网络安全请求；本专项后置，不自动续跑；文档提交曾后置，本轮按用户要求仅对五份记录使用单次参数跳过钩子进行本地提交，持久化配置不改、不推送。隔离身份键原型尚有两项独立审查P2未闭环，未进入产品；ABBA仅完成A0／B1，不形成性能验收。产品仍为`af9a32c`，已观察句柄全部终态。详见[后置记录及恢复入口](../architecture/reviews/2026-10-19-s2-fingerprint-validation-deferred.md)。S2与剩余17项未完成，原门槛保留。
+**当前安排：** 2026-10-19用户要求函数指纹验证先记录、后续再验证，并反馈触发网络安全请求；本专项后置，不自动续跑；五份后置记录已按用户要求使用单次参数跳过钩子完成本地提交，持久化配置不改、不推送。隔离身份键原型尚有两项独立审查P2未闭环，未进入产品；ABBA仅完成A0／B1，不形成性能验收。该专项已验证产品基线为`af9a32c`，其后通用校验增量见下文；已观察句柄全部终态。详见[后置记录及恢复入口](../architecture/reviews/2026-10-19-s2-fingerprint-validation-deferred.md)。S2与剩余17项未完成，原门槛保留。
 
-**当前增量：** 固定纯代码库存预检发现原指纹缓存可在键哈希回调中被自恢复helper欺骗：已改变函数返回旧摘要。已以原15 RED和默认值独立1 RED复现，最小修复在两LRU之前检查exact-type完整code树、收紧默认值类型资格，并沿原机制固定新helper／CREATE live inventory；核心四模块129 passed，一次独立审查无阻断。442产品／931测试新wheel `9d01d2…`已构建，438模块受影响源码6469 passed／694配置skipped、隔离安装517 passed／17配置skipped，默认材料／两份原History及starter一次写入恢复已通过。完整CONTROL主体无profile ABBA保持各版本结果／proof和SDK计数，但CPU中位**增加22.083%**，这是正确性代价，不能算提速或S2通过。见[复现、修复及成本记录](../architecture/reviews/2026-10-19-s2-fingerprint-cache-purity.md)。原分段批处理暂停，不增加业务能力或权限／观察缓存，不无依据复跑原360；S2、剩余17项及阶段门槛未关闭。
+**当前增量：** 修复基础ExecutionStore缺少可选Session属性时`Runtime.capabilities`抛异常，以及仅声明版本却误报Session能力的问题。Local／Temporal／Binding／装配共用现有ports层组件身份与同步／异步方法校验，保留原入口签名、各自执行权威和能力范围；异步callable与配置异常行为统一。沿用已整理文档，仅补契约和纠正相关历史状态。受影响25模块428 passed，零失败／错误／跳过；Ruff、改动文件格式与空白检查通过。仅离线源码验证，未构建新wheel、未运行模型／服务、函数指纹专项、旧History兼容专项或S2，不增加这些验收结论。范围及步骤见[本批计划](superpowers/plans/2026-10-19-runtime-component-review.md)。
+
+**上一批增量：** 固定纯代码库存预检发现原指纹缓存可在键哈希回调中被自恢复helper欺骗：已改变函数返回旧摘要。已以原15 RED和默认值独立1 RED复现，最小修复在两LRU之前检查exact-type完整code树、收紧默认值类型资格，并沿原机制固定新helper／CREATE live inventory；核心四模块129 passed，一次独立审查无阻断。442产品／931测试新wheel `9d01d2…`已构建，438模块受影响源码6469 passed／694配置skipped、隔离安装517 passed／17配置skipped，默认材料／两份原History及starter一次写入恢复已通过。完整CONTROL主体无profile ABBA保持各版本结果／proof和SDK计数，但CPU中位**增加22.083%**，这是正确性代价，不能算提速或S2通过。见[复现、修复及成本记录](../architecture/reviews/2026-10-19-s2-fingerprint-cache-purity.md)。原分段批处理暂停，不增加业务能力或权限／观察缓存，不无依据复跑原360；S2、剩余17项及阶段门槛未关闭。
 
 **上一原型：** 隔离Scope合并四项通过，完整CONTROL确认命中，但CPU中位仅减少3.36%，不足预设10%，已否决；不增加Scope API。见[保留证据及受限提案](../architecture/reviews/2026-10-18-s2-scoped-validation-and-batch-proposal.md)。
 
