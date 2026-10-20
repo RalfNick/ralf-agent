@@ -145,6 +145,39 @@ def definition(kind):
     return selected, value, calls
 
 
+async def _close_while_serving(assembly, directory, *, wait_timeout):
+    """Caller retries incomplete close while retaining its borrowed receiver."""
+    from ralf_agent.errors import CloseIncomplete
+
+    loop = asyncio.get_running_loop()
+    deadline = loop.time() + wait_timeout
+    attempts = 0
+    while True:
+        remaining = max(0, deadline - loop.time())
+        try:
+            await asyncio.wait_for(assembly.aclose(wait_timeout=remaining), remaining)
+            return
+        except CloseIncomplete as error:
+            attempts += 1
+            if attempts <= 64:
+                with (directory / "close-retries.jsonl").open("a") as stream:
+                    stream.write(
+                        json.dumps(
+                            {
+                                "attempt": attempts,
+                                "code": error.code,
+                                "report": error.report,
+                                "remaining_seconds": max(0, deadline - loop.time()),
+                            }
+                        )
+                        + "\n"
+                    )
+            remaining = deadline - loop.time()
+            if remaining <= 0:
+                raise
+            await asyncio.sleep(min(0.05, remaining))
+
+
 class CodingSystem:
     def __init__(self, directory, admin, schema, socket_owner, socket_path, data, assembly, client):
         self.directory, self.admin, self.schema = directory, admin, schema
@@ -276,7 +309,7 @@ class CodingSystem:
                         await self.effect_ack_gate(False)
                     # Keep this receiver alive through native and deployment ACKs.
                     try:
-                        await self.assembly.aclose(wait_timeout=60)
+                        await _close_while_serving(self.assembly, self.directory, wait_timeout=60)
                     except BaseException as error:
                         try:
                             from tests.temporal_coding_primary_failure import save_primary_failure

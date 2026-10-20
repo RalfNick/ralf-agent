@@ -755,12 +755,17 @@ class TemporalRuntime:
             record["role"] == "artifacts"
             for record in result.get("binding_catalog", {}).get("records", {}).values()
         )
+        owned_proposal = (
+            self.coding_execution is True
+            and self._deployment_public_execution is True
+            and self._deployment_admission_identity is not None
+        )
         if self.context_reads:
             from .temporal_context_read_protocol import propose, publish
 
-            result = (propose if sandbox_enabled or artifact_enabled else publish)(
-                result, self._context_execution_pin
-            )
+            result = (
+                propose if owned_proposal or sandbox_enabled or artifact_enabled else publish
+            )(result, self._context_execution_pin)
             bridges = {
                 digest(pin.physical): pin.dataset_bridge_fixed.identity
                 for pin in self._session_read_pins
@@ -774,7 +779,7 @@ class TemporalRuntime:
 
             result = (
                 propose_tool_execution
-                if sandbox_enabled or artifact_enabled
+                if owned_proposal or sandbox_enabled or artifact_enabled
                 else publish_tool_execution
             )(result, self._tool_execution_pin)
 

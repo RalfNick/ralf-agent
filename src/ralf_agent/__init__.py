@@ -404,7 +404,7 @@ from .workflow import (
     WorkflowSelection,
 )
 
-__version__ = "0.1.0a2.dev2"
+__version__ = "0.1.0a2.dev3"
 from .binding_artifacts import ArtifactBindingResource, ArtifactView
 from .binding_sandbox import SandboxBindingResource
 from .docker_sandbox import DockerSandbox

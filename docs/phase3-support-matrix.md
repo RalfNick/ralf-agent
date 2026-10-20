@@ -1,5 +1,7 @@
 # 第三阶段支持矩阵与收口门槛
 
+**最新S2批次（2026-10-20）：** a2.dev3的额外指纹P2／联合前缀组装和借用Worker关闭责任已定向验证；原360首项仍1失败，JUnit465.431秒含收尾、3次写入，1 root保留，Session关闭未确认／Assembly CloseIncomplete。原Worker保持服务的60秒内关闭仍未收敛，不能称已修复整链或生命周期。原失败、门槛和数据保留；其余17项未启动。安装6502通过／3夹具断言失败／694配置跳过与修正后安装36通过分别记录，不拼成全量全绿；见[本批证据](../architecture/reviews/2026-10-20-s2-joint-publication-close.md)。此前摘要按原版本保留。
+
 当前状态见[唯一交付摘要](implementation-status.md#当前交付摘要)和[P3-3冻结范围收口](../architecture/reviews/2026-10-18-p3-3-closeout.md)。**所选P3-3最小服务控制与必要恢复已验收。** HTTP控制／持久游标／断连续接／背压，以及累计容量下原任务的取消、机械恢复、效果采纳、实际停止、封存退休与owned关闭按原制品逐项取证；满2,000 Update的原Parent在未封存时也能沿原History推进。20组既有制品校验通过。该P3-3收口批次未改产品或重新运行服务，不合并不同批次为同次全绿。
 
 2026-10-18用户明确恢复P3-2/S2，按原360秒首项→其余十二正常／五故障推进，原失败和全部门槛保留；见[执行记录](superpowers/plans/2026-10-18-s2-resume.md)。Session／Turn仍归P3-2。2026-10-18用户允许独立推进的**P3-4冻结最小范围已验收**：原认证／Scope与资源交集、所选越权拒绝、可替换脱敏审计、Local工作消息压缩及原完整封存树下PG冗余效果副本清理。最终442产品wheel受影响源码／安装各234 passed／22配置skipped，同包真实PG／Temporal／HTTP共24 passed／零跳过；[门槛核对及限制](../architecture/reviews/2026-10-18-temporal-effect-retention.md#p3-4门槛核对与后续)保留各原制品归属。2026-10-18用户进一步允许独立推进的**P3-5所选最小范围已验收**：Local源码／安装各3项、相同442产品wheel真实Temporal／PG两次全数据恢复1项通过，原身份／回执／unknown／停止／退休和错误发布回退保持，见[逐项核对](../architecture/reviews/2026-10-18-framework-backup-restore.md)。全部失败和门槛保留；用户随后明确允许独立候选验收，见[本批记录](../architecture/reviews/2026-10-18-candidate-verification.md)，S2与阶段未完成保持。4项原输入夹具失败已定向修复，最终候选完整回归13,374 passed／891配置skipped、隔离安装275通过；原SDK并发封存拒绝、未测外部首次采纳与任意History等边界继续保留，不新增全拓扑或通用治理专项。仅本地提交，不推送。

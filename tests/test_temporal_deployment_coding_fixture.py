@@ -1037,6 +1037,14 @@ def test_worker_context_preserves_body_failure_and_original_close_failure(
     system.admin, system.assembly, system.workers = Admin(), Assembly(), []
     worker = Worker()
     monkeypatch.setattr(service, "build_temporal_worker", lambda *args, **kwargs: worker)
+
+    async def close_once(assembly, directory, *, wait_timeout):
+        # This test isolates worker exception preservation. Retry/deadline
+        # behavior of the real helper has its own receiver-close tests.
+        assert directory == tmp_path
+        await assembly.aclose(wait_timeout=wait_timeout)
+
+    monkeypatch.setattr(service, "_close_while_serving", close_once)
     (tmp_path / "block-original").touch()
     (tmp_path / "fail-kill").touch()
 

@@ -271,9 +271,72 @@ def _cacheable_code(code):
 
 
 def _cache_helpers():
-    # Compare only integer identities; retain every sampled object separately so
-    # replacing metadata cannot recycle a pinned id or execute foreign equality.
-    references, shapes = [], []
+    """Check every original helper field afresh without rebuilding a snapshot."""
+    methods = (
+        _constant,
+        _code,
+        _function,
+        canonical,
+        digest,
+        inspect.isfunction,
+        _plain_digest,
+        _cached_plain_digest,
+        _defaults_digest,
+        _cached_defaults_digest,
+        _simple_defaults,
+        _cacheable_constant,
+        _cacheable_code,
+    )
+    for method, pin in zip(methods, _CACHE_HELPERS, strict=True):
+        if method is not pin[0]:
+            return False
+        attributes = method.__dict__
+        if method is _cached_plain_digest or method is _cached_defaults_digest:
+            # Fixed dictionary/key identities reject added or foreign keys
+            # before lookup, including equality callbacks in string subclasses.
+            if (
+                attributes is not pin[6]
+                or dict.__len__(attributes) != len(pin[7])
+                or any(
+                    key is not expected
+                    for key, expected in zip(dict.keys(attributes), pin[7], strict=True)
+                )
+                or dict.get(attributes, "__wrapped__") is not pin[5]
+            ):
+                return False
+        elif (
+            method.__code__ is not pin[1]
+            or method.__defaults__ is not pin[2]
+            or method.__kwdefaults__ is not pin[3]
+            or method.__closure__ is not pin[4]
+            or dict.__len__(attributes) != 0
+        ):
+            # Native function helpers have no attributes or keyword defaults at
+            # import. Extra metadata stays on the original uncached path.
+            return False
+        if pin[3] is not None:
+            return False
+    return (
+        types is _CACHE_GLOBALS[0]
+        and types.CodeType is _CACHE_GLOBALS[1]
+        and _DEFAULT_PRIMITIVES is _CACHE_GLOBALS[2]
+        and _DEFAULT_CACHE_CHARS is _CACHE_GLOBALS[3]
+        and _CODE_PURITY is _CACHE_GLOBALS[4]
+        and _CODE_PURITY_MAX is _CACHE_GLOBALS[5]
+    )
+
+
+_CACHE_HELPERS = tuple(
+    (
+        method,
+        getattr(method, "__code__", None),
+        getattr(method, "__defaults__", None),
+        getattr(method, "__kwdefaults__", None),
+        getattr(method, "__closure__", None),
+        getattr(method, "__wrapped__", None),
+        method.__dict__,
+        tuple(dict.keys(method.__dict__)),
+    )
     for method in (
         _constant,
         _code,
@@ -288,36 +351,16 @@ def _cache_helpers():
         _simple_defaults,
         _cacheable_constant,
         _cacheable_code,
-    ):
-        keywords = getattr(method, "__kwdefaults__", None)
-        references.extend(
-            (
-                method,
-                getattr(method, "__code__", None),
-                getattr(method, "__defaults__", None),
-                keywords,
-                getattr(method, "__closure__", None),
-                getattr(method, "__wrapped__", None),
-            )
-        )
-        shapes.append(-1 if keywords is None else dict.__len__(keywords))
-        if keywords is not None:
-            for key, value in dict.items(keywords):
-                references.extend((key, value))
-    references.extend(
-        (
-            types,
-            types.CodeType,
-            _DEFAULT_PRIMITIVES,
-            _DEFAULT_CACHE_CHARS,
-            _CODE_PURITY,
-            _CODE_PURITY_MAX,
-        )
     )
-    return (tuple(map(id, references)), tuple(shapes)), tuple(references)
-
-
-_CACHE_HELPERS = _cache_helpers()
+)
+_CACHE_GLOBALS = (
+    types,
+    types.CodeType,
+    _DEFAULT_PRIMITIVES,
+    _DEFAULT_CACHE_CHARS,
+    _CODE_PURITY,
+    _CODE_PURITY_MAX,
+)
 _CACHE_GUARD = (_cache_helpers, _cache_helpers.__code__)
 
 
@@ -327,7 +370,7 @@ def executable_digest(method):
         if (
             _cache_helpers is _CACHE_GUARD[0]
             and _cache_helpers.__code__ is _CACHE_GUARD[1]
-            and _cache_helpers()[0] == _CACHE_HELPERS[0]
+            and _cache_helpers()
             and inspect.isfunction(target)
             and target.__closure__ is None
             and getattr(target, "__wrapped__", None) is None

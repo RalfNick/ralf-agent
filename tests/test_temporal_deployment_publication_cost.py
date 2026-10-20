@@ -21,7 +21,7 @@ def optional_sdk():
     pytest.importorskip("temporalio")
 
 
-async def construct(tmp_path, monkeypatch, *, composition=True, selected=True):
+async def construct(tmp_path, monkeypatch, *, composition=True, selected=True, context_reads=False):
     from ralf_agent.temporal_coding_factories import build
 
     events = []
@@ -36,6 +36,7 @@ async def construct(tmp_path, monkeypatch, *, composition=True, selected=True):
         journal=effect,
         coding_execution=True,
         coding_composition=composition,
+        context_reads=context_reads,
         **({"admission_policy": DeploymentAdmissionPolicy("publication-cost")} if selected else {}),
     )
     return runtime, context
@@ -101,11 +102,11 @@ def test_selected3_fresh_pipeline_matches_strict_publication_with_one_final_vali
             expected, strict_profile = profile_call(strict)
             actual, current_profile = profile_call(runtime._current_manifest)
             assert canonical(actual) == canonical(expected)
-            # Two pre-existing base-component validate_manifest calls stay;
-            # the final publisher adds the coupled selected3 validation.
-            assert count(current_profile, deployment.validate_protocol) == 3
+            # Owned base proposals defer the two intermediate complete checks;
+            # the final publisher still validates the complete selected release.
+            assert count(current_profile, deployment.validate_protocol) == 1
             assert count(current_profile, native.validate_protocol) == 1
-            assert count(current_profile, tree.validate_protocol) == 3
+            assert count(current_profile, tree.validate_protocol) == 1
             assert count(strict_profile, native.validate_protocol) == 2
             assert count(strict_profile, tree.validate_protocol) == (3 if composition else 2)
             assert publication_clones(strict_profile) == (3 if composition else 2)
