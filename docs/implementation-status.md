@@ -6,6 +6,8 @@
 
 **当前交付：0.1.0a1 Local 基础 SDK Alpha 本地候选。** 首版范围已冻结，见[Alpha说明](releases/0.1.0a1.md)。产品行为沿用fc128b8，仅发行版本与材料调整。固定源码393项、独立安装160项及两条starter通过；Linux ARM64三版本各311项基础／16项恢复及两条starter通过，零失败／错误／跳过／OOM。本候选验收单独见[本批记录](../architecture/reviews/2026-10-19-alpha1-release-candidate.md)。尚未公开发布，函数指纹和S2继续后置。
 
+**原生AMD64／手动CI准备（最新，未形成远端通过）。** 增加宿主与daemon架构共同核验的`--require-native`、原包／当前产品／许可证离线交接预检，以及只接收同仓库已暂存原包的独立手动CI工作流。两个维护模块95项通过，原a1真实预检通过，Mac实际原生请求在创建容器前拒绝；YAML／Bash语法已核对。原包暂存run、默认分支工作流、远端执行及发布权限仍需外部步骤，均未执行；详见[准备记录](../architecture/reviews/2026-10-20-alpha1-native-ci-preparation.md)。不重建或覆盖原制品，不改变311／16／2及资源限制，函数指纹和S2后置。
+
 **AMD64模拟复验（最新）。** Docker Hub当前DNS／HTTPS路径仍异常；匿名从AWS公共注册表取得与原索引摘要一致的Docker官方Python镜像后，原a1包在Mac ARM64模拟的Linux x86_64／Python3.11–3.13各 **311＋16项及两条starter通过**，原2CPU／2GiB／swap0／无网络、严格串行，零失败／错误／实际跳过／OOM，最高334.38MiB。维护包装器显式选择架构，相关80项通过；只改工具、测试及文档。原下载失败及1,318项历史证据保持，见[排障与验收](../architecture/reviews/2026-10-20-amd64-basic-validation.md)。原生AMD64、远端CI仍未验收，函数指纹和S2继续后置；未推送或公开发布。
 
 **首版维护收尾（前批）。** 用户确认仅继续首版冻结范围。补Linux报告完整身份／实际输入预检、创建前来源记录及离线镜像导出／加载；发现原Session用例混同Run终态与lane空闲，仅修测试并在门禁manifest固定校正前后SHA，原a1 wheel／sdist和442产品字节不变。源码及checkout外原wheel安装各92项通过；Mac3.12和Linux ARM64三版本最终各311＋16项及两条starter通过，Linux最高290.82MiB、零OOM；原3.12测试失败与显式校正后结果分别记录于[本批验收](../architecture/reviews/2026-10-19-alpha1-maintenance-closeout.md)。首版可执行维护项与外部待办见[收尾表](releases/0.1.0a1.md#首版收尾状态)：原AMD64镜像准备网络超时记录保留，远端CI／公开发行／独立采用未验收，函数指纹和S2继续后置。

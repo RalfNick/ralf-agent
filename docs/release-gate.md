@@ -119,6 +119,29 @@ AMD64使用同一包装器并显式增加`--platform linux/amd64`；默认仍为
 
 在ARM64 Mac上运行`linux/amd64`属于模拟执行，报告中的宿主与容器架构分别保留；通过只形成所选基础SDK的模拟矩阵证据，不能替代原生AMD64、远端CI或S2验收。
 
+### 原生 AMD64 与远端手动 CI（准备完成，尚未执行）
+
+原生验证在上述AMD64命令中增加`--require-native`。包装器在任何容器创建前核对宿主必须为Linux x86_64、Docker daemon也须为Linux AMD64；不匹配返回失败，保存`matrix-error.json`和空`matrix.json`。ARM64 Mac上的模拟运行不能通过此入口。默认不加该参数时仍允许原有明确标记的模拟验证。
+
+远端入口为[alpha1-release-gate.yml](../.github/workflows/alpha1-release-gate.yml)，仅`workflow_dispatch`，不随push／PR运行，也不调用原宽泛`ci.yml`。单个`ubuntu-24.04` job内串行运行三Python容器；先下载、校验原包，再按原依赖锁和索引摘要准备网络输入，最后容器`network=none`执行原311／16／2。五个官方Actions引用固定到提交摘要，checkout不持久保存凭据；仓库权限仅contents／actions读取，没有发布步骤。失败时也保存已有证据；准备步骤失败不能当作门禁通过。
+
+工作流通过[Docker官方setup action](https://github.com/docker/setup-docker-action/tree/v4)在临时runner准备Docker29.0.1及独立daemon，显式`set-host`固定连接，不依赖runner自带旧CLI。运行前保存client／server版本和`image inspect --help`的实际`--platform`能力检查；缺少能力时失败，不移除平台核验来适应旧版。匿名Docker配置不会改变已固定的daemon地址。本机不安装或替换Docker。
+
+手动输入`candidate_run_id`须是**本仓库**已授权暂存原包的Actions run，artifact名固定为`ralf-alpha1-original-candidate`。artifact根目录必须包含下面两份原文件，不能使用宽泛CI重新构建的包代替：
+
+```text
+ralf_agent-0.1.0a1-py3-none-any.whl
+ralf_agent-0.1.0a1.tar.gz
+```
+
+工作流从指定run下载artifact的机制见[官方download-artifact说明](https://github.com/actions/download-artifact/tree/v4)。原包暂存是单独的外部交接：可在受控runner上复制下节预检生成的`candidate/`，经授权后由`actions/upload-artifact`使用上述固定artifact名保存；其`path`只选该目录，不上传整个`dist/`。目前没有已建立的暂存run，不提供虚构run ID，也不自动上传本机文件。若使用自有原生Linux机器，可直接搬运原包／工具／锁定依赖并执行相同的`--require-native`命令，无需声称已运行GitHub CI。
+
+GitHub的手动触发要求该工作流先在默认分支可用，见[官方说明](https://docs.github.com/en/actions/how-tos/manage-workflow-runs/manually-run-a-workflow)。本批只准备本地文件；推送／合并、建立暂存run、触发CI均未执行。需要这些外部动作时停下，按用户授权另行推进；手动触发CI也不代表允许公开发布。
+
+现有`ci.yml`仍会随push／PR执行全量检查，本批没有关闭或修改它。后续授权推送本批维护提交时，可在该交接提交使用GitHub支持的`[skip ci]`仅跳过自动push／PR工作流，再单独手动触发这里的冻结门禁，避免恢复函数指纹／S2后置范围；见[官方跳过说明](https://docs.github.com/en/actions/how-tos/manage-workflow-runs/skip-workflow-runs)。这不算全量CI通过，也不绕过受保护分支的必需检查；若必需检查因此pending，应停下由维护者决定交接方式，不自动合并或修改保护规则。本批按用户后续授权仅作带该标记的本地交接提交，不推送或触发远端CI；标记不影响今后经授权的手动触发。
+
+远端验收必须保留Actions run／attempt／checkout SHA及输入run ID、四份工具摘要、`native-host.json`、三份实际`report.json`、JUnit、容器退出／资源／清理结果，并核对原a1制品与测试校正身份。配置、YAML语法检查和Mac拒绝测试均不能替代原生通过回执。60分钟job看门狗只约束维护任务，不改变原各阶段超时或S2的360秒门槛。
+
 输出目录必须不存在，已有成功或失败记录均不覆盖。矩阵脚本只挂载维护工具、制品、wheelhouse与输出，容器不联网、不挂载源码／Git／宿主凭据／Docker socket；先确认前一容器实际结束，再启动下一版本。创建前先保存唯一名称／归属标签，客户端超时也按名称核对，只控制归属匹配的容器。保存日志／退出状态后移除；创建结果、归属或停止状态无法确认时中止后续版本。超时后暂时查不到容器不等于创建已结束，须按保留名称再次核对。
 
 ## 放行与证据

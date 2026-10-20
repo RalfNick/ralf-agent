@@ -20,6 +20,21 @@ def call(*args, timeout=45):
     return result.stdout.strip()
 
 
+def verify_native_host(target_platform):
+    arch = target_platform.split("/")[1]
+    aliases = {"amd64": {"amd64", "x86_64"}, "arm64": {"arm64", "aarch64"}}[arch]
+    host = {"system": platform.system(), "machine": platform.machine()}
+    if host["system"] != "Linux" or host["machine"] not in aliases:
+        raise RuntimeError("native_host_platform_mismatch")
+    daemon = json.loads(call("docker", "info", "--format", "{{json .}}"))
+    if daemon.get("OSType") != "linux" or daemon.get("Architecture") not in aliases:
+        raise RuntimeError("native_daemon_platform_mismatch")
+    return {
+        "host": host,
+        "docker": {"os": daemon["OSType"], "architecture": daemon["Architecture"]},
+    }
+
+
 def verify_owned(info, token):
     if (info["Config"].get("Labels") or {}).get("ralf.release-gate") != token:
         raise RuntimeError("container_owner_mismatch")
@@ -105,6 +120,7 @@ def main(argv=None):
     for name in ("wheel", "sdist", "wheelhouse", "output"):
         parser.add_argument("--" + name, type=Path, required=True)
     parser.add_argument("--platform", choices=("linux/arm64", "linux/amd64"), default="linux/arm64")
+    parser.add_argument("--require-native", action="store_true")
     args = parser.parse_args(argv)
     architecture = args.platform.split("/")[1]
     root = args.output.resolve()
@@ -139,6 +155,7 @@ def main(argv=None):
                 "artifacts": actual_artifacts,
                 "host": {"system": platform.system(), "machine": platform.machine()},
                 "platform": args.platform,
+                "native_required": args.require_native,
                 "artifact_source_commit": spec["artifact_source_commit"],
                 "limits": spec["linux_container_limits"],
             },
@@ -153,6 +170,16 @@ def main(argv=None):
         print(json.dumps(error), flush=True)
         return 1
     results = []
+    if args.require_native:
+        try:
+            native = verify_native_host(args.platform)
+            (root / "native-host.json").write_text(json.dumps(native, indent=2) + "\n")
+        except Exception as error:
+            failure = {"phase": "native_host_check", "error": str(error)}
+            (root / "matrix-error.json").write_text(json.dumps(failure, indent=2) + "\n")
+            (root / "matrix.json").write_text("[]\n")
+            print(json.dumps(failure), flush=True)
+            return 1
     for minor, image in spec[f"linux_{architecture}_images"].items():
         output = root / minor
         output.mkdir()

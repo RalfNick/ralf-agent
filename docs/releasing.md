@@ -19,6 +19,25 @@ ralf --version
 
 重复验证使用[固定发布门禁与平台矩阵](release-gate.md)，显式提供原制品与哈希锁定wheelhouse；脚本本身不执行发布。原a1制品仍绑定ba7bc46，维护工具的提交和运行报告单独定位。
 
+### 首版原制品交接预检
+
+在当前维护checkout中执行以下**离线**检查；输出目录必须不存在，原候选不覆盖：
+
+```bash
+python3.12 tools/release_preflight.py \
+  --wheel /ABS/ralf_agent-0.1.0a1-py3-none-any.whl \
+  --sdist /ABS/ralf_agent-0.1.0a1.tar.gz \
+  --output /ABS/new-alpha1-handoff
+```
+
+预检复用固定SHA／442产品／939测试输入及原显式校正校验，并核对当前源码产品字节、pyproject版本和两包内的Apache-2.0声明／LICENSE／NOTICE。它不import SDK、运行模型或测试、重建包、连接账号、创建Tag或上传文件。成功后才生成只含两份原包的`candidate/`、`candidate.sha256`和`preflight.json`；复制后再次核对SHA。失败输出保留，不能把`candidate.pending/`当作成功交接目录。
+
+交接放行须同时满足CLI返回0、`preflight.json`为`passed_local_preflight`及`candidate.sha256`核对通过，不能仅凭`candidate/`存在放行。该状态只说明上述本地检查通过，`publication_ready`仍为false；未执行的原生AMD64、远端CI、权限／授权、公开安装及独立采用分别列出，不把它们混作本地通过。原包仍来自`ba7bc46`；新工具、测试和文档不回填原sdist，也不以同版本重建包替代它。当前checkout与原产品树不同时，预检拒绝，需要明确另起版本与验收，不能修改固定SHA绕过。
+
+交接目录准备后按[原生／手动CI步骤](release-gate.md#原生-amd64-与远端手动-ci准备完成尚未执行)操作；原包暂存、推送工作流到可手动触发的位置、触发run均为尚未执行的外部步骤，本批在这些动作前停下。
+
+公开发行前还须人工核对目标仓库、维护者／PyPI项目控制权、最终源码提交／Tag、原包SHA与有限平台声明。上述检查与公开发布均未执行；只有另行授权后才进行。函数指纹与S2继续后置，不能据本地预检关闭完整第三阶段。
+
 ## 历史基础 SDK 制品（dev123）
 
 原目录为 `dist/basic-sdk-dev123/`：

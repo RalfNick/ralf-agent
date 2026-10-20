@@ -622,3 +622,73 @@ def test_worker_report_cannot_borrow_original_identity_for_other_actual_artifact
     assert not linux_wrapper.verify_report(
         worker_report, gate.read_spec(), "3.11", worker_inputs, {"other.whl": "different"}
     )
+
+
+@pytest.mark.parametrize(
+    ("system", "host_arch", "daemon_os", "daemon_arch", "allowed"),
+    [
+        ("Linux", "x86_64", "linux", "x86_64", True),
+        ("Linux", "x86_64", "linux", "amd64", True),
+        ("Darwin", "arm64", "linux", "amd64", False),
+        ("Linux", "aarch64", "linux", "amd64", False),
+        ("Linux", "x86_64", "linux", "aarch64", False),
+        ("Linux", "x86_64", "windows", "amd64", False),
+    ],
+)
+def test_native_gate_requires_matching_linux_host_and_daemon(
+    linux_wrapper, monkeypatch, system, host_arch, daemon_os, daemon_arch, allowed
+):
+    monkeypatch.setattr(linux_wrapper.platform, "system", lambda: system)
+    monkeypatch.setattr(linux_wrapper.platform, "machine", lambda: host_arch)
+    monkeypatch.setattr(
+        linux_wrapper,
+        "call",
+        lambda *a, **k: json.dumps({"OSType": daemon_os, "Architecture": daemon_arch}),
+    )
+    if allowed:
+        result = linux_wrapper.verify_native_host("linux/amd64")
+        assert result["host"] == {"system": "Linux", "machine": "x86_64"}
+        assert result["docker"] == {"os": daemon_os, "architecture": daemon_arch}
+    else:
+        with pytest.raises(RuntimeError, match="native_.*_mismatch"):
+            linux_wrapper.verify_native_host("linux/amd64")
+
+
+def test_require_native_cli_records_rejection_before_any_docker_operation(
+    linux_wrapper, tmp_path, monkeypatch
+):
+    monkeypatch.setattr(linux_wrapper.platform, "system", lambda: "Darwin")
+    monkeypatch.setattr(linux_wrapper.platform, "machine", lambda: "arm64")
+
+    def forbidden(*args, **kwargs):
+        pytest.fail("No Docker operation is allowed after a mismatched native host")
+
+    monkeypatch.setattr(linux_wrapper, "call", forbidden)
+    wheel, sdist = tmp_path / "one.whl", tmp_path / "one.tar.gz"
+    wheel.write_bytes(b"wheel")
+    sdist.write_bytes(b"sdist")
+    stage_declared_gate(linux_wrapper, tmp_path, (wheel, sdist), monkeypatch)
+    output = tmp_path / "native-rejected"
+    assert (
+        linux_wrapper.main(
+            [
+                "--wheel",
+                str(wheel),
+                "--sdist",
+                str(sdist),
+                "--wheelhouse",
+                str(tmp_path),
+                "--output",
+                str(output),
+                "--platform",
+                "linux/amd64",
+                "--require-native",
+            ]
+        )
+        == 1
+    )
+    assert json.loads((output / "matrix.json").read_text()) == []
+    assert (
+        json.loads((output / "matrix-error.json").read_text())["error"]
+        == "native_host_platform_mismatch"
+    )
