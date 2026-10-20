@@ -115,7 +115,7 @@ python3.12 tools/run_release_gate_linux.py \
   --wheelhouse /ABS/wheelhouse --output /ABS/new-linux-matrix
 ```
 
-AMD64使用同一包装器并显式增加`--platform linux/amd64`；默认仍为`linux/arm64`。镜像准备与离线门禁分开：`linux_amd64_images`固定了[AWS公共注册表的Docker官方Python仓库](https://gallery.ecr.aws/docker/library/python)及原多平台索引摘要，先用`docker pull --platform linux/amd64`准备这些精确引用。包装器不会自行联网下载；按目标平台执行`docker image inspect --platform`，再核对实际镜像架构和容器报告，不能依赖本地缓存的默认架构。Docker需支持该按平台检查选项；本次使用Docker29.0.1。
+AMD64使用同一包装器并显式增加`--platform linux/amd64`；默认仍为`linux/arm64`。镜像准备与离线门禁分开：`linux_amd64_images`固定了[Docker Hub官方Python仓库](https://hub.docker.com/_/python)及原多平台索引摘要。原生CI首次使用AWS公共镜像时被`Data limit exceeded`拒绝，因此仅切换官方仓库传输来源；原三个索引摘要不变，原AWS失败和此前Mac网络故障均保留，先用`docker pull --platform linux/amd64`准备这些精确引用。包装器不会自行联网下载；按目标平台执行`docker image inspect --platform`，再核对实际镜像架构和容器报告，不能依赖本地缓存的默认架构。Docker需支持该按平台检查选项；本次使用Docker29.0.1。
 
 在ARM64 Mac上运行`linux/amd64`属于模拟执行，报告中的宿主与容器架构分别保留；通过只形成所选基础SDK的模拟矩阵证据，不能替代原生AMD64、远端CI或S2验收。
 
