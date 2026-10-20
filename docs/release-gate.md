@@ -17,10 +17,10 @@
 | Linux ARM64／Debian12缓存镜像 | 3.11、3.12、3.13 | cgroup v2、2CPU／2GiB、无额外swap、`network=none`；串行 | 本批三版本各311＋16及两条starter通过，零失败／错误／跳过／OOM；见[本批记录](../architecture/reviews/2026-10-19-release-gate.md) |
 | macOS ARM64 | 3.12 | 本地隔离venv；不声称Linux容器的资源限制 | 本批311＋16及两条starter通过，独立记录 |
 | Linux AMD64／Debian12（ARM64 Mac模拟） | 3.11、3.12、3.13 | 同一门禁、2CPU／2GiB、swap0、`network=none`；串行 | 三版本各311＋16＋2通过，零失败／错误／跳过／OOM；仅模拟矩阵，见[AMD64记录](../architecture/reviews/2026-10-20-amd64-basic-validation.md) |
-| 原生Linux AMD64 | 3.11、3.12、3.13 | 相同门禁与资源条件 | 尚未验收；模拟通过不代替原生宿主或远端CI |
+| 原生Linux AMD64／Debian12（GitHub Ubuntu24.04 X64宿主） | 3.11、3.12、3.13 | 相同门禁，2CPU／2GiB、swap0、无网络；串行 | 各311＋16＋2通过，零失败／错误／跳过／OOM，最高286.81MiB；见[远端验收](../architecture/reviews/2026-10-20-alpha1-native-ci-validation.md) |
 | Windows、其他Python／平台 | 未选 | 门禁在安装前拒绝 | 未验收 |
 
-manifest里的平台条目只声明允许执行，实际通过报告才形成该平台的有限证据。远端CI尚未执行；本机通过不等于GitHub Actions通过。现有`ci.yml`的广泛回归不是本门禁，当前任务不执行它。
+manifest里的平台条目只声明允许执行，实际通过报告才形成该平台的有限证据。[远端手动run 39362466673](https://github.com/RalfNick/ralf-agent/actions/runs/39362466673)已验证所选原生AMD64范围；本机报告与远端报告分别保存。现有`ci.yml`的广泛回归不是本门禁，本轮未执行它。
 
 ## 准备依赖wheelhouse
 
@@ -87,7 +87,7 @@ docker image load --input linux-arm64-images.tar
 
 离线复验还需要原 wheel、原 sdist、四份维护工具／输入文件及锁定 wheelhouse；不用携带整个历史 `dist/`。只复制 `release_gate.py` 不足以复验。镜像导出／加载是标准 Docker 操作，不接入 SDK、不获取模型凭据；真实门禁容器仍保持 `network=none`。
 
-此前 Docker 的 ARM64 导出／加载回环结果见收尾验收，不外推不同 Docker 存储格式或未测宿主。Docker Hub 连接超时和匿名 AMD64 镜像下载失败单独保留；后续使用同索引摘要的 AWS 官方公共镜像取得所选 AMD64 模拟通过证据，见[排障与复验](../architecture/reviews/2026-10-20-amd64-basic-validation.md)。未执行原生 AMD64 或远端 CI。
+此前 Docker 的 ARM64 导出／加载回环结果见收尾验收，不外推不同 Docker 存储格式或未测宿主。Mac的Docker Hub连接超时和匿名AMD64镜像下载失败单独保留；使用同索引摘要的AWS公共镜像取得的所选AMD64模拟证据见[排障与复验](../architecture/reviews/2026-10-20-amd64-basic-validation.md)。本轮原生宿主使用Docker Hub同摘要镜像通过，不说明Mac的原网络故障已解决。
 
 ## 执行
 
@@ -119,7 +119,7 @@ AMD64使用同一包装器并显式增加`--platform linux/amd64`；默认仍为
 
 在ARM64 Mac上运行`linux/amd64`属于模拟执行，报告中的宿主与容器架构分别保留；通过只形成所选基础SDK的模拟矩阵证据，不能替代原生AMD64、远端CI或S2验收。
 
-### 原生 AMD64 与远端手动 CI（准备完成，尚未执行）
+### 原生 AMD64 与远端手动 CI
 
 原生验证在上述AMD64命令中增加`--require-native`。包装器在任何容器创建前核对宿主必须为Linux x86_64、Docker daemon也须为Linux AMD64；不匹配返回失败，保存`matrix-error.json`和空`matrix.json`。ARM64 Mac上的模拟运行不能通过此入口。默认不加该参数时仍允许原有明确标记的模拟验证。
 
@@ -136,13 +136,13 @@ ralf_agent-0.1.0a1-py3-none-any.whl
 ralf_agent-0.1.0a1.tar.gz
 ```
 
-工作流从指定run下载artifact的机制见[官方download-artifact说明](https://github.com/actions/download-artifact/tree/v4)。原包暂存是单独的外部交接：可在受控runner上复制下节预检生成的`candidate/`，经授权后由`actions/upload-artifact`使用上述固定artifact名保存；其`path`只选该目录，不上传整个`dist/`。目前没有已建立的暂存run，不提供虚构run ID，也不自动上传本机文件。若使用自有原生Linux机器，可直接搬运原包／工具／锁定依赖并执行相同的`--require-native`命令，无需声称已运行GitHub CI。
+工作流从指定run下载artifact的机制见[官方download-artifact说明](https://github.com/actions/download-artifact/tree/v4)。原包暂存是单独的外部交接：只上传经预检的两份原包，不上传整个`dist/`。本轮已授权[暂存run 39361602003](https://github.com/RalfNick/ralf-agent/actions/runs/39361602003)，其固定名artifact经服务端ZIP摘要及原包SHA复核后交给门禁。artifact保留14天；过期后需要重新授权暂存精确原包，不能继续使用失效ID或重新构建包代替。若使用自有原生Linux机器，可直接搬运原包／工具／锁定依赖并执行相同的`--require-native`命令。
 
 2026-10-20用户进一步授权原包暂存及手动执行。新增[私有暂存工作流](../.github/workflows/alpha1-stage-candidate.yml)桥接本机原包到Actions artifact：仅接受`ralf-alpha1-private-stage-`前缀、`draft=true`、未发布的本仓库草稿；资产名称、数量、大小和两份原SHA均须匹配，重定向必须HTTPS且移除Authorization，失败只保留proof，不交出部分candidate。暂存任务为读取草稿可见性使用`contents: write`权限，但下载脚本只发GET，不包含发布或源码写入操作；原固定门禁仍只有只读权限。验证证据取回后删除本次草稿，保留原包、暂存proof及失败记录，不将草稿转为公开Release，也不创建正式版本Tag。实际run及通过结果另行取证，工作流存在不等于通过。
 
-GitHub的手动触发要求该工作流先在默认分支可用，见[官方说明](https://docs.github.com/en/actions/how-tos/manage-workflow-runs/manually-run-a-workflow)。本批只准备本地文件；推送／合并、建立暂存run、触发CI均未执行。需要这些外部动作时停下，按用户授权另行推进；手动触发CI也不代表允许公开发布。
+GitHub的手动触发要求该工作流先在默认分支可用，见[官方说明](https://docs.github.com/en/actions/how-tos/manage-workflow-runs/manually-run-a-workflow)。本轮核对默认分支为`feat/m1-local-runtime`，使用已核验的RalfNick账号推送必要CI维护提交，并经用户授权手动暂存及执行；最终通过run的checkout为`0b9b6c9`，原制品源码仍为`ba7bc46`。手动触发CI不代表允许公开发布。本次临时草稿已删除，确认未发布且没有生成对应Tag；Actions证据及原失败保留。
 
-现有`ci.yml`仍会随push／PR执行全量检查，本批没有关闭或修改它。后续授权推送本批维护提交时，可在该交接提交使用GitHub支持的`[skip ci]`仅跳过自动push／PR工作流，再单独手动触发这里的冻结门禁，避免恢复函数指纹／S2后置范围；见[官方跳过说明](https://docs.github.com/en/actions/how-tos/manage-workflow-runs/skip-workflow-runs)。这不算全量CI通过，也不绕过受保护分支的必需检查；若必需检查因此pending，应停下由维护者决定交接方式，不自动合并或修改保护规则。本批按用户后续授权仅作带该标记的本地交接提交，不推送或触发远端CI；标记不影响今后经授权的手动触发。
+现有`ci.yml`仍会随push／PR执行全量检查，本批没有关闭或修改它。本轮三个CI维护提交均保留GitHub支持的`[skip ci]`，只单独手动执行这里的暂存和冻结门禁，避免恢复函数指纹／S2后置范围；已核对相应提交只有三个手动run，宽泛CI未启动。见[官方跳过说明](https://docs.github.com/en/actions/how-tos/manage-workflow-runs/skip-workflow-runs)。这不算全量CI通过，也不绕过受保护分支的必需检查；若必需检查因此pending，应停下由维护者决定交接方式，不自动合并或修改保护规则。标记不影响今后经授权的手动触发。
 
 远端验收必须保留Actions run／attempt／checkout SHA及输入run ID、四份工具摘要、`native-host.json`、三份实际`report.json`、JUnit、容器退出／资源／清理结果，并核对原a1制品与测试校正身份。配置、YAML语法检查和Mac拒绝测试均不能替代原生通过回执。60分钟job看门狗只约束维护任务，不改变原各阶段超时或S2的360秒门槛。
 

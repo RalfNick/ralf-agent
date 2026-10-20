@@ -1,12 +1,12 @@
 # 预览版本验证与发布
 
-当前推荐 **0.1.0a1 Local 基础 SDK Alpha 本地候选**。首版范围、实验性能力和平台边界见[Alpha说明](releases/0.1.0a1.md)。基于fc128b8，只统一发行版本和材料，不新增运行时能力；函数指纹专项、S2、完整第三阶段与R01–R26状态保持。
+当前推荐 **0.1.0a1 Local 基础 SDK Alpha 未公开候选**。首版范围、实验性能力和平台边界见[Alpha说明](releases/0.1.0a1.md)。基于fc128b8，只统一发行版本和材料，不新增运行时能力；函数指纹专项、S2、完整第三阶段与R01–R26状态保持。
 
-CI 检查与构建不自动发布到 PyPI／GitHub Release。本轮只生成本地制品，未推送、上传或核验公开发行；历史制品及其证据保留。
+CI检查与构建不自动发布到PyPI／GitHub Release。原a1制品保持不变，后续经授权暂存原包并执行所选原生AMD64手动门禁，CI维护提交已推送；未公开发行。临时未发布草稿已删除；历史制品及失败证据保留，见[远端验收](../architecture/reviews/2026-10-20-alpha1-native-ci-validation.md)。
 
 ## 本轮本地交付
 
-候选目录为 `dist/alpha1-candidate/`，包含 `ralf_agent-0.1.0a1-py3-none-any.whl`、`ralf_agent-0.1.0a1.tar.gz`、`delivery.json`、`SHA256SUMS`及有限验收证据。原dev123及更早制品不可覆盖。当前仅本地候选，不是公开PyPI或GitHub Release。
+候选目录为 `dist/alpha1-candidate/`，包含 `ralf_agent-0.1.0a1-py3-none-any.whl`、`ralf_agent-0.1.0a1.tar.gz`、`delivery.json`、`SHA256SUMS`及有限验收证据。原dev123及更早制品不可覆盖。原包另经授权暂存到Actions artifact；当前仍为未公开候选，不是公开PyPI或GitHub Release。
 
 ```bash
 cd /ABSOLUTE/PATH/ralf-agent/dist/alpha1-candidate
@@ -32,9 +32,9 @@ python3.12 tools/release_preflight.py \
 
 预检复用固定SHA／442产品／939测试输入及原显式校正校验，并核对当前源码产品字节、pyproject版本和两包内的Apache-2.0声明／LICENSE／NOTICE。它不import SDK、运行模型或测试、重建包、连接账号、创建Tag或上传文件。成功后才生成只含两份原包的`candidate/`、`candidate.sha256`和`preflight.json`；复制后再次核对SHA。失败输出保留，不能把`candidate.pending/`当作成功交接目录。
 
-交接放行须同时满足CLI返回0、`preflight.json`为`passed_local_preflight`及`candidate.sha256`核对通过，不能仅凭`candidate/`存在放行。该状态只说明上述本地检查通过，`publication_ready`仍为false；未执行的原生AMD64、远端CI、权限／授权、公开安装及独立采用分别列出，不把它们混作本地通过。原包仍来自`ba7bc46`；新工具、测试和文档不回填原sdist，也不以同版本重建包替代它。当前checkout与原产品树不同时，预检拒绝，需要明确另起版本与验收，不能修改固定SHA绕过。
+交接放行须同时满足CLI返回0、`preflight.json`为`passed_local_preflight`及`candidate.sha256`核对通过，不能仅凭`candidate/`存在放行。该状态只说明上述本地检查通过，`publication_ready`仍为false；原生AMD64／远端CI须有各自实际报告，公开发行权限／授权、公开安装及独立采用仍分别列出，不能由本地预检代签。原包仍来自`ba7bc46`；新工具、测试和文档不回填原sdist，也不以同版本重建包替代它。当前checkout与原产品树不同时，预检拒绝，需要明确另起版本与验收，不能修改固定SHA绕过。
 
-交接目录准备后按[原生／手动CI步骤](release-gate.md#原生-amd64-与远端手动-ci准备完成尚未执行)操作；原包暂存、推送工作流到可手动触发的位置、触发run均为尚未执行的外部步骤，本批在这些动作前停下。
+交接目录准备后按[原生／手动CI步骤](release-gate.md#原生-amd64-与远端手动-ci)操作。本轮已授权的暂存run为39361602003、原生通过run为39362466673，原包摘要及三版本完整回执已复核；artifact保留14天，失效后须重新暂存精确原包。只形成所选基础SDK平台证据，不触发公开发行或宽泛CI。
 
 公开发行前还须人工核对目标仓库、维护者／PyPI项目控制权、最终源码提交／Tag、原包SHA与有限平台声明。上述检查与公开发布均未执行；只有另行授权后才进行。函数指纹与S2继续后置，不能据本地预检关闭完整第三阶段。
 
