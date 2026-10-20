@@ -5,7 +5,8 @@ from . import temporal_session_deployment_verification as verification
 from .errors import DefinitionMismatch
 from .task_controls import _binding
 from .temporal_bindings import _plain_binding_inputs
-from .temporal_state import CONTEXT_ACTIVITY, MODEL_ACTIVITY, detached
+from .temporal_parent_state import CONTROL_ACTIVITY, SELECTION_ACTIVITY
+from .temporal_state import CONTEXT_ACTIVITY, MODEL_ACTIVITY, TOOL_ACTIVITY, detached
 from .types import canonical, digest
 
 
@@ -35,6 +36,8 @@ class _ActivityReading:
             (self, "_node"),
             (self, "_ancestry"),
             (self, "read"),
+            (self, "read_ancestry"),
+            (self, "_verify_origin"),
         )
         self._bindings = tuple(_binding(getattr(owner, name)) for owner, name in self._ports)
         self._identity = None
@@ -191,39 +194,7 @@ class _ActivityReading:
             checked()
             if proof["admission_receipt"]["root"] != held:
                 _reject()
-            # Registry bytes remain proposals until this new verifier reads the
-            # raw original transport. No outer object's validate() is authority.
-            intent = self._proposal["intent"]
-            value = {
-                "version": 1,
-                "mode": "observe",
-                "intent": intent,
-                **{
-                    name: intent[name]
-                    for name in (
-                        "scope",
-                        "namespace",
-                        "coordinator_id",
-                        "coordinator_execution_epoch",
-                    )
-                },
-            }
-            validation = verification.SessionControlValidation(
-                self.runtime,
-                self.client,
-                value,
-                self.info,
-                deployment_id=self.policy["deployment_id"],
-                _coordinator_activity=False,
-            )
-            checked()
-            verified = await validation.validate()
-            checked()
-            if canonical(verified) != self._identity:
-                _reject()
-            if execution._policy(self.runtime, expected=proof["manifest"]) != self.policy:
-                _reject()
-            checked()
+            await self._verify_origin(proof["manifest"])
             return detached(proof)
         except _MissingPin:
             checked()
@@ -231,6 +202,68 @@ class _ActivityReading:
         finally:
             self._identity = None
             self._proposal = None
+
+    async def read_ancestry(self, original):
+        # A detached local is never exposed through the proposal read handles.
+        original = detached(original)
+        identity = digest(original)
+        try:
+            self._check()
+            if (
+                original["run_id"] != self._claim[0]
+                or original["execution_epoch"] != self._claim[1]
+                or original["scope"] != self.request["scope"]
+                or not original["admission"]["lineage"]
+            ):
+                _reject()
+            root = await self._ancestry(original)
+            await self._verify_origin(original["manifest"])
+            self._check()
+            if digest(original) != identity:
+                _reject()
+            return detached(root)
+        except _MissingPin:
+            self._check()
+            return None
+        finally:
+            self._identity = None
+            self._proposal = None
+
+    async def _verify_origin(self, manifest):
+        checked = self._check
+        # Registry bytes remain proposals until this new verifier reads the
+        # raw original transport. No outer object's validate() is authority.
+        intent = self._proposal["intent"]
+        value = {
+            "version": 1,
+            "mode": "observe",
+            "intent": intent,
+            **{
+                name: intent[name]
+                for name in (
+                    "scope",
+                    "namespace",
+                    "coordinator_id",
+                    "coordinator_execution_epoch",
+                )
+            },
+        }
+        validation = verification.SessionControlValidation(
+            self.runtime,
+            self.client,
+            value,
+            self.info,
+            deployment_id=self.policy["deployment_id"],
+            _coordinator_activity=False,
+        )
+        checked()
+        verified = await validation.validate()
+        checked()
+        if canonical(verified) != self._identity:
+            _reject()
+        if execution._policy(self.runtime, expected=manifest) != self.policy:
+            _reject()
+        checked()
 
 
 class _ReadOnlyClient:
@@ -360,6 +393,7 @@ def source_bindings():
                 _reject,
                 _MissingPin,
                 read_activity,
+                read_ancestry,
                 source_bindings,
                 _plain_binding_inputs,
                 _ActivityReading,
@@ -368,6 +402,8 @@ def source_bindings():
                 _ActivityReading._node,
                 _ActivityReading._ancestry,
                 _ActivityReading.read,
+                _ActivityReading.read_ancestry,
+                _ActivityReading._verify_origin,
                 _ReadOnlyClient,
                 _ReadOnlyClient.__init__,
                 _ReadOnlyClient._check,
@@ -418,6 +454,10 @@ def source_bindings():
             verification._ACTIVITY_FIELDS,
             MODEL_ACTIVITY,
             CONTEXT_ACTIVITY,
+            CONTROL_ACTIVITY,
+            SELECTION_ACTIVITY,
+            TOOL_ACTIVITY,
+            execution.ACTIVITY,
         )
     )
 
@@ -447,3 +487,31 @@ async def read_activity(runtime, client, policy, request, info):
     if execution._policy(runtime, expected=manifest) != policy:
         _reject()
     return await _ActivityReading(runtime, client, policy, request, info).read()
+
+
+async def read_ancestry(runtime, client, policy, original, info):
+    """One final Session verifier for the existing fresh ancestor read set."""
+    if (
+        info is None
+        or getattr(info, "activity_type", None)
+        not in {execution.ACTIVITY, CONTROL_ACTIVITY, SELECTION_ACTIVITY, TOOL_ACTIVITY}
+        or original["run_id"] != info.workflow_id
+        or original["execution_epoch"] != info.workflow_run_id
+        or not original["admission"]["lineage"]
+    ):
+        return None
+    manifest = original["manifest"]
+    protocol = manifest.get("deployment_admission_protocol", {})
+    if (
+        type(protocol) is not dict
+        or type(protocol.get("version")) is not int
+        or protocol["version"] != 4
+        or manifest.get("binding_protocol") not in (22, 23)
+        or "coding_execution_protocol" not in manifest
+        or not _plain_binding_inputs(manifest, {})
+    ):
+        return None
+    if execution._policy(runtime, expected=manifest) != policy:
+        _reject()
+    reading = _ActivityReading(runtime, client, policy, {"scope": original["scope"]}, info)
+    return await reading.read_ancestry(original)

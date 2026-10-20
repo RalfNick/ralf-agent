@@ -9,6 +9,7 @@ from functools import wraps
 
 from .errors import DefinitionMismatch, RalfError, ValidationError
 from .governance import DeploymentAdmissionPolicy, TemporalExecutionPolicy
+from .task_controls import _binding
 from .temporal_deployment_admission import registry_id, root_run_id
 from .temporal_state import detached
 from .types import digest
@@ -99,24 +100,24 @@ def _sealed(value):
 
 
 def _policy(runtime, *, expected=None):
+    pin = getattr(runtime, "_deployment_admission_policy_pin", None)
+    if pin is not None and type(pin) is not DeploymentAdmissionPolicy:
+        _reject()
+    # Inspect the declaration before the final full check. No identity getter
+    # may run after that check and silently replace an already checked owner.
+    # This synchronous boundary needs one complete check, not two reconstructions.
+    identity = None if pin is None else detached(pin.identity)
     if expected is None:
         runtime.validate_release()
     else:
         runtime.validate_release(expected)
-    pin = getattr(runtime, "_deployment_admission_policy_pin", None)
-    if pin is None:
-        return None
     if (
-        type(pin) is not DeploymentAdmissionPolicy
+        getattr(runtime, "_deployment_admission_policy_pin", None) is not pin
         or getattr(runtime, "_deployment_admission_policy", None) is not pin
-        or getattr(runtime, "_deployment_admission_identity", None) != pin.identity
+        or getattr(runtime, "_deployment_admission_identity", None) != identity
     ):
         _reject()
-    if expected is None:
-        runtime.validate_release()
-    else:
-        runtime.validate_release(expected)
-    return detached(pin.identity)
+    return identity
 
 
 def _actual(client, info, *, run_id, epoch):
@@ -465,7 +466,13 @@ async def _pin(client, parent, child, call):
             _reject()
 
 
-async def _ancestry(runtime, client, policy, original, *, read_only=False):
+async def _ancestry(runtime, client, policy, original, *, read_only=False, info=None):
+    if info is not None and len(original["admission"]["lineage"]) >= 2:
+        from .temporal_session_activity_reads import read_ancestry
+
+        grouped = await read_ancestry(runtime, client, policy, original, info)
+        if grouped is not None:
+            return grouped
     current = original
     for index in range(len(original["admission"]["lineage"]) - 1, -1, -1):
         link = original["admission"]["lineage"][index]
@@ -580,6 +587,11 @@ async def _held(client, policy, root_proof, *, bind):
 
 
 async def admit(runtime, client, value, info):
+    from . import temporal_session_activity_reads as readings
+
+    sources = readings.source_bindings
+    source_pin, ancestry_pin = _binding(sources), _binding(_ancestry)
+    implementations = sources()
     value = detached(value)
     _exact(value, _VALUE_FIELDS)
     policy = _policy(runtime)
@@ -600,11 +612,16 @@ async def admit(runtime, client, value, info):
         )
     ):
         _reject()
-    root_proof = await _ancestry(runtime, client, policy, proof)
+    if (
+        _binding(readings.source_bindings) != source_pin
+        or _binding(_ancestry) != ancestry_pin
+        or sources() != implementations
+    ):
+        _reject()
+    root_proof = await _ancestry(runtime, client, policy, proof, info=info)
     held = await _held(client, policy, root_proof, bind=True)
     _actual(client, info, run_id=value["run_id"], epoch=value["execution_epoch"])
-    _policy(runtime)
-    runtime.validate_release(value["runtime_manifest"])
+    _policy(runtime, expected=value["runtime_manifest"])
     result = {
         "version": 1,
         "run_id": proof["run_id"],
@@ -628,6 +645,11 @@ def _activity_body(request):
 
 
 async def validate_activity(runtime, client, request, info):
+    from . import temporal_session_activity_reads as readings
+
+    sources = readings.source_bindings
+    source_pin, ancestry_pin = _binding(sources), _binding(_ancestry)
+    implementations = sources()
     request = detached(request)
     policy = _policy(runtime)
     if policy is None:
@@ -667,7 +689,13 @@ async def validate_activity(runtime, client, request, info):
             and payload["deployment_admission"] != proof["admission"]
         ):
             _reject()
-    root = await _ancestry(runtime, client, policy, proof)
+    if (
+        _binding(readings.source_bindings) != source_pin
+        or _binding(_ancestry) != ancestry_pin
+        or sources() != implementations
+    ):
+        _reject()
+    root = await _ancestry(runtime, client, policy, proof, info=info)
     held = await _held(client, policy, root, bind=False)
     if proof["admission_receipt"]["root"] != held:
         _reject()
@@ -743,8 +771,7 @@ async def control(runtime, client, value, info):
             _reject()
     await _namespace(client, proof["admission"]["root"]["namespace"])
     _actual(client, info, run_id=proof["run_id"], epoch=proof["execution_epoch"])
-    _policy(runtime)
-    runtime.validate_release(value["runtime_manifest"])
+    _policy(runtime, expected=value["runtime_manifest"])
     return detached(result)
 
 
@@ -844,8 +871,9 @@ def wrap_activities(runtime, client, activities):
             if proof is not None:
                 _actual(client, info, run_id=proof["run_id"], epoch=proof["execution_epoch"])
                 await _namespace(client, proof["admission"]["root"]["namespace"])
-                runtime.validate_release(proof["manifest"])
-            _policy(runtime)
+                _policy(runtime, expected=proof["manifest"])
+            else:
+                _policy(runtime)
             return result
 
         return wrapped

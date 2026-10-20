@@ -161,7 +161,11 @@ def test_actual_session_coding_original_ack_retains_turn_until_retirement(
                         await system.effect_ack_gate(False)
                     else:
                         (tmp_path / (prefix + boundary)).unlink()
-                    await system.engine.drive(leaf, wait_seconds=0)
+                    # The completed invocation retries its end ACK itself. Once
+                    # admitted, retirement may seal the leaf before a new drive;
+                    # observe that recovery without racing a sealed mutation.
+                    if boundary != "deployment-end":
+                        await system.engine.drive(leaf, wait_seconds=0)
                     details = await _eventually(
                         lambda: system.view(leaf),
                         lambda d: any(

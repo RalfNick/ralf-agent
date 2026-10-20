@@ -7,7 +7,7 @@ from types import SimpleNamespace
 
 import pytest
 
-from ralf_agent import AgentSpec, GraphNode, GraphWorkflowSpec
+from ralf_agent import AgentSpec, GraphNode, GraphWorkflowSpec, TeamSpec
 from ralf_agent import temporal_coding_composition_state as composition
 from ralf_agent import temporal_deployment_execution as execution
 from ralf_agent import temporal_deployment_execution_state as admission
@@ -15,7 +15,7 @@ from ralf_agent import temporal_deployment_release as release
 from ralf_agent import temporal_deployment_release_state as closure
 from ralf_agent import temporal_session_deployment_verification as verification
 from ralf_agent.errors import DefinitionMismatch
-from ralf_agent.temporal_parent_state import PARENT_WORKFLOW_NAME
+from ralf_agent.temporal_parent_state import PARENT_WORKFLOW_NAME, TemporalParentState
 from ralf_agent.temporal_session_deployment_control import _CheckedClient
 from ralf_agent.temporal_session_state import SESSION_ACTIVITY
 from ralf_agent.temporal_state import WORKFLOW_NAME, TemporalRunState
@@ -26,7 +26,7 @@ from tests.test_temporal_session_deployment_dto import origin
 from tests.test_temporal_session_deployment_execution import admit, initialize
 
 
-def tree_environment(monkeypatch, *, validation_class=None):
+def tree_environment(monkeypatch, *, validation_class=None, nested_depth=1):
     captured = {}
     session_class = child_fixture.TemporalSessionState
 
@@ -44,83 +44,124 @@ def tree_environment(monkeypatch, *, validation_class=None):
             max_concurrency=3,
         ),
     )
-    parent, _ = child_fixture.original_child()
+    definition = None
+    if nested_depth > 1:
+        definition = AgentSpec("leaf", "answer")
+        for index in range(nested_depth):
+            definition = TeamSpec(f"level-{index}", {"child": definition})
+    parent, _ = child_fixture.original_child(definition)
     intent = captured["session"].deployment_turn().intent
     composition.adopt_admission(
         parent,
         {"namespace": intent["namespace"], "execution_epoch": parent.epoch, "admitted": True},
     )
-    assert len(parent.children) == 3
+    assert len(parent.children) == (3 if nested_depth == 1 else 1)
     states = {parent.run_id: parent}
-    for index, call in enumerate(parent.children):
-        epoch = f"child-{index}-epoch"
-        call.update(
-            started=True,
-            dispatch_started=True,
-            settled=True,
-            uncertain=False,
-            state="succeeded",
-            deployment_execution_epoch=epoch,
-        )
-        composition.pin_child_execution(
+
+    def close_tree(parent):
+        for index, call in enumerate(parent.children):
+            epoch = (
+                f"child-{index}-epoch"
+                if nested_depth == 1
+                else f"child-{parent.depth}-{index}-epoch"
+            )
+            call.update(
+                started=True,
+                dispatch_started=True,
+                settled=True,
+                uncertain=False,
+                state="succeeded",
+                deployment_execution_epoch=epoch,
+            )
+            composition.pin_child_execution(
+                parent,
+                call["run_id"],
+                {
+                    "namespace": intent["namespace"],
+                    "execution_epoch": epoch,
+                    "original_execution_epoch": epoch,
+                    "request_digest": digest(call["request"]),
+                    "parent_run_id": parent.run_id,
+                    "parent_execution_epoch": parent.epoch,
+                },
+            )
+            cls = (
+                TemporalParentState
+                if call["request"]["definition"]["kind"] == "team"
+                else TemporalRunState
+            )
+            extra = {"depth": call["depth"]} if cls is TemporalParentState else {}
+            child = cls(
+                call["run_id"],
+                parent.scope,
+                call["command_id"],
+                call["request"],
+                parent.manifest,
+                epoch,
+                **extra,
+            )
+            initialize(
+                child,
+                call["deployment_admission"],
+                {
+                    "namespace": intent["namespace"]["name"],
+                    "workflow_id": parent.run_id,
+                    "run_id": parent.epoch,
+                },
+            )
+            admit(child)
+            composition.initialize(child, namespace=intent["namespace"]["name"])
+            composition.validate_child_link(
+                child,
+                namespace=intent["namespace"]["name"],
+                parent_namespace=intent["namespace"]["name"],
+                parent_run_id=parent.run_id,
+                parent_epoch=parent.epoch,
+                original_epoch=epoch,
+            )
+            states[child.run_id] = child
+            if isinstance(child, TemporalParentState):
+                member = next(iter(child.definition["members"]))
+                child.accept_selection(
+                    {
+                        "calls": [
+                            {"id": "nested", "member": member, "input": child.request["input"]}
+                        ],
+                        "done": False,
+                        "result": None,
+                    }
+                )
+                child.next_calls()
+                composition.adopt_admission(
+                    child,
+                    {"namespace": intent["namespace"], "execution_epoch": epoch, "admitted": True},
+                )
+                close_tree(child)
+            child.state = "succeeded"
+            if not isinstance(child, TemporalParentState):
+                closure.initialize(child)
+                assert closure.closure(child) == (True, [])
+                closure.seal(child, {"scope": child.scope, "children": []})
+            composition.adopt_child_stop(
+                parent, child.run_id, composition.physical_stop_view(child)
+            )
+            states[child.run_id] = child
+        parent.state = "succeeded"
+        for reservation in parent.reservations.values():
+            reservation["status"] = "settled"
+        closure.initialize(parent)
+        return closure.seal(
             parent,
-            call["run_id"],
             {
-                "namespace": intent["namespace"],
-                "execution_epoch": epoch,
-                "original_execution_epoch": epoch,
-                "request_digest": digest(call["request"]),
-                "parent_run_id": parent.run_id,
-                "parent_execution_epoch": parent.epoch,
+                "scope": parent.scope,
+                "children": [
+                    release._child_entry(call, states[call["run_id"]].deployment_seal)
+                    for call in parent.children
+                ],
             },
         )
-        child = TemporalRunState(
-            call["run_id"],
-            parent.scope,
-            call["command_id"],
-            call["request"],
-            parent.manifest,
-            epoch,
-        )
-        initialize(
-            child,
-            call["deployment_admission"],
-            {
-                "namespace": intent["namespace"]["name"],
-                "workflow_id": parent.run_id,
-                "run_id": parent.epoch,
-            },
-        )
-        admit(child)
-        composition.initialize(child, namespace=intent["namespace"]["name"])
-        composition.validate_child_link(
-            child,
-            namespace=intent["namespace"]["name"],
-            parent_namespace=intent["namespace"]["name"],
-            parent_run_id=parent.run_id,
-            parent_epoch=parent.epoch,
-            original_epoch=epoch,
-        )
-        child.state = "succeeded"
-        closure.initialize(child)
-        assert closure.closure(child) == (True, [])
-        closure.seal(child, {"scope": child.scope, "children": []})
-        composition.adopt_child_stop(parent, child.run_id, composition.physical_stop_view(child))
-        states[child.run_id] = child
-    parent.state = "succeeded"
-    for reservation in parent.reservations.values():
-        reservation["status"] = "settled"
-    closure.initialize(parent)
-    certificate = closure.seal(
-        parent,
-        {
-            "scope": parent.scope,
-            "children": [
-                release._child_entry(call, states[call["run_id"]].deployment_seal)
-                for call in parent.children
-            ],
-        },
-    )
+
+    certificate = close_tree(parent)
     wire = {
         "version": 1,
         "mode": "observe",
@@ -159,7 +200,10 @@ def tree_environment(monkeypatch, *, validation_class=None):
             client.reads[(self.identity, "describe")] += 1
             metadata = state.deployment_admission
             parent_id, parent_epoch = (
-                (parent.run_id, parent.epoch)
+                (
+                    metadata["lineage"][-1]["parent_run_id"],
+                    metadata["lineage"][-1]["parent_execution_epoch"],
+                )
                 if metadata["lineage"]
                 else (intent["coordinator_id"], intent["coordinator_execution_epoch"])
             )
@@ -168,7 +212,9 @@ def tree_environment(monkeypatch, *, validation_class=None):
                 run_id=state.epoch,
                 namespace=client.namespace,
                 task_queue=intent["submission"]["task_queue"],
-                workflow_type=PARENT_WORKFLOW_NAME if state is parent else WORKFLOW_NAME,
+                workflow_type=PARENT_WORKFLOW_NAME
+                if isinstance(state, TemporalParentState)
+                else WORKFLOW_NAME,
                 parent_id=parent_id,
                 parent_run_id=parent_epoch,
                 raw_info=SimpleNamespace(first_run_id=state.epoch),

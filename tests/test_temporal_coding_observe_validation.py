@@ -22,8 +22,8 @@ from tests.test_temporal_session_deployment_dto import origin
 from tests.test_temporal_session_tree_reading import tree_environment
 
 
-def environment(monkeypatch):
-    v, client, parent, _ = tree_environment(monkeypatch)
+def environment(monkeypatch, *, nested_depth=1):
+    v, client, parent, _ = tree_environment(monkeypatch, nested_depth=nested_depth)
     runtime = v.runtime
     intent = v.intent
     reg = state()
@@ -264,6 +264,23 @@ def original_validator(e, cls=None):
     )
 
 
+def test_register_uses_one_complete_permission_readset_on_each_side(monkeypatch):
+    async def run():
+        e = environment(monkeypatch)
+        e.parent.state = "running"
+        e.parent.deployment_seal = None
+        result = await transport.execute(
+            e.runtime, e.client, transport.request(e.parent, e.call, "register"), e.info
+        )
+        assert result == {"run_id": e.call["run_id"], "registered": True}
+        # Each side refreshes both the original root and Registry permission;
+        # permission itself also performs the complete identity validation.
+        assert e.counts[("query", "deployment_coding_validation")] == 4
+        assert not e.probe.writes and not e.client.writes
+
+    asyncio.run(run())
+
+
 @pytest.mark.parametrize(
     "fault", ["runtime", "activity", "client", "source", "base_class", "base_check"]
 )
@@ -322,7 +339,7 @@ def test_default_public_validation_and_permission_retain_full_checks(monkeypatch
         for operation in (validator.validate, validator.permission):
             e.full.clear()
             await operation()
-            assert e.full["runtime"] == 9
+            assert e.full["runtime"] == 6
         with pytest.raises(DefinitionMismatch):
             validator._check(full=1)
 
@@ -358,7 +375,7 @@ def test_unpinned_observe_retains_the_default_full_path(monkeypatch):
                 e.runtime, e.client, transport.request(e.parent, e.call, "observe"), e.info
             )
         # The incomplete original pin is never promoted to the readonly type.
-        assert e.full["runtime"] >= 76
+        assert e.full["runtime"] >= 50
 
     asyncio.run(run())
 
@@ -375,7 +392,7 @@ def test_other_activity_contexts_retain_original_full_observation(monkeypatch, a
             e.runtime, e.client, transport.request(e.parent, e.call, "observe"), e.info
         )
         assert result["version"] == 1
-        assert e.full["runtime"] == 76
+        assert e.full["runtime"] == 50
         assert e.client.events.count("history") == 6
         assert e.probe.writes == []
 

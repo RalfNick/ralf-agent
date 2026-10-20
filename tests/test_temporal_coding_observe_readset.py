@@ -135,6 +135,10 @@ def environment(monkeypatch):
             steps.append("validate")
             return await super().validate()
 
+        async def permission(self):
+            steps.append("permission")
+            return await super().permission()
+
     monkeypatch.setattr(bridge, "control", control)
     monkeypatch.setattr(composition_control, "control", control)
     monkeypatch.setattr(validation, "CodingValidation", TracedValidation)
@@ -188,7 +192,7 @@ def test_other_coding_four_modes_keep_original_validation_order(monkeypatch, mod
         runtime, client, parent, call, info, _, steps = environment(monkeypatch)
         await transport.execute(runtime, client, transport.request(parent, call, mode), info)
         assert steps == (
-            ["validate", "control", "validate"]
+            ["permission", "control", "permission"]
             if mode == "register"
             else ["validate", "child-describe", "validate", "control", "child-describe", "validate"]
         )

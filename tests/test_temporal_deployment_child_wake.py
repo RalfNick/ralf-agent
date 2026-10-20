@@ -333,6 +333,7 @@ def test_native_ledger_only_end_notifies_once_and_duplicate_ack_has_no_feedback(
             workflow, "get_external_workflow_handle", lambda *args, **kwargs: Receiver()
         )
         proof = identity(value)
+        proof["activity_name"] = "ralf.temporal.tool.v1"
         await value.deployment_call_started(proof)
         await value._notify_deployment_parent()
         revision = value.state.revision
@@ -717,3 +718,43 @@ def test_stopped_unsettled_child_adopts_only_fresh_selected3_observation(
             assert state.budget["reserved"] == 8
 
     asyncio.run(scenario())
+
+
+@pytest.mark.parametrize("legacy", [False, True])
+def test_running_control_ledger_does_not_echo_an_observation_back_to_parent(monkeypatch, legacy):
+    value = selected_parent(monkeypatch)
+    monkeypatch.setattr(workflow, "patched", lambda name: not legacy)
+    value.state.state = "running"
+    value.state.deployment_calls = {}
+    before = value._deployment_notification_token()
+    value.state.deployment_calls["observe"] = {
+        "identity": {"activity_name": "ralf.temporal.control.v1"},
+        "stopped": False,
+        "fence_proof": None,
+    }
+    begun = value._deployment_notification_token()
+    value.state.deployment_calls["observe"]["stopped"] = True
+    ended = value._deployment_notification_token()
+    if legacy:
+        assert len({before, begun, ended}) == 3
+    else:
+        assert before == begun == ended
+    value.state.revision += 1
+    assert value._deployment_notification_token() != ended
+
+
+@pytest.mark.parametrize("phase", ["succeeded", "cancelled", "failed", "stopping"])
+def test_terminal_or_stopping_control_end_still_notifies_physical_ownership(monkeypatch, phase):
+    value = selected_parent(monkeypatch)
+    value.state.state = "running" if phase == "stopping" else phase
+    value.state.composition_stop_intent = {"reason": "closing"} if phase == "stopping" else None
+    value.state.deployment_calls = {
+        "observe": {
+            "identity": {"activity_name": "ralf.temporal.control.v1"},
+            "stopped": False,
+            "fence_proof": None,
+        }
+    }
+    before = value._deployment_notification_token()
+    value.state.deployment_calls["observe"]["stopped"] = True
+    assert value._deployment_notification_token() != before

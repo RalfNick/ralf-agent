@@ -297,7 +297,7 @@ class CodingValidation:
             run_id=self._request["run_id"],
             epoch=self._request["execution_epoch"],
         )
-        # Policy inspection already validates the full release on both sides.
+        # Policy inspection captures its declaration before the final full release check.
         if full and execution._policy(runtime, expected=self._manifest) != self._policy:
             _reject()
 
@@ -306,7 +306,11 @@ class CodingValidation:
 
     async def _bootstrap_nodes(self, readonly):
         from . import temporal_deployment_execution as execution
+        from . import temporal_session_activity_reads as readings
 
+        sources = readings.source_bindings
+        source_pin = _binding(sources)
+        implementations = sources()
         runtime, request = self._runtime, self._request
         leaf = await execution._proof(
             runtime,
@@ -329,7 +333,11 @@ class CodingValidation:
             "coding_parent"
         ):
             _reject()
-        root = await execution._ancestry(runtime, readonly, self._policy, leaf, read_only=True)
+        if _binding(readings.source_bindings) != source_pin or sources() != implementations:
+            _reject()
+        root = await execution._ancestry(
+            runtime, readonly, self._policy, leaf, read_only=True, info=self._info
+        )
         self._check(full=True)
         proofs = [leaf]
         for link in reversed(leaf["admission"]["lineage"]):

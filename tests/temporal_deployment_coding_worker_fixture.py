@@ -772,12 +772,54 @@ class FaultHandle:
                     and envelope["operation"] == "coding_receipt"
                 ):
                     self._after_coding_receipt(envelope["proof"])
+            if name == "view" and args and type(args[0]) is dict:
+                request = args[0]
+                if request.get("kind") == "deployment_retirement_observation":
+                    completed = result.get("result") if type(result) is dict else None
+                    if (
+                        type(completed) is dict
+                        and completed.get("ok") is True
+                        and type(completed.get("receipt")) is dict
+                        and completed["receipt"].get("released") is True
+                    ):
+                        self._after_release_reply(
+                            request["retirement_observation"]["request"], completed["receipt"]
+                        )
             return result
+
+    def _after_release_reply(self, payload, result):
+        from temporalio.service import RPCError, RPCStatusCode
+
+        flag = self.owner.directory / "lose-release-reply"
+        if flag.exists():
+            flag.unlink()
+            (self.owner.directory / "lost-release-reply.json").write_text(
+                json.dumps({"workflow_id": self.original.id, "payload": payload, "result": result})
+            )
+            raise RPCError(
+                "Controlled reply loss after actual original Registry release",
+                RPCStatusCode.UNAVAILABLE,
+                b"",
+            )
 
     async def signal(self, name, payload, **options):
         if name == "coding_recovery" and payload.get("operation") == "coding_receipt":
             await self._before_coding_receipt(payload["proof"])
+        if name == "execution_ended" and payload.get("operation") == "deployment_call_ended":
+            self._before_deployment_end(payload["proof"])
         return await self.original.signal(name, payload, **options)
+
+    def _before_deployment_end(self, proof):
+        from temporalio.service import RPCError, RPCStatusCode
+
+        gate = self.owner.directory / "block-deployment-end"
+        if proof.get("activity_name") == "ralf.temporal.tool.v1" and gate.exists():
+            (self.owner.directory / "block-deployment-end.attempted").touch()
+            raise RPCError(
+                "Controlled original Coding ACK transport unavailable",
+                RPCStatusCode.UNAVAILABLE,
+                b"",
+            )
 
     async def _before_coding_receipt(self, payload):
         if payload.get("kind") != "stop":
@@ -868,9 +910,7 @@ class FaultHandle:
         if name == "coding_receipt":
             await self._before_coding_receipt(payload)
         if name == "deployment_call_ended":
-            # Isolate the original Coding Tool carrier, not unrelated Model/ACK calls.
-            if payload.get("activity_name") == "ralf.temporal.tool.v1":
-                flag = "block-deployment-end"
+            self._before_deployment_end(payload)
         if flag and (self.owner.directory / flag).exists():
             (self.owner.directory / (flag + ".attempted")).touch()
             raise RPCError(
@@ -880,19 +920,7 @@ class FaultHandle:
             )
         result = await self.original.execute_update(name, payload, **options)
         if name == "release_deployment_root":
-            flag = self.owner.directory / "lose-release-reply"
-            if flag.exists():
-                flag.unlink()
-                (self.owner.directory / "lost-release-reply.json").write_text(
-                    json.dumps(
-                        {"workflow_id": self.original.id, "payload": payload, "result": result}
-                    )
-                )
-                raise RPCError(
-                    "Controlled reply loss after actual original Registry release Update",
-                    RPCStatusCode.UNAVAILABLE,
-                    b"",
-                )
+            self._after_release_reply(payload, result)
         if name == "coding_receipt":
             self._after_coding_receipt(payload)
         return result

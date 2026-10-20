@@ -61,9 +61,22 @@ class TemporalCodingAuthority:
         canonical(result)
         return copy.deepcopy(result)
 
-    async def _state(self):
+    async def _state(self, *dispatch):
         from .temporal_coding_state import CODING_QUERY
 
+        if len(dispatch) not in (0, 2):
+            raise DefinitionMismatch("Coding requires its original dispatch and Runner pair")
+        if dispatch:
+            envelope, runner_identity = dispatch
+            if type(envelope) is not DispatchEnvelope:
+                raise DefinitionMismatch("Coding requires its original DispatchEnvelope")
+            expected = asdict(envelope.context) | {
+                "tool_manifest": envelope.tool_manifest,
+                "arguments": envelope.arguments,
+                "operation_digest": envelope.operation_digest,
+            }
+            if expected != self._request["coding_request"]["dispatch"]:
+                raise DefinitionMismatch("Coding original dispatch changed")
         result = await self._call(CODING_QUERY, self._proof)
         if (
             type(result) is not dict
@@ -73,26 +86,18 @@ class TemporalCodingAuthority:
             or type(result.get("cancelled")) is not bool
         ):
             raise DefinitionMismatch("Coding query lost its original native intent")
+        if dispatch and result["runner"] != runner_identity:
+            raise DefinitionMismatch("Coding original Runner changed")
         return result
 
     async def check(self, envelope, runner_identity):
-        if type(envelope) is not DispatchEnvelope:
-            raise DefinitionMismatch("Coding requires its original DispatchEnvelope")
-        dispatch = asdict(envelope.context) | {
-            "tool_manifest": envelope.tool_manifest,
-            "arguments": envelope.arguments,
-            "operation_digest": envelope.operation_digest,
-        }
-        if dispatch != self._request["coding_request"]["dispatch"]:
-            raise DefinitionMismatch("Coding original dispatch changed")
-        value = await self._state()
-        if value["runner"] != runner_identity:
-            raise DefinitionMismatch("Coding original Runner changed")
+        value = await self._state(envelope, runner_identity)
         return value["request"]
 
     async def resource_state(self, envelope, runner_identity):
-        await self.check(envelope, runner_identity)
-        value = (await self._state())["state"]
+        # Project the same fresh response whose dispatch and Runner were checked;
+        # a second Query would require another complete pre/post validation set.
+        value = (await self._state(envelope, runner_identity))["state"]
         result = {"prepare_grant": value["grants"].get("prepare")} | {
             name: value.get(name) for name in ("prepared", "binding", "thread", "turn")
         }

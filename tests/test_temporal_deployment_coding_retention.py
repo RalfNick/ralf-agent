@@ -754,6 +754,8 @@ def test_fixture_exit_closes_only_dummy_fd_and_preserves_original_recovery(
     class System:
         def __init__(self, directory, admin, schema, sock, path, data, built, client):
             assert built is assembly
+            self.processes = []  # This dummy never starts a Worker.
+
             self.socket_owner, self.socket_path = sock, path
             self.original_inode = path.stat().st_dev, path.stat().st_ino
             self.release = {

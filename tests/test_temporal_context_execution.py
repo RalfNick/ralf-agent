@@ -199,6 +199,45 @@ def test_notification_failure_retains_entry_until_acknowledged():
     asyncio.run(run())
 
 
+def test_transient_end_failure_retries_without_an_observer_or_reexecuting_handler():
+    async def run():
+        execution = owner()
+        first_attempt = asyncio.Event()
+        acknowledged = asyncio.Event()
+        available = False
+        operations, receipts = [], []
+
+        async def operation():
+            operations.append("ran")
+            return "original-result"
+
+        async def end(receipt):
+            receipts.append(receipt)
+            first_attempt.set()
+            if not available:
+                raise OSError("temporary original transport failure")
+            acknowledged.set()
+
+        try:
+            assert (
+                await execution.execute(operation, proof=proof(), on_end=end) == "original-result"
+            )
+            await asyncio.wait_for(first_attempt.wait(), 1)
+            assert execution._entries and not acknowledged.is_set()
+            available = True
+            # No wait/aclose or second invocation drives notification recovery.
+            await asyncio.wait_for(acknowledged.wait(), 2)
+            await asyncio.sleep(0)
+            assert not execution._entries
+            assert operations == ["ran"] and len(receipts) >= 2
+            assert all(receipt == proof() for receipt in receipts)
+        finally:
+            available = True
+            await execution.aclose(wait_timeout=3)
+
+    asyncio.run(run())
+
+
 def test_capacity_and_duplicate_refusal_never_start_extra_reader():
     async def run():
         execution = owner(max_calls=1)

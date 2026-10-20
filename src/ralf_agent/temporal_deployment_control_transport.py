@@ -370,10 +370,13 @@ async def execute(runtime, client, value, info):
         # The preceding full Activity validation permits only this read. Finish the
         # adjacent descriptor read before bootstrap/fresh; control still follows a
         # complete validation, and the independent post-control validation remains.
-        if not describe_readset:
+        if value["mode"] == "register":
+            # permission() includes the same complete identity read set and
+            # full exit check as validate(); keep one fresh check on each side.
+            if not await validator.permission():
+                _reject()
+        elif not describe_readset:
             await validator.validate()
-        if value["mode"] == "register" and not await validator.permission():
-            _reject()
 
         def child_description(epoch):
             from .temporal_parent_state import PARENT_WORKFLOW_NAME
@@ -466,9 +469,11 @@ async def execute(runtime, client, value, info):
                 await reading_client.get_workflow_handle(call["run_id"]).describe(),
                 child_description(expected_epoch),
             )
-        await validator.validate()
-        if value["mode"] == "register" and not await validator.permission():
-            _reject()
+        if value["mode"] == "register":
+            if not await validator.permission():
+                _reject()
+        else:
+            await validator.validate()
         execution._actual(client, info, run_id=proof["run_id"], epoch=proof["execution_epoch"])
         await execution._namespace(reading_client, proof["namespace"])
         if closed_reading:

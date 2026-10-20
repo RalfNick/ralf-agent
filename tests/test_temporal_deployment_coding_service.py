@@ -895,6 +895,9 @@ async def coding_system(
             # it retains the original path/inode and all durable recovery data.
             sock.close()
             CreateSupervisor.start_once = original_create_start
+            from tests.temporal_fixture_resources import retain_assembly_clients
+
+            retain_assembly_clients(assembly, [] if system is None else system.processes, directory)
 
 
 @pytest.mark.parametrize("kind,syntax", TOPOLOGIES)

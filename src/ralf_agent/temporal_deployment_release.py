@@ -545,8 +545,7 @@ async def execute(runtime, client, value, info):
     else:
         _reject()
     await execution._namespace(client, proof["namespace"])
-    execution._policy(runtime)
-    runtime.validate_release(proof["manifest"])
+    execution._policy(runtime, expected=proof["manifest"])
     return detached(result)
 
 

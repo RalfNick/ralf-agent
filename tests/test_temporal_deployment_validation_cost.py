@@ -23,7 +23,7 @@ def _sdk():
     pytest.importorskip("temporalio")
 
 
-def test_policy_checks_expected_release_on_both_sides_of_policy_read():
+def test_policy_checks_expected_release_after_capturing_policy_declaration():
     manifest = {"fixed": "original"}
     calls = []
 
@@ -34,7 +34,7 @@ def test_policy_checks_expected_release_on_both_sides_of_policy_read():
 
     runtime = ObservedRuntime(manifest)
     assert _policy(runtime, expected=manifest) == POLICY.identity
-    assert calls == [manifest, manifest]
+    assert calls == [manifest]
     with pytest.raises(DefinitionMismatch):
         _policy(runtime, expected={"fixed": "foreign"})
 
@@ -78,7 +78,7 @@ def test_ready_identity_bootstrap_bounds_release_work_and_refreshes_permissions(
         result = await getattr(validator, method)()
         assert result is (None if method == "validate" else True)
         assert len(bootstrap_reads) == before
-        assert len(counts) == 4
+        assert len(counts) == 2
         assert all(expected == request["runtime_manifest"] for expected in counts)
         assert client.namespace_reads == 2
         queries = [call for call in client.calls if call[0] == "query"]

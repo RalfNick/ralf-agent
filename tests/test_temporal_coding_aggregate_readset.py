@@ -77,6 +77,77 @@ def test_warm_callback_aggregates_coding_checks_but_retains_all_session_sdk_fact
     asyncio.run(run())
 
 
+def test_resource_observation_keeps_two_fresh_validation_sets_without_duplicate_query(monkeypatch):
+    from dataclasses import asdict
+
+    from ralf_agent.executors import DispatchEnvelope
+    from ralf_agent.temporal_coding_state import CODING_QUERY
+    from ralf_agent.types import InvocationContext, Scope
+
+    async def run():
+        runtime, client, session, request, info = environment(monkeypatch)
+        envelope = DispatchEnvelope(
+            InvocationContext(
+                Scope(**request["scope"]),
+                request["run_id"],
+                request["action_id"],
+                "attempt",
+                request["release_digest"],
+                request["execution_epoch"],
+            ),
+            {"name": "code"},
+            {"task": "observe"},
+            "operation",
+        )
+        native = {
+            "dispatch": asdict(envelope.context)
+            | {
+                "tool_manifest": envelope.tool_manifest,
+                "arguments": envelope.arguments,
+                "operation_digest": envelope.operation_digest,
+            }
+        }
+        request["coding_request"] = {**native, "request_digest": digest(native)}
+        original_handle = client.get_workflow_handle
+        native_queries = []
+
+        class Handle:
+            def __init__(self, handle):
+                self.handle = handle
+
+            def __getattr__(self, name):
+                return getattr(self.handle, name)
+
+            async def query(self, name, payload):
+                if name == CODING_QUERY:
+                    native_queries.append(payload)
+                    return {
+                        "request": request["coding_request"],
+                        "runner": {"kind": "original"},
+                        "state": {"grants": {}},
+                        "cancelled": False,
+                    }
+                return await self.handle.query(name, payload)
+
+        def handle(identity, **options):
+            return Handle(original_handle(identity, **options))
+
+        client.get_workflow_handle = handle
+        authority = await callbacks(client, request, info, runtime)("original", None, recovery=True)
+        await authority.validate_registration()
+        runtime.rebuilds = 0
+        session.events.clear()
+        observed = await authority.resource_state(envelope, {"kind": "original"})
+        assert observed == dict.fromkeys(["prepare_grant", "prepared", "binding", "thread", "turn"])
+        assert len(native_queries) == 1
+        assert runtime.rebuilds == 4  # Full checks before/after each fresh validation set.
+        assert session.events.count("deployment_session_intent") == 2
+        assert session.events.count("deployment_session_command") == 2
+        assert session.events.count("history") == 2
+
+    asyncio.run(run())
+
+
 def test_public_validation_and_permission_keep_complete_runtime_checks(monkeypatch):
     from ralf_agent.temporal_deployment_coding_validation import CodingValidation
 
@@ -87,7 +158,7 @@ def test_public_validation_and_permission_keep_complete_runtime_checks(monkeypat
         for operation in (validator.validate, validator.permission):
             runtime.rebuilds = 0
             assert await operation() in (None, True)
-            assert runtime.rebuilds == 9
+            assert runtime.rebuilds == 6
 
     asyncio.run(run())
 
@@ -214,7 +285,7 @@ def test_publication_three_callback_keeps_public_full_validation(monkeypatch):
         await authority.validate_registration()
         runtime.rebuilds = 0
         assert await authority.validate_registration() is None
-        assert runtime.rebuilds == 6
+        assert runtime.rebuilds == 4
 
     asyncio.run(run())
 
@@ -259,7 +330,7 @@ def test_first_cold_callback_keeps_original_complete_bootstrap_checks(monkeypatc
         authority = await callbacks(client, request, info, runtime)("original", None, recovery=True)
         runtime.rebuilds = 0
         await authority.validate_registration()
-        assert runtime.rebuilds == 30
+        assert runtime.rebuilds == 19
         runtime.rebuilds = 0
         await authority.validate_registration()
         assert runtime.rebuilds == 2

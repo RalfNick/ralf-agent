@@ -291,6 +291,15 @@ class TemporalRunWorkflow:
     def _deployment_notification_token(self):
         calls = getattr(self.state, "deployment_calls", {})
         tools = getattr(self.state, "tool_executions", {})
+        # An internal Control's own ledger is not a business observation. Echoing
+        # it while running makes each parent's observe create another observe
+        # in its parent. Keep every physical owner visible during termination;
+        # business revisions and tool owners always retain their normal hints.
+        quiet_controls = (
+            workflow.patched("ralf-running-control-notification-v1")
+            and self.state.state not in {"succeeded", "failed", "cancelled", "cancelling"}
+            and getattr(self.state, "composition_stop_intent", None) is None
+        )
         return digest(
             [
                 self.state.epoch,
@@ -298,6 +307,8 @@ class TemporalRunWorkflow:
                 [
                     (key, call["stopped"], digest(call.get("fence_proof")))
                     for key, call in sorted(calls.items())
+                    if not quiet_controls
+                    or call.get("identity", {}).get("activity_name") != "ralf.temporal.control.v1"
                 ],
                 [
                     (

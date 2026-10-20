@@ -22,7 +22,7 @@ from tests.test_temporal_session_deployment_dto import origin, reservation
 from tests.test_temporal_session_deployment_execution import admit, coordinator, initialize
 
 
-def original_child():
+def original_child(definition=None):
     seed, _ = coding_intent_request(registry_state(), composition=True)
     binding = copy.deepcopy(seed["binding"])
     host = TemporalRuntime(
@@ -30,7 +30,7 @@ def original_child():
     )
     binding["manifest"]["orchestration"] = host.orchestration_release["orchestration"]
     binding["request"] = submission_request(
-        GraphWorkflowSpec("parent", [GraphNode("a", agent=AgentSpec("a", "answer"))]),
+        definition or GraphWorkflowSpec("parent", [GraphNode("a", agent=AgentSpec("a", "answer"))]),
         None,
         budget=32,
     )
@@ -85,6 +85,15 @@ def original_child():
         parent_epoch=intent["coordinator_execution_epoch"],
         original_epoch=parent.epoch,
     )
+    if parent.definition["kind"] == "team":
+        member = next(iter(parent.definition["members"]))
+        parent.accept_selection(
+            {
+                "calls": [{"id": "nested", "member": member, "input": parent.request["input"]}],
+                "done": False,
+                "result": None,
+            }
+        )
     return parent, parent.next_calls()[0]
 
 

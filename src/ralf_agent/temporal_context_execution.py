@@ -170,21 +170,31 @@ class ContextExecutionOwner:
             return
 
         async def notify():
-            try:
-                await self._threads.drain(entry["group"])
-                if entry["on_end"] is not None:
-                    result = entry["on_end"](json.loads(canonical(entry["proof"])))
-                    if inspect.isawaitable(result):
-                        result = await result
-                    if result is not None:
-                        if inspect.iscoroutine(result):
-                            result.close()
-                        raise ValidationError("Context execution end must return completed None")
-            except asyncio.CancelledError:
-                raise
-            except Exception:
-                return
-            self._entries.pop(key, None)
+            delay = 0.05
+            while True:
+                try:
+                    await self._threads.drain(entry["group"])
+                    if entry["on_end"] is not None:
+                        result = entry["on_end"](json.loads(canonical(entry["proof"])))
+                        if inspect.isawaitable(result):
+                            result = await result
+                        if result is not None:
+                            if inspect.iscoroutine(result):
+                                result.close()
+                            raise ValidationError(
+                                "Context execution end must return completed None"
+                            )
+                except asyncio.CancelledError:
+                    raise
+                except Exception:
+                    # Keep the original completed invocation and end proof owned.
+                    # A temporary ACK failure must recover without a second
+                    # handler invocation or a caller driving wait/close.
+                    await asyncio.sleep(delay)
+                    delay = min(delay * 2, 1)
+                else:
+                    self._entries.pop(key, None)
+                    return
 
         entry["notification"] = asyncio.create_task(notify())
 

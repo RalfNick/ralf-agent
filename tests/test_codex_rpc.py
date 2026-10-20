@@ -115,34 +115,38 @@ def test_only_coding_mode_retains_bounded_queued_peer_after_close(tmp_path, codi
     asyncio.run(scenario())
 
 
-def test_timeout_and_cancel_do_not_retry_or_misroute_late_response(tmp_path):
+@pytest.mark.parametrize("startup_delay", [0, 0.2])
+def test_timeout_and_cancel_do_not_retry_or_misroute_late_response(tmp_path, startup_delay):
     rpc = peer(
         tmp_path,
         """
+        time.sleep(STARTUP_DELAY)
+        send({'method': 'ready'})
         a = json.loads(sys.stdin.readline())
-        time.sleep(.08)
-        send({'id': a['id'], 'result': {'late': True}})
+        # First request must expire before the caller sends the second.
         b = json.loads(sys.stdin.readline())
-        time.sleep(.02)
-        send({'id': b['id'], 'result': {'cancelledCaller': True}})
+        send({'id': a['id'], 'result': {'late': True}})
+        send({'method': 'secondSeen'})
+        # Third request is sent only after cancellation of the second caller.
         c = json.loads(sys.stdin.readline())
+        send({'id': b['id'], 'result': {'cancelledCaller': True}})
         send({'id': c['id'], 'result': {'third': True}})
         time.sleep(10)
-    """,
+    """.replace("STARTUP_DELAY", str(startup_delay)),
         request_timeout=0.04,
     )
 
     async def scenario():
         await rpc.start()
         try:
+            assert await asyncio.wait_for(rpc.next_event(), 2) == {"method": "ready"}
             with pytest.raises(TimeoutError):
                 await rpc.request("turn/start", {})
             cancelled = asyncio.create_task(rpc.request("thread/read", {}))
-            await asyncio.sleep(0.005)
+            assert await asyncio.wait_for(rpc.next_event(), 2) == {"method": "secondSeen"}
             cancelled.cancel()
             with pytest.raises(asyncio.CancelledError):
                 await cancelled
-            await asyncio.sleep(0.09)
             assert await rpc.request("thread/read", {}) == {"third": True}
         finally:
             await rpc.aclose()

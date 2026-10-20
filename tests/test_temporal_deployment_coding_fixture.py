@@ -207,6 +207,56 @@ def test_unreachable_fault_allows_inventory_then_arms_after_completed_create(tmp
     )
 
 
+@pytest.mark.parametrize("transport", ["signal", "update"])
+@pytest.mark.parametrize("activity_name", ["ralf.temporal.tool.v1", "ralf.temporal.model.v1"])
+def test_deployment_end_fault_blocks_original_tool_ack_on_both_transports(
+    tmp_path, transport, activity_name
+):
+    from temporalio.service import RPCError, RPCStatusCode
+
+    calls = []
+    proof = {"activity_name": activity_name, "invocation_id": "original-invocation"}
+    envelope = {"operation": "deployment_call_ended", "proof": proof}
+
+    class Original:
+        id = "original-run"
+
+        async def signal(self, name, payload, **options):
+            calls.append((name, payload, options))
+
+        async def execute_update(self, name, payload, **options):
+            calls.append((name, payload, options))
+            return {"recorded": True}
+
+    handle = worker.FaultHandle(worker.FaultClient(None, tmp_path), Original())
+    gate = tmp_path / "block-deployment-end"
+    gate.touch()
+    name, payload, options = (
+        ("execution_ended", envelope, {})
+        if transport == "signal"
+        else ("deployment_call_ended", proof, {"id": "original-end"})
+    )
+
+    async def scenario():
+        if activity_name == "ralf.temporal.tool.v1":
+            with pytest.raises(RPCError) as blocked:
+                await getattr(handle, transport if transport == "signal" else "execute_update")(
+                    name, payload, **options
+                )
+            assert blocked.value.status == RPCStatusCode.UNAVAILABLE
+            assert calls == [] and (tmp_path / "block-deployment-end.attempted").exists()
+            gate.unlink()
+        await getattr(handle, transport if transport == "signal" else "execute_update")(
+            name, payload, **options
+        )
+        assert calls == [(name, payload, options)]
+        assert calls[0][1] is payload
+        if activity_name != "ralf.temporal.tool.v1":
+            assert not (tmp_path / "block-deployment-end.attempted").exists()
+
+    asyncio.run(scenario())
+
+
 def test_release_reply_fault_occurs_only_after_real_update_and_once(tmp_path):
     from temporalio.service import RPCError, RPCStatusCode
 
@@ -240,6 +290,60 @@ def test_release_reply_fault_occurs_only_after_real_update_and_once(tmp_path):
             is response
         )
         assert calls == [("release_deployment_root", payload, {"id": "original-update"})] * 2
+
+    asyncio.run(scenario())
+
+
+@pytest.mark.parametrize("state", ["pending", "refused", "unrelated", "released"])
+def test_release_reply_fault_covers_completed_original_retirement_observation(tmp_path, state):
+    from temporalio.service import RPCError, RPCStatusCode
+
+    payload = {"certificate": {"original": "seal"}}
+    receipt = {
+        "root": {"run_id": "original-run"},
+        "certificate": payload["certificate"],
+        "released": True,
+    }
+    response = {
+        "result": None
+        if state == "pending"
+        else {"ok": False, "error": "definition_mismatch"}
+        if state == "refused"
+        else {"ok": True, "receipt": receipt}
+    }
+    request = {
+        "kind": "diagnostics" if state == "unrelated" else "deployment_retirement_observation",
+        "retirement_observation": {"request": payload},
+    }
+    calls = []
+
+    class Original:
+        id = "original-registry"
+
+        async def query(self, name, value, **options):
+            await asyncio.sleep(0)
+            calls.append((name, value, options))
+            return response
+
+    handle = worker.FaultHandle(worker.FaultClient(None, tmp_path), Original())
+    gate, witness = tmp_path / "lose-release-reply", tmp_path / "lost-release-reply.json"
+    gate.touch()
+
+    async def scenario():
+        if state == "released":
+            with pytest.raises(RPCError) as lost:
+                await handle.query("view", request)
+            assert lost.value.status == RPCStatusCode.UNAVAILABLE
+            assert len(calls) == 1 and not gate.exists()
+            assert json.loads(witness.read_text()) == {
+                "workflow_id": "original-registry",
+                "payload": payload,
+                "result": receipt,
+            }
+        assert await handle.query("view", request) is response
+        assert len(calls) == (2 if state == "released" else 1)
+        if state != "released":
+            assert gate.exists() and not witness.exists()
 
     asyncio.run(scenario())
 
