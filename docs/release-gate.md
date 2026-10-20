@@ -127,6 +127,8 @@ AMD64使用同一包装器并显式增加`--platform linux/amd64`；默认仍为
 
 工作流通过[Docker官方setup action](https://github.com/docker/setup-docker-action/tree/v4)在临时runner准备Docker29.0.1及独立daemon，显式`set-host`固定连接，不依赖runner自带旧CLI。运行前保存client／server版本和`image inspect --help`的实际`--platform`能力检查；缺少能力时失败，不移除平台核验来适应旧版。匿名Docker配置不会改变已固定的daemon地址。本机不安装或替换Docker。
 
+`DOCKER_CONFIG`在runner启动后的首个步骤通过`GITHUB_ENV`设置；job级`env`不能引用`runner.temp`。原定义被GitHub以422拒绝，尚未启动SDK测试；该拒绝与actionlint语义RED保留，修正不改变容器参数或固定输入。
+
 手动输入`candidate_run_id`须是**本仓库**已授权暂存原包的Actions run，artifact名固定为`ralf-alpha1-original-candidate`。artifact根目录必须包含下面两份原文件，不能使用宽泛CI重新构建的包代替：
 
 ```text
