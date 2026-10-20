@@ -20,6 +20,7 @@ from tests.test_temporal_session_deployment_dto import origin
 from tests.test_temporal_session_validation_readset import CountedRuntime
 
 EARLY = {"namespace", "describe", "deployment_session_intent", "deployment_session_command"}
+STARTABLE = EARLY - {"deployment_session_command"}
 
 
 class ReadClient(Client):
@@ -35,7 +36,7 @@ class ReadClient(Client):
         first = name in EARLY and self.counts[name] == 1
         if first:
             self.started.add(name)
-            if self.started == EARLY:
+            if self.started == STARTABLE:
                 self.overlap.set()
             gate = (
                 self.fail_gate
@@ -123,14 +124,12 @@ async def wait_for_overlap(client):
         if client.overlap.is_set():
             break
         await asyncio.sleep(0)
-    assert client.started == EARLY
+    assert client.started == STARTABLE
 
 
 @pytest.mark.parametrize("composition", [False, True])
 @pytest.mark.parametrize("coordinator", [False, True])
-def test_four_independent_original_reads_overlap_before_start_and_final_freshness(
-    composition, coordinator
-):
+def test_independent_reads_overlap_and_coordinator_queries_stay_serial(composition, coordinator):
     async def run():
         runtime, client, validate = environment(composition=composition, coordinator=coordinator)
         task = asyncio.create_task(validate())
@@ -190,7 +189,8 @@ def test_failed_original_readset_drains_all_readers_and_never_adopts(fault, monk
             client.gate.set()
             with pytest.raises((DefinitionMismatch, RuntimeError, asyncio.CancelledError)):
                 await task
-            assert client.completed == EARLY and not adopted
+            assert client.completed == (STARTABLE if fault == "callback" else EARLY)
+            assert client.completed == client.started and not adopted
             if fault != "resource":
                 assert "history" not in client.events
         finally:

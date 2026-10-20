@@ -586,6 +586,23 @@ class TemporalRuntimeAssembly:
             except (Exception, asyncio.CancelledError):
                 if not self._worker_ready.done():
                     raise
+        # Stop Session acceptance independently of Coding's physical drain.
+        # Both tasks remain owned across caller cancellation/timeout, and both
+        # must finish before any poller, execution owner or resource is closed.
+        if self.release.get("session_deployment_protocol") == 1 and self._client is not None:
+            from .temporal_session_deployment_close import close as close_sessions
+
+            if self._session_stop_task is None:
+                self._session_stop_task = asyncio.create_task(
+                    close_sessions(
+                        self._runtime,
+                        client=self._client,
+                        scope=self._scope,
+                        task_queue=self._queue,
+                        wait_timeout=wait_timeout,
+                    )
+                )
+                self._session_stop_task.add_done_callback(_observe)
         if getattr(self._runtime, "coding_execution", False):
             if (
                 self._runtime.orchestration_release.get("binding_protocol")
@@ -626,19 +643,6 @@ class TemporalRuntimeAssembly:
                         self._coding_stop_task = None
                     raise
         if self.release.get("session_deployment_protocol") == 1 and self._client is not None:
-            from .temporal_session_deployment_close import close as close_sessions
-
-            if self._session_stop_task is None:
-                self._session_stop_task = asyncio.create_task(
-                    close_sessions(
-                        self._runtime,
-                        client=self._client,
-                        scope=self._scope,
-                        task_queue=self._queue,
-                        wait_timeout=wait_timeout,
-                    )
-                )
-                self._session_stop_task.add_done_callback(_observe)
             try:
                 await _bounded_task(self._session_stop_task, wait_timeout)
             except BaseException:

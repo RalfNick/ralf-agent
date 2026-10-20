@@ -264,13 +264,24 @@ class SessionControlValidation:
                 finally:
                     self._check(full=False)
 
-            # All four facts are independent reads of the original coordinator.
-            # A failed/cancelled reader cannot leave another SDK read unobserved.
+            async def coordinator_facts():
+                # Temporal's consistent-query buffer is per Workflow. Keep
+                # both fresh facts, but do not make them compete for one slot.
+                values = []
+                for kind in ("deployment_session_intent", "deployment_session_command"):
+                    try:
+                        value = await read(handle.query, "view", self.selector(kind))
+                    except (Exception, asyncio.CancelledError) as error:
+                        value = error
+                    values.append(value)
+                return values
+
+            # Namespace/description can overlap the coordinator reads. Drain
+            # every started reader on failure/cancellation before returning.
             readers = asyncio.gather(
                 self._namespace(),
                 read(current.describe),
-                read(handle.query, "view", self.selector("deployment_session_intent")),
-                read(handle.query, "view", self.selector("deployment_session_command")),
+                coordinator_facts(),
                 return_exceptions=True,
             )
             try:
@@ -284,6 +295,9 @@ class SessionControlValidation:
                 self._check(full=False)
                 raise
             self._check(full=False)
+            if isinstance(results[2], BaseException):
+                raise results[2]
+            results = [results[0], results[1], *results[2]]
             for result in results:
                 if isinstance(result, BaseException):
                     raise result

@@ -1,6 +1,6 @@
 # 能力范围与剩余验收清单
 
-**最新S2剩余项（2026-10-20）：** a2.dev3原360首项仍失败，实际取消后Session／Assembly关闭未完成，1 root和未采纳写入保留；剩余17项必须继续等待首项通过。额外指纹P2、完整CONTROL离线11.262%与夹具借用责任修复不能关闭S2。下一步基于原History和完整调用区分查询处理／转换／校验成本与关闭等待，先做因果复现；不扩功能、提高门槛期限或继续盲调缓存。回归原失败、定向修正和全部资源保留见[本批记录](../architecture/reviews/2026-10-20-s2-joint-publication-close.md)。
+**最新S2剩余项（2026-10-20）：** a2.dev4修复同一Coordinator自竞争查询及Session关闭启动阻塞，原360首项仍失败／JUnit398.311秒含收尾；本次4次写入、Session／Assembly关闭及两root退休通过，但完成采纳／会话收敛未在整链期限内结束。其余17项继续等待首项通过。History显示Activity排队很短，Tool与多层观察／核验仍较慢；重复通知可能包含必要停止事实，尚无安全合并证据，未修改该协议或继续盲调缓存。原失败、694配置跳过及夹具修正范围分别保留，见[本批记录](../architecture/reviews/2026-10-20-s2-query-buffer-and-session-close.md)。
 
 首版剩余交付项以[Alpha收尾表](releases/0.1.0a1.md#首版收尾状态)为准；已选本地优化、外部前置条件和长期能力分开。最新维护记录见[首版收尾验收](../architecture/reviews/2026-10-19-alpha1-maintenance-closeout.md)，历史dev段落不作为新增排期。
 

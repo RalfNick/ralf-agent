@@ -68,6 +68,7 @@ def test_owned_session_coding_physical_close_precedes_session_drain_and_worker_s
 
     async def run():
         events = []
+        coding_closed = asyncio.Event()
         scope = Scope("original", "owner")
         client = SimpleNamespace(namespace="original")
 
@@ -107,8 +108,14 @@ def test_owned_session_coding_physical_close_precedes_session_drain_and_worker_s
             assert client is assembly._client and scope is assembly.scope
             assert task_queue == "original-queue" and "worker-stop" not in events
             events.append("coding-close")
+            coding_closed.set()
 
         async def close_sessions(runtime, *, client, scope, task_queue, wait_timeout):
+            assert "worker-stop" not in events
+            events.append("session-fence")
+            # The original Session closes acceptance first, but cannot confirm
+            # drain before its native Coding resources have actually stopped.
+            await coding_closed.wait()
             assert "coding-close" in events and "worker-stop" not in events
             events.append("session-drain")
 
@@ -125,6 +132,7 @@ def test_owned_session_coding_physical_close_precedes_session_drain_and_worker_s
         await assembly.aclose()
         assert events == [
             "worker-start",
+            "session-fence",
             "coding-close",
             "session-drain",
             "retirement",
