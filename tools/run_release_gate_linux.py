@@ -1,4 +1,4 @@
-"""Serial cached ARM64 Docker execution of release_gate.py; never pulls images."""
+"""Serial cached ARM64/AMD64 Docker execution of release_gate.py; never pulls images."""
 
 import argparse
 import hashlib
@@ -42,10 +42,11 @@ def lookup_owned(identifier, token):
     return values[0]
 
 
-def verify_report(report, spec, minor, inputs, artifacts):
+def verify_report(report, spec, minor, inputs, artifacts, target_platform="linux/arm64"):
     try:
         if artifacts != spec["artifacts"]:
             return False
+        machine = {"linux/arm64": "aarch64", "linux/amd64": "x86_64"}[target_platform]
         expected = {
             "status": "passed_selected_scope",
             "phase": "complete",
@@ -58,7 +59,7 @@ def verify_report(report, spec, minor, inputs, artifacts):
             "runner_sha256": inputs["release_gate.py"],
             "manifest_sha256": inputs["release_gate_manifest.json"],
             "requirements_sha256": inputs["release_gate_requirements.lock"],
-            "platform": {"system": "Linux", "machine": "aarch64", "python_minor": minor},
+            "platform": {"system": "Linux", "machine": machine, "python_minor": minor},
             "tests": {
                 name: {"tests": phase["count"], "failures": 0, "errors": 0, "skipped": 0}
                 for name, phase in spec["tests"].items()
@@ -103,7 +104,9 @@ def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     for name in ("wheel", "sdist", "wheelhouse", "output"):
         parser.add_argument("--" + name, type=Path, required=True)
+    parser.add_argument("--platform", choices=("linux/arm64", "linux/amd64"), default="linux/arm64")
     args = parser.parse_args(argv)
+    architecture = args.platform.split("/")[1]
     root = args.output.resolve()
     if root.exists():
         parser.error("output_already_exists")
@@ -135,7 +138,7 @@ def main(argv=None):
                 "tools": tool_inputs,
                 "artifacts": actual_artifacts,
                 "host": {"system": platform.system(), "machine": platform.machine()},
-                "platform": "linux/arm64",
+                "platform": args.platform,
                 "artifact_source_commit": spec["artifact_source_commit"],
                 "limits": spec["linux_container_limits"],
             },
@@ -150,7 +153,7 @@ def main(argv=None):
         print(json.dumps(error), flush=True)
         return 1
     results = []
-    for minor, image in spec["linux_arm64_images"].items():
+    for minor, image in spec[f"linux_{architecture}_images"].items():
         output = root / minor
         output.mkdir()
         token = uuid.uuid4().hex
@@ -159,8 +162,10 @@ def main(argv=None):
         container, final, clean = None, None, False
         row = {"python_minor": minor, "passed": False, "container_name": name}
         try:
-            info = json.loads(call("docker", "image", "inspect", image))[0]
-            if info["Architecture"] != "arm64" or info["Os"] != "linux":
+            info = json.loads(
+                call("docker", "image", "inspect", "--platform", args.platform, image)
+            )[0]
+            if info["Architecture"] != architecture or info["Os"] != "linux":
                 raise RuntimeError("cached_image_platform_mismatch")
             (output / "image.json").write_text(json.dumps(info, indent=2) + "\n")
             (output / "create-attempt.json").write_text(
@@ -172,7 +177,7 @@ def main(argv=None):
                 "create",
                 "--pull=never",
                 "--platform",
-                "linux/arm64",
+                args.platform,
                 "--name",
                 name,
                 "--label",
@@ -219,7 +224,7 @@ def main(argv=None):
             code = int(call("docker", "wait", container, timeout=900))
             report = json.loads((output / "gate/report.json").read_text())
             row["passed"] = code == 0 and verify_report(
-                report, spec, minor, tool_inputs, actual_artifacts
+                report, spec, minor, tool_inputs, actual_artifacts, args.platform
             )
             if not row["passed"]:
                 raise RuntimeError("gate_report_identity_or_result_mismatch")

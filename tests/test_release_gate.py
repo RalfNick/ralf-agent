@@ -438,16 +438,29 @@ def test_passed_worker_report_with_mismatched_identity_or_results_is_rejected(
     )
 
 
-@pytest.mark.parametrize("mismatch", ["architecture", "artifacts"])
-def test_matrix_rejects_other_architecture_even_when_worker_says_passed(
-    linux_wrapper, worker_report, tmp_path, monkeypatch, mismatch
+@pytest.mark.parametrize("requested_platform", ["linux/arm64", "linux/amd64"])
+@pytest.mark.parametrize("mismatch", ["architecture", "artifacts", "cached_image", None])
+def test_matrix_binds_selected_platform_images_and_reports(
+    linux_wrapper, worker_report, tmp_path, monkeypatch, mismatch, requested_platform
 ):
     containers = {}
+    architecture = requested_platform.split("/")[1]
+    machine = "x86_64" if architecture == "amd64" else "aarch64"
+    other_machine = "aarch64" if architecture == "amd64" else "x86_64"
+    removed = []
 
     def call(*args, **kwargs):
         if args[1:3] == ("image", "inspect"):
-            return json.dumps([{"Architecture": "arm64", "Os": "linux"}])
+            assert args[3:5] == ("--platform", requested_platform)
+            image_architecture = "wrong" if mismatch == "cached_image" else architecture
+            return json.dumps([{"Architecture": image_architecture, "Os": "linux"}])
         if args[1] == "create":
+            assert args[args.index("--platform") + 1] == requested_platform
+            assert len(removed) == len(containers)  # Previous version finished and was removed.
+            assert args[args.index("--cpus") + 1] == "2"
+            assert args[args.index("--memory") + 1] == "2g"
+            assert args[args.index("--memory-swap") + 1] == "2g"
+            assert args[args.index("--network") + 1] == "none"
             name = args[args.index("--name") + 1]
             token = args[args.index("--label") + 1].split("=", 1)[1]
             output = next(
@@ -458,7 +471,7 @@ def test_matrix_rejects_other_architecture_even_when_worker_says_passed(
             report = deepcopy(worker_report)
             report["platform"] = {
                 "system": "Linux",
-                "machine": "x86_64" if mismatch == "architecture" else "aarch64",
+                "machine": other_machine if mismatch == "architecture" else machine,
                 "python_minor": Path(output).name,
             }
             report["python"] = Path(output).name + ".17"
@@ -476,7 +489,10 @@ def test_matrix_rejects_other_architecture_even_when_worker_says_passed(
             return json.dumps([containers[args[2]]])
         if args[1] == "wait":
             return "0"
-        if args[1] in ("start", "rm"):
+        if args[1] == "rm":
+            removed.append(args[2])
+            return ""
+        if args[1] == "start":
             return ""
         raise AssertionError(args)
 
@@ -490,7 +506,7 @@ def test_matrix_rejects_other_architecture_even_when_worker_says_passed(
     wheel, sdist = tmp_path / "one.whl", tmp_path / "one.tar.gz"
     wheel.write_bytes(b"wheel")
     sdist.write_bytes(b"sdist")
-    if mismatch == "architecture":
+    if mismatch != "artifacts":
         declared = stage_declared_gate(linux_wrapper, tmp_path, (wheel, sdist), monkeypatch)
         worker_report["artifacts"] = declared["artifacts"]
         worker_report["manifest_sha256"] = hashlib.sha256(
@@ -507,14 +523,19 @@ def test_matrix_rejects_other_architecture_even_when_worker_says_passed(
             str(tmp_path),
             "--output",
             str(output),
+            "--platform",
+            requested_platform,
         ]
     )
-    assert code == 1
+    assert code == (0 if mismatch is None else 1)
     rows = json.loads((output / "matrix.json").read_text())
-    if mismatch == "architecture":
+    if mismatch in ("architecture", None):
         assert len(rows) == 3 and all(
-            not row["passed"] and row["container_removed"] for row in rows
+            row["passed"] == (mismatch is None) and row["container_removed"] for row in rows
         )
+    elif mismatch == "cached_image":
+        assert len(rows) == 3 and not containers
+        assert all(row["error"] == "cached_image_platform_mismatch" for row in rows)
     else:
         assert rows == [] and not containers
         assert (
@@ -522,6 +543,7 @@ def test_matrix_rejects_other_architecture_even_when_worker_says_passed(
             == "artifact_sha256_mismatch"
         )
     provenance = json.loads((output / "matrix-input.json").read_text())
+    assert provenance["platform"] == requested_platform
     assert (
         provenance["tools"]["run_release_gate_linux.py"]
         == hashlib.sha256((ROOT / "tools/run_release_gate_linux.py").read_bytes()).hexdigest()

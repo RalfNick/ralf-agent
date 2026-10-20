@@ -2,11 +2,13 @@
 
 ## 当前交付摘要
 
-更新：2026-10-19。本节是唯一当前状态摘要；历史批次保留在下方，仅作原版本证据引用。R01–R26是长期路线图，不作为本轮基础交付的额外阻塞条件。
+更新：2026-10-20。本节是唯一当前状态摘要；历史批次保留在下方，仅作原版本证据引用。R01–R26是长期路线图，不作为本轮基础交付的额外阻塞条件。
 
 **当前交付：0.1.0a1 Local 基础 SDK Alpha 本地候选。** 首版范围已冻结，见[Alpha说明](releases/0.1.0a1.md)。产品行为沿用fc128b8，仅发行版本与材料调整。固定源码393项、独立安装160项及两条starter通过；Linux ARM64三版本各311项基础／16项恢复及两条starter通过，零失败／错误／跳过／OOM。本候选验收单独见[本批记录](../architecture/reviews/2026-10-19-alpha1-release-candidate.md)。尚未公开发布，函数指纹和S2继续后置。
 
-**首版维护收尾（本批）。** 用户确认仅继续首版冻结范围。补Linux报告完整身份／实际输入预检、创建前来源记录及离线镜像导出／加载；发现原Session用例混同Run终态与lane空闲，仅修测试并在门禁manifest固定校正前后SHA，原a1 wheel／sdist和442产品字节不变。源码及checkout外原wheel安装各92项通过；Mac3.12和Linux ARM64三版本最终各311＋16项及两条starter通过，Linux最高290.82MiB、零OOM；原3.12测试失败与显式校正后结果分别记录于[本批验收](../architecture/reviews/2026-10-19-alpha1-maintenance-closeout.md)。首版可执行维护项与外部待办见[收尾表](releases/0.1.0a1.md#首版收尾状态)：AMD64镜像准备网络超时，远端CI／公开发行／独立采用未验收，函数指纹和S2继续后置。
+**AMD64模拟复验（最新）。** Docker Hub当前DNS／HTTPS路径仍异常；匿名从AWS公共注册表取得与原索引摘要一致的Docker官方Python镜像后，原a1包在Mac ARM64模拟的Linux x86_64／Python3.11–3.13各 **311＋16项及两条starter通过**，原2CPU／2GiB／swap0／无网络、严格串行，零失败／错误／实际跳过／OOM，最高334.38MiB。维护包装器显式选择架构，相关80项通过；只改工具、测试及文档。原下载失败及1,318项历史证据保持，见[排障与验收](../architecture/reviews/2026-10-20-amd64-basic-validation.md)。原生AMD64、远端CI仍未验收，函数指纹和S2继续后置；未推送或公开发布。
+
+**首版维护收尾（前批）。** 用户确认仅继续首版冻结范围。补Linux报告完整身份／实际输入预检、创建前来源记录及离线镜像导出／加载；发现原Session用例混同Run终态与lane空闲，仅修测试并在门禁manifest固定校正前后SHA，原a1 wheel／sdist和442产品字节不变。源码及checkout外原wheel安装各92项通过；Mac3.12和Linux ARM64三版本最终各311＋16项及两条starter通过，Linux最高290.82MiB、零OOM；原3.12测试失败与显式校正后结果分别记录于[本批验收](../architecture/reviews/2026-10-19-alpha1-maintenance-closeout.md)。首版可执行维护项与外部待办见[收尾表](releases/0.1.0a1.md#首版收尾状态)：原AMD64镜像准备网络超时记录保留，远端CI／公开发行／独立采用未验收，函数指纹和S2继续后置。
 
 **前批发布门禁维护。** 原 a1 制品与产品字节保持固定，新增[离线发布门禁及平台矩阵](release-gate.md)，将制品 SHA、依赖锁、311／16 项完整 node 身份、两条 starter 及实际平台回执作为放行条件。维护工具单测和临时 sdist 解包测试分别 **34 passed**，不把它们合并为 SDK 覆盖。Mac 3.12／Linux ARM64 3.11–3.13各 **311＋16 passed**，两条 starter 各写一次，零失败／错误／跳过；Linux最终轮最高290.93 MiB、零OOM。资源、原失败及工具版本分别记录于[本批验收](../architecture/reviews/2026-10-19-release-gate.md)；AMD64／远端 CI／Windows不列为通过。本批仅维护工具、测试和文档，不新增 SDK 能力或重新构建推荐制品；函数指纹和 S2 继续后置。
 

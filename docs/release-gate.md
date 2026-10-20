@@ -16,7 +16,8 @@
 | --- | --- | --- | --- |
 | Linux ARM64／Debian12缓存镜像 | 3.11、3.12、3.13 | cgroup v2、2CPU／2GiB、无额外swap、`network=none`；串行 | 本批三版本各311＋16及两条starter通过，零失败／错误／跳过／OOM；见[本批记录](../architecture/reviews/2026-10-19-release-gate.md) |
 | macOS ARM64 | 3.12 | 本地隔离venv；不声称Linux容器的资源限制 | 本批311＋16及两条starter通过，独立记录 |
-| Linux AMD64 | 3.11、3.12、3.13 | 同一门禁及相同容器资源条件 | 允许后续执行，**尚未验收**；未提供或冒用ARM64镜像作为AMD64证据 |
+| Linux AMD64／Debian12（ARM64 Mac模拟） | 3.11、3.12、3.13 | 同一门禁、2CPU／2GiB、swap0、`network=none`；串行 | 三版本各311＋16＋2通过，零失败／错误／跳过／OOM；仅模拟矩阵，见[AMD64记录](../architecture/reviews/2026-10-20-amd64-basic-validation.md) |
+| 原生Linux AMD64 | 3.11、3.12、3.13 | 相同门禁与资源条件 | 尚未验收；模拟通过不代替原生宿主或远端CI |
 | Windows、其他Python／平台 | 未选 | 门禁在安装前拒绝 | 未验收 |
 
 manifest里的平台条目只声明允许执行，实际通过报告才形成该平台的有限证据。远端CI尚未执行；本机通过不等于GitHub Actions通过。现有`ci.yml`的广泛回归不是本门禁，当前任务不执行它。
@@ -42,6 +43,8 @@ for minor in 3.11 3.12 3.13; do
     -r tools/release_gate_requirements.lock -d /ABS/wheelhouse
 done
 ```
+
+准备AMD64时使用同一依赖锁，将上面的`manylinux_2_17_aarch64`改为`manylinux_2_17_x86_64`。每版本的二进制wheel均须通过锁内SHA校验，不回退源码构建。
 
 缺包、版本或哈希不符时门禁失败，不回退网络或不同版本。Linux镜像需事先按manifest里的精确digest准备；矩阵脚本使用`--pull=never`，不自动下载镜像。
 
@@ -84,7 +87,7 @@ docker image load --input linux-arm64-images.tar
 
 离线复验还需要原 wheel、原 sdist、四份维护工具／输入文件及锁定 wheelhouse；不用携带整个历史 `dist/`。只复制 `release_gate.py` 不足以复验。镜像导出／加载是标准 Docker 操作，不接入 SDK、不获取模型凭据；真实门禁容器仍保持 `network=none`。
 
-本轮当前 Docker 的导出／加载回环结果见收尾验收，不外推不同 Docker 存储格式或未测宿主。官方仓库连接超时和匿名 AMD64 镜像下载失败单独保留；尚无 AMD64 原生或模拟通过证据，也未执行远端 CI。
+此前 Docker 的 ARM64 导出／加载回环结果见收尾验收，不外推不同 Docker 存储格式或未测宿主。Docker Hub 连接超时和匿名 AMD64 镜像下载失败单独保留；后续使用同索引摘要的 AWS 官方公共镜像取得所选 AMD64 模拟通过证据，见[排障与复验](../architecture/reviews/2026-10-20-amd64-basic-validation.md)。未执行原生 AMD64 或远端 CI。
 
 ## 执行
 
@@ -111,6 +114,10 @@ python3.12 tools/run_release_gate_linux.py \
   --sdist /ABS/ralf_agent-0.1.0a1.tar.gz \
   --wheelhouse /ABS/wheelhouse --output /ABS/new-linux-matrix
 ```
+
+AMD64使用同一包装器并显式增加`--platform linux/amd64`；默认仍为`linux/arm64`。镜像准备与离线门禁分开：`linux_amd64_images`固定了[AWS公共注册表的Docker官方Python仓库](https://gallery.ecr.aws/docker/library/python)及原多平台索引摘要，先用`docker pull --platform linux/amd64`准备这些精确引用。包装器不会自行联网下载；按目标平台执行`docker image inspect --platform`，再核对实际镜像架构和容器报告，不能依赖本地缓存的默认架构。Docker需支持该按平台检查选项；本次使用Docker29.0.1。
+
+在ARM64 Mac上运行`linux/amd64`属于模拟执行，报告中的宿主与容器架构分别保留；通过只形成所选基础SDK的模拟矩阵证据，不能替代原生AMD64、远端CI或S2验收。
 
 输出目录必须不存在，已有成功或失败记录均不覆盖。矩阵脚本只挂载维护工具、制品、wheelhouse与输出，容器不联网、不挂载源码／Git／宿主凭据／Docker socket；先确认前一容器实际结束，再启动下一版本。创建前先保存唯一名称／归属标签，客户端超时也按名称核对，只控制归属匹配的容器。保存日志／退出状态后移除；创建结果、归属或停止状态无法确认时中止后续版本。超时后暂时查不到容器不等于创建已结束，须按保留名称再次核对。
 
