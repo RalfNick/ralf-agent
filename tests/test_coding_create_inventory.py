@@ -59,16 +59,15 @@ def test_explicit_inventory_is_complete_and_detached():
     assert set(inventory.inventory()["process_methods"]) == set(PROCESS_METHODS)
 
 
-def test_code_cache_purity_gate_is_in_live_inventory(monkeypatch):
+@pytest.mark.parametrize("name", ["_cacheable_constant", "_cacheable_code"])
+def test_code_cache_purity_gate_is_in_live_inventory(monkeypatch, name):
     from ralf_agent import component_fingerprint
 
     inventory = module()
     before = inventory.inventory()
-    monkeypatch.setattr(component_fingerprint, "_cacheable_constant", changed)
+    monkeypatch.setattr(component_fingerprint, name, changed)
     after = inventory.inventory()
-    assert (
-        before["fingerprint"]["_cacheable_constant"] != after["fingerprint"]["_cacheable_constant"]
-    )
+    assert before["fingerprint"][name] != after["fingerprint"][name]
 
 
 @pytest.mark.parametrize("name", PROCESS_FUNCTIONS)

@@ -179,6 +179,8 @@ def _defaults_digest(code, defaults_snapshot, keyword_defaults_snapshot):
 _cached_defaults_digest = lru_cache(maxsize=1024)(_defaults_digest)
 _DEFAULT_PRIMITIVES = (str, int, float, bool, type(None))
 _DEFAULT_CACHE_CHARS = 8192
+_CODE_PURITY_MAX = 1024
+_CODE_PURITY = [{}]
 
 
 def _simple_defaults(defaults, keyword_defaults):
@@ -246,35 +248,73 @@ def _cacheable_constant(value, depth=0):
     return type(value.co_consts) is tuple and _cacheable_constant(value.co_consts, depth + 1)
 
 
+def _cacheable_code(code):
+    """Reuse only the bounded proof that an exact immutable code tree is pure.
+
+    Published dictionaries are never mutated. Concurrent misses can discard one
+    another's cache entries, but every snapshot stays bounded and every retained
+    code reference prevents address reuse from approving a different object.
+    """
+    if type(code) is not types.CodeType or type(_CODE_PURITY) is not list or len(_CODE_PURITY) != 1:
+        return False
+    proofs = _CODE_PURITY[0]
+    if type(proofs) is not dict:
+        return False
+    if proofs.get(id(code)) is code:
+        return True
+    if not _cacheable_constant(code):
+        return False
+    updated = {} if len(proofs) >= _CODE_PURITY_MAX else dict(proofs)
+    updated[id(code)] = code
+    _CODE_PURITY[0] = updated
+    return True
+
+
 def _cache_helpers():
-    return tuple(
+    # Compare only integer identities; retain every sampled object separately so
+    # replacing metadata cannot recycle a pinned id or execute foreign equality.
+    references, shapes = [], []
+    for method in (
+        _constant,
+        _code,
+        _function,
+        canonical,
+        digest,
+        inspect.isfunction,
+        _plain_digest,
+        _cached_plain_digest,
+        _defaults_digest,
+        _cached_defaults_digest,
+        _simple_defaults,
+        _cacheable_constant,
+        _cacheable_code,
+    ):
+        keywords = getattr(method, "__kwdefaults__", None)
+        references.extend(
+            (
+                method,
+                getattr(method, "__code__", None),
+                getattr(method, "__defaults__", None),
+                keywords,
+                getattr(method, "__closure__", None),
+                getattr(method, "__wrapped__", None),
+            )
+        )
+        shapes.append(-1 if keywords is None else dict.__len__(keywords))
+        if keywords is not None:
+            for key, value in dict.items(keywords):
+                references.extend((key, value))
+    references.extend(
         (
-            method,
-            getattr(method, "__code__", None),
-            getattr(method, "__defaults__", None),
-            None
-            if getattr(method, "__kwdefaults__", None) is None
-            else dict(method.__kwdefaults__),
-            getattr(method, "__closure__", None),
-            getattr(method, "__wrapped__", None),
+            types,
+            types.CodeType,
+            _DEFAULT_PRIMITIVES,
+            _DEFAULT_CACHE_CHARS,
+            _CODE_PURITY,
+            _CODE_PURITY_MAX,
         )
-        for method in (
-            _constant,
-            _code,
-            _function,
-            canonical,
-            digest,
-            inspect.isfunction,
-            _plain_digest,
-            _cached_plain_digest,
-            getattr(_cached_plain_digest, "__wrapped__", None),
-            _defaults_digest,
-            _cached_defaults_digest,
-            getattr(_cached_defaults_digest, "__wrapped__", None),
-            _simple_defaults,
-            _cacheable_constant,
-        )
-    ) + ((types, types.CodeType), _DEFAULT_PRIMITIVES, _DEFAULT_CACHE_CHARS)
+    )
+    return (tuple(map(id, references)), tuple(shapes)), tuple(references)
 
 
 _CACHE_HELPERS = _cache_helpers()
@@ -285,12 +325,13 @@ def executable_digest(method):
     try:
         target = getattr(method, "__func__", method)
         if (
-            (_cache_helpers, getattr(_cache_helpers, "__code__", None)) == _CACHE_GUARD
-            and _cache_helpers() == _CACHE_HELPERS
+            _cache_helpers is _CACHE_GUARD[0]
+            and _cache_helpers.__code__ is _CACHE_GUARD[1]
+            and _cache_helpers()[0] == _CACHE_HELPERS[0]
             and inspect.isfunction(target)
             and target.__closure__ is None
             and getattr(target, "__wrapped__", None) is None
-            and _cacheable_constant(target.__code__)
+            and _cacheable_code(target.__code__)
         ):
             if target.__defaults__ is None and target.__kwdefaults__ is None:
                 return _cached_plain_digest(target.__code__)

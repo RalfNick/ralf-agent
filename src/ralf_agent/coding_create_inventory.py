@@ -74,6 +74,7 @@ def inventory_fields():
             "_function",
             "_plain_digest",
             "_cacheable_constant",
+            "_cacheable_code",
             "_cache_helpers",
             "executable_digest",
         ),

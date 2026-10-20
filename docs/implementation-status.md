@@ -4,9 +4,11 @@
 
 更新：2026-10-20。本节是唯一当前状态摘要；历史批次保留在下方，仅作原版本证据引用。R01–R26是长期路线图，不作为本轮基础交付的额外阻塞条件。
 
-**当前交付：0.1.0a1 Local 基础 SDK Alpha 未公开候选。** 首版范围已冻结，见[Alpha说明](releases/0.1.0a1.md)。产品行为沿用fc128b8，仅发行版本与材料调整。固定源码393项、独立安装160项及两条starter通过；Linux ARM64三版本各311项基础／16项恢复及两条starter通过，零失败／错误／跳过／OOM。本候选验收单独见[本批记录](../architecture/reviews/2026-10-19-alpha1-release-candidate.md)。原包已授权暂存用于下方AMD64手动CI；尚未公开发布，函数指纹和S2继续后置。
+**专项最新状态（2026-10-20）：** 用户已明确恢复函数指纹与S2验证，此前后置安排撤销。指纹helper元数据P2已修复；私有a2.dev1安装回归6486项通过／694配置跳过，但原360秒S2首项失败，已保留。最终有界纯代码判定候选a2.dev2完成核心152项及完整CONTROL收益16.141%，匹配制品隔离回归6495项通过／694配置跳过，默认材料、两History及两starter通过；真实S2首项仍1失败／432.140秒含收尾，三次业务提交、两root退休但Session关闭未确认／Assembly RPCError，schema及失败数据保留，剩余17项未启动；原a1包和既有平台证据不变。S2和第三阶段未关闭，未推送／公开发布，详见[恢复验证记录](../architecture/reviews/2026-10-20-s2-fingerprint-resume.md)。以下原a1及历史批次的“后置／未运行”只描述各自当时范围。
 
-**原生AMD64／手动CI（最新，所选范围通过）。** 原a1包经授权暂存后，在GitHub Ubuntu24.04原生X64宿主、Docker29.0.1中严格串行运行Debian12／Python3.11.17、3.12.15、3.13.16，每版 **311项基础＋16项恢复＋两条starter通过**，零失败／错误／实际跳过／OOM，内存峰值最高286.81MiB。实际2CPU／2GiB、swap0、无网络、原包与工具身份及三个容器移除均已复核；[run 39362466673](https://github.com/RalfNick/ralf-agent/actions/runs/39362466673)与[验收记录](../architecture/reviews/2026-10-20-alpha1-native-ci-validation.md)。维护测试106项通过；保留原422解析拒绝、ECR限流失败和1,533份历史摘要。只修CI及传输，三个镜像摘要、原包和产品字节不变；临时草稿已删除，无公开Tag／Release。宽泛CI、函数指纹及S2未运行，公开发行／独立采用仍未验收。
+**冻结基础交付：0.1.0a1 Local 基础 SDK Alpha 未公开候选。** 首版范围已冻结，见[Alpha说明](releases/0.1.0a1.md)。产品行为沿用fc128b8，仅发行版本与材料调整。固定源码393项、独立安装160项及两条starter通过；Linux ARM64三版本各311项基础／16项恢复及两条starter通过，零失败／错误／跳过／OOM。本候选验收单独见[本批记录](../architecture/reviews/2026-10-19-alpha1-release-candidate.md)。原包已授权暂存用于下方AMD64手动CI；尚未公开发布，该a1门禁当时不包含函数指纹／S2专项；本次恢复结果以上方为准。
+
+**原生AMD64／手动CI（最新，所选范围通过）。** 原a1包经授权暂存后，在GitHub Ubuntu24.04原生X64宿主、Docker29.0.1中严格串行运行Debian12／Python3.11.17、3.12.15、3.13.16，每版 **311项基础＋16项恢复＋两条starter通过**，零失败／错误／实际跳过／OOM，内存峰值最高286.81MiB。实际2CPU／2GiB、swap0、无网络、原包与工具身份及三个容器移除均已复核；[run 39362466673](https://github.com/RalfNick/ralf-agent/actions/runs/39362466673)与[验收记录](../architecture/reviews/2026-10-20-alpha1-native-ci-validation.md)。维护测试106项通过；保留原422解析拒绝、ECR限流失败和1,533份历史摘要。只修CI及传输，三个镜像摘要、原包和产品字节不变；临时草稿已删除，无公开Tag／Release。该原a1门禁未执行宽泛CI及上述两项专项，公开发行／独立采用仍未验收。
 
 **AMD64模拟复验（前批）。** Mac的Docker Hub DNS／HTTPS路径异常；匿名从AWS公共注册表取得原索引摘要一致的Docker官方Python镜像后，原a1包在Mac ARM64模拟的Linux x86_64／Python3.11–3.13各 **311＋16项及两条starter通过**，原2CPU／2GiB／swap0／无网络、严格串行，零失败／错误／实际跳过／OOM，最高334.38MiB。维护包装器显式选择架构，相关80项通过；只改工具、测试及文档。原下载失败及1,318项历史证据保持，见[排障与验收](../architecture/reviews/2026-10-20-amd64-basic-validation.md)。此批模拟不代替上方独立原生CI证据，也未证明Mac网络故障恢复；函数指纹和S2继续后置。
 
@@ -39,7 +41,7 @@
 
 | 范围 | 状态与约束 |
 | --- | --- |
-| P3-2 | S1普通Session功能子集已有验收；S2原360秒及当前完整矩阵仍未通过。2026-10-18恢复原门槛后，用户于10-19要求函数指纹验证后置；该专项不自动续跑，原失败与门槛保留，不列为已支持 |
+| P3-2 | S1普通Session功能子集已有验收；S2原360秒及当前完整矩阵仍未通过。2026-10-20用户明确恢复函数指纹／S2；本轮a2.dev1首项失败已保留，a2.dev2所选指纹／安装／兼容通过，S2首项1失败／432.140秒含收尾、Session关闭未确认且schema保留；未解锁其余17项，不列为已支持 |
 | P3-3 | **冻结所选范围已验收。** 最小服务控制、持久HTTP游标／断连续接、有界背压及原任务必要取消／恢复已按各原制品取证；见[收口核对](../architecture/reviews/2026-10-18-p3-3-closeout.md)。不等于同版本全服务矩阵或第三阶段完成 |
 | P3-4 | **冻结最小范围已验收。** 可信Scope／资源交集、所选越权拒绝、可替换脱敏审计、Local工作消息压缩及原封存树下PG冗余效果副本清理；见[门槛核对](../architecture/reviews/2026-10-18-temporal-effect-retention.md#p3-4门槛核对与后续)，不等于完整企业权限或Run遗忘 |
 | P3-5 | **冻结最小范围已验收。** 所选Local／Temporal／PG原数据备份恢复、原身份及匹配Worker、错误版本／发布拒绝与回退；见[逐项核对](../architecture/reviews/2026-10-18-framework-backup-restore.md)。不外推自动Schema降级、生产Temporal灾备或全部组合 |
