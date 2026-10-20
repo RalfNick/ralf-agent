@@ -112,7 +112,7 @@ def test_actual_session_coding_approval_cold_handoff_lost_retirement_and_cancel(
             finally:
                 await facade.aclose()
 
-    asyncio.run(asyncio.wait_for(scenario(), 360))
+    asyncio.run(asyncio.wait_for(scenario(), 600))
 
 
 @pytest.mark.parametrize("boundary", ["effect", "native-stop", "deployment-end"])

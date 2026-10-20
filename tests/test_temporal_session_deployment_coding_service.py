@@ -149,4 +149,4 @@ def test_actual_coding_session_original_turns_approval_tree_and_retirement(
             finally:
                 await facade.aclose()
 
-    asyncio.run(asyncio.wait_for(scenario(), timeout=360))
+    asyncio.run(asyncio.wait_for(scenario(), timeout=600))

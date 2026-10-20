@@ -1,6 +1,8 @@
 # 预览版本验证与发布
 
-**最新本机专项候选：`0.1.0a2.dev4`。** wheel SHA `6cf80ff5a776e397625da3c220b84b31a001018b82d0c215f7fffef827250f62`，本地安全证据在 `dist/s2-query-buffer-20261020/`，原包位于其中 `ralf-s2-query-buffer-fix-20261020/wheel/`。默认材料／两原History及starter兼容通过；原S2首项仍超时，所选取消后关闭／退休通过，不能因此列为推荐或已支持S2。详见[验证范围和兼容限制](../architecture/reviews/2026-10-20-s2-query-buffer-and-session-close.md)。原a1／dev3不可覆盖，显式源码固定的历史Worker继续匹配原包；不推送、不公开发布，不沿用a1平台结论。
+**600秒门槛复验：** 产品及wheel未变，只改两处测试常量，安全证据在`dist/s2-600-second-gate-20261020/`，详见[修订验收](../architecture/reviews/2026-10-20-s2-600-second-gate.md)。原360秒失败及a1／dev3／dev4原包和各自证据不变，专项仍未完成。
+
+**最新本机专项候选：`0.1.0a2.dev4`。** wheel SHA `6cf80ff5a776e397625da3c220b84b31a001018b82d0c215f7fffef827250f62`，本地安全证据在 `dist/s2-query-buffer-20261020/`，原包位于其中 `ralf-s2-query-buffer-fix-20261020/wheel/`。默认材料／两原History及starter兼容通过；S2按用户修订600秒门槛首项通过、其余17项12通过／5失败，零跳过，仍不能列为已支持S2。详见[验证范围和兼容限制](../architecture/reviews/2026-10-20-s2-query-buffer-and-session-close.md)。原a1／dev3不可覆盖，显式源码固定的历史Worker继续匹配原包；不推送、不公开发布，不沿用a1平台结论。
 
 **2026-10-20专项恢复：** 用户已恢复函数指纹／S2验证。a2.dev1／a2.dev2为独立本机私有候选；原a1推荐包及其冻结门禁不重建、不覆盖，新候选不能套用原a1平台验收。版本、兼容范围与当前结果见[恢复验证记录](../architecture/reviews/2026-10-20-s2-fingerprint-resume.md)；原a1不包含本轮指纹P2修复，私有a2也未取得S2支持资格。S2仍开放，不推送或公开发布。下文原a1及旧开发批次的“后置”保留其历史范围。
 
