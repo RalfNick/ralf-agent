@@ -3,6 +3,7 @@ include tools/generate_codex_protocol.py
 include tools/verify_codex_seccomp.py tools/codex-seccomp-provenance.json
 include tools/release_gate.py tools/run_release_gate_linux.py
 include tools/release_preflight.py
+include tools/stage_alpha1_candidate.py
 include tools/release_gate_manifest.json tools/release_gate_requirements.lock
 recursive-include architecture *.md
 recursive-include docs *.md

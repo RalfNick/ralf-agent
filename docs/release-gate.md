@@ -136,6 +136,8 @@ ralf_agent-0.1.0a1.tar.gz
 
 工作流从指定run下载artifact的机制见[官方download-artifact说明](https://github.com/actions/download-artifact/tree/v4)。原包暂存是单独的外部交接：可在受控runner上复制下节预检生成的`candidate/`，经授权后由`actions/upload-artifact`使用上述固定artifact名保存；其`path`只选该目录，不上传整个`dist/`。目前没有已建立的暂存run，不提供虚构run ID，也不自动上传本机文件。若使用自有原生Linux机器，可直接搬运原包／工具／锁定依赖并执行相同的`--require-native`命令，无需声称已运行GitHub CI。
 
+2026-10-20用户进一步授权原包暂存及手动执行。新增[私有暂存工作流](../.github/workflows/alpha1-stage-candidate.yml)桥接本机原包到Actions artifact：仅接受`ralf-alpha1-private-stage-`前缀、`draft=true`、未发布的本仓库草稿；资产名称、数量、大小和两份原SHA均须匹配，重定向必须HTTPS且移除Authorization，失败只保留proof，不交出部分candidate。暂存任务为读取草稿可见性使用`contents: write`权限，但下载脚本只发GET，不包含发布或源码写入操作；原固定门禁仍只有只读权限。验证证据取回后删除本次草稿，保留原包、暂存proof及失败记录，不将草稿转为公开Release，也不创建正式版本Tag。实际run及通过结果另行取证，工作流存在不等于通过。
+
 GitHub的手动触发要求该工作流先在默认分支可用，见[官方说明](https://docs.github.com/en/actions/how-tos/manage-workflow-runs/manually-run-a-workflow)。本批只准备本地文件；推送／合并、建立暂存run、触发CI均未执行。需要这些外部动作时停下，按用户授权另行推进；手动触发CI也不代表允许公开发布。
 
 现有`ci.yml`仍会随push／PR执行全量检查，本批没有关闭或修改它。后续授权推送本批维护提交时，可在该交接提交使用GitHub支持的`[skip ci]`仅跳过自动push／PR工作流，再单独手动触发这里的冻结门禁，避免恢复函数指纹／S2后置范围；见[官方跳过说明](https://docs.github.com/en/actions/how-tos/manage-workflow-runs/skip-workflow-runs)。这不算全量CI通过，也不绕过受保护分支的必需检查；若必需检查因此pending，应停下由维护者决定交接方式，不自动合并或修改保护规则。本批按用户后续授权仅作带该标记的本地交接提交，不推送或触发远端CI；标记不影响今后经授权的手动触发。
