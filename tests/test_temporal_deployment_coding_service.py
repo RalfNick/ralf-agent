@@ -191,7 +191,7 @@ class CodingSystem:
         self.expected_retention = []
         self.recovery = None
         self.engine = assembly.create_engine(
-            client, task_queue=self.queue, activity_timeout=80, drive_timeout=80
+            client, task_queue=self.queue, activity_timeout=90, drive_timeout=80
         )
         self.engines.append(self.engine)
 
@@ -250,7 +250,7 @@ class CodingSystem:
                 )
             )
 
-    def facade(self, *, client=None, queue=None, release=None, scope=None, timeout=80):
+    def facade(self, *, client=None, queue=None, release=None, scope=None, timeout=90):
         engine = TemporalEngine(
             client or self.client,
             task_queue=queue or self.queue,
@@ -1278,7 +1278,7 @@ def test_actual_coding3_lost_first_acceptance_recovers_original_alias_queue_and_
             accepted = await system.client.data_converter.decode(
                 history.events[0].workflow_execution_started_event_attributes.input.payloads
             )
-            assert accepted[0]["activity_timeout"] == 80
+            assert accepted[0]["activity_timeout"] == 90
             assert (
                 history.events[0].workflow_execution_started_event_attributes.task_queue.name
                 == system.queue

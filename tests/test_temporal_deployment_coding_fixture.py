@@ -1187,3 +1187,32 @@ def test_worker_context_preserves_body_failure_and_original_close_failure(
     if close_fails:
         diagnostic = json.loads((tmp_path / "initial-close-error.json").read_text())
         assert diagnostic["type"] == "CloseIncomplete" and diagnostic["report"] == closing.report
+
+
+@pytest.mark.parametrize("explicit_timeout", [None, 1])
+def test_coding_s2_uses_revised_activity_deadline_without_changing_drive(
+    tmp_path, monkeypatch, explicit_timeout
+):
+    calls = []
+
+    def create_engine(client, **options):
+        engine = SimpleNamespace(client=client, **options)
+        calls.append(engine)
+        return engine
+
+    assembly = SimpleNamespace(
+        _runtime=object(), release={"fixed": "release"}, create_engine=create_engine
+    )
+    data = {
+        "scope": {"workspace": "workspace", "principal": "principal"},
+        "policy": {"deployment_id": "deployment", "max_active_root_runs": 1},
+        "queue": "queue",
+    }
+    monkeypatch.setattr(service, "TemporalEngine", create_engine)
+    system = service.CodingSystem(tmp_path, None, "schema", None, None, data, assembly, object())
+    assert system.engine.activity_timeout == 90
+    assert system.engine.drive_timeout == 80
+    engine = system.facade(**({} if explicit_timeout is None else {"timeout": explicit_timeout}))
+    assert engine.activity_timeout == (90 if explicit_timeout is None else explicit_timeout)
+    assert engine.drive_timeout == 80
+    assert system.engines == calls
