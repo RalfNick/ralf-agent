@@ -106,6 +106,7 @@ class TemporalRunWorkflow:
                 exc, "type", "definition_mismatch"
             )
         self._deployment_dirty = {}
+        self._deployment_forced = {}
         self._deployment_observed = {}
         self._deployment_observing = set()
         self._deployment_hint_tokens = {}
@@ -165,10 +166,21 @@ class TemporalRunWorkflow:
             call["run_id"], 0
         )
 
-    def _deployment_child_observed(self, call, generation):
-        if self._deployment_child_generation(call) != generation:
-            return False
-        self._deployment_observed[call["run_id"]] = generation
+    def _deployment_child_observed(self, call, generation, *, acknowledged=None, forced=None):
+        current = self._deployment_child_generation(call)
+        if current != generation:
+            if not (
+                current == generation + 1
+                and acknowledged is not None
+                and acknowledged == self._deployment_hint_tokens.get(call["run_id"])
+                and forced is not None
+                and forced == getattr(self, "_deployment_forced", {}).get(call["run_id"], 0)
+                and workflow.patched("ralf-observed-parent-hint-v1")
+            ):
+                return False
+        # A newer forced read or multiple hints cannot be covered by the last
+        # token alone: an untrusted replay could otherwise hide an intervening hint.
+        self._deployment_observed[call["run_id"]] = current
         getattr(self, "_deployment_read_failures", {}).pop(call["run_id"], None)
         return True
 
@@ -224,7 +236,12 @@ class TemporalRunWorkflow:
 
     def _deployment_force_child_reads(self):
         if self._deployment_notifications_selected():
+            if not hasattr(self, "_deployment_forced"):
+                self._deployment_forced = {}
             for call in getattr(self.state, "children", ()):
+                self._deployment_forced[call["run_id"]] = (
+                    self._deployment_forced.get(call["run_id"], 0) + 1
+                )
                 self._deployment_dirty[call["run_id"]] = self._deployment_child_generation(call) + 1
 
     @workflow.signal(name="deployment_child_wake")
@@ -329,7 +346,83 @@ class TemporalRunWorkflow:
         info = self._deployment_query_epoch()
         if info.parent is None:
             return True
+        if (
+            self.state.manifest.get("session_deployment_protocol") == 1
+            and self.state.deployment_admission.get("lineage") == []
+            and workflow.patched("ralf-session-root-parent-hint-v1")
+        ):
+            # A Session root's SDK parent is its Coordinator, which receives
+            # the independent Session ``wake`` below, not composition hints.
+            origin = self.state.deployment_admission["session_origin"]
+            if (
+                info.parent.namespace != info.namespace
+                or info.parent.workflow_id != origin["coordinator_id"]
+                or info.parent.run_id != origin["coordinator_execution_epoch"]
+            ):
+                from .errors import DefinitionMismatch
+
+                raise DefinitionMismatch("Session root Coordinator parent changed")
+            # Old failed sends may have left a generic retry timer. Discard
+            # only that wrong route, retaining all real Session notification debt.
+            self._deployment_parent_pending = None
+            self._deployment_parent_notification_error = None
+            self._deployment_parent_notification_retry = False
+            self._deployment_parent_notification_attempts = 0
+            return True
         if info.parent.namespace != info.namespace:
+            return True
+        if (
+            self.state.manifest.get("deployment_admission_protocol", {}).get("version") == 4
+            and self.state.state == "queued"
+            and self.state.error is None
+            and len(self.state.receipts) == len(self.state.command_digests) == 1
+            and getattr(self, "_deployment_parent_pending", None) is None
+            and getattr(self, "_deployment_parent_notified", None) is None
+            and getattr(self, "_deployment_parent_notification_error", None) is None
+            and not getattr(self, "_deployment_parent_notification_retry", False)
+            and not getattr(self, "_deployment_parent_notification_attempts", 0)
+            and not any(
+                getattr(self.state, name, None)
+                for name in (
+                    "actions",
+                    "children",
+                    "queue",
+                    "reservations",
+                    "active_action",
+                    "remote_uncertain",
+                    "deployment_calls",
+                    "tool_executions",
+                    "pending_acks",
+                    "deferred_acks",
+                    "reconcile_requests",
+                    "active_reconciliation",
+                    "active_evidence_ack",
+                    "session_stages",
+                    "pending_session",
+                    "session_recovery",
+                    "memory_stages",
+                    "pending_completion",
+                    "memory_recovery",
+                    "memory_recovery_revision",
+                    "context_read_stages",
+                    "managed_context_stages",
+                    "context_artifact_dispatches",
+                    "context_artifact_receipts",
+                    "completion_stages",
+                    "pending_verification",
+                    "input_requests",
+                    "planning_input_sources",
+                    "root_read_request",
+                    "composition_stop_intent",
+                    "deployment_seal",
+                    "deployment_retirement",
+                    "deployment_admission_error",
+                )
+            )
+            and workflow.patched("ralf-empty-queued-parent-hint-v1")
+        ):
+            # The parent's independent initial read remains dirty. Do not add
+            # another queued hint or acknowledge facts before any work starts.
             return True
         if getattr(self, "_deployment_parent_notification_error", None) is not None and not getattr(
             self, "_deployment_parent_notification_retry", False
@@ -1335,6 +1428,35 @@ class TemporalRunWorkflow:
             if kind == "status":
                 return self.state.snapshot()
             if kind == "diagnostics":
+                if "deployment_child_observation" in request:
+                    from .errors import DefinitionMismatch
+
+                    self._deployment_query_epoch()
+                    if (
+                        set(request)
+                        != {
+                            "scope",
+                            "kind",
+                            "run_id",
+                            "execution_epoch",
+                            "deployment_child_observation",
+                        }
+                        or request["deployment_child_observation"] is not True
+                        or request["run_id"] != self.state.run_id
+                        or request["execution_epoch"] != self.state.epoch
+                    ):
+                        raise DefinitionMismatch("Original child observation identity changed")
+                    from .temporal_coding_composition_state import physical_stop_view
+
+                    # One synchronous Query covers an already acknowledged hint.
+                    # Do not recompute a token or call patched() in a read-only Query.
+                    return {
+                        **self.state.diagnostics(),
+                        "deployment_child_observation": {
+                            "acknowledged": getattr(self, "_deployment_parent_notified", None),
+                            "physical_proof": physical_stop_view(self.state),
+                        },
+                    }
                 return self.state.diagnostics()
             if kind == "memory_stages":
                 return detached(list(getattr(self.state, "memory_stages", {}).values()))

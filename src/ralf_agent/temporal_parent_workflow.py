@@ -1,6 +1,7 @@
 """Independent History parent scheduler with registered child Workflow ownership."""
 
 import asyncio
+import copy
 from datetime import timedelta
 
 from temporalio import workflow
@@ -148,7 +149,47 @@ class TemporalParentWorkflow(TemporalRunWorkflow):
             pin_child_execution,
             request_parent_stop,
         )
+        from .types import digest
 
+        def notification_facts():
+            # Keep this comparison inside the registered Worker callable; do
+            # not change the frozen pure State.observe implementation/inventory.
+            facts = copy.deepcopy(
+                {
+                    key: item
+                    for key, item in vars(self.state).items()
+                    if key not in {"revision", "event_log"}
+                }
+            )
+            edge = next(c for c in facts["children"] if c["run_id"] == run_id)
+            edge.pop("observed_revision", None)
+            edge.pop("observation_digest", None)
+            if "snapshot" in edge:
+                edge["snapshot"].pop("state_revision", None)
+            if "physical_stop_proof" in edge:
+                edge["physical_stop_proof"].pop("revision", None)
+                edge["physical_stop_proof"].pop("proof_digest", None)
+            return facts
+
+        previous = next((c for c in self.state.children if c["run_id"] == run_id), {})
+        old_revision, old_digest = (
+            previous.get("observed_revision"),
+            previous.get("observation_digest"),
+        )
+        quiet = (
+            self.state.manifest.get("deployment_admission_protocol", {}).get("version") == 4
+            and self.state.state not in {"succeeded", "failed", "cancelled", "cancelling"}
+            and self.state.composition_stop_intent is None
+            and getattr(self.state, "deployment_seal", None) is None
+            and getattr(self.state, "deployment_retirement", None) is None
+            and type(old_revision) is int
+            and old_revision >= 0
+            and old_digest is not None
+        )
+        before = notification_facts() if quiet else None
+        revision, event_count = (
+            (self.state.revision, len(self.state.event_log)) if quiet else (0, 0)
+        )
         try:
             proof = value["coding_composition_proof"]
             pin_child_execution(self.state, run_id, proof)
@@ -164,6 +205,54 @@ class TemporalParentWorkflow(TemporalRunWorkflow):
             )
             self.state._emit("child_evidence_refused")
             return False
+        if before is not None and self.state.revision > revision:
+            native = {}
+            if self.state.manifest.get("user_input_protocol") == 1:
+                native.update(
+                    input_requests=call["input_requests"],
+                    planning_input_sources=call["planning_input_sources"],
+                )
+            if self.state.manifest.get("model_history_protocol") == 2:
+                native["native_history_bundle"] = call["native_history_bundle"]
+            normalized = {**value["snapshot"], "state_revision": old_revision}
+            evidence_flow = value["workflow"]
+            if self.state.observation_version == 2:
+                evidence_flow = {
+                    name: evidence_flow.get(name, False)
+                    for name in (
+                        "quiescent",
+                        "remote_stop_confirmed",
+                        "unknown_remote_execution",
+                        "evidence_ack_pending",
+                        "reconciliation_pending",
+                    )
+                }
+            # The old digest retains the full child budget, which is not
+            # otherwise stored on the edge. Adoption and all its checks ran first.
+            if (
+                value["snapshot"]["state_revision"] > old_revision
+                and digest(
+                    {
+                        "snapshot": normalized,
+                        "budget": value["budget"],
+                        "workflow": evidence_flow,
+                        **native,
+                    }
+                )
+                == old_digest
+                and notification_facts() == before
+                and all(
+                    event["kind"] in {"coding_composition_child_stop_observed", "child_observed"}
+                    and event["data"].get("run_id") == run_id
+                    for event in self.state.event_log[event_count:]
+                )
+                and workflow.patched("ralf-source-revision-notification-v1")
+            ):
+                self._deployment_notification_revisions = (
+                    getattr(self, "_deployment_notification_revisions", 0)
+                    + self.state.revision
+                    - revision
+                )
         return True
 
     async def _deadline(self, seconds):
@@ -349,6 +438,7 @@ class TemporalParentWorkflow(TemporalRunWorkflow):
                     if notifications and not self._deployment_child_is_dirty(call):
                         continue
                     generation = self._deployment_child_generation(call) if notifications else None
+                    forced = getattr(self, "_deployment_forced", {}).get(call["run_id"], 0)
                     if notifications and not self._deployment_child_read_ready(call, generation):
                         continue
                     before = self.state.revision
@@ -370,7 +460,12 @@ class TemporalParentWorkflow(TemporalRunWorkflow):
                                 self.state.observe(call["run_id"], value)
                                 adopted = True
                             if notifications and adopted:
-                                self._deployment_child_observed(call, generation)
+                                self._deployment_child_observed(
+                                    call,
+                                    generation,
+                                    acknowledged=value.get("parent_notification_ack"),
+                                    forced=forced,
+                                )
                             elif notifications:
                                 self._deployment_child_read_failed(
                                     call, generation, "definition_mismatch"

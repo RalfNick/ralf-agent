@@ -37,6 +37,7 @@ FLAGS = {
     "reconciliation_pending",
 }
 EXTRA_OBSERVATIONS = {
+    "parent_notification_ack",
     "input_requests",
     "planning_input_sources",
     "native_history_bundle",
@@ -163,6 +164,10 @@ def _snapshot_shape(snapshot):
 def pack_response(state, call, value):
     _selected(state.manifest)
     value = detached(value)
+    if "parent_notification_ack" in value:
+        ack = value["parent_notification_ack"]
+        if type(ack) is not str or len(ack) != 64 or any(c not in "0123456789abcdef" for c in ack):
+            _reject()
     proof = value["coding_composition_proof"]
     binding = _binding(state, call, proof)
     if value.get("scope") != state.scope or canonical(value.get("manifest")) != canonical(
@@ -212,6 +217,10 @@ def expand_response(state, call, response):
     ):
         _reject()
     binding, physical, observation = value["binding"], value["physical_proof"], value["observation"]
+    if type(observation) is dict and "parent_notification_ack" in observation:
+        ack = observation["parent_notification_ack"]
+        if type(ack) is not str or len(ack) != 64 or any(c not in "0123456789abcdef" for c in ack):
+            _reject()
     if type(binding) is not dict or set(binding) != BINDING_FIELDS or type(physical) is not dict:
         _reject()
     from .temporal_coding_composition_state import _view_fields

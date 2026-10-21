@@ -4,12 +4,17 @@ The pure DTO validators correlate bytes only. This module reads the original
 SDK coordinator and its durable intent before allowing any control body.
 """
 
+from weakref import WeakKeyDictionary
+
 from .errors import DefinitionMismatch
 from .task_controls import _binding
 from .temporal_session_deployment_dto import validate_intent, validate_origin
 from .temporal_session_state import SESSION_ACTIVITY, SESSION_WORKFLOW
 from .temporal_state import detached
 from .types import canonical, digest
+
+# Transport coordination only: every caller still reads its own fresh SDK facts.
+_COORDINATOR_QUERIES = WeakKeyDictionary()
 
 REQUEST_FIELDS = {
     "version",
@@ -240,7 +245,15 @@ class SessionControlValidation:
         # outer boundary; every original identity/port pin remains per await.
         if type(_full_release) is not bool:
             _reject()
-        self._check(full=_full_release)
+        original_check = self._check
+        check_binding = _binding(original_check)
+
+        def check(*, full=True):
+            if check_binding != _binding(original_check) or check_binding != _binding(self._check):
+                _reject()
+            original_check(full=full)
+
+        check(full=_full_release)
         i, client = self.intent, self.client
         current = client.get_workflow_handle(i["coordinator_id"])
         handle = client.get_workflow_handle(
@@ -258,23 +271,46 @@ class SessionControlValidation:
             import asyncio
 
             async def read(operation, *args):
-                self._check(full=False)
+                check(full=False)
                 try:
                     return await operation(*args)
                 finally:
-                    self._check(full=False)
+                    check(full=False)
+
+            coordinator_key = (
+                i["namespace"]["id"],
+                i["coordinator_id"],
+                i["coordinator_execution_epoch"],
+            )
 
             async def coordinator_facts():
-                # Temporal's consistent-query buffer is per Workflow. Keep
-                # both fresh facts, but do not make them compete for one slot.
-                values = []
-                for kind in ("deployment_session_intent", "deployment_session_command"):
-                    try:
-                        value = await read(handle.query, "view", self.selector(kind))
-                    except (Exception, asyncio.CancelledError) as error:
-                        value = error
-                    values.append(value)
-                return values
+                # The query slot belongs to the original Workflow, not this
+                # validator or SDK client. Independent Activities must share it.
+                loop = asyncio.get_running_loop()
+                queries = _COORDINATOR_QUERIES.setdefault(loop, {})
+                entry = queries.get(coordinator_key)
+                if entry is None:
+                    entry = queries[coordinator_key] = [asyncio.Lock(), 0]
+                entry[1] += 1
+                try:
+                    async with entry[0]:
+                        values = []
+                        for kind in ("deployment_session_intent", "deployment_session_command"):
+                            try:
+                                # Lock acquisition suspends this verifier. Recheck
+                                # before evaluating any replaceable Query callback.
+                                check(full=False)
+                                value = await read(handle.query, "view", self.selector(kind))
+                            except (Exception, asyncio.CancelledError) as error:
+                                value = error
+                            values.append(value)
+                        return values
+                finally:
+                    entry[1] -= 1
+                    if not entry[1]:
+                        del queries[coordinator_key]
+                    if not queries:
+                        del _COORDINATOR_QUERIES[loop]
 
             # Namespace/description can overlap the coordinator reads. Drain
             # every started reader on failure/cancellation before returning.
@@ -292,9 +328,9 @@ class SessionControlValidation:
                         await asyncio.shield(readers)
                     except asyncio.CancelledError:
                         pass
-                self._check(full=False)
+                check(full=False)
                 raise
-            self._check(full=False)
+            check(full=False)
             if isinstance(results[2], BaseException):
                 raise results[2]
             results = [results[0], results[1], *results[2]]
@@ -304,20 +340,20 @@ class SessionControlValidation:
             _, description, intent, command = results
         else:
             await self._namespace()
-            self._check(full=False)
+            check(full=False)
             description = await current.describe()
-            self._check(full=False)
+            check(full=False)
         self._description(description)
         await self._start(handle, description)
-        self._check(full=False)
+        check(full=False)
         if not coding:
             intent = await handle.query("view", self.selector("deployment_session_intent"))
-            self._check(full=False)
+            check(full=False)
         if intent != i:
             _reject()
         if not coding:
             command = await handle.query("view", self.selector("deployment_session_command"))
-            self._check(full=False)
+            check(full=False)
         if type(command) is not dict or set(command) != {"receipt", "session_ref"}:
             _reject()
         receipt = command["receipt"]
@@ -347,10 +383,10 @@ class SessionControlValidation:
             _reject()
         # A reset while an epoch-pinned Query succeeds must still refuse.
         description = await client.get_workflow_handle(i["coordinator_id"]).describe()
-        self._check(full=False)
+        check(full=False)
         self._description(description)
         await self._namespace()
-        self._check(full=_full_release)
+        check(full=_full_release)
         origin = {
             "version": 1,
             **{

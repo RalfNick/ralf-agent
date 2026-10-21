@@ -5,15 +5,56 @@ from .types import Scope, digest
 
 
 async def namespace_id(client):
-    from temporalio.api.workflowservice.v1 import DescribeNamespaceRequest
+    import asyncio
 
-    result = await client.workflow_service.describe_namespace(
-        DescribeNamespaceRequest(namespace=client.namespace)
-    )
-    value = result.namespace_info.id
-    if not value:
-        raise DefinitionMismatch("Temporal namespace UUID is unavailable")
-    return value
+    from temporalio.api.workflowservice.v1 import DescribeNamespaceRequest
+    from temporalio.service import RPCError, RPCStatusCode
+
+    from .task_controls import _binding
+
+    namespace, service = client.namespace, client.workflow_service
+    describe = service.describe_namespace
+    binding = _binding(describe)
+
+    def check():
+        if (
+            client.namespace != namespace
+            or client.workflow_service is not service
+            or _binding(describe) != binding
+            or _binding(service.describe_namespace) != binding
+        ):
+            raise DefinitionMismatch("Original namespace observation port changed")
+
+    task = asyncio.current_task()
+    if task is not None and task.cancelling():
+        # Deliver an entry cancellation before the SDK can translate it; a
+        # previously caught cancellation leaves the public count positive too.
+        await asyncio.sleep(0)
+    cancellations = 0 if task is None else task.cancelling()
+    for attempt in range(2):
+        check()
+        request = DescribeNamespaceRequest(namespace=namespace)
+        try:
+            result = await describe(request)
+        except RPCError as exc:
+            # A waiter cancellation may surface as RPC CANCELLED in the bridge.
+            if (
+                exc.status == RPCStatusCode.CANCELLED
+                and task is not None
+                and task.cancelling() > cancellations
+            ):
+                raise asyncio.CancelledError from exc
+            check()
+            if attempt or exc.status != RPCStatusCode.CANCELLED:
+                raise
+            # Repeat only this fixed read once, never a dispatch or control.
+            await asyncio.sleep(0)
+        else:
+            check()
+            value = result.namespace_info.id
+            if not value:
+                raise DefinitionMismatch("Temporal namespace UUID is unavailable")
+            return value
 
 
 async def validate_tree_activity(client, request, *, workflow_id):

@@ -5,7 +5,7 @@ import uuid
 from dataclasses import asdict
 from types import SimpleNamespace
 
-from .errors import CloseIncomplete, DefinitionMismatch
+from .errors import CloseIncomplete, DefinitionMismatch, ValidationError
 from .temporal_state import detached
 from .types import Scope, canonical, digest
 
@@ -801,10 +801,58 @@ async def control(runtime, client, value, info=None):
         elif mode == "observe":
             handle = client.get_workflow_handle(child["run_id"], run_id=child["execution_epoch"])
             result = {
-                **await handle.query("view", {"scope": value["scope"], "kind": "diagnostics"}),
+                **await handle.query(
+                    "view",
+                    {
+                        "scope": value["scope"],
+                        "kind": "diagnostics",
+                        **(
+                            {
+                                "deployment_child_observation": True,
+                                "run_id": child["run_id"],
+                                "execution_epoch": child["execution_epoch"],
+                            }
+                            if value["runtime_manifest"]
+                            .get("deployment_admission_protocol", {})
+                            .get("version")
+                            == 4
+                            else {}
+                        ),
+                    },
+                ),
                 "scope": value["scope"],
                 "coding_composition_proof": child,
             }
+            if "deployment_child_observation" in result:
+                carrier = result.pop("deployment_child_observation")
+                from .session_types import sha
+
+                if type(carrier) is not dict or set(carrier) != {"acknowledged", "physical_proof"}:
+                    raise DefinitionMismatch("Original child observation carrier changed")
+                acknowledged = carrier["acknowledged"]
+                if acknowledged is not None:
+                    try:
+                        sha(acknowledged)
+                    except (TypeError, ValueError, ValidationError):
+                        raise DefinitionMismatch(
+                            "Original child notification ACK changed"
+                        ) from None
+                    result["parent_notification_ack"] = acknowledged
+                fresh = _validate_proof(
+                    carrier["physical_proof"],
+                    scope=value["scope"],
+                    run_id=child["run_id"],
+                    epoch=child["execution_epoch"],
+                    manifest=value["runtime_manifest"],
+                    namespace=namespace,
+                    request=child["request"],
+                )
+                if (
+                    fresh["revision"] < child["revision"]
+                    or result["snapshot"]["state_revision"] != fresh["revision"]
+                ):
+                    raise DefinitionMismatch("Original atomic child observation revision changed")
+                child = fresh
         else:
             raise DefinitionMismatch("Unknown original composition control")
         result["coding_composition_proof"] = child

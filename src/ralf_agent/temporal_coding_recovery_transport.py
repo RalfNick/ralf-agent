@@ -126,8 +126,13 @@ def _receipt(operation, proof, value):
             != {"action_id", "admitted", "original_invocation_id", "request", "runner"}
             or value["action_id"] != proof["action_id"]
             or value["admitted"] is not True
-            or type(value["original_invocation_id"]) is not str
-            or not value["original_invocation_id"]
+            or (
+                value["original_invocation_id"] is not None
+                and (
+                    type(value["original_invocation_id"]) is not str
+                    or not value["original_invocation_id"]
+                )
+            )
             or type(value["request"]) is not dict
             or type(value["runner"]) is not dict
         ):
