@@ -4,6 +4,20 @@
 
 Ralf-Agent 需要 Python 3.11+。本地开发使用 Linux 或 macOS，本轮实测平台见[Alpha范围](releases/0.1.0a2.md)，CI配置不等于已运行通过；CI的Python版本与检查以[贡献指南](../CONTRIBUTING.md)和[工作流](../.github/workflows/ci.yml)为准。
 
+## 从公开 Alpha 安装
+
+当前公开入口是[GitHub Release v0.1.0a2](https://github.com/RalfNick/ralf-agent/releases/tag/v0.1.0a2)，尚未发布到PyPI。以下精确wheel URL与SHA已在源码目录外的新环境实际安装，审批、崩溃恢复和重复提交通过：
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install 'https://github.com/RalfNick/ralf-agent/releases/download/v0.1.0a2/ralf_agent-0.1.0a2-py3-none-any.whl#sha256=dfac0e38b2a879d8eb0c23dd5889774a0d64860c9ffe1945f9ef945629f95a46'
+ralf --version
+ralf --format text init my-agent
+```
+
+Release同时提供原sdist和只列这两包的`SHA256SUMS`。公开安装实测为macOS ARM64／Python3.12、正常PyPI基础依赖解析；Linux ARM64／原生AMD64三Python版本使用冻结依赖门禁分别验收。具体范围和原失败见[公开交付记录](../architecture/reviews/2026-10-22-alpha2-public-release.md)。
+
 ## 从源码安装
 
 ```bash
@@ -17,7 +31,7 @@ ralf --version
 
 基础运行依赖为 `httpx` 和 `jsonschema`。默认 SQLite、离线 Demo 与独立 starter 不需要模型密钥或外部服务。安装后按[首用教程](getting-started.md)完成提交、审批与恢复。
 
-上面的 clone 命令演示源码安装方式。发行源码`1b72c05`已按授权推送；本轮未公开发行wheel／sdist。要复现交付请使用下方精确wheel，或对应源码提交，并核对`ralf --version`。制品的固定来源、平台和追加测试校正见[验证清单](alpha2-validation-status.md)，不能仅凭远端分支名称推导同一验收范围。
+上面的 clone 命令演示源码安装方式。公开Tag`v0.1.0a2`固定验收代码`3a92720`；默认分支另维护最新安装文档。要复现交付请使用下方精确wheel，或对应源码提交，并核对`ralf --version`。制品的固定来源、平台和追加测试校正见[验证清单](alpha2-validation-status.md)，不能仅凭远端分支名称推导同一验收范围。
 
 ## 从本地 wheel 安装
 
@@ -31,7 +45,7 @@ ralf --version
 ralf init my-agent
 ```
 
-当前推荐 0.1.0a2 的 Local 基础 SDK 本地候选，目录及 SHA 校验见[发布指南](releasing.md#当前a2本地交付)。dev123及更早目录属于历史制品，不要仅按同名 wheel 选择。本项目文档尚未核验公开 PyPI／GitHub Release 中的对应发行包，推荐使用源码或明确获得的 wheel。wheel 包含独立工程生成器，仓库 `examples/` 通过源码获取。
+当前推荐公开的 0.1.0a2 Local 基础 SDK Alpha，目录及 SHA 校验见[发布指南](releasing.md#当前a2本地交付)。dev123及更早目录属于历史制品，不要仅按同名 wheel 选择。GitHub Release的对应原包已公开核验；PyPI未发布。wheel 包含独立工程生成器，仓库 `examples/` 通过源码获取。
 
 ## 按需安装可选依赖
 

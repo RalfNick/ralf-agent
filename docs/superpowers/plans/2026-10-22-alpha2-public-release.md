@@ -33,10 +33,10 @@
 
 **Interfaces:** Existing `stage(release_id, output, spec, fetch_json, fetch_blob)` remains unchanged; select the private staging prefix by the fixed supported Alpha version.
 
-- [ ] Add and run RED tests for a2 exact draft acceptance, version/prefix mismatch and unsupported version rejection.
-- [ ] Make the minimal staging change, retaining a1 behavior; run affected maintenance tests and static checks.
-- [ ] Run the original missing fingerprint inventory node using the immutable a2 wheel in a matching Temporal SDK environment; record exact SDK versions, artifact/node identities and result.
-- [ ] Commit the transport tool locally with one-shot hook bypass and `[skip ci]`; record immutable tool SHA for Task 2.
+- [x] Add and run RED tests for a2 exact draft acceptance, version/prefix mismatch and unsupported version rejection.
+- [x] Make the minimal staging change, retaining a1 behavior; run affected maintenance tests and static checks.
+- [x] Run the original missing fingerprint inventory node using the immutable a2 wheel in a matching Temporal SDK environment; record exact SDK versions, artifact/node identities and result.
+- [x] Commit the transport tool locally with one-shot hook bypass and `[skip ci]`; record immutable tool SHA for Task 2.
 
 ### Task 2: Native AMD64 fixed gate
 
@@ -44,10 +44,10 @@
 
 **Interfaces:** New a2 workflow names, a2 asset names, private draft prefix and Actions artifact name; both workflows pin Task 1's immutable tools commit. a1 workflows remain unchanged.
 
-- [ ] Add and run RED tests for manual-only triggers, exact checkout, existing action SHAs, resource/native gate command and a1 preservation.
-- [ ] Derive a2 workflows from the already accepted a1 workflows; run affected tests and static/YAML validation.
-- [ ] Push only necessary reviewed commits as RalfNick; create an unpublished staging draft with the two original assets, dispatch staging, verify resulting hashes and dispatch fixed native gate.
-- [ ] Download real reports and inspect all three JUnits, platform/config/serial timestamps, cleanup and artifact identities. Retain any failures and diagnose before proceeding.
+- [x] Add and run RED tests for manual-only triggers, exact checkout, existing action SHAs, resource/native gate command and a1 preservation.
+- [x] Derive a2 workflows from the already accepted a1 workflows; run affected tests and static/YAML validation.
+- [x] Push only necessary reviewed commits as RalfNick; create an unpublished staging draft with the two original assets, dispatch staging, verify resulting hashes and dispatch fixed native gate.
+- [x] Download real reports and inspect all three JUnits, platform/config/serial timestamps, cleanup and artifact identities. Retain any failures and diagnose before proceeding.
 
 ### Task 3: Public Alpha delivery and installed recovery
 
@@ -55,10 +55,10 @@
 
 **Interfaces:** Public GitHub prerelease `v0.1.0a2`, exact original wheel/sdist and artifact-only checksums; anonymous download URL. PyPI is a separate target requiring actual verified control.
 
-- [ ] Verify repository publication permission, absent/conflict-free tag, fixed source tree, all gate results, license and release notes; prepare exact release assets and source/tag identity.
-- [ ] Publish the verified prerelease, preserving all historic artifacts and evidence. Remove only this session's unused staging draft after proof is retained; do not delete unknown resources.
-- [ ] Download publicly without credentials, verify SHA, install into a fresh external environment, and run version, starter approval/duplicate/recovery and continuous example checks.
-- [ ] Update status/docs to actual results and boundaries, perform final independent review and checks, and commit/push the release evidence docs with `[skip ci]`.
+- [x] Verify repository publication permission, absent/conflict-free tag, fixed source tree, all gate results, license and release notes; prepare exact release assets and source/tag identity.
+- [x] Publish the verified prerelease, preserving all historic artifacts and evidence. Remove only this session's unused staging draft after proof is retained; do not delete unknown resources.
+- [x] Download publicly without credentials, verify SHA, install into a fresh external environment, and run version, starter approval/duplicate/recovery and continuous example checks.
+- [x] Update status/docs to actual results and boundaries, perform final independent review and checks, and commit/push the release evidence docs with `[skip ci]`.
 
 ## Execution rulings and ledger
 

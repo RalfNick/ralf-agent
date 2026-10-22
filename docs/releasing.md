@@ -1,6 +1,8 @@
 # 预览版本验证与发布
 
-**当前推荐：`0.1.0a2` Local SDK Alpha 本地候选。** 包含`8e09ec7`的近期修复，SDK仅版本调整；范围见[当前Alpha说明](releases/0.1.0a2.md)。发行源码`1b72c05`已按授权推送；原a1、dev19及全部失败分别保留。本轮追加验证不推送或公开发布，平台关口、门禁修订2与当前结果见[验证清单](alpha2-validation-status.md)，不能沿用原a1成绩。
+**当前推荐：`0.1.0a2` Local SDK Alpha。** 包含`8e09ec7`的近期修复，SDK仅版本调整；范围见[当前Alpha说明](releases/0.1.0a2.md)。发行源码`1b72c05`已按授权推送；原a1、dev19及全部失败分别保留。本轮已按新授权完成必要推送、固定CI与GitHub预发行，平台关口、门禁修订2与当前结果见[验证清单](alpha2-validation-status.md)，不能沿用原a1成绩。
+
+**公开入口：** [v0.1.0a2](https://github.com/RalfNick/ralf-agent/releases/tag/v0.1.0a2)，精确wheel URL及实测安装步骤见[安装指南](installation.md#从公开-alpha-安装)。Tag固定验收代码3a92720；当前文档维护不移动Tag或改写原包。GitHub预发行及匿名安装已完成，PyPI未发布。验收见[公开交付记录](../architecture/reviews/2026-10-22-alpha2-public-release.md)。
 
 ## 当前a2本地交付
 
@@ -24,7 +26,7 @@ python3.12 tools/release_preflight.py \
   --sdist /ABS/ralf_agent-0.1.0a2.tar.gz --output /ABS/new-a2-handoff
 ```
 
-本地预检须返回0、`passed_local_preflight`且复制后摘要正确；它检查来源产品、版本和许可证，不运行平台门禁，`publication_ready`保持false。本地实际安装、311／16／2、sdist离线重建及连续示例由独立报告取证。Linux ARM64三Python版本已按原包及第2版门禁通过；原生AMD64、远端a2 CI、项目权限、最终Tag、公开发行及公开安装分别待验，不能由本地报告代签。到远端CI交接边界停止，未经后续授权不上传、触发或发布。
+本地预检须返回0、`passed_local_preflight`且复制后摘要正确；它检查来源产品、版本和许可证，不运行平台门禁，`publication_ready`保持false。本地实际安装、311／16／2、sdist离线重建及连续示例由独立报告取证。Linux ARM64和原生AMD64三Python版本均按原包／第2版门禁通过；远端a2 CI、GitHub权限／Tag／预发行及匿名安装由各自实际报告验收。预检输出的`publication_ready=false`及外部责任列表仅表示该工具不代签这些步骤，不是当前实时待办；当前状态以本页公开记录为准。
 
 原dev19的S2与指纹资格按原制品和环境引用；新a2不新增服务或模型质量成绩。兼容、旧Worker与未定位未知异常见[当前Alpha说明](releases/0.1.0a2.md#兼容与已知限制)。
 

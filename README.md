@@ -8,7 +8,7 @@ Ralf-Agent 把模型决策、工具调用、人工审批和业务结果保存为
 
 [快速开始](#快速开始) · [文档目录](docs/README.md) · [示例](examples/README.md) · [贡献指南](CONTRIBUTING.md) · [更新记录](CHANGELOG.md)
 
-> 当前为 **0.1.0a2 Alpha 本地候选**，API 与部署能力仍在演进。使用范围以[实现清单](docs/implementation-status.md)为准；不同后端与组合的验证范围分别记录。首版冻结范围、平台及未验收项见[Alpha说明](docs/releases/0.1.0a2.md)，本候选尚未公开发布。默认本地入门无需模型密钥、Redis、Temporal 或 Docker。
+> 当前为 **[0.1.0a2 Alpha](https://github.com/RalfNick/ralf-agent/releases/tag/v0.1.0a2)**，API 与部署能力仍在演进。使用范围以[实现清单](docs/implementation-status.md)为准；不同后端与组合的验证范围分别记录。首版冻结范围、平台及未验收项见[Alpha说明](docs/releases/0.1.0a2.md)，已通过GitHub Release公开发行及匿名安装核对，尚未发布到PyPI。默认本地入门无需模型密钥、Redis、Temporal 或 Docker。
 
 ## 为什么使用 Ralf-Agent
 
@@ -20,14 +20,12 @@ Ralf-Agent 把模型决策、工具调用、人工审批和业务结果保存为
 
 ## 快速开始
 
-需要 Python 3.11+，本地开发使用 Linux 或 macOS。从源码安装：
+需要 Python 3.11+，已验收平台见[Alpha说明](docs/releases/0.1.0a2.md)。从公开的精确wheel安装：
 
 ```bash
-git clone https://github.com/RalfNick/ralf-agent.git
-cd ralf-agent
 python3 -m venv .venv
 source .venv/bin/activate
-python -m pip install -e .
+python -m pip install 'https://github.com/RalfNick/ralf-agent/releases/download/v0.1.0a2/ralf_agent-0.1.0a2-py3-none-any.whl#sha256=dfac0e38b2a879d8eb0c23dd5889774a0d64860c9ffe1945f9ef945629f95a46'
 ralf --db .ralf/demo.sqlite --format text demo --ticket INC-001
 ```
 

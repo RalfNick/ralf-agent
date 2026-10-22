@@ -1,6 +1,6 @@
 # 可复现的 Local SDK 发布门禁
 
-**当前候选：`0.1.0a2`。** 默认`tools/release_gate_manifest.json`固定新候选，原a1 manifest逐字节保存在`tools/release_gate_manifest.alpha1.json`。原a1完整通过成绩仍只属于原包；原a1手动工作流固定checkout到`0b9b6c9`，不处理a2。当前不触发远端CI或公开发布。
+**当前发行：`0.1.0a2`。** 默认`tools/release_gate_manifest.json`固定新候选，原a1 manifest逐字节保存在`tools/release_gate_manifest.alpha1.json`。原a1完整通过成绩仍只属于原包；原a1手动工作流固定checkout到`0b9b6c9`，不处理a2。本轮已按用户授权完成独立a2手动CI及GitHub预发行；见[公开交付](../architecture/reviews/2026-10-22-alpha2-public-release.md)。
 
 **当前门禁修订：2。** 原a2 manifest保存在`tools/release_gate_manifest.alpha2-original.json`，原包和原交付目录不覆盖。首轮Linux3.13发现一个终态Run立即要求Session空闲的测试竞态；第2版只对原测试文件应用固定摘要及唯一文本替换，改为1秒有界观察Session空闲，不改SDK、node身份、业务断言或资源／期限。新报告须记录该校正，不称原测试未经校正通过；当前状态与原失败见[追加验证清单](alpha2-validation-status.md)。
 
@@ -12,7 +12,7 @@
 | --- | --- |
 | macOS ARM64／Python3.12 | a2原第1版门禁311＋16及两starter通过；见原`delivery.json`，不套用旧a1成绩 |
 | Linux ARM64／Python3.11–3.13 | a2第2版门禁三版本各311＋16及两starter通过，零失败／错误／跳过／OOM；2CPU／2GiB／swap0、串行断网，最高326.48MiB；见[本轮验收](../architecture/reviews/2026-10-22-alpha2-validation-audit.md) |
-| 原生Linux AMD64／Python3.11–3.13 | 待新a2实际报告，须`--require-native`；远端执行另行授权 |
+| 原生Linux AMD64／Python3.11–3.13 | a2三版本各311＋16及两starter通过，零失败／错误／跳过／OOM，最高288.33MiB；实际`--require-native`、2CPU／2GiB、串行断网；[run39715385289](https://github.com/RalfNick/ralf-agent/actions/runs/39715385289) |
 | Windows及其他平台／Python | 未验收 |
 
 两包使用独立a2版本及精确SHA，manifest还记录产品树、测试输入树和构建工作区来源。sdist内的manifest是构建输入快照，最终放行使用交付目录`gate/`或最终维护checkout的外置manifest；这是避免sdist自身SHA循环，不是允许换包或降低校验。
@@ -27,9 +27,9 @@ python3.12 tools/release_gate.py \
   --wheelhouse /ABS/locked-wheelhouse --output /ABS/new-a2-macos-evidence
 ```
 
-后续经授权在本机Linux ARM64或原生AMD64使用原`run_release_gate_linux.py`，参数沿用下方原流程，仅替换a2两包与外置工具套件；不修改镜像digest、依赖锁、311／16身份或资源限制。原`alpha1-*`远端工作流仅服务历史a1，不可用于a2后冒称当前版本通过。本批完成本地交接后停止，远端a2入口与实际运行待授权。
+后续经授权在本机Linux ARM64或原生AMD64使用原`run_release_gate_linux.py`，参数沿用下方原流程，仅替换a2两包与外置工具套件；不修改镜像digest、依赖锁、311／16身份或资源限制。原`alpha1-*`远端工作流仅服务历史a1，不可用于a2后冒称当前版本通过。独立[alpha2门禁](../.github/workflows/alpha2-release-gate.yml)与[暂存入口](../.github/workflows/alpha2-stage-candidate.yml)固定dfb066e，只手动执行；原a1入口保持历史身份。实际a2暂存run39715289979及原生run39715385289已完成，不以工作流存在代替通过。
 
-公开安装、独立采用、真实模型和未选服务另行验收，见[当前Alpha范围](releases/0.1.0a2.md)。
+公开GitHub安装已独立核验；独立采用、真实模型扩展质量和未选服务另行验收，见[当前Alpha范围](releases/0.1.0a2.md)。
 
 ## 历史a1流程与原制品记录
 

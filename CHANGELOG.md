@@ -1,11 +1,12 @@
 # Changelog
 
-## 0.1.0a2 — Local SDK Alpha candidate (not published)
+## 0.1.0a2 — Alpha (2026-10-22)
 
 - Freeze the runtime fixes accepted in `8e09ec7` as a distinct Alpha candidate; change only the package version in SDK sources. Preserve the original a1 artifacts and their platform evidence.
 - Align the current installation, release and capability documentation, and a separate wheel/sdist with a fixed external artifact manifest. Retain the original 311 basic checks, 16 recovery checks, two starters and dependency lock.
 - Record the dev19 selected S2 18/18 and prior fingerprint qualification as separate historical evidence, with matching-Worker and unknown-effect restrictions. These are not new-package or cross-platform qualifications.
-- New candidate local results are recorded in the closeout and delivery receipts. Linux, remote CI, public publication and public installation remain separate pending gates. No new runtime feature or dependency.
+- Publish the exact original wheel/sdist and artifact checksums through GitHub prerelease v0.1.0a2. Native AMD64 and ARM64 Python3.11–3.13 gates each pass311/16/two starters; anonymous public-URL installation, both original recovery starters and five-stage replay checks pass.
+- Qualify the optional Temporal fingerprint inventory node separately in three matching SDK environments. Source regression:14,003 passed/891 conditional skips; preserve the sandbox failures and all historical evidence. No new runtime feature or dependency; PyPI remains unpublished.
 
 ## 0.1.0a1 — Local SDK Alpha candidate (not published)
 

@@ -1,6 +1,6 @@
-# Implementation status — 0.1.0a2 candidate
+# Implementation status — 0.1.0a2 Alpha
 
-**当前发行候选（2026-10-22）：** `0.1.0a2`包含`8e09ec7`的近期修复，SDK仅改版本；当前范围、制品和本地放行要求见[Alpha说明](releases/0.1.0a2.md)及[当前交付](releasing.md#当前a2本地交付)。本地结果由独立delivery／门禁报告登记；本轮Linux ARM64三Python版本同包各311＋16及两starter通过，门禁修订2仅校正Session测试竞态；指纹缓存最小SDK96项另行跨三版本通过，另1项缺Temporal可选SDK未验收。原生AMD64／远端a2 CI、公开发行和公开安装仍待各自验收，见[验证与待处理清单](alpha2-validation-status.md)。原a1及dev19原包、全部历史失败和未知义务保留。
+**当前公开Alpha（2026-10-22）：** [0.1.0a2](https://github.com/RalfNick/ralf-agent/releases/tag/v0.1.0a2)已由RalfNick发行，原两包及SDK不改。原生AMD64／ARM64三Python版本分别各311＋16及两starter通过；Temporal指纹单项已按匹配SDK独立补验。公开URL普通安装、两条恢复starter和五阶段重复提交通过；额外源码全量14,003通过／891条件跳过。PyPI、独立采用和完整M1未验收；详见[当前验证清单](alpha2-validation-status.md)及[公开交付记录](../architecture/reviews/2026-10-22-alpha2-public-release.md)。原a1／dev19及全部历史失败和未知义务保留。
 
 **S2本批验收（2026-10-22）：** 私有`0.1.0a2.dev19`同包首项通过后，剩余17项全部通过，正式18/18；并行Session.status、递归第二Turn ready80和完整关闭、冷交接及全部故障通过。无筛选隔离安装全量13,991通过／891按原条件跳过，受影响源码／安装各2,477通过／29跳过；32份新旧业务History及两份默认History分别重放通过。P3-2/S2所选技术门槛闭环，按既有规则以本轮本地提交作为第三阶段冻结交付点。所有原失败、未知义务和原期限保留；原dev18偶发未知异常原因仍未确定，真实模型、任意历史Worker、完整企业及长期R01–R26不由此验收。详见[最终核对](../architecture/reviews/2026-10-21-s2-session-parent-hints.md#最终核对与交付边界2026-10-22)；不推送或公开发布。
 
