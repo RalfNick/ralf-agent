@@ -1,0 +1,561 @@
+.docs-shell {
+  width: min(1328px, calc(100% - 72px));
+  margin: auto;
+  display: grid;
+  grid-template-columns: 220px minmax(0, 1fr) 180px;
+  gap: 48px;
+  align-items: start;
+}
+.docs-sidebar {
+  position: sticky;
+  top: 80px;
+  max-height: calc(100vh - 80px);
+  overflow-y: auto;
+  padding: 44px 0 40px;
+  border-right: 1px solid var(--line);
+  min-height: calc(100vh - 80px);
+}
+.docs-sidebar .sidebar-label {
+  font: 9px var(--mono);
+  letter-spacing: 1.5px;
+  color: #91acbf;
+  margin-bottom: 20px;
+  font-size: 11px;
+}
+.docs-nav-group > p {
+  color: #91adbf;
+  font-size: 12px;
+  margin: 20px 13px 8px;
+}
+.docs-nav-group:first-child > p {
+  margin-top: 0;
+}
+.docs-mobile-group {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 5px;
+  min-width: 0;
+}
+.docs-mobile-group > p {
+  grid-column: 1 / -1;
+  color: #a7c4d2;
+  font-size: 12px;
+  margin: 12px 10px 4px;
+}
+.docs-mobile-group a {
+  min-width: 0;
+  min-height: 44px;
+  overflow-wrap: anywhere;
+}
+.docs-sidebar a {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 13px;
+  padding: 10px 13px;
+  margin: 3px 19px 3px 0;
+  color: #a4bfd0;
+  border-radius: 4px;
+  line-height: 1.6;
+}
+.docs-sidebar a:hover {
+  color: #c8dbe4;
+  background: #152533;
+}
+.docs-sidebar a[aria-current="page"] {
+  background: #16303a;
+  color: #a7e5e6;
+  border-left: 2px solid #8fd9de;
+  padding-left: 11px;
+}
+.docs-sidebar a span {
+  font: 8px var(--mono);
+  color: #4d748a;
+  min-width: 16px;
+}
+.docs-sidebar .sidebar-external {
+  margin-top: 25px;
+  padding-top: 20px;
+  border-top: 1px solid var(--line);
+  margin-right: 20px;
+}
+.docs-sidebar .sidebar-external a {
+  font-size: 12px;
+  padding: 7px 10px;
+  margin: 0;
+  color: #a4bfd0;
+}
+.doc-article {
+  min-width: 0;
+  padding: 45px 0 70px;
+}
+.breadcrumbs {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  color: #9db6c8;
+  font-size: 12px;
+  margin-bottom: 23px;
+}
+.breadcrumbs a {
+  color: #8bbbc8;
+}
+.doc-eyebrow {
+  font: 9px var(--mono);
+  color: #90aebf;
+  letter-spacing: 1.3px;
+  margin-bottom: 12px;
+  font-size: 11px;
+}
+.doc-title {
+  font-size: 36px;
+  line-height: 1.35;
+  letter-spacing: -1px;
+  margin-bottom: 15px;
+  color: #e0edf4;
+}
+.doc-version {
+  margin: -14px 0 28px;
+  color: #94afc1;
+  font-size: 12px;
+  line-height: 1.8;
+  overflow-wrap: anywhere;
+}
+.doc-version a { color: #8bbbc8; text-decoration: underline; }
+.doc-description {
+  font-size: 15px;
+  color: #9fb7ca;
+  line-height: 1.9;
+  padding-bottom: 28px;
+  border-bottom: 1px solid var(--line);
+  margin-bottom: 30px;
+}
+.prose {
+  font-size: 15px;
+  line-height: 1.9;
+  color: #a9becf;
+  overflow-wrap: anywhere;
+}
+.prose h2 {
+  font-size: 23px;
+  color: #dae9f1;
+  font-weight: 550;
+  line-height: 1.5;
+  margin: 40px 0 15px;
+  letter-spacing: -0.4px;
+  scroll-margin-top: 105px;
+}
+.prose h3 {
+  font-size: 18px;
+  color: #d2e5ef;
+  line-height: 1.6;
+  margin: 28px 0 12px;
+  scroll-margin-top: 105px;
+}
+.prose p {
+  margin: 16px 0;
+}
+.prose a {
+  color: #a1dce3;
+  text-decoration: underline;
+  text-decoration-color: #3c6a7a;
+  text-underline-offset: 3px;
+}
+.prose a:hover {
+  text-decoration-color: var(--cyan);
+}
+.prose strong {
+  color: #d1e4ee;
+  font-weight: 550;
+}
+.prose ul,
+.prose ol {
+  padding-left: 22px;
+  margin: 17px 0;
+}
+.prose li {
+  margin: 7px 0;
+  padding-left: 3px;
+}
+.prose :not(pre) > code {
+  font-size: 0.85em;
+  color: #b4d4e5;
+  background: #152432;
+  border: 1px solid #243a4c;
+  border-radius: 4px;
+  padding: 2px 5px;
+  white-space: normal;
+}
+.prose pre {
+  font-size: 13px;
+  line-height: 1.9;
+  border: 1px solid #283c50;
+  border-radius: 6px;
+  padding: 22px 18px;
+  background: #0b1420 !important;
+  overflow: auto;
+  margin: 24px 0;
+}
+.prose pre code {
+  font-family: var(--mono);
+}
+.prose blockquote {
+  margin: 23px 0;
+  padding: 8px 19px;
+  border: 1px solid #284454;
+  border-left: 3px solid #7abac4;
+  border-radius: 3px;
+  background: #0e253044;
+  color: #aacbd9;
+  font-size: 13px;
+}
+.prose blockquote p {
+  margin: 9px 0;
+}
+.prose .table-wrap {
+  overflow-x: auto;
+  margin: 24px 0;
+}
+.prose table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  margin: 24px 0;
+  display: block;
+  overflow: auto;
+}
+.prose th,
+.prose td {
+  border: 1px solid #283a4d;
+  padding: 11px 13px;
+  text-align: left;
+  min-width: 100px;
+}
+.prose th {
+  color: #b5d1e2;
+  background: #122330;
+  font-weight: 500;
+}
+.prose td {
+  background: #0c1723;
+}
+.doc-toc {
+  position: sticky;
+  top: 115px;
+  padding-top: 3px;
+}
+.doc-toc p {
+  font: 8px var(--mono);
+  letter-spacing: 1px;
+  color: #9bb8c9;
+  margin-bottom: 17px;
+  font-size: 11px;
+}
+.doc-toc ul {
+  padding: 0;
+  list-style: none;
+  margin: 0;
+  border-left: 1px solid #283c4e;
+}
+.doc-toc li {
+  margin: 0;
+}
+.doc-toc a {
+  font-size: 13px;
+  color: #9cb8ca;
+  display: block;
+  padding: 7px 0 7px 16px;
+  line-height: 1.7;
+}
+.doc-toc a:hover,
+.doc-toc a[aria-current] {
+  color: #aadbe2;
+}
+.doc-toc li.nested a {
+  padding-left: 25px;
+  font-size: 12px;
+}
+.doc-sources {
+  margin-top: 38px;
+  padding: 20px 0;
+  border-block: 1px solid var(--line);
+  font-size: 12px;
+  color: #94afc1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 9px 16px;
+}
+.doc-sources a {
+  color: #8ab2c5;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.doc-pagination {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  padding-top: 25px;
+}
+.doc-pagination a {
+  border: 1px solid #284054;
+  border-radius: 5px;
+  padding: 15px 18px;
+  min-width: 35%;
+  font-size: 14px;
+  color: #a3c9d9;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.doc-pagination a:hover {
+  border-color: #5d8a9c;
+  background: #112331;
+}
+.doc-pagination a:last-child {
+  margin-left: auto;
+  text-align: right;
+  justify-content: flex-end;
+}
+.doc-pagination small {
+  display: block;
+  font-size: 12px;
+  color: #91acbf;
+  margin-bottom: 5px;
+}
+.docs-mobile-nav {
+  display: none;
+}
+.docs-page .site-footer {
+  position: relative;
+  z-index: 1;
+}
+.docs-page .footer-main {
+  padding-block: 32px;
+}
+@media (min-width: 1550px) {
+  .docs-shell {
+    width: min(1400px, calc(100% - 120px));
+    grid-template-columns: 230px minmax(0, 1fr) 190px;
+    gap: 60px;
+  }
+  .prose {
+    font-size: 15px;
+  }
+}
+@media (max-width: 1100px) {
+  .docs-shell {
+    width: calc(100% - 48px);
+    grid-template-columns: 190px minmax(0, 1fr);
+    gap: 35px;
+  }
+  .doc-toc {
+    display: none;
+  }
+  .docs-sidebar a {
+    font-size: 13px;
+    margin-right: 15px;
+    padding-inline: 10px;
+    color: #a4bfd0;
+  }
+  .doc-title {
+    font-size: 32px;
+  }
+  .prose pre {
+    font-size: 13px;
+  }
+}
+@media (max-width: 800px) {
+  .docs-shell {
+    width: calc(100% - 40px);
+    grid-template-columns: 160px minmax(0, 1fr);
+    gap: 25px;
+  }
+  .docs-sidebar {
+    top: 68px;
+    min-height: calc(100vh - 68px);
+    max-height: calc(100vh - 68px);
+    padding-top: 30px;
+  }
+  .docs-sidebar a {
+    font-size: 13px;
+    padding: 8px;
+    gap: 5px;
+    margin-right: 12px;
+    color: #a4bfd0;
+  }
+  .docs-sidebar a span {
+    font-size: 7px;
+    min-width: 13px;
+  }
+  .docs-sidebar .sidebar-label {
+    font-size: 11px;
+    color: #91acbf;
+  }
+  .doc-article {
+    padding-top: 32px;
+  }
+  .doc-title {
+    font-size: 29px;
+  }
+  .doc-description {
+    font-size: 15px;
+    color: #9fb7ca;
+  }
+  .prose {
+    font-size: 15px;
+  }
+  .prose h2 {
+    font-size: 21px;
+  }
+  .prose h3 {
+    font-size: 17px;
+  }
+  .prose pre {
+    font-size: 13px;
+    padding-inline: 13px;
+  }
+  .doc-pagination a {
+    font-size: 14px;
+    padding: 12px;
+    gap: 8px;
+  }
+}
+@media (max-width: 580px) {
+  .docs-shell {
+    width: calc(100% - 36px);
+    display: block;
+  }
+  .docs-sidebar {
+    display: none;
+  }
+  .docs-mobile-nav {
+    display: block;
+    border-bottom: 1px solid var(--line);
+    background: #0e1a27;
+  }
+  .docs-mobile-nav > summary {
+    padding: 13px 20px;
+    cursor: pointer;
+    font-size: 14px;
+    color: #9ac6d6;
+  }
+  .docs-mobile-nav > nav {
+    padding: 0 20px 15px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 5px;
+  }
+  .docs-mobile-nav a {
+    font-size: 13px;
+    padding: 8px;
+    color: #7899b1;
+    border-radius: 4px;
+  }
+  .docs-mobile-nav a[aria-current="page"] {
+    color: var(--cyan);
+    background: #18333e;
+  }
+  .doc-article {
+    padding-top: 29px;
+    padding-bottom: 45px;
+  }
+  .doc-title {
+    font-size: 29px;
+  }
+  .doc-description {
+    font-size: 15px;
+    padding-bottom: 23px;
+    margin-bottom: 23px;
+    color: #9fb7ca;
+  }
+  .prose {
+    font-size: 15px;
+    line-height: 1.95;
+  }
+  .prose pre {
+    font-size: 13px;
+    padding: 27px 12px 18px;
+    margin-block: 20px;
+  }
+  .prose h2 {
+    font-size: 21px;
+    margin-top: 32px;
+  }
+  .prose h3 {
+    font-size: 17px;
+  }
+  .prose table {
+    font-size: 13px;
+  }
+  .prose th,
+  .prose td {
+    padding: 9px 10px;
+  }
+  .prose blockquote {
+    font-size: 13px;
+    padding-inline: 14px;
+    color: #aacbd9;
+  }
+  .doc-pagination {
+    gap: 10px;
+  }
+  .doc-pagination a {
+    padding: 12px 10px;
+    font-size: 14px;
+    min-width: 40%;
+  }
+  .doc-pagination small {
+    font-size: 12px;
+    color: #91acbf;
+  }
+  .breadcrumbs {
+    font-size: 12px;
+    color: #9db6c8;
+  }
+  .doc-sources {
+    font-size: 12px;
+    gap: 7px 12px;
+    color: #94afc1;
+  }
+  .doc-eyebrow {
+    font-size: 11px;
+    color: #90aebf;
+  }
+}
+
+@media (max-width: 580px) {
+  .prose {
+    font-size: 14px;
+  }
+  .doc-description {
+    font-size: 14px;
+  }
+  .prose pre {
+    font-size: 12px;
+  }
+  .prose th,
+  .prose td {
+    font-size: 13px;
+  }
+  .docs-mobile-nav > summary {
+    min-height: 48px;
+    padding-block: 13px;
+  }
+  .doc-pagination {
+    flex-wrap: wrap;
+  }
+  .doc-pagination a {
+    font-size: 13px;
+    min-height: 72px;
+    flex: 1;
+    min-width: 130px;
+  }
+  .doc-sources {
+    font-size: 12px;
+    line-height: 1.85;
+  }
+  .doc-pagination small {
+    font-size: 12px;
+  }
+}

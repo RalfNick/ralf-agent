@@ -1,0 +1,38 @@
+---
+import Icon from './Icon.astro';
+import Logo from './Logo.astro';
+import { brand, localeHref, repository, type Locale } from '../lib/site';
+interface Props { locale: Locale; docs?: boolean }
+const { locale, docs = false } = Astro.props;
+const zh = locale === 'zh';
+const home = `/${locale}/`;
+---
+<header class="site-header" data-pagefind-ignore>
+  <div class="header-inner">
+    <a href={home} class="brand" aria-label={brand.name}><Logo /></a>
+    <span class="alpha-badge">ALPHA</span>
+    <nav class="desktop-nav" aria-label={zh ? '主导航' : 'Main navigation'}>
+      <a href={`${home}#execution`}>{zh ? '执行演示' : 'Execution'}</a>
+      <a href={`${home}#capabilities`}>{zh ? '能力' : 'Capabilities'}</a>
+      <a href={`${home}docs/overview/`} aria-current={docs ? 'page' : undefined}>{zh ? '文档' : 'Docs'}</a>
+    </nav>
+    <div class="header-actions">
+      <button class="search-trigger icon-button" data-search-open aria-label={zh ? '搜索文档' : 'Search docs'}><Icon name="search" size={17}/><span>{zh ? '搜索' : 'Search'}</span><kbd>⌘ K</kbd></button>
+      <a class="language-switch" href={localeHref(Astro.url.pathname, zh ? 'en' : 'zh')} lang={zh ? 'en' : 'zh-CN'} aria-label={zh ? 'Switch to English' : '切换到中文'}><Icon name="globe" size={15}/>{zh ? 'EN' : '中'}</a>
+      <a class="github-link" href={repository} aria-label="GitHub"><Icon name="github" size={19}/></a>
+      <button class="menu-toggle icon-button" aria-label={zh ? '打开导航' : 'Open navigation'} data-open-label={zh ? '打开导航' : 'Open navigation'} data-close-label={zh ? '关闭导航' : 'Close navigation'} aria-expanded="false" aria-controls="mobile-nav"><Icon name="menu" /></button>
+    </div>
+  </div>
+  <nav id="mobile-nav" class="mobile-nav" hidden aria-label={zh ? '移动端导航' : 'Mobile navigation'}>
+    <a href={`${home}#execution`}>{zh ? '执行演示' : 'Execution'}</a><a href={`${home}#capabilities`}>{zh ? '能力' : 'Capabilities'}</a><a href={`${home}docs/overview/`}>{zh ? '阅读文档' : 'Documentation'}</a>
+    <a href={repository}>GitHub</a>
+  </nav>
+</header>
+<script>
+  const toggle = document.querySelector<HTMLButtonElement>('.menu-toggle');
+  const nav = document.querySelector<HTMLElement>('#mobile-nav');
+  const setOpen = (open: boolean) => { if (!toggle || !nav) return; toggle.setAttribute('aria-expanded', String(open)); toggle.setAttribute('aria-label', (open ? toggle.dataset.closeLabel : toggle.dataset.openLabel) ?? 'Navigation'); nav.hidden = !open; };
+  toggle?.addEventListener('click', () => setOpen(toggle.getAttribute('aria-expanded') !== 'true'));
+  nav?.querySelectorAll('a').forEach((a) => a.addEventListener('click', () => setOpen(false)));
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && nav && !nav.hidden) { setOpen(false); toggle?.focus(); } });
+</script>

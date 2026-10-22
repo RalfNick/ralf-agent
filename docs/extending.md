@@ -1,4 +1,4 @@
-# Ralf-Agent 扩展指南
+# Relf-Agent 扩展指南
 
 版本：0.1.0a2 Alpha 本地候选；更新：2026-10-22。面向 SDK／适配器开发者。本指南描述执行、装配、召回和知识端口；当前扩展组件与限制见 [实现清单](implementation-status.md)及[首版范围](releases/0.1.0a2.md)，企业适配与完整 M1 仍未验收。
 

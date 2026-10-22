@@ -2,7 +2,7 @@
 
 [文档目录](README.md) · [首用教程](getting-started.md) · [API 参考](api-reference.md)
 
-Ralf-Agent 将 Agent 定义、执行事实与业务效果分开保存。先用 Local 与 SQLite 理解下面的概念，再按需要选择编排和部署方式。
+Relf-Agent 将 Agent 定义、执行事实与业务效果分开保存。先用 Local 与 SQLite 理解下面的概念，再按需要选择编排和部署方式。
 
 ## 从定义到一次执行
 

@@ -1,0 +1,99 @@
+---
+import Icon from './Icon.astro';
+import { initialDemo } from '../lib/demo';
+import type { Locale } from '../lib/site';
+interface Props { locale: Locale }
+const { locale } = Astro.props;
+const zh = locale === 'zh';
+const steps = zh ? [
+  { title: '核对待批操作', short: '核对', detail: '查看工具、参数和摘要' },
+  { title: '保存人工批准', short: '批准', detail: '批准绑定到原 Action' },
+  { title: '重启执行宿主', short: '重启', detail: '新进程读取原记录' },
+  { title: '继续原任务', short: '恢复', detail: '采纳结果，完成原 Run' },
+] : [
+  { title: 'Review the operation', short: 'Review', detail: 'Inspect the tool, arguments and digest' },
+  { title: 'Record approval', short: 'Approve', detail: 'Approval belongs to the original action' },
+  { title: 'Restart the host', short: 'Restart', detail: 'A new process reads the saved records' },
+  { title: 'Continue the run', short: 'Resume', detail: 'Adopt the result and finish the run' },
+];
+const digest = `${initialDemo.operationDigest.slice(0, 8)}…${initialDemo.operationDigest.slice(-8)}`;
+---
+<section id="execution" class="execution-section section-pad container">
+  <div class="section-heading">
+    <div><div class="eyebrow"><span class="section-index">01 /</span> APPROVE / RESTART / RESUME</div><h2>{zh ? <>在关键操作前审批。<br/><span class="muted">重启后，依据记录继续。</span></> : <>Pause for approval.<br/><span class="muted">Resume from recorded evidence.</span></>}</h2></div>
+    <p>{zh ? '以工单变更为例：核对计划并批准，模拟宿主重启，再用已保存的批准继续原任务。点击下方按钮，走完这条路径。' : 'Try an illustrative ticket change: review and approve the plan, restart the host, then continue the original task with its recorded approval. Use the buttons below to follow the path.'}</p>
+  </div>
+  <div class="execution-demo" data-execution-demo data-locale={locale}>
+    <div class="demo-toolbar"><div class="window-dots"><i></i><i></i><i></i></div><span>oncall_agent / INC-001</span><span class="demo-tag"><i></i>{zh ? '浏览器示意' : 'BROWSER DEMO'}</span></div>
+    <div class="demo-grid">
+      <div class="demo-timeline"><div class="mini-label">{zh ? '演示阶段' : 'DEMO STAGES'}</div><ol>{steps.map((step, i) => <li data-demo-step={i} class:list={{ active: i === 0 }} aria-current={i === 0 ? 'step' : undefined}><span class="step-number">0{i + 1}</span><div><strong class="step-title-desktop">{step.title}</strong><strong class="step-title-mobile">{step.short}</strong><small>{step.detail}</small></div><span class="step-indicator"></span></li>)}</ol><a href={`/${locale}/docs/recovery/`}>{zh ? '查看真实恢复协议' : 'Read the recovery protocol'}<Icon name="arrow" size={16}/></a></div>
+      <div class="demo-console">
+        <div class="console-heading"><span class="mini-label">{zh ? '原任务记录' : 'ORIGINAL RUN'}</span><span class="run-state"><span>Run state</span><code data-demo-state>waiting_approval</code></span></div>
+        <div class="console-record">
+          <span>Run ID</span><code data-demo-identity>{initialDemo.runId}</code>
+          <span>Action ID</span><code data-demo-identity>{initialDemo.actionId}</code>
+          <span>{zh ? '操作摘要' : 'Digest'}</span><code data-demo-identity title={initialDemo.operationDigest}>{digest} <small>{zh ? '缩略' : 'shortened'}</small></code>
+          <span>{zh ? '工具' : 'Tool'}</span><code>apply_change</code>
+          <span>{zh ? '参数' : 'Arguments'}</span><code class="demo-arguments">{'{ "ticket": "INC-001",'}<br/>{'  "plan": "restart test cache" }'}</code>
+          <span>{zh ? '审批记录' : 'Approval'}</span><code data-demo-approval>{zh ? '待确认' : 'pending'}</code>
+          <span>{zh ? '演示宿主' : 'Demo host'}</span><code data-demo-host>process_01</code>
+        </div>
+        <p class="identity-note" data-demo-identity-note>{zh ? '示意 ID 与摘要：批准会绑定到这一个操作。' : 'Illustrative IDs and digest: approval will bind to this operation.'}</p>
+        <div class="demo-event-log"><ol data-demo-events aria-label={zh ? '示意事件记录' : 'Illustrative event history'}><li>{zh ? '工单已读取，变更操作等待审批。' : 'Ticket read. The change is awaiting approval.'}</li></ol><p data-demo-message aria-live="polite" aria-atomic="true">{zh ? '先核对工具、参数与摘要，再批准这次操作。' : 'Review the tool, arguments and digest before approving.'}</p></div>
+        <div class="demo-controls">
+          <button class="button button-primary" data-demo-action="approve">{zh ? '批准这次操作' : 'Approve this operation'}<Icon name="check" size={17}/></button>
+          <button class="button button-secondary" data-demo-action="restart" hidden>{zh ? '模拟宿主重启' : 'Simulate host restart'}<Icon name="restart" size={17}/></button>
+          <button class="button button-primary" data-demo-action="resume" hidden>{zh ? '恢复原任务' : 'Resume original run'}<Icon name="arrow" size={17}/></button>
+          <span class="demo-success" data-demo-success hidden><Icon name="check" size={18}/>{zh ? '示意写入完成 1 次' : '1 illustrative write completed'}</span>
+          <button class="reset-button" data-demo-action="reset">{zh ? '重置演示' : 'Reset demo'}<Icon name="restart" size={14}/></button>
+        </div>
+        <a class="demo-next text-link" data-demo-next href={`/${locale}/docs/quickstart/`} hidden>{zh ? '在本地运行这个流程' : 'Run this flow locally'}<Icon name="arrow" size={17}/></a>
+      </div>
+    </div>
+    <div class="demo-disclaimer"><span class="tiny-square"></span><p>{zh ? '固定数据的浏览器示意，不运行 Python、调用模型或执行业务写入。真实恢复需要原数据、匹配配置和业务证据；未知写效果仍需核验。' : 'Fixed browser-only data: no Python, model calls or business writes. Real recovery needs original data, matching configuration and business evidence; unknown writes still require reconciliation.'}</p></div>
+    <noscript><p class="demo-noscript">{zh ? '启用 JavaScript 可体验演示，或直接阅读' : 'Enable JavaScript to try the demo, or read the'} <a href={`/${locale}/docs/quickstart/`}>{zh ? '完整离线教程' : 'complete offline tutorial'}</a>.</p></noscript>
+  </div>
+</section>
+<script>
+  import { initialDemo, transitionDemo, type DemoEvent } from '../lib/demo';
+  const demo = document.querySelector<HTMLElement>('[data-execution-demo]');
+  if (demo) {
+    let state = { ...initialDemo };
+    const zh = demo.dataset.locale === 'zh';
+    const phases = ['waiting_approval', 'approved', 'interrupted', 'succeeded'];
+    const messages = zh ? {
+      waiting_approval: '先核对工具、参数与摘要，再批准这次操作。',
+      approved: '批准已保存，Run 状态为 running；工具尚未执行。现在模拟宿主重启。',
+      interrupted: '新宿主已读取原记录。Run 仍为 running，原批准、Action ID 和摘要保持一致。',
+      succeeded: '沿用已保存的批准，原任务继续并完成。本演示中的写入计数为 1。',
+    } : {
+      waiting_approval: 'Review the tool, arguments and digest before approving.',
+      approved: 'Approval recorded. The run is running; the tool has not executed yet. Now restart the host.',
+      interrupted: 'The new host read the records. The run is still running; approval, action ID and digest are unchanged.',
+      succeeded: 'The original run continued with its recorded approval and completed. This demo shows one write.',
+    };
+    const events = zh ? ['工单已读取，变更操作等待审批。', '人工批准已保存，并绑定到原操作摘要。', 'process_02 读取原 Run、Action 与审批记录。', '恢复原操作，保存结果，Run 完成。'] : ['Ticket read. The change is awaiting approval.', 'Approval saved and bound to the original digest.', 'process_02 read the original run, action and approval.', 'Original operation resumed, result recorded, run completed.'];
+    const update = () => {
+      const phase = phases.indexOf(state.phase);
+      demo.querySelectorAll<HTMLElement>('[data-demo-step]').forEach((step, i) => {
+        step.classList.toggle('active', i === phase); step.classList.toggle('complete', i < phase);
+        if (i === phase) step.setAttribute('aria-current', 'step'); else step.removeAttribute('aria-current');
+      });
+      const status = demo.querySelector('[data-demo-state]'); if (status) status.textContent = state.runState;
+      demo.dataset.phase = state.phase;
+      const approval = demo.querySelector('[data-demo-approval]'); if (approval) approval.textContent = state.approved ? (zh ? '已批准 · 记录已保存' : 'approved · recorded') : (zh ? '待确认' : 'pending');
+      const host = demo.querySelector('[data-demo-host]'); if (host) host.textContent = state.hostId;
+      const note = demo.querySelector('[data-demo-identity-note]'); if (note) note.textContent = phase >= 2 ? (zh ? '已从保存记录中重新读取：Run、Action、摘要与批准均保持一致。' : 'Reloaded from saved records: the run, action, digest and approval are unchanged.') : (zh ? '示意 ID 与摘要：批准会绑定到这一个操作。' : 'Illustrative IDs and digest: approval will bind to this operation.');
+      const message = demo.querySelector('[data-demo-message]'); if (message) message.textContent = messages[state.phase];
+      const history = demo.querySelector('[data-demo-events]'); if (history) history.replaceChildren(...events.slice(0, phase + 1).map((event) => { const item = document.createElement('li'); item.textContent = event; return item; }));
+      demo.querySelectorAll<HTMLButtonElement>('[data-demo-action]').forEach((button) => { const action = button.dataset.demoAction; button.hidden = action !== 'reset' && !((action === 'approve' && phase === 0) || (action === 'restart' && phase === 1) || (action === 'resume' && phase === 2)); });
+      const success = demo.querySelector<HTMLElement>('[data-demo-success]'); if (success) success.hidden = phase !== 3;
+      const next = demo.querySelector<HTMLElement>('[data-demo-next]'); if (next) next.hidden = phase !== 3;
+    };
+    demo.querySelectorAll<HTMLButtonElement>('[data-demo-action]').forEach((button) => button.addEventListener('click', () => {
+      state = transitionDemo(state, button.dataset.demoAction as DemoEvent); update();
+      if (state.phase === 'succeeded') demo.querySelector<HTMLAnchorElement>('[data-demo-next]')?.focus({ preventScroll: true });
+      else demo.querySelector<HTMLButtonElement>('[data-demo-action]:not([hidden])')?.focus({ preventScroll: true });
+    }));
+  }
+</script>

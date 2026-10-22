@@ -1,6 +1,6 @@
 # 贡献指南
 
-欢迎通过问题复现、文档、示例、测试和代码改进 Ralf-Agent。项目当前为 Python 开发预览；应用接入从[首用教程](docs/getting-started.md)开始，查找专题从[文档目录](docs/README.md)开始。
+欢迎通过问题复现、文档、示例、测试和代码改进 Relf-Agent。项目当前为 Python 开发预览；应用接入从[首用教程](docs/getting-started.md)开始，查找专题从[文档目录](docs/README.md)开始。
 
 ## 报告问题与提出需求
 
@@ -54,4 +54,4 @@ python -m build
 
 ## License
 
-Ralf-Agent 采用 [Apache License 2.0](LICENSE)。除非明确另行说明，主动提交用于纳入本项目的贡献按该许可证第 5 条提供。引入第三方材料时，保留适用的版权与归属声明，包括 [NOTICE](NOTICE)。
+Relf-Agent 采用 [Apache License 2.0](LICENSE)。除非明确另行说明，主动提交用于纳入本项目的贡献按该许可证第 5 条提供。引入第三方材料时，保留适用的版权与归属声明，包括 [NOTICE](NOTICE)。

@@ -1,16 +1,20 @@
-# Ralf-Agent
+# Relf-Agent
 
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache--2.0-blue.svg)](LICENSE)
 
-**可持久化审批与恢复的 Python Agent 框架。**
+**灵活构建智能体，可靠运行智能应用。**
 
-Ralf-Agent 把模型决策、工具调用、人工审批和业务结果保存为明确的执行步骤，让 Agent 任务在进程重启后继续。模型、工具、上下文、记忆和检索组件可以独立替换，从本地 SQLite 的单 Agent 逐步组合到 Workflow、Plan／Team 与 Temporal 执行。
+**Reliable and Extensible Lifecycle Framework for Intelligent Agents** — 可靠、可扩展的智能体全生命周期框架。
+
+Relf-Agent 把模型决策、工具调用、人工审批和业务结果保存为明确的执行步骤，让 Agent 任务在进程重启后继续。模型、工具、上下文、记忆和检索组件可以独立替换，从本地 SQLite 的单 Agent 逐步组合到 Workflow、Plan／Team 与 Temporal 执行。
+
+原项目名为 Ralf-Agent。本次更新展示品牌；安装包仍为 `ralf-agent`，Python 导入仍为 `ralf_agent`，命令仍为 `ralf`，仓库与已发布制品地址保持。详见[名称与兼容边界](docs/project-naming.md)。
 
 [快速开始](#快速开始) · [文档目录](docs/README.md) · [示例](examples/README.md) · [贡献指南](CONTRIBUTING.md) · [更新记录](CHANGELOG.md)
 
 > 当前为 **[0.1.0a2 Alpha](https://github.com/RalfNick/ralf-agent/releases/tag/v0.1.0a2)**，API 与部署能力仍在演进。使用范围以[实现清单](docs/implementation-status.md)为准；不同后端与组合的验证范围分别记录。首版冻结范围、平台及未验收项见[Alpha说明](docs/releases/0.1.0a2.md)，已通过GitHub Release公开发行及匿名安装核对，尚未发布到PyPI。默认本地入门无需模型密钥、Redis、Temporal 或 Docker。
 
-## 为什么使用 Ralf-Agent
+## 为什么使用 Relf-Agent
 
 - **审批后再执行：** 写工具声明效果类别和审批要求，批准绑定到具体操作与参数。
 - **保留任务进度：** 已保存的模型响应、工具回执和命令身份用于恢复原 Run，避免从头重跑整个任务。
@@ -121,4 +125,4 @@ Python 工具与配置工厂属于可信宿主代码。沙箱与服务身份需�
 
 ## 开源协议
 
-Ralf-Agent 采用 [Apache License 2.0](LICENSE)，第三方归属信息见 [NOTICE](NOTICE)。再分发与修改请遵循许可证要求；外部模型服务、模型权重和第三方依赖适用各自的许可或服务条款。贡献许可见 [CONTRIBUTING.md](CONTRIBUTING.md#license)。
+Relf-Agent 采用 [Apache License 2.0](LICENSE)，第三方归属信息见 [NOTICE](NOTICE)。再分发与修改请遵循许可证要求；外部模型服务、模型权重和第三方依赖适用各自的许可或服务条款。贡献许可见 [CONTRIBUTING.md](CONTRIBUTING.md#license)。

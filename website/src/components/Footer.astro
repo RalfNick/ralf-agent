@@ -1,0 +1,14 @@
+---
+import Logo from './Logo.astro';
+import Icon from './Icon.astro';
+import { brand, repository, repositoryUrl, type Locale } from '../lib/site';
+interface Props { locale: Locale }
+const { locale } = Astro.props; const zh = locale === 'zh';
+---
+<footer class="site-footer" data-pagefind-ignore>
+  <div class="footer-main container">
+    <div><a href={`/${locale}/`} class="brand" aria-label={brand.name}><Logo /></a><p>{brand.tagline[locale]}</p></div>
+    <div class="footer-links"><a href={`/${locale}/docs/quickstart/`}>{zh ? '运行离线示例' : 'Run offline example'}<Icon size={15}/></a><a href={repositoryUrl("docs", "tree")}>{zh ? '完整技术文档' : 'Technical docs (mixed languages)'}<Icon name="external" size={13}/></a><a href={`/${locale}/docs/api-reference/`}>{zh ? 'API 与 CLI' : 'API & CLI'}</a><a href={`/${locale}/docs/testing/`}>{zh ? '测试与评估' : 'Testing & evaluation'}</a><a href={repository}>GitHub<Icon name="external" size={13}/></a><a href={repositoryUrl("LICENSE")}>Apache 2.0<Icon name="external" size={13}/></a></div>
+  </div>
+  <div class="footer-bottom container"><span>© {new Date().getUTCFullYear()} {brand.name} contributors</span><span>Built in Python. Open by design.</span><span class="footer-status"><i></i> {zh ? 'Alpha · 持续构建中' : 'Alpha · Actively building'}</span></div>
+</footer>

@@ -1,0 +1,51 @@
+name: Website
+
+on:
+  pull_request:
+    paths:
+      - 'website/**'
+      - '.github/workflows/website.yml'
+      - 'README.md'
+      - 'docs/**'
+      - 'src/ralf_agent/**'
+      - 'pyproject.toml'
+  push:
+    paths:
+      - 'website/**'
+      - '.github/workflows/website.yml'
+      - 'README.md'
+      - 'docs/**'
+      - 'src/ralf_agent/**'
+      - 'pyproject.toml'
+
+permissions:
+  contents: read
+
+jobs:
+  static-website:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: website
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: website/package-lock.json
+      - run: npm ci
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -e .
+        working-directory: .
+      - run: npm run check
+      - run: npm test
+      - run: npm run docs:check
+      - run: npm run docs:examples
+      - run: npm run build
+      - run: npm run docs:links -- --remote
+      - run: npm run cf:check

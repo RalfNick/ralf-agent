@@ -1,0 +1,50 @@
+---
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import Search from '../components/Search.astro';
+import { brand, siteMetadata, localeHref, type Locale } from '../lib/site';
+import '../styles/global.css';
+interface Props { locale: Locale; title: string; description: string; docs?: boolean; noindex?: boolean }
+const { locale, title, description, docs = false, noindex = false } = Astro.props;
+const metadata = siteMetadata(import.meta.env.PUBLIC_SITE_URL, Astro.url.pathname === '/' ? '/zh/' : Astro.url.pathname);
+const indexable = metadata.indexable && !noindex;
+---
+<!doctype html>
+<html lang={locale === 'zh' ? 'zh-CN' : 'en'}>
+  <head>
+    <meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <meta name="theme-color" content="#080d17"/>
+    <title>{title}</title><meta name="description" content={description}/>
+    <meta name="robots" content={indexable ? 'index, follow' : 'noindex, nofollow'}/>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg"/>
+    {indexable && <><link rel="canonical" href={metadata.canonical}/><link rel="alternate" hreflang="zh-CN" href={`${metadata.origin}${localeHref(Astro.url.pathname, 'zh')}`}/><link rel="alternate" hreflang="en" href={`${metadata.origin}${localeHref(Astro.url.pathname, 'en')}`}/><link rel="alternate" hreflang="x-default" href={`${metadata.origin}${localeHref(Astro.url.pathname, 'zh')}`}/></>}
+    <meta property="og:type" content="website"/><meta property="og:site_name" content={brand.name}/><meta property="og:title" content={title}/><meta property="og:description" content={description}/><meta property="og:locale" content={locale === 'zh' ? 'zh_CN' : 'en_US'}/>
+    {indexable && <><meta property="og:url" content={metadata.canonical}/><meta property="og:image" content={`${metadata.origin}/og.png`}/><meta property="og:image:width" content="1200"/><meta property="og:image:height" content="630"/></>}
+    <meta name="twitter:card" content="summary_large_image"/>
+  </head>
+  <body class:list={{ 'docs-page': docs }}>
+    <a class="skip-link" href="#main">{locale === 'zh' ? '跳到正文' : 'Skip to content'}</a>
+    <Header locale={locale} docs={docs}/>
+    <slot/>
+    <Footer locale={locale}/>
+    <Search locale={locale}/>
+    <div class="copy-status sr-only" role="status" aria-live="polite"></div>
+    <script>
+      document.querySelectorAll<HTMLElement>('pre').forEach((pre) => {
+        if (pre.closest('[data-no-copy]')) return;
+        pre.tabIndex = 0;
+        pre.setAttribute('aria-label', document.documentElement.lang.startsWith('zh') ? '代码示例，可横向滚动' : 'Code example, scroll horizontally');
+        const button = document.createElement('button'); button.type = 'button'; button.className = 'code-copy';
+        const zh = document.documentElement.lang.startsWith('zh');
+        const label = zh ? '复制代码' : 'Copy code'; button.textContent = label; button.setAttribute('aria-label', label);
+        button.addEventListener('click', async () => {
+          try { await navigator.clipboard.writeText(pre.querySelector('code')?.textContent ?? ''); button.textContent = zh ? '已复制' : 'Copied'; }
+          catch { button.textContent = zh ? '请手动复制' : 'Select to copy'; }
+          const status = document.querySelector('.copy-status'); if (status) status.textContent = button.textContent;
+          setTimeout(() => { button.textContent = label; }, 2000);
+        });
+        const frame = document.createElement('div'); frame.className = 'code-frame'; pre.before(frame); frame.append(pre, button);
+      });
+    </script>
+  </body>
+</html>

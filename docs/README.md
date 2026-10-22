@@ -1,6 +1,8 @@
-# Ralf-Agent 文档
+# Relf-Agent 文档
 
 [项目首页](../README.md) · [示例目录](../examples/README.md) · [贡献指南](../CONTRIBUTING.md)
+
+可靠、可扩展的智能体全生命周期框架。展示名称由 Ralf-Agent 更新为 Relf-Agent；包名、导入路径与 CLI 保持，见[名称与兼容边界](project-naming.md)。
 
 第一次使用按“安装 → 首用教程 → 核心概念 → 选择功能指南”阅读。这里按使用任务组织现有文档；出现某项功能的链接表示有对应指南，支持范围仍以[实现清单](implementation-status.md)及各指南为准。
 

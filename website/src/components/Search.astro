@@ -1,0 +1,120 @@
+---
+import Icon from './Icon.astro';
+import type { Locale } from '../lib/site';
+interface Props { locale: Locale }
+const { locale } = Astro.props; const zh = locale === 'zh';
+---
+<dialog class="search-dialog" aria-labelledby="search-title" data-locale={locale} data-pagefind-ignore>
+  <div class="search-heading"><h2 id="search-title">{zh ? '搜索文档' : 'Search documentation'}</h2><button class="icon-button" data-search-close aria-label={zh ? '关闭搜索' : 'Close search'}><Icon name="close" /></button></div>
+  <div id="search-ui">
+    <form class="doc-search-form" role="search">
+      <label class="sr-only" for="search-query">{zh ? '搜索文档' : 'Search documentation'}</label>
+      <input id="search-query" class="doc-search-input" type="search" placeholder={zh ? '搜索安装、审批、恢复…' : 'Search installation, approvals, recovery…'} autocomplete="off" disabled aria-describedby="search-status"/>
+      <button class="doc-search-clear" type="button" data-search-clear>{zh ? '清空' : 'Clear'}</button>
+    </form>
+    <ol class="doc-search-results" aria-label={zh ? '搜索结果' : 'Search results'}></ol>
+  </div><p id="search-status" class="search-message" role="status" aria-live="polite"></p>
+  <div class="search-fallback" hidden><button class="button button-primary" data-search-retry>{zh ? '重试搜索' : 'Retry search'}<Icon name="restart" size={16}/></button><a class="button button-secondary" href={`/${locale}/docs/quickstart/`}>{zh ? '浏览文档' : 'Browse documentation'}<Icon name="book" size={16}/></a></div>
+  <div class="search-footer"><span>Pagefind · {zh ? '本地静态搜索' : 'Static local search'}</span><span><kbd>esc</kbd> {zh ? '关闭' : 'close'}</span></div>
+</dialog>
+<script>
+  const dialog = document.querySelector<HTMLDialogElement>('.search-dialog');
+  const message = document.querySelector<HTMLElement>('.search-message');
+  const fallback = document.querySelector<HTMLElement>('.search-fallback');
+  const retry = document.querySelector<HTMLButtonElement>('[data-search-retry]');
+  const input = document.querySelector<HTMLInputElement>('#search-query');
+  const results = document.querySelector<HTMLOListElement>('.doc-search-results');
+  const zh = dialog?.dataset.locale === 'zh';
+  interface SearchData { url: string; meta: { title?: string }; excerpt: string }
+  interface SearchIndex { search: (query: string) => Promise<{ results: { data: () => Promise<SearchData> }[] }>; destroy: () => Promise<void> }
+  let index: SearchIndex | null = null;
+  let loading = false;
+  let attempt = 0;
+  let request = 0;
+  let debounce: ReturnType<typeof setTimeout>;
+  let trigger: HTMLElement | null = null;
+  async function deadline<T>(operation: Promise<T>): Promise<T> {
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    try { return await Promise.race([operation, new Promise<never>((_, reject) => { timer = setTimeout(() => reject(new Error('Search request timed out')), 12000); })]); }
+    finally { clearTimeout(timer); }
+  }
+  function unavailable(error: unknown) {
+    const failed = index; index = null;
+    void failed?.destroy().catch(() => {});
+    results?.replaceChildren();
+    if (message) message.textContent = zh ? '搜索暂时不可用。你可以重试，或从文档目录继续浏览。' : 'Search is temporarily unavailable. Try again, or continue browsing the documentation.';
+    if (fallback) fallback.hidden = false;
+    if (import.meta.env.DEV) console.warn('Search unavailable', error);
+  }
+  async function search() {
+    const current = ++request;
+    const query = input?.value.trim() ?? '';
+    results?.replaceChildren();
+    if (!index) { dialog?.removeAttribute('aria-busy'); return; }
+    if (!query) { dialog?.removeAttribute('aria-busy'); if (message) message.textContent = zh ? '输入关键词，搜索当前语言的文档。' : 'Enter a keyword to search documentation in this language.'; return; }
+    if (message) message.textContent = zh ? '搜索中…' : 'Searching…';
+    dialog?.setAttribute('aria-busy', 'true');
+    const active = index;
+    try {
+      const data = await deadline((async () => {
+        const response = await active.search(query);
+        return Promise.all(response.results.map((result) => result.data()));
+      })());
+      if (current !== request) return;
+      data.forEach((item) => {
+        const url = new URL(item.url, window.location.origin);
+        if (url.origin !== window.location.origin || !url.pathname.startsWith(`/${zh ? 'zh' : 'en'}/docs/`)) return;
+        const row = document.createElement('li');
+        const link = document.createElement('a'); link.href = url.href; link.textContent = item.meta.title || item.url;
+        const excerpt = document.createElement('p'); excerpt.textContent = new DOMParser().parseFromString(item.excerpt, 'text/html').body.textContent;
+        row.append(link, excerpt); results?.append(row);
+      });
+      const count = results?.children.length ?? 0;
+      if (message) message.textContent = count ? (zh ? `找到 ${count} 条结果` : `${count} ${count === 1 ? 'result' : 'results'} found`) : (zh ? `没有找到“${query}”，请换一个关键词。` : `No results for “${query}”. Try another keyword.`);
+    } catch (error) { if (current === request) unavailable(error); }
+    finally { if (current === request) dialog?.removeAttribute('aria-busy'); }
+  }
+  async function loadSearch() {
+    if (!dialog || index || loading) return;
+    loading = true;
+    ++request; clearTimeout(debounce);
+    dialog.setAttribute('aria-busy', 'true');
+    if (input) input.disabled = true;
+    if (fallback) fallback.hidden = true;
+    if (retry) retry.disabled = true;
+    if (message) message.textContent = zh ? '正在加载搜索索引…' : 'Loading search index…';
+    try {
+      // Each retry gets a fresh module and instance; failed imports/chunks can otherwise remain cached.
+      const path = `/pagefind/pagefind.js${++attempt > 1 ? `?retry=${Date.now()}-${attempt}` : ''}`;
+      const module = await deadline(import(/* @vite-ignore */ path));
+      index = module.createInstance({ basePath: '/pagefind/' }) as SearchIndex;
+      const active = index;
+      // init() alone does not wait for the language index, query chunks or result fragments.
+      await deadline((async () => {
+        const probe = await active.search(zh ? '审批' : 'approval');
+        // The build makes Pagefind chunk failures reject in worker and fallback.
+        // This indexed term also checks actual metadata/wasm readiness.
+        if (!probe.results.length) throw new Error('Search index readiness check failed');
+        await probe.results[0].data();
+      })());
+    } catch (error) { unavailable(error); }
+    finally { loading = false; dialog.removeAttribute('aria-busy'); if (retry) retry.disabled = false; if (input) input.disabled = false; }
+    if (index) { if (dialog.open) input?.focus(); await search(); }
+  }
+  async function openSearch() {
+    if (!dialog || dialog.open) return;
+    trigger = document.activeElement as HTMLElement;
+    dialog.showModal();
+    if (index) input?.focus();
+    else await loadSearch();
+  }
+  input?.addEventListener('input', () => { ++request; clearTimeout(debounce); debounce = setTimeout(search, 200); });
+  document.querySelector('.doc-search-form')?.addEventListener('submit', (event) => { event.preventDefault(); clearTimeout(debounce); search(); });
+  document.querySelector('[data-search-clear]')?.addEventListener('click', () => { if (input) input.value = ''; clearTimeout(debounce); search(); input?.focus(); });
+  retry?.addEventListener('click', loadSearch);
+  document.querySelectorAll<HTMLElement>('[data-search-open]').forEach((button) => button.addEventListener('click', openSearch));
+  document.querySelector('[data-search-close]')?.addEventListener('click', () => dialog?.close());
+  dialog?.addEventListener('click', (e) => { if (e.target === dialog) { const r = dialog.getBoundingClientRect(); if (e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom) dialog.close(); } });
+  dialog?.addEventListener('close', () => trigger?.focus());
+  document.addEventListener('keydown', (e) => { if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); openSearch(); } });
+</script>

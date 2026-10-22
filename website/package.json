@@ -1,0 +1,32 @@
+{
+  "name": "relf-agent-website",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22.22.0"
+  },
+  "scripts": {
+    "dev": "astro dev --host 127.0.0.1",
+    "check": "astro check",
+    "test": "node --test tests/*.test.ts",
+    "build": "astro build && pagefind --site dist && node scripts/finalize-build.mjs && node scripts/check-build.mjs",
+    "preview": "astro preview --host 127.0.0.1",
+    "cf:check": "wrangler deploy --dry-run",
+    "cf:dev": "wrangler dev --ip 127.0.0.1",
+    "docs:check": "node scripts/check-docs.mjs",
+    "docs:links": "node scripts/check-repository-links.mjs",
+    "docs:examples": "python3 scripts/check-tutorials.py"
+  },
+  "dependencies": {
+    "astro": "7.4.1",
+    "@astrojs/markdown-satteri": "0.4.4"
+  },
+  "devDependencies": {
+    "@astrojs/check": "0.9.11",
+    "@types/node": "24.19.2",
+    "pagefind": "1.5.2",
+    "typescript": "5.9.3",
+    "wrangler": "4.151.3"
+  }
+}

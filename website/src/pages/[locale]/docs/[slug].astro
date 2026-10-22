@@ -1,0 +1,41 @@
+---
+import { getCollection, render } from 'astro:content';
+import Base from '../../../layouts/Base.astro';
+import Icon from '../../../components/Icon.astro';
+import { brand, guideSlugs, guideNames, guideGroups, repository, repositoryUrl, repositoryInfo, type Locale } from '../../../lib/site';
+export async function getStaticPaths() {
+  const guides = await getCollection('guides');
+  return guides.map((guide) => ({ params: { locale: guide.data.locale, slug: guide.data.slug }, props: { guide } }));
+}
+const { guide } = Astro.props;
+const { Content, headings } = await render(guide);
+const locale = guide.data.locale as Locale; const zh = locale === 'zh';
+const current = guideSlugs.findIndex((slug) => slug === guide.data.slug);
+const prev = current > 0 ? guideSlugs[current - 1] : undefined;
+const next = guideSlugs[current + 1];
+---
+<Base locale={locale} title={`${guide.data.title} — ${brand.name}`} description={guide.data.description} docs>
+  <details class="docs-mobile-nav" data-pagefind-ignore><summary>{zh ? '文档目录' : 'Documentation menu'} · {guide.data.title}</summary><nav>{guideGroups.map((group) => <div class="docs-mobile-group"><p>{group.title[locale]}</p>{group.slugs.map((slug) => <a href={`/${locale}/docs/${slug}/`} aria-current={slug === guide.data.slug ? 'page' : undefined}>{guideNames[locale][guideSlugs.indexOf(slug)]}</a>)}</div>)}</nav></details>
+  <div class="docs-shell">
+    <aside class="docs-sidebar" aria-label={zh ? '文档导航' : 'Documentation navigation'} data-pagefind-ignore><p class="sidebar-label">BUILD WITH {brand.name.toUpperCase()}</p><nav>{guideGroups.map((group) => <div class="docs-nav-group"><p>{group.title[locale]}</p>{group.slugs.map((slug) => <a href={`/${locale}/docs/${slug}/`} aria-current={slug === guide.data.slug ? 'page' : undefined}><span>{String(guideSlugs.indexOf(slug) + 1).padStart(2, '0')}</span>{guideNames[locale][guideSlugs.indexOf(slug)]}</a>)}</div>)}</nav><div class="sidebar-external"><a href={repositoryUrl("docs", "tree")}>{zh ? '完整技术文档' : 'Technical docs (mixed languages)'}<Icon name="external" size={12}/></a><a href={repository}>GitHub<Icon name="external" size={12}/></a><a href={`/${locale}/`}>{zh ? '返回首页' : 'Back to home'}<Icon name="arrow" size={13}/></a></div></aside>
+    <main id="main" class="doc-article" data-pagefind-body>
+      <div class="breadcrumbs" data-pagefind-ignore><a href={`/${locale}/`}>{brand.name}</a><Icon name="chevron" size={10}/><a href={`/${locale}/docs/overview/`}>{zh ? '文档' : 'Docs'}</a><Icon name="chevron" size={10}/><span>{guide.data.title}</span></div>
+      <div class="doc-eyebrow" data-pagefind-ignore>GUIDE {String(current + 1).padStart(2, '0')} / LOCAL FIRST</div>
+      <h1 class="doc-title" data-pagefind-meta="title">{guide.data.title}</h1><p class="doc-description">{guide.data.description}</p><p class="doc-version" data-pagefind-ignore>{zh ? '资料基线' : 'Documentation baseline'}: SDK {repositoryInfo.sdkVersion} · {zh ? '验证于' : 'Verified'} {repositoryInfo.verifiedAt} · <a href={repositoryUrl("pyproject.toml")}>{repositoryInfo.ref.slice(0, 12)}</a></p>
+      <article class="prose"><Content/></article>
+      <div class="doc-sources" data-pagefind-ignore><span>{zh ? '精选指南 · 技术来源：' : 'Technical sources (repository; some in Chinese):'}</span>{guide.data.sources.map((source) => <a href={repositoryUrl(source)}>{source.replace('docs/', '')}<Icon name="external" size={10}/></a>)}</div>
+      <nav class="doc-pagination" aria-label={zh ? '相邻文档' : 'Adjacent guides'} data-pagefind-ignore>{prev && <a href={`/${locale}/docs/${prev}/`}><Icon name="arrow" size={14} class="previous-arrow"/><span><small>{zh ? '上一篇' : 'Previous'}</small>{guideNames[locale][current - 1]}</span></a>}{next && <a href={`/${locale}/docs/${next}/`}><span><small>{zh ? '下一篇' : 'Next'}</small>{guideNames[locale][current + 1]}</span><Icon name="arrow" size={14}/></a>}</nav>
+    </main>
+    <aside class="doc-toc" aria-label={zh ? '本页目录' : 'On this page'} data-pagefind-ignore><p>{zh ? '本页目录' : 'ON THIS PAGE'}</p><ul>{headings.filter((h) => h.depth < 4).map((h) => <li class:list={{ nested: h.depth === 3 }}><a href={`#${h.slug}`}>{h.text}</a></li>)}</ul></aside>
+  </div>
+</Base>
+<style>.previous-arrow{transform:rotate(180deg)}</style>
+<script>
+  const toc = document.querySelector('.doc-toc');
+  if (toc && 'IntersectionObserver' in window) {
+    const observer = new IntersectionObserver((entries) => {
+      for (const entry of entries) if (entry.isIntersecting) { toc.querySelectorAll('a').forEach((a) => { if (a.getAttribute('href') === `#${entry.target.id}`) a.setAttribute('aria-current', 'location'); else a.removeAttribute('aria-current'); }); }
+    }, { rootMargin: '-100px 0px -60% 0px' });
+    document.querySelectorAll('.prose h2,.prose h3').forEach((h) => observer.observe(h));
+  }
+</script>

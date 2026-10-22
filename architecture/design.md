@@ -1,4 +1,6 @@
-# RALF 开源 Agent 平台架构设计
+# Relf-Agent 开源 Agent 平台架构设计
+
+当前展示名称为 Relf-Agent：Reliable and Extensible Lifecycle Framework for Intelligent Agents，可靠、可扩展的智能体全生命周期框架。下文历史版本和协议中的 RALF 名称保留，技术标识与恢复契约不因品牌变更，见[名称与兼容边界](../docs/project-naming.md)。
 
 版本：1.8（授权复合根 namespace H2b3、Local 复合 Session H2b2、Temporal 高级编排入口 H2c2、原生入口 H2c1、同库 Session H2b1、Local stateless H2a、H1a／Local H1b／Session H1c／Facts与Knowledge范围H1d及纯完成Verifier H1e／执行限制H1f绑定实现、AgentHarness命名及Facade/Session/关闭契约；文档版本独立于产品版本）
 

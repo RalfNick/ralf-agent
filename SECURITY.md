@@ -1,6 +1,6 @@
 # 安全报告与支持范围
 
-Ralf-Agent 当前为开发预览，API 和运维能力仍在演进。当前版本见 [pyproject.toml](pyproject.toml)，支持范围见[实现清单](docs/implementation-status.md)。维护者优先修复当前开发版本；尚未承诺旧预览版的补丁周期或安全响应 SLA。
+Relf-Agent 当前为开发预览，API 和运维能力仍在演进。当前版本见 [pyproject.toml](pyproject.toml)，支持范围见[实现清单](docs/implementation-status.md)。维护者优先修复当前开发版本；尚未承诺旧预览版的补丁周期或安全响应 SLA。
 
 ## 报告漏洞
 
