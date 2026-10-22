@@ -10,6 +10,9 @@
 
 | 文档 | 解决的问题 |
 | --- | --- |
+| [0.1.0a3 本地发行候选](releases/0.1.0a3.md) | 新品牌／PyPI 元数据、精确制品与原有功能边界 |
+| [Alpha 3 验收清单](alpha3-validation-status.md) | 本地结果与尚未执行的远端／上传步骤 |
+| [PyPI 发布准备](pypi-publishing.md) | 账号、Trusted Publisher、手动门禁与公开安装核对 |
 | [0.1.0a2 Alpha 范围与候选](releases/0.1.0a2.md) | 首版范围、已测平台、实验性能力及本地制品／公开发行边界 |
 | [Alpha 2 验证与待处理](alpha2-validation-status.md) | 当前门禁、历史失败、未定位问题、待验证平台与公开发行关口 |
 | [可复现发布门禁](release-gate.md) | 固定制品、离线依赖、精确测试集合、平台矩阵及失败证据 |

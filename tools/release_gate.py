@@ -37,8 +37,8 @@ def file_digest(path):
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
-def read_spec():
-    return json.loads((HERE / "release_gate_manifest.json").read_text())
+def read_spec(path=None):
+    return json.loads((path or HERE / "release_gate_manifest.json").read_text())
 
 
 def check_platform(spec, system, machine, minor):
@@ -382,10 +382,11 @@ def execute(args, output, result, spec):
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--plan", action="store_true")
+    parser.add_argument("--manifest", type=Path, default=HERE / "release_gate_manifest.json")
     for name in ("wheel", "sdist", "wheelhouse", "output"):
         parser.add_argument("--" + name, type=Path)
     args = parser.parse_args(argv)
-    spec = read_spec()
+    spec = read_spec(args.manifest)
     if args.plan:
         print(json.dumps(spec, indent=2))
         return 0
@@ -405,7 +406,7 @@ def main(argv=None):
         "version": spec["version"],
         "deferred": spec["deferred"],
         "artifacts": spec["artifacts"],
-        "manifest_sha256": file_digest(HERE / "release_gate_manifest.json"),
+        "manifest_sha256": file_digest(args.manifest),
         "runner_sha256": file_digest(Path(__file__).resolve()),
         "public_upload": False,
     }

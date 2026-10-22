@@ -120,6 +120,15 @@ def test_alpha2_stage_accepts_its_exact_private_draft(staging, inputs, tmp_path)
     assert receipt["artifacts"] == spec["artifacts"]
 
 
+def test_alpha3_stage_accepts_its_own_frozen_bytes(staging, inputs, tmp_path):
+    spec, release, blobs = inputs
+    spec["version"] = "0.1.0a3"
+    release["tag_name"] = "ralf-alpha3-private-stage-test"
+    receipt = staging.stage(17, tmp_path / "a3", spec, lambda _: release, blobs.__getitem__)
+    assert receipt["status"] == "verified_original_candidate"
+    assert receipt["artifacts"] == spec["artifacts"]
+
+
 @pytest.mark.parametrize(
     ("version", "tag"),
     [

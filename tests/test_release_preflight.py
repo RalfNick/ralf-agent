@@ -25,27 +25,28 @@ def preflight(monkeypatch):
 
 
 @pytest.fixture
-def candidate(tmp_path):
+def candidate(tmp_path, request):
+    version = getattr(request, "param", "0.1.0a1")
     source = tmp_path / "source"
     package = source / "src/ralf_agent"
     package.mkdir(parents=True)
-    product = b'__version__ = "0.1.0a1"\n'
+    product = f'__version__ = "{version}"\n'.encode()
     (package / "__init__.py").write_bytes(product)
-    (source / "pyproject.toml").write_text('[project]\nname="ralf-agent"\nversion="0.1.0a1"\n')
+    (source / "pyproject.toml").write_text(f'[project]\nname="ralf-agent"\nversion="{version}"\n')
     for name in ["LICENSE", "NOTICE"]:
         (source / name).write_text(name + " original\n")
-    wheel = tmp_path / "ralf_agent-0.1.0a1-py3-none-any.whl"
+    wheel = tmp_path / f"ralf_agent-{version}-py3-none-any.whl"
     with zipfile.ZipFile(wheel, "w") as z:
         z.writestr("ralf_agent/__init__.py", product)
         z.writestr(
-            "ralf_agent-0.1.0a1.dist-info/METADATA",
-            "Name: ralf-agent\nVersion: 0.1.0a1\nLicense-Expression: Apache-2.0\n",
+            f"ralf_agent-{version}.dist-info/METADATA",
+            f"Name: ralf-agent\nVersion: {version}\nLicense-Expression: Apache-2.0\n",
         )
         for name in ["LICENSE", "NOTICE"]:
             z.writestr(
-                "ralf_agent-0.1.0a1.dist-info/licenses/" + name, (source / name).read_bytes()
+                f"ralf_agent-{version}.dist-info/licenses/" + name, (source / name).read_bytes()
             )
-    sdist = tmp_path / "ralf_agent-0.1.0a1.tar.gz"
+    sdist = tmp_path / f"ralf_agent-{version}.tar.gz"
     tests = {
         "tests/context_crash_assertions.py": b"# helper",
         "tests/test_starter.py": b"# test",
@@ -56,13 +57,13 @@ def candidate(tmp_path):
             **tests,
             **{n: (source / n).read_bytes() for n in ["LICENSE", "NOTICE"]},
         }.items():
-            info = tarfile.TarInfo("ralf_agent-0.1.0a1/" + name)
+            info = tarfile.TarInfo(f"ralf_agent-{version}/" + name)
             info.size = len(content)
             tar.addfile(info, io.BytesIO(content))
     import release_gate
 
     spec = {
-        "version": "0.1.0a1",
+        "version": version,
         "artifact_source_commit": "original-source",
         "artifacts": {p.name: hashlib.sha256(p.read_bytes()).hexdigest() for p in [wheel, sdist]},
         "product_files": 1,
@@ -137,3 +138,29 @@ def test_handoff_rechecks_copied_bytes_before_exposing_candidate(
         preflight.prepare(wheel, sdist, source, spec, out)
     assert not (out / "candidate").exists()
     assert json.loads((out / "preflight.json").read_text())["status"] == "failed"
+
+
+def test_preflight_cli_uses_explicit_manifest(preflight, candidate, tmp_path, monkeypatch):
+    source, wheel, sdist, spec = candidate
+    manifest = tmp_path / "selected.json"
+    manifest.write_text(json.dumps(spec))
+    monkeypatch.setattr(preflight.gate, "HERE", source / "tools")
+    out = tmp_path / "selected-handoff"
+    assert (
+        preflight.main(
+            [
+                "--manifest",
+                str(manifest),
+                "--wheel",
+                str(wheel),
+                "--sdist",
+                str(sdist),
+                "--output",
+                str(out),
+            ]
+        )
+        == 0
+    )
+    receipt = json.loads((out / "preflight.json").read_text())
+    assert receipt["artifacts"] == spec["artifacts"]
+    assert (out / "candidate" / wheel.name).read_bytes() == wheel.read_bytes()

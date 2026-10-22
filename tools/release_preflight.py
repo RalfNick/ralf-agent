@@ -87,6 +87,7 @@ def prepare(wheel, sdist, source, spec, output):
 
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--manifest", type=Path, default=gate.HERE / "release_gate_manifest.json")
     for name in ("wheel", "sdist", "output"):
         parser.add_argument("--" + name, type=Path, required=True)
     args = parser.parse_args(argv)
@@ -95,7 +96,7 @@ def main(argv=None):
             args.wheel.resolve(),
             args.sdist.resolve(),
             gate.HERE.parent,
-            gate.read_spec(),
+            gate.read_spec(args.manifest),
             args.output.resolve(),
         )
     except Exception as error:

@@ -4,18 +4,29 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "ralf-agent"
-version = "0.1.0a2"
-description = "Reliable agent tasks with durable approvals and recovery"
+version = "0.1.0a3"
+description = "Relf-Agent: reliable and extensible lifecycle framework for intelligent agents"
 readme = "README.md"
 requires-python = ">=3.11"
 license = "Apache-2.0"
 license-files = ["LICENSE", "NOTICE"]
-classifiers = ["Development Status :: 3 - Alpha", "Programming Language :: Python :: 3"]
+authors = [{name = "RalfNick"}]
+keywords = ["agent", "workflow", "approvals", "recovery", "llm"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+]
 dependencies = ["httpx>=0.27,<1", "jsonschema>=4.23,<5"]
 
 [project.urls]
-Repository = "https://github.com/RalfNick/ralf-agent"
-Issues = "https://github.com/RalfNick/ralf-agent/issues"
+Homepage = "https://github.com/RalfNick/relf-agent"
+Repository = "https://github.com/RalfNick/relf-agent"
+Issues = "https://github.com/RalfNick/relf-agent/issues"
+Documentation = "https://github.com/RalfNick/relf-agent/blob/feat/m1-local-runtime/docs/README.md"
+Changelog = "https://github.com/RalfNick/relf-agent/blob/feat/m1-local-runtime/CHANGELOG.md"
 
 [project.optional-dependencies]
 skills = ["PyYAML>=6,<7"]

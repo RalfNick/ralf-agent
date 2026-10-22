@@ -1,5 +1,7 @@
 # 可复现的 Local SDK 发布门禁
 
+**新候选 a3：** 显式使用 `--manifest tools/release_gate_manifest.alpha3.json`，原 311／16／两 starter 和 Linux 2CPU／2GiB／swap0／串行断网门槛保持。默认 manifest 仍固定原 a2，以免历史入口静默换包。a3 使用新的三条手动流程，不复用 a2 的固定旧仓库条件／旧 checkout；本地与远端实际结果见[a3 清单](alpha3-validation-status.md)，账号与上传步骤见[PyPI 准备](pypi-publishing.md)。本轮不推送或运行远端流程。
+
 **当前发行：`0.1.0a2`。** 默认`tools/release_gate_manifest.json`固定新候选，原a1 manifest逐字节保存在`tools/release_gate_manifest.alpha1.json`。原a1完整通过成绩仍只属于原包；原a1手动工作流固定checkout到`0b9b6c9`，不处理a2。本轮已按用户授权完成独立a2手动CI及GitHub预发行；见[公开交付](../architecture/reviews/2026-10-22-alpha2-public-release.md)。
 
 **当前门禁修订：2。** 原a2 manifest保存在`tools/release_gate_manifest.alpha2-original.json`，原包和原交付目录不覆盖。首轮Linux3.13发现一个终态Run立即要求Session空闲的测试竞态；第2版只对原测试文件应用固定摘要及唯一文本替换，改为1秒有界观察Session空闲，不改SDK、node身份、业务断言或资源／期限。新报告须记录该校正，不称原测试未经校正通过；当前状态与原失败见[追加验证清单](alpha2-validation-status.md)。

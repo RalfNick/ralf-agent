@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.0a3 — Alpha preparation (not published)
+
+- Align the Relf-Agent brand, Python package metadata and absolute long-description links with `RalfNick/relf-agent`; retain distribution `ralf-agent`, imports `ralf_agent` and the `ralf` CLI.
+- Prepare a separate wheel/sdist and explicit a3 gate manifest. Preserve all original a2 artifacts, workflows, passing scopes and historical failures; SDK sources change only the version.
+- Add manual frozen-candidate staging, native qualification and TestPyPI/PyPI OIDC workflows. Publication verifies the exact successful source run, native reports and file hashes, and never rebuilds during upload.
+- Local tests and installation evidence are recorded separately. No push, remote workflow execution, account configuration, upload or new runtime feature is authorized in this preparation.
+
 ## 0.1.0a2 — Alpha (2026-10-22)
 
 - Freeze the runtime fixes accepted in `8e09ec7` as a distinct Alpha candidate; change only the package version in SDK sources. Preserve the original a1 artifacts and their platform evidence.

@@ -121,13 +121,14 @@ def main(argv=None):
         parser.add_argument("--" + name, type=Path, required=True)
     parser.add_argument("--platform", choices=("linux/arm64", "linux/amd64"), default="linux/arm64")
     parser.add_argument("--require-native", action="store_true")
+    parser.add_argument("--manifest", type=Path, default=HERE / "release_gate_manifest.json")
     args = parser.parse_args(argv)
     architecture = args.platform.split("/")[1]
     root = args.output.resolve()
     if root.exists():
         parser.error("output_already_exists")
     root.mkdir(parents=True)
-    spec = json.loads((HERE / "release_gate_manifest.json").read_text())
+    spec = json.loads(args.manifest.read_text())
     inputs = root / "input"
     inputs.mkdir()
     gate = inputs / "gate"
@@ -138,7 +139,8 @@ def main(argv=None):
         "release_gate_manifest.json",
         "release_gate_requirements.lock",
     ):
-        shutil.copy2(HERE / name, gate / name)
+        source = args.manifest if name == "release_gate_manifest.json" else HERE / name
+        shutil.copy2(source, gate / name)
     for source in (args.wheel, args.sdist):
         shutil.copy2(source.resolve(), inputs / source.name)
     tool_inputs = {

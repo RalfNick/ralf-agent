@@ -19,6 +19,8 @@
 
 品牌与仓库链接更新不提供 `relf` 命令、`relf_agent` 导入或同名安装包。继续按[安装指南](installation.md)使用已验证的精确制品；PyPI 尚未发布。CLI 版本输出、旧模板或固定源码中出现 Ralf-Agent 属于原 SDK 的实际输出。
 
+a3 将新品牌和新仓库地址写入新的包元数据与长描述；技术标识保持上表不变。a3 是独立本地候选，账号和后续发布步骤见[PyPI 准备](pypi-publishing.md)。a2 包内旧品牌和旧链接属于原制品内容，不回写。
+
 ## 历史与恢复
 
 已发布的 `0.1.0a2` wheel、sdist、校验摘要及 Tag 保持不变。数据库表、Session／Action 身份、Temporal Workflow／Activity 名称、patch 标识、组件指纹与旧 Worker 匹配规则不随品牌替换。恢复仍需原配置与匹配组件，不能通过改名清除未知业务效果。

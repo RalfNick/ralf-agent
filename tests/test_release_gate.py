@@ -163,11 +163,12 @@ def test_plan_is_read_only_and_reports_current_candidate(tmp_path):
     assert list(tmp_path.iterdir()) == []
 
 
-def test_current_manifest_matches_source_version_and_preserves_original_alpha(gate):
+def test_default_manifest_preserves_original_alpha2_after_new_source_versions(gate):
     current = gate.read_spec()
     original = json.loads((ROOT / "tools/release_gate_manifest.alpha1.json").read_text())
     project = tomllib.loads((ROOT / "pyproject.toml").read_text())["project"]
-    assert current["version"] == project["version"] == "0.1.0a2"
+    assert current["version"] == "0.1.0a2"
+    assert project["version"] == "0.1.0a3"
     assert set(current["artifacts"]) == {
         "ralf_agent-0.1.0a2-py3-none-any.whl",
         "ralf_agent-0.1.0a2.tar.gz",
@@ -684,6 +685,47 @@ def stage_declared_gate(wrapper, tmp_path, artifacts, monkeypatch):
     (target / "release_gate_manifest.json").write_text(json.dumps(spec, indent=2) + "\n")
     monkeypatch.setattr(wrapper, "HERE", target)
     return spec
+
+
+def test_linux_wrapper_stages_selected_manifest_without_replacing_default(
+    linux_wrapper, gate, tmp_path, monkeypatch
+):
+    wheel = tmp_path / "candidate.whl"
+    sdist = tmp_path / "candidate.tar.gz"
+    wheel.write_bytes(b"declared wheel")
+    sdist.write_bytes(b"declared sdist")
+    selected = gate.read_spec()
+    selected["version"] = "0.1.0a3"
+    selected["artifacts"] = {p.name: gate.file_digest(p) for p in (wheel, sdist)}
+    manifest = tmp_path / "selected-manifest.json"
+    manifest.write_text(json.dumps(selected))
+    historical = (linux_wrapper.HERE / "release_gate_manifest.json").read_bytes()
+
+    def no_docker(*args, **kwargs):
+        raise RuntimeError("Docker intentionally unavailable in unit test")
+
+    monkeypatch.setattr(linux_wrapper, "call", no_docker)
+    out = tmp_path / "evidence"
+    assert (
+        linux_wrapper.main(
+            [
+                "--manifest",
+                str(manifest),
+                "--wheel",
+                str(wheel),
+                "--sdist",
+                str(sdist),
+                "--wheelhouse",
+                str(tmp_path),
+                "--output",
+                str(out),
+            ]
+        )
+        == 1
+    )
+    assert (out / "input/gate/release_gate_manifest.json").read_bytes() == manifest.read_bytes()
+    assert (linux_wrapper.HERE / "release_gate_manifest.json").read_bytes() == historical
+    assert all(not row["passed"] for row in json.loads((out / "matrix.json").read_text()))
 
 
 def test_worker_report_cannot_borrow_original_identity_for_other_actual_artifacts(

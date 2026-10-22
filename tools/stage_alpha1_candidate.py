@@ -14,6 +14,7 @@ MAX_ASSET_BYTES = 16 * 1024 * 1024
 STAGING_PREFIXES = {
     "0.1.0a1": "ralf-alpha1-private-stage-",
     "0.1.0a2": "ralf-alpha2-private-stage-",
+    "0.1.0a3": "ralf-alpha3-private-stage-",
 }
 
 
@@ -86,6 +87,14 @@ def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--release-id", type=int, required=True)
     parser.add_argument("--output", type=Path, required=True)
+    parser.add_argument(
+        "--manifest", type=Path, default=release_gate.HERE / "release_gate_manifest.json"
+    )
+    parser.add_argument(
+        "--repository",
+        choices=("RalfNick/ralf-agent", "RalfNick/relf-agent"),
+        default="RalfNick/ralf-agent",
+    )
     args = parser.parse_args(argv)
     token = os.environ.get("GITHUB_TOKEN")
     if args.release_id <= 0 or not token:
@@ -94,7 +103,7 @@ def main(argv=None):
 
     def fetch(path, accept):
         request = urllib.request.Request(
-            "https://api.github.com/repos/RalfNick/ralf-agent/" + path,
+            "https://api.github.com/repos/" + args.repository + "/" + path,
             headers={
                 "Authorization": "Bearer " + token,
                 "Accept": accept,
@@ -111,7 +120,7 @@ def main(argv=None):
         result = stage(
             args.release_id,
             args.output,
-            release_gate.read_spec(),
+            release_gate.read_spec(args.manifest),
             lambda identifier: json.loads(
                 fetch("releases/" + str(identifier), "application/vnd.github+json")
             ),

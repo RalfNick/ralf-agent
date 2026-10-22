@@ -1,5 +1,7 @@
 # 预览版本验证与发布
 
+**当前源码候选：`0.1.0a3`，仅本地准备，尚未推送或公开发布。** 新品牌、PyPI 元数据和手动发布流程见[a3 说明](releases/0.1.0a3.md)、[本批验收](alpha3-validation-status.md)和[账号／发布准备](pypi-publishing.md)。使用独立 `dist/alpha3-candidate/` 与 `tools/release_gate_manifest.alpha3.json`；调用工具必须显式传入 `--manifest`，无参数默认继续保留 a2。a3 平台、上传和公开安装按新包分别验收，下方 a2 及历史记录不回写。
+
 **当前推荐：`0.1.0a2` Local SDK Alpha。** 包含`8e09ec7`的近期修复，SDK仅版本调整；范围见[当前Alpha说明](releases/0.1.0a2.md)。发行源码`1b72c05`已按授权推送；原a1、dev19及全部失败分别保留。本轮已按新授权完成必要推送、固定CI与GitHub预发行，平台关口、门禁修订2与当前结果见[验证清单](alpha2-validation-status.md)，不能沿用原a1成绩。
 
 **公开入口：** [v0.1.0a2](https://github.com/RalfNick/relf-agent/releases/tag/v0.1.0a2)，精确wheel URL及实测安装步骤见[安装指南](installation.md#从公开-alpha-安装)。Tag固定验收代码3a92720；当前文档维护不移动Tag或改写原包。GitHub预发行及匿名安装已完成，PyPI未发布。验收见[公开交付记录](../architecture/reviews/2026-10-22-alpha2-public-release.md)。
