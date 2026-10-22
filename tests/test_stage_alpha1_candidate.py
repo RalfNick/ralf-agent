@@ -109,3 +109,33 @@ def test_asset_redirect_strips_authorization(staging):
         staging.AssetRedirect().redirect_request(
             request, None, 302, "Found", {}, "http://example.com/asset"
         )
+
+
+def test_alpha2_stage_accepts_its_exact_private_draft(staging, inputs, tmp_path):
+    spec, release, blobs = inputs
+    spec["version"] = "0.1.0a2"
+    release["tag_name"] = "ralf-alpha2-private-stage-test"
+    receipt = staging.stage(17, tmp_path / "a2", spec, lambda _: release, blobs.__getitem__)
+    assert receipt["status"] == "verified_original_candidate"
+    assert receipt["artifacts"] == spec["artifacts"]
+
+
+@pytest.mark.parametrize(
+    ("version", "tag"),
+    [
+        ("0.1.0a2", "ralf-alpha1-private-stage-test"),
+        ("0.1.0a1", "ralf-alpha2-private-stage-test"),
+        ("0.1.0a3", "ralf-alpha1-private-stage-test"),
+    ],
+)
+def test_private_stage_rejects_cross_version_or_unknown_alpha(
+    staging, inputs, tmp_path, version, tag
+):
+    spec, release, blobs = inputs
+    spec["version"] = version
+    release["tag_name"] = tag
+    output = tmp_path / "rejected"
+    with pytest.raises(RuntimeError, match="private_staging_release_mismatch"):
+        staging.stage(17, output, spec, lambda _: release, blobs.__getitem__)
+    assert not (output / "candidate").exists()
+    assert json.loads((output / "proof.json").read_text())["status"] == "failed"

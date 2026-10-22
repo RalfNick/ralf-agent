@@ -11,6 +11,10 @@ from pathlib import Path
 import release_gate
 
 MAX_ASSET_BYTES = 16 * 1024 * 1024
+STAGING_PREFIXES = {
+    "0.1.0a1": "ralf-alpha1-private-stage-",
+    "0.1.0a2": "ralf-alpha2-private-stage-",
+}
 
 
 class AssetRedirect(urllib.request.HTTPRedirectHandler):
@@ -29,11 +33,13 @@ def stage(release_id, output, spec, fetch_json, fetch_blob):
     proof = {"status": "failed", "release_id": release_id, "public_release": False}
     try:
         release = fetch_json(release_id)
+        prefix = STAGING_PREFIXES.get(spec.get("version"))
         if (
-            release.get("id") != release_id
+            prefix is None
+            or release.get("id") != release_id
             or release.get("draft") is not True
             or release.get("published_at") is not None
-            or not release.get("tag_name", "").startswith("ralf-alpha1-private-stage-")
+            or not release.get("tag_name", "").startswith(prefix)
         ):
             raise RuntimeError("private_staging_release_mismatch")
         assets = release["assets"]
@@ -92,7 +98,7 @@ def main(argv=None):
             headers={
                 "Authorization": "Bearer " + token,
                 "Accept": accept,
-                "User-Agent": "ralf-alpha1-private-staging",
+                "User-Agent": "ralf-private-staging",
             },
         )
         with opener.open(request, timeout=60) as response:
