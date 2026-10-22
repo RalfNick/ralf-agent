@@ -131,7 +131,23 @@
       ]
     }
   ],
-  "test_corrections": [],
+  "test_corrections": [
+    {
+      "path": "tests/test_agent_sessions.py",
+      "before_sha256": "46d3eb8b57f8422fe84a7f59c09fcc17c8354b0e87b8e9846ba14171928fd40e",
+      "after_sha256": "b930481bfca0935ef9cf50d71109aa76819401f780324f5bcdd061083a4cc3ce",
+      "reason": "Run.wait observes a terminal Run before the owned supervisor may release the Session lane. The reattached shared Session must become idle within a bounded 1-second observation; no SDK behavior, business assertion or node identity changes.",
+      "replacements": [
+        {
+          "before": "            assert not (await runtime.attach_session(session.ref).status()).busy",
+          "after": "            reattached = runtime.attach_session(session.ref)\n            async with asyncio.timeout(1):\n                # A successful Run snapshot does not promise an idle Session lane.\n                while (await reattached.status()).busy:  # noqa: ASYNC110\n                    await asyncio.sleep(0)"
+        }
+      ]
+    }
+  ],
   "build_input_manifest_sha256": "d21e4c1c6038b08f84acd067d51bdeb1ddf3caee703b4a10c2d7aac25072f079",
-  "source_inputs_sha256": "d0c3ea645e07a4f12606a140c624a06b1284fe8173195e68f91babcfe5526e93"
+  "source_inputs_sha256": "d0c3ea645e07a4f12606a140c624a06b1284fe8173195e68f91babcfe5526e93",
+  "gate_revision": 2,
+  "previous_manifest_sha256": "f8396887f5d010e1052fc56bb9951aa518276269322361304004435af679bbd0",
+  "gate_revision_reason": "Correct the Session idle observation fixture after a terminal Run; immutable a2 products, artifacts, node identities, warning policy and resource limits remain unchanged."
 }

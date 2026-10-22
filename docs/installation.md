@@ -17,7 +17,7 @@ ralf --version
 
 基础运行依赖为 `httpx` 和 `jsonschema`。默认 SQLite、离线 Demo 与独立 starter 不需要模型密钥或外部服务。安装后按[首用教程](getting-started.md)完成提交、审批与恢复。
 
-上面的 clone 命令演示源码安装方式，不保证远端已包含本地候选版本。本轮 0.1.0a2 候选尚未推送／公开发布；要复现本轮交付请使用下方精确 wheel，或当前对应的本地源码，并核对 `ralf --version`。
+上面的 clone 命令演示源码安装方式。发行源码`1b72c05`已按授权推送；本轮未公开发行wheel／sdist。要复现交付请使用下方精确wheel，或对应源码提交，并核对`ralf --version`。制品的固定来源、平台和追加测试校正见[验证清单](alpha2-validation-status.md)，不能仅凭远端分支名称推导同一验收范围。
 
 ## 从本地 wheel 安装
 

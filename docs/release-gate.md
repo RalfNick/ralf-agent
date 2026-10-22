@@ -2,14 +2,16 @@
 
 **当前候选：`0.1.0a2`。** 默认`tools/release_gate_manifest.json`固定新候选，原a1 manifest逐字节保存在`tools/release_gate_manifest.alpha1.json`。原a1完整通过成绩仍只属于原包；原a1手动工作流固定checkout到`0b9b6c9`，不处理a2。当前不触发远端CI或公开发布。
 
+**当前门禁修订：2。** 原a2 manifest保存在`tools/release_gate_manifest.alpha2-original.json`，原包和原交付目录不覆盖。首轮Linux3.13发现一个终态Run立即要求Session空闲的测试竞态；第2版只对原测试文件应用固定摘要及唯一文本替换，改为1秒有界观察Session空闲，不改SDK、node身份、业务断言或资源／期限。新报告须记录该校正，不称原测试未经校正通过；当前状态与原失败见[追加验证清单](alpha2-validation-status.md)。
+
 ## 当前a2门禁
 
-复用原311基础、16恢复node身份、两条starter及17依赖锁；新sdist的Session测试已包含原a1校正，不再重复运行改写；资源与断网要求不变，不追加SDK能力。函数指纹与S2按各原候选的所选资格单独引用，已完成项不再笼统写成后置，也不进入本基础门禁。
+复用原311基础、16恢复node身份、两条starter及17依赖锁；新sdist已包含原a1校正，第2版仅增加上段新发现的独立测试校正；资源与断网要求不变，不追加SDK能力。函数指纹与S2按各原候选的所选资格单独引用，已完成项不再笼统写成后置，也不进入本基础门禁。
 
 | 平台 | 本候选状态 |
 | --- | --- |
-| macOS ARM64／Python3.12 | 本批本地门禁目标；实际结果见`dist/alpha2-candidate/delivery.json`及本地报告，不套用旧成绩 |
-| Linux ARM64／Python3.11–3.13 | 待新a2实际报告；2CPU／2GiB／swap0、串行、容器无网络 |
+| macOS ARM64／Python3.12 | a2原第1版门禁311＋16及两starter通过；见原`delivery.json`，不套用旧a1成绩 |
+| Linux ARM64／Python3.11–3.13 | a2第2版门禁三版本各311＋16及两starter通过，零失败／错误／跳过／OOM；2CPU／2GiB／swap0、串行断网，最高326.48MiB；见[本轮验收](../architecture/reviews/2026-10-22-alpha2-validation-audit.md) |
 | 原生Linux AMD64／Python3.11–3.13 | 待新a2实际报告，须`--require-native`；远端执行另行授权 |
 | Windows及其他平台／Python | 未验收 |
 

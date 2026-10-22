@@ -183,6 +183,46 @@ def test_current_manifest_matches_source_version_and_preserves_original_alpha(ga
     assert current["artifact_source_commit"] == "8e09ec79328e719074b14a656a5bf8f15e5a61ff"
 
 
+def test_alpha2_idle_fixture_correction_is_exact_and_keeps_original_artifacts(gate, tmp_path):
+    spec = gate.read_spec()
+    rules = spec["test_corrections"]
+    assert len(rules) == 1
+    rule = rules[0]
+    assert rule["path"] == "tests/test_agent_sessions.py"
+    current = (ROOT / rule["path"]).read_bytes()
+    assert hashlib.sha256(current).hexdigest() == rule["after_sha256"]
+    original = current.decode()
+    for edit in rule["replacements"]:
+        assert original.count(edit["after"]) == 1
+        original = original.replace(edit["after"], edit["before"], 1)
+    original = original.encode()
+    assert hashlib.sha256(original).hexdigest() == rule["before_sha256"]
+    target = tmp_path / rule["path"]
+    target.parent.mkdir()
+    target.write_bytes(original)
+    applied = gate.apply_test_corrections(tmp_path, spec, {rule["path"]: rule["before_sha256"]})
+    assert target.read_bytes() == current
+    assert applied[rule["path"]] == {
+        "before_sha256": rule["before_sha256"],
+        "after_sha256": rule["after_sha256"],
+    }
+
+
+def test_alpha2_initial_gate_manifest_remains_available_as_original_evidence(gate):
+    path = ROOT / "tools/release_gate_manifest.alpha2-original.json"
+    assert path.is_file()
+    assert hashlib.sha256(path.read_bytes()).hexdigest() == (
+        "f8396887f5d010e1052fc56bb9951aa518276269322361304004435af679bbd0"
+    )
+    original = json.loads(path.read_text())
+    current = gate.read_spec()
+    assert current["gate_revision"] == 2
+    assert original["test_corrections"] == []
+    assert current["artifacts"] == original["artifacts"]
+    assert current["tests"] == original["tests"]
+    assert current["test_tree_sha256"] == original["test_tree_sha256"]
+
+
 @pytest.mark.parametrize("workflow", ["alpha1-release-gate.yml", "alpha1-stage-candidate.yml"])
 def test_historical_alpha_workflows_keep_original_tools_and_products(workflow):
     text = (ROOT / ".github/workflows" / workflow).read_text()

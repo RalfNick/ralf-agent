@@ -278,7 +278,11 @@ def test_session_entry_close_only_detaches_from_shared_runtime(tmp_path):
             assert (await run.wait(wait_timeout=1)).snapshot.state == "succeeded"
             with pytest.raises(r.RuntimeClosed):
                 await session.submit("x", command_id="closed")
-            assert not (await runtime.attach_session(session.ref).status()).busy
+            reattached = runtime.attach_session(session.ref)
+            async with asyncio.timeout(1):
+                # A successful Run snapshot does not promise an idle Session lane.
+                while (await reattached.status()).busy:  # noqa: ASYNC110
+                    await asyncio.sleep(0)
 
     asyncio.run(scenario())
 
