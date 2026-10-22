@@ -1,0 +1,129 @@
+name: alpha2-frozen-release-gate
+
+"on":
+  workflow_dispatch:
+    inputs:
+      candidate_run_id:
+        description: Same-repository run containing ralf-alpha2-original-candidate (original wheel and sdist)
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: alpha2-frozen-release-gate-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  native-amd64:
+    if: github.repository == 'RalfNick/ralf-agent'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    env:
+      PIP_CONFIG_FILE: /dev/null
+      PIP_DISABLE_PIP_VERSION_CHECK: '1'
+    steps:
+      - name: Record request and require Linux X64 runner
+        env:
+          CANDIDATE_RUN_ID: ${{ inputs.candidate_run_id }}
+        run: |
+          python3 - <<'PY'
+          import json, os, pathlib, platform, re
+          output = pathlib.Path(os.environ['RUNNER_TEMP']) / 'alpha2-evidence'
+          output.mkdir()
+          request = {key: os.environ.get(key) for key in (
+              'GITHUB_REPOSITORY', 'GITHUB_SHA', 'GITHUB_RUN_ID', 'GITHUB_RUN_ATTEMPT',
+              'RUNNER_OS', 'RUNNER_ARCH', 'CANDIDATE_RUN_ID')}
+          (output / 'request.json').write_text(json.dumps(request, indent=2) + '\n')
+          assert re.fullmatch(r'[1-9][0-9]*', request['CANDIDATE_RUN_ID']), 'invalid_candidate_run_id'
+          assert request['RUNNER_OS'] == 'Linux' and request['RUNNER_ARCH'] == 'X64'
+          assert platform.system() == 'Linux' and platform.machine() == 'x86_64'
+          docker_config = pathlib.Path(os.environ['RUNNER_TEMP']) / 'ralf-anonymous-docker'
+          docker_config.mkdir()
+          (docker_config / 'config.json').write_text('{}\n')
+          with pathlib.Path(os.environ['GITHUB_ENV']).open('a') as stream:
+              stream.write(f'DOCKER_CONFIG={docker_config}\n')
+          PY
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: dfb066e111b2ca9cbace7b4c29fb4abdacd04e9b # immutable a2 tools and product
+          persist-credentials: false
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: '3.12'
+      - name: Receive original candidate from authorized staging run
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: ralf-alpha2-original-candidate
+          repository: ${{ github.repository }}
+          run-id: ${{ inputs.candidate_run_id }}
+          github-token: ${{ github.token }}
+          path: ${{ runner.temp }}/alpha2-incoming
+      - name: Offline artifact and current product preflight
+        run: |
+          python tools/release_preflight.py \
+            --wheel "$RUNNER_TEMP/alpha2-incoming/ralf_agent-0.1.0a2-py3-none-any.whl" \
+            --sdist "$RUNNER_TEMP/alpha2-incoming/ralf_agent-0.1.0a2.tar.gz" \
+            --output "$RUNNER_TEMP/alpha2-evidence/preflight"
+      - name: Prepare only locked AMD64 dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          for minor in 3.11 3.12 3.13; do
+            python -m pip download --index-url https://pypi.org/simple \
+              --only-binary=:all: --no-deps --require-hashes \
+              --platform manylinux_2_17_x86_64 --python-version "$minor" \
+              --implementation cp --abi "cp${minor//./}" \
+              -r tools/release_gate_requirements.lock -d "$RUNNER_TEMP/alpha2-wheels"
+          done
+      - name: Prepare compatible Docker client and dedicated daemon
+        uses: docker/setup-docker-action@e43656e248c0bd0647d3f5c195d116aacf6fcaf4 # v4
+        with:
+          version: v29.0.1
+          set-host: 'true'
+          daemon-config: |
+            {"features": {"containerd-snapshotter": true}}
+      - name: Record and check required Docker capability
+        run: |
+          python - <<'PY'
+          import json, os, subprocess
+          from pathlib import Path
+          versions = json.loads(subprocess.check_output(['docker', 'version', '--format', '{{json .}}']))
+          help_text = subprocess.check_output(['docker', 'image', 'inspect', '--help'], text=True)
+          result = {
+              'client': versions['Client']['Version'], 'server': versions['Server']['Version'],
+              'inspect_platform_available': '--platform' in help_text,
+          }
+          output = Path(os.environ['RUNNER_TEMP']) / 'alpha2-evidence/docker-capability.json'
+          output.write_text(json.dumps(result, indent=2) + '\n')
+          assert result['client'] == result['server'] == '29.0.1', 'docker_version_mismatch'
+          assert result['inspect_platform_available'], 'docker_inspect_platform_unavailable'
+          PY
+      - name: Prepare exact official images separately from offline tests
+        run: |
+          mkdir -p "$DOCKER_CONFIG"
+          printf '{}\n' > "$DOCKER_CONFIG/config.json"
+          python - <<'PY'
+          import json, subprocess
+          from pathlib import Path
+          spec = json.loads(Path('tools/release_gate_manifest.json').read_text())
+          for image in spec['linux_amd64_images'].values():
+              subprocess.run(['docker', 'pull', '--platform', 'linux/amd64', image], check=True, timeout=180)
+          PY
+      - name: Serial native AMD64 frozen installed-artifact gate
+        run: |
+          python tools/run_release_gate_linux.py --platform linux/amd64 --require-native \
+            --wheel "$RUNNER_TEMP/alpha2-evidence/preflight/candidate/ralf_agent-0.1.0a2-py3-none-any.whl" \
+            --sdist "$RUNNER_TEMP/alpha2-evidence/preflight/candidate/ralf_agent-0.1.0a2.tar.gz" \
+            --wheelhouse "$RUNNER_TEMP/alpha2-wheels" \
+            --output "$RUNNER_TEMP/alpha2-evidence/native-amd64"
+      - name: Retain evidence on success or failure (no release publication)
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: alpha2-native-amd64-evidence-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/alpha2-evidence
+          if-no-files-found: error
+          retention-days: 14
