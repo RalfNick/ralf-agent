@@ -1,6 +1,6 @@
 # PyPI 发布准备与人工核对
 
-当前准备版本 `0.1.0a3`，发行名 `ralf-agent`，展示名 Relf-Agent；GitHub 仓库为 `RalfNick/relf-agent`。本批只做本地准备，不上传、不创建账号配置。源码与 SDK 状态见[a3 验收清单](alpha3-validation-status.md)。
+发行名 `ralf-agent`，展示名 Relf-Agent；GitHub 仓库为 `RalfNick/relf-agent`。原 `0.1.0a3` 准备代码已推送，但其冻结包不含后续 review 修复，发布推进暂停。本轮只做本地修复，不上传、不创建账号配置。下列 a3 流程是原冻结候选的参考，不是当前维护源码的放行步骤；包含修复的交付需另起唯一版本、更新独立门禁并重新验收。源码与制品状态见[a3 验收清单](alpha3-validation-status.md)。
 
 ## 需要维护者配置
 

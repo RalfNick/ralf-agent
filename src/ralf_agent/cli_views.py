@@ -298,28 +298,60 @@ def render_result(result):
                     ),
                 ]
             )
-        entry_arguments = (
-            ["--input", "hello"]
-            if template in {"config", "model", "graph", "plan", "team", "dag", "nested"}
-            else (
-                ["--query", "缓存连接失败怎么恢复"]
-                if template == "rag"
-                else ["--ticket", "INC-001"]
-            )
-        )
-        return "\n".join(
-            [
-                f"Created offline Agent starter: {result['directory']}",
-                f"Runtime factory: {result['factory']}",
-                "Start the test task, then inspect its approval:",
-                "  " + shlex.join(["cd", result["directory"]]),
-                "  " + shlex.join(["python", "-m", result["module"], *entry_arguments]),
-                "  "
-                + command_hint(
-                    ".ralf/runs.sqlite", result["factory"], "--format", "text", "inspect", "RUN_ID"
-                ),
+        if template in {"ingest", "hybrid"}:
+            entries = [
+                [
+                    "ingest",
+                    "README.md",
+                    "--document-id",
+                    "guide",
+                    "--command-id",
+                    "ingest-guide",
+                    "--expected-version",
+                    "0",
+                ],
             ]
+            if template == "hybrid":
+                entries.append(["index", "--document-id", "guide"])
+            entries.append(["query", "--query", "Agent", "--command-id", "query-guide"])
+        elif template in {
+            "adapter-contracts",
+            "session-contracts",
+            "facts-contracts",
+            "model-contracts",
+        }:
+            entries = [["seed"], ["check"], ["run"]]
+        elif template == "memory-index":
+            entries = [["seed"], ["run", "--command-prefix", "memory-first"]]
+        else:
+            entries = [
+                {
+                    "oncall": ["--ticket", "INC-001"],
+                    "rag": ["--query", "缓存连接失败怎么恢复"],
+                    "cli": ["run"],
+                    "user-input": ["run", "--command-id", "first-task"],
+                    "config": ["--input", "hello"],
+                    "model": ["--input", "hello"],
+                    "graph": ["--input", "hello"],
+                    "parallel": ["--input", "hello"],
+                    "plan": ["--input", "hello"],
+                    "team": ["--input", "hello"],
+                    "dag": ["--input", "hello"],
+                    "nested": ["--input", "hello"],
+                }.get(template, [])
+            ]
+        lines = [f"Created Agent starter: {result['directory']}"]
+        if result["factory"] is not None:
+            lines.append(f"Runtime factory: {result['factory']}")
+        lines.extend(
+            ["Run from the generated directory:", "  " + shlex.join(["cd", result["directory"]])]
         )
+        lines.extend(
+            "  " + shlex.join(["python", "-m", result["module"], *arguments])
+            for arguments in entries
+        )
+        lines.append("See README.md for configuration, approval, observation and recovery steps.")
+        return "\n".join(lines)
     if isinstance(result, list):
         return (
             "\n".join(

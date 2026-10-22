@@ -81,6 +81,13 @@ database services, arbitrary failure timing, business quality or Temporal
 compatibility. Source-process recovery evidence is recorded separately. Both
 `semantic_quality` and `model_quality` remain null.
 
+K09 covers registered direct method bindings, not arbitrary transitive Python
+state. Native Lexical/Vector/Hybrid combinations also pin their declared internal
+source/index/embedding ports; see the exact [drift boundary](extending.md#3-身份与不可变发布).
+K10 remains the adapter's responsibility: detect its own actual backend change,
+even if its public identity was not updated. A cached validator is not evidence
+that the current source is still valid. These checks do not sandbox trusted code.
+
 ## Implement a replacement
 
 Implement `identity`, `retrieve(scope, namespace, query)` and

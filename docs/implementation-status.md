@@ -1,6 +1,8 @@
-# Implementation status — 0.1.0a2 Alpha
+# Implementation status — Local SDK Alpha
 
-**发行维护（2026-10-22）：** 当前源码为 `0.1.0a3` 本地候选，统一新品牌和 PyPI 交付，不新增 SDK 能力。原公开推荐仍为 a2；a3 的本地安装、远端门禁和上传分别记录在[a3 清单](alpha3-validation-status.md)，本轮不推送或公开发布。下方 a2／dev19 的验收仍属于原制品。
+**当前维护（2026-10-22）：** 原 a3 准备提交 `eb62d57` 已推送，未触发远端 CI 或公开发布。随后维护源码修复取消拒绝回执、starter 提示和 Agent 工具入口三个 P2，补内置检索组合直接方法漂移检查；见[修复与验证](../architecture/reviews/2026-10-22-alpha-review-contract-fixes.md)。不增加能力、依赖、Schema 或执行权威。a2 是现有公开入口；原 a3 冻结包不含修复，发布暂停。源码暂保留 a3 版本号但不作为新候选，本批仅本地提交，制品与平台状态见[a3 清单](alpha3-validation-status.md)。下方 a2／dev19 的验收仍属于原制品。
+
+本批相关源码／安装各69通过，相邻检索316通过／22配置跳过。完整离线回归14,077通过／891条件跳过／5个未修改Coding测试失败；五项单独复验通过，但根因未确认，不拼成全量全绿或发行资格。原失败与实际范围见上述记录。
 
 **当前公开Alpha（2026-10-22）：** [0.1.0a2](https://github.com/RalfNick/relf-agent/releases/tag/v0.1.0a2)已由RalfNick发行，原两包及SDK不改。原生AMD64／ARM64三Python版本分别各311＋16及两starter通过；Temporal指纹单项已按匹配SDK独立补验。公开URL普通安装、两条恢复starter和五阶段重复提交通过；额外源码全量14,003通过／891条件跳过。PyPI、独立采用和完整M1未验收；详见[当前验证清单](alpha2-validation-status.md)及[公开交付记录](../architecture/reviews/2026-10-22-alpha2-public-release.md)。原a1／dev19及全部历史失败和未知义务保留。
 

@@ -1,6 +1,6 @@
 # RALF 通用框架能力与扩展验收
 
-**当前校准（2026-10-22）：** 所选第三阶段含S2已按`8e09ec7`冻结；当前准备`0.1.0a2`本地Alpha，见[当前能力](../../docs/implementation-status.md)、[剩余清单](../../docs/remaining-work.md)及[首版范围](../../docs/releases/0.1.0a2.md)。下列dev批次和早期矩阵保留当时状态；“未交付／下一步”不覆盖上述当前摘要，也不扩张首版范围。
+**当前校准（2026-10-22）：** 所选第三阶段含S2已按`8e09ec7`冻结；a2已公开，a3原准备代码`eb62d57`已推送但未公开发布。随后[维护修复](../reviews/2026-10-22-alpha-review-contract-fixes.md)只修现有公共契约和文档，原a3候选保留且发布暂停，不新增能力或执行权威。当前以[实现状态](../../docs/implementation-status.md)、[剩余清单](../../docs/remaining-work.md)及[首版范围](../../docs/releases/0.1.0a2.md)为准。下列dev批次和早期矩阵保留当时状态；“未交付／下一步”不覆盖上述当前摘要，也不扩张首版范围。
 
 
 Dev120 在原 History 权威内接通公共 deployment3 的既定 Temporal Coding Agent／sequence、有限图、Team／Dynamic 与递归范围，与 ordinary2 共用同地址 Registry。native grant、准确效果／费用、物理结束和独立 ACK 是不同事实，unknown 继续占位并保留恢复资料。原子事实通知、紧凑验证和 publication 优化保留原 SDK 门禁、最终完整验证及原期限；所选稳态 read-set 边界不提供即时 read-auth 撤销。范围与限制见[本批验收](../reviews/2026-10-15-temporal-deployment-coding.md)。

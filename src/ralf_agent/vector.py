@@ -22,8 +22,10 @@ from .retrieval import (
     DocumentRecord,
     RetrievalQuery,
     _bounded_result,
+    _check_method_bindings,
     _component_identity,
     _integer,
+    _method_bindings,
     _retrieved,
     _scope,
     _store_identity,
@@ -314,6 +316,11 @@ class VectorRetriever:
             raise ValidationError("EmbeddingProvider.embed must be async")
         if _index_identity(index)["dimensions"] != _embedding_identity(embedding)["dimensions"]:
             raise ValidationError("Embedding and vector index dimensions do not match")
+        self._port_bindings = {
+            "store": _method_bindings(store, ("get", "get_chunk", "chunks")),
+            "index": _method_bindings(index, ("upsert", "search", "delete_document")),
+            "embedding": _method_bindings(embedding, ("embed",)),
+        }
 
     @property
     def identity(self):
@@ -332,9 +339,15 @@ class VectorRetriever:
         )
 
     def _capture(self):
+        self._check_methods()
         return self.store, self.index, self.embedding, copy.deepcopy(self.identity)
 
+    def _check_methods(self):
+        for name, bindings in self._port_bindings.items():
+            _check_method_bindings(getattr(self, name), bindings)
+
     def _check(self, store, index, embedding, identity):
+        self._check_methods()
         if self.store is not store or self.index is not index or self.embedding is not embedding:
             raise DefinitionMismatch("The executing vector retrieval component was replaced")
         actual = {
@@ -384,7 +397,13 @@ class VectorRetriever:
             embedding, [chunk.text for chunk in chunks], identity["embedding"]["dimensions"]
         )
         self._check(store, index, embedding, identity)
-        await _validate_chunks(store, scope, namespace, chunks)
+        await _validate_chunks(
+            store,
+            scope,
+            namespace,
+            chunks,
+            check=lambda: self._check(store, index, embedding, identity),
+        )
         current = await memory_call(store.get, scope, namespace, document_id)
         self._check(store, index, embedding, identity)
         if not isinstance(current, DocumentRecord) or current != record:
@@ -435,5 +454,11 @@ class VectorRetriever:
     async def validate(self, scope, namespace, items):
         _scope(scope, namespace)
         store, index, embedding, identity = self._capture()
-        await _validate_chunks(store, scope, namespace, tuple(items))
+        await _validate_chunks(
+            store,
+            scope,
+            namespace,
+            tuple(items),
+            check=lambda: self._check(store, index, embedding, identity),
+        )
         self._check(store, index, embedding, identity)

@@ -656,7 +656,7 @@ class A2AApplication:
                 command = "a2a-cancel:" + digest({"id": request_id, "task": task_id})
             _text(command, "Cancellation command identity")
             receipt = await engine.cancel(task_id, command_id=command)
-            if receipt.outcome.get("rejected"):
+            if receipt.apply_state == "rejected" or receipt.outcome.get("rejected"):
                 raise _RPCError(-32002, "Task cannot be canceled")
             snapshot = await engine.status(task_id)
         return await self._task_snapshot(engine, snapshot)

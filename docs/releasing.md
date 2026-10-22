@@ -1,6 +1,6 @@
 # 预览版本验证与发布
 
-**当前源码候选：`0.1.0a3`，仅本地准备，尚未推送或公开发布。** 新品牌、PyPI 元数据和手动发布流程见[a3 说明](releases/0.1.0a3.md)、[本批验收](alpha3-validation-status.md)和[账号／发布准备](pypi-publishing.md)。使用独立 `dist/alpha3-candidate/` 与 `tools/release_gate_manifest.alpha3.json`；调用工具必须显式传入 `--manifest`，无参数默认继续保留 a2。a3 平台、上传和公开安装按新包分别验收，下方 a2 及历史记录不回写。
+**当前维护状态：a3 准备提交 `eb62d57` 已推送，后续 review 修复仅本地提交。** 新品牌、PyPI 元数据和冻结流程见[a3 说明](releases/0.1.0a3.md)、[验收清单](alpha3-validation-status.md)和[账号／发布准备](pypi-publishing.md)。原 `dist/alpha3-candidate/` 与 `tools/release_gate_manifest.alpha3.json` 保留为历史候选，未执行远端门禁或公开发布；候选不含本批修复，发布推进暂停。当前源码版本号暂保留 a3，本轮不构建新发行制品；修复后的交付需另起唯一版本和独立验收。固定预检对当前源码与原包不一致应拒绝，不能修改 SHA 或借用旧成绩放行。下方 a2 及历史记录不回写。
 
 **当前推荐：`0.1.0a2` Local SDK Alpha。** 包含`8e09ec7`的近期修复，SDK仅版本调整；范围见[当前Alpha说明](releases/0.1.0a2.md)。发行源码`1b72c05`已按授权推送；原a1、dev19及全部失败分别保留。本轮已按新授权完成必要推送、固定CI与GitHub预发行，平台关口、门禁修订2与当前结果见[验证清单](alpha2-validation-status.md)，不能沿用原a1成绩。
 

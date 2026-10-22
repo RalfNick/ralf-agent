@@ -695,15 +695,35 @@ def _component_identity(component):
 
 
 def _check_store(owner, captured, identity):
+    _check_method_bindings(captured, owner._store_bindings)
     if owner.store is not captured or digest(_store_identity(captured)) != digest(identity):
         raise DefinitionMismatch("The executing knowledge store changed during the operation")
 
 
-async def _validate_chunks(store, scope, namespace, items):
+def _method_bindings(component, names):
+    from .task_controls import _binding
+
+    return {name: _binding(getattr(component, name, None)) for name in names}
+
+
+def _check_method_bindings(component, captured):
+    try:
+        changed = _method_bindings(component, captured) != captured
+    except Exception as exc:
+        raise DefinitionMismatch("The registered retrieval port changed") from exc
+    if changed:
+        raise DefinitionMismatch("The registered retrieval port changed")
+
+
+async def _validate_chunks(store, scope, namespace, items, *, check=None):
     for item in items:
+        if check is not None:
+            check()
         if not isinstance(item, Chunk) or item.scope != scope or item.namespace != namespace:
             raise ValidationError("Knowledge source is unavailable in the requested scope")
         current = await memory_call(store.get_chunk, scope, namespace, item.chunk_id)
+        if check is not None:
+            check()
         if (
             not isinstance(current, Chunk)
             or (current.expires_at is not None and current.expires_at <= time.time())
@@ -740,6 +760,7 @@ class LexicalRetriever:
         _store_identity(store)
         if not all(callable(getattr(store, name, None)) for name in ("lexical", "get_chunk")):
             raise ValidationError("Knowledge store must provide lexical and get_chunk")
+        self._store_bindings = _method_bindings(store, ("lexical", "get_chunk"))
 
     @property
     def identity(self):
@@ -748,6 +769,7 @@ class LexicalRetriever:
     async def retrieve(self, scope, namespace, query):
         _scope(scope, namespace)
         store, identity = self.store, _store_identity(self.store)
+        _check_store(self, store, identity)
         result = await memory_call(store.lexical, scope, namespace, query)
         _check_store(self, store, identity)
         return _validate_result(result, scope, namespace, query)
@@ -755,7 +777,10 @@ class LexicalRetriever:
     async def validate(self, scope, namespace, items):
         _scope(scope, namespace)
         store, identity = self.store, _store_identity(self.store)
-        await _validate_chunks(store, scope, namespace, tuple(items))
+        _check_store(self, store, identity)
+        await _validate_chunks(
+            store, scope, namespace, tuple(items), check=lambda: _check_store(self, store, identity)
+        )
         _check_store(self, store, identity)
 
 

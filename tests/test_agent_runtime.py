@@ -231,6 +231,22 @@ def test_standalone_agent_explicit_model_and_typed_tool(tmp_path):
     asyncio.run(scenario())
 
 
+@pytest.mark.parametrize("registered", [False, True])
+def test_standalone_agent_refuses_function_list_with_actionable_guidance_before_io(
+    tmp_path, registered
+):
+    def lookup(value: int) -> dict:
+        return {"value": value}
+
+    if registered:
+        registry = r.ToolRegistry()
+        registry.register_function(lookup, effect="read_only")
+    path = tmp_path / "not-created" / "runs.sqlite"
+    with pytest.raises(ValidationError, match="ToolRegistry"):
+        r.Agent(model=ScriptedProvider([]), tools=[lookup], db_path=path)
+    assert not path.parent.exists()
+
+
 def test_explicit_cancel_preserves_business_cancel_and_close_cancel_policy(tmp_path):
     async def scenario():
         started, release = asyncio.Event(), asyncio.Event()

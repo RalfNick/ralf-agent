@@ -282,7 +282,7 @@ class TaskControlBridge:
         _require_text(run_id, "Run ID")
         _require_text(command_id, "Command ID")
         value = await self._call("cancel", run_id, command_id=command_id)
-        self._receipt(value, command_id, "cancel", run_id)
+        self._receipt(value, command_id, "cancel", run_id, allow_rejected=True)
         return copy.deepcopy(value)
 
     async def send_input(

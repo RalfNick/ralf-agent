@@ -26,10 +26,14 @@ class Agent:
         if runtime is None:
             if model is None:
                 raise ValidationError("Standalone Agent requires an explicit model Provider")
-            registry = tools if isinstance(tools, ToolRegistry) else ToolRegistry()
-            if not isinstance(tools, ToolRegistry):
-                for function in tools:
-                    registry.register_function(function)
+            if isinstance(tools, ToolRegistry):
+                registry = tools
+            elif isinstance(tools, (tuple, list)) and not tools:
+                registry = ToolRegistry()
+            else:
+                raise ValidationError(
+                    "Agent tools require a ToolRegistry; register functions with an explicit effect"
+                )
             names = tuple(registry._tools)
             selected = definition or AgentSpec(name, instructions, names)
             harness = selected if isinstance(selected, AgentHarness) else AgentHarness(selected)

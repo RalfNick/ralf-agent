@@ -1,6 +1,6 @@
 # Relf-Agent 扩展指南
 
-版本：0.1.0a2 Alpha 本地候选；更新：2026-10-22。面向 SDK／适配器开发者。本指南描述执行、装配、召回和知识端口；当前扩展组件与限制见 [实现清单](implementation-status.md)及[首版范围](releases/0.1.0a2.md)，企业适配与完整 M1 仍未验收。
+更新：2026-10-22。面向 SDK／适配器开发者；a2 已公开，a3 原候选已冻结并推送，随后维护源码包含[未发行的 review 修复](../architecture/reviews/2026-10-22-alpha-review-contract-fixes.md)。本指南描述执行、装配、召回和知识端口；当前扩展组件与限制见 [实现清单](implementation-status.md)及[首版范围](releases/0.1.0a2.md)，企业适配与完整 M1 仍未验收。
 
 完整目标要求每层交付公共契约、默认实现、替换示例和共同验收，见[通用框架能力矩阵](../architecture/viewpoints/framework-capabilities.md)。静态图／并行、动态规划／团队和远程数据已有实现，分别见[静态 Workflow](static-workflows.md)、[编排](orchestration.md)与[远程数据](remote-data.md)。默认实现不一定默认启用；每 Agent 能力绑定、推荐组合与 Local/Temporal 契约差异见[整体审查](../architecture/reviews/2026-10-08-agent-framework-alignment.md)。下表以本地装配契约为主，Temporal 支持范围单独声明。
 
@@ -94,6 +94,10 @@ Facts 的 `recall` 默认按游标分页。已有语义排序后端声明可选 
 ## 3. 身份与不可变发布
 
 identity／backend_id 表达端点、数据库／namespace、模型、版本及影响行为的非秘密配置。不要存入 API key、连接凭据或用户隐私。独立内存实例默认具有不同身份；人为指定同一身份时，使用者负责后端语义保持一致。
+
+方法漂移保护有明确边界：框架固定已登记的直接方法（包括绑定对象、函数及其代码入口），在调用前后复核。内置 `LexicalRetriever` 固定 Store 的 `lexical/get_chunk`；`VectorRetriever` 固定 Store 的 `get/get_chunk/chunks`、Index 的 `upsert/search/delete_document` 和 Embedding 的 `embed`；`HybridRetriever` 固定自己的来源 `get_chunk`，分支按其原直接端口检查。改变这些实现需创建新组合并按原版本规则发布，不能在同一个运行组件中热替换。
+
+该检查不递归追踪任意 Python 闭包、全局变量、客户端内部缓存、网络路由或数据库内容，也不隔离不可信 Python。第三方适配器必须自行固定实际后端，保证 `validate` 回读当前来源；原数据按 CAS／版本更新仍然合法，并由来源校验拒绝旧引用。公共 identity／backend_id 编码不因这次运行时检查变化，旧任务仍需保留匹配组件与 Worker。
 
 工具实例状态、partial 绑定参数、闭包和外部依赖不会自动序列化；改变它们时同步更新 `ToolSpec.version/config` 并构造新的 Registry。Provider／Harness／ToolExecutor／ContextBuilder／记忆的 identity 应反映实际当前配置。内核在恢复、异步装配后的派发、模型响应采纳、工具授权后，以及最终会话写入完成后、提交节点／Run 成功前复核固定发布。会话读取和保存固定使用同一执行组件；若适配器在等待期间更换实际后端，Run 失败，已发生的外部写入仍可能存在。
 

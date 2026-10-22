@@ -1,11 +1,18 @@
 # Changelog
 
+## Unreleased — post-a3 contract fixes
+
+- Preserve valid rejected cancellation receipts through TaskControlBridge and recognize both Local and legacy Temporal refusal formats in A2A.
+- Print executable starter entry commands; refuse bare Agent function lists before I/O with explicit ToolRegistry/effect guidance.
+- Pin the declared internal source/index/embedding methods of native retrieval combinations; document direct-method protection and adapter backend responsibilities.
+- Correct release/capability status: `eb62d57` was pushed, a3 remains unpublished, and its immutable artifacts do not contain these fixes. No new release artifact or version is prepared in this batch; the next delivery needs a unique version and its own qualification.
+
 ## 0.1.0a3 — Alpha preparation (not published)
 
 - Align the Relf-Agent brand, Python package metadata and absolute long-description links with `RalfNick/relf-agent`; retain distribution `ralf-agent`, imports `ralf_agent` and the `ralf` CLI.
 - Prepare a separate wheel/sdist and explicit a3 gate manifest. Preserve all original a2 artifacts, workflows, passing scopes and historical failures; SDK sources change only the version.
 - Add manual frozen-candidate staging, native qualification and TestPyPI/PyPI OIDC workflows. Publication verifies the exact successful source run, native reports and file hashes, and never rebuilds during upload.
-- Local tests and installation evidence are recorded separately. No push, remote workflow execution, account configuration, upload or new runtime feature is authorized in this preparation.
+- Local tests and installation evidence are recorded separately. Preparation commit `eb62d57` was subsequently pushed as authorized with `[skip ci]`; no remote workflow, account configuration, upload or new runtime feature was executed in that batch.
 
 ## 0.1.0a2 — Alpha (2026-10-22)
 

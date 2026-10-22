@@ -4,6 +4,8 @@
 
 ## 当前放行情况
 
+后续整体 review 确认的三个 P2 及内置检索方法保护边界见[未发行修复](../architecture/reviews/2026-10-22-alpha-review-contract-fixes.md)。原 a2 包和下面的历史成绩不改写，也不声称包含后续源码修复。
+
 | 事项 | 当前状态 | 证据／下一步 |
 | --- | --- | --- |
 | a2版本、wheel／sdist、来源及许可证 | 已公开并核对 | [本地交付](../architecture/reviews/2026-10-22-alpha2-local-closeout.md)，原两包和50项校验清单保持 |

@@ -11,9 +11,11 @@ from .ports import is_async_callable, is_sync_callable
 from .retrieval import (
     RetrievalQuery,
     _bounded_result,
+    _check_method_bindings,
     _component_identity,
     _integer,
     _items_chars,
+    _method_bindings,
     _retrieved,
     _scope,
     _store_identity,
@@ -99,6 +101,7 @@ class HybridRetriever:
             raise ValidationError("Unknown retrieval failure policy")
         _store_identity(store)
         _component(store_with_identity(store), ["get_chunk"])
+        self._store_bindings = _method_bindings(store, ("get_chunk",))
         for branch in retrievers.values():
             _component(branch, ["retrieve", "validate"])
         fusion = RRFFusion() if fusion is None else fusion
@@ -139,6 +142,7 @@ class HybridRetriever:
 
     def _capture(self):
         store = self.store
+        _check_method_bindings(store, self._store_bindings)
         source_binding = _binding(store.get_chunk)
         values = {k: _component(v, ["retrieve", "validate"]) for k, v in self.retrievers.items()}
         return (
@@ -152,6 +156,7 @@ class HybridRetriever:
 
     def _check(self, captured):
         store, binding, branches, fusion, reranker, identity = captured
+        _check_method_bindings(store, self._store_bindings)
         try:
             if (
                 self.store is not store
@@ -228,7 +233,9 @@ class HybridRetriever:
                 if c.chunk_id in items and _body(items[c.chunk_id]) != _body(c):
                     raise ValidationError("Conflicting candidate provenance")
                 items[c.chunk_id] = copy.deepcopy(c)
-        await _validate_chunks(store, scope, namespace, tuple(items.values()))
+        await _validate_chunks(
+            store, scope, namespace, tuple(items.values()), check=lambda: self._check(captured)
+        )
         self._check(captured)
         fused = await _invoke(fusion, "fuse", copy.deepcopy(rankings), limit=self.candidate_limit)
         self._check(captured)
@@ -251,7 +258,9 @@ class HybridRetriever:
         ).items
         # Pure ranking can still outlive a source's TTL. Confirm source bodies
         # immediately before dispatching a potentially remote reranker.
-        await _validate_chunks(store, scope, namespace, tuple(items.values()))
+        await _validate_chunks(
+            store, scope, namespace, tuple(items.values()), check=lambda: self._check(captured)
+        )
         self._check(captured)
         order = await _invoke(
             reranker,
@@ -272,7 +281,9 @@ class HybridRetriever:
         candidates = {c.chunk_id: c for c in selected}
         if len(set(order)) != len(order) or any(k not in candidates for k in order):
             raise ValidationError("Reranker forged or repeated candidate")
-        await _validate_chunks(store, scope, namespace, tuple(items.values()))
+        await _validate_chunks(
+            store, scope, namespace, tuple(items.values()), check=lambda: self._check(captured)
+        )
         self._check(captured)
         kind = "rrf" if isinstance(self.fusion, RRFFusion) else "fusion"
         mode = "hybrid:" + kind + (":degraded:" + ",".join(sorted(missing)) if missing else "")
@@ -288,7 +299,13 @@ class HybridRetriever:
             raise ValidationError("Invalid retrieval snapshot")
         captured = self._capture()
         self._check(captured)
-        await _validate_chunks(captured[0], scope, namespace, copy.deepcopy(tuple(items)))
+        await _validate_chunks(
+            captured[0],
+            scope,
+            namespace,
+            copy.deepcopy(tuple(items)),
+            check=lambda: self._check(captured),
+        )
         self._check(captured)
 
 

@@ -4,9 +4,9 @@
 
 Relf-Agent 需要 Python 3.11+。本地开发使用 Linux 或 macOS，本轮实测平台见[Alpha范围](releases/0.1.0a2.md)，CI配置不等于已运行通过；CI的Python版本与检查以[贡献指南](../CONTRIBUTING.md)和[工作流](../.github/workflows/ci.yml)为准。
 
-## 本地 a3 候选
+## 原 a3 候选与维护源码
 
-当前源码版本为 `0.1.0a3`，本批尚未推送或发布到 GitHub／PyPI。公开推荐仍是下方的原 a2 URL。核验本地 a3 时使用独立目录中的 `ralf_agent-0.1.0a3-py3-none-any.whl` 并检查 SHA，步骤见[a3 说明](releases/0.1.0a3.md)；不要将未公开的 `pip install ralf-agent==0.1.0a3` 当作可用入口。源码安装会得到本地 a3，与 a2 的已验收平台成绩分开。
+原 `0.1.0a3` 准备提交 `eb62d57` 已推送，未运行远端门禁或公开发布。后续维护源码包含[未发行修复](../architecture/reviews/2026-10-22-alpha-review-contract-fixes.md)，原 a2／a3 冻结包不含这些修复。原 a3 发布暂停；下一交付需唯一新版本及独立验收。源码版本号暂保留 a3，源码安装与原 a3 wheel 不是同一产品快照，不能仅凭版本号互认。公开入口仍是下方的原 a2 URL；不要将 `pip install ralf-agent==0.1.0a3` 当作可用入口。原包及 SHA 仅作历史核对，见[a3 说明](releases/0.1.0a3.md)。
 
 ## 从公开 Alpha 安装
 

@@ -14,6 +14,12 @@ Current implementation and acceptance boundaries are listed [separately](impleme
 Provide an explicit model and trusted tools; no credential discovery or paid calls
 occur during construction. Native Providers follow the [model guide](model-adapters.md).
 
+For nonempty tools, pass a `ToolRegistry` and declare each function's `effect`
+through `register_function` or `registry.tool`. A bare function list has no effect
+metadata and is refused before database creation; decorating a function does not
+attach its Registry's declaration to a separate list. Omitted tools or an empty
+list/tuple create an empty Registry. The Agent never infers that a function is read-only.
+
 ```python
 from ralf_agent import Agent, ToolRegistry
 
