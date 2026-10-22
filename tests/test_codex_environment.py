@@ -10,6 +10,7 @@ from pathlib import Path
 import pytest
 
 from ralf_agent.errors import DefinitionMismatch, ExecutionHostFailed, ValidationError
+from tests.coding_cli_fixture import ready_cli
 
 # Removing physical pins, exact inspect checks or retained ID recovery must fail these tests.
 FAKE_DOCKER = r"""
@@ -94,18 +95,7 @@ def resource(tmp_path):
     # A newly created shebang executable can take longer to enter Python than
     # the intentional 0.25/0.3-second handler deadlines on macOS. Readiness
     # warms only the fake executable, before any product ownership or CLI call.
-    before = cli.read_bytes()
-    ready = subprocess.run(
-        [str(cli), "--fixture-ready"],
-        env={"PATH": str(cli.parent) + ":/usr/bin:/bin"},
-        stdin=subprocess.DEVNULL,
-        capture_output=True,
-        start_new_session=True,
-        timeout=5,
-        check=True,
-    )
-    assert ready.stdout == ready.stderr == b""
-    assert cli.read_bytes() == before
+    ready_cli(cli)
     assert set(tmp_path.iterdir()) == {root, cli}
     assert not tuple(root.iterdir())
     return root, cli

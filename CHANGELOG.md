@@ -5,6 +5,7 @@
 - Preserve valid rejected cancellation receipts through TaskControlBridge and recognize both Local and legacy Temporal refusal formats in A2A.
 - Print executable starter entry commands; refuse bare Agent function lists before I/O with explicit ToolRegistry/effect guidance.
 - Pin the declared internal source/index/embedding methods of native retrieval combinations; document direct-method protection and adapter backend responsibilities.
+- Prepare synthetic Coding CLI fixtures before bounded business calls; reject failed readiness before creating test Runner journals. Preserve product deadlines, historical failures and the distinction between fixture hardening and an unconfirmed historical trigger.
 - Correct release/capability status: `eb62d57` was pushed, a3 remains unpublished, and its immutable artifacts do not contain these fixes. No new release artifact or version is prepared in this batch; the next delivery needs a unique version and its own qualification.
 
 ## 0.1.0a3 — Alpha preparation (not published)

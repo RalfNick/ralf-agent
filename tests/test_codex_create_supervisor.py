@@ -13,6 +13,7 @@ from pathlib import Path
 import pytest
 
 from ralf_agent.errors import DefinitionMismatch, ExecutionHostFailed, ValidationError
+from tests.coding_cli_fixture import ready_cli
 
 
 def supervisor():
@@ -28,15 +29,16 @@ def operation(tmp_path):
     root = tmp_path / "resource"
     root.mkdir(mode=0o700)
     root = root.resolve()
-    lease = os.open(root / "lease.lock", os.O_CREAT | os.O_EXCL | os.O_RDWR, 0o600)
-    fcntl.flock(lease, fcntl.LOCK_EX | fcntl.LOCK_NB)
     cli = tmp_path / "docker"
     cli.write_text(
         "#!"
         + sys.executable
         + "\n"
         + """import json,os,pathlib,sys,time
+if sys.argv[1:]==['--fixture-ready']:sys.exit(0)
 p=pathlib.Path(sys.argv[2]).parent;mode=sys.argv[6]
+if mode=='entry-hold':
+ while not (p/'finish').exists():time.sleep(.01)
 with (p/'invocations').open('a') as f:f.write(str(os.getpid())+'\\n')
 (p/'cli-env.json').write_text(json.dumps(dict(os.environ)))
 if mode=='hold':
@@ -53,6 +55,11 @@ print('d'*64,flush=True)
 """
     )
     cli.chmod(0o700)
+    ready_cli(cli)
+    assert not tuple(root.iterdir())
+    assert set(tmp_path.iterdir()) == {root, cli}
+    lease = os.open(root / "lease.lock", os.O_CREAT | os.O_EXCL | os.O_RDWR, 0o600)
+    fcntl.flock(lease, fcntl.LOCK_EX | fcntl.LOCK_NB)
     binding = {
         "environment": {"kind": "synthetic-original", "root": str(root)},
         "generation": "a" * 32,
@@ -99,6 +106,43 @@ def eventually(predicate, timeout=5):
     while not predicate():
         assert time.monotonic() < deadline, "Original process barrier did not complete"
         time.sleep(0.01)
+
+
+def test_cli_fixture_readiness_has_no_business_or_operation_effect(operation):
+    root, _, cli, _ = operation
+    original = cli.read_bytes()
+    files = set(root.iterdir())
+    ready = subprocess.run(
+        [str(cli), "--fixture-ready"],
+        env={"PATH": "/usr/bin:/bin"},
+        stdin=subprocess.DEVNULL,
+        capture_output=True,
+        start_new_session=True,
+        timeout=5,
+    )
+    assert ready.returncode == 0
+    assert ready.stdout == ready.stderr == b""
+    assert cli.read_bytes() == original
+    assert set(root.iterdir()) == files == {root / "lease.lock"}
+
+
+def test_ready_cli_still_obeys_original_deadline_before_business_entry(operation):
+    handle = create(operation, "entry-hold")
+    try:
+        handle.launch()
+        handle.start_once()
+        value = handle.drain()
+        assert value["complete"] and value["helpers_ended"] and value["control_drained"]
+        receipt = value["receipt"]
+        assert receipt["reason"] == "timeout"
+        assert receipt["cli_gate_accepted"] is True and receipt["cli_exec_started"] is True
+        assert receipt["child_ended"] is True and receipt["exit_code"] != 0
+        assert receipt["cid"] is None
+        assert not (operation[0] / "invocations").exists()
+        with pytest.raises(DefinitionMismatch):
+            handle.start_once()
+    finally:
+        handle.close()
 
 
 def test_construction_has_no_cli_and_outer_never_gate_produces_actual_drained_receipt(operation):

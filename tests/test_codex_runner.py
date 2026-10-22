@@ -121,6 +121,7 @@ def test_workspace_artifacts_use_fenced_owned_namespace_and_exclude_hidden_metad
 
 
 def native_fixture(tmp_path, mode="completed", *, startup_delay=0):
+    from tests.coding_cli_fixture import ready_cli
     from tests.test_codex_environment import FAKE_DOCKER
 
     control = json.loads(Path(__file__).with_name("codex_control_fixture.json").read_text())
@@ -217,6 +218,7 @@ def native_fixture(tmp_path, mode="completed", *, startup_delay=0):
         )
     cli.write_text(f"#!{sys.executable}\n" + source)
     cli.chmod(0o700)
+    ready_cli(cli)
     return cli
 
 
@@ -228,8 +230,8 @@ def original_engine(tmp_path, *, mode="completed", timeout=3, startup_delay=0):
 
     root = tmp_path / "coding"
     root.mkdir(mode=0o700)
-    journal = RunnerJournal(str(tmp_path / "runner.sqlite"), identity={"dependency": "fixture"})
     cli = native_fixture(tmp_path, mode, startup_delay=startup_delay)
+    journal = RunnerJournal(str(tmp_path / "runner.sqlite"), identity={"dependency": "fixture"})
     resource = CodexCodingRunner(
         root,
         journal=journal,

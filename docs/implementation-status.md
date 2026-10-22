@@ -2,7 +2,7 @@
 
 **当前维护（2026-10-22）：** 原 a3 准备提交 `eb62d57` 已推送，未触发远端 CI 或公开发布。随后维护源码修复取消拒绝回执、starter 提示和 Agent 工具入口三个 P2，补内置检索组合直接方法漂移检查；见[修复与验证](../architecture/reviews/2026-10-22-alpha-review-contract-fixes.md)。不增加能力、依赖、Schema 或执行权威。a2 是现有公开入口；原 a3 冻结包不含修复，发布暂停。源码暂保留 a3 版本号但不作为新候选，本批仅本地提交，制品与平台状态见[a3 清单](alpha3-validation-status.md)。下方 a2／dev19 的验收仍属于原制品。
 
-本批相关源码／安装各69通过，相邻检索316通过／22配置跳过。完整离线回归14,077通过／891条件跳过／5个未修改Coding测试失败；五项单独复验通过，但根因未确认，不拼成全量全绿或发行资格。原失败与实际范围见上述记录。
+前批公共契约修复的源码／安装各69通过，相邻检索316通过／22配置跳过。随后补齐合成Coding CLI就绪与失败装配顺序，442产品文件未改，新增7项反例；最终完整离线回归 **14,089通过／891条件跳过／零失败与错误**，原五项全部通过。原五项及中间一轮Workspace超时均保留，历史瞬态原因未能追认；宿主睡眠时序、固定输入复验及范围见[本批记录](../architecture/reviews/2026-10-22-coding-regression-fixture-readiness.md)。本批不准备a4，不把源码测试作为原a3候选或真实服务的放行资格。
 
 **当前公开Alpha（2026-10-22）：** [0.1.0a2](https://github.com/RalfNick/relf-agent/releases/tag/v0.1.0a2)已由RalfNick发行，原两包及SDK不改。原生AMD64／ARM64三Python版本分别各311＋16及两starter通过；Temporal指纹单项已按匹配SDK独立补验。公开URL普通安装、两条恢复starter和五阶段重复提交通过；额外源码全量14,003通过／891条件跳过。PyPI、独立采用和完整M1未验收；详见[当前验证清单](alpha2-validation-status.md)及[公开交付记录](../architecture/reviews/2026-10-22-alpha2-public-release.md)。原a1／dev19及全部历史失败和未知义务保留。
 

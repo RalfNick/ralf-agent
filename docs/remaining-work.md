@@ -2,7 +2,7 @@
 
 **当前维护：** a3 准备代码 `eb62d57` 已推送，未执行远端 CI 或公开发行。随后[review 修复](../architecture/reviews/2026-10-22-alpha-review-contract-fixes.md)收紧现有取消回执、starter 首用、Agent 工具入口及内置检索方法漂移边界，不扩功能、不关闭新的 R 项。修复仅在维护源码，原 a2／a3 包不含修复；原 a3 发布暂停，未来交付需唯一新版本及独立验收。a2 公开入口保留，平台／账户／上传状态见[a3 清单](alpha3-validation-status.md)；本批只本地提交。
 
-本批相关源码／安装检查通过；完整离线回归仍保留5个Coding测试失败，单独复验通过但根因未确认，不能标全量全绿。该未闭环项独立记录，不改写原dev19的所选S2历史资格。
+本批补齐Coding合成CLI准备与失败装配顺序，产品和原期限不改；最终完整离线 **14,089通过／891条件跳过／零失败与错误**，原五项全部通过。原五项失败及中间一轮Workspace超时保留，历史瞬态原因不追认；见[取证与完整复验](../architecture/reviews/2026-10-22-coding-regression-fixture-readiness.md)。不新增R项完成资格，不准备a4，不改写原dev19的所选S2或原a2／a3制品验收。
 
 **当前收尾（2026-10-22）：** 本轮首版交付事项已收口：a2原两包保持，原生AMD64／ARM64三Python基础门禁通过；原缺Temporal SDK的指纹单项已独立补齐；[GitHub Alpha](https://github.com/RalfNick/relf-agent/releases/tag/v0.1.0a2)和匿名公开安装已完成。额外源码全量14,003通过／891条件跳过。PyPI、独立采用、完整M1及长期R01–R26仍单独开放，不自动扩展本轮任务。状态见[验证清单](alpha2-validation-status.md)，证据见[公开交付记录](../architecture/reviews/2026-10-22-alpha2-public-release.md)。原S2所选18/18和所有历史失败保持。
 
