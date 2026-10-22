@@ -12,13 +12,13 @@ Use **Python 3.11 or newer** in a virtual environment. The local introduction us
 
 Relf-Agent is in Alpha. APIs and deployment combinations continue to evolve. See the repository's [implementation status (Chinese)](repo:docs/implementation-status.md) for the actual verification scope of each combination.
 
-The display brand changed from Ralf-Agent to Relf-Agent. The `ralf-agent` distribution, `ralf_agent` imports, `ralf` CLI and repository URLs remain unchanged. Do not use `pip install relf-agent`, `import relf_agent` or a `relf` command. The original SDK still prints Ralf-Agent in `ralf --version`.
+The display brand changed from Ralf-Agent to Relf-Agent, and the repository is now `RalfNick/relf-agent`. The `ralf-agent` distribution, `ralf_agent` imports and `ralf` CLI remain unchanged. Do not use `pip install relf-agent`, `import relf_agent` or a `relf` command. The original SDK still prints Ralf-Agent in `ralf --version`.
 
 ## Install from source
 
 ```bash
-git clone https://github.com/RalfNick/ralf-agent.git
-cd ralf-agent
+git clone https://github.com/RalfNick/relf-agent.git
+cd relf-agent
 git checkout 0b9b6c9682c40285d91994cd831aa93d7e814bf1
 python3 -m venv .venv
 source .venv/bin/activate
@@ -28,7 +28,7 @@ ralf --version
 
 This documentation baseline is SDK **0.1.0a1**, commit `0b9b6c9682c40285d91994cd831aa93d7e814bf1`, verified on 2026-10-21. The checkout command pins it; `ralf --version` should show `0.1.0a1`. The base dependencies include `httpx` and `jsonschema`. Newer source may differ; keep the original SDK and configuration for old runs.
 
-> This guide pins the original a1 source, not a public a1 package. The latest [0.1.0a2 Alpha](https://github.com/RalfNick/ralf-agent/releases/tag/v0.1.0a2) is publicly available through GitHub Release; its release notes provide the verified installation command. PyPI remains unpublished, so `pip install ralf-agent` is not this guide's verified entry point.
+> This guide pins the original a1 source, not a public a1 package. The latest [0.1.0a2 Alpha](https://github.com/RalfNick/relf-agent/releases/tag/v0.1.0a2) is publicly available through GitHub Release; its release notes provide the verified installation command. PyPI remains unpublished, so `pip install ralf-agent` is not this guide's verified entry point.
 
 If you have a local wheel, install it in a virtual environment with `python -m pip install /actual/path/package.whl`. Verify its source and version.
 

@@ -12,7 +12,7 @@
 | --- | --- |
 | macOS ARM64／Python3.12 | a2原第1版门禁311＋16及两starter通过；见原`delivery.json`，不套用旧a1成绩 |
 | Linux ARM64／Python3.11–3.13 | a2第2版门禁三版本各311＋16及两starter通过，零失败／错误／跳过／OOM；2CPU／2GiB／swap0、串行断网，最高326.48MiB；见[本轮验收](../architecture/reviews/2026-10-22-alpha2-validation-audit.md) |
-| 原生Linux AMD64／Python3.11–3.13 | a2三版本各311＋16及两starter通过，零失败／错误／跳过／OOM，最高288.33MiB；实际`--require-native`、2CPU／2GiB、串行断网；[run39715385289](https://github.com/RalfNick/ralf-agent/actions/runs/39715385289) |
+| 原生Linux AMD64／Python3.11–3.13 | a2三版本各311＋16及两starter通过，零失败／错误／跳过／OOM，最高288.33MiB；实际`--require-native`、2CPU／2GiB、串行断网；[run39715385289](https://github.com/RalfNick/relf-agent/actions/runs/39715385289) |
 | Windows及其他平台／Python | 未验收 |
 
 两包使用独立a2版本及精确SHA，manifest还记录产品树、测试输入树和构建工作区来源。sdist内的manifest是构建输入快照，最终放行使用交付目录`gate/`或最终维护checkout的外置manifest；这是避免sdist自身SHA循环，不是允许换包或降低校验。

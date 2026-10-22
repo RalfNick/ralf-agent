@@ -12,13 +12,13 @@ sources: [docs/installation.md, docs/getting-started.md]
 
 Relf-Agent 处于 Alpha 阶段，API 和部署组合仍在演进。各组合的实际验证范围以仓库的[实现清单](repo:docs/implementation-status.md)为准。
 
-展示名称已由 Ralf-Agent 更新为 Relf-Agent。安装包 `ralf-agent`、导入路径 `ralf_agent`、CLI `ralf` 与仓库地址保持；不使用 `pip install relf-agent`、`import relf_agent` 或 `relf` 命令。旧版 `ralf --version` 显示 Ralf-Agent 属于原 SDK 输出。
+展示名称已由 Ralf-Agent 更新为 Relf-Agent，仓库现为 `RalfNick/relf-agent`。安装包 `ralf-agent`、导入路径 `ralf_agent`、CLI `ralf` 保持；不使用 `pip install relf-agent`、`import relf_agent` 或 `relf` 命令。旧版 `ralf --version` 显示 Ralf-Agent 属于原 SDK 输出。
 
 ## 从源码安装
 
 ```bash
-git clone https://github.com/RalfNick/ralf-agent.git
-cd ralf-agent
+git clone https://github.com/RalfNick/relf-agent.git
+cd relf-agent
 git checkout 0b9b6c9682c40285d91994cd831aa93d7e814bf1
 python3 -m venv .venv
 source .venv/bin/activate
@@ -28,7 +28,7 @@ ralf --version
 
 文档基线为 SDK **0.1.0a1**，提交 `0b9b6c9682c40285d91994cd831aa93d7e814bf1`，验证日期为 2026-10-21。checkout 命令固定此版本，`ralf --version` 应显示 `0.1.0a1`。基础依赖含 `httpx` 和 `jsonschema`。更新源码后行为可能变化；为旧 Run 保留原 SDK 和配置。
 
-> 当前指南固定原 a1 源码，不把它描述成公开发行包。最新 [0.1.0a2 Alpha](https://github.com/RalfNick/ralf-agent/releases/tag/v0.1.0a2) 已通过 GitHub Release 公开交付，安装命令见其发布说明；PyPI 尚未发布，`pip install ralf-agent` 不是本指南的已验证入口。
+> 当前指南固定原 a1 源码，不把它描述成公开发行包。最新 [0.1.0a2 Alpha](https://github.com/RalfNick/relf-agent/releases/tag/v0.1.0a2) 已通过 GitHub Release 公开交付，安装命令见其发布说明；PyPI 尚未发布，`pip install ralf-agent` 不是本指南的已验证入口。
 
 如果已经获得本地 wheel，可以在虚拟环境中用 `python -m pip install /实际路径/包名.whl` 安装，并核对制品来源与版本。
 

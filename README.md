@@ -8,11 +8,11 @@
 
 Relf-Agent 把模型决策、工具调用、人工审批和业务结果保存为明确的执行步骤，让 Agent 任务在进程重启后继续。模型、工具、上下文、记忆和检索组件可以独立替换，从本地 SQLite 的单 Agent 逐步组合到 Workflow、Plan／Team 与 Temporal 执行。
 
-原项目名为 Ralf-Agent。本次更新展示品牌；安装包仍为 `ralf-agent`，Python 导入仍为 `ralf_agent`，命令仍为 `ralf`，仓库与已发布制品地址保持。详见[名称与兼容边界](docs/project-naming.md)。
+原项目名为 Ralf-Agent，仓库现为 [RalfNick/relf-agent](https://github.com/RalfNick/relf-agent)。安装包仍为 `ralf-agent`，Python 导入仍为 `ralf_agent`，命令仍为 `ralf`，已发布制品及恢复标识保持不变。详见[名称与兼容边界](docs/project-naming.md)。
 
 [快速开始](#快速开始) · [文档目录](docs/README.md) · [示例](examples/README.md) · [贡献指南](CONTRIBUTING.md) · [更新记录](CHANGELOG.md)
 
-> 当前为 **[0.1.0a2 Alpha](https://github.com/RalfNick/ralf-agent/releases/tag/v0.1.0a2)**，API 与部署能力仍在演进。使用范围以[实现清单](docs/implementation-status.md)为准；不同后端与组合的验证范围分别记录。首版冻结范围、平台及未验收项见[Alpha说明](docs/releases/0.1.0a2.md)，已通过GitHub Release公开发行及匿名安装核对，尚未发布到PyPI。默认本地入门无需模型密钥、Redis、Temporal 或 Docker。
+> 当前为 **[0.1.0a2 Alpha](https://github.com/RalfNick/relf-agent/releases/tag/v0.1.0a2)**，API 与部署能力仍在演进。使用范围以[实现清单](docs/implementation-status.md)为准；不同后端与组合的验证范围分别记录。首版冻结范围、平台及未验收项见[Alpha说明](docs/releases/0.1.0a2.md)，已通过GitHub Release公开发行及匿名安装核对，尚未发布到PyPI。默认本地入门无需模型密钥、Redis、Temporal 或 Docker。
 
 ## 为什么使用 Relf-Agent
 
@@ -29,7 +29,7 @@ Relf-Agent 把模型决策、工具调用、人工审批和业务结果保存为
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
-python -m pip install 'https://github.com/RalfNick/ralf-agent/releases/download/v0.1.0a2/ralf_agent-0.1.0a2-py3-none-any.whl#sha256=dfac0e38b2a879d8eb0c23dd5889774a0d64860c9ffe1945f9ef945629f95a46'
+python -m pip install 'https://github.com/RalfNick/relf-agent/releases/download/v0.1.0a2/ralf_agent-0.1.0a2-py3-none-any.whl#sha256=dfac0e38b2a879d8eb0c23dd5889774a0d64860c9ffe1945f9ef945629f95a46'
 ralf --db .ralf/demo.sqlite --format text demo --ticket INC-001
 ```
 

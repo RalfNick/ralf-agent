@@ -13,8 +13,8 @@ This page covers the complete local path from installation to a completed task. 
 In a terminal, create a virtual environment and install:
 
 ```bash
-git clone https://github.com/RalfNick/ralf-agent.git
-cd ralf-agent
+git clone https://github.com/RalfNick/relf-agent.git
+cd relf-agent
 git checkout 0b9b6c9682c40285d91994cd831aa93d7e814bf1
 python3 -m venv .venv
 source .venv/bin/activate

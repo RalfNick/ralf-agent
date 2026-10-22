@@ -14,10 +14,10 @@
 | Python 发行包名 | `ralf-agent` |
 | Python 导入路径 | `ralf_agent` |
 | CLI 及相关子工具前缀 | `ralf`、`ralf-*` |
-| 仓库及 Issues、Release 地址 | `https://github.com/RalfNick/ralf-agent` |
+| 仓库及 Issues、Release 地址 | `https://github.com/RalfNick/relf-agent` |
 | 环境变量、默认目录及配置字段 | 原 `RALF_*`、`.ralf` 等标识 |
 
-本次只更新品牌，不提供 `relf` 命令、`relf_agent` 导入或同名安装包。继续按[安装指南](installation.md)使用已验证的精确制品；PyPI 尚未发布。CLI 版本输出、旧模板或固定源码中出现 Ralf-Agent 属于原 SDK 的实际输出。
+品牌与仓库链接更新不提供 `relf` 命令、`relf_agent` 导入或同名安装包。继续按[安装指南](installation.md)使用已验证的精确制品；PyPI 尚未发布。CLI 版本输出、旧模板或固定源码中出现 Ralf-Agent 属于原 SDK 的实际输出。
 
 ## 历史与恢复
 

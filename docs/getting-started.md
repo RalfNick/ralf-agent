@@ -6,7 +6,7 @@
 
 真实模型可用 `ralf init my-model-agent --template model` 生成独立项目，先替换 model/协议/凭据环境变量；配置限制与验证等级见 [模型接入](model-adapters.md)。生成模板不执行收费请求，也不表示账户与型号已验证。
 
-当前已验证源码和本地 wheel 的安装路径；尚未核验 PyPI 或 GitHub Release 中有对应发行包。不要把 `pip install ralf-agent` 当作已验证的安装方式。
+当前已验证源码和原 wheel 的安装路径；公开 a2 原包及仓库改名后的下载入口见[安装指南](installation.md#从公开-alpha-安装)。PyPI 尚未发布，不要把 `pip install ralf-agent` 当作已验证的安装方式。
 
 ## 1. 安装：wheel 使用者与源码开发者
 
@@ -24,8 +24,8 @@ ralf --version
 **从源码开始：**
 
 ```bash
-git clone https://github.com/RalfNick/ralf-agent.git
-cd ralf-agent
+git clone https://github.com/RalfNick/relf-agent.git
+cd relf-agent
 python3 -m venv .venv
 source .venv/bin/activate
 python -m pip install -e .

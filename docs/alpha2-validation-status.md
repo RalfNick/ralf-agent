@@ -1,6 +1,6 @@
 # Alpha 2 验证与待处理清单
 
-更新：2026-10-22。公开[v0.1.0a2](https://github.com/RalfNick/ralf-agent/releases/tag/v0.1.0a2)固定验收代码`3a92720`，发布的仍是`1b72c05`冻结的原两包；原dev19专项、各平台和公开安装分别判断。运行结果只适用于各自制品、测试集合与平台；不把测试数量换算为框架完成率。
+更新：2026-10-22。公开[v0.1.0a2](https://github.com/RalfNick/relf-agent/releases/tag/v0.1.0a2)固定验收代码`3a92720`，发布的仍是`1b72c05`冻结的原两包；原dev19专项、各平台和公开安装分别判断。运行结果只适用于各自制品、测试集合与平台；不把测试数量换算为框架完成率。
 
 ## 当前放行情况
 
@@ -11,7 +11,7 @@
 | Linux ARM64／Python3.11–3.13基础SDK | 本轮同包复验通过 | 每版311基础＋16恢复＋两starter，零失败／错误／跳过／OOM；原2CPU／2GiB／swap0、串行断网，峰值最高326.48MiB |
 | 函数指纹跨Python缓存回归 | 最小SDK96项和Temporal单项分别在三版本通过 | 后续以匹配Temporal SDK独立补齐原单项；不拼成同环境97项，不扩大为完整指纹／CONTROL／旧Worker资格，原缺依赖失败保留 |
 | 原生Linux AMD64／Python3.11–3.13 | 新a2原包三版本通过 | 各311＋16＋两starter，原2CPU／2GiB／swap0、串行断网；零失败／错误／跳过／OOM，最高288.33MiB |
-| a2远端CI入口与实际运行 | 已按授权执行 | 独立`alpha2-*`手动入口固定dfb066e；[run39715385289](https://github.com/RalfNick/ralf-agent/actions/runs/39715385289)实际报告已复核，原a1流程不改 |
+| a2远端CI入口与实际运行 | 已按授权执行 | 独立`alpha2-*`手动入口固定dfb066e；[run39715385289](https://github.com/RalfNick/relf-agent/actions/runs/39715385289)实际报告已复核，原a1流程不改 |
 | 项目权限、最终Tag、GitHub发行与公开安装 | 已完成 | RalfNick核验；Tagv0.1.0a2，原两包及SHA公开下载匹配；公开URL普通安装、两starter和五阶段重复提交通过 |
 | PyPI | 未发布 | 未配置发布认证／核验项目控制权，不能把GitHub所有权当作PyPI权限 |
 | S2所选Temporal／Coding恢复 | 原dev19同包18/18已通过 | [原验收](../architecture/reviews/2026-10-21-s2-session-parent-hints.md#最终核对与交付边界2026-10-22)；不是a2各平台同次服务验证 |

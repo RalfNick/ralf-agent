@@ -4,7 +4,7 @@
 
 ## 报告问题与提出需求
 
-提交前先搜索已有 [Issues](https://github.com/RalfNick/ralf-agent/issues)，确认[实现清单](docs/implementation-status.md)中的支持范围。问题报告请包含：
+提交前先搜索已有 [Issues](https://github.com/RalfNick/relf-agent/issues)，确认[实现清单](docs/implementation-status.md)中的支持范围。问题报告请包含：
 
 - 包版本或 commit、OS、Python 版本及所选后端／可选依赖。
 - 可独立运行的最小复现、操作步骤、预期与实际行为。

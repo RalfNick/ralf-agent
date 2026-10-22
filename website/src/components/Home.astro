@@ -10,7 +10,7 @@ interface Props { locale: Locale }
 const { locale } = Astro.props; const zh = locale === 'zh';
 const docs = `/${locale}/docs/`;
 const description = zh ? `${brand.name}：${brand.meaning.zh}按需组合模型、工具、上下文与记忆，通过持久审批和恢复运行智能应用。` : `${brand.name}: ${brand.meaning.en} Compose models, tools and memory with durable approvals and recovery.`;
-const installCode = `git clone ${repository}.git\ncd ralf-agent\ngit checkout ${repositoryInfo.ref}\npython3 -m venv .venv\nsource .venv/bin/activate\npython -m pip install -e .`;
+const installCode = `git clone ${repository}.git\ncd relf-agent\ngit checkout ${repositoryInfo.ref}\npython3 -m venv .venv\nsource .venv/bin/activate\npython -m pip install -e .`;
 const runCode = 'ralf --format text init ../my-agent\ncd ../my-agent\npython -m agent_app --ticket INC-001';
 ---
 <Base locale={locale} title={`${brand.name} — ${brand.tagline[locale]}`} description={description}>

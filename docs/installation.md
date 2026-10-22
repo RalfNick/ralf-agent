@@ -6,12 +6,12 @@ Relf-Agent 需要 Python 3.11+。本地开发使用 Linux 或 macOS，本轮实�
 
 ## 从公开 Alpha 安装
 
-当前公开入口是[GitHub Release v0.1.0a2](https://github.com/RalfNick/ralf-agent/releases/tag/v0.1.0a2)，尚未发布到PyPI。以下精确wheel URL与SHA已在源码目录外的新环境实际安装，审批、崩溃恢复和重复提交通过：
+当前公开入口是[GitHub Release v0.1.0a2](https://github.com/RalfNick/relf-agent/releases/tag/v0.1.0a2)，尚未发布到PyPI。原wheel已在源码目录外的新环境实际安装，审批、崩溃恢复和重复提交通过；仓库改名后的以下下载地址另经匿名下载核对，原包SHA保持：
 
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
-python -m pip install 'https://github.com/RalfNick/ralf-agent/releases/download/v0.1.0a2/ralf_agent-0.1.0a2-py3-none-any.whl#sha256=dfac0e38b2a879d8eb0c23dd5889774a0d64860c9ffe1945f9ef945629f95a46'
+python -m pip install 'https://github.com/RalfNick/relf-agent/releases/download/v0.1.0a2/ralf_agent-0.1.0a2-py3-none-any.whl#sha256=dfac0e38b2a879d8eb0c23dd5889774a0d64860c9ffe1945f9ef945629f95a46'
 ralf --version
 ralf --format text init my-agent
 ```
@@ -21,8 +21,8 @@ Release同时提供原sdist和只列这两包的`SHA256SUMS`。公开安装实�
 ## 从源码安装
 
 ```bash
-git clone https://github.com/RalfNick/ralf-agent.git
-cd ralf-agent
+git clone https://github.com/RalfNick/relf-agent.git
+cd relf-agent
 python3 -m venv .venv
 source .venv/bin/activate
 python -m pip install -e .

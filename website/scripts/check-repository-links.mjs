@@ -5,10 +5,16 @@ import { resolve, join } from 'node:path';
 import { repositoryInfo } from '../src/lib/repository.mjs';
 
 const repoRoot = fileURLToPath(new URL('../../', import.meta.url));
+const previousRepository = 'https://github.com/RalfNick/ralf-agent';
 
 export function checkRepositoryTargets(urls, files) {
   const problems = [];
   for (const value of new Set(urls)) {
+    // Cached Markdown must not silently depend on the previous repository redirect.
+    if (value === previousRepository || ['/', '?', '#'].some((separator) => value.startsWith(previousRepository + separator))) {
+      problems.push(`Stale repository URL: ${value}`);
+      continue;
+    }
     if (!value.startsWith(`${repositoryInfo.url}/blob/`) && !value.startsWith(`${repositoryInfo.url}/tree/`)) continue;
     const suffix = value.slice(repositoryInfo.url.length + 1);
     const [kind, ref, ...parts] = suffix.split('/');

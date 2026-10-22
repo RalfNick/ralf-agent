@@ -13,8 +13,8 @@ sources: [docs/installation.md, docs/getting-started.md, docs/recovery-guide.md]
 在终端中创建独立虚拟环境并安装：
 
 ```bash
-git clone https://github.com/RalfNick/ralf-agent.git
-cd ralf-agent
+git clone https://github.com/RalfNick/relf-agent.git
+cd relf-agent
 git checkout 0b9b6c9682c40285d91994cd831aa93d7e814bf1
 python3 -m venv .venv
 source .venv/bin/activate

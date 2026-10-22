@@ -1,7 +1,7 @@
 {
   "note": "Record only after reviewing both locales against the listed repository sources.",
   "repository": {
-    "url": "https://github.com/RalfNick/ralf-agent",
+    "url": "https://github.com/RalfNick/relf-agent",
     "ref": "0b9b6c9682c40285d91994cd831aa93d7e814bf1",
     "sdkVersion": "0.1.0a1",
     "verifiedAt": "2026-10-21"
@@ -15,7 +15,7 @@
       "sources": {
         "docs/agent-api.md": "c65995cf48297497f31f4b8a9ab0208014d69b59f9c9416d2aff8ac4fbc7af46",
         "docs/api-reference.md": "d364c4c495b1a4213d7f2ec744f147530505bac62f10067cc7202544b1b2f96c",
-        "docs/getting-started.md": "19f3bcecbd8d77ea154828eddf94d8c787ecfbab68506806068f03d763fcff51",
+        "docs/getting-started.md": "cb356c0842bd0a41119b6bf2f8f7feb9be06da09ee3b7b4dcc6e8b86d6cceba9",
         "docs/recovery-guide.md": "2e5ce75c935469eb4840452493fb42ba0ce39fd72f546a76dea1161948f8a0ab",
         "docs/runtime-assembly.md": "9897a4d51584c178ad056dab159ee3e260c9fa73c38f969cb79ee624914e1533",
         "docs/sdk-model-tools.md": "df32aa8980b54089b72911cce585f7fb99d4a0dbdd24c68fe309684355601ef8",
@@ -30,7 +30,7 @@
       },
       "sources": {
         "docs/agent-api.md": "c65995cf48297497f31f4b8a9ab0208014d69b59f9c9416d2aff8ac4fbc7af46",
-        "docs/installation.md": "1aa009ebb0fbb52f4823d2afcb58afd7298050f66d8d7c77194d6a3c3f06e340",
+        "docs/installation.md": "210680734007d77cee3dced94a587e20f551cb94b3a647c0cd8b12b7fc49b319",
         "docs/managed-memory.md": "dae3d0380f5db955c8e83e4d40c13fc0421e422bddaee18efab5f054b6ed81ce",
         "docs/orchestration.md": "24fad0ac4ce11a3dbbcca0b84f4d57b8111d02c28262abdba74ae9208667881f",
         "docs/recall-and-rag.md": "7862d157f3161523595f88782cbbd4b04389c309614da2ee3196180697491947",
@@ -53,12 +53,12 @@
     },
     "installation": {
       "translations": {
-        "zh": "09ce6d416a9ade01d10430a3f7d49d793c11de696ce15b28254b2e83af2b2cef",
-        "en": "accd8da6bac64bc194289ea4636ef1778f8c0eddbc25ece50a5e86bef657e80f"
+        "zh": "694740764cf1688160d96f14911a5f434ec6f943acab514e3d4787d15ed4d945",
+        "en": "c2697ca0a9152f608f3e759da126a033535f83426e14e314f13e70dac6bfa92e"
       },
       "sources": {
-        "docs/getting-started.md": "19f3bcecbd8d77ea154828eddf94d8c787ecfbab68506806068f03d763fcff51",
-        "docs/installation.md": "1aa009ebb0fbb52f4823d2afcb58afd7298050f66d8d7c77194d6a3c3f06e340"
+        "docs/getting-started.md": "cb356c0842bd0a41119b6bf2f8f7feb9be06da09ee3b7b4dcc6e8b86d6cceba9",
+        "docs/installation.md": "210680734007d77cee3dced94a587e20f551cb94b3a647c0cd8b12b7fc49b319"
       }
     },
     "integrations": {
@@ -85,9 +85,9 @@
         "en": "b06dd0829b58b574ce8549b784dfa8d0e5d764815669e3df490ef16e0fddc09e"
       },
       "sources": {
-        "README.md": "aba9fb8cc09fd5338b42a66ed4834a022c9029b72a40e74fd5846949c7932f71",
+        "README.md": "b7f4885f0a509e841008d45422ccbe58ff332d39e8f545592c81571b52dedf38",
         "docs/completion-verification.md": "1aa50f064c1ea212d78e2fa5dceaa4f7e9a81889daad309aca38e73d096b4735",
-        "docs/getting-started.md": "19f3bcecbd8d77ea154828eddf94d8c787ecfbab68506806068f03d763fcff51",
+        "docs/getting-started.md": "cb356c0842bd0a41119b6bf2f8f7feb9be06da09ee3b7b4dcc6e8b86d6cceba9",
         "docs/model-adapters.md": "ec3a80838dd548aa7c55fb78e150047d5f38f866877dee8df884dc90b4e500f7",
         "docs/sdk-model-tools.md": "df32aa8980b54089b72911cce585f7fb99d4a0dbdd24c68fe309684355601ef8"
       }
@@ -108,8 +108,8 @@
     },
     "overview": {
       "translations": {
-        "zh": "b4c0928a9b64f29189f1ef27ad098325ce38a39979e0f344bfa186dee03d3d4c",
-        "en": "6332502078f5004344600c027f287f7637327c9ad753fd028010701f91f7b920"
+        "zh": "de5438ecbeb3e1b8ddf51a61719fc26af4d7471b5644e1ecdcbabf93558348ff",
+        "en": "8c9d2aee33b11ab9909f640e3b07f59aa69b7769f704bc477009632bc07740c4"
       },
       "sources": {
         "docs/basic-capabilities.md": "c7116fd58bb90a6758b7b9d04b9814345ab5bc4f247dfa40a3084b5aaccb611d",
@@ -120,12 +120,12 @@
     },
     "quickstart": {
       "translations": {
-        "zh": "483ead44d1d8107a0f0021c4a5a9fe612b313a8cff965f524c8227cd3c0742fd",
-        "en": "d674944803f7df66321203115e8f090d27ec77a060e63a5f8e868bb81111db9a"
+        "zh": "6fe0c6ef527db07263d697f7f71af0778dc5b4b4dab95e9e29d98305854ef936",
+        "en": "f8aaf0fad2f11585323e8852ab832abc7d8f559af8e09730da7531564af61a93"
       },
       "sources": {
-        "docs/getting-started.md": "19f3bcecbd8d77ea154828eddf94d8c787ecfbab68506806068f03d763fcff51",
-        "docs/installation.md": "1aa009ebb0fbb52f4823d2afcb58afd7298050f66d8d7c77194d6a3c3f06e340",
+        "docs/getting-started.md": "cb356c0842bd0a41119b6bf2f8f7feb9be06da09ee3b7b4dcc6e8b86d6cceba9",
+        "docs/installation.md": "210680734007d77cee3dced94a587e20f551cb94b3a647c0cd8b12b7fc49b319",
         "docs/recovery-guide.md": "2e5ce75c935469eb4840452493fb42ba0ce39fd72f546a76dea1161948f8a0ab"
       }
     },
@@ -136,7 +136,7 @@
       },
       "sources": {
         "docs/concepts.md": "ad1881ff612c4e4b15de63cf840dcbe3f93740b47de0164fd38e852e19802d48",
-        "docs/getting-started.md": "19f3bcecbd8d77ea154828eddf94d8c787ecfbab68506806068f03d763fcff51",
+        "docs/getting-started.md": "cb356c0842bd0a41119b6bf2f8f7feb9be06da09ee3b7b4dcc6e8b86d6cceba9",
         "docs/recovery-guide.md": "2e5ce75c935469eb4840452493fb42ba0ce39fd72f546a76dea1161948f8a0ab"
       }
     },

@@ -2,7 +2,7 @@
 
 **当前推荐：`0.1.0a2` Local SDK Alpha。** 包含`8e09ec7`的近期修复，SDK仅版本调整；范围见[当前Alpha说明](releases/0.1.0a2.md)。发行源码`1b72c05`已按授权推送；原a1、dev19及全部失败分别保留。本轮已按新授权完成必要推送、固定CI与GitHub预发行，平台关口、门禁修订2与当前结果见[验证清单](alpha2-validation-status.md)，不能沿用原a1成绩。
 
-**公开入口：** [v0.1.0a2](https://github.com/RalfNick/ralf-agent/releases/tag/v0.1.0a2)，精确wheel URL及实测安装步骤见[安装指南](installation.md#从公开-alpha-安装)。Tag固定验收代码3a92720；当前文档维护不移动Tag或改写原包。GitHub预发行及匿名安装已完成，PyPI未发布。验收见[公开交付记录](../architecture/reviews/2026-10-22-alpha2-public-release.md)。
+**公开入口：** [v0.1.0a2](https://github.com/RalfNick/relf-agent/releases/tag/v0.1.0a2)，精确wheel URL及实测安装步骤见[安装指南](installation.md#从公开-alpha-安装)。Tag固定验收代码3a92720；当前文档维护不移动Tag或改写原包。GitHub预发行及匿名安装已完成，PyPI未发布。验收见[公开交付记录](../architecture/reviews/2026-10-22-alpha2-public-release.md)。
 
 ## 当前a2本地交付
 

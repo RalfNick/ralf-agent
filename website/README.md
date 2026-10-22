@@ -2,7 +2,7 @@
 
 独立的 Astro 静态官网。当前展示品牌为 **Relf-Agent**：**Reliable and Extensible Lifecycle Framework for Intelligent Agents**，可靠、可扩展的智能体全生命周期框架。定位：灵活构建智能体，可靠运行智能应用。
 
-原项目名为 Ralf-Agent；本次仅更新展示名称，`ralf-agent` 安装包、`ralf_agent` 导入、`ralf` CLI、实际仓库地址与原 SDK 保持。教程继续固定 `repository.json` 中的 a1 基线；最新公开 a2 链接另行标注。旧计划／审查与 Cloudflare 资源名保留。无需服务端、模型密钥或 Cloudflare 账户即可本地查看。
+原项目名为 Ralf-Agent；`ralf-agent` 安装包、`ralf_agent` 导入、`ralf` CLI 与原 SDK 保持。仓库已更名为 [RalfNick/relf-agent](https://github.com/RalfNick/relf-agent)，`repository.json` 与当前页面链接已同步。教程继续固定原 a1 基线；最新公开 a2 链接另行标注。旧计划／审查与 Cloudflare 资源名保留。无需服务端、模型密钥或 Cloudflare 账户即可本地查看。
 
 ## 本地开发与预览
 
@@ -77,6 +77,8 @@ npm run cf:dev
 搜索通过 Pagefind API 显示当前语言的文档。加载前用正文中必有的“审批／approval”验证索引与 WASM 就绪，每次查询等待全部结果片段，失败保留关键词并可重试。当前每种语言为两个查询分块。Pagefind 1.5.2 原实现会吞掉部分分块错误，因此 `scripts/strict-pagefind.mjs` 在构建时给主线程与 Worker 的同一个已知 catch 增加重新抛出，防止显示不完整结果。补丁只匹配一个准确位置，版本或实现变化会中止构建，必须重新审阅；单元测试与浏览器故障注入覆盖失败和重试。开发模式没有生成索引时显示重试与文档入口。
 
 `repository.json` 集中记录 SDK 版本、已发布提交和验证日期。组件调用 `repositoryUrl()`，Markdown 使用 `[标题](repo:docs/example.md#section)`，由 Sätteri MDAST 插件转换；不要再写死分支。构建检查所有生成的仓库链接，使用固定 Git tree 确认目标存在，不显示未发布的“编辑本页”。`npm run docs:links -- --remote` 另外只读核验固定提交属于远端 HEAD 的历史，需要网络和对应 Git 对象；CI 使用完整 checkout。英文指向中文的可选资料标注语言，关键操作应提供站内双语路径。
+
+修改仓库 URL 或 Markdown 链接转换配置后，先运行 `npm exec -- astro sync --force` 清除内容层缓存，再执行 `npm run build`。共享配置变化可能不会使已缓存的 Markdown 链接失效；构建检查会拒绝旧仓库地址，避免仅部分页面使用新链接。
 
 `npm run docs:examples` 需要 Python 3.12 和 SDK 基础依赖（先在虚拟环境安装 SDK）。脚本在临时目录导出固定提交的 SDK，直接提取两种语言的教程代码，验证模型示例改输出 Schema 后的新命令身份、重放、Session、输入、离线应用测试和混合检索。真实模型示例只替换成确定性 Provider 验证装配；不会运行付费模型／Embedding 探针。完整连续应用和评估命令的本轮验证记录见 reviews。
 
