@@ -1,0 +1,121 @@
+{
+  "schema_version": 1,
+  "version": "0.1.0a1",
+  "artifact_source_commit": "ba7bc467ddaa9bd309435bd9a5a015091911ad62",
+  "artifacts": {
+    "ralf_agent-0.1.0a1-py3-none-any.whl": "a736993b941213945ed3309de1fc7ed69e7c5ad5033f69b24ce35b8c1c341aee",
+    "ralf_agent-0.1.0a1.tar.gz": "bdf626bcee84678395b90a9c2b5bd5815a7c14188131b645b7f5ac337229fd63"
+  },
+  "product_files": 442,
+  "product_tree_sha256": "db4ed7fb38d2951696649c26534341b9698d7cfa1a0fbffa5cb99a8cf6a573ea",
+  "test_tree_sha256": "d52bfaa1d9f4d2f82fa70a34cfc7bc86cc5bfc60ee36374cca777db37ea8ac31",
+  "tests": {
+    "main": {
+      "selectors": [
+        "tests/test_async_adapter_combinations.py",
+        "tests/test_tool_sources.py",
+        "tests/test_mcp.py",
+        "tests/test_memory_pipeline.py",
+        "tests/test_runtime_capabilities.py",
+        "tests/test_extension_contracts.py",
+        "tests/test_support_journey.py",
+        "tests/test_agent_sessions.py",
+        "tests/test_workflow_adoption.py",
+        "tests/test_orchestration.py",
+        "tests/test_managed_data_context.py",
+        "tests/test_context_artifact_review.py",
+        "tests/test_composite_data_context.py",
+        "tests/test_local_approval_values.py",
+        "tests/test_local_deadline_facade.py",
+        "tests/test_component_validation.py",
+        "tests/test_scoped_semantic_recall.py",
+        "tests/test_composite_session_recovery.py"
+      ],
+      "deselect": [
+        "tests/test_scoped_semantic_recall.py::test_temporal_scoped_semantic_context_survives_state_restore_without_reembedding"
+      ],
+      "count": 311,
+      "node_ids_sha256": "e256798bd6320b827682989458e2bf698aed1bbd2c33c7444d4826e528cd0b70"
+    },
+    "related": {
+      "selectors": [
+        "tests/test_h3_context_process.py",
+        "tests/test_file_artifacts.py::test_composite_file_offload_recovers_without_repeating_business_or_artifact_write"
+      ],
+      "deselect": [],
+      "count": 16,
+      "node_ids_sha256": "d9056e7a4290a7fe3674ef49aaf946bb18f69454db414203a238ce6949f4b42c"
+    }
+  },
+  "starter_cases": 2,
+  "platforms": [
+    {
+      "system": "Linux",
+      "machine": "aarch64",
+      "python": [
+        "3.11",
+        "3.12",
+        "3.13"
+      ]
+    },
+    {
+      "system": "Darwin",
+      "machine": "arm64",
+      "python": [
+        "3.12"
+      ]
+    },
+    {
+      "system": "Linux",
+      "machine": "x86_64",
+      "python": [
+        "3.11",
+        "3.12",
+        "3.13"
+      ]
+    }
+  ],
+  "deferred": [
+    "function-fingerprint qualification",
+    "S2"
+  ],
+  "not_qualified": [
+    "remote CI",
+    "Linux AMD64 until actual passing report",
+    "Windows",
+    "real models and unselected services"
+  ],
+  "linux_container_limits": {
+    "cpus": 2,
+    "memory_bytes": 2147483648,
+    "swap_bytes": 0
+  },
+  "linux_arm64_images": {
+    "3.11": "sha256:0a310eeecf4e1f5a0743f9a6520c90c88d089c903ca5fd283f501e3a805f5f89",
+    "3.12": "sha256:34386ef0cb081344d7ec1c103ba398e6e9f64e9ab3a1509accc92a4e24a07258",
+    "3.13": "sha256:a1165e272e578941b84abc79e4ab38a0305cd12803a5c4247979ac7655f4d641"
+  },
+  "linux_amd64_images": {
+    "3.11": "docker.io/library/python@sha256:0a310eeecf4e1f5a0743f9a6520c90c88d089c903ca5fd283f501e3a805f5f89",
+    "3.12": "docker.io/library/python@sha256:34386ef0cb081344d7ec1c103ba398e6e9f64e9ab3a1509accc92a4e24a07258",
+    "3.13": "docker.io/library/python@sha256:a1165e272e578941b84abc79e4ab38a0305cd12803a5c4247979ac7655f4d641"
+  },
+  "test_corrections": [
+    {
+      "path": "tests/test_agent_sessions.py",
+      "before_sha256": "b04de6c6106bd7e39ca429b4441d3b991c7d8f287171aef60dad22b5ce7c4685",
+      "after_sha256": "46d3eb8b57f8422fe84a7f59c09fcc17c8354b0e87b8e9846ba14171928fd40e",
+      "reason": "Run terminal observation does not promise Session lane idle; wait for the documented idle condition before the next Turn. No SDK behavior or test identity change.",
+      "replacements": [
+        {
+          "before": "            assert (await first.wait(wait_timeout=1)).snapshot.state == \"succeeded\"",
+          "after": "            assert (await first.wait(wait_timeout=1)).snapshot.state == \"succeeded\"\n            async with asyncio.timeout(1):\n                # Session exposes polling, not a completion Event.\n                while (await session.status()).busy:  # noqa: ASYNC110\n                    await asyncio.sleep(0)"
+        },
+        {
+          "before": "            assert (await second.wait(wait_timeout=1)).snapshot.state == \"succeeded\"",
+          "after": "            assert (await second.wait(wait_timeout=1)).snapshot.state == \"succeeded\"\n            async with asyncio.timeout(1):\n                # Session exposes polling, not a completion Event.\n                while (await session.status()).busy:  # noqa: ASYNC110\n                    await asyncio.sleep(0)"
+        }
+      ]
+    }
+  ]
+}

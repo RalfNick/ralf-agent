@@ -20,7 +20,7 @@ jobs:
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
-          ref: ${{ github.sha }}
+          ref: 0b9b6c9682c40285d91994cd831aa93d7e814bf1 # immutable a1 tools and product
           persist-credentials: false
       - name: Verify private draft and exact original bytes
         env:

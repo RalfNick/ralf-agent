@@ -1,6 +1,36 @@
 # 预览版本验证与发布
 
-**S2本轮结果（2026-10-21）：** 同一私有a2.dev13（SHA `a4f5fec1ebd0a5783e88c839984f8e582ed24529fad47cf2f7c06769bfbdd8af`），442产品字节不变、不重建制品。用户仅将S2既有统一Activity80改90，其余期限保持，SDK默认不变。并行诊断1通过／374.414秒；首项1通过／436.114秒并清理后才运行剩余17项，结果15通过／2失败／零跳过，正式矩阵合计 **16/18通过**。矩阵并行图再次通过／352.956秒，原递归及冷交接第二Turn仍在ready80失败，关闭CloseIncomplete；两意外schema及hard-kill精确预期保留均保存，自有服务已停止、零停止错误。受影响源码及同包隔离安装各134通过／零跳过；本轮未重跑无筛选全量，前批13819通过／891缺配置跳过仅为历史证据。未找到可安全删去的重复校验，本轮没有追加产品修复，不将性能波动归因于单一配置或将旧失败报绿。**S2／P3-2／第三阶段仍开放**，不推送或公开发布；见[本批记录](../architecture/reviews/2026-10-21-s2-activity90.md)。
+**当前推荐：`0.1.0a2` Local SDK Alpha 本地候选。** 包含`8e09ec7`的近期修复，SDK仅版本调整；范围见[当前Alpha说明](releases/0.1.0a2.md)。原a1、dev19及全部失败分别保留。当前不推送或公开发布，Linux与远端CI不因原a1结果视为a2已通过。
+
+## 当前a2本地交付
+
+新交付目录为`dist/alpha2-candidate/`，只选其中精确wheel／sdist，核对`SHA256SUMS`及`delivery.json`。发行来源为`8e09ec7`加本批发行工作区，完整输入摘要见`source-inputs.json`，不能将原提交或其原dev19 wheel冒充a2。交付包内版本均为`0.1.0a2`，原a1包不覆盖。
+
+```bash
+cd /ABS/ralf-agent/dist/alpha2-candidate
+shasum -a 256 -c SHA256SUMS
+python3.12 -m venv /tmp/ralf-a2-install
+/tmp/ralf-a2-install/bin/python -m pip install ./ralf_agent-0.1.0a2-py3-none-any.whl
+/tmp/ralf-a2-install/bin/ralf --version
+```
+
+当前checkout的[固定门禁](release-gate.md)与外置manifest绑定a2。sdist所含manifest为构建前输入快照，不包含最终制品SHA；使用交付`gate/`工具套件或最终维护checkout的外置manifest，不以修改SHA或仅运行`--plan`放行。
+
+```bash
+python3.12 tools/release_preflight.py \
+  --wheel /ABS/ralf_agent-0.1.0a2-py3-none-any.whl \
+  --sdist /ABS/ralf_agent-0.1.0a2.tar.gz --output /ABS/new-a2-handoff
+```
+
+本地预检须返回0、`passed_local_preflight`且复制后摘要正确；它检查来源产品、版本和许可证，不运行平台门禁，`publication_ready`保持false。本地实际安装、311／16／2、sdist离线重建及连续示例由独立报告取证。Linux ARM64／原生AMD64、远端CI、项目权限、最终Tag、公开发行及公开安装分别待验，不能由本地报告代签。到远端CI交接边界停止，未经后续授权不上传、触发或发布。
+
+原dev19的S2与指纹资格按原制品和环境引用；新a2不新增服务或模型质量成绩。兼容、旧Worker与未定位未知异常见[当前Alpha说明](releases/0.1.0a2.md#兼容与已知限制)。
+
+## 历史a1流程与原制品记录
+
+以下保留原a1及其后各候选的原始记录。它们不覆盖本页顶部的a2当前候选；历史“后置／待验／不推送”描述当时状态。原a1复验须使用固定维护提交`0b9b6c9682c40285d91994cd831aa93d7e814bf1`的源码与工具，不用当前a2 checkout冒充原输入。
+
+**历史dev13结果（2026-10-21）：** 同一私有a2.dev13（SHA `a4f5fec1ebd0a5783e88c839984f8e582ed24529fad47cf2f7c06769bfbdd8af`），442产品字节不变、不重建制品。用户仅将S2既有统一Activity80改90，其余期限保持，SDK默认不变。并行诊断1通过／374.414秒；首项1通过／436.114秒并清理后才运行剩余17项，结果15通过／2失败／零跳过，正式矩阵合计 **16/18通过**。矩阵并行图再次通过／352.956秒，原递归及冷交接第二Turn仍在ready80失败，关闭CloseIncomplete；两意外schema及hard-kill精确预期保留均保存，自有服务已停止、零停止错误。受影响源码及同包隔离安装各134通过／零跳过；本轮未重跑无筛选全量，前批13819通过／891缺配置跳过仅为历史证据。未找到可安全删去的重复校验，本轮没有追加产品修复，不将性能波动归因于单一配置或将旧失败报绿。**S2／P3-2／第三阶段仍开放**，不推送或公开发布；见[本批记录](../architecture/reviews/2026-10-21-s2-activity90.md)。
 
 **前批本机专项候选：`0.1.0a2.dev5`。** wheel SHA `a25686241dbdf91ab285f76c5cf3de44a10eae056df1f6390f4c44b3e1a1cbb0`，442产品文件源码／wheel／隔离安装一致。定向原五失败3通过／2失败；完整安装回归主动中止（5800通过／139跳过，非全量通过），S2仍未通过，不能作为已支持Coding Session的发行制品。默认材料、两旧History及两starter通过；源码固定的历史部署Worker仍使用各自原包，新默认patch不追溯修改旧History。详见[本批记录](../architecture/reviews/2026-10-20-s2-five-failures.md)。a1及dev4保持原字节和证据，本批不复用a1平台门禁，不推送或公开发布。
 
@@ -10,7 +40,7 @@
 
 **2026-10-20专项恢复：** 用户已恢复函数指纹／S2验证。a2.dev1／a2.dev2为独立本机私有候选；原a1推荐包及其冻结门禁不重建、不覆盖，新候选不能套用原a1平台验收。版本、兼容范围与当前结果见[恢复验证记录](../architecture/reviews/2026-10-20-s2-fingerprint-resume.md)；原a1不包含本轮指纹P2修复，私有a2也未取得S2支持资格。S2仍开放，不推送或公开发布。下文原a1及旧开发批次的“后置”保留其历史范围。
 
-当前推荐 **0.1.0a1 Local 基础 SDK Alpha 未公开候选**。首版范围、实验性能力和平台边界见[Alpha说明](releases/0.1.0a1.md)。基于fc128b8，只统一发行版本和材料，不新增运行时能力；函数指纹专项、S2、完整第三阶段与R01–R26状态保持。
+历史推荐 **0.1.0a1 Local 基础 SDK Alpha 未公开候选**。首版范围、实验性能力和平台边界见[Alpha说明](releases/0.1.0a1.md)。基于fc128b8，只统一发行版本和材料，不新增运行时能力；函数指纹专项、S2、完整第三阶段与R01–R26状态保持。
 
 CI检查与构建不自动发布到PyPI／GitHub Release。原a1制品保持不变，后续经授权暂存原包并执行所选原生AMD64手动门禁，CI维护提交已推送；未公开发行。临时未发布草稿已删除；历史制品及失败证据保留，见[远端验收](../architecture/reviews/2026-10-20-alpha1-native-ci-validation.md)。
 

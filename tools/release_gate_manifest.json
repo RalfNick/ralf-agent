@@ -1,14 +1,14 @@
 {
   "schema_version": 1,
-  "version": "0.1.0a1",
-  "artifact_source_commit": "ba7bc467ddaa9bd309435bd9a5a015091911ad62",
+  "version": "0.1.0a2",
+  "artifact_source_commit": "8e09ec79328e719074b14a656a5bf8f15e5a61ff",
   "artifacts": {
-    "ralf_agent-0.1.0a1-py3-none-any.whl": "a736993b941213945ed3309de1fc7ed69e7c5ad5033f69b24ce35b8c1c341aee",
-    "ralf_agent-0.1.0a1.tar.gz": "bdf626bcee84678395b90a9c2b5bd5815a7c14188131b645b7f5ac337229fd63"
+    "ralf_agent-0.1.0a2-py3-none-any.whl": "dfac0e38b2a879d8eb0c23dd5889774a0d64860c9ffe1945f9ef945629f95a46",
+    "ralf_agent-0.1.0a2.tar.gz": "8a6be717541117ce8cecf4135ba5442936b3192b9d1967d5c79ca90511a35cc8"
   },
   "product_files": 442,
-  "product_tree_sha256": "db4ed7fb38d2951696649c26534341b9698d7cfa1a0fbffa5cb99a8cf6a573ea",
-  "test_tree_sha256": "d52bfaa1d9f4d2f82fa70a34cfc7bc86cc5bfc60ee36374cca777db37ea8ac31",
+  "product_tree_sha256": "f57d7de0928819ddf28be3557b3d1371230bb286dc25443b97f8ac78c2af41fd",
+  "test_tree_sha256": "ad01c541e0aee6d2350f7a4ca276b45539d8375faf265ad1ec99bd112a621fb9",
   "tests": {
     "main": {
       "selectors": [
@@ -75,12 +75,10 @@
       ]
     }
   ],
-  "deferred": [
-    "function-fingerprint qualification",
-    "S2"
-  ],
+  "deferred": [],
   "not_qualified": [
     "remote CI",
+    "Linux ARM64 until actual passing report",
     "Linux AMD64 until actual passing report",
     "Windows",
     "real models and unselected services"
@@ -100,7 +98,22 @@
     "3.12": "docker.io/library/python@sha256:34386ef0cb081344d7ec1c103ba398e6e9f64e9ab3a1509accc92a4e24a07258",
     "3.13": "docker.io/library/python@sha256:a1165e272e578941b84abc79e4ab38a0305cd12803a5c4247979ac7655f4d641"
   },
-  "test_corrections": [
+  "artifact_source_kind": "release_worktree",
+  "artifact_manifest_role": "external_delivery",
+  "separate_qualification": {
+    "function_fingerprint": {
+      "version": "0.1.0a2.dev2",
+      "scope": "macOS ARM64 / CPython 3.12.7; original digest semantics, bounded cache, installed contracts",
+      "new_artifact_qualification": false
+    },
+    "S2": {
+      "version": "0.1.0a2.dev19",
+      "wheel_sha256": "58f12c5f0cf406aa2d8c2ef37ff22219a6836dd0885cd9de4650b46fd5acbb0e",
+      "scope": "selected macOS ARM64 / Python 3.12 / Temporal + PostgreSQL; 18 of 18",
+      "new_artifact_qualification": false
+    }
+  },
+  "inherited_test_corrections": [
     {
       "path": "tests/test_agent_sessions.py",
       "before_sha256": "b04de6c6106bd7e39ca429b4441d3b991c7d8f287171aef60dad22b5ce7c4685",
@@ -117,5 +130,8 @@
         }
       ]
     }
-  ]
+  ],
+  "test_corrections": [],
+  "build_input_manifest_sha256": "d21e4c1c6038b08f84acd067d51bdeb1ddf3caee703b4a10c2d7aac25072f079",
+  "source_inputs_sha256": "d0c3ea645e07a4f12606a140c624a06b1284fe8173195e68f91babcfe5526e93"
 }

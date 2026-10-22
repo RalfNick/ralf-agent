@@ -5,6 +5,7 @@ import importlib.util
 import json
 import subprocess
 import sys
+import tomllib
 from pathlib import Path
 
 import pytest
@@ -26,12 +27,14 @@ def identity(value):
     ).hexdigest()
 
 
-def test_frozen_scope_never_selects_postponed_suites(gate):
+def test_frozen_local_scope_keeps_separate_service_qualification(gate):
     spec = gate.read_spec()
     assert spec["tests"]["main"]["count"] == 311
     assert spec["tests"]["related"]["count"] == 16
     assert spec["starter_cases"] == 2
-    assert spec["deferred"] == ["function-fingerprint qualification", "S2"]
+    assert spec["deferred"] == []
+    assert spec["separate_qualification"]["S2"]["version"] == "0.1.0a2.dev19"
+    assert spec["separate_qualification"]["S2"]["new_artifact_qualification"] is False
     assert len(spec["tests"]["main"]["deselect"]) == 1
     for phase in spec["tests"].values():
         assert all("fingerprint" not in p and "s2" not in p.lower() for p in phase["selectors"])
@@ -145,7 +148,7 @@ def test_standard_sdist_root_directory_and_required_inputs_are_accepted(gate, tm
     assert (tmp_path / "checks/tests/test_starter.py").read_bytes() == b"x"
 
 
-def test_plan_is_read_only_and_preserves_postponed_status(tmp_path):
+def test_plan_is_read_only_and_reports_current_candidate(tmp_path):
     result = subprocess.run(
         [sys.executable, str(ROOT / "tools/release_gate.py"), "--plan"],
         cwd=tmp_path,
@@ -155,9 +158,36 @@ def test_plan_is_read_only_and_preserves_postponed_status(tmp_path):
     )
     assert result.returncode == 0, result.stderr
     plan = json.loads(result.stdout)
-    assert plan["version"] == "0.1.0a1"
-    assert "S2" in plan["deferred"]
+    assert plan["version"] == "0.1.0a2"
+    assert "remote CI" in plan["not_qualified"]
     assert list(tmp_path.iterdir()) == []
+
+
+def test_current_manifest_matches_source_version_and_preserves_original_alpha(gate):
+    current = gate.read_spec()
+    original = json.loads((ROOT / "tools/release_gate_manifest.alpha1.json").read_text())
+    project = tomllib.loads((ROOT / "pyproject.toml").read_text())["project"]
+    assert current["version"] == project["version"] == "0.1.0a2"
+    assert set(current["artifacts"]) == {
+        "ralf_agent-0.1.0a2-py3-none-any.whl",
+        "ralf_agent-0.1.0a2.tar.gz",
+    }
+    assert original["version"] == "0.1.0a1"
+    assert original["artifacts"] == {
+        "ralf_agent-0.1.0a1-py3-none-any.whl": "a736993b941213945ed3309de1fc7ed69e7c5ad5033f69b24ce35b8c1c341aee",
+        "ralf_agent-0.1.0a1.tar.gz": "bdf626bcee84678395b90a9c2b5bd5815a7c14188131b645b7f5ac337229fd63",
+    }
+    assert current["tests"] == original["tests"]
+    assert current["product_tree_sha256"] != original["product_tree_sha256"]
+    assert current["artifact_source_kind"] == "release_worktree"
+    assert current["artifact_source_commit"] == "8e09ec79328e719074b14a656a5bf8f15e5a61ff"
+
+
+@pytest.mark.parametrize("workflow", ["alpha1-release-gate.yml", "alpha1-stage-candidate.yml"])
+def test_historical_alpha_workflows_keep_original_tools_and_products(workflow):
+    text = (ROOT / ".github/workflows" / workflow).read_text()
+    assert "ref: 0b9b6c9682c40285d91994cd831aa93d7e814bf1" in text
+    assert "ref: ${{ github.sha }}" not in text
 
 
 def test_existing_evidence_is_never_overwritten(tmp_path):

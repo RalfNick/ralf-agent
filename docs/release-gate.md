@@ -1,5 +1,38 @@
 # 可复现的 Local SDK 发布门禁
 
+**当前候选：`0.1.0a2`。** 默认`tools/release_gate_manifest.json`固定新候选，原a1 manifest逐字节保存在`tools/release_gate_manifest.alpha1.json`。原a1完整通过成绩仍只属于原包；原a1手动工作流固定checkout到`0b9b6c9`，不处理a2。当前不触发远端CI或公开发布。
+
+## 当前a2门禁
+
+复用原311基础、16恢复node身份、两条starter及17依赖锁；新sdist的Session测试已包含原a1校正，不再重复运行改写；资源与断网要求不变，不追加SDK能力。函数指纹与S2按各原候选的所选资格单独引用，已完成项不再笼统写成后置，也不进入本基础门禁。
+
+| 平台 | 本候选状态 |
+| --- | --- |
+| macOS ARM64／Python3.12 | 本批本地门禁目标；实际结果见`dist/alpha2-candidate/delivery.json`及本地报告，不套用旧成绩 |
+| Linux ARM64／Python3.11–3.13 | 待新a2实际报告；2CPU／2GiB／swap0、串行、容器无网络 |
+| 原生Linux AMD64／Python3.11–3.13 | 待新a2实际报告，须`--require-native`；远端执行另行授权 |
+| Windows及其他平台／Python | 未验收 |
+
+两包使用独立a2版本及精确SHA，manifest还记录产品树、测试输入树和构建工作区来源。sdist内的manifest是构建输入快照，最终放行使用交付目录`gate/`或最终维护checkout的外置manifest；这是避免sdist自身SHA循环，不是允许换包或降低校验。
+
+本地执行使用原已锁定wheelhouse，不联网补依赖；输出目录必须不存在：
+
+```bash
+python3.12 tools/release_gate.py --plan
+python3.12 tools/release_gate.py \
+  --wheel /ABS/ralf_agent-0.1.0a2-py3-none-any.whl \
+  --sdist /ABS/ralf_agent-0.1.0a2.tar.gz \
+  --wheelhouse /ABS/locked-wheelhouse --output /ABS/new-a2-macos-evidence
+```
+
+后续经授权在本机Linux ARM64或原生AMD64使用原`run_release_gate_linux.py`，参数沿用下方原流程，仅替换a2两包与外置工具套件；不修改镜像digest、依赖锁、311／16身份或资源限制。原`alpha1-*`远端工作流仅服务历史a1，不可用于a2后冒称当前版本通过。本批完成本地交接后停止，远端a2入口与实际运行待授权。
+
+公开安装、独立采用、真实模型和未选服务另行验收，见[当前Alpha范围](releases/0.1.0a2.md)。
+
+## 历史a1流程与原制品记录
+
+以下保留原a1及其后各候选的原始记录。它们不覆盖本页顶部的a2当前候选；历史“后置／待验／不推送”描述当时状态。原a1复验须使用固定维护提交`0b9b6c9682c40285d91994cd831aa93d7e814bf1`的源码与工具，不用当前a2 checkout冒充原输入。
+
 **2026-10-20专项恢复：** 用户已恢复函数指纹与S2验证，见[恢复验证记录](../architecture/reviews/2026-10-20-s2-fingerprint-resume.md)。本文件固定的a1门禁与JSON历史deferred字段不追溯修改；新a2候选专项单独取证，不改原包、平台或放行标准。尚未公开发布。
 
 本门禁是仓库维护工具，不增加SDK功能，也不执行上传、Tag、推送或公开发布。它复用[0.1.0a1冻结范围](releases/0.1.0a1.md)，验证显式指定的已安装制品；不自动运行全量测试。本固定a1门禁不包含函数指纹专项或S2，其恢复验证单独记录，所有原失败和门槛保留。

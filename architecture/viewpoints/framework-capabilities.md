@@ -1,5 +1,8 @@
 # RALF 通用框架能力与扩展验收
 
+**当前校准（2026-10-22）：** 所选第三阶段含S2已按`8e09ec7`冻结；当前准备`0.1.0a2`本地Alpha，见[当前能力](../../docs/implementation-status.md)、[剩余清单](../../docs/remaining-work.md)及[首版范围](../../docs/releases/0.1.0a2.md)。下列dev批次和早期矩阵保留当时状态；“未交付／下一步”不覆盖上述当前摘要，也不扩张首版范围。
+
+
 Dev120 在原 History 权威内接通公共 deployment3 的既定 Temporal Coding Agent／sequence、有限图、Team／Dynamic 与递归范围，与 ordinary2 共用同地址 Registry。native grant、准确效果／费用、物理结束和独立 ACK 是不同事实，unknown 继续占位并保留恢复资料。原子事实通知、紧凑验证和 publication 优化保留原 SDK 门禁、最终完整验证及原期限；所选稳态 read-set 边界不提供即时 read-auth 撤销。范围与限制见[本批验收](../reviews/2026-10-15-temporal-deployment-coding.md)。
 
 v30 全部12651项重新执行，11847 passed／804配置依赖跳过，独立安装416产品字节及dev119原History兼容通过；后4个测试文件的92项定向检查另记。实际安装normal原13通过／1失败保留，修订后并行关闭normal单项1 passed／152.70秒，真实故障、前后pins与unknown预期保留验证通过；两次记录不能称为同次14项全绿，也不证明原失败的精确根因。历史13拓扑与真实Docker窗口按各自冻结版本记录，结构peer不增加模型质量结论，dev109质量记录仍限原范围。公共Session S1／S2仍为下一必需项，完整R13／R01–R26与第三阶段未完成；以下旧批次段落保留其历史范围。
