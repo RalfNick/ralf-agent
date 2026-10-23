@@ -30,7 +30,7 @@ This documentation baseline is SDK **0.1.0a1**, commit `0b9b6c9682c40285d91994cd
 
 > This guide pins the original a1 source, not a public a1 package. The latest [0.1.0a2 Alpha](https://github.com/RalfNick/relf-agent/releases/tag/v0.1.0a2) is publicly available through GitHub Release; its release notes provide the verified installation command. PyPI remains unpublished, so `pip install ralf-agent` is not this guide's verified entry point.
 
-> A separate `0.1.0a4` candidate includes the public-contract and Coding-fixture fixes. See the current release status in `docs/alpha4-validation-status.md` of the maintenance checkout for actual local, platform and publication evidence. Original a3 packages remain unchanged and on hold. This guide retains its a1 tutorial baseline and the verified public a2 installation; local a4 checks do not qualify Linux or public distribution.
+> The separate `0.1.0a4` candidate includes the public-contract and Coding-fixture fixes. Its preparation source has been pushed and the current default source branch is `main`. See the current release status in `docs/alpha4-validation-status.md` of the maintenance checkout for actual local, platform and publication evidence. Original a3 packages remain unchanged and on hold. This guide retains its a1 tutorial baseline and the verified public a2 installation; local a4 checks do not qualify Linux or public distribution.
 
 If you have a local wheel, install it in a virtual environment with `python -m pip install /actual/path/package.whl`. Verify its source and version.
 

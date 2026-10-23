@@ -2,7 +2,9 @@
 
 独立的 Astro 静态官网。当前展示品牌为 **Relf-Agent**：**Reliable and Extensible Lifecycle Framework for Intelligent Agents**，可靠、可扩展的智能体全生命周期框架。定位：灵活构建智能体，可靠运行智能应用。
 
-原项目名为 Ralf-Agent；`ralf-agent` 安装包、`ralf_agent` 导入、`ralf` CLI 与原 SDK 保持。仓库已更名为 [RalfNick/relf-agent](https://github.com/RalfNick/relf-agent)，`repository.json` 与当前页面链接已同步。教程继续固定原 a1 基线；最新公开 a2 链接另行标注。旧计划／审查与 Cloudflare 资源名保留。无需服务端、模型密钥或 Cloudflare 账户即可本地查看。
+原项目名为 Ralf-Agent；`ralf-agent` 安装包、`ralf_agent` 导入、`ralf` CLI 与原 SDK 保持。仓库已更名为 [RalfNick/relf-agent](https://github.com/RalfNick/relf-agent)，`repository.json` 与当前页面链接已同步。源码默认分支为 `main`，基于已审核的 `b545aba`；原开发分支继续保留。官网 **[relfagent.com](https://relfagent.com/)** 已上线，本批同步已使用的域名配置与维护说明。教程继续固定原 a1 基线；公开安装仍使用 a2，a4 仅完成候选本地验证与源码推送，未公开发行。旧计划／审查与 Cloudflare 资源名保留。无需服务端、模型密钥或 Cloudflare 账户即可本地查看。
+
+网站上线的现场证据见[上线验收记录](reviews/2026-10-23-cloudflare-launch.md)及其HTTP明细；该记录对应原部署构建，不是本轮重新部署或现场浏览器复验。网站采用手工部署，未连接Git自动部署。
 
 ## 本地开发与预览
 
@@ -41,10 +43,10 @@ npx astro preview stop
 
 未设置 `PUBLIC_SITE_URL` 时，HTML 为 `noindex, nofollow`，robots 禁止抓取，不输出 canonical 或 sitemap，适合当前本地预览。
 
-选定实际公开域名后，复制 `.env.example` 为 `.env` 并设置 **HTTP(S) origin**（不带子路径、查询、凭据），重新构建。也可由 CI 构建环境传入：
+官网已上线，主域名为 **`https://relfagent.com`**。中文入口为 `/zh/`，英文入口为 `/en/`，文档继续与官网部署在同一域名下。复制 `.env.example` 为 `.env` 并取消 `PUBLIC_SITE_URL` 的注释，重新构建。该值必须是 **HTTP(S) origin**（不带子路径、查询、凭据）。也可由 CI 构建环境传入：
 
 ```bash
-PUBLIC_SITE_URL=https://你的实际域名 npm run build
+PUBLIC_SITE_URL=https://relfagent.com npm run build
 ```
 
 设置后生成 canonical、双语 hreflang、robots、sitemap 与 Open Graph 元数据；根路径的 canonical 指向 `/zh/`。404 保持 noindex。`public/og.png` 是分享图片，`public/og.svg` 保留可编辑矢量源。
@@ -52,6 +54,15 @@ PUBLIC_SITE_URL=https://你的实际域名 npm run build
 ## Cloudflare
 
 采用 [Workers Static Assets](https://developers.cloudflare.com/workers/static-assets/)，`wrangler.jsonc` 只托管 `dist/` 静态资源，无 Worker 业务代码、数据库或秘密绑定。目录式 URL 使用尾斜线，未知路径返回自定义 404；`public/_headers` 定义响应头与构建资产缓存。
+
+官网已于 **2026-10-23** 通过 Cloudflare 控制台直接上传 `dist/` 上线，生产 Worker 为 `ralf-agent-website`。主域名为 [relfagent.com](https://relfagent.com/)，中英文入口分别为 [/zh/](https://relfagent.com/zh/) 和 [/en/](https://relfagent.com/en/)。当前采用手工发布，尚未连接 Git 自动部署；后续内容更新需要重新构建并上传 `dist/`，或使用已登录的 Wrangler 部署，不能只修改仓库就视为线上已更新。
+
+区域内已配置以下跳转，均保留路径与查询字符串：
+
+- `www.relfagent.com`：代理 A 记录 `192.0.2.0`，仅用于让流量进入 Cloudflare 重定向规则。
+- 单一重定向 `Relf-Agent — HTTPS and www to apex`：匹配 `(http.host eq "www.relfagent.com") or (http.host eq "relfagent.com" and not ssl)`，动态目标 `concat("https://relfagent.com", http.request.uri.path)`，状态码 **301**，保留查询字符串。HTTPS 主域名不匹配该规则，避免循环。
+
+DNS 和重定向规则由 Cloudflare 控制台维护；当前 Wrangler 文件只声明主域名的 Worker 绑定，不包含区域规则。迁移账户或重建区域时，需同时恢复以上配置。
 
 本地验证与 Cloudflare 路由预览：
 
@@ -63,7 +74,17 @@ npm run cf:dev
 
 `cf:check` 是 `wrangler deploy --dry-run`，不会上传或部署。`cf:dev` 在本机模拟 Workers 静态资源路由，可验证真正的 404 状态。
 
-未来上线时，再配置 Cloudflare 账户、实际域名和 `PUBLIC_SITE_URL`。在 Workers Builds 中选择仓库子目录 `website`，构建命令 `npm ci && npm run build`，部署命令 `npx wrangler deploy`；本次没有绑定账户或运行部署。也可使用 Pages 静态构建，根目录 `website`、输出目录 `dist`，但当前 Wrangler 配置面向 Workers。
+`wrangler.jsonc` 已声明 `relfagent.com` 为 Worker 的 Custom Domain；资源名继续使用 `ralf-agent-website`，与展示品牌分开。该声明只在实际部署时生效，本地构建与 dry run 不会绑定域名或发布内容。
+
+后续部署与线上核对流程（本批不重新部署）：
+
+1. 在 Cloudflare 确认 `relfagent.com` 已完成注册，并在域名概览中显示为活动。刚提交注册时成功页可能先于域名列表更新。
+2. 在本目录执行 `PUBLIC_SITE_URL=https://relfagent.com npm run build` 和 `npm run cf:check`，检查正式地址元数据与静态资源。
+3. 确认目标 Cloudflare 账户并获得发布授权后，执行 `npx wrangler deploy`。Custom Domain 会由 Cloudflare 创建所需 DNS 记录和证书，无需手工添加指向服务器的 A 记录；若已有同名 CNAME，应先核对其用途，避免覆盖已有服务。参见 [Custom Domains](https://developers.cloudflare.com/workers/configuration/routing/custom-domains/)。
+4. 验证 `https://relfagent.com/`、`/zh/`、`/en/`、两种语言的文档与搜索、`/robots.txt`、`/sitemap.xml`，以及不存在路径的 HTTP 404。证书签发和域名生效必须以公开访问结果为准。
+5. 当前 `www.relfagent.com` 和HTTP入口已由Cloudflare区域规则301重定向至HTTPS根域，保留路径及查询参数，见上线记录。该DNS／重定向配置由控制台维护，不包含在当前Wrangler根域Worker绑定中；后续修改时参照 [www 到根域名的重定向](https://developers.cloudflare.com/rules/url-forwarding/examples/redirect-www-to-root/)核对已有用途。
+
+需要自动构建时，在 Workers Builds 中选择仓库子目录 `website`，构建命令 `npm ci && npm run build`，部署命令 `npx wrangler deploy`；将 `PUBLIC_SITE_URL=https://relfagent.com` 设置为**构建环境变量**，仅设置 Worker 运行时变量不会改写已经生成的 HTML。预览构建不传该值，保持 noindex。GitHub Actions 当前工作流只验证，不部署。也可使用 Pages 静态构建，根目录 `website`、输出目录 `dist`，但当前 Wrangler 配置面向 Workers。
 
 ## 内容维护
 

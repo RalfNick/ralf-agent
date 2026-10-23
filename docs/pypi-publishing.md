@@ -1,6 +1,6 @@
 # PyPI 发布准备与人工核对
 
-发行名 `ralf-agent`，展示名 Relf-Agent，仓库 `RalfNick/relf-agent`。当前推进独立 `0.1.0a4` 候选，包含 `210a79e` 公共契约修复和 `672d0cf` Coding 测试夹具修正。实际本地／平台状态见[a4 清单](alpha4-validation-status.md)。本批不推送、触发远端 CI、核验账号或上传；以下外部步骤须另行授权。原 a3 两包和原 `pypi-publish.yml` 保留，不用于发布 a4；原结果见[a3 清单](alpha3-validation-status.md)。
+发行名 `ralf-agent`，展示名 Relf-Agent，仓库 `RalfNick/relf-agent`。当前推进独立 `0.1.0a4` 候选，包含 `210a79e` 公共契约修复和 `672d0cf` Coding 测试夹具修正。实际本地／平台状态见[a4 清单](alpha4-validation-status.md)。准备提交 `b545aba` 已推送，默认代码入口已切换至 `main`，官网入口已同步；本批不触发远端 CI、核验发行账号或上传。以下暂存、门禁与发行操作须另行授权。原 a3 两包和原 `pypi-publish.yml` 保留，不用于发布 a4；原结果见[a3 清单](alpha3-validation-status.md)。
 
 ## 需要维护者配置
 
@@ -20,7 +20,7 @@
 
 ## 经另行授权后执行的顺序
 
-本地交付不授权以下外部操作。先审核本地提交、精确制品 SHA 和支持矩阵；本流程自动核对原生AMD64，不代签本地Mac、Linux ARM64或其他平台。正式发布前需人工核对声明支持的平台实际报告，未验收范围不得写为通过。必要推送获批后再执行：
+本地交付不授权以下外部操作。先审核本地提交、精确制品 SHA 和支持矩阵；本流程自动核对原生AMD64，不代签本地Mac、Linux ARM64或其他平台。正式发布前需人工核对声明支持的平台实际报告，未验收范围不得写为通过。已完成准备代码推送；暂存、远端门禁和上传另行获批后执行：
 
 1. 将两份原 a4 包暂存到本仓库未发布草稿，tag 必须以 `ralf-alpha4-private-stage-` 开头，资产只能是原 wheel／sdist。不要创建正式发行 Tag 或公开该草稿。
 2. 手动运行 `alpha4-stage-candidate.yml`，输入草稿 Release ID。脚本只 GET 草稿资产，核对名称、长度和固定 SHA；`contents: write` 仅用于草稿可见性。暂存 artifact 名为 `ralf-alpha4-original-candidate`。

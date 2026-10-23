@@ -1,6 +1,6 @@
 # 预览版本验证与发布
 
-**当前维护：独立 `0.1.0a4` Local SDK Alpha 候选。** 包含 `210a79e` 公共契约修复及 `672d0cf` Coding 测试夹具修正；SDK 相对这两个修复提交只调整包版本，不改依赖、Schema 或执行身份。新包目录 `dist/alpha4-candidate/`，固定门禁显式选择 `tools/release_gate_manifest.alpha4.json`。两包 SHA、实际安装结果与未完成步骤见[a4 说明](releases/0.1.0a4.md)、[验收清单](alpha4-validation-status.md)和[PyPI 准备](pypi-publishing.md)。本批只做本地准备和提交，不推送、触发远端 CI 或公开发布。
+**当前维护：独立 `0.1.0a4` Local SDK Alpha 候选。** 包含 `210a79e` 公共契约修复及 `672d0cf` Coding 测试夹具修正；SDK 相对这两个修复提交只调整包版本，不改依赖、Schema 或执行身份。新包目录 `dist/alpha4-candidate/`，固定门禁显式选择 `tools/release_gate_manifest.alpha4.json`。两包 SHA、实际安装结果与未完成步骤见[a4 说明](releases/0.1.0a4.md)、[验收清单](alpha4-validation-status.md)和[PyPI 准备](pypi-publishing.md)。准备提交 `b545aba` 已推送，随后按授权建立默认 `main` 并同步[官网](https://relfagent.com/)入口；原开发分支保留。当前只同步仓库与文档，不触发远端 CI、部署网站或公开发布 a4。
 
 原 a2／a3 包、历史失败和旧 manifest 保留。原 a3 准备提交 `eb62d57` 已推送，但两包不含后续修复，发布暂停；不能重新使用 a3 版本号、覆盖原包或借旧成绩放行 a4。默认 manifest 继续固定 a2，a4 必须显式传入新 manifest；sdist 内是构建输入快照，执行放行使用最终外置 manifest。
 

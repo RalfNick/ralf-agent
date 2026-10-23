@@ -6,7 +6,7 @@ Relf-Agent 需要 Python 3.11+。本地开发使用 Linux 或 macOS，本轮实�
 
 ## 当前 a4 本地候选与原制品
 
-当前源码版本 `0.1.0a4` 包含 `210a79e` 公共契约修复和 `672d0cf` Coding 测试夹具修正。独立本地 wheel／sdist 及精确 SHA 见[a4 说明](releases/0.1.0a4.md)，实际安装、平台及待发布状态见[a4 清单](alpha4-validation-status.md)。本批不推送、触发远端 CI 或公开发布；`pip install ralf-agent==0.1.0a4` 不是当前公开安装入口。
+当前源码版本 `0.1.0a4` 包含 `210a79e` 公共契约修复和 `672d0cf` Coding 测试夹具修正。独立本地 wheel／sdist 及精确 SHA 见[a4 说明](releases/0.1.0a4.md)，实际安装、平台及待发布状态见[a4 清单](alpha4-validation-status.md)。源码已推送至默认 `main`，原开发分支保留；本轮不触发远端 CI 或公开发布 a4，`pip install ralf-agent==0.1.0a4` 不是当前公开安装入口。
 
 原 a2／a3 包和全部历史失败保留；原 a3 不含近期修复且发布暂停。公开安装仍是下方 a2 URL；本地新包不能沿用旧包成绩或旧 Worker 资格。
 
@@ -37,7 +37,7 @@ ralf --version
 
 基础运行依赖为 `httpx` 和 `jsonschema`。默认 SQLite、离线 Demo 与独立 starter 不需要模型密钥或外部服务。安装后按[首用教程](getting-started.md)完成提交、审批与恢复。
 
-上面的 clone 命令演示源码安装方式。公开Tag`v0.1.0a2`固定验收代码`3a92720`；默认分支另维护最新安装文档。要复现交付请使用下方精确wheel，或对应源码提交，并核对`ralf --version`。制品的固定来源、平台和追加测试校正见[验证清单](alpha2-validation-status.md)，不能仅凭远端分支名称推导同一验收范围。
+上面的 clone 命令默认获取 `main`，演示当前 Alpha 源码安装；[官网](https://relfagent.com/)提供双语入门。公开Tag`v0.1.0a2`固定验收代码`3a92720`；默认分支另维护最新安装文档。要复现交付请使用下方精确wheel，或对应源码提交，并核对`ralf --version`。制品的固定来源、平台和追加测试校正见[验证清单](alpha2-validation-status.md)，不能仅凭远端分支名称推导同一验收范围。
 
 ## 从本地 wheel 安装
 

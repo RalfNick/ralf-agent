@@ -1,6 +1,6 @@
 # Relf-Agent 文档
 
-当前准备独立 [0.1.0a4 本地候选](releases/0.1.0a4.md)，实际范围与待办见[验收清单](alpha4-validation-status.md)。原 a2 仍为公开安装入口，原 a3 制品和历史记录保留。
+[官网](https://relfagent.com/) 已上线，源码默认分支为 `main`。独立 [0.1.0a4 本地候选](releases/0.1.0a4.md)已完成本地验证并推送准备代码，平台与公开发行待办见[验收清单](alpha4-validation-status.md)。原 a2 仍为公开安装入口，原 a3 制品和历史记录保留。
 
 [项目首页](../README.md) · [示例目录](../examples/README.md) · [贡献指南](../CONTRIBUTING.md)
 
