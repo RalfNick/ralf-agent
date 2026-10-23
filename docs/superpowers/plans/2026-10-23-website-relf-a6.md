@@ -58,9 +58,9 @@ The user requested replacing Ralf in website documentation and selected: “统�
 **Interfaces:** `npm run verify:production` remains the shared production gate; no SDK CI pass claim follows from website-only checks.
 
 - [x] Run `PUBLIC_SITE_URL=https://relfagent.com PYTHON_BIN=<a6-python> npm run verify:production` and read the complete result.
-- [ ] Inspect built pages for stale display names, verify retained technical identifiers, and check bilingual search results.
+- [x] Inspect built pages for stale display names, verify retained technical identifiers, and check bilingual search results.
 - [x] Obtain one independent read-only review; resolve actionable findings and repeat only affected checks.
-- [ ] Commit the coherent website update, then use the existing automatic deployment and verify the resulting website build if pushed.
+- [x] Commit the coherent website update, then use the existing automatic deployment and verify the resulting website build if pushed.
 
 ## Execution rulings
 
