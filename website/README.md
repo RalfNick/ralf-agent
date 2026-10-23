@@ -96,13 +96,15 @@ GitHub Actions 与 Cloudflare 共用 `npm run verify`：静态检查 → 单元�
 | 生产分支 | `main` |
 | 根目录 | `website` |
 | 构建命令 | `bash scripts/cloudflare-build.sh` |
-| 部署命令 | `npx wrangler deploy` |
+| 部署命令 | `npx wrangler deploy && npm run cf:verify-live` |
 | 预览构建 | 关闭；PR 和非 main 分支由 GitHub Actions 检查，不发布生产站 |
 | 构建变量 | `PUBLIC_SITE_URL=https://relfagent.com`、`SKIP_DEPENDENCY_INSTALL=1` |
 | 运行时版本文件 | `.nvmrc` 为 Node 24，`.python-version` 为已验证的 Python 3.12.7 |
 | 构建监视路径 | `website/*`、`docs/*`、`src/ralf_agent/*`、`pyproject.toml`、`README.md`、`.github/workflows/website.yml`（相对仓库根目录；Cloudflare 的 `*` 包含子目录路径） |
 
 `cloudflare-build.sh` 补齐浅克隆历史，安装锁定的 Node 依赖，在独立 `.venv-build` 中安装 SDK 基础依赖，随后运行完整正式验证。Cloudflare 仅在构建命令成功后执行部署命令，上传这次验证生成的 `dist/`。无需在 GitHub 仓库中复制 Cloudflare Token；GitHub 应用仓库权限与 Workers Builds 使用的部署令牌在各自控制台管理。
+
+发布成功后，`cf:verify-live` 使用默认 HTTPS 证书验证，逐项核对本次 `dist/` 的公开页面与资源 SHA-256，并检查自定义 404、尾斜线，以及保留路径和查询参数的 9 组 HTTP／www 跳转。检查采用有限并发和最多三次尝试，结果写入忽略的 `.wrangler/live-acceptance.json`，构建日志同时保留逐项结果。这样也能准确核验每次构建生成的 Pagefind 分块，避免跨构建比较其内容哈希。验收失败会使该次构建显示失败；此时站点已经发布，需根据日志处理故障或回滚到上一部署。
 
 只将 `PUBLIC_SITE_URL` 设为 Worker 运行时变量不会改写静态 HTML，必须设置**构建变量**。独立预览构建不传该值，保持 noindex。GitHub Actions 只验证，共用检查入口；生产发布由 Workers Builds 负责。官网与 SDK 仍在同一仓库、独立部署；不需要另建网站仓库。
 

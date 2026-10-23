@@ -15,6 +15,7 @@
     "build": "astro build && pagefind --site dist && node scripts/finalize-build.mjs && node scripts/check-build.mjs",
     "preview": "astro preview --host 127.0.0.1",
     "cf:check": "wrangler deploy --dry-run",
+    "cf:verify-live": "node scripts/check-live.ts",
     "cf:dev": "wrangler dev --ip 127.0.0.1",
     "docs:check": "node scripts/check-docs.mjs",
     "docs:links": "node scripts/check-repository-links.mjs",
