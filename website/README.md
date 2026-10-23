@@ -4,7 +4,7 @@
 
 原项目名为 Ralf-Agent；`ralf-agent` 安装包、`ralf_agent` 导入、`ralf` CLI 与原 SDK 保持。仓库已更名为 [RalfNick/relf-agent](https://github.com/RalfNick/relf-agent)，`repository.json` 与当前页面链接已同步。源码默认分支为 `main`，基于已审核的 `b545aba`；原开发分支继续保留。官网 **[relfagent.com](https://relfagent.com/)** 已上线，本批同步已使用的域名配置与维护说明。教程继续固定原 a1 基线；公开安装仍使用 a2，a4 仅完成候选本地验证与源码推送，未公开发行。旧计划／审查与 Cloudflare 资源名保留。无需服务端、模型密钥或 Cloudflare 账户即可本地查看。
 
-网站上线的现场证据见[上线验收记录](reviews/2026-10-23-cloudflare-launch.md)及其HTTP明细；该记录对应原部署构建，不是本轮重新部署或现场浏览器复验。网站采用手工部署，未连接Git自动部署。
+首次手工上线的现场证据见[上线验收记录](reviews/2026-10-23-cloudflare-launch.md)及其 HTTP 明细。自动构建入口、检查门禁和 Cloudflare 连接参数见下方“自动构建与发布”；连接状态与实际发布结果以 Cloudflare 构建记录为准。
 
 ## 本地开发与预览
 
@@ -55,7 +55,7 @@ PUBLIC_SITE_URL=https://relfagent.com npm run build
 
 采用 [Workers Static Assets](https://developers.cloudflare.com/workers/static-assets/)，`wrangler.jsonc` 只托管 `dist/` 静态资源，无 Worker 业务代码、数据库或秘密绑定。目录式 URL 使用尾斜线，未知路径返回自定义 404；`public/_headers` 定义响应头与构建资产缓存。
 
-官网已于 **2026-10-23** 通过 Cloudflare 控制台直接上传 `dist/` 上线，生产 Worker 为 `ralf-agent-website`。主域名为 [relfagent.com](https://relfagent.com/)，中英文入口分别为 [/zh/](https://relfagent.com/zh/) 和 [/en/](https://relfagent.com/en/)。当前采用手工发布，尚未连接 Git 自动部署；后续内容更新需要重新构建并上传 `dist/`，或使用已登录的 Wrangler 部署，不能只修改仓库就视为线上已更新。
+官网已于 **2026-10-23** 首次通过 Cloudflare 控制台上传 `dist/` 上线，生产 Worker 为 `ralf-agent-website`。主域名为 [relfagent.com](https://relfagent.com/)，中英文入口分别为 [/zh/](https://relfagent.com/zh/) 和 [/en/](https://relfagent.com/en/)。Workers Builds 连接成功后由正式分支更新触发发布；手工上传或 Wrangler 部署保留为维护方式。
 
 区域内已配置以下跳转，均保留路径与查询字符串：
 
@@ -76,7 +76,7 @@ npm run cf:dev
 
 `wrangler.jsonc` 已声明 `relfagent.com` 为 Worker 的 Custom Domain；资源名继续使用 `ralf-agent-website`，与展示品牌分开。该声明只在实际部署时生效，本地构建与 dry run 不会绑定域名或发布内容。
 
-后续部署与线上核对流程（本批不重新部署）：
+手工部署与线上核对流程：
 
 1. 在 Cloudflare 确认 `relfagent.com` 已完成注册，并在域名概览中显示为活动。刚提交注册时成功页可能先于域名列表更新。
 2. 在本目录执行 `PUBLIC_SITE_URL=https://relfagent.com npm run build` 和 `npm run cf:check`，检查正式地址元数据与静态资源。
@@ -84,7 +84,27 @@ npm run cf:dev
 4. 验证 `https://relfagent.com/`、`/zh/`、`/en/`、两种语言的文档与搜索、`/robots.txt`、`/sitemap.xml`，以及不存在路径的 HTTP 404。证书签发和域名生效必须以公开访问结果为准。
 5. 当前 `www.relfagent.com` 和HTTP入口已由Cloudflare区域规则301重定向至HTTPS根域，保留路径及查询参数，见上线记录。该DNS／重定向配置由控制台维护，不包含在当前Wrangler根域Worker绑定中；后续修改时参照 [www 到根域名的重定向](https://developers.cloudflare.com/rules/url-forwarding/examples/redirect-www-to-root/)核对已有用途。
 
-需要自动构建时，在 Workers Builds 中选择仓库子目录 `website`，构建命令 `npm ci && npm run build`，部署命令 `npx wrangler deploy`；将 `PUBLIC_SITE_URL=https://relfagent.com` 设置为**构建环境变量**，仅设置 Worker 运行时变量不会改写已经生成的 HTML。预览构建不传该值，保持 noindex。GitHub Actions 当前工作流只验证，不部署。也可使用 Pages 静态构建，根目录 `website`、输出目录 `dist`，但当前 Wrangler 配置面向 Workers。
+### 自动构建与发布
+
+GitHub Actions 与 Cloudflare 共用 `npm run verify`：静态检查 → 单元测试 → 双语源文档同步检查 → 固定 SDK 的离线教程 → Astro/Pagefind 构建 → 公开 GitHub 文档基线核验 → Wrangler dry run。任一步失败立即终止。`npm run verify:production` 额外要求 `PUBLIC_SITE_URL` 精确为 `https://relfagent.com`，避免正式站生成 noindex 或错误 canonical。
+
+在**现有** Worker 的 Settings → Build 连接仓库，使用以下配置：
+
+| 配置项 | 值 |
+| --- | --- |
+| GitHub 仓库 | `RalfNick/relf-agent` |
+| 生产分支 | `main` |
+| 根目录 | `website` |
+| 构建命令 | `bash scripts/cloudflare-build.sh` |
+| 部署命令 | `npx wrangler deploy` |
+| 预览构建 | 关闭；PR 和非 main 分支由 GitHub Actions 检查，不发布生产站 |
+| 构建变量 | `PUBLIC_SITE_URL=https://relfagent.com`、`SKIP_DEPENDENCY_INSTALL=1` |
+| 运行时版本文件 | `.nvmrc` 为 Node 24，`.python-version` 为已验证的 Python 3.12.7 |
+| 构建监视路径 | `website/*`、`docs/*`、`src/ralf_agent/*`、`pyproject.toml`、`README.md`、`.github/workflows/website.yml`（相对仓库根目录；Cloudflare 的 `*` 包含子目录路径） |
+
+`cloudflare-build.sh` 补齐浅克隆历史，安装锁定的 Node 依赖，在独立 `.venv-build` 中安装 SDK 基础依赖，随后运行完整正式验证。Cloudflare 仅在构建命令成功后执行部署命令，上传这次验证生成的 `dist/`。无需在 GitHub 仓库中复制 Cloudflare Token；GitHub 应用仓库权限与 Workers Builds 使用的部署令牌在各自控制台管理。
+
+只将 `PUBLIC_SITE_URL` 设为 Worker 运行时变量不会改写静态 HTML，必须设置**构建变量**。独立预览构建不传该值，保持 noindex。GitHub Actions 只验证，共用检查入口；生产发布由 Workers Builds 负责。官网与 SDK 仍在同一仓库、独立部署；不需要另建网站仓库。
 
 ## 内容维护
 
@@ -95,7 +115,9 @@ npm run cf:dev
 - `src/lib/site.ts` 的 `brand`：统一展示名、英文全称、中文含义与双语定位；不控制 SDK 或持久化身份。
 - `docs-source-lock.json`：本轮审阅的指南与技术源文件哈希。
 
-搜索通过 Pagefind API 显示当前语言的文档。加载前用正文中必有的“审批／approval”验证索引与 WASM 就绪，每次查询等待全部结果片段，失败保留关键词并可重试。当前每种语言为两个查询分块。Pagefind 1.5.2 原实现会吞掉部分分块错误，因此 `scripts/strict-pagefind.mjs` 在构建时给主线程与 Worker 的同一个已知 catch 增加重新抛出，防止显示不完整结果。补丁只匹配一个准确位置，版本或实现变化会中止构建，必须重新审阅；单元测试与浏览器故障注入覆盖失败和重试。开发模式没有生成索引时显示重试与文档入口。
+搜索通过 Pagefind API 显示当前语言的文档。页面空闲（最迟约 2 秒调度）及搜索入口的指针／键盘意图会提前预热；预热和打开弹窗共享一次初始化。初始化总预算为 30 秒，实际查询预算仍为 12 秒。用正文中必有的“审批／approval”验证索引、WASM 和第一个结果片段，每次查询等待全部匹配片段；后台失败不打断页面，用户打开搜索后仍可明确重试。超时或失效的实例会清理，迟到响应不能恢复旧实例，重试会导入新的模块实例并保留关键词。
+
+当前每种语言为两个查询分块。Pagefind 1.5.2 原实现会吞掉部分分块错误，因此 `scripts/strict-pagefind.mjs` 在构建时给主线程与 Worker 的同一个已知 catch 增加重新抛出，防止显示不完整结果。补丁只匹配一个准确位置，版本或实现变化会中止构建，必须重新审阅；单元测试与浏览器故障注入覆盖失败和重试。开发模式没有生成索引时显示重试与文档入口。
 
 `repository.json` 集中记录 SDK 版本、已发布提交和验证日期。组件调用 `repositoryUrl()`，Markdown 使用 `[标题](repo:docs/example.md#section)`，由 Sätteri MDAST 插件转换；不要再写死分支。构建检查所有生成的仓库链接，使用固定 Git tree 确认目标存在，不显示未发布的“编辑本页”。`npm run docs:links -- --remote` 另外只读核验固定提交属于远端 HEAD 的历史，需要网络和对应 Git 对象；CI 使用完整 checkout。英文指向中文的可选资料标注语言，关键操作应提供站内双语路径。
 

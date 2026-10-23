@@ -10,6 +10,8 @@
     "dev": "astro dev --host 127.0.0.1",
     "check": "astro check",
     "test": "node --test tests/*.test.ts",
+    "verify": "node scripts/verify.ts",
+    "verify:production": "node scripts/verify.ts --production",
     "build": "astro build && pagefind --site dist && node scripts/finalize-build.mjs && node scripts/check-build.mjs",
     "preview": "astro preview --host 127.0.0.1",
     "cf:check": "wrangler deploy --dry-run",

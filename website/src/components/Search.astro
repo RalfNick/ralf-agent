@@ -18,6 +18,7 @@ const { locale } = Astro.props; const zh = locale === 'zh';
   <div class="search-footer"><span>Pagefind · {zh ? '本地静态搜索' : 'Static local search'}</span><span><kbd>esc</kbd> {zh ? '关闭' : 'close'}</span></div>
 </dialog>
 <script>
+  import { createSearchBootstrap, withinDeadline, type SearchIndex } from '../lib/search-bootstrap';
   const dialog = document.querySelector<HTMLDialogElement>('.search-dialog');
   const message = document.querySelector<HTMLElement>('.search-message');
   const fallback = document.querySelector<HTMLElement>('.search-fallback');
@@ -25,22 +26,15 @@ const { locale } = Astro.props; const zh = locale === 'zh';
   const input = document.querySelector<HTMLInputElement>('#search-query');
   const results = document.querySelector<HTMLOListElement>('.doc-search-results');
   const zh = dialog?.dataset.locale === 'zh';
-  interface SearchData { url: string; meta: { title?: string }; excerpt: string }
-  interface SearchIndex { search: (query: string) => Promise<{ results: { data: () => Promise<SearchData> }[] }>; destroy: () => Promise<void> }
+  const bootstrap = createSearchBootstrap((path) => import(/* @vite-ignore */ path), zh ? 'zh' : 'en');
   let index: SearchIndex | null = null;
   let loading = false;
-  let attempt = 0;
   let request = 0;
   let debounce: ReturnType<typeof setTimeout>;
   let trigger: HTMLElement | null = null;
-  async function deadline<T>(operation: Promise<T>): Promise<T> {
-    let timer: ReturnType<typeof setTimeout> | undefined;
-    try { return await Promise.race([operation, new Promise<never>((_, reject) => { timer = setTimeout(() => reject(new Error('Search request timed out')), 12000); })]); }
-    finally { clearTimeout(timer); }
-  }
   function unavailable(error: unknown) {
-    const failed = index; index = null;
-    void failed?.destroy().catch(() => {});
+    index = null;
+    bootstrap.reset();
     results?.replaceChildren();
     if (message) message.textContent = zh ? '搜索暂时不可用。你可以重试，或从文档目录继续浏览。' : 'Search is temporarily unavailable. Try again, or continue browsing the documentation.';
     if (fallback) fallback.hidden = false;
@@ -56,10 +50,10 @@ const { locale } = Astro.props; const zh = locale === 'zh';
     dialog?.setAttribute('aria-busy', 'true');
     const active = index;
     try {
-      const data = await deadline((async () => {
+      const data = await withinDeadline((async () => {
         const response = await active.search(query);
         return Promise.all(response.results.map((result) => result.data()));
-      })());
+      })(), 12_000);
       if (current !== request) return;
       data.forEach((item) => {
         const url = new URL(item.url, window.location.origin);
@@ -84,19 +78,7 @@ const { locale } = Astro.props; const zh = locale === 'zh';
     if (retry) retry.disabled = true;
     if (message) message.textContent = zh ? '正在加载搜索索引…' : 'Loading search index…';
     try {
-      // Each retry gets a fresh module and instance; failed imports/chunks can otherwise remain cached.
-      const path = `/pagefind/pagefind.js${++attempt > 1 ? `?retry=${Date.now()}-${attempt}` : ''}`;
-      const module = await deadline(import(/* @vite-ignore */ path));
-      index = module.createInstance({ basePath: '/pagefind/' }) as SearchIndex;
-      const active = index;
-      // init() alone does not wait for the language index, query chunks or result fragments.
-      await deadline((async () => {
-        const probe = await active.search(zh ? '审批' : 'approval');
-        // The build makes Pagefind chunk failures reject in worker and fallback.
-        // This indexed term also checks actual metadata/wasm readiness.
-        if (!probe.results.length) throw new Error('Search index readiness check failed');
-        await probe.results[0].data();
-      })());
+      index = await bootstrap.load();
     } catch (error) { unavailable(error); }
     finally { loading = false; dialog.removeAttribute('aria-busy'); if (retry) retry.disabled = false; if (input) input.disabled = false; }
     if (index) { if (dialog.open) input?.focus(); await search(); }
@@ -112,7 +94,15 @@ const { locale } = Astro.props; const zh = locale === 'zh';
   document.querySelector('.doc-search-form')?.addEventListener('submit', (event) => { event.preventDefault(); clearTimeout(debounce); search(); });
   document.querySelector('[data-search-clear]')?.addEventListener('click', () => { if (input) input.value = ''; clearTimeout(debounce); search(); input?.focus(); });
   retry?.addEventListener('click', loadSearch);
-  document.querySelectorAll<HTMLElement>('[data-search-open]').forEach((button) => button.addEventListener('click', openSearch));
+  const warmSearch = () => { void bootstrap.load().catch(() => {}); };
+  document.querySelectorAll<HTMLElement>('[data-search-open]').forEach((button) => {
+    button.addEventListener('click', openSearch);
+    button.addEventListener('pointerenter', warmSearch, { once: true });
+    button.addEventListener('focus', warmSearch, { once: true });
+  });
+  // Start cold network work before the first dialog click, without blocking page rendering.
+  if ('requestIdleCallback' in window) window.requestIdleCallback(warmSearch, { timeout: 2_000 });
+  else setTimeout(warmSearch, 1_000);
   document.querySelector('[data-search-close]')?.addEventListener('click', () => dialog?.close());
   dialog?.addEventListener('click', (e) => { if (e.target === dialog) { const r = dialog.getBoundingClientRect(); if (e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom) dialog.close(); } });
   dialog?.addEventListener('close', () => trigger?.focus());
