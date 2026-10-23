@@ -8,14 +8,14 @@ sources: [docs/user-input.md, docs/agent-api.md, docs/session-api.md, docs/recov
 
 Use durable input when an application needs a missing parameter or clarification. An explicitly registered `request_input` tool pauses its original Run at `waiting_input`. The question survives shutdown and restart. Business approval, a new conversation Turn and a reply to this question are different operations. Ordinary output such as `{"status":"needs_input"}` does not create a durable question.
 
-The following path uses the installed **0.1.0a1** Local SDK and an offline provider. It needs no model key or network service. First complete [installation](/en/docs/installation/) or the [quickstart](/en/docs/quickstart/).
+The following path uses the installed **0.1.0a6** Local SDK and an offline provider. It needs no model key or network service. First complete [installation](/en/docs/installation/) or the [quickstart](/en/docs/quickstart/).
 
 ## 1. Create the installed input starter
 
 From a working directory, choose a project directory that does not yet exist:
 
 ```bash
-ralf --format text init input-app --template user-input
+relf --format text init input-app --template user-input
 cd input-app
 python -m agent_app run --command-id first-question
 ```
@@ -29,7 +29,7 @@ The result includes `state: waiting_input`, a `run_id` and an input entry in `pe
 Replace `RUN_ID` with the saved value. Global CLI options go before the subcommand:
 
 ```bash
-ralf --db .ralf/runs.sqlite \
+relf --db .ralf/runs.sqlite \
   --factory agent_app.runtime:create_engine \
   --format text inspect RUN_ID
 ```
@@ -43,7 +43,7 @@ Expect `State: waiting_input`, the question, its reply Schema and a suggested `s
 Substitute the three saved placeholders. The outer single quotes below are shell quoting; the inner double quotes make `production` a JSON string:
 
 ```bash
-ralf --db .ralf/runs.sqlite \
+relf --db .ralf/runs.sqlite \
   --factory agent_app.runtime:create_engine \
   send-input RUN_ID PENDING_ID \
   --digest TARGET_DIGEST --value-json '"production"' \
@@ -55,9 +55,9 @@ The receipt should include `kind: send_input`, `record_state: durably_recorded` 
 ## 4. Resume and inspect the result
 
 ```bash
-ralf --db .ralf/runs.sqlite \
+relf --db .ralf/runs.sqlite \
   --factory agent_app.runtime:create_engine resume RUN_ID
-ralf --db .ralf/runs.sqlite --format text inspect RUN_ID
+relf --db .ralf/runs.sqlite --format text inspect RUN_ID
 ```
 
 Expect `State: succeeded` and `Result: {"environment": "production"}`. Each command can run in a separate process. Keep the same database, original factory, release and policy configuration when restarting.
@@ -90,7 +90,7 @@ Save this as `input_sdk.py` in a separate directory with the SDK installed, then
 import asyncio
 import json
 
-from ralf_agent import (
+from relf_agent import (
     AgentSpec, LocalEngine, ModelResponse, Runtime, SQLiteStore,
     ToolCall, ToolRegistry, UserInputPolicy, register_user_input,
 )
@@ -153,7 +153,7 @@ An open question keeps its Session busy. `Session.submit()` and `Session.run()` 
 For a Team, graph or nested child, `root.pending()` includes each question's original owner RunRef in `ref`. The following is a **usage fragment** inside an already configured Runtime with an existing `root` handle; it is not a standalone program:
 
 ```python
-from ralf_agent import RunRef
+from relf_agent import RunRef
 
 question = next(q for q in await root.pending() if q["kind"] == "input")
 owner = await runtime.aattach(RunRef.from_dict(question["ref"]))

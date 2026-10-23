@@ -3,7 +3,7 @@ title: 运行与部署
 description: 选择 Local 或 Temporal，管理版本化配置、执行额度、观察与资源生命周期。
 locale: zh
 slug: operations
-sources: [docs/runtime-assembly.md, docs/agent-api.md, docs/agent-limits.md, docs/temporal-execution.md, docs/recovery-guide.md, docs/releases/0.1.0a1.md]
+sources: [docs/runtime-assembly.md, docs/agent-api.md, docs/agent-limits.md, docs/temporal-execution.md, docs/recovery-guide.md, docs/releases/0.1.0a6.md]
 ---
 
 ## 先选择执行后端
@@ -25,12 +25,12 @@ Local 不会自动变成分布式调度器；Temporal 也不是把 LocalEngine �
 已经完成源码安装后，在新目录生成离线配置项目：
 
 ```bash
-ralf init my-config-agent --template config
+relf init my-config-agent --template config
 cd my-config-agent
 python -m agent_app --input hello --command-id hello-1
 python -m agent_app --input pending --command-id pending-1 --submit-only
-ralf --config runtime.toml --format text inspect RUN_ID
-ralf --config runtime.toml resume RUN_ID
+relf --config runtime.toml --format text inspect RUN_ID
+relf --config runtime.toml resume RUN_ID
 ```
 
 将 `RUN_ID` 换成第二次提交返回值。`runtime.toml` 定义运行组件，`agent.toml` 定义 Agent。模板 Provider 为 `offline-echo`，只验证装配与执行。
@@ -87,7 +87,7 @@ API 和部分组合仍在 Alpha 阶段。部署判断使用你的实际组件与
 
 ## 验证基线与支持边界
 
-本站基于页首所示已发布提交的 SDK **0.1.0a1**，验证日期 **2026-10-21**。日期记录这些教程的验证，不表示每种部署或线上型号均获保证。
+本站基于页首所示固定源码提交的 SDK **0.1.0a6 候选版本**，验证日期 **2026-10-23**。日期记录这些教程的验证，不表示每种部署或线上型号均获保证。
 
 | 组合 | 文档状态 | 使用前继续验证 |
 | --- | --- | --- |

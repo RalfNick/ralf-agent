@@ -6,11 +6,11 @@ slug: api-reference
 sources: [docs/api-reference.md, docs/agent-api.md, docs/session-api.md, docs/user-input.md, docs/sdk-model-tools.md, docs/recovery-guide.md, docs/runtime-assembly.md, docs/getting-started.md]
 ---
 
-本页精选常用 Local 入口，对照 SDK `0.1.0a1` 核验，不是完整的自动生成 API 列表。完整程序从[连续应用教程](/zh/docs/app-tutorial/)开始；Provider 装配见[模型与工具](/zh/docs/models-tools/)。Temporal 和可选后端的独立契约见[运行与部署](/zh/docs/operations/)。
+本页精选常用 Local 入口，对照 SDK `0.1.0a6` 核验，不是完整的自动生成 API 列表。完整程序从[连续应用教程](/zh/docs/app-tutorial/)开始；Provider 装配见[模型与工具](/zh/docs/models-tools/)。Temporal 和可选后端的独立契约见[运行与部署](/zh/docs/operations/)。
 
 ## 定义和可运行入口
 
-以下名称从 `ralf_agent` 导入。
+以下名称从 `relf_agent` 导入。
 
 | 入口 | 常用签名或默认值 | 含义 |
 | --- | --- | --- |
@@ -122,13 +122,13 @@ Agent／Runtime 使用 `async with`。独立 Agent 关闭自己创建的 Runtime
 全局选项放在子命令前：`--db` 默认为 `.ralf/runs.sqlite`，`--format` 默认为 `json`，`--format text` 输出可读视图。`--config runtime.toml` 与 `--factory module:callable` 是互斥的可信装配选择；修改／恢复命令必须保留同一数据库和原装配。
 
 ```bash
-ralf --version
-ralf --help
-ralf run --help
-ralf send-input --help
+relf --version
+relf --help
+relf run --help
+relf send-input --help
 ```
 
-| `ralf [全局选项]` 后的命令 | 结果／推进方式 |
+| `relf [全局选项]` 后的命令 | 结果／推进方式 |
 | --- | --- |
 | `init my-agent --template config` | 在新目录创建离线 starter，随后按其 README 运行。 |
 | `run --spec agent.toml --input hello --command-id hello-1 --budget 32` | 须提供 `--config` 或 `--factory`；提交并推进到完成／暂停。JSON 输入改用 `--input-json`。 |

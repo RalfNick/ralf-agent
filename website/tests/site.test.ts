@@ -14,7 +14,7 @@ test("approval survives a simulated restart and resumes the original operation o
   const completed = transitionDemo(restarted, "resume");
   assert.equal(completed.phase, "succeeded");
   assert.equal(completed.runState, "succeeded");
-  assert.equal(completed.runId, "run_01J_RALF");
+  assert.equal(completed.runId, "run_01J_RELF");
   assert.equal(completed.writes, 1);
   assert.deepEqual(transitionDemo(completed, "resume"), completed);
   assert.deepEqual(transitionDemo(completed, "reset"), initialDemo);

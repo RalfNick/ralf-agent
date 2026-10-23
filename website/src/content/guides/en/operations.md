@@ -3,7 +3,7 @@ title: Runtime & deployment
 description: Choose Local or Temporal and manage versioned configuration, execution allowances, observation and resource lifetimes.
 locale: en
 slug: operations
-sources: [docs/runtime-assembly.md, docs/agent-api.md, docs/agent-limits.md, docs/temporal-execution.md, docs/recovery-guide.md, docs/releases/0.1.0a1.md]
+sources: [docs/runtime-assembly.md, docs/agent-api.md, docs/agent-limits.md, docs/temporal-execution.md, docs/recovery-guide.md, docs/releases/0.1.0a6.md]
 ---
 
 ## Choose an execution backend
@@ -25,12 +25,12 @@ This website is static and can be hosted on Cloudflare. A Python agent applicati
 After source installation, generate a new offline configuration project:
 
 ```bash
-ralf init my-config-agent --template config
+relf init my-config-agent --template config
 cd my-config-agent
 python -m agent_app --input hello --command-id hello-1
 python -m agent_app --input pending --command-id pending-1 --submit-only
-ralf --config runtime.toml --format text inspect RUN_ID
-ralf --config runtime.toml resume RUN_ID
+relf --config runtime.toml --format text inspect RUN_ID
+relf --config runtime.toml resume RUN_ID
 ```
 
 Replace `RUN_ID` with the second submission's ID. `runtime.toml` defines runtime components; `agent.toml` defines the agent. The template's `offline-echo` provider verifies assembly and execution.
@@ -87,7 +87,7 @@ APIs and some combinations remain Alpha. Evaluate deployment using evidence from
 
 ## Verified baseline and support boundaries
 
-This site documents SDK **0.1.0a1** at the published commit shown above, verified on **2026-10-21**. The date records these tutorial checks, not a guarantee for every deployment or hosted model.
+This site documents the SDK **0.1.0a6 source candidate** at the pinned commit shown above, verified on **2026-10-23**. The date records these tutorial checks, not a guarantee for every deployment or hosted model.
 
 | Combination | Documentation status | Your next verification |
 | --- | --- | --- |

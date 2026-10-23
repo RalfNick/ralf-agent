@@ -25,7 +25,7 @@ Save this complete, key-free example as `session_agent.py` in a new working dire
 
 ```python
 import asyncio
-from ralf_agent import Agent, ModelResponse
+from relf_agent import Agent, ModelResponse
 
 class OfflineSupport:
     identity = {"kind": "website-session-fixture", "version": "1"}
@@ -73,7 +73,7 @@ Reusing a command ID retrieves its original receipt, including a saved busy reje
 With the SDK installed, choose a new directory:
 
 ```bash
-ralf init my-knowledge-agent --template rag
+relf init my-knowledge-agent --template rag
 cd my-knowledge-agent
 python -m agent_app --query 'postgres connection refused'
 python -m agent_app --query 'quantum entanglement teleportation'
@@ -90,7 +90,7 @@ The same query uses a stable command ID by default, so repeating it retrieves th
 Use the independent `ingest` template to import UTF-8 Markdown:
 
 ```bash
-ralf init my-doc-agent --template ingest
+relf init my-doc-agent --template ingest
 cd my-doc-agent
 python - <<'PY'
 from pathlib import Path
@@ -123,7 +123,7 @@ Local vector implementations use linear search; they are not ANN indexes or mana
 After installation, use another new directory. The corpus starts empty; this sequence creates the source, commits it, builds vectors and queries it:
 
 ```bash
-ralf init my-hybrid-agent --template hybrid
+relf init my-hybrid-agent --template hybrid
 cd my-hybrid-agent
 python - <<'TEXT'
 from pathlib import Path
@@ -143,14 +143,14 @@ This optional complete probe makes a real HTTP request and may incur provider fe
 ```python
 import asyncio
 import os
-from ralf_agent import OpenAIEmbeddingProvider
+from relf_agent import OpenAIEmbeddingProvider
 
 async def main():
     async with OpenAIEmbeddingProvider(
-        model=os.environ["RALF_EMBED_MODEL"],
-        base_url=os.environ["RALF_EMBED_BASE_URL"],
-        api_key=os.environ["RALF_EMBED_API_KEY"],
-        dimensions=int(os.environ["RALF_EMBED_DIMENSIONS"]),
+        model=os.environ["RELF_EMBED_MODEL"],
+        base_url=os.environ["RELF_EMBED_BASE_URL"],
+        api_key=os.environ["RELF_EMBED_API_KEY"],
+        dimensions=int(os.environ["RELF_EMBED_DIMENSIONS"]),
     ) as embedding:
         report = await embedding.embed_result(["connection pool exhausted"])
         print(len(report.vectors), len(report.vectors[0]), report.usage)

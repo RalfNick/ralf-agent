@@ -6,7 +6,7 @@ slug: testing
 sources: [docs/sdk-model-tools.md, docs/business-evaluation.md, docs/task-evaluation.md, docs/planning-evaluation.md, docs/agent-api.md, docs/completion-verification.md]
 ---
 
-先按[快速开始](/zh/docs/quickstart/)安装 SDK `0.1.0a1` 并激活 Python 环境。下面的离线路径不需要模型密钥、网络服务或 pytest，已对照发布的 SDK 基线验证。
+先按[快速开始](/zh/docs/quickstart/)安装 SDK `0.1.0a6` 并激活 Python 环境。下面的离线路径不需要模型密钥、网络服务或 pytest，已对照固定的 a6 源码基线验证。
 
 ## 先选择需要的证据
 
@@ -23,8 +23,8 @@ sources: [docs/sdk-model-tools.md, docs/business-evaluation.md, docs/task-evalua
 创建新的工作目录：
 
 ```bash
-mkdir ralf-offline-tests
-cd ralf-offline-tests
+mkdir relf-offline-tests
+cd relf-offline-tests
 ```
 
 将以下内容保存为 `test_app.py`。它使用自定义的结构化 `ModelProvider` 执行真正的受管理 Agent／工具循环，不调用外部模型。`complete` 先提出工具调用，再返回工具的真实结果。测试覆盖业务输出、持久工具完成证据和相同命令回放。
@@ -35,7 +35,7 @@ import json
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
-from ralf_agent import Agent, ModelResponse, ToolCall, ToolRegistry
+from relf_agent import Agent, ModelResponse, ToolCall, ToolRegistry
 
 
 class OfflineProvider:
@@ -104,11 +104,11 @@ PASS: tool result, durable completion, command replay; model calls=2
 
 ## 检查模型适配器协议
 
-在 `ralf-offline-tests` 中执行：
+在 `relf-offline-tests` 中执行：
 
 ```bash
-ralf-check-model
-ralf-check-model --offline > compatibility.json
+relf-check-model
+relf-check-model --offline > compatibility.json
 python - <<'PY'
 import json
 with open("compatibility.json") as file:
@@ -128,7 +128,7 @@ completed 5 5 6 None
 需要可编辑的安装后项目时：
 
 ```bash
-ralf init my-model-check --template model-check
+relf init my-model-check --template model-check
 cd my-model-check
 python -m agent_app
 cd ..
@@ -139,25 +139,25 @@ cd ..
 真实兼容检查须另外显式启用，可能产生供应商费用。私下设置 `MY_MODEL_KEY`，将占位模型换成账号实际可用型号：
 
 ```bash
-ralf-check-model --adapter openai-responses --model YOUR_ACTUAL_MODEL \
+relf-check-model --adapter openai-responses --model YOUR_ACTUAL_MODEL \
   --api-key-env MY_MODEL_KEY --max-calls 6 --max-output-tokens 1024 \
   --timeout 30 --evidence-dir .ralf/private-live-compatibility-1
 ```
 
-本命令至多允许六次模型调用尝试，并声明每次输出／await 上限；它不是金额硬上限，也不证明上游取消。其他适配器见 `ralf-check-model --help`。通过只适用于所选端点、型号、适配器和案例，本页离线检查不代表已有在线验收。SDK 可 `await evaluate_model_compatibility(provider, cases=[...], limits=EvaluationLimits(...), evidence_dir=...)`，注入的 Provider 为借用资源。更多细节见 [SDK 兼容检查（中英混排）](repo:docs/sdk-model-tools.md#bounded-compatibility-checks)。
+本命令至多允许六次模型调用尝试，并声明每次输出／await 上限；它不是金额硬上限，也不证明上游取消。其他适配器见 `relf-check-model --help`。通过只适用于所选端点、型号、适配器和案例，本页离线检查不代表已有在线验收。SDK 可 `await evaluate_model_compatibility(provider, cases=[...], limits=EvaluationLimits(...), evidence_dir=...)`，注入的 Provider 为借用资源。更多细节见 [SDK 兼容检查（中英混排）](repo:docs/sdk-model-tools.md#bounded-compatibility-checks)。
 
 ## 验证业务、RAG、Plan 和 Team 行为
 
-在 `ralf-offline-tests` 中运行以下安装后命令。它们以确定性离线 Provider 执行真实受管理循环，并用独立任务 oracle 验证结果：
+在 `relf-offline-tests` 中运行以下安装后命令。它们以确定性离线 Provider 执行真实受管理循环，并用独立任务 oracle 验证结果：
 
 ```bash
-ralf-evaluate-business --offline --max-calls 16 \
+relf-evaluate-business --offline --max-calls 16 \
   --evidence-dir .ralf/business-1 --report business.json
-ralf-evaluate-rag --offline \
+relf-evaluate-rag --offline \
   --evidence-dir .ralf/rag-1 --report rag.json
-ralf-evaluate-orchestration --offline --kind plan-and-execute --max-calls 32 \
+relf-evaluate-orchestration --offline --kind plan-and-execute --max-calls 32 \
   --evidence-dir .ralf/plan-1 --report plan.json
-ralf-evaluate-orchestration --offline --kind team --max-calls 32 \
+relf-evaluate-orchestration --offline --kind team --max-calls 32 \
   --evidence-dir .ralf/team-1 --report team.json
 python - <<'PY'
 import json
@@ -190,18 +190,18 @@ team: completed 5/5 calls=17 model_quality=None
 
 ## 单独评估规划提案
 
-`ralf-evaluate-planning` 通过受管理 `ModelDAGPlanner` 子 Run 对提案评分，不执行被提议的业务 Worker。默认冻结套件有 20 个案例，仓库提供的离线响应 fixture 只覆盖三个。
+`relf-evaluate-planning` 通过受管理 `ModelDAGPlanner` 子 Run 对提案评分，不执行被提议的业务 Worker。默认冻结套件有 20 个案例，仓库提供的离线响应 fixture 只覆盖三个。
 
 安装后的安全默认命令为：
 
 ```bash
-ralf-evaluate-planning
+relf-evaluate-planning
 ```
 
 它报告 `not_run`、20 个总案例、零调用及 `model_quality: null`。执行源码 fixture 时，先回到安装所用的已发布仓库 checkout 根目录（测试目录不会生成此文件）：
 
 ```bash
-ralf-evaluate-planning --fixture evals/planning-fixtures.json \
+relf-evaluate-planning --fixture evals/planning-fixtures.json \
   --max-cases 3 --max-calls 3 \
   --evidence-dir .ralf/planning-1 --report planning.json
 ```
@@ -213,8 +213,8 @@ ralf-evaluate-planning --fixture evals/planning-fixtures.json \
 协议检查通过后，再明确配置端点、模型、密钥与独立的新证据批次。例如下面是显式启用的有界真实业务评估，本指南没有运行它：
 
 ```bash
-ralf-evaluate-business --provider openai --model-env RALF_EVAL_MODEL \
-  --base-url-env RALF_EVAL_BASE_URL --key-env RALF_EVAL_KEY \
+relf-evaluate-business --provider openai --model-env RELF_EVAL_MODEL \
+  --base-url-env RELF_EVAL_BASE_URL --key-env RELF_EVAL_KEY \
   --max-cases 8 --max-calls 32 --max-output-tokens 2048 --timeout 60 \
   --evidence-dir .ralf/private-live-business-1 --report live-business.json
 ```

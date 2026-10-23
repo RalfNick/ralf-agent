@@ -25,7 +25,7 @@ Execution Store 另行保存 Run、Action、审批、响应快照和回执。删
 
 ```python
 import asyncio
-from ralf_agent import Agent, ModelResponse
+from relf_agent import Agent, ModelResponse
 
 class OfflineSupport:
     identity = {"kind": "website-session-fixture", "version": "1"}
@@ -73,7 +73,7 @@ asyncio.run(main())
 在已安装 SDK 的环境中，选择新目录：
 
 ```bash
-ralf init my-knowledge-agent --template rag
+relf init my-knowledge-agent --template rag
 cd my-knowledge-agent
 python -m agent_app --query 'postgres connection refused'
 python -m agent_app --query 'quantum entanglement teleportation'
@@ -90,7 +90,7 @@ python -m agent_app --query 'quantum entanglement teleportation'
 使用独立 `ingest` 模板导入一份 UTF-8 Markdown：
 
 ```bash
-ralf init my-doc-agent --template ingest
+relf init my-doc-agent --template ingest
 cd my-doc-agent
 python - <<'PY'
 from pathlib import Path
@@ -123,7 +123,7 @@ python -m agent_app query --query 'pool timeout' --command-id answer-first
 安装后另选新目录。模板初始语料为空，以下命令依次创建原文、提交来源、建立向量索引并查询：
 
 ```bash
-ralf init my-hybrid-agent --template hybrid
+relf init my-hybrid-agent --template hybrid
 cd my-hybrid-agent
 python - <<'TEXT'
 from pathlib import Path
@@ -143,14 +143,14 @@ python -m agent_app query --query 'pool timeout' --command-id answer-first
 ```python
 import asyncio
 import os
-from ralf_agent import OpenAIEmbeddingProvider
+from relf_agent import OpenAIEmbeddingProvider
 
 async def main():
     async with OpenAIEmbeddingProvider(
-        model=os.environ["RALF_EMBED_MODEL"],
-        base_url=os.environ["RALF_EMBED_BASE_URL"],
-        api_key=os.environ["RALF_EMBED_API_KEY"],
-        dimensions=int(os.environ["RALF_EMBED_DIMENSIONS"]),
+        model=os.environ["RELF_EMBED_MODEL"],
+        base_url=os.environ["RELF_EMBED_BASE_URL"],
+        api_key=os.environ["RELF_EMBED_API_KEY"],
+        dimensions=int(os.environ["RELF_EMBED_DIMENSIONS"]),
     ) as embedding:
         report = await embedding.embed_result(["connection pool exhausted"])
         print(len(report.vectors), len(report.vectors[0]), report.usage)

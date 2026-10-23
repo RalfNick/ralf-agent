@@ -15,23 +15,23 @@ In a terminal, create a virtual environment and install:
 ```bash
 git clone https://github.com/RalfNick/relf-agent.git
 cd relf-agent
-git checkout 0b9b6c9682c40285d91994cd831aa93d7e814bf1
+git checkout ba1c81fca67e15e70c1d51d0f4ecbbbcbbb37239
 python3 -m venv .venv
 source .venv/bin/activate
 python -m pip install -e .
-ralf --version
+relf --version
 ```
 
 > This guide uses source installation. Check your actual revision. Relf-Agent is in Alpha, and APIs and deployment combinations continue to evolve. A public PyPI release has not been verified as the installation path for this guide.
 
-The checkout pins the documentation baseline **0.1.0a1**, verified on 2026-10-21; confirm that version before continuing. See [installation](/en/docs/installation/) if your version differs.
+The checkout pins the documentation baseline **0.1.0a6**, verified on 2026-10-23; confirm that version before continuing. See [installation](/en/docs/installation/) if your version differs.
 
 ## 2. Create an offline ticket project
 
 Continue from the source checkout and choose a target directory that does not yet exist:
 
 ```bash
-ralf --format text init ../my-agent
+relf --format text init ../my-agent
 cd ../my-agent
 python -m agent_app --db .ralf/runs.sqlite --ticket INC-001
 ```
@@ -45,7 +45,7 @@ The offline provider emits fixed proposals to demonstrate the execution protocol
 The first run stops at `waiting_approval`. Its output includes `run_id`, `pending` and the submission receipt. Replace the placeholder below with the real run ID:
 
 ```bash
-ralf --db .ralf/runs.sqlite \
+relf --db .ralf/runs.sqlite \
   --factory agent_app.runtime:create_engine \
   --format text inspect RUN_ID
 ```
@@ -59,14 +59,14 @@ ralf --db .ralf/runs.sqlite \
 Inspect the operation, then use the actual commands returned by `inspect`. To fill them manually, take `ACTION_ID` and `OPERATION_DIGEST` from the original pending operation:
 
 ```bash
-ralf --db .ralf/runs.sqlite \
+relf --db .ralf/runs.sqlite \
   --factory agent_app.runtime:create_engine \
   approve RUN_ID ACTION_ID \
   --digest OPERATION_DIGEST --command-id approve-001
-ralf --db .ralf/runs.sqlite \
+relf --db .ralf/runs.sqlite \
   --factory agent_app.runtime:create_engine \
   --format text resume RUN_ID
-ralf --db .ralf/runs.sqlite --format text inspect RUN_ID
+relf --db .ralf/runs.sqlite --format text inspect RUN_ID
 ```
 
 An approval receipt with `applied` means the decision was recorded. `resume` advances execution and result adoption. Check that `state` is `succeeded`; a command's exit code alone does not prove business completion.

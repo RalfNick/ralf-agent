@@ -11,7 +11,7 @@ sources: [docs/sdk-model-tools.md, docs/getting-started.md, docs/model-adapters.
 `ToolRegistry.tool` 从支持的 Python 注解中生成参数 Schema。函数仍然是普通的可调用对象；注册时必须明确 `effect`，注解推导不授予任何权限。
 
 ```python
-from ralf_agent import ToolRegistry
+from relf_agent import ToolRegistry
 
 tools = ToolRegistry()
 
@@ -33,12 +33,12 @@ def lookup(ticket: str):
 
 ## 连接模型并运行
 
-在进程环境设置 `OPENAI_API_KEY` 和 `RALF_MODEL`；模型名使用当前账户实际支持的值。在新的工作目录将下面的完整示例保存为 `ticket_agent.py`。它使用真实 Provider，会产生供应商用量；如需先验证无密钥工具循环，运行[离线应用测试](/zh/docs/testing/)。
+在进程环境设置 `OPENAI_API_KEY` 和 `RELF_MODEL`；模型名使用当前账户实际支持的值。在新的工作目录将下面的完整示例保存为 `ticket_agent.py`。它使用真实 Provider，会产生供应商用量；如需先验证无密钥工具循环，运行[离线应用测试](/zh/docs/testing/)。
 
 ```python
 import asyncio
 import os
-from ralf_agent import (
+from relf_agent import (
     AgentSpec, LocalEngine, OpenAIChatProvider,
     SQLiteStore, ToolRegistry,
 )
@@ -55,7 +55,7 @@ spec = AgentSpec(
 )
 
 async def main():
-    provider = OpenAIChatProvider(model=os.environ["RALF_MODEL"])
+    provider = OpenAIChatProvider(model=os.environ["RELF_MODEL"])
     with LocalEngine(
         SQLiteStore(".ralf/agent.sqlite"),
         providers={"default": provider}, tools=tools,

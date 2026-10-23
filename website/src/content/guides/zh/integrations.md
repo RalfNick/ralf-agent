@@ -38,17 +38,17 @@ SSE 文本片段可用于临时展示；完整响应通过校验并保存后，�
 MCP starter 启动本地子进程服务，并使用独立 SQLite 业务回执库；它不需要模型密钥。当前 stdio 路径需要支持 POSIX 进程管理的环境。
 
 ```bash
-ralf init my-mcp-agent --template mcp
+relf init my-mcp-agent --template mcp
 cd my-mcp-agent
 python -m agent_app --value 3 --command-id first-change
-ralf --db .ralf/runs.sqlite --factory agent_app.runtime:create_engine \
+relf --db .ralf/runs.sqlite --factory agent_app.runtime:create_engine \
   --format text inspect RUN_ID
 ```
 
 把 `RUN_ID` 换成提交返回值。检查工具、参数和摘要，执行 `inspect` 输出的批准命令，再恢复：
 
 ```bash
-ralf --db .ralf/runs.sqlite \
+relf --db .ralf/runs.sqlite \
   --factory agent_app.runtime:create_engine resume RUN_ID
 ```
 

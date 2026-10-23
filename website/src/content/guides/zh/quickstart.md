@@ -15,23 +15,23 @@ sources: [docs/installation.md, docs/getting-started.md, docs/recovery-guide.md]
 ```bash
 git clone https://github.com/RalfNick/relf-agent.git
 cd relf-agent
-git checkout 0b9b6c9682c40285d91994cd831aa93d7e814bf1
+git checkout ba1c81fca67e15e70c1d51d0f4ecbbbcbbb37239
 python3 -m venv .venv
 source .venv/bin/activate
 python -m pip install -e .
-ralf --version
+relf --version
 ```
 
 > 本指南使用源码安装。核对实际检出的版本；Relf-Agent 处于 Alpha，API 与部署组合仍在演进。公开 PyPI 发行包尚未作为本指南核验的安装方式。
 
-checkout 固定文档基线 **0.1.0a1**，验证日期为 2026-10-21；继续前确认该版本。版本不同先查[安装与环境](/zh/docs/installation/)。
+checkout 固定文档基线 **0.1.0a6**，验证日期为 2026-10-23；继续前确认该版本。版本不同先查[安装与环境](/zh/docs/installation/)。
 
 ## 2. 创建离线工单项目
 
 继续在源码仓库根目录执行，选择一个尚不存在的目标目录：
 
 ```bash
-ralf --format text init ../my-agent
+relf --format text init ../my-agent
 cd ../my-agent
 python -m agent_app --db .ralf/runs.sqlite --ticket INC-001
 ```
@@ -45,7 +45,7 @@ python -m agent_app --db .ralf/runs.sqlite --ticket INC-001
 首次运行会停在 `waiting_approval`。输出中包含 `run_id`、`pending` 与提交回执。将以下占位符替换成实际 ID：
 
 ```bash
-ralf --db .ralf/runs.sqlite \
+relf --db .ralf/runs.sqlite \
   --factory agent_app.runtime:create_engine \
   --format text inspect RUN_ID
 ```
@@ -59,14 +59,14 @@ ralf --db .ralf/runs.sqlite \
 核对操作后，优先执行 `inspect` 给出的实际命令。手工填写时，`ACTION_ID` 与 `OPERATION_DIGEST` 必须取自原 pending：
 
 ```bash
-ralf --db .ralf/runs.sqlite \
+relf --db .ralf/runs.sqlite \
   --factory agent_app.runtime:create_engine \
   approve RUN_ID ACTION_ID \
   --digest OPERATION_DIGEST --command-id approve-001
-ralf --db .ralf/runs.sqlite \
+relf --db .ralf/runs.sqlite \
   --factory agent_app.runtime:create_engine \
   --format text resume RUN_ID
-ralf --db .ralf/runs.sqlite --format text inspect RUN_ID
+relf --db .ralf/runs.sqlite --format text inspect RUN_ID
 ```
 
 批准回执的 `applied` 表示决定已保存。`resume` 才推进工具执行与结果采纳。流程完成后检查 `state` 是否为 `succeeded`，不要仅凭进程退出码判断业务成功。

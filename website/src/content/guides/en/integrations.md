@@ -38,17 +38,17 @@ SSE text fragments are temporary display data. A complete, validated and recorde
 The MCP starter starts a local subprocess service and uses a separate SQLite business-receipt database. It needs no model key. The current stdio path requires an environment with POSIX process management.
 
 ```bash
-ralf init my-mcp-agent --template mcp
+relf init my-mcp-agent --template mcp
 cd my-mcp-agent
 python -m agent_app --value 3 --command-id first-change
-ralf --db .ralf/runs.sqlite --factory agent_app.runtime:create_engine \
+relf --db .ralf/runs.sqlite --factory agent_app.runtime:create_engine \
   --format text inspect RUN_ID
 ```
 
 Replace `RUN_ID` with the submitted run ID. Inspect the tool, arguments and digest, execute the approval command printed by `inspect`, then resume:
 
 ```bash
-ralf --db .ralf/runs.sqlite \
+relf --db .ralf/runs.sqlite \
   --factory agent_app.runtime:create_engine resume RUN_ID
 ```
 

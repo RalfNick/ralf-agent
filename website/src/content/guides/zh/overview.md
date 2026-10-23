@@ -3,7 +3,7 @@ title: 能力总览
 description: 从业务目标选择 Agent、工具、记忆、知识与执行方式，逐步组合你的应用。
 locale: zh
 slug: overview
-sources: [docs/basic-capabilities.md, docs/concepts.md, docs/support-journey.md, docs/releases/0.1.0a1.md]
+sources: [docs/basic-capabilities.md, docs/concepts.md, docs/support-journey.md, docs/releases/0.1.0a6.md]
 ---
 
 ## Relf-Agent 用来解决什么
@@ -12,7 +12,7 @@ Relf-Agent 是开源 Python Agent 框架。你定义模型、业务工具与任�
 
 全称是 **Reliable and Extensible Lifecycle Framework for Intelligent Agents**，即**可靠、可扩展的智能体全生命周期框架**。定位是：**灵活构建智能体，可靠运行智能应用。** 模型推理、规划与成员协作提供智能能力，可替换组件支持业务定制，持久执行负责审批与恢复。
 
-项目原名Ralf-Agent，仓库现为`RalfNick/relf-agent`。a6起公共入口统一为`relf-agent`、`relf_agent`、`relf`／`relf-*`；a5和更早包仍使用旧导入／命令。本站教程继续采用下方标注的SDK0.1.0a1固定基线，其历史例子使用`ralf_agent`／`ralf`；原公开版本见[0.1.0a2 Alpha](https://github.com/RalfNick/relf-agent/releases/tag/v0.1.0a2)。新版本的制品、平台及恢复资格独立验收。
+Relf-Agent 的源码仓库为 `RalfNick/relf-agent`。本站教程固定 SDK **0.1.0a6** 源码候选，统一使用 `relf-agent`、`relf_agent`、`relf`／`relf-*`。从[安装与环境](/zh/docs/installation/)准备对应环境；公开发行、平台和旧任务恢复资格另行核验。
 
 一个典型工单流程是：读取工单 → 检索运维手册 → 提出变更 → 人工审批 → 执行工具 → 检查结果。可以先用一个 Agent 完成，再把固定步骤组合成 Workflow；需要成员协作时，再加入 Plan 或 Team。
 

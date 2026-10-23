@@ -11,8 +11,8 @@ sources: [docs/recovery-guide.md, docs/getting-started.md, docs/concepts.md]
 Run these commands from the quickstart project's root. Keep the original database, scope, factory and component identities, and replace the placeholders:
 
 ```bash
-ralf --db .ralf/runs.sqlite --factory agent_app.runtime:create_engine --format text inspect RUN_ID
-ralf --db .ralf/runs.sqlite events RUN_ID --after 0 --limit 100
+relf --db .ralf/runs.sqlite --factory agent_app.runtime:create_engine --format text inspect RUN_ID
+relf --db .ralf/runs.sqlite events RUN_ID --after 0 --limit 100
 ```
 
 `inspect`, `status` and `events` read SQLite without writing and currently observe the default local scope. Queries do not reschedule work. A successful CLI command does not mean that the run completed.
@@ -30,8 +30,8 @@ ralf --db .ralf/runs.sqlite events RUN_ID --after 0 --limit 100
 A process can close normally while waiting for approval. A new process loads the same factory and decides on the original action and digest:
 
 ```bash
-ralf --db .ralf/runs.sqlite --factory agent_app.runtime:create_engine approve RUN_ID ACTION_ID --digest OPERATION_DIGEST --command-id approve-001
-ralf --db .ralf/runs.sqlite --factory agent_app.runtime:create_engine --format text resume RUN_ID
+relf --db .ralf/runs.sqlite --factory agent_app.runtime:create_engine approve RUN_ID ACTION_ID --digest OPERATION_DIGEST --command-id approve-001
+relf --db .ralf/runs.sqlite --factory agent_app.runtime:create_engine --format text resume RUN_ID
 ```
 
 To reject, add `--reject` to the approval command and give that decision its own `command_id`. Take the digest from the original pending operation. An approval receipt records the decision; the actual business result is established after execution continues.
@@ -73,7 +73,7 @@ This is an operation template. Replace the run, action and result with actual ve
 ## Cancellation and shutdown
 
 ```bash
-ralf --db .ralf/runs.sqlite --factory agent_app.runtime:create_engine cancel RUN_ID --command-id cancel-001
+relf --db .ralf/runs.sqlite --factory agent_app.runtime:create_engine cancel RUN_ID --command-id cancel-001
 ```
 
 Cancellation stops further scheduling. It does not undo dispatched business operations. Before shutdown, finish or cancel and await your managed drive task, wait for actual thread calls to finish, then close the engine. Do not delete leases or databases to bypass an executor that still owns active work.

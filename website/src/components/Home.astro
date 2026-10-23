@@ -11,7 +11,7 @@ const { locale } = Astro.props; const zh = locale === 'zh';
 const docs = `/${locale}/docs/`;
 const description = zh ? `${brand.name}：${brand.meaning.zh}按需组合模型、工具、上下文与记忆，通过持久审批和恢复运行智能应用。` : `${brand.name}: ${brand.meaning.en} Compose models, tools and memory with durable approvals and recovery.`;
 const installCode = `git clone ${repository}.git\ncd relf-agent\ngit checkout ${repositoryInfo.ref}\npython3 -m venv .venv\nsource .venv/bin/activate\npython -m pip install -e .`;
-const runCode = 'ralf --format text init ../my-agent\ncd ../my-agent\npython -m agent_app --ticket INC-001';
+const runCode = 'relf --format text init ../my-agent\ncd ../my-agent\npython -m agent_app --ticket INC-001';
 ---
 <Base locale={locale} title={`${brand.name} — ${brand.tagline[locale]}`} description={description}>
   <main id="main">
@@ -35,7 +35,7 @@ const runCode = 'ralf --format text init ../my-agent\ncd ../my-agent\npython -m 
         <p>{zh ? '源码安装后，生成一个离线工单项目。固定 Provider 会提出待批操作，让你先理解执行协议，再接入自己的模型。' : 'Install from source and generate an offline ticket project. A fixed provider proposes an operation for approval, so you can learn the execution protocol before connecting a real model.'}</p>
         <ol class="build-steps"><li><span>01</span><div><strong>{zh ? '安装 SDK，生成项目' : 'Install the SDK and create a project'}</strong><p>{zh ? 'Python 3.11+ · 本地 SQLite' : 'Python 3.11+ · local SQLite'}</p></div></li><li><span>02</span><div><strong>{zh ? '检查并批准原操作' : 'Inspect and approve the operation'}</strong><p>inspect → approve</p></div></li><li><span>03</span><div><strong>{zh ? '恢复原 Run，检查完成状态' : 'Resume the run and inspect its result'}</strong><p>resume → succeeded</p></div></li></ol>
         <a class="text-link" href={`${docs}quickstart/`}>{zh ? '按完整教程继续审批与恢复' : 'Continue with the full approval & recovery tutorial'}<Icon name="arrow" size={17}/></a>
-        <p class="code-note">{zh ? '本区固定 SDK a1，使用旧命令 ralf；当前 a6 使用 relf / relf_agent。首次运行预期停在 waiting_approval。这些命令用于安装与启动项目，完整教程在同一页包含安装、审批、恢复和结果检查。' : 'This section pins SDK a1 and its ralf command; current a6 uses relf / relf_agent. The first run should pause at waiting_approval. These commands install and start the project; the full tutorial covers installation, approval, recovery and result inspection on one page.'}</p>
+        <p class="code-note">{zh ? '本区固定 SDK 0.1.0a6 源码候选，使用 relf 命令和独立 Python 环境。首次运行预期停在 waiting_approval。这些命令用于安装与启动项目，完整教程在同一页包含安装、审批、恢复和结果检查。' : 'This section pins the SDK 0.1.0a6 source candidate and uses relf in an isolated Python environment. The first run should pause at waiting_approval. These commands install and start the project; the full tutorial covers installation, approval, recovery and result inspection on one page.'}</p>
       </div>
       <div class="sdk-code-panel">
         <div class="code-toolbar"><span><span class="tiny-square"></span>{zh ? '终端 · 离线工单' : 'Terminal · offline ticket'}</span><span>LOCAL / SQLITE</span></div>

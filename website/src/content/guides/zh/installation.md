@@ -3,7 +3,7 @@ title: 安装与环境
 description: 从源码准备一个轻量的 Python 环境，先在本地跑通 Relf-Agent。
 locale: zh
 slug: installation
-sources: [docs/installation.md, docs/getting-started.md]
+sources: [docs/installation.md, docs/getting-started.md, docs/alpha6-validation-status.md, docs/releases/0.1.0a6.md]
 ---
 
 ## 环境要求
@@ -12,25 +12,23 @@ sources: [docs/installation.md, docs/getting-started.md]
 
 Relf-Agent 处于 Alpha 阶段，API 和部署组合仍在演进。各组合的实际验证范围以仓库的[实现清单](repo:docs/implementation-status.md)为准。
 
-展示名称为Relf-Agent，仓库为`RalfNick/relf-agent`。从a6起，发行名、Python导入和CLI统一为`relf-agent`、`relf_agent`、`relf`／`relf-*`；a5仅改发行名，仍使用旧入口。本指南固定a1源码和公开a2的原导入`ralf_agent`及原命令`ralf`，不将历史示例改成无法在原包运行的新命令。
+Relf-Agent 的固定源码基线为 **0.1.0a6**，仓库为 `RalfNick/relf-agent`。本指南统一使用发行名 `relf-agent`、Python 导入 `relf_agent` 和 CLI `relf`／`relf-*`。
 
 ## 从源码安装
 
 ```bash
 git clone https://github.com/RalfNick/relf-agent.git
 cd relf-agent
-git checkout 0b9b6c9682c40285d91994cd831aa93d7e814bf1
+git checkout ba1c81fca67e15e70c1d51d0f4ecbbbcbbb37239
 python3 -m venv .venv
 source .venv/bin/activate
 python -m pip install -e .
-ralf --version
+relf --version
 ```
 
-文档基线为 SDK **0.1.0a1**，提交 `0b9b6c9682c40285d91994cd831aa93d7e814bf1`，验证日期为 2026-10-21。checkout 命令固定此版本，`ralf --version` 应显示 `0.1.0a1`。基础依赖含 `httpx` 和 `jsonschema`。更新源码后行为可能变化；为旧 Run 保留原 SDK 和配置。
+文档基线为 SDK **0.1.0a6**，提交 `ba1c81fca67e15e70c1d51d0f4ecbbbcbbb37239`，验证日期为 2026-10-23。checkout 命令固定此版本，`relf --version` 应显示 `0.1.0a6`。基础依赖含 `httpx` 和 `jsonschema`。更新源码后行为可能变化；为旧 Run 保留原 SDK 和配置。
 
-> 当前指南固定原 a1 源码，不把它描述成公开发行包。最新 [0.1.0a2 Alpha](https://github.com/RalfNick/relf-agent/releases/tag/v0.1.0a2) 已通过 GitHub Release 公开交付，安装命令见其发布说明；PyPI 尚未发布，`pip install ralf-agent` 不是本指南的已验证入口。
-
-> 当前候选为`relf-agent==0.1.0a6`；实际状态见维护checkout的`docs/alpha6-validation-status.md`。a5原包和记录保留，不放行a6。新旧版本使用独立环境；不自动迁移旧Run、History或函数指纹。
+> 本指南验证的是固定的 **a6 源码候选**，不表示 a6 已公开发行到 PyPI 或 GitHub Release。制品、平台及发行状态见 [a6 验收状态](repo:docs/alpha6-validation-status.md)与 [a6 说明](repo:docs/releases/0.1.0a6.md)。[历史 a2 归档](https://github.com/RalfNick/relf-agent/releases/tag/v0.1.0a2)保留其原入口和独立证据。新旧版本使用独立环境；旧 Run、History 和函数身份不会自动迁移。
 
 如果已经获得本地 wheel，可以在虚拟环境中用 `python -m pip install /实际路径/包名.whl` 安装，并核对制品来源与版本。
 
@@ -56,8 +54,8 @@ ralf --version
 ## 确认安装
 
 ```bash
-ralf --help
-ralf --version
+relf --help
+relf --version
 ```
 
-找不到 `ralf` 时，先确认虚拟环境已经激活，再运行 `python -m pip show ralf-agent` 检查安装位置。接下来阅读[快速开始](/zh/docs/quickstart/)，完成一次本地审批与跨进程恢复。
+找不到 `relf` 时，先确认虚拟环境已经激活，再运行 `python -m pip show relf-agent` 检查安装位置。接下来阅读[快速开始](/zh/docs/quickstart/)，完成一次本地审批与跨进程恢复。

@@ -8,7 +8,7 @@ sources: [docs/support-journey.md, docs/installation.md, docs/agent-api.md, docs
 
 Follow ticket `INC-001` through five stages in one application file: an Agent with a read-only tool, a persistent Session, local RAG, lasting Facts and a sequential Workflow. Each stage composes existing SDK components. The default provider is an offline fixture; it demonstrates execution and evidence plumbing without model credentials or network services.
 
-This tutorial targets the **0.1.0a1 Local SDK** at published commit `0b9b6c9682c40285d91994cd831aa93d7e814bf1`. Complete [installation](/en/docs/installation/) and the [approval quickstart](/en/docs/quickstart/) first. The stages below run without Temporal, Docker, embeddings or an external database. Online model compatibility and task quality need separate [testing and evaluation](/en/docs/testing/).
+This tutorial targets the **0.1.0a6 Local SDK** at pinned source commit `ba1c81fca67e15e70c1d51d0f4ecbbbcbbb37239`. Complete [installation](/en/docs/installation/) and the [approval quickstart](/en/docs/quickstart/) first. The stages below run without Temporal, Docker, embeddings or an external database. Online model compatibility and task quality need separate [testing and evaluation](/en/docs/testing/).
 
 ## 1. Prepare the application file
 
@@ -18,7 +18,7 @@ If you followed source installation, run this **from the framework checkout root
 
 ```bash
 mkdir ../support-app
-git show 0b9b6c9682c40285d91994cd831aa93d7e814bf1:examples/support_journey.py \
+git show ba1c81fca67e15e70c1d51d0f4ecbbbcbbb37239:examples/support_journey.py \
   > ../support-app/support_journey.py
 cd ../support-app
 python support_journey.py --help
@@ -142,8 +142,8 @@ This is a fixed sequence of two Agent definitions. The offline result demonstrat
 Every output supplies a `run_id`. For example, inspect a Session stage Run with its own database:
 
 ```bash
-ralf --db .ralf/support-journey/session.sqlite --format text inspect RUN_ID
-ralf --db .ralf/support-journey/session.sqlite events RUN_ID --after 0 --limit 100
+relf --db .ralf/support-journey/session.sqlite --format text inspect RUN_ID
+relf --db .ralf/support-journey/session.sqlite events RUN_ID --after 0 --limit 100
 ```
 
 Use `agent.sqlite`, `rag.sqlite`, `memory.sqlite` or `workflow.sqlite` for the corresponding stage, and adjust the directory if you supplied `--data-dir`. These commands observe the default Local Scope; inspection does not resume execution. This example does not expose a `module:create_engine` CLI factory.
@@ -152,7 +152,7 @@ After a stopped process, rerun the original application command with the same fi
 
 | Symptom | Next step |
 | --- | --- |
-| `ModuleNotFoundError: ralf_agent` | Activate the environment containing the installed SDK; verify [installation](/en/docs/installation/) |
+| `ModuleNotFoundError: relf_agent` | Activate the environment containing the installed SDK; verify [installation](/en/docs/installation/) |
 | Python cannot open the file, or reports HTML syntax | Prepare the raw `support_journey.py` source and run beside it |
 | JSON `{"error":"validation_error"}` | Check arguments and configuration; live mode requires an explicit model and credentials, and the fixture supports only `INC-001` |
 | `idempotency_conflict` | Recover the original request unchanged; use a new ID for a new intent |

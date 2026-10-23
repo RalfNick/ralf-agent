@@ -3,7 +3,7 @@ title: Capabilities overview
 description: Choose agents, tools, memory, knowledge and execution patterns for your task, then compose them gradually.
 locale: en
 slug: overview
-sources: [docs/basic-capabilities.md, docs/concepts.md, docs/support-journey.md, docs/releases/0.1.0a1.md]
+sources: [docs/basic-capabilities.md, docs/concepts.md, docs/support-journey.md, docs/releases/0.1.0a6.md]
 ---
 
 ## What Relf-Agent helps you build
@@ -12,7 +12,7 @@ Relf-Agent is an open-source Python agent framework. You define models, business
 
 The name expands to **Reliable and Extensible Lifecycle Framework for Intelligent Agents**. **Build intelligent agents. Run them reliably.** Model reasoning, planning and member collaboration provide intelligence; replaceable components support customization; durable execution handles approval and recovery.
 
-Previously named Ralf-Agent, the project now lives at `RalfNick/relf-agent`. a6 uses `relf-agent`, `relf_agent`, and `relf` / `relf-*`; a5 and earlier archives retain the old imports and commands. These tutorials keep their SDK0.1.0a1 baseline and its actual `ralf_agent` / `ralf` examples. The original public archive is [0.1.0a2 Alpha](https://github.com/RalfNick/relf-agent/releases/tag/v0.1.0a2). New artifact, platform and recovery qualifications remain separate.
+Relf-Agent lives at `RalfNick/relf-agent`. These tutorials pin the **0.1.0a6** source candidate and use `relf-agent`, `relf_agent`, and `relf` / `relf-*` throughout. Prepare its matching environment in [installation](/en/docs/installation/); public release, platform and old-run recovery qualifications are separate checks.
 
 A ticket flow might read a ticket, retrieve a runbook, propose a change, wait for approval, execute a tool and inspect the result. Start with one agent. Compose fixed steps into a workflow, then add plans or teams when the task needs delegation.
 

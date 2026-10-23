@@ -6,11 +6,11 @@ slug: api-reference
 sources: [docs/api-reference.md, docs/agent-api.md, docs/session-api.md, docs/user-input.md, docs/sdk-model-tools.md, docs/recovery-guide.md, docs/runtime-assembly.md, docs/getting-started.md]
 ---
 
-This is a curated reference for the common Local path, checked against SDK `0.1.0a1`. It is not an exhaustive generated API listing. Start with the [application tutorial](/en/docs/app-tutorial/) for a complete program; use [models and tools](/en/docs/models-tools/) for provider setup. Temporal and optional backends have separate contracts in [operations](/en/docs/operations/).
+This is a curated reference for the common Local path, checked against SDK `0.1.0a6`. It is not an exhaustive generated API listing. Start with the [application tutorial](/en/docs/app-tutorial/) for a complete program; use [models and tools](/en/docs/models-tools/) for provider setup. Temporal and optional backends have separate contracts in [operations](/en/docs/operations/).
 
 ## Definitions and runnable entries
 
-Import these names from `ralf_agent`.
+Import these names from `relf_agent`.
 
 | Entry | Common signature or defaults | Meaning |
 | --- | --- | --- |
@@ -122,13 +122,13 @@ Typed exceptions derive from `RalfError` and expose `.code`. CLI errors print a 
 Global options precede the subcommand: `--db` defaults to `.ralf/runs.sqlite`, `--format` to `json`; `--format text` gives a readable view. `--config runtime.toml` and `--factory module:callable` are mutually exclusive trusted assembly choices. Keep the same database and original assembly for mutation/recovery commands.
 
 ```bash
-ralf --version
-ralf --help
-ralf run --help
-ralf send-input --help
+relf --version
+relf --help
+relf run --help
+relf send-input --help
 ```
 
-| Command after `ralf [global options]` | Result / driving behavior |
+| Command after `relf [global options]` | Result / driving behavior |
 | --- | --- |
 | `init my-agent --template config` | Writes an offline starter to a new directory. Follow its README. |
 | `run --spec agent.toml --input hello --command-id hello-1 --budget 32` | Requires `--config` or `--factory`; submits and drives to completion/pause. `--input-json` selects JSON input instead. |

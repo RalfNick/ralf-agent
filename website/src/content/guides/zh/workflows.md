@@ -22,7 +22,7 @@ sources: [docs/static-workflows.md, docs/orchestration.md, docs/parallel-workflo
 安装 SDK 后，选择一个不存在的目录：
 
 ```bash
-ralf init my-graph --template graph
+relf init my-graph --template graph
 cd my-graph
 python -m agent_app --input urgent --command-id urgent-task
 ```
@@ -33,8 +33,8 @@ python -m agent_app --input urgent --command-id urgent-task
 
 ```bash
 python -m agent_app --input urgent --command-id queued-task --submit-only
-ralf --config runtime.toml resume RUN_ID
-ralf --config runtime.toml --format text inspect RUN_ID
+relf --config runtime.toml resume RUN_ID
+relf --config runtime.toml --format text inspect RUN_ID
 ```
 
 静态图支持显式依赖、条件、输入映射和合并；有界并行需要显式配置 `max_concurrency`。纯 Transform 只做 JSON 数据计算，外部 I/O 使用受管理工具。完整定义见[静态图指南](repo:docs/static-workflows.md)。
@@ -45,7 +45,7 @@ ralf --config runtime.toml --format text inspect RUN_ID
 
 ```python
 import asyncio
-from ralf_agent import AgentSpec, RuntimeBuilder, RuntimeProfile, TeamSpec
+from relf_agent import AgentSpec, RuntimeBuilder, RuntimeProfile, TeamSpec
 
 profile = RuntimeProfile(
     "team", "1", {"default": {"adapter": "offline-echo"}},

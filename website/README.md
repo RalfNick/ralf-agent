@@ -2,7 +2,7 @@
 
 独立的 Astro 静态官网。当前展示品牌为 **Relf-Agent**：**Reliable and Extensible Lifecycle Framework for Intelligent Agents**，可靠、可扩展的智能体全生命周期框架。定位：灵活构建智能体，可靠运行智能应用。
 
-原项目名为Ralf-Agent，仓库为[RalfNick/relf-agent](https://github.com/RalfNick/relf-agent)。a6统一发行名`relf-agent`、导入`relf_agent`与命令`relf`／`relf-*`；a5及更早包继续使用原入口。本网站的可执行教程和首页安装演示仍明确固定原a1，使用其实际`ralf_agent`／`ralf`；公开a2、原a4／a5和当前a6分别验收。每页说明版本边界，不把新名字塞入原包命令。官网[relfagent.com](https://relfagent.com/)已上线，本批仅更新本地文案和验证，不部署、推送或公开发布SDK；Cloudflare资源名和历史记录保持。
+Relf-Agent 的仓库为 [RalfNick/relf-agent](https://github.com/RalfNick/relf-agent)。官网中英文文档、可执行教程和首页安装演示固定 SDK **0.1.0a6 源码候选**，统一使用 `relf-agent`、`relf_agent` 与 `relf`／`relf-*`。源码候选可检出不等于 SDK 包已公开发行；a6 制品、平台及发行资格独立核验。旧版任务保留原 SDK、配置和数据环境，Cloudflare 资源名和历史记录保持实际身份。
 
 首次手工上线的现场证据见[上线验收记录](reviews/2026-10-23-cloudflare-launch.md)及其 HTTP 明细。自动构建入口、检查门禁和 Cloudflare 连接参数见下方“自动构建与发布”；连接状态与实际发布结果以 Cloudflare 构建记录为准。
 
@@ -37,7 +37,7 @@ npx astro preview status
 npx astro preview stop
 ```
 
-`npm run build` 会输出 32 个页面（3 个首页入口、28 篇双语文档与 404），创建双语 Pagefind 搜索索引，检查本地链接、资源与页内锚点。十四组文档按“开始使用／构建能力／运行与维护／查询与验证”组织，包含连续应用教程、持久用户输入、API 与 CLI 参考、测试与评估。源码教程固定 a1；公开 a2 与 PyPI 未发布的状态分别说明。
+`npm run build` 会输出 32 个页面（3 个首页入口、28 篇双语文档与 404），创建双语 Pagefind 搜索索引，检查本地链接、资源与页内锚点。十四组文档按“开始使用／构建能力／运行与维护／查询与验证”组织，包含连续应用教程、持久用户输入、API 与 CLI 参考、测试与评估。源码教程固定 a6 候选；公开 a2 历史归档与 a6 发行资格分别说明。
 
 ## 域名与搜索引擎
 
@@ -100,7 +100,7 @@ GitHub Actions 与 Cloudflare 共用 `npm run verify`：静态检查 → 单元�
 | 预览构建 | 关闭；PR 和非 main 分支由 GitHub Actions 检查，不发布生产站 |
 | 构建变量 | `PUBLIC_SITE_URL=https://relfagent.com`、`SKIP_DEPENDENCY_INSTALL=1` |
 | 运行时版本文件 | `.nvmrc` 为 Node 24，`.python-version` 为已验证的 Python 3.12.7 |
-| 构建监视路径 | `website/*`、`docs/*`、`src/ralf_agent/*`、`pyproject.toml`、`README.md`、`.github/workflows/website.yml`（相对仓库根目录；Cloudflare 的 `*` 包含子目录路径） |
+| 构建监视路径 | `website/*`、`docs/*`、`src/relf_agent/*`、`pyproject.toml`、`README.md`、`.github/workflows/website.yml`（相对仓库根目录；Cloudflare 的 `*` 包含子目录路径） |
 
 `cloudflare-build.sh` 补齐浅克隆历史，安装锁定的 Node 依赖，在独立 `.venv-build` 中安装 SDK 基础依赖，随后运行完整正式验证。Cloudflare 仅在构建命令成功后执行部署命令，上传这次验证生成的 `dist/`。无需在 GitHub 仓库中复制 Cloudflare Token；GitHub 应用仓库权限与 Workers Builds 使用的部署令牌在各自控制台管理。
 
@@ -121,7 +121,7 @@ GitHub Actions 与 Cloudflare 共用 `npm run verify`：静态检查 → 单元�
 
 当前每种语言为两个查询分块。Pagefind 1.5.2 原实现会吞掉部分分块错误，因此 `scripts/strict-pagefind.mjs` 在构建时给主线程与 Worker 的同一个已知 catch 增加重新抛出，防止显示不完整结果。补丁只匹配一个准确位置，版本或实现变化会中止构建，必须重新审阅；单元测试与浏览器故障注入覆盖失败和重试。开发模式没有生成索引时显示重试与文档入口。
 
-`repository.json` 集中记录 SDK 版本、已发布提交和验证日期。组件调用 `repositoryUrl()`，Markdown 使用 `[标题](repo:docs/example.md#section)`，由 Sätteri MDAST 插件转换；不要再写死分支。构建检查所有生成的仓库链接，使用固定 Git tree 确认目标存在，不显示未发布的“编辑本页”。`npm run docs:links -- --remote` 另外只读核验固定提交属于远端 HEAD 的历史，需要网络和对应 Git 对象；CI 使用完整 checkout。英文指向中文的可选资料标注语言，关键操作应提供站内双语路径。
+`repository.json` 集中记录 SDK 版本、固定公开源码提交和验证日期。组件调用 `repositoryUrl()`，Markdown 使用 `[标题](repo:docs/example.md#section)`，由 Sätteri MDAST 插件转换；不要再写死分支。构建检查所有生成的仓库链接，使用固定 Git tree 确认目标存在，不显示未发布的“编辑本页”。`npm run docs:links -- --remote` 另外只读核验固定提交属于远端 HEAD 的历史，需要网络和对应 Git 对象；CI 使用完整 checkout。英文指向中文的可选资料标注语言，关键操作应提供站内双语路径。
 
 修改仓库 URL 或 Markdown 链接转换配置后，先运行 `npm exec -- astro sync --force` 清除内容层缓存，再执行 `npm run build`。共享配置变化可能不会使已缓存的 Markdown 链接失效；构建检查会拒绝旧仓库地址，避免仅部分页面使用新链接。
 

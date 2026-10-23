@@ -3,7 +3,7 @@ title: Installation
 description: Prepare a small Python environment and run Relf-Agent locally from source.
 locale: en
 slug: installation
-sources: [docs/installation.md, docs/getting-started.md]
+sources: [docs/installation.md, docs/getting-started.md, docs/alpha6-validation-status.md, docs/releases/0.1.0a6.md]
 ---
 
 ## Requirements
@@ -12,25 +12,23 @@ Use **Python 3.11 or newer** in a virtual environment. The local introduction us
 
 Relf-Agent is in Alpha. APIs and deployment combinations continue to evolve. See the repository's [implementation status (Chinese)](repo:docs/implementation-status.md) for the actual verification scope of each combination.
 
-The project is Relf-Agent at `RalfNick/relf-agent`. Starting with a6, the distribution, import and commands are `relf-agent`, `relf_agent`, and `relf` / `relf-*`. a5 changed only the distribution name. This guide deliberately retains the actual `ralf_agent` imports and `ralf` commands for its pinned a1 source and public a2 archive; new commands do not run against those old packages.
+This guide pins the **0.1.0a6** source of Relf-Agent at `RalfNick/relf-agent`. Its distribution, Python import and CLI names are `relf-agent`, `relf_agent`, and `relf` / `relf-*`.
 
 ## Install from source
 
 ```bash
 git clone https://github.com/RalfNick/relf-agent.git
 cd relf-agent
-git checkout 0b9b6c9682c40285d91994cd831aa93d7e814bf1
+git checkout ba1c81fca67e15e70c1d51d0f4ecbbbcbbb37239
 python3 -m venv .venv
 source .venv/bin/activate
 python -m pip install -e .
-ralf --version
+relf --version
 ```
 
-This documentation baseline is SDK **0.1.0a1**, commit `0b9b6c9682c40285d91994cd831aa93d7e814bf1`, verified on 2026-10-21. The checkout command pins it; `ralf --version` should show `0.1.0a1`. The base dependencies include `httpx` and `jsonschema`. Newer source may differ; keep the original SDK and configuration for old runs.
+This documentation baseline is SDK **0.1.0a6**, commit `ba1c81fca67e15e70c1d51d0f4ecbbbcbbb37239`, verified on 2026-10-23. The checkout command pins it; `relf --version` should show `0.1.0a6`. The base dependencies include `httpx` and `jsonschema`. Newer source may differ; keep the original SDK and configuration for old runs.
 
-> This guide pins the original a1 source, not a public a1 package. The latest [0.1.0a2 Alpha](https://github.com/RalfNick/relf-agent/releases/tag/v0.1.0a2) is publicly available through GitHub Release; its release notes provide the verified installation command. PyPI remains unpublished, so `pip install ralf-agent` is not this guide's verified entry point.
-
-> The current candidate is `relf-agent==0.1.0a6`; actual evidence is in `docs/alpha6-validation-status.md` in the maintenance checkout. a5 archives and records remain intact and do not qualify a6. Use separate versioned environments; old Runs, History and fingerprints are not automatically migrated.
+> This guide verifies a fixed **a6 source candidate**; it does not claim a public a6 package on PyPI or GitHub Release. See the [a6 validation status (Chinese)](repo:docs/alpha6-validation-status.md) and [a6 notes (Chinese)](repo:docs/releases/0.1.0a6.md) for artifact, platform and release qualifications. The [historical a2 archive](https://github.com/RalfNick/relf-agent/releases/tag/v0.1.0a2) retains its own entrypoints and evidence. Use separate environments; old Runs, History and function identities are not automatically migrated.
 
 If you have a local wheel, install it in a virtual environment with `python -m pip install /actual/path/package.whl`. Verify its source and version.
 
@@ -56,8 +54,8 @@ The complete extras are declared in [pyproject.toml](repo:pyproject.toml). Suppl
 ## Verify the installation
 
 ```bash
-ralf --help
-ralf --version
+relf --help
+relf --version
 ```
 
-If `ralf` cannot be found, activate the virtual environment and inspect `python -m pip show ralf-agent`. Continue to the [quickstart](/en/docs/quickstart/) for local approval and cross-process recovery.
+If `relf` cannot be found, activate the virtual environment and inspect `python -m pip show relf-agent`. Continue to the [quickstart](/en/docs/quickstart/) for local approval and cross-process recovery.

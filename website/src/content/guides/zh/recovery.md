@@ -11,8 +11,8 @@ sources: [docs/recovery-guide.md, docs/getting-started.md, docs/concepts.md]
 以下命令在快速开始生成的项目根目录执行。保留原数据库、Scope、工厂与组件身份，把占位符替换为实际值：
 
 ```bash
-ralf --db .ralf/runs.sqlite --factory agent_app.runtime:create_engine --format text inspect RUN_ID
-ralf --db .ralf/runs.sqlite events RUN_ID --after 0 --limit 100
+relf --db .ralf/runs.sqlite --factory agent_app.runtime:create_engine --format text inspect RUN_ID
+relf --db .ralf/runs.sqlite events RUN_ID --after 0 --limit 100
 ```
 
 `inspect`、`status`、`events` 使用只读 SQLite，当前观察默认本地 Scope。查询不会重新调度任务；CLI 返回成功也不表示 Run 已完成。
@@ -30,8 +30,8 @@ ralf --db .ralf/runs.sqlite events RUN_ID --after 0 --limit 100
 进程可以在等待审批时正常关闭。新进程加载同一工厂，对原 Action 与原操作摘要作出决定：
 
 ```bash
-ralf --db .ralf/runs.sqlite --factory agent_app.runtime:create_engine approve RUN_ID ACTION_ID --digest OPERATION_DIGEST --command-id approve-001
-ralf --db .ralf/runs.sqlite --factory agent_app.runtime:create_engine --format text resume RUN_ID
+relf --db .ralf/runs.sqlite --factory agent_app.runtime:create_engine approve RUN_ID ACTION_ID --digest OPERATION_DIGEST --command-id approve-001
+relf --db .ralf/runs.sqlite --factory agent_app.runtime:create_engine --format text resume RUN_ID
 ```
 
 拒绝时在批准命令中加 `--reject`，并使用该决定自己的 `command_id`。摘要取自原 pending；批准回执表示决定已保存，恢复后才确认实际业务结果。
@@ -73,7 +73,7 @@ with create_engine(".ralf/runs.sqlite") as engine:
 ## 取消与关闭
 
 ```bash
-ralf --db .ralf/runs.sqlite --factory agent_app.runtime:create_engine cancel RUN_ID --command-id cancel-001
+relf --db .ralf/runs.sqlite --factory agent_app.runtime:create_engine cancel RUN_ID --command-id cancel-001
 ```
 
 取消停止后续调度，不撤销已经发出的业务操作。应用关闭前完成或取消并等待自己的驱动任务，等待真实线程调用结束，再关闭 Engine。不要删除租约或数据库来绕过仍然活跃的执行者。

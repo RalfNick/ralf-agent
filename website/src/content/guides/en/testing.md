@@ -6,7 +6,7 @@ slug: testing
 sources: [docs/sdk-model-tools.md, docs/business-evaluation.md, docs/task-evaluation.md, docs/planning-evaluation.md, docs/agent-api.md, docs/completion-verification.md]
 ---
 
-Install SDK `0.1.0a1` using [quickstart](/en/docs/quickstart/) and activate that Python environment first. The offline examples below need no model key, network service or pytest. They were checked against the published SDK baseline.
+Install SDK `0.1.0a6` using [quickstart](/en/docs/quickstart/) and activate that Python environment first. The offline examples below need no model key, network service or pytest. They were checked against the pinned a6 source baseline.
 
 ## Choose the evidence you need
 
@@ -23,8 +23,8 @@ Keep deterministic regression in your regular checks. Run compatibility when cha
 Create a fresh working directory:
 
 ```bash
-mkdir ralf-offline-tests
-cd ralf-offline-tests
+mkdir relf-offline-tests
+cd relf-offline-tests
 ```
 
 Save the following as `test_app.py`. This is a real managed Agent/tool loop with your own structural `ModelProvider`, not a call to an external model. `complete` returns a tool proposal first, then returns the actual tool result. The test checks the business output, durable tool completion and identical-command replay.
@@ -35,7 +35,7 @@ import json
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
-from ralf_agent import Agent, ModelResponse, ToolCall, ToolRegistry
+from relf_agent import Agent, ModelResponse, ToolCall, ToolRegistry
 
 
 class OfflineProvider:
@@ -104,11 +104,11 @@ Every invocation uses a fresh temporary database and closes its Agent before del
 
 ## Check a model adapter without business claims
 
-From `ralf-offline-tests`, run:
+From `relf-offline-tests`, run:
 
 ```bash
-ralf-check-model
-ralf-check-model --offline > compatibility.json
+relf-check-model
+relf-check-model --offline > compatibility.json
 python - <<'PY'
 import json
 with open("compatibility.json") as file:
@@ -128,7 +128,7 @@ The five cases are `text`, `structured`, `tool`, `stream`, `stream_close`; `--ca
 For editable installed scaffolding:
 
 ```bash
-ralf init my-model-check --template model-check
+relf init my-model-check --template model-check
 cd my-model-check
 python -m agent_app
 cd ..
@@ -139,25 +139,25 @@ The starter runs the same five offline cases and stores private evidence in `my-
 A live compatibility probe is a separate, explicit opt-in and may incur provider fees. Set `MY_MODEL_KEY` privately and replace the model placeholder with a model available to your account:
 
 ```bash
-ralf-check-model --adapter openai-responses --model YOUR_ACTUAL_MODEL \
+relf-check-model --adapter openai-responses --model YOUR_ACTUAL_MODEL \
   --api-key-env MY_MODEL_KEY --max-calls 6 --max-output-tokens 1024 \
   --timeout 30 --evidence-dir .ralf/private-live-compatibility-1
 ```
 
-This allows at most six attempted model invocations, with declared per-call output/await bounds. It is not a monetary cap or proof of upstream cancellation. Other adapters are listed by `ralf-check-model --help`; a passing result applies only to the selected endpoint, model, adapter and cases. No live result is implied by the offline checks on this page. SDK callers can `await evaluate_model_compatibility(provider, cases=[...], limits=EvaluationLimits(...), evidence_dir=...)`; injected Providers are borrowed. More details: [SDK compatibility checks (mixed Chinese/English)](repo:docs/sdk-model-tools.md#bounded-compatibility-checks).
+This allows at most six attempted model invocations, with declared per-call output/await bounds. It is not a monetary cap or proof of upstream cancellation. Other adapters are listed by `relf-check-model --help`; a passing result applies only to the selected endpoint, model, adapter and cases. No live result is implied by the offline checks on this page. SDK callers can `await evaluate_model_compatibility(provider, cases=[...], limits=EvaluationLimits(...), evidence_dir=...)`; injected Providers are borrowed. More details: [SDK compatibility checks (mixed Chinese/English)](repo:docs/sdk-model-tools.md#bounded-compatibility-checks).
 
 ## Exercise business, RAG, Plan and Team behavior
 
-From `ralf-offline-tests`, these installed commands execute actual managed loops with deterministic offline Providers and independent task oracles:
+From `relf-offline-tests`, these installed commands execute actual managed loops with deterministic offline Providers and independent task oracles:
 
 ```bash
-ralf-evaluate-business --offline --max-calls 16 \
+relf-evaluate-business --offline --max-calls 16 \
   --evidence-dir .ralf/business-1 --report business.json
-ralf-evaluate-rag --offline \
+relf-evaluate-rag --offline \
   --evidence-dir .ralf/rag-1 --report rag.json
-ralf-evaluate-orchestration --offline --kind plan-and-execute --max-calls 32 \
+relf-evaluate-orchestration --offline --kind plan-and-execute --max-calls 32 \
   --evidence-dir .ralf/plan-1 --report plan.json
-ralf-evaluate-orchestration --offline --kind team --max-calls 32 \
+relf-evaluate-orchestration --offline --kind team --max-calls 32 \
   --evidence-dir .ralf/team-1 --report team.json
 python - <<'PY'
 import json
@@ -190,18 +190,18 @@ Without `--offline` or an explicitly selected Provider, these evaluators report 
 
 ## Evaluate plan proposals separately
 
-`ralf-evaluate-planning` scores proposals through a managed `ModelDAGPlanner` child; it does not execute the proposed business workers. Its default frozen suite has 20 cases, but the supplied offline response fixture covers only three.
+`relf-evaluate-planning` scores proposals through a managed `ModelDAGPlanner` child; it does not execute the proposed business workers. Its default frozen suite has 20 cases, but the supplied offline response fixture covers only three.
 
 The safe installed default is:
 
 ```bash
-ralf-evaluate-planning
+relf-evaluate-planning
 ```
 
 It reports `not_run`, 20 total cases, zero calls and `model_quality: null`. To run the source fixture, return to the published repository checkout root used for installation (the file is not created in your test directory):
 
 ```bash
-ralf-evaluate-planning --fixture evals/planning-fixtures.json \
+relf-evaluate-planning --fixture evals/planning-fixtures.json \
   --max-cases 3 --max-calls 3 \
   --evidence-dir .ralf/planning-1 --report planning.json
 ```
@@ -213,8 +213,8 @@ Expected fields are `status: "completed"`, `passed: 3`, `total: 3`, `calls: 3`, 
 After protocol checks pass, explicitly configure the chosen endpoint/model/key and a separate fresh evidence batch. For example, this bounded business run is a live opt-in; it was not run for this guide:
 
 ```bash
-ralf-evaluate-business --provider openai --model-env RALF_EVAL_MODEL \
-  --base-url-env RALF_EVAL_BASE_URL --key-env RALF_EVAL_KEY \
+relf-evaluate-business --provider openai --model-env RELF_EVAL_MODEL \
+  --base-url-env RELF_EVAL_BASE_URL --key-env RELF_EVAL_KEY \
   --max-cases 8 --max-calls 32 --max-output-tokens 2048 --timeout 60 \
   --evidence-dir .ralf/private-live-business-1 --report live-business.json
 ```

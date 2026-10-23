@@ -8,14 +8,14 @@ sources: [docs/user-input.md, docs/agent-api.md, docs/session-api.md, docs/recov
 
 应用缺少参数或需要澄清时，可以使用持久用户输入。显式注册的 `request_input` 工具让原 Run 停在 `waiting_input`，关闭和重启后仍保留同一个问题。业务审批、新的会话 Turn 与回答旧问题是不同操作。普通业务输出 `{"status":"needs_input"}` 不会自动创建持久问题。
 
-以下流程使用已安装的 **0.1.0a1** Local SDK 和离线 Provider，不需要模型密钥或网络服务。请先完成[安装](/zh/docs/installation/)或[快速开始](/zh/docs/quickstart/)。
+以下流程使用已安装的 **0.1.0a6** Local SDK 和离线 Provider，不需要模型密钥或网络服务。请先完成[安装](/zh/docs/installation/)或[快速开始](/zh/docs/quickstart/)。
 
 ## 1. 生成已安装的输入 starter
 
 在自己的工作目录中选择一个尚不存在的工程目录：
 
 ```bash
-ralf --format text init input-app --template user-input
+relf --format text init input-app --template user-input
 cd input-app
 python -m agent_app run --command-id first-question
 ```
@@ -29,7 +29,7 @@ python -m agent_app run --command-id first-question
 把 `RUN_ID` 替换成保存的值。全局 CLI 参数放在子命令之前：
 
 ```bash
-ralf --db .ralf/runs.sqlite \
+relf --db .ralf/runs.sqlite \
   --factory agent_app.runtime:create_engine \
   --format text inspect RUN_ID
 ```
@@ -43,7 +43,7 @@ ralf --db .ralf/runs.sqlite \
 替换下面三个已保存的占位符。外层单引号是 shell 引号，内层双引号让 `production` 成为 JSON 字符串：
 
 ```bash
-ralf --db .ralf/runs.sqlite \
+relf --db .ralf/runs.sqlite \
   --factory agent_app.runtime:create_engine \
   send-input RUN_ID PENDING_ID \
   --digest TARGET_DIGEST --value-json '"production"' \
@@ -55,9 +55,9 @@ ralf --db .ralf/runs.sqlite \
 ## 4. 恢复并检查结果
 
 ```bash
-ralf --db .ralf/runs.sqlite \
+relf --db .ralf/runs.sqlite \
   --factory agent_app.runtime:create_engine resume RUN_ID
-ralf --db .ralf/runs.sqlite --format text inspect RUN_ID
+relf --db .ralf/runs.sqlite --format text inspect RUN_ID
 ```
 
 应看到 `State: succeeded` 和 `Result: {"environment": "production"}`。每条命令都可以运行在独立进程中；重启时保留相同数据库、原工厂、release 和策略配置。
@@ -90,7 +90,7 @@ ralf --db .ralf/runs.sqlite --format text inspect RUN_ID
 import asyncio
 import json
 
-from ralf_agent import (
+from relf_agent import (
     AgentSpec, LocalEngine, ModelResponse, Runtime, SQLiteStore,
     ToolCall, ToolRegistry, UserInputPolicy, register_user_input,
 )
@@ -153,7 +153,7 @@ asyncio.run(main())
 在 Team、图或嵌套子任务中，`root.pending()` 的 `ref` 包含问题原 owner 的 RunRef。下面是已有 Runtime 和 `root` handle 中的**用法片段**，不是独立程序：
 
 ```python
-from ralf_agent import RunRef
+from relf_agent import RunRef
 
 question = next(q for q in await root.pending() if q["kind"] == "input")
 owner = await runtime.aattach(RunRef.from_dict(question["ref"]))

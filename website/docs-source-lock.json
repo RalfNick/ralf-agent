@@ -2,15 +2,15 @@
   "note": "Record only after reviewing both locales against the listed repository sources.",
   "repository": {
     "url": "https://github.com/RalfNick/relf-agent",
-    "ref": "0b9b6c9682c40285d91994cd831aa93d7e814bf1",
-    "sdkVersion": "0.1.0a1",
-    "verifiedAt": "2026-10-21"
+    "ref": "ba1c81fca67e15e70c1d51d0f4ecbbbcbbb37239",
+    "sdkVersion": "0.1.0a6",
+    "verifiedAt": "2026-10-23"
   },
   "guides": {
     "api-reference": {
       "translations": {
-        "zh": "c335446421d51bdb071aeab5a8a0a3fde77f88e7a283817d93dcd3dae14adba3",
-        "en": "dff61222f375301b4bcf64a7aa21e3dc9e3375330fd4c199225edd5a7e3c63fe"
+        "zh": "a7539d7f24152c30a0b79c2bf9143407f58e30e0423028955cc0b23914e22f5c",
+        "en": "1cf3e4cdaca38f4134c98ec44adb6e15cfe08e0dbbd51faa43c984a4ea3aa3f8"
       },
       "sources": {
         "docs/agent-api.md": "2c06e453655715184bf3adc09ead2d3deb37ed313f6710b9149d5e4be981eee1",
@@ -25,8 +25,8 @@
     },
     "app-tutorial": {
       "translations": {
-        "zh": "e7e628e02839baea4e62ab9fe1a8b934a2afe3ef104076c24083a3ef3e0b22a7",
-        "en": "0ca6096ef3d0e1818987834d7ec5e304a2ef06147631ea80404353e9e1b41523"
+        "zh": "7bbab9e92a51524482553634cc329ed5bba236f195bfceb98e9439a07bc0741b",
+        "en": "24ff29c5ed4a7dbe4e1e7b67a06a275a3e9c76ed1c207cfd07d32a46da76af06"
       },
       "sources": {
         "docs/agent-api.md": "2c06e453655715184bf3adc09ead2d3deb37ed313f6710b9149d5e4be981eee1",
@@ -53,18 +53,20 @@
     },
     "installation": {
       "translations": {
-        "zh": "f7e9aa1246ef01f302a1489f68e6a7b6938f8d59e18c002ea35d777d243eb68d",
-        "en": "8837de3d72fa40ec6b77366e5d3112a3b92b3259ea15fd5aae5e1e4a494b09b0"
+        "zh": "f17ef9f843dbd5e1ecaa751d870b4e520da6a591eeb469bc6ab57d77d792544a",
+        "en": "e41cefb3ad4466adb9b6f0214b7903c3ce785599f892c80c4e9162829f36bee4"
       },
       "sources": {
+        "docs/alpha6-validation-status.md": "a30c6f47cf5d85fcc79f1e03d7e9ae966fa2722e409808efc237c74b53678b1c",
         "docs/getting-started.md": "e4220d7f0271be1b8ab72d489c26095178b0dddbab6e70499e2c26de13fb3480",
-        "docs/installation.md": "f61dc33d7c10fd8777442ad46443ad2e37cca1d3453e3da49f97c491d6031d88"
+        "docs/installation.md": "f61dc33d7c10fd8777442ad46443ad2e37cca1d3453e3da49f97c491d6031d88",
+        "docs/releases/0.1.0a6.md": "6b582a84f10d1cc1735d71a68eda6dada59f48ddd89a04a70482f00f16f1de08"
       }
     },
     "integrations": {
       "translations": {
-        "zh": "05e7d8289ef77d0dbdc9033af71e111f45406b7dd789ff68ca3ac8dc4425bec2",
-        "en": "7d1677417d84e20910b1349ff71b3cb24bbd6e7799cb8594ab2a93d800a392f4"
+        "zh": "ff1a591802c7e58153a1d0d2b667c936ff762a1e6f6255a691bd3994496c3bd5",
+        "en": "bf8d6e15b450b81bf8f84fc087a39bdf9716acac4fd19ba36be84ca8c529e611"
       },
       "sources": {
         "docs/cli-tools.md": "8d2dfe00cde83832d85b6d45772c2230b238d255c574af93b663b293dd6003e5",
@@ -81,8 +83,8 @@
     },
     "models-tools": {
       "translations": {
-        "zh": "b52c0c7416c4e9f851d426043591c36bf9457daa6cc0b3eba9c494726d5dd411",
-        "en": "b06dd0829b58b574ce8549b784dfa8d0e5d764815669e3df490ef16e0fddc09e"
+        "zh": "f615a0cea5e5ae6eee48e1c797420c91fcbf663a3a4bd5fa1fc06111639c9f21",
+        "en": "5ab6fcbf57fd3587761bea01506da4d105ddd6d59b7f3dd8ed32364f5e01fea3"
       },
       "sources": {
         "README.md": "67ab2822cb3a0bda206321889bb1bdc2fd261060c8bc9f7e2b18ccdb253e5fe0",
@@ -94,34 +96,34 @@
     },
     "operations": {
       "translations": {
-        "zh": "82d0161294a3a6c2772139c8a0c172bca705ea0f3f2b2003230bce87d1ad788f",
-        "en": "6d15103dc24c8a6007f54a923211d51792ad1f0a77d703b947613f31c0bb87e5"
+        "zh": "86fb5016467fb7ce2b3057319c3139a4a869a02e1b9fbe2c45833132b05163b8",
+        "en": "989b76f44e602444ac42ce12c1e0b7a73781b349a9c243bce9412b642e1a58c7"
       },
       "sources": {
         "docs/agent-api.md": "2c06e453655715184bf3adc09ead2d3deb37ed313f6710b9149d5e4be981eee1",
         "docs/agent-limits.md": "456dbc1dde6357cf1a2dd318b298a9e6b68bdaa3dec1ad8d9ccefa10cc597472",
         "docs/recovery-guide.md": "bda5652b2ba4ce5406ace3165cbd78f7e110cd5e3f77476c46fa616b31e6b76a",
-        "docs/releases/0.1.0a1.md": "b946c8320fcaee338f2d0f31c62b9573fcaa7bc2234f6b63c8a0b8de1330c8e2",
+        "docs/releases/0.1.0a6.md": "6b582a84f10d1cc1735d71a68eda6dada59f48ddd89a04a70482f00f16f1de08",
         "docs/runtime-assembly.md": "8b0bab96aa5256e6fd9581c79b3e1e15f03ee17ef7300707de751d41b9beed7b",
         "docs/temporal-execution.md": "bfc3451fb27b5601aee91ac98db49e764b0501d1ffa471ed2a71d69ea4a0c90c"
       }
     },
     "overview": {
       "translations": {
-        "zh": "00d9e339c09cc61918a0a2912fd81605e00e88cb2df15aa6ee7ce331270f1646",
-        "en": "721cf04ede95ae3c94dc798b8054a75faf173fa253342fd8a87a882dc6c4bf6c"
+        "zh": "a79572b7295bb9733b55fa0bfdb15c383b05610f9b1f5b0fdf5b995e08c37b85",
+        "en": "a091cb07c1d42752e444450234a44f427cc0326ab66a222f36771848beef0977"
       },
       "sources": {
         "docs/basic-capabilities.md": "f13b05d797599ccbcdf0158244faa3e0ea29006155468be0830e5207e732b3bf",
         "docs/concepts.md": "ad1881ff612c4e4b15de63cf840dcbe3f93740b47de0164fd38e852e19802d48",
-        "docs/releases/0.1.0a1.md": "b946c8320fcaee338f2d0f31c62b9573fcaa7bc2234f6b63c8a0b8de1330c8e2",
+        "docs/releases/0.1.0a6.md": "6b582a84f10d1cc1735d71a68eda6dada59f48ddd89a04a70482f00f16f1de08",
         "docs/support-journey.md": "3475d7a2d3e919e020c4850f01b3641289a79655bfaa7f95a22a3cd6840c1814"
       }
     },
     "quickstart": {
       "translations": {
-        "zh": "6fe0c6ef527db07263d697f7f71af0778dc5b4b4dab95e9e29d98305854ef936",
-        "en": "f8aaf0fad2f11585323e8852ab832abc7d8f559af8e09730da7531564af61a93"
+        "zh": "297732f63b7cab760b9da61edfb70aac512d905b3d436676b8c5af99f39da777",
+        "en": "4ee0c8c108256a8b727cfb95c7b8a61347fb755f1c42c2893bf96d9abc53bb68"
       },
       "sources": {
         "docs/getting-started.md": "e4220d7f0271be1b8ab72d489c26095178b0dddbab6e70499e2c26de13fb3480",
@@ -131,8 +133,8 @@
     },
     "recovery": {
       "translations": {
-        "zh": "e7328c9f4948f32f015c9f2521e7a10533eeb77d3566253c65b1b63bf274b1f6",
-        "en": "1d4ff6335ba43ea2e96d232b4d30c15f7ea215234a8661d28816df4483a29d6e"
+        "zh": "6dac8393105d9260216c1f30b81a6dcaade8063041eab1baf0196a0178b737de",
+        "en": "cc56a665c4b3cd64dc6fcebcd7b17dc081f3574d7813e216dd117a828c0a4746"
       },
       "sources": {
         "docs/concepts.md": "ad1881ff612c4e4b15de63cf840dcbe3f93740b47de0164fd38e852e19802d48",
@@ -142,8 +144,8 @@
     },
     "sessions-memory": {
       "translations": {
-        "zh": "f06a1f6b718011516ce9e41d4665ead578cb37eeba872adbb0ba5f37f38f257d",
-        "en": "f49e440a707a050c93ca4b954d61c520f54c3f3108761f236410afac80816da1"
+        "zh": "6e29ef573573de87ee63605c90e4236e76308ddd5c9aa2c61e21571d0fd8c2a8",
+        "en": "5fc7e403ec936b57e162ab250dd1b927d4bb879340f6ce685d524d4ce9eaf791"
       },
       "sources": {
         "docs/context-artifacts.md": "9b5824232b7de2091a7d4f205735a7f16228dce24e08e39f83a5dfaa4b753dd8",
@@ -160,8 +162,8 @@
     },
     "testing": {
       "translations": {
-        "zh": "a8ea2c0d3ba7fb72006855bd388d17dc8567c3a248af37c616f3f9bd00a49ead",
-        "en": "a519f4375fb8e94d2293aed3abd930d94d849a4ace4abdc1af6ec8e670a783f7"
+        "zh": "b012f03291b3c23581b7a1598c953394c78f14d53fc18818c99ac4f33dae82c2",
+        "en": "25eddd605208797f2ef928c5a894740d5f897a65478deeb9d33417ed70527aee"
       },
       "sources": {
         "docs/agent-api.md": "2c06e453655715184bf3adc09ead2d3deb37ed313f6710b9149d5e4be981eee1",
@@ -174,8 +176,8 @@
     },
     "user-input": {
       "translations": {
-        "zh": "5324c8c50307a1c66a2ee72585a6407ddc77f6d9f6b0bdb8f9f5390c6ed9309d",
-        "en": "740a99a7696a2eea24cdc196987bf41b0e81d1ac06ba8aa103a6900ae02b97f7"
+        "zh": "84916a6adb1fca456527703ee0b634c813a218391a66212fb66f783f9b07fb69",
+        "en": "d64a254a4a205987a8c58acfc32d569076ee578dc3b587182b62ac5eb4d5c52f"
       },
       "sources": {
         "docs/agent-api.md": "2c06e453655715184bf3adc09ead2d3deb37ed313f6710b9149d5e4be981eee1",
@@ -186,8 +188,8 @@
     },
     "workflows": {
       "translations": {
-        "zh": "5d43a86a7111eff0c7679318b1494cd290daf703b804509a4bf4d7fa5a01e1e4",
-        "en": "c2ed357a04d284f88954106ed5131d5fed0db254e92a69d992277942c521990a"
+        "zh": "88876f4adba300ec4d8c96832d7ca85633563d4e468d804eadec455dabdccd61",
+        "en": "47b3c419095766f8c4f39ce0044c913aef218cf85f2f16907c2e1eea1bcffdaa"
       },
       "sources": {
         "docs/concepts.md": "ad1881ff612c4e4b15de63cf840dcbe3f93740b47de0164fd38e852e19802d48",

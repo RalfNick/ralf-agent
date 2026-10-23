@@ -22,7 +22,7 @@ Start with the smallest useful structure. Child runs retain the existing tool, a
 After installing the SDK, choose a directory that does not yet exist:
 
 ```bash
-ralf init my-graph --template graph
+relf init my-graph --template graph
 cd my-graph
 python -m agent_app --input urgent --command-id urgent-task
 ```
@@ -33,8 +33,8 @@ To submit first and continue later:
 
 ```bash
 python -m agent_app --input urgent --command-id queued-task --submit-only
-ralf --config runtime.toml resume RUN_ID
-ralf --config runtime.toml --format text inspect RUN_ID
+relf --config runtime.toml resume RUN_ID
+relf --config runtime.toml --format text inspect RUN_ID
 ```
 
 Static graphs support explicit dependencies, conditions, input mapping and joins. Bounded parallel execution requires an explicit `max_concurrency`. Pure transforms compute JSON data; external I/O belongs in managed tools. See the [static graph guide (Chinese)](repo:docs/static-workflows.md).
@@ -45,7 +45,7 @@ This offline example demonstrates delegation without model credentials:
 
 ```python
 import asyncio
-from ralf_agent import AgentSpec, RuntimeBuilder, RuntimeProfile, TeamSpec
+from relf_agent import AgentSpec, RuntimeBuilder, RuntimeProfile, TeamSpec
 
 profile = RuntimeProfile(
     "team", "1", {"default": {"adapter": "offline-echo"}},

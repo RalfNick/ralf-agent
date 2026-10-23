@@ -8,7 +8,7 @@ sources: [docs/support-journey.md, docs/installation.md, docs/agent-api.md, docs
 
 围绕工单 `INC-001`，在同一份应用文件中完成五个阶段：带只读工具的 Agent、持久 Session、本地 RAG、长期 Facts 和顺序 Workflow。每个阶段组合现有 SDK 组件。默认 Provider 是离线替身，无需模型凭据与网络服务，用于验证执行流程与证据传递。
 
-本教程面向发布提交 `0b9b6c9682c40285d91994cd831aa93d7e814bf1` 的 **0.1.0a1 Local SDK**。先完成[安装](/zh/docs/installation/)和[审批首用教程](/zh/docs/quickstart/)。以下阶段不需要 Temporal、Docker、Embedding 或外部数据库。线上模型兼容性与任务质量需要另外进行[测试与评估](/zh/docs/testing/)。
+本教程面向固定源码提交 `ba1c81fca67e15e70c1d51d0f4ecbbbcbbb37239` 的 **0.1.0a6 Local SDK**。先完成[安装](/zh/docs/installation/)和[审批首用教程](/zh/docs/quickstart/)。以下阶段不需要 Temporal、Docker、Embedding 或外部数据库。线上模型兼容性与任务质量需要另外进行[测试与评估](/zh/docs/testing/)。
 
 ## 1. 准备应用文件
 
@@ -18,7 +18,7 @@ sources: [docs/support-journey.md, docs/installation.md, docs/agent-api.md, docs
 
 ```bash
 mkdir ../support-app
-git show 0b9b6c9682c40285d91994cd831aa93d7e814bf1:examples/support_journey.py \
+git show ba1c81fca67e15e70c1d51d0f4ecbbbcbbb37239:examples/support_journey.py \
   > ../support-app/support_journey.py
 cd ../support-app
 python support_journey.py --help
@@ -142,8 +142,8 @@ python support_journey.py workflow --command-id workflow-1
 每次输出都有 `run_id`。例如，用 Session 阶段自己的数据库检查其 Run：
 
 ```bash
-ralf --db .ralf/support-journey/session.sqlite --format text inspect RUN_ID
-ralf --db .ralf/support-journey/session.sqlite events RUN_ID --after 0 --limit 100
+relf --db .ralf/support-journey/session.sqlite --format text inspect RUN_ID
+relf --db .ralf/support-journey/session.sqlite events RUN_ID --after 0 --limit 100
 ```
 
 其他阶段分别使用 `agent.sqlite`、`rag.sqlite`、`memory.sqlite`、`workflow.sqlite`。如果使用了 `--data-dir`，相应替换目录。这些命令观察默认 Local Scope；检查本身不会恢复执行。本例没有暴露 `module:create_engine` CLI 工厂。
@@ -152,7 +152,7 @@ ralf --db .ralf/support-journey/session.sqlite events RUN_ID --after 0 --limit 1
 
 | 现象 | 下一步 |
 | --- | --- |
-| `ModuleNotFoundError: ralf_agent` | 激活安装 SDK 的环境，核对[安装](/zh/docs/installation/) |
+| `ModuleNotFoundError: relf_agent` | 激活安装 SDK 的环境，核对[安装](/zh/docs/installation/) |
 | Python 找不到文件，或报告 HTML 语法错误 | 准备 raw `support_journey.py` 源码，在该文件目录运行 |
 | JSON `{"error":"validation_error"}` | 检查参数与配置；真实模式需明确型号和凭据，离线工单只支持 `INC-001` |
 | `idempotency_conflict` | 原请求保持不变进行恢复；新意图使用新 ID |

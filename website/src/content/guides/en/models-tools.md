@@ -11,7 +11,7 @@ sources: [docs/sdk-model-tools.md, docs/getting-started.md, docs/model-adapters.
 `ToolRegistry.tool` generates an argument schema from supported Python annotations. The function remains callable. Declare `effect` explicitly; annotation inference grants no authorization.
 
 ```python
-from ralf_agent import ToolRegistry
+from relf_agent import ToolRegistry
 
 tools = ToolRegistry()
 
@@ -33,12 +33,12 @@ A Python function remains directly callable; this execution evidence belongs to 
 
 ## Connect a model and run
 
-Set `OPENAI_API_KEY` and `RALF_MODEL` in the process environment. Choose a model actually available to your account. Save this complete example as `ticket_agent.py` in a new working directory. It uses a real provider and incurs provider usage; use the [offline application test](/en/docs/testing/) first if you want a key-free tool loop.
+Set `OPENAI_API_KEY` and `RELF_MODEL` in the process environment. Choose a model actually available to your account. Save this complete example as `ticket_agent.py` in a new working directory. It uses a real provider and incurs provider usage; use the [offline application test](/en/docs/testing/) first if you want a key-free tool loop.
 
 ```python
 import asyncio
 import os
-from ralf_agent import (
+from relf_agent import (
     AgentSpec, LocalEngine, OpenAIChatProvider,
     SQLiteStore, ToolRegistry,
 )
@@ -55,7 +55,7 @@ spec = AgentSpec(
 )
 
 async def main():
-    provider = OpenAIChatProvider(model=os.environ["RALF_MODEL"])
+    provider = OpenAIChatProvider(model=os.environ["RELF_MODEL"])
     with LocalEngine(
         SQLiteStore(".ralf/agent.sqlite"),
         providers={"default": provider}, tools=tools,
