@@ -1,0 +1,349 @@
+{
+  "recorded_at": "2026-10-23T06:10:41Z",
+  "repository": "RalfNick/relf-agent",
+  "source_commit": "3878e74a691792d2c8559d1af76b4343c0fd7f20",
+  "run": {
+    "id": 39899564122,
+    "url": "https://github.com/RalfNick/relf-agent/actions/runs/39899564122",
+    "status": "completed",
+    "conclusion": "cancelled",
+    "attempt": 1
+  },
+  "scope": "Dependency repair completed; other SDK failures are recorded for follow-up, not fixed in this change.",
+  "jobs": [
+    {
+      "id": 120237741589,
+      "name": "test (3.13)",
+      "status": "completed",
+      "conclusion": "failure",
+      "started_at": "2026-10-23T04:17:50Z",
+      "completed_at": "2026-10-23T05:10:08Z",
+      "url": "https://github.com/RalfNick/relf-agent/actions/runs/39899564122/job/120237741589"
+    },
+    {
+      "id": 120237741657,
+      "name": "test (3.11)",
+      "status": "completed",
+      "conclusion": "cancelled",
+      "started_at": "2026-10-23T04:17:50Z",
+      "completed_at": "2026-10-23T05:10:36Z",
+      "url": "https://github.com/RalfNick/relf-agent/actions/runs/39899564122/job/120237741657"
+    },
+    {
+      "id": 120237741721,
+      "name": "test (3.12)",
+      "status": "completed",
+      "conclusion": "cancelled",
+      "started_at": "2026-10-23T04:17:50Z",
+      "completed_at": "2026-10-23T05:10:37Z",
+      "url": "https://github.com/RalfNick/relf-agent/actions/runs/39899564122/job/120237741721"
+    },
+    {
+      "id": 120237741968,
+      "name": "remote-contracts",
+      "status": "completed",
+      "conclusion": "cancelled",
+      "started_at": "2026-10-23T04:17:51Z",
+      "completed_at": "2026-10-23T05:03:12Z",
+      "url": "https://github.com/RalfNick/relf-agent/actions/runs/39899564122/job/120237741968"
+    }
+  ],
+  "python_313": {
+    "job_id": 120237741589,
+    "python_version": "3.13.16",
+    "summary": {
+      "failed": 49,
+      "passed": 14031,
+      "skipped": 941,
+      "warnings": 2,
+      "duration_seconds": 3109.73
+    },
+    "failure_groups": {
+      "connected-coding-capture": 30,
+      "crash-recovery-count": 2,
+      "fact-index-maintenance": 4,
+      "malformed-html": 2,
+      "malformed-pdf": 1,
+      "temporal-coding-fixture-path": 10
+    },
+    "failures": [
+      {
+        "node": "tests/test_codex_connected_runner.py::test_connected_constructor_and_identity_never_resolve_credentials",
+        "error": "ralf_agent.errors.ValidationError: Connected Coding compiler capture changed",
+        "group": "connected-coding-capture"
+      },
+      {
+        "node": "tests/test_codex_connected_runner.py::test_connected_helper_change_is_rejected_before_credentials_or_business",
+        "error": "ralf_agent.errors.ValidationError: Connected Coding compiler capture changed",
+        "group": "connected-coding-capture"
+      },
+      {
+        "node": "tests/test_codex_connected_runner.py::test_public_inventory_digest_must_match_independently_checked_private_inventory[digest-0000000000000000000000000000000000000000000000000000000000000000]",
+        "error": "ralf_agent.errors.ValidationError: Connected Coding compiler capture changed",
+        "group": "connected-coding-capture"
+      },
+      {
+        "node": "tests/test_codex_connected_runner.py::test_public_inventory_digest_must_match_independently_checked_private_inventory[algorithm-forged]",
+        "error": "ralf_agent.errors.ValidationError: Connected Coding compiler capture changed",
+        "group": "connected-coding-capture"
+      },
+      {
+        "node": "tests/test_codex_connected_runner.py::test_security_global_change_is_refused_before_credentials[codex_rpc-_METHODS-replacement0]",
+        "error": "ralf_agent.errors.ValidationError: Connected Coding compiler capture changed",
+        "group": "connected-coding-capture"
+      },
+      {
+        "node": "tests/test_codex_connected_runner.py::test_security_global_change_is_refused_before_credentials[codex_rpc-_CONTROL_METHODS-replacement1]",
+        "error": "ralf_agent.errors.ValidationError: Connected Coding compiler capture changed",
+        "group": "connected-coding-capture"
+      },
+      {
+        "node": "tests/test_codex_connected_runner.py::test_security_global_change_is_refused_before_credentials[codex_rpc-_MAX_ID-7]",
+        "error": "ralf_agent.errors.ValidationError: Connected Coding compiler capture changed",
+        "group": "connected-coding-capture"
+      },
+      {
+        "node": "tests/test_codex_connected_runner.py::test_security_global_change_is_refused_before_credentials[codex_auth_transport-_MAX_ID-7]",
+        "error": "ralf_agent.errors.ValidationError: Connected Coding compiler capture changed",
+        "group": "connected-coding-capture"
+      },
+      {
+        "node": "tests/test_codex_connected_runner.py::test_security_global_change_is_refused_before_credentials[codex_environment-_COMMAND-replacement4]",
+        "error": "ralf_agent.errors.ValidationError: Connected Coding compiler capture changed",
+        "group": "connected-coding-capture"
+      },
+      {
+        "node": "tests/test_composite_binding_crash.py::test_bound_process_recovery_preserves_model_and_business_effect[external_commit-nested]",
+        "error": "assert 5 == 4",
+        "group": "crash-recovery-count"
+      },
+      {
+        "node": "tests/test_connected_coding_declarations.py::test_local_sdk_json_toml_assemble_same_lazy_identity_and_close_owned_journal[single]",
+        "error": "ralf_agent.errors.ValidationError: Connected Coding compiler capture changed",
+        "group": "connected-coding-capture"
+      },
+      {
+        "node": "tests/test_connected_coding_declarations.py::test_local_sdk_json_toml_assemble_same_lazy_identity_and_close_owned_journal[tool-list]",
+        "error": "ralf_agent.errors.ValidationError: Connected Coding compiler capture changed",
+        "group": "connected-coding-capture"
+      },
+      {
+        "node": "tests/test_connected_coding_declarations.py::test_postgres_sdk_json_toml_borrow_same_effect_owner_and_close_owned_resources[single]",
+        "error": "ralf_agent.errors.ValidationError: Connected Coding compiler capture changed",
+        "group": "connected-coding-capture"
+      },
+      {
+        "node": "tests/test_connected_coding_declarations.py::test_postgres_sdk_json_toml_borrow_same_effect_owner_and_close_owned_resources[tool-list]",
+        "error": "ralf_agent.errors.ValidationError: Connected Coding compiler capture changed",
+        "group": "connected-coding-capture"
+      },
+      {
+        "node": "tests/test_connected_coding_factories.py::test_default_factory_assembles_without_credentials_or_native_business",
+        "error": "ralf_agent.errors.ValidationError: Connected Coding compiler capture changed",
+        "group": "connected-coding-capture"
+      },
+      {
+        "node": "tests/test_connected_coding_lifecycle.py::test_source_failures_cannot_leak_exception_chain_or_start_native_business[error]",
+        "error": "ralf_agent.errors.ValidationError: Connected Coding compiler capture changed",
+        "group": "connected-coding-capture"
+      },
+      {
+        "node": "tests/test_connected_coding_lifecycle.py::test_source_failures_cannot_leak_exception_chain_or_start_native_business[invalid]",
+        "error": "ralf_agent.errors.ValidationError: Connected Coding compiler capture changed",
+        "group": "connected-coding-capture"
+      },
+      {
+        "node": "tests/test_connected_coding_lifecycle.py::test_cancelled_resolution_retires_original_owner_without_auth_or_reread[caller_cancel]",
+        "error": "ralf_agent.errors.ValidationError: Connected Coding compiler capture changed",
+        "group": "connected-coding-capture"
+      },
+      {
+        "node": "tests/test_connected_coding_lifecycle.py::test_cancelled_resolution_retires_original_owner_without_auth_or_reread[runner_close]",
+        "error": "ralf_agent.errors.ValidationError: Connected Coding compiler capture changed",
+        "group": "connected-coding-capture"
+      },
+      {
+        "node": "tests/test_connected_coding_lifecycle.py::test_cold_reconciliation_and_close_never_resolve_credentials_or_repeat_login",
+        "error": "ralf_agent.errors.ValidationError: Connected Coding compiler capture changed",
+        "group": "connected-coding-capture"
+      },
+      {
+        "node": "tests/test_connected_coding_lifecycle.py::test_source_identity_drift_after_resolution_refuses_auth_and_native_business",
+        "error": "ralf_agent.errors.ValidationError: Connected Coding compiler capture changed",
+        "group": "connected-coding-capture"
+      },
+      {
+        "node": "tests/test_connected_coding_lifecycle.py::test_completed_connection_resolves_once_and_close_leaves_source_borrowed",
+        "error": "ralf_agent.errors.ValidationError: Connected Coding compiler capture changed",
+        "group": "connected-coding-capture"
+      },
+      {
+        "node": "tests/test_connected_coding_loop.py::test_original_approval_authentication_and_fence_do_not_persist_credentials[completed]",
+        "error": "ralf_agent.errors.ValidationError: Connected Coding compiler capture changed",
+        "group": "connected-coding-capture"
+      },
+      {
+        "node": "tests/test_connected_coding_loop.py::test_original_approval_authentication_and_fence_do_not_persist_credentials[echo]",
+        "error": "ralf_agent.errors.ValidationError: Connected Coding compiler capture changed",
+        "group": "connected-coding-capture"
+      },
+      {
+        "node": "tests/test_fact_index_maintenance_recovery.py::test_original_session_action_attempt_and_index_evidence_survive_native_death[accepted-embedding]",
+        "error": "AssertionError: Traceback (most recent call last):",
+        "group": "fact-index-maintenance"
+      },
+      {
+        "node": "tests/test_fact_index_maintenance_recovery.py::test_original_session_action_attempt_and_index_evidence_survive_native_death[tool-receipt]",
+        "error": "AssertionError: Traceback (most recent call last):",
+        "group": "fact-index-maintenance"
+      },
+      {
+        "node": "tests/test_fact_index_maintenance_starter.py::test_cancelled_application_retains_original_runtime_and_native_owner_until_same_loop_retry[False]",
+        "error": "TimeoutError",
+        "group": "fact-index-maintenance"
+      },
+      {
+        "node": "tests/test_fact_index_maintenance_starter.py::test_cancelled_application_retains_original_runtime_and_native_owner_until_same_loop_retry[True]",
+        "error": "TimeoutError",
+        "group": "fact-index-maintenance"
+      },
+      {
+        "node": "tests/test_html_ingestion.py::test_html_malformed_marked_declaration_has_typed_error",
+        "error": "Failed: DID NOT RAISE ValidationError",
+        "group": "malformed-html"
+      },
+      {
+        "node": "tests/test_ingestion_starter.py::test_ingest_starter_rejects_bad_user_source_without_writing[malformed-html]",
+        "error": "AssertionError: ",
+        "group": "malformed-html"
+      },
+      {
+        "node": "tests/test_parallel_workflow.py::test_parallel_real_process_crash_windows[external_commit]",
+        "error": "assert 5 == 4",
+        "group": "crash-recovery-count"
+      },
+      {
+        "node": "tests/test_pdf_ingestion.py::test_pdf_malformed_form_text_is_refused_before_parent_can_swallow_error",
+        "error": "Failed: DID NOT RAISE ValidationError",
+        "group": "malformed-pdf"
+      },
+      {
+        "node": "tests/test_temporal_coding_connection_publication.py::test_actual_shared_postgres_publication_refuses_changed_connection_implementation[False-True-hook]",
+        "error": "ralf_agent.errors.ValidationError: Connected Coding compiler capture changed",
+        "group": "connected-coding-capture"
+      },
+      {
+        "node": "tests/test_temporal_coding_connection_publication.py::test_actual_shared_postgres_publication_refuses_changed_connection_implementation[False-True-model_fields]",
+        "error": "ralf_agent.errors.ValidationError: Connected Coding compiler capture changed",
+        "group": "connected-coding-capture"
+      },
+      {
+        "node": "tests/test_temporal_coding_connection_publication.py::test_actual_shared_postgres_publication_refuses_changed_connection_implementation[False-True-inventory]",
+        "error": "ralf_agent.errors.ValidationError: Connected Coding compiler capture changed",
+        "group": "connected-coding-capture"
+      },
+      {
+        "node": "tests/test_temporal_coding_connection_publication.py::test_actual_shared_postgres_publication_refuses_changed_connection_implementation[True-True-hook]",
+        "error": "ralf_agent.errors.ValidationError: Connected Coding compiler capture changed",
+        "group": "connected-coding-capture"
+      },
+      {
+        "node": "tests/test_temporal_coding_connection_publication.py::test_actual_shared_postgres_publication_refuses_changed_connection_implementation[True-True-model_fields]",
+        "error": "ralf_agent.errors.ValidationError: Connected Coding compiler capture changed",
+        "group": "connected-coding-capture"
+      },
+      {
+        "node": "tests/test_temporal_coding_connection_publication.py::test_actual_shared_postgres_publication_refuses_changed_connection_implementation[True-True-inventory]",
+        "error": "ralf_agent.errors.ValidationError: Connected Coding compiler capture changed",
+        "group": "connected-coding-capture"
+      },
+      {
+        "node": "tests/test_temporal_coding_registration_root_checks.py::test_connected_override_retains_independent_base_root_check",
+        "error": "ralf_agent.errors.ValidationError: Connected Coding compiler capture changed",
+        "group": "connected-coding-capture"
+      },
+      {
+        "node": "tests/test_temporal_deployment_coding_fixture.py::test_sdk_client_setup_failure_closes_or_retains_original_assembly[False]",
+        "error": "AssertionError: assert (FileNotFoundError(2, 'No such file or directory') is OSError('Controlled SDK client setup failure'))",
+        "group": "temporal-coding-fixture-path"
+      },
+      {
+        "node": "tests/test_temporal_deployment_coding_fixture.py::test_sdk_client_setup_failure_closes_or_retains_original_assembly[True]",
+        "error": "FileNotFoundError: [Errno 2] No such file or directory: '/private/tmp/ralf-dcoding-be02c3843aac.sock'",
+        "group": "temporal-coding-fixture-path"
+      },
+      {
+        "node": "tests/test_temporal_deployment_coding_retention.py::test_cleanup_deletion_gate_is_separate_from_assembly_close_and_keeps_private_recovery[retained]",
+        "error": "FileNotFoundError: [Errno 2] No such file or directory",
+        "group": "temporal-coding-fixture-path"
+      },
+      {
+        "node": "tests/test_temporal_deployment_coding_retention.py::test_cleanup_deletion_gate_is_separate_from_assembly_close_and_keeps_private_recovery[delete]",
+        "error": "FileNotFoundError: [Errno 2] No such file or directory",
+        "group": "temporal-coding-fixture-path"
+      },
+      {
+        "node": "tests/test_temporal_deployment_coding_retention.py::test_cleanup_deletion_gate_is_separate_from_assembly_close_and_keeps_private_recovery[read_failure]",
+        "error": "FileNotFoundError: [Errno 2] No such file or directory",
+        "group": "temporal-coding-fixture-path"
+      },
+      {
+        "node": "tests/test_temporal_deployment_coding_retention.py::test_cleanup_deletion_gate_is_separate_from_assembly_close_and_keeps_private_recovery[close_failure]",
+        "error": "FileNotFoundError: [Errno 2] No such file or directory",
+        "group": "temporal-coding-fixture-path"
+      },
+      {
+        "node": "tests/test_temporal_deployment_coding_retention.py::test_cleanup_deletion_gate_is_separate_from_assembly_close_and_keeps_private_recovery[worker_alive]",
+        "error": "FileNotFoundError: [Errno 2] No such file or directory",
+        "group": "temporal-coding-fixture-path"
+      },
+      {
+        "node": "tests/test_temporal_deployment_coding_retention.py::test_fixture_exit_closes_only_dummy_fd_and_preserves_original_recovery[retained]",
+        "error": "FileNotFoundError: [Errno 2] No such file or directory",
+        "group": "temporal-coding-fixture-path"
+      },
+      {
+        "node": "tests/test_temporal_deployment_coding_retention.py::test_fixture_exit_closes_only_dummy_fd_and_preserves_original_recovery[close_failure]",
+        "error": "FileNotFoundError: [Errno 2] No such file or directory",
+        "group": "temporal-coding-fixture-path"
+      },
+      {
+        "node": "tests/test_temporal_deployment_coding_retention.py::test_fixture_exit_closes_only_dummy_fd_and_preserves_original_recovery[active_owner]",
+        "error": "FileNotFoundError: [Errno 2] No such file or directory",
+        "group": "temporal-coding-fixture-path"
+      }
+    ]
+  },
+  "remote_contracts": {
+    "job_id": 120237741968,
+    "conclusion": "cancelled",
+    "configured_timeout_minutes": 45,
+    "observed_duration_seconds": 2721,
+    "first_contract_step": {
+      "passed": 274,
+      "duration_seconds": 43.36
+    },
+    "unfinished_step": "Two-worker Temporal contracts and History replay",
+    "note": "No final pytest summary for the unfinished step. Cancellation occurred after about 45 minutes; the precise cancellation cause has not been verified."
+  },
+  "local_python_312": {
+    "summary": {
+      "failed": 2,
+      "passed": 14079,
+      "skipped": 940,
+      "duration_seconds": 2315.05
+    },
+    "failures": [
+      {
+        "node": "tests/test_codex_cli_process_lifecycle.py::test_stdout_eof_does_not_kill_cli_before_its_successful_actual_exit",
+        "error": "ExecutionHostFailed: Docker CLI deadline exceeded",
+        "followup": "Whole module passed separately: 8 passed in 2.14 seconds. Full-run failure remains recorded."
+      },
+      {
+        "node": "tests/test_pdf_ingestion.py::test_pdf_malformed_form_text_is_refused_before_parent_can_swallow_error",
+        "error": "Failed: DID NOT RAISE ValidationError",
+        "followup": "Reproduced with temporalio and psycopg imports explicitly blocked; pypdf 6.21.2."
+      }
+    ]
+  }
+}
