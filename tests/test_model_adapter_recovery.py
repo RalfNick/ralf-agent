@@ -10,8 +10,8 @@ from pathlib import Path
 
 import pytest
 
-from ralf_agent import SQLiteStore
-from ralf_agent.types import canonical
+from relf_agent import SQLiteStore
+from relf_agent.types import canonical
 
 
 def worker(root, phase, window):

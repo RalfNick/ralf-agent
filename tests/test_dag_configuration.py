@@ -1,7 +1,7 @@
 import asyncio
 import json
 
-from ralf_agent import DynamicWorkflowSpec, RuntimeBuilder, RuntimeProfile, load_spec
+from relf_agent import DynamicWorkflowSpec, RuntimeBuilder, RuntimeProfile, load_spec
 
 
 def test_default_dag_factory_and_nested_file_codec(tmp_path):
@@ -34,8 +34,8 @@ def test_default_dag_factory_and_nested_file_codec(tmp_path):
 
 
 def test_async_network_port_and_dag_public_exports():
-    import ralf_agent
-    from ralf_agent import (
+    import relf_agent
+    from relf_agent import (
         AsyncExecutionEngine,
         AsyncRuntimeDiagnostics,
         DAGNode,
@@ -46,4 +46,4 @@ def test_async_network_port_and_dag_public_exports():
 
     assert AsyncExecutionEngine and AsyncRuntimeDiagnostics
     assert DAGNode and DAGProposal and ModelDAGPlanner and PlanningConclusion
-    assert len(ralf_agent.__all__) == len(set(ralf_agent.__all__))
+    assert len(relf_agent.__all__) == len(set(relf_agent.__all__))

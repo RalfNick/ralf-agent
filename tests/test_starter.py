@@ -9,13 +9,13 @@ from pathlib import Path
 import httpx
 import pytest
 
-from ralf_agent.errors import ValidationError
+from relf_agent.errors import ValidationError
 
 ROOT = Path(__file__).resolve().parents[1]
 
 
 def create_starter(directory):
-    from ralf_agent.starter import create_starter
+    from relf_agent.starter import create_starter
 
     return create_starter(directory)
 
@@ -99,11 +99,11 @@ def installed_wheel(tmp_path_factory):
     )
     imported = Path(
         subprocess_result(
-            [python, "-c", "import ralf_agent; print(ralf_agent.__file__)"], cwd=work
+            [python, "-c", "import relf_agent; print(relf_agent.__file__)"], cwd=work
         ).strip()
     )
     assert imported.is_relative_to(purelib)
-    return python, environment / "bin" / "ralf"
+    return python, environment / "bin" / "relf"
 
 
 @pytest.mark.parametrize("crash_after_write", [False, True])
@@ -118,7 +118,7 @@ def test_wheel_starter_approves_and_recovers_once_without_repository_imports(
                 python,
                 "-c",
                 "import json, sys; from dataclasses import asdict; "
-                "from ralf_agent.starter import create_starter; "
+                "from relf_agent.starter import create_starter; "
                 "print(json.dumps(asdict(create_starter(sys.argv[1]))))",
                 destination,
             ],

@@ -4,12 +4,12 @@ import copy
 
 import pytest
 
-from ralf_agent import temporal_deployment_control_projection as projection
-from ralf_agent import temporal_deployment_execution_state as deployment
-from ralf_agent.errors import DefinitionMismatch, ValidationError
-from ralf_agent.temporal_bindings import request_release_digest
-from ralf_agent.temporal_state import TemporalCommandRegistryState
-from ralf_agent.types import digest
+from relf_agent import temporal_deployment_control_projection as projection
+from relf_agent import temporal_deployment_execution_state as deployment
+from relf_agent.errors import DefinitionMismatch, ValidationError
+from relf_agent.temporal_bindings import request_release_digest
+from relf_agent.temporal_state import TemporalCommandRegistryState
+from relf_agent.types import digest
 from tests.test_temporal_deployment_coding_registry import coding_request
 from tests.test_temporal_deployment_control_projection import bound_registry
 from tests.test_temporal_deployment_public_registry import NAMESPACE, POLICY, SCOPE
@@ -196,9 +196,9 @@ def sdk_session_environment(monkeypatch):
 
     from temporalio.client import WorkflowExecutionStatus
 
-    from ralf_agent import temporal_deployment_execution as execution
-    from ralf_agent import temporal_session_deployment_verification as verification
-    from ralf_agent.temporal_state import COMMAND_REGISTRY_NAME, WORKFLOW_NAME
+    from relf_agent import temporal_deployment_execution as execution
+    from relf_agent import temporal_session_deployment_verification as verification
+    from relf_agent.temporal_state import COMMAND_REGISTRY_NAME, WORKFLOW_NAME
     from tests.test_temporal_deployment_coding_validation import Client, Handle, Runtime, seal
 
     intent, metadata, state = coding_original(composition=False)
@@ -357,7 +357,7 @@ def test_compact_session_native_checks_original_coordinator_after_each_fresh_rea
 ):
     import asyncio
 
-    from ralf_agent.temporal_deployment_coding_validation import CodingValidation
+    from relf_agent.temporal_deployment_coding_validation import CodingValidation
 
     runtime, client, request, info = sdk_session_environment(monkeypatch)
     validator = CodingValidation(runtime, client, request, info)
@@ -378,7 +378,7 @@ def test_compact_session_native_checks_original_coordinator_after_each_fresh_rea
 def test_session_reset_during_compact_reads_refuses_before_native_permission(monkeypatch):
     import asyncio
 
-    from ralf_agent.temporal_deployment_coding_validation import CodingValidation
+    from relf_agent.temporal_deployment_coding_validation import CodingValidation
 
     runtime, client, request, info = sdk_session_environment(monkeypatch)
     validator = CodingValidation(runtime, client, request, info)
@@ -401,7 +401,7 @@ def test_compact_session_rejects_changed_original_acceptance_and_actual_configur
 ):
     import asyncio
 
-    from ralf_agent.temporal_deployment_coding_validation import CodingValidation
+    from relf_agent.temporal_deployment_coding_validation import CodingValidation
     from tests.test_temporal_deployment_coding_validation import seal
 
     runtime, client, request, info = sdk_session_environment(monkeypatch)
@@ -420,8 +420,8 @@ def test_compact_session_rejects_changed_original_acceptance_and_actual_configur
 def test_compact_session_fresh_origin_verifier_binding_cannot_change(monkeypatch):
     import asyncio
 
-    from ralf_agent import temporal_session_deployment_verification as verification
-    from ralf_agent.temporal_deployment_coding_validation import CodingValidation
+    from relf_agent import temporal_session_deployment_verification as verification
+    from relf_agent.temporal_deployment_coding_validation import CodingValidation
 
     runtime, client, request, info = sdk_session_environment(monkeypatch)
     validator = CodingValidation(runtime, client, request, info)

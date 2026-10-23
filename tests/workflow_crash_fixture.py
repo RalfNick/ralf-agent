@@ -6,7 +6,7 @@ import json
 import os
 from dataclasses import asdict
 
-from ralf_agent import GraphNode, GraphWorkflowSpec, ValueRef
+from relf_agent import GraphNode, GraphWorkflowSpec, ValueRef
 from tests.receipt_runtime import create_engine, spec
 
 

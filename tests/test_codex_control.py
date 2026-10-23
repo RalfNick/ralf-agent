@@ -8,13 +8,13 @@ from pathlib import Path
 
 import pytest
 
-from ralf_agent.codex_protocol import CodexProtocol
-from ralf_agent.codex_rpc import CodexRPCProtocolError, CodexRPCTransport
-from ralf_agent.errors import ValidationError
+from relf_agent.codex_protocol import CodexProtocol
+from relf_agent.codex_rpc import CodexRPCProtocolError, CodexRPCTransport
+from relf_agent.errors import ValidationError
 
 
 def test_control_protocol_supports_only_frozen_reads_and_null_requirements():
-    from ralf_agent.codex_protocol import CodexControlProtocol
+    from relf_agent.codex_protocol import CodexControlProtocol
 
     protocol = CodexControlProtocol()
     assert protocol.validate_request("configRequirements/read", None) is None
@@ -31,7 +31,7 @@ def test_control_protocol_supports_only_frozen_reads_and_null_requirements():
 
 
 def test_control_protocol_accepts_real_bounded_result_shapes():
-    from ralf_agent.codex_protocol import CodexControlProtocol
+    from relf_agent.codex_protocol import CodexControlProtocol
 
     results = json.loads(Path(__file__).with_name("codex_control_fixture.json").read_text())
     protocol = CodexControlProtocol()
@@ -101,7 +101,7 @@ def test_control_transport_rejects_native_requests_and_unreviewed_events(tmp_pat
 
 
 def test_probe_queries_nine_reads_and_closes_without_business_submission(tmp_path):
-    from ralf_agent.codex_control import CodexControlProbe
+    from relf_agent.codex_control import CodexControlProbe
 
     traffic = tmp_path / "traffic.jsonl"
     fixture = Path(__file__).with_name("codex_control_fixture.json")
@@ -171,7 +171,7 @@ def test_control_transport_accepts_exact_untrusted_workspace_warning(tmp_path):
 
 
 def test_probe_does_not_accept_final_receipt_after_protocol_failure(tmp_path):
-    from ralf_agent.codex_control import CodexControlProbe
+    from relf_agent.codex_control import CodexControlProbe
 
     fixture = Path(__file__).with_name("codex_control_fixture.json")
     script = tmp_path / "peer.py"
@@ -192,7 +192,7 @@ def test_probe_does_not_accept_final_receipt_after_protocol_failure(tmp_path):
 
 
 def test_cancelled_control_probe_reaps_its_actual_peer(tmp_path):
-    from ralf_agent.codex_control import CodexControlProbe
+    from relf_agent.codex_control import CodexControlProbe
 
     identity = tmp_path / "pid.txt"
     script = tmp_path / "peer.py"

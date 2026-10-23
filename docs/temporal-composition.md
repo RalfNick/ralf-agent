@@ -8,7 +8,7 @@ Workflows; an Activity does not create a LocalEngine or a competing SQL schedule
 
 ```python
 from temporalio.client import Client
-from ralf_agent import (
+from relf_agent import (
     AgentSpec,
     DynamicWorkflowSpec,
     Scope,
@@ -18,7 +18,7 @@ from ralf_agent import (
     ToolRegistry,
     build_temporal_worker,
 )
-from ralf_agent.runtime_builder import EchoProvider
+from relf_agent.runtime_builder import EchoProvider
 
 
 async def example(address):
@@ -149,7 +149,7 @@ corpus and actual model evaluation.
 ## Installed starter
 
 ```shell
-ralf --format text init my-distributed-agent --template temporal
+relf --format text init my-distributed-agent --template temporal
 cd my-distributed-agent
 # Set RALF_TEMPORAL_ADDRESS to your actual Service in both terminals.
 python -m agent_app worker

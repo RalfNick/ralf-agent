@@ -6,12 +6,12 @@ import json
 import httpx
 import pytest
 
-from ralf_agent.errors import ProviderError, ValidationError
-from ralf_agent.types import canonical, digest
+from relf_agent.errors import ProviderError, ValidationError
+from relf_agent.types import canonical, digest
 
 
 def provider(**kwargs):
-    module = importlib.import_module("ralf_agent.gemini_functions")
+    module = importlib.import_module("relf_agent.gemini_functions")
     return module.GeminiFunctionProvider("fixture", api_key="dummy", **kwargs)
 
 

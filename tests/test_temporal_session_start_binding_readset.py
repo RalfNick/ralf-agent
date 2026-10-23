@@ -6,8 +6,8 @@ from types import SimpleNamespace
 
 import pytest
 
-from ralf_agent import temporal_deployment_execution as execution
-from ralf_agent.errors import DefinitionMismatch
+from relf_agent import temporal_deployment_execution as execution
+from relf_agent.errors import DefinitionMismatch
 from tests.test_temporal_coding_aggregate_readset import environment
 
 
@@ -82,7 +82,7 @@ def test_changed_original_facts_in_intermediate_start_read_never_return_binding(
 
 
 def test_ordinary_session_four_keeps_both_complete_origin_readsets():
-    from ralf_agent import temporal_deployment_execution_state as pure
+    from relf_agent import temporal_deployment_execution_state as pure
     from tests.test_temporal_session_deployment_control import Client, Runtime
     from tests.test_temporal_session_deployment_dto import origin, reservation
     from tests.test_temporal_session_deployment_execution import (

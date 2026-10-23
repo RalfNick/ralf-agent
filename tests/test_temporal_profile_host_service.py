@@ -12,7 +12,7 @@ from pathlib import Path
 
 import pytest
 
-from ralf_agent import (
+from relf_agent import (
     AgentSpec,
     GraphNode,
     GraphWorkflowSpec,
@@ -21,8 +21,8 @@ from ralf_agent import (
     Scope,
     TemporalProfile,
 )
-from ralf_agent.errors import AuthorizationDenied, DefinitionMismatch
-from ralf_agent.temporal import TemporalEngine, replay_temporal_history
+from relf_agent.errors import AuthorizationDenied, DefinitionMismatch
+from relf_agent.temporal import TemporalEngine, replay_temporal_history
 
 from .temporal_profile_host_worker import build, context_metadata_root
 

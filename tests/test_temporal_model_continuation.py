@@ -7,7 +7,7 @@ from dataclasses import asdict
 
 import pytest
 
-from ralf_agent import (
+from relf_agent import (
     AgentBindingDescriptor,
     AgentDefinition,
     AgentSpec,
@@ -20,12 +20,12 @@ from ralf_agent import (
     ToolCall,
     ToolRegistry,
 )
-from ralf_agent.errors import DefinitionMismatch, ValidationError
-from ralf_agent.temporal_activities import TemporalRuntime
-from ralf_agent.temporal_bindings import normalize_request, provider_alias
-from ralf_agent.temporal_profile import TemporalProfile
-from ralf_agent.temporal_state import TemporalRunState, validate_manifest
-from ralf_agent.types import digest, submission_request
+from relf_agent.errors import DefinitionMismatch, ValidationError
+from relf_agent.temporal_activities import TemporalRuntime
+from relf_agent.temporal_bindings import normalize_request, provider_alias
+from relf_agent.temporal_profile import TemporalProfile
+from relf_agent.temporal_state import TemporalRunState, validate_manifest
+from relf_agent.types import digest, submission_request
 from tests.test_temporal_memory_bindings import grant
 
 
@@ -42,7 +42,7 @@ class SignedProvider:
         return {"protocol": "history-signature-1", "owner_digest": self.owner}
 
     async def complete(self, messages, tools):
-        from ralf_agent.model_continuation import ContinuedModelResponse, ModelContinuation
+        from relf_agent.model_continuation import ContinuedModelResponse, ModelContinuation
 
         self.calls.append(copy.deepcopy(messages))
         if self.after is not None:
@@ -310,7 +310,7 @@ def test_joint_release_has_complete_original_protocol_and_provider_registration(
 
 
 def test_joint_continuation_retains_context_and_tool_execution_owners():
-    from ralf_agent.tool_execution import ToolExecutionOwner
+    from relf_agent.tool_execution import ToolExecutionOwner
 
     async def run():
         runtime, _, _ = setup(
@@ -326,7 +326,7 @@ def test_joint_continuation_retains_context_and_tool_execution_owners():
 
 
 def test_joint_continuation_keeps_artifact_selection_and_recovery_contract():
-    from ralf_agent.temporal_bindings import effective_manifest, selected_runtime
+    from relf_agent.temporal_bindings import effective_manifest, selected_runtime
     from tests.test_artifact_binding_temporal import host, request
 
     old, stores = host()
@@ -352,8 +352,8 @@ def test_joint_continuation_keeps_artifact_selection_and_recovery_contract():
 
 
 def test_joint_continuation_keeps_original_sandbox_grants(registered):
-    from ralf_agent.binding_sandbox import SandboxBindingResource
-    from ralf_agent.temporal_bindings import effective_step
+    from relf_agent.binding_sandbox import SandboxBindingResource
+    from relf_agent.temporal_bindings import effective_step
     from tests.test_sandbox_binding_execution import Reader
 
     registry, _ = registered

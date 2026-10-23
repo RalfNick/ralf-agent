@@ -5,15 +5,15 @@ from dataclasses import asdict
 
 import pytest
 
-from ralf_agent import AgentSpec, LocalEngine, RuntimeBuilder, RuntimeCatalog, RuntimeProfile
-from ralf_agent.agent_run import RunRef
-from ralf_agent.agent_runtime import AgentRun
-from ralf_agent.errors import ValidationError
-from ralf_agent.runtime_config import COMPONENT_KINDS
-from ralf_agent.runtime_router import ProfiledEngine
-from ralf_agent.storage import SQLiteStore
-from ralf_agent.task_controls import TaskControlBridge
-from ralf_agent.types import CommandReceipt, RunSnapshot, Scope
+from relf_agent import AgentSpec, LocalEngine, RuntimeBuilder, RuntimeCatalog, RuntimeProfile
+from relf_agent.agent_run import RunRef
+from relf_agent.agent_runtime import AgentRun
+from relf_agent.errors import ValidationError
+from relf_agent.runtime_config import COMPONENT_KINDS
+from relf_agent.runtime_router import ProfiledEngine
+from relf_agent.storage import SQLiteStore
+from relf_agent.task_controls import TaskControlBridge
+from relf_agent.types import CommandReceipt, RunSnapshot, Scope
 
 from .helpers import ScriptedProvider
 from .test_task_controls import Controls
@@ -34,7 +34,7 @@ def input_record(run_id="run"):
     }
     # Use the shared creation API only once available; this tests projection,
     # not independently generated authority identities.
-    from ralf_agent.user_input import UserInputPolicy, make_input_record
+    from relf_agent.user_input import UserInputPolicy, make_input_record
 
     return make_input_record(
         run_id=run_id,
@@ -146,7 +146,7 @@ def test_profiled_input_replay_does_not_construct_removed_profile(tmp_path):
 
 def test_configured_policy_schema_preflight_precedes_provider_io(tmp_path):
     assert "user_input_policies" in COMPONENT_KINDS, "missing configured policy family"
-    from ralf_agent.runtime_builder import ComponentRegistry
+    from relf_agent.runtime_builder import ComponentRegistry
 
     called = []
     registry = ComponentRegistry()
@@ -171,7 +171,7 @@ def test_configured_policy_schema_preflight_precedes_provider_io(tmp_path):
 
 
 def test_snapshot_projects_input_and_preserves_legacy_approval_bytes():
-    from ralf_agent import types
+    from relf_agent import types
 
     assert callable(getattr(AgentRun, "send_input", None)), "missing public input control"
     record = input_record()
@@ -225,8 +225,8 @@ def test_snapshot_rejects_malformed_input_journal_with_typed_error(record):
 
 
 def test_public_child_question_observation_and_reply_keep_original_owner(tmp_path):
-    from ralf_agent import ModelResponse, Runtime, TeamSpec, ToolCall, ToolRegistry
-    from ralf_agent.user_input import register_user_input
+    from relf_agent import ModelResponse, Runtime, TeamSpec, ToolCall, ToolRegistry
+    from relf_agent.user_input import register_user_input
 
     async def run():
         tools = ToolRegistry()

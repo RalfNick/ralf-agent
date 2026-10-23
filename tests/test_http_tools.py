@@ -7,9 +7,9 @@ from concurrent.futures import ThreadPoolExecutor
 import httpx
 import pytest
 
-import ralf_agent as api
-from ralf_agent.errors import DefinitionMismatch, ValidationError
-from ralf_agent.tools import ThreadExecutionTracker, current_thread_group, current_thread_tracker
+import relf_agent as api
+from relf_agent.errors import DefinitionMismatch, ValidationError
+from relf_agent.tools import ThreadExecutionTracker, current_thread_group, current_thread_tracker
 
 from .http_tool_fixture import endpoint
 from .test_cli_tools import context, descriptor
@@ -300,7 +300,7 @@ def test_both_trackers_wait_until_actual_http_client_resource_close(monkeypatch)
 
 
 def test_transport_defensively_sanitizes_actual_httpx_url_rejection():
-    from ralf_agent import http_tool_transport
+    from relf_agent import http_tool_transport
 
     with pytest.raises(api.ToolSourceError) as error:
         http_tool_transport.execute(

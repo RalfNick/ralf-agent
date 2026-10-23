@@ -11,7 +11,7 @@ source-validated. The declaration selection limit stays1–100.
 
 ```python
 import asyncio
-from ralf_agent import (
+from relf_agent import (
     InMemorySkillCatalog,
     SkillSpec,
     SkillDirectoryRetriever,

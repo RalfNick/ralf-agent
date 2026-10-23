@@ -3,7 +3,7 @@ from dataclasses import asdict
 
 import pytest
 
-from ralf_agent import (
+from relf_agent import (
     AgentSpec,
     BudgetedContextAssembler,
     ModelResponse,
@@ -11,10 +11,10 @@ from ralf_agent import (
     ToolRegistry,
     UTF8TokenEstimator,
 )
-from ralf_agent.errors import DefinitionMismatch
-from ralf_agent.temporal_activities import TemporalRuntime
-from ralf_agent.temporal_state import TemporalRunState
-from ralf_agent.types import submission_request
+from relf_agent.errors import DefinitionMismatch
+from relf_agent.temporal_activities import TemporalRuntime
+from relf_agent.temporal_state import TemporalRunState
+from relf_agent.types import submission_request
 
 
 class Provider:

@@ -6,8 +6,8 @@ import sqlite3
 
 import pytest
 
-import ralf_agent as r
-from ralf_agent.errors import DefinitionMismatch, ValidationError
+import relf_agent as r
+from relf_agent.errors import DefinitionMismatch, ValidationError
 
 from .test_remote_session_turns import definition, setup
 

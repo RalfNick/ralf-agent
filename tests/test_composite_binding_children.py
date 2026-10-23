@@ -4,7 +4,7 @@ import asyncio
 
 import pytest
 
-from ralf_agent import (
+from relf_agent import (
     AgentBindingDescriptor,
     AgentSpec,
     BindingSelection,
@@ -19,8 +19,8 @@ from ralf_agent import (
     ToolSpec,
     WorkflowSpec,
 )
-from ralf_agent.errors import DefinitionMismatch, IdempotencyConflict
-from ralf_agent.types import ToolCall
+from relf_agent.errors import DefinitionMismatch, IdempotencyConflict
+from relf_agent.types import ToolCall
 
 from .helpers import ScriptedProvider
 from .test_binding_execution import RecordingProvider, TaggedContext, bound_catalog, choice, engine

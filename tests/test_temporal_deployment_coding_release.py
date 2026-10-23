@@ -6,8 +6,8 @@ from types import SimpleNamespace
 
 import pytest
 
-from ralf_agent.errors import DefinitionMismatch
-from ralf_agent.types import digest
+from relf_agent.errors import DefinitionMismatch
+from relf_agent.types import digest
 
 
 @pytest.fixture(autouse=True, scope="module")
@@ -16,7 +16,7 @@ def _optional_temporal_sdk():
 
 
 def environment(monkeypatch, publication=3, registry_version=3):
-    from ralf_agent import temporal_deployment_release_state as state_module
+    from relf_agent import temporal_deployment_release_state as state_module
 
     from .test_temporal_deployment_coding_registry import coding_request
     from .test_temporal_deployment_execution import sealed
@@ -98,7 +98,7 @@ def environment(monkeypatch, publication=3, registry_version=3):
 
 
 def test_normal_stopped_v3_call_has_none_fence_and_can_release(monkeypatch):
-    from ralf_agent import temporal_deployment_release as release
+    from relf_agent import temporal_deployment_release as release
 
     async def run():
         runtime, client, state, proof, _, _ = environment(monkeypatch)
@@ -113,7 +113,7 @@ def test_normal_stopped_v3_call_has_none_fence_and_can_release(monkeypatch):
 
 @pytest.mark.parametrize("fault", [None, "identity", "changed-candidate", "extra-field", "present"])
 def test_persisted_v3_fence_must_match_exact_original_history_candidate(monkeypatch, fault):
-    from ralf_agent import temporal_deployment_release as release
+    from relf_agent import temporal_deployment_release as release
 
     async def run():
         runtime, client, state, proof, _, identity = environment(monkeypatch)
@@ -168,8 +168,8 @@ def test_persisted_v3_fence_must_match_exact_original_history_candidate(monkeypa
 def test_registry_owned_release_verifies_positive_shared_version_handshake(
     monkeypatch, publication, registry_version, allowed
 ):
-    from ralf_agent import temporal_deployment_release as release
-    from ralf_agent.temporal_deployment_release_state import seal
+    from relf_agent import temporal_deployment_release as release
+    from relf_agent.temporal_deployment_release_state import seal
 
     async def run():
         runtime, client, state, proof, _, _ = environment(
@@ -205,9 +205,9 @@ def test_registry_owned_release_verifies_positive_shared_version_handshake(
 
 @pytest.mark.parametrize("has_seal", [False, True])
 def test_bridge_seal_observation_preserves_live_stop_path_and_never_mutates(monkeypatch, has_seal):
-    from ralf_agent import temporal_deployment_coding_bridge as bridge
-    from ralf_agent.temporal_bindings import request_release_digest
-    from ralf_agent.temporal_deployment_release_state import seal
+    from relf_agent import temporal_deployment_coding_bridge as bridge
+    from relf_agent.temporal_bindings import request_release_digest
+    from relf_agent.temporal_deployment_release_state import seal
 
     from .test_temporal_deployment_execution import sealed
 
@@ -248,8 +248,8 @@ def test_bridge_seal_observation_preserves_live_stop_path_and_never_mutates(monk
 
 @pytest.mark.parametrize("publication,registry_version", [(2, 2), (2, 3), (3, 3)])
 def test_registry_owned_release_rejects_reset_sdk_epoch(monkeypatch, publication, registry_version):
-    from ralf_agent import temporal_deployment_release as release
-    from ralf_agent.temporal_deployment_release_state import seal
+    from relf_agent import temporal_deployment_release as release
+    from relf_agent.temporal_deployment_release_state import seal
 
     async def run():
         runtime, client, state, proof, _, _ = environment(

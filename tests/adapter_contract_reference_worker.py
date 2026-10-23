@@ -7,7 +7,7 @@ import os
 from contextlib import contextmanager
 from dataclasses import asdict
 
-from ralf_agent import (
+from relf_agent import (
     AgentSpec,
     ComponentRegistry,
     Runtime,
@@ -16,7 +16,7 @@ from ralf_agent import (
     SQLiteStore,
     recommended_profile,
 )
-from ralf_agent.adapter_contract_reference import (
+from relf_agent.adapter_contract_reference import (
     ReferenceKnowledgeSource,
     register_reference_components,
 )

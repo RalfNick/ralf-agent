@@ -9,7 +9,7 @@ from pathlib import Path
 
 import pytest
 
-from ralf_agent import (
+from relf_agent import (
     AgentSpec,
     BranchCondition,
     ExecutionPlan,
@@ -27,9 +27,9 @@ from ralf_agent import (
     ValueRef,
     WorkflowSelection,
 )
-from ralf_agent.errors import DefinitionMismatch
-from ralf_agent.storage import SQLiteStore
-from ralf_agent.types import submission_request
+from relf_agent.errors import DefinitionMismatch
+from relf_agent.storage import SQLiteStore
+from relf_agent.types import submission_request
 
 from .helpers import ScriptedProvider, tool_response
 
@@ -525,7 +525,7 @@ def test_custom_interpreter_may_order_semantically_valid_skips(tmp_path):
 def test_downlevel_native_release_check_refuses_graph_without_dispatch(tmp_path):
     # dev9 reads definition.steps before checking its native Manifest. Retain
     # that read shape so it refuses the graph protocol before scheduling.
-    from ralf_agent.types import digest
+    from relf_agent.types import digest
 
     with runtime(tmp_path / "runs.db") as engine:
         handle = engine.submit(

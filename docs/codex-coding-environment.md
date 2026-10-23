@@ -10,7 +10,7 @@ dev103 新增 opt-in 原容器移除门禁与冷停止接口；有限 Local 集�
 ## 保留的 Docker 环境
 
 ```python
-from ralf_agent.codex_environment import DockerCodingEnvironment
+from relf_agent.codex_environment import DockerCodingEnvironment
 
 # private_root 是新建的绝对路径、空且属当前用户的 0700 目录。
 environment = DockerCodingEnvironment(
@@ -63,7 +63,7 @@ intent，再移除该 ID；仅实际成功的精确 ID inventory 缺席检查后
 
 ## 共享 PostgreSQL 启动证据
 
-显式导入 `ralf_agent.postgres_runner_journal.PostgresRunnerJournal`，借用已初始化的
+显式导入 `relf_agent.postgres_runner_journal.PostgresRunnerJournal`，借用已初始化的
 原 `PostgresEffectJournal`，再 `await journal.initialize()` 固定 dataset 身份及表路由。
 `await journal.aclose()` 只关闭视图，原 EffectJournal／连接仍由原 owner 关闭。
 依赖、容量及完整 DispatchEnvelope 在业务 RPC 前校验。

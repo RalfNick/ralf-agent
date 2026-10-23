@@ -4,7 +4,7 @@ import asyncio
 
 import pytest
 
-import ralf_agent as r
+import relf_agent as r
 
 from .composite_session_fixture import definitions, engine
 from .test_remote_session_recovery import settled

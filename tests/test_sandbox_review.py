@@ -5,9 +5,9 @@ import threading
 
 import pytest
 
-import ralf_agent as r
-from ralf_agent.errors import DefinitionMismatch, RalfError, ValidationError
-from ralf_agent.types import digest
+import relf_agent as r
+from relf_agent.errors import DefinitionMismatch, RalfError, ValidationError
+from relf_agent.types import digest
 
 from .test_docker_sandbox import provider
 from .test_sandbox_tools import Provider, context
@@ -101,7 +101,7 @@ def test_changed_live_scope_allowlist_refuses_before_any_native_authorization():
 
 @pytest.mark.parametrize("name", ["request", "json", "close", "decode_logs", "native_lease"])
 def test_native_helper_implementation_drift_cannot_reuse_fixed_release(monkeypatch, name):
-    from ralf_agent import docker_sandbox as module
+    from relf_agent import docker_sandbox as module
 
     value = provider()
 
@@ -119,7 +119,7 @@ def test_native_helper_implementation_drift_cannot_reuse_fixed_release(monkeypat
 
 
 def test_create_unknown_keeps_actual_thread_slot_and_native_lease_until_cleanup(tmp_path):
-    from ralf_agent.docker_sandbox_transport import NativeSandboxLease, lease_root
+    from relf_agent.docker_sandbox_transport import NativeSandboxLease, lease_root
 
     created, inspect_blocked, release = threading.Event(), threading.Event(), threading.Event()
     native_id = "b" * 64
@@ -220,7 +220,7 @@ def test_typed_proven_refusal_withdraws_source_and_original_owner_without_stop()
 
 
 def test_native_control_receiver_drift_refuses_pinned_methods(monkeypatch):
-    from ralf_agent.task_controls import _binding
+    from relf_agent.task_controls import _binding
 
     class Control:
         def request(self, *args, **kwargs):
@@ -324,7 +324,7 @@ def test_failed_but_proven_stopped_native_call_allows_original_owner_drain():
 
 
 def test_nested_owner_no_start_does_not_prove_sandbox_handler_never_started():
-    from ralf_agent.temporal_context_execution import ContextExecutionRejected
+    from relf_agent.temporal_context_execution import ContextExecutionRejected
 
     class Nested(Provider):
         async def run(self, scope, request, *, invocation_id):

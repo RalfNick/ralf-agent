@@ -14,7 +14,7 @@ from pathlib import Path
 import httpx
 import pytest
 
-from ralf_agent.a2a import A2AClient
+from relf_agent.a2a import A2AClient
 from tests.test_a2a_run_controls import wait_state, writes
 
 

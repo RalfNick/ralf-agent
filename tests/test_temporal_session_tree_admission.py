@@ -4,10 +4,10 @@ from dataclasses import asdict
 
 import pytest
 
-from ralf_agent import AgentBindingDescriptor, AgentSpec, BindingSelection, Scope
-from ralf_agent.errors import DefinitionMismatch, ValidationError
-from ralf_agent.temporal_session_state import TemporalSessionState
-from ralf_agent.temporal_session_tree import validate_lineage
+from relf_agent import AgentBindingDescriptor, AgentSpec, BindingSelection, Scope
+from relf_agent.errors import DefinitionMismatch, ValidationError
+from relf_agent.temporal_session_state import TemporalSessionState
+from relf_agent.temporal_session_tree import validate_lineage
 
 from .test_temporal_persistent_session_data import accepted, runtime
 from .test_temporal_session_tree_protocol import proposal
@@ -116,7 +116,7 @@ def test_metadata_candidate_is_not_an_implicitly_registered_worker_release():
 
 
 def test_candidate_parent_does_not_dispatch_children_before_original_root_read():
-    from ralf_agent.temporal_parent_state import TemporalParentState
+    from relf_agent.temporal_parent_state import TemporalParentState
 
     host, request, _ = setup()
     state = TemporalSessionState(candidate(host, request))
@@ -135,9 +135,9 @@ def test_candidate_parent_does_not_dispatch_children_before_original_root_read()
 
 
 def test_private_source_rebind_preserves_history_root_and_forks_member_generation():
-    from ralf_agent.session_types import SessionRef
-    from ralf_agent.temporal_session_topology import CompositeSessionTopology
-    from ralf_agent.types import digest
+    from relf_agent.session_types import SessionRef
+    from relf_agent.temporal_session_topology import CompositeSessionTopology
+    from relf_agent.types import digest
 
     host, request, _ = setup(root=False)
     state = TemporalSessionState(candidate(host, request))
@@ -192,7 +192,7 @@ def test_accepted_tree_turn_and_busy_receipt_survive_coordinator_restore():
 
 
 def test_opted_tree_release_keeps_stateless_composites_with_disabled_data_usable():
-    from ralf_agent import (
+    from relf_agent import (
         AgentBindingDescriptor,
         AgentSpec,
         BindingSelection,
@@ -201,11 +201,11 @@ def test_opted_tree_release_keeps_stateless_composites_with_disabled_data_usable
         TeamSpec,
         ToolRegistry,
     )
-    from ralf_agent.temporal_activities import TemporalRuntime
-    from ralf_agent.temporal_bindings import normalize_request
-    from ralf_agent.temporal_parent_state import TemporalParentState
-    from ralf_agent.temporal_session_topology import CompositeSessionTopology
-    from ralf_agent.types import submission_request
+    from relf_agent.temporal_activities import TemporalRuntime
+    from relf_agent.temporal_bindings import normalize_request
+    from relf_agent.temporal_parent_state import TemporalParentState
+    from relf_agent.temporal_session_topology import CompositeSessionTopology
+    from relf_agent.types import submission_request
 
     host = TemporalRuntime(
         providers={"default": runtime(InMemoryMemory()).providers["default"]},
@@ -231,11 +231,11 @@ def test_opted_tree_release_keeps_stateless_composites_with_disabled_data_usable
 def test_unbound_tree_external_composite_is_rejected_before_run_creation():
     import asyncio
 
-    from ralf_agent import AgentSpec, GraphNode, GraphWorkflowSpec, InMemoryMemory, ToolRegistry
-    from ralf_agent.errors import NotFound
-    from ralf_agent.temporal import TemporalEngine
-    from ralf_agent.temporal_activities import TemporalRuntime
-    from ralf_agent.temporal_session_topology import CompositeSessionTopology
+    from relf_agent import AgentSpec, GraphNode, GraphWorkflowSpec, InMemoryMemory, ToolRegistry
+    from relf_agent.errors import NotFound
+    from relf_agent.temporal import TemporalEngine
+    from relf_agent.temporal_activities import TemporalRuntime
+    from relf_agent.temporal_session_topology import CompositeSessionTopology
 
     class Client:
         async def start_workflow(self, *args, **kwargs):

@@ -8,7 +8,7 @@
 ## 默认组合与替换
 
 ```python
-from ralf_agent import (
+from relf_agent import (
     AgentBindingDescriptor,
     AgentDefinition,
     AgentSpec,
@@ -22,7 +22,7 @@ from ralf_agent import (
     TaskRecallPlanner,
     ToolRegistry,
 )
-from ralf_agent.temporal_activities import TemporalRuntime
+from relf_agent.temporal_activities import TemporalRuntime
 
 scope = Scope("workspace", "developer")
 facts = SQLiteMemory("facts.sqlite")

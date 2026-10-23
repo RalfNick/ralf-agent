@@ -4,8 +4,8 @@ from dataclasses import replace
 
 import pytest
 
-import ralf_agent as r
-from ralf_agent.errors import ValidationError
+import relf_agent as r
+from relf_agent.errors import ValidationError
 
 
 def api():
@@ -136,7 +136,7 @@ def test_indexed_store_cas_turn_pages_scope_and_reader_schema(tmp_path):
 
 def test_actual_namespace_storage_alias_cannot_create_two_routes(tmp_path):
     Key, _, _ = api()
-    from ralf_agent.binding_sessions import session_storage_key
+    from relf_agent.binding_sessions import session_storage_key
 
     with r.SQLiteStore(tmp_path / "alias.sqlite") as store:
         admission = store.create_session_admission()

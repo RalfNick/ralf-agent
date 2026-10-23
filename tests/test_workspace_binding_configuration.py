@@ -5,7 +5,7 @@ import json
 
 import pytest
 
-from ralf_agent import (
+from relf_agent import (
     AgentBindingDescriptor,
     AgentDefinition,
     AgentSpec,
@@ -15,9 +15,9 @@ from ralf_agent import (
     RuntimeProfile,
     Scope,
 )
-from ralf_agent.errors import ValidationError
-from ralf_agent.runtime_config import load_catalog
-from ralf_agent.workspace import WorkspaceError
+from relf_agent.errors import ValidationError
+from relf_agent.runtime_config import load_catalog
+from relf_agent.workspace import WorkspaceError
 
 from .test_workspace_binding_execution import Reader, finish
 from .test_workspace_bindings import registered as registered
@@ -105,7 +105,7 @@ names = ["a_workspace_read_text"]
 def test_async_default_filesystem_source_is_allocated_once_and_closed_in_original_order(
     tmp_path, monkeypatch
 ):
-    import ralf_agent.workspace_factories as module
+    import relf_agent.workspace_factories as module
 
     root = tmp_path / "files"
     root.mkdir()

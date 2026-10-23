@@ -6,9 +6,9 @@ from types import SimpleNamespace
 
 import pytest
 
-from ralf_agent.errors import ValidationError
-from ralf_agent.postgres_runner_journal import PostgresRunnerJournal
-from ralf_agent.types import Scope
+from relf_agent.errors import ValidationError
+from relf_agent.postgres_runner_journal import PostgresRunnerJournal
+from relf_agent.types import Scope
 
 
 def test_composition_resources_requires_scope_before_pg_io():
@@ -23,7 +23,7 @@ def test_composition_resources_requires_scope_before_pg_io():
 
 
 def test_composition_resources_includes_fenced_rows_and_validates_same_effect(monkeypatch):
-    from ralf_agent import postgres_runner_journal as module
+    from relf_agent import postgres_runner_journal as module
 
     seen = []
 

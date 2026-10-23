@@ -6,9 +6,9 @@ from types import SimpleNamespace as NS
 
 import pytest
 
-from ralf_agent.errors import RalfError
-from ralf_agent.temporal_workflow import TemporalCommandRegistryWorkflow, workflow
-from ralf_agent.types import digest
+from relf_agent.errors import RalfError
+from relf_agent.temporal_workflow import TemporalCommandRegistryWorkflow, workflow
+from relf_agent.types import digest
 from tests.test_temporal_scoped_manual_recovery_state import (
     manual_request,
     original_state,
@@ -42,7 +42,7 @@ def fixture(monkeypatch, *, hold=False, failure=False):
     monkeypatch.setattr(workflow, "info", lambda: info)
 
     async def execute(name, value, **options):
-        from ralf_agent.temporal_parent_state import CONTROL_ACTIVITY
+        from relf_agent.temporal_parent_state import CONTROL_ACTIVITY
 
         assert name == CONTROL_ACTIVITY and value["mode"] == "scoped_manual"
         assert options["task_queue"] == info.task_queue
@@ -63,7 +63,7 @@ def fixture(monkeypatch, *, hold=False, failure=False):
 
 
 def test_pure_probe_and_signal_reuse_original_full_verifier_once(monkeypatch):
-    from ralf_agent.temporal_scoped_manual_transport import accept, observe
+    from relf_agent.temporal_scoped_manual_transport import accept, observe
 
     async def run():
         host, info, envelope, _, calls = fixture(monkeypatch)
@@ -85,7 +85,7 @@ def test_pure_probe_and_signal_reuse_original_full_verifier_once(monkeypatch):
 
 
 def test_original_registry_signal_and_query_use_the_same_observation(monkeypatch):
-    from ralf_agent.temporal_scoped_manual_recovery import configuration
+    from relf_agent.temporal_scoped_manual_recovery import configuration
 
     async def run():
         host, info, envelope, _, calls = fixture(monkeypatch)
@@ -107,7 +107,7 @@ def test_original_registry_signal_and_query_use_the_same_observation(monkeypatch
 
 
 def test_inflight_duplicate_is_claimed_before_await_and_query_never_confirms_delivery(monkeypatch):
-    from ralf_agent.temporal_scoped_manual_transport import accept, observe
+    from relf_agent.temporal_scoped_manual_transport import accept, observe
 
     async def run():
         host, info, envelope, gate, calls = fixture(monkeypatch, hold=True)
@@ -125,7 +125,7 @@ def test_inflight_duplicate_is_claimed_before_await_and_query_never_confirms_del
 
 
 def test_pending_bound_never_evicts_inflight_or_business_identity(monkeypatch):
-    from ralf_agent.temporal_scoped_manual_transport import accept, observe
+    from relf_agent.temporal_scoped_manual_transport import accept, observe
 
     async def run():
         host, info, e, gate, calls = fixture(monkeypatch, hold=True)
@@ -152,7 +152,7 @@ def test_pending_bound_never_evicts_inflight_or_business_identity(monkeypatch):
 
 
 def test_rejected_original_proof_is_recorded_without_a_business_slot(monkeypatch):
-    from ralf_agent.temporal_scoped_manual_transport import accept, observe
+    from relf_agent.temporal_scoped_manual_transport import accept, observe
 
     async def run():
         host, info, envelope, _, calls = fixture(monkeypatch, failure=True)
@@ -172,7 +172,7 @@ def test_rejected_original_proof_is_recorded_without_a_business_slot(monkeypatch
     ["scope", "namespace", "epoch", "reset", "request", "digest", "query", "version", "nonce"],
 )
 def test_invalid_signal_never_reaches_original_proof(monkeypatch, fault):
-    from ralf_agent.temporal_scoped_manual_transport import accept, observe
+    from relf_agent.temporal_scoped_manual_transport import accept, observe
 
     async def run():
         host, info, e, _, calls = fixture(monkeypatch)
@@ -206,7 +206,7 @@ def test_invalid_signal_never_reaches_original_proof(monkeypatch, fault):
 
 
 def test_observation_collision_never_replaces_original_request_or_receipt(monkeypatch):
-    from ralf_agent.temporal_scoped_manual_transport import accept, observe
+    from relf_agent.temporal_scoped_manual_transport import accept, observe
 
     async def run():
         host, info, e, _, calls = fixture(monkeypatch)

@@ -5,10 +5,10 @@ from dataclasses import replace
 
 import pytest
 
-import ralf_agent as r
-import ralf_agent.skills as skills
-from ralf_agent.errors import RalfError
-from ralf_agent.retrieval import KnowledgeContext, RetrievalQuery
+import relf_agent as r
+import relf_agent.skills as skills
+from relf_agent.errors import RalfError
+from relf_agent.retrieval import KnowledgeContext, RetrievalQuery
 
 
 @pytest.mark.parametrize("field", ["unexpected", "scope", "kind", "next_offset"])

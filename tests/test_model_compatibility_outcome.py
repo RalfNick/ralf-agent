@@ -3,9 +3,9 @@ import json
 
 import pytest
 
-from ralf_agent.model_compatibility import evaluate_model_compatibility
-from ralf_agent.model_protocol import ModelStreamEvent
-from ralf_agent.types import ModelResponse, ToolCall
+from relf_agent.model_compatibility import evaluate_model_compatibility
+from relf_agent.model_protocol import ModelStreamEvent
+from relf_agent.types import ModelResponse, ToolCall
 
 
 class OutcomeProvider:

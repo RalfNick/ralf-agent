@@ -1,0 +1,913 @@
+"""Optional, explicitly asynchronous Temporal execution facade and worker factory."""
+
+import asyncio
+import uuid
+from dataclasses import asdict
+from datetime import timedelta
+
+from .errors import (
+    AuthorizationDenied,
+    CapacityExceeded,
+    DefinitionMismatch,
+    IdempotencyConflict,
+    NotFound,
+    RalfError,
+    ValidationError,
+)
+from .temporal_state import (
+    COMMAND_REGISTRY_NAME,
+    WORKFLOW_NAME,
+    detached,
+    temporal_capabilities,
+    text,
+    validate_manifest,
+    validate_request,
+    validate_schema_references,
+)
+from .types import (
+    AgentSpec,
+    CommandReceipt,
+    RunDiagnostics,
+    RunEvent,
+    RunHandle,
+    RunSnapshot,
+    Scope,
+    credits,
+    digest,
+    submission_request,
+)
+
+_ERRORS = {
+    cls.code: cls
+    for cls in (
+        AuthorizationDenied,
+        CapacityExceeded,
+        DefinitionMismatch,
+        IdempotencyConflict,
+        NotFound,
+        ValidationError,
+    )
+}
+
+
+def _sdk():
+    try:
+        from temporalio.client import Client, WorkflowUpdateFailedError
+        from temporalio.common import WorkflowIDConflictPolicy, WorkflowIDReusePolicy
+        from temporalio.exceptions import ApplicationError, WorkflowAlreadyStartedError
+        from temporalio.service import RPCError, RPCStatusCode
+    except ImportError as exc:
+        raise ValidationError(
+            "Temporal execution requires the optional temporal dependency"
+        ) from exc
+    return (
+        Client,
+        WorkflowUpdateFailedError,
+        WorkflowIDConflictPolicy,
+        WorkflowIDReusePolicy,
+        ApplicationError,
+        WorkflowAlreadyStartedError,
+        RPCError,
+        RPCStatusCode,
+    )
+
+
+def _raise_code(code):
+    raise _ERRORS.get(code, RalfError)("Temporal operation was rejected")
+
+
+def _snapshot(value):
+    return RunSnapshot(
+        **{**value, "pending": tuple(value["pending"]), "actions": tuple(value["actions"])}
+    )
+
+
+class TemporalEngine:
+    """Trusted-scope facade; all network controls are async.
+
+    The runtime manifest is a published, non-secret immutable release identity.
+    The borrowed Client remains caller-owned. The fixed orchestration release
+    selects Agent, sequence, graph, Team, dynamic and nested definition support.
+    Public deployment v2 shares one original root claim across its descendants.
+    """
+
+    def __init__(
+        self,
+        client,
+        *,
+        task_queue,
+        release,
+        scope=None,
+        namespace=None,
+        activity_timeout=60,
+        drive_timeout=120,
+    ):
+        text(task_queue, "Temporal task queue")
+        if scope is not None and not isinstance(scope, Scope):
+            raise ValidationError("TemporalEngine requires a trusted Scope")
+        from .temporal_startup_options import validate_seconds
+
+        for value in (activity_timeout, drive_timeout):
+            validate_seconds(value)
+        configured_namespace = getattr(client, "namespace", None)
+        if (
+            namespace is not None
+            and configured_namespace is not None
+            and namespace != configured_namespace
+        ):
+            raise DefinitionMismatch("Temporal Client belongs to a different namespace")
+        self.client, self.task_queue = client, task_queue
+        self.scope, self.namespace = (
+            scope or Scope(),
+            namespace or configured_namespace or "default",
+        )
+        self._release = validate_manifest(release)
+        from .temporal_deployment_protocol import public_selected
+
+        if "deployment_admission_protocol" in self._release and not public_selected(self._release):
+            raise ValidationError(
+                "Temporal deployment public assembly requires safe-release integration"
+            )
+        self.activity_timeout, self.drive_timeout = activity_timeout, drive_timeout
+        self._closed = False
+        self._registry = None
+        self._deployment_namespace_binding = {"namespace": None}
+
+    @property
+    def capabilities(self):
+        from .temporal_bindings import capabilities
+
+        extended = "orchestration" in self._release
+        composition = self._release.get("binding_protocol") in (13, 15, 17, 19, 21, 23)
+        return {
+            **temporal_capabilities(),
+            "shared_session": self._release.get("session_protocol") == 1,
+            "graph": extended,
+            "team": extended
+            and (not composition or self._release.get("binding_protocol") in (17, 19, 21, 23)),
+            "dag": extended
+            and (not composition or self._release.get("binding_protocol") in (17, 19, 21, 23)),
+            "nesting": extended
+            and (not composition or self._release.get("binding_protocol") == 23),
+            "rag": "knowledge_context" in self._release,
+            **capabilities(self._release),
+        }
+
+    @property
+    def binding_capabilities(self):
+        from .temporal_bindings import ROLES
+
+        kinds = (
+            ["graph"]
+            if self._release.get("binding_protocol") in (13, 15)
+            else ["graph", "team", "dynamic"]
+        )
+        return {
+            "schema_version": 1,
+            "supported_definition_kinds": ["agent", "sequence"]
+            + (kinds if "orchestration" in self._release else [])
+            if self._release["kernel"] == "temporal-3"
+            else [],
+            "supported_binding_roles": sorted(
+                ROLES
+                if self._release.get("artifacts_binding_protocol") == 1
+                else ROLES - {"artifacts"}
+            )
+            if self._release["kernel"] == "temporal-3"
+            else [],
+            "session_modes": ["history-conversation"]
+            if self._release.get("session_protocol") == 1
+            else [],
+            "resource_selectors": self._release["kernel"] == "temporal-3",
+            "resource_selector_roles": {
+                "facts": ["namespace"],
+                "knowledge": ["namespace"],
+                **(
+                    {"artifacts": ["namespace"]}
+                    if self._release.get("artifacts_binding_protocol") == 1
+                    else {}
+                ),
+            }
+            if self._release["kernel"] == "temporal-3"
+            else [],
+            "required_stage_kinds": [],
+            "session_admission": self._release.get("session_protocol") == 1,
+        }
+
+    @property
+    def release(self):
+        return detached(self._release)
+
+    @classmethod
+    async def connect(cls, address, *, namespace="default", **kwargs):
+        Client = _sdk()[0]
+        client = await Client.connect(address, namespace=namespace)
+        return cls(client, namespace=namespace, **kwargs)
+
+    def _handle(self, run_id, *, execution_epoch=None):
+        if self._closed:
+            raise ValidationError("TemporalEngine is closed")
+        text(run_id, "Run ID")
+        if execution_epoch is not None:
+            text(execution_epoch, "Execution epoch")
+            return self.client.get_workflow_handle(run_id, run_id=execution_epoch)
+        return self.client.get_workflow_handle(run_id)
+
+    async def _view(self, run_id, kind, *, _execution_epoch=None, **values):
+        sdk = _sdk()
+        try:
+            handle = (
+                self._handle(run_id)
+                if _execution_epoch is None
+                else self._handle(run_id, execution_epoch=_execution_epoch)
+            )
+            result = await handle.query(
+                "view", {"scope": asdict(self.scope), "kind": kind, **values}
+            )
+        except sdk[6] as exc:
+            if exc.status == sdk[7].NOT_FOUND:
+                raise NotFound("Temporal Run was not found") from None
+            raise
+        if isinstance(result, dict) and "error" in result and set(result) == {"error"}:
+            _raise_code(result["error"])
+        return result
+
+    @property
+    def command_registry_id(self):
+        from .temporal_deployment_protocol import public_selected
+
+        if public_selected(self._release):
+            return self._release["deployment_admission_protocol"]["registry_id"]
+        return "ralf-temporal-commands-" + digest(asdict(self.scope))
+
+    async def _guard(self, kind, command_id, target, payload):
+        from .temporal_deployment_protocol import public_selected
+
+        if public_selected(self._release):
+            from .temporal_deployment_submissions import guard
+
+            return await guard(self, kind, command_id, target, payload)
+        sdk = _sdk()
+        if self._closed:
+            raise ValidationError("TemporalEngine is closed")
+        if self._registry is None:
+            try:
+                await self.client.start_workflow(
+                    COMMAND_REGISTRY_NAME,
+                    {"scope": asdict(self.scope)},
+                    id=self.command_registry_id,
+                    task_queue=self.task_queue,
+                    id_reuse_policy=sdk[3].REJECT_DUPLICATE,
+                    id_conflict_policy=sdk[2].FAIL,
+                )
+            except sdk[5]:
+                pass
+            # Temporal retains the first accepted task queue in this Workflow's
+            # History; a later facade configuration cannot move the registry.
+            self._registry = self.client.get_workflow_handle(self.command_registry_id)
+        try:
+            reservation = {
+                "scope": asdict(self.scope),
+                "command_id": command_id,
+                "kind": kind,
+                "target": target,
+                "payload_digest": digest(payload),
+            }
+            if (
+                kind == "submit"
+                and self._release.get("binding_protocol") in (13, 15, 17, 19, 21, 23)
+                and "coding_composition_protocol" in self._release
+                and payload.get("definition", {}).get("kind")
+                in (
+                    {"graph", "team", "dynamic"}
+                    if self._release.get("binding_protocol") in (17, 19, 21, 23)
+                    else {"graph"}
+                )
+                and "coding_parent" not in payload
+            ):
+                reservation["coding_composition"] = {
+                    "version": 1,
+                    "manifest_digest": digest(self.release),
+                    "request_digest": digest(payload),
+                }
+            from .temporal_scoped_reservation import KINDS, reserve
+
+            if kind in KINDS:
+                try:
+                    recorded = await reserve(
+                        self._registry, reservation, namespace=self.client.namespace
+                    )
+                except ValidationError:
+                    if kind != "reconcile" or payload.get("query") is not False:
+                        raise
+                    from .temporal_scoped_manual_recovery import reserve_manual
+
+                    recorded = await reserve_manual(self, self._registry, reservation, payload)
+                return recorded.get("control_binding")
+            else:
+                # Sessions have their own existing reservation/receipt contract.
+                await self._registry.execute_update("reserve", reservation)
+        except sdk[1] as exc:
+            cause = exc.cause
+            if isinstance(cause, sdk[4]):
+                _raise_code(cause.type)
+            raise
+        # Registry acceptance is deliberately not returned as a Run receipt.
+
+    async def submit(self, spec, input, *, command_id, budget=32, session_id=None):
+        owner = getattr(self, "_coding_submission_owner", None)
+        if owner is None:
+            return await self._submit(
+                spec, input, command_id=command_id, budget=budget, session_id=session_id
+            )
+        if self._closed:
+            raise ValidationError("TemporalEngine is closed")
+        request = submission_request(spec, input, budget=budget, session_id=session_id)
+
+        async def operation():
+            return await self._submit(
+                spec, input, command_id=command_id, budget=budget, session_id=session_id
+            )
+
+        return await owner.execute(
+            operation,
+            scope=asdict(self.scope),
+            release_digest=digest(self._release),
+            request_digest=digest(request),
+        )
+
+    async def _submit(self, spec, input, *, command_id, budget=32, session_id=None):
+        from .temporal_deployment_protocol import public_selected
+
+        if public_selected(self._release):
+            from .temporal_deployment_submissions import submit
+
+            return await submit(
+                self, spec, input, command_id=command_id, budget=budget, session_id=session_id
+            )
+        from .binding_definitions import AgentDefinition, BoundDefinition
+        from .temporal_managed_context import check_scope
+
+        if (
+            isinstance(spec, (AgentDefinition, BoundDefinition))
+            and self._release["kernel"] != "temporal-3"
+        ):
+            raise ValidationError("Per-Agent bindings require temporal-3")
+        check_scope(self._release, asdict(self.scope))
+        if session_id is not None:
+            raise ValidationError("Temporal shared sessions are not supported")
+        from .orchestration_types import DynamicWorkflowSpec, TeamSpec
+        from .workflow import GraphWorkflowSpec
+
+        composite = isinstance(spec, (GraphWorkflowSpec, TeamSpec, DynamicWorkflowSpec))
+        if composite and "orchestration" not in self._release:
+            raise ValidationError(
+                "Temporal supports native AgentSpec or sequential WorkflowSpec; registered orchestration release required"
+            )
+        if not isinstance(spec, (AgentSpec, AgentDefinition, BoundDefinition)) and not composite:
+            from .types import WorkflowSpec
+
+            if not isinstance(spec, WorkflowSpec):
+                raise ValidationError(
+                    "Temporal supports native AgentSpec or sequential WorkflowSpec"
+                )
+        text(command_id, "Command ID")
+        credits(budget)
+        request = submission_request(spec, input, budget=budget, session_id=session_id)
+        from .temporal_bindings import normalize_request
+
+        request = normalize_request(request, self._release)
+        composite = request["definition"]["kind"] in {"graph", "team", "dynamic"}
+        from .spec_codec import agent_steps
+
+        for step in agent_steps(request["definition"]):
+            validate_schema_references(step["output_schema"])
+        # This stable ID isolates tenant/principal and caller command identity.
+        # Runtime aliases/releases are resolved only on first acceptance.
+        run_id = "ralf-temporal-" + digest([asdict(self.scope), command_id])
+        await self._guard("submit", command_id, run_id, request)
+        try:
+            receipt = await self._view(run_id, "submission", request=request, command_id=command_id)
+            return RunHandle(run_id, CommandReceipt(**receipt))
+        except NotFound:
+            pass
+        validate_request(request, self._release)
+        from .temporal_bindings import validate_bindings
+
+        validate_bindings(request, self._release, asdict(self.scope))
+        from .temporal_session_tree import require_tree_admission
+
+        require_tree_admission(request, self._release)
+        sdk = _sdk()
+        try:
+            from .temporal_parent_state import PARENT_WORKFLOW_NAME
+
+            await self.client.start_workflow(
+                PARENT_WORKFLOW_NAME if composite else WORKFLOW_NAME,
+                {
+                    "scope": asdict(self.scope),
+                    "command_id": command_id,
+                    "request": request,
+                    "manifest": self.release,
+                    "activity_timeout": self.activity_timeout,
+                },
+                id=run_id,
+                task_queue=self.task_queue,
+                id_reuse_policy=sdk[3].REJECT_DUPLICATE,
+                id_conflict_policy=sdk[2].FAIL,
+                retry_policy=None,
+            )
+        except sdk[5]:
+            pass
+        receipt = await self._view(run_id, "submission", request=request, command_id=command_id)
+        return RunHandle(run_id, CommandReceipt(**receipt))
+
+    async def status(self, run_id):
+        return _snapshot(await self._view(run_id, "status"))
+
+    async def compact_effect_evidence(self, run_id, *, runtime, limit=100, after_effect_key=None):
+        """Remove exact receipt copies only under the original full sealed tree."""
+        from .temporal_retention import compact_effect_evidence
+
+        return await compact_effect_evidence(
+            self, run_id, runtime=runtime, limit=limit, after_effect_key=after_effect_key
+        )
+
+    async def events(self, run_id, *, after=0, limit=1000):
+        if type(after) is not int or after < 0 or type(limit) is not int or not 1 <= limit <= 10000:
+            raise ValidationError("Events require non-negative after and limit from 1 to 10000")
+        return [
+            RunEvent(**event)
+            for event in await self._view(run_id, "events", after=after, limit=limit)
+        ]
+
+    async def diagnostics(self, run_id):
+        value = await self._view(run_id, "diagnostics")
+        return RunDiagnostics(
+            _snapshot(value["snapshot"]),
+            value["manifest"],
+            value["release_digest"],
+            value["budget"],
+            value["workflow"],
+        )
+
+    async def deployment_diagnostics(self):
+        from .temporal_deployment_protocol import public_selected
+        from .temporal_deployment_submissions import diagnostics
+
+        if not public_selected(self._release):
+            raise ValidationError("Public deployment diagnostics require protocol 2")
+        return await diagnostics(self)
+
+    async def memory_stages(self, run_id):
+        """Pure History evidence; no backend reads or implicit recovery."""
+        return await self._view(run_id, "memory_stages")
+
+    async def session_stages(self, run_id):
+        """Pure original Session save evidence, without data I/O or recovery."""
+        return await self._view(run_id, "session_stages")
+
+    async def completion_stages(self, run_id):
+        """Observe original completion intents/verdicts; never invoke the verifier."""
+        return await self._view(run_id, "completion_stages")
+
+    async def context_stages(self, run_id):
+        """Read this Run's original History evidence; no Activity or child traversal."""
+        return await self._view(run_id, "context_stages")
+
+    async def context_read_stages(self, run_id):
+        """Pure original read admission/response/end evidence, without data I/O."""
+        return await self._view(run_id, "context_read_stages")
+
+    async def context_artifacts(self, run_id):
+        """Read artifact dispatch/receipt proofs without accessing storage."""
+        return await self._view(run_id, "context_artifacts")
+
+    async def _command(self, run_id, kind, command_id, **values):
+        text(command_id, "Command ID")
+        sdk = _sdk()
+        payload = {"kind": kind, "scope": asdict(self.scope), **values}
+        if kind == "send_input":
+            payload["run_id"] = run_id
+        from .temporal_deployment_protocol import public_selected
+
+        binding = None
+        if public_selected(self._release):
+            from .temporal_deployment_submissions import _policy, _recheck
+
+            client, scope, policy = self.client, asdict(self.scope), _policy(self)
+            binding = await self._guard(kind, command_id, run_id, payload)
+            if binding is not None:
+                from .temporal_deployment_registry import CONTROL_BINDING_FIELDS
+
+                if (
+                    type(binding) is not dict
+                    or set(binding) != CONTROL_BINDING_FIELDS
+                    or type(binding["version"]) is not int
+                    or binding["version"] not in (1, 2)
+                    or binding["version"] == 2
+                    and (
+                        kind != "reconcile"
+                        or values.get("query") is not False
+                        or binding["root_run_id"] != run_id
+                        or binding["root_execution_epoch"] != binding["target_execution_epoch"]
+                    )
+                    or binding["scope"] != scope
+                    or binding["target"] != run_id
+                ):
+                    raise DefinitionMismatch("Original descendant control binding changed")
+                text(binding["target_execution_epoch"], "Execution epoch")
+                await self._view(
+                    run_id, "status", _execution_epoch=binding["target_execution_epoch"]
+                )
+                await _recheck(self, client, scope, binding["namespace"], policy)
+            else:
+                await self._view(run_id, "status")
+        else:
+            await self._view(run_id, "status")
+            client, scope, release = self.client, asdict(self.scope), self.release
+            binding = await self._guard(kind, command_id, run_id, payload)
+            if binding is not None:
+                from .temporal_scoped_manual_recovery import binding as scoped_binding
+
+                binding = scoped_binding(
+                    binding, {"scope": scope, "kind": kind, "target": run_id}, client.namespace
+                )
+                await self._view(
+                    run_id, "status", _execution_epoch=binding["target_execution_epoch"]
+                )
+                from .temporal_session_activities import namespace_id
+
+                if await namespace_id(client) != binding["namespace"]["id"]:
+                    raise DefinitionMismatch("Original scoped manual namespace changed")
+                if (
+                    self.client is not client
+                    or client.namespace != binding["namespace"]["name"]
+                    or asdict(self.scope) != scope
+                    or self.release != release
+                ):
+                    raise DefinitionMismatch("Original scoped manual binding changed")
+        try:
+            handle = (
+                self._handle(run_id)
+                if binding is None
+                else self._handle(run_id, execution_epoch=binding["target_execution_epoch"])
+            )
+            from .temporal_command_transport import execute, supports
+            from .temporal_deployment_protocol import selected
+
+            if supports(payload) and (
+                public_selected(self._release) or not selected(self._release)
+            ):
+                receipt = await execute(
+                    self.client,
+                    run_id,
+                    {"command_id": command_id, "payload": payload},
+                    execution_epoch=None if binding is None else binding["target_execution_epoch"],
+                )
+            else:
+                receipt = await handle.execute_update(
+                    "command", {"command_id": command_id, "payload": payload}
+                )
+        except sdk[1] as exc:
+            cause = exc.cause
+            if isinstance(cause, sdk[4]):
+                _raise_code(cause.type)
+            raise
+        except sdk[6] as exc:
+            if exc.status == sdk[7].NOT_FOUND:
+                raise NotFound("Temporal Run was not found") from None
+            raise
+        if receipt["apply_state"] == "rejected":
+            if kind == "send_input":
+                return CommandReceipt(**receipt)
+            _raise_code(receipt["outcome"]["error"])
+        return CommandReceipt(**receipt)
+
+    async def send_input(
+        self, run_id, pending_id, target_digest, value, *, command_id, expected_state_revision=None
+    ):
+        from .user_input import input_reply_payload
+
+        payload = input_reply_payload(
+            run_id,
+            pending_id,
+            target_digest,
+            value,
+            expected_state_revision=expected_state_revision,
+        )
+        payload.pop("run_id")
+        return await self._command(run_id, "send_input", command_id, **payload)
+
+    async def approve(self, run_id, action_id, target_digest, *, command_id, approved=True):
+        return await self._command(
+            run_id,
+            "approve",
+            command_id,
+            action_id=action_id,
+            digest=target_digest,
+            approved=approved,
+        )
+
+    async def cancel(self, run_id, *, command_id):
+        return await self._command(run_id, "cancel", command_id)
+
+    async def reconcile(self, run_id, action_id, result=None, *, command_id, query=False):
+        if type(query) is not bool:
+            raise ValidationError("Reconciliation query must be a boolean")
+        values = {"action_id": action_id, "query": query}
+        if not query:
+            values["result"] = detached(result)
+        return await self._command(run_id, "reconcile", command_id, **values)
+
+    async def patch_plan(self, run_id, proposal, *, expected_plan_revision, command_id):
+        from .dag_planning import DAGProposal
+
+        if (
+            not isinstance(proposal, DAGProposal)
+            or type(expected_plan_revision) is not int
+            or expected_plan_revision < 0
+        ):
+            raise ValidationError("DAG patch requires typed proposal and nonnegative revision")
+        return await self._command(
+            run_id,
+            "patch",
+            command_id,
+            proposal=proposal.to_dict(),
+            expected_plan_revision=expected_plan_revision,
+        )
+
+    async def drive(self, run_id, *, wait_seconds=None):
+        from .temporal_deployment_protocol import public_selected
+        from .temporal_scoped_reservation import drive_command
+
+        public = public_selected(self._release)
+        scoped_command = None if public else await drive_command(self, run_id)
+        if public:
+            closure = await self._view(run_id, "deployment_closure")
+            if closure.get("seal") is not None:
+                from .temporal_deployment_submissions import recover_retirement
+
+                await recover_retirement(self, run_id, closure)
+                return await self.status(run_id)
+        # A mechanical wake has fixed content. Reuse its command identity
+        # while sending a fresh SDK Update so the original History wakes again.
+        command_id = (
+            "drive:" + digest([asdict(self.scope), run_id])
+            if public
+            else scoped_command or "drive:" + uuid.uuid4().hex
+        )
+        try:
+            await self._command(run_id, "drive", command_id)
+        except IdempotencyConflict:
+            if not public:
+                if scoped_command is None:
+                    raise
+                replacement = await drive_command(self, run_id)
+                if replacement is None or replacement == command_id:
+                    raise
+            else:
+                # Preserve a colliding old command. The original Registry proposes
+                # another identity; registration still performs every normal check.
+                diagnostics = await self.deployment_diagnostics()
+                hint = next(
+                    (
+                        item
+                        for item in diagnostics.get("recovery_drive_hints", [])
+                        if item.get("run_id") == run_id
+                    ),
+                    None,
+                )
+                if (
+                    hint is None
+                    or hint.get("durable") is not False
+                    or hint.get("command_id") == command_id
+                ):
+                    raise
+                replacement = hint["command_id"]
+            await self._command(run_id, "drive", replacement)
+        deadline = asyncio.get_running_loop().time() + (
+            self.drive_timeout if wait_seconds is None else wait_seconds
+        )
+        while True:
+            diagnostics = await self.diagnostics(run_id)
+            snapshot = diagnostics.snapshot
+            pending = (
+                diagnostics.workflow["reconciliation_pending"]
+                or diagnostics.workflow["evidence_ack_pending"]
+            )
+            if (
+                snapshot.state not in {"queued", "running"} and not pending
+            ) or asyncio.get_running_loop().time() >= deadline:
+                return snapshot
+            await asyncio.sleep(0.05)
+
+    async def aclose(self):
+        # Client is borrowed; the SDK manages its transport lifetime.
+        self._closed = True
+
+
+def build_temporal_worker(
+    client, *, task_queue, runtime, release=None, activity_owner=None, **worker_options
+):
+    """Explicit worker registration with fixed identity and no hidden fallbacks."""
+    from .temporal_activities import TemporalRuntime, registered_activities
+
+    _sdk()
+    from temporalio.worker import Worker
+
+    from .temporal_control_activities import registered_parent_activities
+    from .temporal_parent_workflow import TemporalParentWorkflow
+    from .temporal_session_activities import registered_session_activities
+    from .temporal_session_workflow import TemporalSessionWorkflow
+    from .temporal_workflow import TemporalCommandRegistryWorkflow, TemporalRunWorkflow
+
+    text(task_queue, "Temporal task queue")
+    if not isinstance(runtime, TemporalRuntime):
+        raise ValidationError("Worker requires explicit TemporalRuntime dependencies")
+    runtime.validate_release(release)
+    manifest = runtime.manifest if release is None else detached(release)
+    if worker_options.get("build_id", digest(manifest)) != digest(manifest):
+        raise DefinitionMismatch("Worker build identity must match its pinned release")
+    worker_options.setdefault("workflow_runner", _workflow_runner())
+    worker_options.setdefault("identity", "ralf-temporal:" + digest(manifest))
+    worker_options.setdefault("build_id", digest(manifest))
+    worker_options.setdefault("sticky_queue_schedule_to_start_timeout", timedelta(seconds=1))
+    worker_options.setdefault("disable_eager_activity_execution", True)
+    activities = registered_activities(runtime, client)
+    native_activities = tuple(activities)
+    parent_activities = registered_parent_activities(runtime, client)
+    activities = activities + parent_activities + registered_session_activities(runtime, client)
+    maintenance = []
+    if "deployment_admission_protocol" in manifest:
+        from .temporal_deployment_execution import registered_activity, wrap_activities
+
+        activities = activities + [registered_activity(runtime, client)]
+        from .temporal_deployment_protocol import public_selected
+
+        if public_selected(manifest):
+            from .temporal_deployment_release import registered_activity as registered_release
+
+            release_activity = registered_release(runtime, client)
+            activities.append(release_activity)
+            maintenance.append((release_activity, "release"))
+        if manifest.get("session_deployment_protocol") == 1:
+            from temporalio import activity
+
+            from .temporal_session_deployment_control import registered_registry_session_activities
+            from .temporal_session_state import SESSION_ACTIVITY
+
+            registry_activities = registered_registry_session_activities(runtime, client)
+            activities.extend(registry_activities)
+            maintenance.extend((function, "session-registry") for function in registry_activities)
+            maintenance.extend(
+                (function, "session-control")
+                for function in activities
+                if activity._Definition.from_callable(function).name == SESSION_ACTIVITY
+            )
+            maintenance.append((parent_activities[0], "control"))
+            from .temporal_state import ACK_ACTIVITY
+
+            maintenance.extend(
+                (function, "evidence")
+                for function in native_activities
+                if activity._Definition.from_callable(function).name == ACK_ACTIVITY
+            )
+        from .temporal_deployment_coding_state import selected as coding_deployment_selected
+
+        if coding_deployment_selected(manifest):
+            from temporalio import activity
+
+            from .temporal_coding_state import CODING_STOP_ACTIVITY
+            from .temporal_deployment_coding_bridge import registered_stop_activity
+
+            stop_activity = registered_stop_activity(runtime, client)
+            activities.append(stop_activity)
+            maintenance.append((stop_activity, "stop"))
+            # Only objects returned by this build's original fixed factory
+            # are candidates; the owner verifies their full wrapper provenance.
+            maintenance.extend(
+                (function, "native-stop")
+                for function in native_activities
+                if activity._Definition.from_callable(function).name == CODING_STOP_ACTIVITY
+            )
+            # This exact factory-produced control retains both universal SDK
+            # admission and original actual-call/end-ACK wrappers.
+            if manifest.get("session_deployment_protocol") != 1:
+                maintenance.append((parent_activities[0], "control"))
+        originals = activities
+        activities = wrap_activities(runtime, client, originals)
+        from .temporal_activities import _register_evidence_wrapper
+
+        for original, wrapped in zip(originals, activities, strict=True):
+            if any(original is fixed and kind == "evidence" for fixed, kind in maintenance):
+                _register_evidence_wrapper(runtime, client, original, wrapped)
+        maintenance = [
+            (wrapped, kind)
+            for original, wrapped in zip(originals, activities, strict=True)
+            for fixed, kind in maintenance
+            if original is fixed
+        ]
+    if activity_owner is not None:
+        from .temporal_assembly_lifecycle import WorkerExecutionOwner
+
+        if not isinstance(activity_owner, WorkerExecutionOwner):
+            raise ValidationError("Worker requires its original mechanical Activity owner")
+        if activity_owner.release_digest != digest(runtime.orchestration_release):
+            raise DefinitionMismatch("Worker owner must retain the original release")
+        activities = activity_owner.wrap_activities(
+            activities, client=client, runtime=runtime, maintenance=maintenance
+        )
+    return Worker(
+        client,
+        task_queue=task_queue,
+        workflows=[
+            TemporalRunWorkflow,
+            TemporalCommandRegistryWorkflow,
+            TemporalParentWorkflow,
+            TemporalSessionWorkflow,
+        ],
+        activities=activities,
+        **worker_options,
+    )
+
+
+async def replay_temporal_history(history, *, namespace=None):
+    """Replay actual service History against this fixed Workflow implementation."""
+    _sdk()
+    from temporalio.worker import Replayer
+
+    from .temporal_parent_workflow import TemporalParentWorkflow
+    from .temporal_session_workflow import TemporalSessionWorkflow
+    from .temporal_workflow import TemporalCommandRegistryWorkflow, TemporalRunWorkflow
+
+    options = {}
+    if namespace is not None:
+        text(namespace, "Original Temporal namespace")
+        options["namespace"] = namespace
+    await Replayer(
+        workflows=[
+            TemporalRunWorkflow,
+            TemporalCommandRegistryWorkflow,
+            TemporalParentWorkflow,
+            TemporalSessionWorkflow,
+        ],
+        workflow_runner=_workflow_runner(),
+        **options,
+    ).replay_workflow(history)
+
+
+def _workflow_runner():
+    from temporalio.worker.workflow_sandbox import SandboxedWorkflowRunner, SandboxRestrictions
+
+    # The package public exports import HTTP provider definitions. They are
+    # never called from Workflow code; passing these third-party definitions
+    # through avoids replay-time import side effects while retaining the
+    # SDK sandbox around our Workflow implementation.
+    return SandboxedWorkflowRunner(
+        restrictions=SandboxRestrictions.default.with_passthrough_modules(
+            "httpx",
+            "jsonschema",
+            "relf_agent.temporal_bindings",
+            "relf_agent.temporal_context",
+            "relf_agent.model_history",
+            "relf_agent.user_input",
+            "relf_agent.temporal_user_input",
+            "relf_agent.temporal_context_read_protocol",
+            "relf_agent.temporal_context_read_state",
+            "relf_agent.temporal_tool_execution",
+            "relf_agent.temporal_tool_execution_state",
+            "relf_agent.coding_execution_rules",
+            "relf_agent.temporal_coding_state",
+            "relf_agent.temporal_coding_protocol",
+            "relf_agent.temporal_coding_composition_state",
+            "relf_agent.temporal_coding_composition_protocol",
+            "relf_agent.temporal_deployment_coding_state",
+            "relf_agent.temporal_deployment_protocol",
+            "relf_agent.temporal_deployment_admission",
+            "relf_agent.temporal_session_deployment_dto",
+            "relf_agent.temporal_session_deployment_state",
+            "relf_agent.temporal_deployment_execution",
+            "relf_agent.temporal_deployment_release_state",
+            "relf_agent.temporal_memory_state",
+            "relf_agent.temporal_facts_state",
+            "relf_agent.temporal_knowledge_state",
+            "relf_agent.temporal_session_state",
+            "relf_agent.session_types",
+            "relf_agent.temporal_session_data_state",
+            "relf_agent.temporal_session_tree",
+            "relf_agent.temporal_session_tree_reads",
+            "relf_agent.temporal_session_tree_protocol",
+            "relf_agent.temporal_session_topology",
+            "relf_agent.temporal_session_identity",
+            "relf_agent.temporal_parent_session",
+            "relf_agent.temporal_managed_context",
+            "relf_agent.temporal_limits_state",
+            "relf_agent.temporal_completion_state",
+            "relf_agent.temporal_decision_state",
+            "relf_agent.model_continuation",
+            "relf_agent.harness",
+            "relf_agent.types",
+            "relf_agent.errors",
+        )
+    )

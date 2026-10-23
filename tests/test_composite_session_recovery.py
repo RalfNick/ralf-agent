@@ -4,8 +4,8 @@ import threading
 
 import pytest
 
-import ralf_agent as r
-from ralf_agent.errors import DefinitionMismatch, ValidationError
+import relf_agent as r
+from relf_agent.errors import DefinitionMismatch, ValidationError
 
 from .composite_session_fixture import Provider, definitions, engine, root_messages
 
@@ -409,7 +409,7 @@ def test_composite_member_provider_binding_remains_selected_inside_shared_turn(
 @pytest.mark.parametrize("kind", ["graph", "team"])
 def test_composite_member_namespace_bindings_keep_original_addresses(tmp_path, kind):
     async def scenario():
-        from ralf_agent.binding_sessions import session_storage_key
+        from relf_agent.binding_sessions import session_storage_key
 
         raw = engine(tmp_path / "member.sqlite")
         agent = r.AgentSpec("worker", "Answer")

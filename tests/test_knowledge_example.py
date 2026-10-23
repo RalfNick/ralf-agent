@@ -4,7 +4,7 @@ import time
 
 import pytest
 
-from ralf_agent import Scope, SQLiteStore
+from relf_agent import Scope, SQLiteStore
 
 from .test_component_example import process
 
@@ -44,7 +44,7 @@ def test_example_retrieves_real_local_evidence_and_cli_recovers_from_another_cwd
             [
                 sys.executable,
                 "-m",
-                "ralf_agent",
+                "relf_agent",
                 "--db",
                 database,
                 "--factory",
@@ -59,7 +59,7 @@ def test_example_retrieves_real_local_evidence_and_cli_recovers_from_another_cwd
     output = done["result"]
     assert output["grounded"] is True and output["citations"]
     assert document_id in {citation["document_id"] for citation in output["citations"]}
-    from ralf_agent.retrieval import SQLiteKnowledgeStore
+    from relf_agent.retrieval import SQLiteKnowledgeStore
 
     with SQLiteKnowledgeStore(str(database) + ".knowledge.sqlite") as knowledge:
         for citation in output["citations"]:
@@ -98,7 +98,7 @@ def test_example_refuses_to_answer_without_retrieved_evidence(tmp_path):
 
 def test_factory_initialization_never_overwrites_an_updated_document(tmp_path):
     from examples.knowledge_agent import create_engine
-    from ralf_agent.retrieval import Document, SQLiteKnowledgeStore
+    from relf_agent.retrieval import Document, SQLiteKnowledgeStore
 
     database = tmp_path / "runs.sqlite"
     with create_engine(database):
@@ -124,7 +124,7 @@ def test_factory_initialization_never_overwrites_an_updated_document(tmp_path):
 @pytest.mark.parametrize("retired", ["deleted", "expired"])
 def test_seed_initialization_respects_retired_documents_without_blocking_startup(tmp_path, retired):
     from examples.knowledge_agent import create_engine
-    from ralf_agent.retrieval import Document, SQLiteKnowledgeStore
+    from relf_agent.retrieval import Document, SQLiteKnowledgeStore
 
     database = tmp_path / "runs.sqlite"
     with create_engine(database):

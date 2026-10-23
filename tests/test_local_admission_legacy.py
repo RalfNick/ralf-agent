@@ -5,7 +5,7 @@ import copy
 
 import pytest
 
-from ralf_agent import (
+from relf_agent import (
     AgentSpec,
     DeploymentAdmissionPolicy,
     LocalEngine,
@@ -13,8 +13,8 @@ from ralf_agent import (
     ToolRegistry,
     WorkflowSpec,
 )
-from ralf_agent.orchestration_types import DynamicWorkflowSpec, TeamSpec
-from ralf_agent.runtime_builder import EchoProvider
+from relf_agent.orchestration_types import DynamicWorkflowSpec, TeamSpec
+from relf_agent.runtime_builder import EchoProvider
 
 
 @pytest.mark.parametrize("kind", ["team", "dynamic", "nested"])

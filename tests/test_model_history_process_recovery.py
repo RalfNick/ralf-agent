@@ -10,11 +10,11 @@ from pathlib import Path
 
 import pytest
 
-import ralf_agent
-from ralf_agent import AgentSpec, CompleteModelHistory, LocalEngine, SQLiteStore, ToolRegistry
-from ralf_agent.completion import CompletionVerdict
-from ralf_agent.model_continuation import ContinuedModelResponse, ModelContinuation
-from ralf_agent.types import digest
+import relf_agent
+from relf_agent import AgentSpec, CompleteModelHistory, LocalEngine, SQLiteStore, ToolRegistry
+from relf_agent.completion import CompletionVerdict
+from relf_agent.model_continuation import ContinuedModelResponse, ModelContinuation
+from relf_agent.types import digest
 
 FIRST_RAW = ' { "answer" : "first" } '
 SECOND_RAW = ' { "answer" : "second" } '
@@ -151,7 +151,7 @@ def test_committed_process_exit_preserves_complete_original_final_and_verifier_r
     env = {
         "PATH": os.defpath,
         "PYTHONPATH": os.pathsep.join(
-            (str(Path(ralf_agent.__file__).parent.parent), str(Path(__file__).parent.parent))
+            (str(Path(relf_agent.__file__).parent.parent), str(Path(__file__).parent.parent))
         ),
     }
     for mode, expected in (("crash", 77), ("resume", 0)):

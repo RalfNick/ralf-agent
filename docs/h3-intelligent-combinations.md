@@ -33,7 +33,7 @@ dev48 可在语义 Profile 中显式配置[HTTP 重排](http-reranking.md)，沿
 
 ```python
 import asyncio
-from ralf_agent import Runtime, RuntimeBuilder, recommended_harness, recommended_profile
+from relf_agent import Runtime, RuntimeBuilder, recommended_harness, recommended_profile
 
 
 async def main():
@@ -78,7 +78,7 @@ CompleteVerifier 默认取最后结果，SchemaVerifier 验证输出结构；二
 ## 显式语义知识库
 
 ```python
-from ralf_agent import AgentSpec, Document, Runtime, RuntimeBuilder, recommended_profile
+from relf_agent import AgentSpec, Document, Runtime, RuntimeBuilder, recommended_profile
 
 profile = recommended_profile(
     "semantic-knowledge",
@@ -128,7 +128,7 @@ async def answer():
 import asyncio
 from tempfile import TemporaryDirectory
 
-from ralf_agent import (
+from relf_agent import (
     AgentSpec,
     ComponentRegistry,
     Document,
@@ -208,7 +208,7 @@ Session 超出总预算时只保留完整近期轮次，最新完整轮次放不
 `session_projection` 记录省略；不会把孤立答案当成完整轮次。
 
 ```python
-from ralf_agent import RelevantDataContext, OverlapReferenceSelector
+from relf_agent import RelevantDataContext, OverlapReferenceSelector
 
 context = RelevantDataContext(
     artifact_store,  # SDK 注入的资源由调用方关闭

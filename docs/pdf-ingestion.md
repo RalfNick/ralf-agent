@@ -1,5 +1,6 @@
 # 可选文本 PDF 摄取 — dev53
 
+当前可执行示例使用a6的`relf_agent`／`relf`入口和独立环境；下文dev版本号标记能力最初引入批次，不把原批次验收授予a6。原包入口见[名称边界](project-naming.md)。
 `PdfDocumentParser` 实现原同步 `DocumentParser`，读取应用提供的 `application/pdf` 字节，并复用原知识、Chunker 和原子回执。
 核心 SDK 不导入或要求 pypdf；只有构造此适配器时加载可选依赖。
 
@@ -7,7 +8,7 @@
 # 源码安装
 python -m pip install -e '.[pdf]'
 # 或安装本地构建的 wheel
-python -m pip install 'dist/ralf_agent-0.1.0.dev53-py3-none-any.whl[pdf]'
+python -m pip install 'dist/relf_agent-0.1.0a6-py3-none-any.whl[pdf]'
 ```
 
 未安装或不支持的 pypdf 版本返回 `ValidationError`，提示 `relf-agent[pdf]`。
@@ -16,7 +17,7 @@ python -m pip install 'dist/ralf_agent-0.1.0.dev53-py3-none-any.whl[pdf]'
 该身份不归档依赖代码，也不认证任意库内部运行时猴子补丁；保留原发布环境仍是应用责任。
 
 ```python
-from ralf_agent import (
+from relf_agent import (
     PdfDocumentParser,
     IngestionCoordinator,
     Scope,
@@ -56,7 +57,7 @@ SDK 借用 Store，不负责关闭共享客户端。
 ## 模板使用
 
 ```sh
-ralf init my-docs --template ingest
+relf init my-docs --template ingest
 cd my-docs
 python -m agent_app ingest /absolute/path/runbook.pdf --document-id runbook --command-id first --expected-version 0
 python -m agent_app query --query 'pool timeout' --command-id answer-first

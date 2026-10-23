@@ -12,13 +12,13 @@ from pathlib import Path
 
 import pytest
 
-import ralf_agent
-from ralf_agent import AgentSpec, LocalEngine, ModelResponse, SQLiteStore, ToolCall
-from ralf_agent.errors import DefinitionMismatch, ValidationError
-from ralf_agent.harness import DecisionProposal, NativeHarness
-from ralf_agent.model_continuation import ContinuedModelResponse, ModelContinuation
-from ralf_agent.tools import ToolRegistry
-from ralf_agent.types import digest
+import relf_agent
+from relf_agent import AgentSpec, LocalEngine, ModelResponse, SQLiteStore, ToolCall
+from relf_agent.errors import DefinitionMismatch, ValidationError
+from relf_agent.harness import DecisionProposal, NativeHarness
+from relf_agent.model_continuation import ContinuedModelResponse, ModelContinuation
+from relf_agent.tools import ToolRegistry
+from relf_agent.types import digest
 
 
 class Provider:
@@ -197,7 +197,7 @@ def test_true_process_exit_recovery_does_not_redispatch_received_model(tmp_path,
     for mode, expected in (("crash", 77), ("resume", 0)):
         process = subprocess.run(
             [sys.executable, str(Path(__file__)), str(tmp_path), window, mode],
-            env={"PATH": os.defpath, "PYTHONPATH": str(Path(ralf_agent.__file__).parent.parent)},
+            env={"PATH": os.defpath, "PYTHONPATH": str(Path(relf_agent.__file__).parent.parent)},
             capture_output=True,
             text=True,
             timeout=20,
@@ -306,10 +306,10 @@ def test_mutated_invalid_continuation_is_received_then_rejected_not_unknown(tmp_
 
 
 def test_bound_selected_provider_pins_continuation_and_restarts_without_host_fallback(tmp_path):
-    from ralf_agent.binding_catalog import BindingCatalog
-    from ralf_agent.binding_definitions import AgentDefinition
-    from ralf_agent.binding_types import AgentBindingDescriptor, BindingSelection
-    from ralf_agent.types import Scope
+    from relf_agent.binding_catalog import BindingCatalog
+    from relf_agent.binding_definitions import AgentDefinition
+    from relf_agent.binding_types import AgentBindingDescriptor, BindingSelection
+    from relf_agent.types import Scope
 
     class Host:
         identity = {"kind": "must-not-run", "version": "1"}
@@ -354,13 +354,13 @@ def test_bound_selected_provider_pins_continuation_and_restarts_without_host_fal
 
 @pytest.mark.parametrize("context_kind", ["default", "managed", "managed-data"])
 def test_context_budget_preserves_latest_signed_tool_group_without_truncation(context_kind):
-    from ralf_agent.artifacts import InMemoryArtifactStore
-    from ralf_agent.context import ContextAssembler
-    from ralf_agent.data_context import ManagedDataContext
-    from ralf_agent.managed_context import ManagedContextPipeline
-    from ralf_agent.model_continuation import assistant_message
-    from ralf_agent.model_evidence import snapshot_model_response
-    from ralf_agent.types import canonical
+    from relf_agent.artifacts import InMemoryArtifactStore
+    from relf_agent.context import ContextAssembler
+    from relf_agent.data_context import ManagedDataContext
+    from relf_agent.managed_context import ManagedContextPipeline
+    from relf_agent.model_continuation import assistant_message
+    from relf_agent.model_evidence import snapshot_model_response
+    from relf_agent.types import canonical
 
     response = asyncio.run(Provider().complete([], []))
     raw = snapshot_model_response(response)

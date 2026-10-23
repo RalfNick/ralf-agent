@@ -7,8 +7,8 @@ from pathlib import Path
 
 import pytest
 
-from ralf_agent.errors import DefinitionMismatch, ValidationError
-from ralf_agent.types import digest
+from relf_agent.errors import DefinitionMismatch, ValidationError
+from relf_agent.types import digest
 
 POLICY = {
     "kind": "deployment-admission-policy",
@@ -36,12 +36,12 @@ FILES = {
 
 def test_original_execution_admission_helpers_are_available():
     for name in ("temporal_deployment_protocol", "temporal_deployment_execution_state"):
-        assert importlib.util.find_spec("ralf_agent." + name) is not None
+        assert importlib.util.find_spec("relf_agent." + name) is not None
 
 
 @pytest.fixture
 def protocol():
-    name = "ralf_agent.temporal_deployment_protocol"
+    name = "relf_agent.temporal_deployment_protocol"
     assert importlib.util.find_spec(name) is not None, "Deployment publication is missing"
     return importlib.import_module(name)
 

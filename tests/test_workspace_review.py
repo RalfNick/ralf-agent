@@ -9,7 +9,7 @@ import tracemalloc
 
 import pytest
 
-from ralf_agent import (
+from relf_agent import (
     FileSystemWorkspace,
     InMemoryWorkspace,
     Scope,
@@ -19,7 +19,7 @@ from ralf_agent import (
     WorkspaceToolSource,
     register_tool_source,
 )
-from ralf_agent.errors import AuthorizationDenied, DefinitionMismatch, ValidationError
+from relf_agent.errors import AuthorizationDenied, DefinitionMismatch, ValidationError
 
 from .test_workspace_tools import context
 
@@ -239,7 +239,7 @@ def test_workspace_sdk_aclose_owns_admission_before_tracker_dispatch():
 
 def test_workspace_non_utf8_normalized_root_refuses_before_any_fd(tmp_path, monkeypatch):
     # Simulates a Linux byte-name ancestor alias; this macOS filesystem disallows it.
-    import ralf_agent.filesystem_workspace as filesystem
+    import relf_agent.filesystem_workspace as filesystem
 
     original_open = os.open
     allocated = []

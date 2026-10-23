@@ -5,14 +5,14 @@ import importlib.util
 
 import pytest
 
-from ralf_agent.errors import ValidationError
+from relf_agent.errors import ValidationError
 
 
 def source_type():
-    assert importlib.util.find_spec("ralf_agent.codex_credentials") is not None, (
+    assert importlib.util.find_spec("relf_agent.codex_credentials") is not None, (
         "lazy Coding credential source is missing"
     )
-    from ralf_agent.codex_credentials import EnvironmentCodingCredentials
+    from relf_agent.codex_credentials import EnvironmentCodingCredentials
 
     return EnvironmentCodingCredentials
 

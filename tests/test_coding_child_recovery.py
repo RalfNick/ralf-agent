@@ -4,9 +4,9 @@ import asyncio
 
 import pytest
 
-from ralf_agent import AgentSpec, DynamicWorkflowSpec, LocalEngine, ModelResponse, TeamSpec
-from ralf_agent.errors import DefinitionMismatch, ValidationError
-from ralf_agent.storage import SQLiteStore
+from relf_agent import AgentSpec, DynamicWorkflowSpec, LocalEngine, ModelResponse, TeamSpec
+from relf_agent.errors import DefinitionMismatch, ValidationError
+from relf_agent.storage import SQLiteStore
 
 from .helpers import tool_response
 from .test_local_delegated_coding import LifecycleRunner, coding_engine
@@ -144,7 +144,7 @@ def test_child_stop_predicate_rejects_replaced_original_ownership(tmp_path):
         with engine.store.transaction():
             leaf["parent_call"]["reservation"] = "other-escrow"
             engine.store.save_run(leaf)
-        from ralf_agent.local_coding_children import stops_settled
+        from relf_agent.local_coding_children import stops_settled
 
         with pytest.raises(DefinitionMismatch, match="ownership"):
             stops_settled(engine, engine.store.run(handle.run_id))
@@ -154,7 +154,7 @@ def test_child_stop_predicate_rejects_replaced_original_ownership(tmp_path):
 
 
 def test_owned_nested_original_child_stops_under_ancestor_quarantine_and_retries(tmp_path):
-    from ralf_agent.runtime_lifecycle import BuildContext, RuntimeInstance
+    from relf_agent.runtime_lifecycle import BuildContext, RuntimeInstance
 
     from .test_coding_lifecycle import Journal, OwnedRunner
 
@@ -194,9 +194,9 @@ def test_owned_nested_original_child_stops_under_ancestor_quarantine_and_retries
 
 
 def test_sibling_failure_waits_for_original_coding_stop_before_parent_failed(tmp_path):
-    from ralf_agent import ToolRegistry
-    from ralf_agent.delegated_coding import register_coding_tool
-    from ralf_agent.orchestration_types import ChildCall
+    from relf_agent import ToolRegistry
+    from relf_agent.delegated_coding import register_coding_tool
+    from relf_agent.orchestration_types import ChildCall
 
     async def exercise():
         runner = LifecycleRunner(crash=True, fail_stop=True, wait=True)
@@ -275,9 +275,9 @@ def test_sibling_failure_waits_for_original_coding_stop_before_parent_failed(tmp
 
 @pytest.mark.parametrize("owned_cleanup", [False, True])
 def test_maximum_original_parent_depth_allows_ninth_run_coding_leaf(tmp_path, owned_cleanup):
-    from ralf_agent.local_coding_children import stop_children, stops_settled
-    from ralf_agent.orchestration_types import ChildCall
-    from ralf_agent.runtime_lifecycle import BuildContext, RuntimeInstance
+    from relf_agent.local_coding_children import stop_children, stops_settled
+    from relf_agent.orchestration_types import ChildCall
+    from relf_agent.runtime_lifecycle import BuildContext, RuntimeInstance
 
     from .test_coding_lifecycle import Journal, OwnedRunner
 

@@ -10,14 +10,14 @@ import textwrap
 
 import pytest
 
-from ralf_agent.codex_rpc import CodexRPCClosed, CodexRPCError, CodexRPCTransport
+from relf_agent.codex_rpc import CodexRPCClosed, CodexRPCError, CodexRPCTransport
 
 pytestmark = pytest.mark.skipif(os.name != "posix", reason="POSIX process groups required")
 CANARY = "synthetic-auth-canary-109"
 
 
 def transport_type():
-    name = "ralf_agent.codex_auth_transport"
+    name = "relf_agent.codex_auth_transport"
     assert importlib.util.find_spec(name) is not None, (
         "dedicated authenticated transport is missing"
     )
@@ -493,7 +493,7 @@ def test_incomplete_cleanup_retains_original_owner_and_cancellation_identity(
 ):
     import signal
 
-    from ralf_agent.codex_rpc import CodexRPCCloseIncomplete
+    from relf_agent.codex_rpc import CodexRPCCloseIncomplete
 
     marker = tmp_path / "entered"
     ready = tmp_path / "peer-ready"
@@ -623,7 +623,7 @@ def test_outgoing_credential_is_bounded_without_partial_login_or_retry(tmp_path)
     ],
 )
 def test_every_owned_auth_transport_method_can_publish_executable_fingerprint(method):
-    from ralf_agent.component_fingerprint import executable_digest
+    from relf_agent.component_fingerprint import executable_digest
 
     fingerprint = executable_digest(getattr(transport_type(), method))
     assert type(fingerprint) is str
@@ -651,7 +651,7 @@ def test_every_owned_auth_transport_method_can_publish_executable_fingerprint(me
 def test_generic_auth_methods_remain_refused_when_borrowed_base_allowlist_drifts(
     tmp_path, monkeypatch, method, borrowed_allowlist
 ):
-    from ralf_agent import codex_rpc
+    from relf_agent import codex_rpc
 
     monkeypatch.setattr(
         codex_rpc, borrowed_allowlist, getattr(codex_rpc, borrowed_allowlist) | {method}

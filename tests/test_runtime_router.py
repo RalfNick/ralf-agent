@@ -8,19 +8,19 @@ from dataclasses import asdict
 
 import pytest
 
-from ralf_agent import AgentSpec, LocalEngine, ModelResponse, SQLiteStore, ToolRegistry
-from ralf_agent.errors import DefinitionMismatch, IdempotencyConflict, ValidationError
+from relf_agent import AgentSpec, LocalEngine, ModelResponse, SQLiteStore, ToolRegistry
+from relf_agent.errors import DefinitionMismatch, IdempotencyConflict, ValidationError
 
 from .test_cli import subprocess_env
 from .test_runtime_config import declaration
 
 
 def api():
-    return importlib.import_module("ralf_agent.runtime_router")
+    return importlib.import_module("relf_agent.runtime_router")
 
 
 def catalog(default="1"):
-    module = importlib.import_module("ralf_agent.runtime_config")
+    module = importlib.import_module("relf_agent.runtime_config")
     value = module.RuntimeCatalog()
     for version, label in [("1", "first"), ("2", "second")]:
         value.register(module.RuntimeProfile(**declaration(version, label)))
@@ -42,7 +42,7 @@ def test_new_default_changes_new_runs_but_old_runs_resolve_original_components(t
 
 def test_submit_replay_ignores_unusable_new_default_and_checks_original_request(tmp_path):
     selected = catalog()
-    module = importlib.import_module("ralf_agent.runtime_config")
+    module = importlib.import_module("relf_agent.runtime_config")
     with api().ProfiledEngine(selected, tmp_path / "replay.sqlite") as runtime:
         first = runtime.submit(AgentSpec("a", "Answer"), "q", command_id="s")
         selected.register(
@@ -60,7 +60,7 @@ def test_missing_original_profile_is_observable_but_never_uses_new_default(tmp_p
     path = tmp_path / "missing.sqlite"
     with api().ProfiledEngine(catalog(), path) as runtime:
         first = runtime.submit(AgentSpec("a", "Answer"), "q", command_id="s")
-    config_module = importlib.import_module("ralf_agent.runtime_config")
+    config_module = importlib.import_module("relf_agent.runtime_config")
     replacement = config_module.RuntimeCatalog()
     replacement.register(config_module.RuntimeProfile(**declaration("2", "second")), default=True)
     with api().ProfiledEngine(replacement, path) as runtime:
@@ -72,7 +72,7 @@ def test_missing_original_profile_is_observable_but_never_uses_new_default(tmp_p
 
 def test_active_execution_blocks_switching_and_cancellation_keeps_original_runtime(tmp_path):
     async def scenario():
-        builder_module = importlib.import_module("ralf_agent.runtime_builder")
+        builder_module = importlib.import_module("relf_agent.runtime_builder")
         started, release = asyncio.Event(), asyncio.Event()
 
         class Provider:
@@ -84,7 +84,7 @@ def test_active_execution_blocks_switching_and_cancellation_keeps_original_runti
                 return ModelResponse(output="done")
 
         selected = catalog()
-        config_module = importlib.import_module("ralf_agent.runtime_config")
+        config_module = importlib.import_module("relf_agent.runtime_config")
         selected.register(
             config_module.RuntimeProfile("slow", "1", {"default": {"adapter": "slow"}}),
             default=True,
@@ -153,7 +153,7 @@ def test_config_cli_accepts_tasks_and_resolves_old_version_across_processes(tmp_
             [
                 sys.executable,
                 "-m",
-                "ralf_agent",
+                "relf_agent",
                 "--db",
                 str(database),
                 "--config",
@@ -213,7 +213,7 @@ def test_approval_restart_uses_original_provider_and_tool_version_once(tmp_path)
             [
                 sys.executable,
                 "-m",
-                "ralf_agent",
+                "relf_agent",
                 "--db",
                 str(database),
                 "--factory",

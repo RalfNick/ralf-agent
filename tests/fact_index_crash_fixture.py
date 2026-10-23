@@ -7,7 +7,7 @@ import sqlite3
 import sys
 from pathlib import Path
 
-from ralf_agent import (
+from relf_agent import (
     FactIndexCatalog,
     IndexedMemoryStore,
     RecallQuery,

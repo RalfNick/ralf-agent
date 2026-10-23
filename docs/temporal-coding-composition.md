@@ -70,7 +70,7 @@ Coding 工具调用，不证明原生认证或真实模型任务质量。
 import asyncio
 
 from temporalio.client import Client
-from ralf_agent import (
+from relf_agent import (
     AgentBindingDescriptor, AgentSpec, BindingSelection, BoundDefinition,
     GraphNode, GraphWorkflowSpec, TemporalProfile, TemporalRuntimeBuilder, ValueRef,
 )
@@ -271,7 +271,7 @@ Activity 重投不能创建新 attempt 或重新提交 Thread／Turn。
 reset／替代 execution 都不能代替原身份。保存实际服务 History 后，用原名称重放：
 
 ```python
-from ralf_agent import replay_temporal_history
+from relf_agent import replay_temporal_history
 
 # history 是原 SDK handle.fetch_history() 取得的 History。
 await replay_temporal_history(history, namespace=client.namespace)

@@ -7,8 +7,8 @@ from dataclasses import FrozenInstanceError
 
 import pytest
 
-import ralf_agent as r
-from ralf_agent.errors import AuthorizationDenied, ValidationError
+import relf_agent as r
+from relf_agent.errors import AuthorizationDenied, ValidationError
 
 SCOPE = r.Scope()
 
@@ -200,7 +200,7 @@ def test_unknown_skill_and_closed_catalog_refuse_new_reads():
 
 @pytest.mark.parametrize("part", ["scope", "catalog_digest", "sha256", "bytes", "instructions"])
 def test_get_snapshot_validator_refuses_forged_original_evidence(part):
-    helpers = importlib.import_module("ralf_agent.skills")
+    helpers = importlib.import_module("relf_agent.skills")
     port = catalog()
     value = port.get(SCOPE, "help")
     if part in {"scope", "catalog_digest"}:
@@ -215,7 +215,7 @@ def test_get_snapshot_validator_refuses_forged_original_evidence(part):
 
 
 def test_list_validator_detaches_and_rejects_boolean_numeric_or_wrong_pagination():
-    helpers = importlib.import_module("ralf_agent.skills")
+    helpers = importlib.import_module("relf_agent.skills")
     port = catalog()
     original = port.list(SCOPE)
     accepted = helpers.validate_skill_list(

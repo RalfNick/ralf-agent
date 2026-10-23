@@ -4,8 +4,8 @@ import json
 
 import pytest
 
-from ralf_agent import AgentSpec, RuntimeBuilder, recommended_profile
-from ralf_agent.errors import ValidationError
+from relf_agent import AgentSpec, RuntimeBuilder, recommended_profile
+from relf_agent.errors import ValidationError
 
 
 def embedding():
@@ -83,7 +83,7 @@ def test_memory_recall_profile_uses_matching_fact_namespace_and_survives_reconne
 
 
 def test_new_profile_roundtrip_and_original_declarations_stay_identical(tmp_path):
-    from ralf_agent import load_catalog
+    from relf_agent import load_catalog
 
     for kind in ("plan-and-execute", "team", "memory-recall", "semantic-knowledge"):
         profile = recommended_profile(
@@ -124,8 +124,8 @@ def test_new_profile_roundtrip_and_original_declarations_stay_identical(tmp_path
 
 
 def test_memory_combination_routes_relevant_bounded_facts_to_model(tmp_path):
-    from ralf_agent import ComponentRegistry, ModelResponse
-    from ralf_agent.types import canonical
+    from relf_agent import ComponentRegistry, ModelResponse
+    from relf_agent.types import canonical
 
     class Evidence:
         identity = {"kind": "recall-evidence-fixture", "version": "1"}
@@ -164,7 +164,7 @@ def test_memory_combination_routes_relevant_bounded_facts_to_model(tmp_path):
 
 
 def test_memory_profile_toml_roundtrip(tmp_path):
-    from ralf_agent import load_catalog
+    from relf_agent import load_catalog
 
     path = tmp_path / "runtime.toml"
     path.write_text("""schema_version = 1
@@ -208,7 +208,7 @@ def test_invalid_selector_factory_preflight_creates_no_execution_database(tmp_pa
 
 
 def test_plan_profile_supports_explicit_managed_model_planner(tmp_path):
-    from ralf_agent import ComponentRegistry, ModelResponse, recommended_harness
+    from relf_agent import ComponentRegistry, ModelResponse, recommended_harness
 
     class Model:
         identity = {"kind": "planner-model-fixture", "version": "1"}

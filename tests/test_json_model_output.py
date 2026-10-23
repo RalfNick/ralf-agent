@@ -4,8 +4,8 @@ import json
 import httpx
 import pytest
 
-from ralf_agent.errors import ProviderError, ValidationError
-from ralf_agent.providers import DeepSeekChatProvider, OpenAIChatProvider
+from relf_agent.errors import ProviderError, ValidationError
+from relf_agent.providers import DeepSeekChatProvider, OpenAIChatProvider
 
 
 @pytest.mark.parametrize("provider_type", [OpenAIChatProvider, DeepSeekChatProvider])

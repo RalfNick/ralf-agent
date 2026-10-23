@@ -5,9 +5,9 @@ import copy
 
 import pytest
 
-from ralf_agent.errors import DefinitionMismatch
-from ralf_agent.temporal_session_deployment_control import _CheckedClient
-from ralf_agent.temporal_session_deployment_verification import (
+from relf_agent.errors import DefinitionMismatch
+from relf_agent.temporal_session_deployment_control import _CheckedClient
+from relf_agent.temporal_session_deployment_verification import (
     SessionControlValidation,
     validate_session_origin,
 )
@@ -53,7 +53,7 @@ def test_original_origin_readset_has_seven_facts_with_direct_or_checked_transpor
 def test_original_checked_transport_drift_during_sdk_read_never_returns_authority(
     fault, monkeypatch
 ):
-    from ralf_agent import temporal_session_deployment_verification as verification
+    from relf_agent import temporal_session_deployment_verification as verification
 
     proof, client = environment()
     transport = _CheckedClient(proof)

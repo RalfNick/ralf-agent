@@ -6,17 +6,17 @@ from dataclasses import asdict
 
 import pytest
 
-import ralf_agent as r
-from ralf_agent.errors import AuthorizationDenied, DefinitionMismatch, RalfError
-from ralf_agent.temporal_activities import TemporalRuntime
-from ralf_agent.temporal_bindings import (
+import relf_agent as r
+from relf_agent.errors import AuthorizationDenied, DefinitionMismatch, RalfError
+from relf_agent.temporal_activities import TemporalRuntime
+from relf_agent.temporal_bindings import (
     effective_manifest,
     normalize_request,
     selected_runtime,
     validate_bindings,
 )
-from ralf_agent.temporal_state import TemporalRunState, validate_manifest
-from ralf_agent.types import submission_request
+from relf_agent.temporal_state import TemporalRunState, validate_manifest
+from relf_agent.types import submission_request
 
 from .test_artifact_binding_execution import Reader, definition
 
@@ -251,7 +251,7 @@ def test_selected_context_and_selected_artifact_remain_independent():
 def test_temporal_artifact_selector_capability_is_reported_for_joint_release():
     from types import SimpleNamespace
 
-    from ralf_agent.temporal import TemporalEngine
+    from relf_agent.temporal import TemporalEngine
 
     runtime, _ = host()
     engine = TemporalEngine(
@@ -341,7 +341,7 @@ def test_malformed_artifact_template_has_typed_admission_refusal(corruption):
 def test_legacy_temporal_release_does_not_advertise_new_artifact_binding():
     from types import SimpleNamespace
 
-    from ralf_agent.temporal import TemporalEngine
+    from relf_agent.temporal import TemporalEngine
 
     execution = TemporalRuntime(
         providers={"default": Reader()},

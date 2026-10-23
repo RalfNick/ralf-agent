@@ -7,9 +7,9 @@ journals. Missing or malformed evidence always retains the original fixture.
 import copy
 from datetime import timedelta
 
-from ralf_agent.temporal_deployment_admission import registry_id, root_run_id
-from ralf_agent.temporal_deployment_release_state import CERTIFICATE_FIELDS
-from ralf_agent.types import digest
+from relf_agent.temporal_deployment_admission import registry_id, root_run_id
+from relf_agent.temporal_deployment_release_state import CERTIFICATE_FIELDS
+from relf_agent.types import digest
 
 
 class EvidenceMismatch(ValueError):
@@ -47,8 +47,8 @@ def root_identity(value):
 
 def signal_reservation(request, result, registry, policy, namespace):
     """A later completed Registry handler attests the Signal's immutable reservation."""
-    from ralf_agent.temporal_deployment_admission import _REQUEST_FIELDS
-    from ralf_agent.temporal_deployment_execution_state import _root
+    from relf_agent.temporal_deployment_admission import _REQUEST_FIELDS
+    from relf_agent.temporal_deployment_execution_state import _root
 
     require(set(request) == _REQUEST_FIELDS | {"root_admission"})
     require(request["kind"] == "submit" and request["admission_policy"] == policy)
@@ -87,8 +87,8 @@ def signal_reservation(request, result, registry, policy, namespace):
 
 
 def release_receipt(request, result, policy, namespace):
-    from ralf_agent.temporal_deployment_admission import _BIND_FIELDS
-    from ralf_agent.temporal_deployment_execution_state import _root
+    from relf_agent.temporal_deployment_admission import _BIND_FIELDS
+    from relf_agent.temporal_deployment_execution_state import _root
 
     require(set(request) == _BIND_FIELDS | {"certificate"})
     require(request["admission_policy"] == policy and request["namespace"] == namespace)
@@ -284,7 +284,7 @@ async def deletion_evidence(
                 identity = value["run_id"]
                 if identity in accepted:
                     continue  # Existing Update/Session acceptance remains authoritative.
-                from ralf_agent.temporal_deployment_admission import _BIND_FIELDS
+                from relf_agent.temporal_deployment_admission import _BIND_FIELDS
 
                 require(
                     set(value)
@@ -387,7 +387,7 @@ async def deletion_evidence(
                 )
                 saved = {"root": copy.deepcopy(root), "submission": copy.deepcopy(submission)}
                 if intent is not None:
-                    from ralf_agent.temporal_session_deployment_dto import (
+                    from relf_agent.temporal_session_deployment_dto import (
                         validate_intent,
                         validate_origin,
                     )
@@ -469,8 +469,8 @@ async def deletion_evidence(
                     else:
                         require(version == 4)
                         session_close = True
-                        from ralf_agent.session_types import SessionKey
-                        from ralf_agent.temporal_session_state import workflow_id
+                        from relf_agent.session_types import SessionKey
+                        from relf_agent.temporal_session_state import workflow_id
 
                         for candidate in result["candidates"]:
                             saved = candidate["session_submission"]
@@ -621,10 +621,10 @@ async def session_evidence(
     client, identity, records, accepted, released, namespace, scope, registry_epoch, archive
 ):
     """Read/reduce original History through the existing pure Session state only."""
-    from ralf_agent.temporal_session_activities import namespace_id
-    from ralf_agent.temporal_session_deployment_dto import decode_control_body
-    from ralf_agent.temporal_session_deployment_state import START_SELECTOR_FIELDS
-    from ralf_agent.temporal_session_state import (
+    from relf_agent.temporal_session_activities import namespace_id
+    from relf_agent.temporal_session_deployment_dto import decode_control_body
+    from relf_agent.temporal_session_deployment_state import START_SELECTOR_FIELDS
+    from relf_agent.temporal_session_state import (
         SESSION_ACTIVITY,
         SESSION_WORKFLOW,
         TemporalSessionState,

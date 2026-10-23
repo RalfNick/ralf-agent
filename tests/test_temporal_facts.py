@@ -6,7 +6,7 @@ from dataclasses import asdict
 
 import pytest
 
-from ralf_agent import (
+from relf_agent import (
     AgentBindingDescriptor,
     AgentDefinition,
     AgentSpec,
@@ -19,10 +19,10 @@ from ralf_agent import (
     Scope,
     ToolRegistry,
 )
-from ralf_agent.temporal_activities import TemporalRuntime
-from ralf_agent.temporal_bindings import normalize_request
-from ralf_agent.temporal_state import TemporalRunState
-from ralf_agent.types import submission_request
+from relf_agent.temporal_activities import TemporalRuntime
+from relf_agent.temporal_bindings import normalize_request
+from relf_agent.temporal_state import TemporalRunState
+from relf_agent.types import submission_request
 from tests.test_temporal_binding_isolation import advance
 
 
@@ -115,8 +115,8 @@ def test_changed_facts_block_fresh_model_dispatch(managed):
 
 
 def test_foreign_scope_and_ungranted_namespace_are_refused():
-    from ralf_agent.errors import AuthorizationDenied
-    from ralf_agent.temporal_state import validate_request
+    from relf_agent.errors import AuthorizationDenied
+    from relf_agent.temporal_state import validate_request
 
     runtime, state, _, _, _ = setup()
     request = copy.deepcopy(state.request)
@@ -199,7 +199,7 @@ def test_knowledge_and_facts_have_independent_validation_formats():
 
 
 def test_task_planner_and_disabled_selection_use_original_facts_port():
-    from ralf_agent import TaskRecallPlanner
+    from relf_agent import TaskRecallPlanner
 
     async def run():
         scope, memory, provider = Scope(), InMemoryMemory(), Provider()
@@ -239,7 +239,7 @@ def test_task_planner_and_disabled_selection_use_original_facts_port():
 
 
 def test_multiple_pages_keep_cursor_query_and_total_budget():
-    from ralf_agent import MemoryRecallPolicy, RecallQuery
+    from relf_agent import MemoryRecallPolicy, RecallQuery
 
     async def run():
         memory, provider, scope = InMemoryMemory(), Provider(), Scope()
@@ -272,8 +272,8 @@ def test_multiple_pages_keep_cursor_query_and_total_budget():
 @pytest.mark.parametrize("change", ["prefix", "client", "pool", "database"])
 def test_native_redis_actual_resource_is_fixed_without_serializing_credentials(change):
     redis = pytest.importorskip("redis.asyncio")
-    from ralf_agent import RedisMemory
-    from ralf_agent.errors import DefinitionMismatch
+    from relf_agent import RedisMemory
+    from relf_agent.errors import DefinitionMismatch
 
     async def run():
         client = redis.Redis.from_url("redis://localhost:6379/0")
@@ -302,7 +302,7 @@ def test_native_redis_actual_resource_is_fixed_without_serializing_credentials(c
 
 @pytest.mark.parametrize("field", ["facts", "knowledge_references", "facts_recall"])
 def test_managed_finalize_cannot_reclassify_original_facts(field):
-    from ralf_agent.errors import ValidationError
+    from relf_agent.errors import ValidationError
 
     async def run():
         runtime, state, _, _, _ = setup(True)
@@ -363,8 +363,8 @@ def test_cancel_during_final_facts_validation_denies_dispatch():
 
 
 def test_unknown_facts_protocol_is_rejected_before_acceptance():
-    from ralf_agent.errors import DefinitionMismatch
-    from ralf_agent.temporal_state import validate_manifest
+    from relf_agent.errors import DefinitionMismatch
+    from relf_agent.temporal_state import validate_manifest
 
     runtime, _, _, _, _ = setup()
     manifest = runtime.manifest
@@ -374,7 +374,7 @@ def test_unknown_facts_protocol_is_rejected_before_acceptance():
 
 
 def test_plain_context_cannot_reclassify_facts_as_knowledge():
-    from ralf_agent.errors import ValidationError
+    from relf_agent.errors import ValidationError
 
     async def run():
         runtime, state, _, _, _ = setup()

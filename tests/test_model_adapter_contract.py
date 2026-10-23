@@ -7,20 +7,20 @@ import json
 
 import pytest
 
-from ralf_agent.adapter_contract_types import AdapterContractCleanupPending
-from ralf_agent.errors import ValidationError
+from relf_agent.adapter_contract_types import AdapterContractCleanupPending
+from relf_agent.errors import ValidationError
 
 
 def api():
     try:
-        return importlib.import_module("ralf_agent.model_adapter_contract")
+        return importlib.import_module("relf_agent.model_adapter_contract")
     except ModuleNotFoundError:
         pytest.fail("The actual fixed ModelProvider cases are missing")
 
 
 def fixture():
     return importlib.import_module(
-        "ralf_agent.model_adapter_contract_reference"
+        "relf_agent.model_adapter_contract_reference"
     ).offline_model_fixture()
 
 
@@ -133,7 +133,7 @@ def test_invalid_case_selection_does_no_preparation(tmp_path):
 
 @pytest.mark.parametrize("boundary", ["before-dispatch", "during-complete"])
 def test_original_local_acceptance_rejects_replaced_complete_binding(tmp_path, boundary):
-    from ralf_agent import AgentSpec, LocalEngine, ModelResponse, SQLiteStore, ToolRegistry
+    from relf_agent import AgentSpec, LocalEngine, ModelResponse, SQLiteStore, ToolRegistry
 
     async def run():
         entered, released = asyncio.Event(), asyncio.Event()
@@ -193,7 +193,7 @@ def test_original_local_acceptance_rejects_replaced_complete_binding(tmp_path, b
 
 
 def test_first_acceptance_supports_unhashable_nonweakref_provider_and_preaccept_replace(tmp_path):
-    from ralf_agent import AgentSpec, LocalEngine, ModelResponse, SQLiteStore, ToolRegistry
+    from relf_agent import AgentSpec, LocalEngine, ModelResponse, SQLiteStore, ToolRegistry
 
     class Provider:
         __slots__ = ("number",)
@@ -227,7 +227,7 @@ def test_current_provider_churn_releases_historical_objects(tmp_path):
     import gc
     import weakref
 
-    from ralf_agent import AgentSpec, LocalEngine, ModelResponse, SQLiteStore, ToolRegistry
+    from relf_agent import AgentSpec, LocalEngine, ModelResponse, SQLiteStore, ToolRegistry
 
     class Provider:
         identity = {"kind": "current-provider-churn", "version": "1"}
@@ -344,7 +344,7 @@ def test_observation_cancellation_drains_actual_provider_before_owned_close(tmp_
         assert source._closed and source._file_descriptor is None
         audit = source.audit()
         assert audit["model_calls"] == audit["response_count"] == audit["close_calls"] == 1
-        from ralf_agent import SQLiteStore
+        from relf_agent import SQLiteStore
 
         with SQLiteStore(tmp_path / "consumer-0.sqlite", readonly=True) as store:
             record = json.loads(store.conn.execute("SELECT data FROM runs").fetchone()[0])
@@ -393,7 +393,7 @@ def test_cancelled_preparation_retains_then_closes_original_allocated_owner(tmp_
 def test_completed_executing_provider_cannot_be_replaced_by_equal_current_provider(
     tmp_path, mutate_original_method
 ):
-    from ralf_agent import AgentSpec, LocalEngine, ModelResponse, SQLiteStore, ToolRegistry
+    from relf_agent import AgentSpec, LocalEngine, ModelResponse, SQLiteStore, ToolRegistry
 
     async def run():
         entered, released = asyncio.Event(), asyncio.Event()
@@ -460,7 +460,7 @@ def test_original_request_and_received_evidence_survive_supplier_alias_mutation(
     result = asyncio.run(api().run_model_case("P03", ChangedFixture(transform), tmp_path))
     assert result.status == "passed"
     assert len(captured) == 1
-    from ralf_agent import SQLiteStore
+    from relf_agent import SQLiteStore
 
     with SQLiteStore(tmp_path / "consumer-0.sqlite", readonly=True) as store:
         before = json.loads(store.conn.execute("SELECT data FROM runs").fetchone()[0])
@@ -473,10 +473,10 @@ def test_original_request_and_received_evidence_survive_supplier_alias_mutation(
 
 
 def test_original_per_agent_provider_override_has_independent_live_method_pin(tmp_path):
-    from ralf_agent import AgentSpec, LocalEngine, ModelResponse, Scope, SQLiteStore, ToolRegistry
-    from ralf_agent.binding_catalog import BindingCatalog
-    from ralf_agent.binding_definitions import AgentDefinition
-    from ralf_agent.binding_types import AgentBindingDescriptor, BindingSelection
+    from relf_agent import AgentSpec, LocalEngine, ModelResponse, Scope, SQLiteStore, ToolRegistry
+    from relf_agent.binding_catalog import BindingCatalog
+    from relf_agent.binding_definitions import AgentDefinition
+    from relf_agent.binding_types import AgentBindingDescriptor, BindingSelection
 
     class Provider:
         def __init__(self, name):
@@ -530,7 +530,7 @@ def test_original_per_agent_provider_override_has_independent_live_method_pin(tm
 
 @pytest.mark.parametrize("boundary", ["before-dispatch", "during-complete"])
 def test_equal_bound_supplier_receiver_cannot_replace_original_complete(tmp_path, boundary):
-    from ralf_agent import AgentSpec, LocalEngine, ModelResponse, SQLiteStore, ToolRegistry
+    from relf_agent import AgentSpec, LocalEngine, ModelResponse, SQLiteStore, ToolRegistry
 
     async def run():
         entered, released = asyncio.Event(), asyncio.Event()
@@ -593,7 +593,7 @@ def test_equal_bound_supplier_receiver_cannot_replace_original_complete(tmp_path
 def test_p01_invalid_returned_lazy_output_is_disposed_without_fixture_verdict(tmp_path):
     import inspect
 
-    from ralf_agent import ModelResponse
+    from relf_agent import ModelResponse
 
     async def lazy():
         return None

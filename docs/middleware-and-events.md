@@ -9,7 +9,7 @@ services remain separate increments.
 ## Observe model and tool calls
 
 ```python
-from ralf_agent import (
+from relf_agent import (
     LoggingMiddleware,
     MiddlewareProvider,
     MiddlewareToolExecutor,
@@ -76,7 +76,7 @@ presentation data. Async/lazy hooks and non-Python entry points are refused.
 ## Default profile assembly
 
 ```python
-from ralf_agent import RuntimeBuilder, RuntimeProfile
+from relf_agent import RuntimeBuilder, RuntimeProfile
 
 profile = RuntimeProfile(
     "observable",
@@ -120,7 +120,7 @@ Submitting the answer and driving the Run remain separate authority operations.
 
 ```python
 from contextlib import aclosing
-from ralf_agent import EventCursor, RunEventSubscription, SQLiteRunReader
+from relf_agent import EventCursor, RunEventSubscription, SQLiteRunReader
 
 reader = SQLiteRunReader(".ralf/runs.sqlite", scope=host_scope)
 saved_cursor = EventCursor.from_token(saved_token) if saved_token else 0
@@ -168,11 +168,11 @@ encoder, not a server or model-token stream.
 ## Installed CLI and observable starter
 
 ```sh
-ralf init my-observable --template observable
+relf init my-observable --template observable
 cd my-observable
 python -m agent_app
-ralf-watch-events --db .ralf/runs.sqlite --run-id RUN_ID
-ralf-watch-events --db .ralf/runs.sqlite --run-id RUN_ID \
+relf-watch-events --db .ralf/runs.sqlite --run-id RUN_ID
+relf-watch-events --db .ralf/runs.sqlite --run-id RUN_ID \
   --after-cursor CURSOR_TOKEN --follow --max-events 1000 --sse
 ```
 

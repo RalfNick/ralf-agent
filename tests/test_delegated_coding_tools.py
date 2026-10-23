@@ -3,10 +3,10 @@ import copy
 
 import pytest
 
-from ralf_agent.errors import AuthorizationDenied, DefinitionMismatch, ValidationError
-from ralf_agent.executors import DispatchEnvelope, PythonToolExecutor
-from ralf_agent.tools import ToolRegistry, ToolSpec
-from ralf_agent.types import InvocationContext, Scope
+from relf_agent.errors import AuthorizationDenied, DefinitionMismatch, ValidationError
+from relf_agent.executors import DispatchEnvelope, PythonToolExecutor
+from relf_agent.tools import ToolRegistry, ToolSpec
+from relf_agent.types import InvocationContext, Scope
 
 
 class Runner:
@@ -27,7 +27,7 @@ class Runner:
 
 
 def helper():
-    from ralf_agent import delegated_coding
+    from relf_agent import delegated_coding
 
     return delegated_coding
 

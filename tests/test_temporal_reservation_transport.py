@@ -7,9 +7,9 @@ import pytest
 
 pytest.importorskip("temporalio")
 
-from ralf_agent.errors import DefinitionMismatch
-from ralf_agent.temporal_deployment_submissions import _update
-from ralf_agent.temporal_workflow import TemporalCommandRegistryWorkflow
+from relf_agent.errors import DefinitionMismatch
+from relf_agent.temporal_deployment_submissions import _update
+from relf_agent.temporal_workflow import TemporalCommandRegistryWorkflow
 from tests.test_temporal_recovery_capacity import control, full_registry
 
 
@@ -171,7 +171,7 @@ def test_observation_id_cannot_replace_original_request_or_leak_other_result():
 
 
 def test_refused_observation_does_not_permanently_reject_later_original_retry():
-    from ralf_agent.temporal_state import TemporalCommandRegistryState
+    from relf_agent.temporal_state import TemporalCommandRegistryState
     from tests.test_temporal_deployment_public_registry import NAMESPACE, POLICY, setup
 
     owner, _ = registry()

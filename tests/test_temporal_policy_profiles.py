@@ -6,13 +6,13 @@ from pathlib import Path
 
 import pytest
 
-from ralf_agent import ComponentRegistry, TemporalProfile, TemporalProfileCatalog
-from ralf_agent.errors import DefinitionMismatch, ValidationError
-from ralf_agent.governance import TemporalExecutionPolicy
-from ralf_agent.runtime_builder import EchoProvider
-from ralf_agent.runtime_config import RuntimeProfile
-from ralf_agent.temporal_builder import TemporalRuntimeBuilder
-from ralf_agent.types import canonical
+from relf_agent import ComponentRegistry, TemporalProfile, TemporalProfileCatalog
+from relf_agent.errors import DefinitionMismatch, ValidationError
+from relf_agent.governance import TemporalExecutionPolicy
+from relf_agent.runtime_builder import EchoProvider
+from relf_agent.runtime_config import RuntimeProfile
+from relf_agent.temporal_builder import TemporalRuntimeBuilder
+from relf_agent.types import canonical
 
 
 def profile(config=None, *, adapter="bounded", provider="offline-echo", version="1"):
@@ -214,7 +214,7 @@ def test_custom_synchronous_policy_factory_can_replace_builtin(tmp_path):
 
 
 def test_local_assembly_refuses_temporal_policy(tmp_path):
-    from ralf_agent.runtime_builder import RuntimeBuilder
+    from relf_agent.runtime_builder import RuntimeBuilder
 
     declaration = RuntimeProfile(
         "assistant",

@@ -1,9 +1,9 @@
 """Network-only composite fixture using production parent/child authorities."""
 
-from ralf_agent.temporal_control_activities import select
-from ralf_agent.temporal_parent_state import PARENT_WORKFLOW_NAME, TemporalParentState
-from ralf_agent.temporal_state import TemporalRunState
-from ralf_agent.types import digest
+from relf_agent.temporal_control_activities import select
+from relf_agent.temporal_parent_state import PARENT_WORKFLOW_NAME, TemporalParentState
+from relf_agent.temporal_state import TemporalRunState
+from relf_agent.types import digest
 
 from .temporal_agent_fixture import AlreadyStarted, StateClient, worker_runtime
 
@@ -113,7 +113,7 @@ class CompositeClient(StateClient):
 
 
 def definitions():
-    import ralf_agent as r
+    import relf_agent as r
 
     agent = r.AgentSpec("a", "Answer", ("lookup",))
     graph = r.GraphWorkflowSpec("graph", [r.GraphNode("a", agent=agent)])

@@ -5,14 +5,14 @@ import json
 import httpx
 import pytest
 
-from ralf_agent import AgentSpec, LocalEngine, SQLiteStore, ToolRegistry, ToolSpec
-from ralf_agent.errors import ProviderError, ValidationError
+from relf_agent import AgentSpec, LocalEngine, SQLiteStore, ToolRegistry, ToolSpec
+from relf_agent.errors import ProviderError, ValidationError
 
 from .test_model_chat import Frames
 
 
 def api():
-    return importlib.import_module("ralf_agent.model_native")
+    return importlib.import_module("relf_agent.model_native")
 
 
 TOOL = {

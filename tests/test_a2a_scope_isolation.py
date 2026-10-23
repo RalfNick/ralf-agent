@@ -8,7 +8,7 @@ from dataclasses import asdict
 import httpx
 import pytest
 
-from ralf_agent import (
+from relf_agent import (
     AgentSpec,
     LocalEngine,
     ModelResponse,
@@ -17,12 +17,12 @@ from ralf_agent import (
     ToolRegistry,
     ToolSpec,
 )
-from ralf_agent.a2a import A2AApplication, A2AClient
-from ralf_agent.errors import AuthorizationDenied
-from ralf_agent.handoff import SQLiteInbox
-from ralf_agent.service_audit import ServiceAudit
-from ralf_agent.storage import SQLiteStore
-from ralf_agent.types import canonical
+from relf_agent.a2a import A2AApplication, A2AClient
+from relf_agent.errors import AuthorizationDenied
+from relf_agent.handoff import SQLiteInbox
+from relf_agent.service_audit import ServiceAudit
+from relf_agent.storage import SQLiteStore
+from relf_agent.types import canonical
 
 SCOPES = {name: Scope("shared-workspace", name) for name in ("alice", "bob")}
 

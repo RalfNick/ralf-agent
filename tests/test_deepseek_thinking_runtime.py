@@ -18,9 +18,9 @@ from pathlib import Path
 import httpx
 import pytest
 
-import ralf_agent as r
-from ralf_agent.planning import ModelPlanner
-from ralf_agent.types import digest
+import relf_agent as r
+from relf_agent.planning import ModelPlanner
+from relf_agent.types import digest
 
 RAW_ARGUMENTS = ' \n { "quantity" : 3 } \t '
 PLAN_MESSAGE = {
@@ -31,10 +31,10 @@ PLAN_MESSAGE = {
 
 
 def provider(model, client):
-    assert importlib.util.find_spec("ralf_agent.deepseek_thinking"), (
+    assert importlib.util.find_spec("relf_agent.deepseek_thinking"), (
         "The dedicated DeepSeek thinking adapter is required for native runtime recovery"
     )
-    from ralf_agent.deepseek_thinking import DeepSeekThinkingProvider
+    from relf_agent.deepseek_thinking import DeepSeekThinkingProvider
 
     return DeepSeekThinkingProvider(
         model, api_key="fixture", client=client, reasoning_effort="high"

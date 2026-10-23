@@ -5,11 +5,13 @@ wheelhouse and a NEW evidence directory. No SDK imports, builds or publication.
 """
 
 import argparse
+import configparser
 import email
 import hashlib
 import json
 import os
 import platform
+import re
 import signal
 import subprocess
 import sys
@@ -109,6 +111,20 @@ def distribution_name(spec):
     return name
 
 
+def python_module(spec):
+    name = spec.get("python_module", "ralf_agent")
+    if name not in ("ralf_agent", "relf_agent"):
+        raise GateError("unsupported_python_module")
+    return name
+
+
+def cli_name(spec):
+    name = spec.get("cli_name", "ralf")
+    if name not in ("ralf", "relf"):
+        raise GateError("unsupported_cli_name")
+    return name
+
+
 def extract_checks(sdist, target, version, distribution="ralf-agent"):
     prefix = f"{distribution.replace('-', '_')}-{version}/"
     contents, seen = {}, set()
@@ -178,6 +194,8 @@ def prepare_artifacts(wheel, sdist, target, spec):
         if spec["artifacts"].get(artifact.name) != file_digest(artifact):
             raise GateError("artifact_sha256_mismatch")
     distribution = distribution_name(spec)
+    module = python_module(spec)
+    cli_name(spec)
     prefix = f"{distribution.replace('-', '_')}-{spec['version']}"
     with zipfile.ZipFile(wheel) as archive:
         if len(archive.namelist()) != len(set(archive.namelist())):
@@ -185,11 +203,31 @@ def prepare_artifacts(wheel, sdist, target, spec):
         metadata = email.message_from_bytes(archive.read(prefix + ".dist-info/METADATA"))
         if metadata["Name"] != distribution or metadata["Version"] != spec["version"]:
             raise GateError("package_version_mismatch")
+        if "python_module" in spec or "cli_name" in spec:
+            try:
+                parser = configparser.ConfigParser(interpolation=None)
+                parser.read_string(archive.read(prefix + ".dist-info/entry_points.txt").decode())
+                scripts = dict(parser["console_scripts"])
+            except (KeyError, ValueError, UnicodeError, configparser.Error) as error:
+                raise GateError("cli_entrypoint_mismatch") from error
+            cli = cli_name(spec)
+            if scripts.get(cli) != module + ".cli:main" or any(
+                not (name == cli or re.fullmatch(re.escape(cli) + r"(?:-[a-z0-9]+)+", name))
+                or not value.startswith(module + ".")
+                or not re.fullmatch(
+                    r"[A-Za-z_]\w*(?:\.[A-Za-z_]\w*)*:[A-Za-z_]\w*(?:\.[A-Za-z_]\w*)*", value
+                )
+                for name, value in scripts.items()
+            ):
+                raise GateError("cli_entrypoint_mismatch")
         products = {
-            name.removeprefix("ralf_agent/"): hashlib.sha256(archive.read(name)).hexdigest()
+            name.removeprefix(module + "/"): hashlib.sha256(archive.read(name)).hexdigest()
             for name in archive.namelist()
-            if name.startswith("ralf_agent/") and Path(name).suffix in (".py", ".json")
+            if name.startswith(module + "/") and Path(name).suffix in (".py", ".json")
         }
+        other = "ralf_agent" if module == "relf_agent" else "relf_agent"
+        if any(name.startswith(other + "/") for name in archive.namelist()):
+            raise GateError("unexpected_python_module")
     if len(products) != spec["product_files"] or digest(products) != spec["product_tree_sha256"]:
         raise GateError("product_tree_mismatch")
     tests = extract_checks(sdist, target, spec["version"], distribution)
@@ -218,16 +256,29 @@ def command(args, log, cwd, env):
 
 
 INSPECT_INSTALLED = """
-import hashlib,importlib.metadata,importlib.util,json,pathlib,ralf_agent,sys,sysconfig
-root=pathlib.Path(ralf_agent.__file__).resolve().parent
+import hashlib,importlib,importlib.metadata,importlib.util,json,pathlib,re,sys,sysconfig
 spec=json.loads(pathlib.Path(sys.argv[1]).read_text())
+module=spec.get('python_module','ralf_agent')
+sdk=importlib.import_module(module)
+root=pathlib.Path(sdk.__file__).resolve().parent
 assert root.is_relative_to(pathlib.Path(sysconfig.get_path('purelib')))
-assert ralf_agent.__version__==importlib.metadata.version(spec.get('distribution_name','ralf-agent'))==spec['version']
+distribution=importlib.metadata.distribution(spec.get('distribution_name','ralf-agent'))
+assert sdk.__version__==distribution.version==spec['version']
+cli=spec.get('cli_name','ralf')
+assert any(e.name==cli and e.value==module+'.cli:main' for e in distribution.entry_points)
+if module=='relf_agent':
+    assert importlib.util.find_spec('ralf_agent') is None
+    for entry in distribution.entry_points:
+        if entry.group!='console_scripts':
+            continue
+        assert entry.name==cli or re.fullmatch(re.escape(cli)+r'(?:-[a-z0-9]+)+',entry.name)
+        assert entry.value.startswith(module+'.')
+        assert callable(entry.load())
 products={str(p.relative_to(root)):hashlib.sha256(p.read_bytes()).hexdigest() for p in root.rglob('*') if p.is_file() and p.suffix in ('.py','.json')}
 actual=hashlib.sha256(json.dumps(products,sort_keys=True,separators=(',',':'),ensure_ascii=True).encode()).hexdigest()
 assert len(products)==spec['product_files'] and actual==spec['product_tree_sha256']
 assert all(importlib.util.find_spec(p) is None for p in ('temporalio','redis','psycopg','qdrant_client','torch','yaml','tiktoken'))
-print(json.dumps({'version':ralf_agent.__version__,'path':str(root),'products':len(products),'minimal_install':True}))
+print(json.dumps({'version':sdk.__version__,'module':module,'cli':cli,'commands':sorted(e.name for e in distribution.entry_points if e.group=='console_scripts'),'path':str(root),'products':len(products),'minimal_install':True}))
 """
 
 STARTER = """
@@ -236,7 +287,7 @@ from tests.test_starter import test_wheel_starter_approves_and_recovers_once_wit
 root=pathlib.Path(sys.argv[1]);root.mkdir()
 for crash in (False,True):
     case=root/('crash' if crash else 'normal');case.mkdir()
-    check(case,(pathlib.Path(sys.executable),pathlib.Path(sys.executable).with_name('ralf')),crash)
+    check(case,(pathlib.Path(sys.executable),pathlib.Path(sys.executable).with_name(sys.argv[2] if len(sys.argv)>2 else 'ralf')),crash)
 print(json.dumps({'cases':2,'business_writes_per_case':1}))
 """
 
@@ -318,7 +369,9 @@ def execute(args, output, result, spec):
             work,
             env,
         )
-        command([str(venv / "bin/ralf"), "--version"], output / "cli-version.log", work, env)
+        command(
+            [str(venv / "bin" / cli_name(spec)), "--version"], output / "cli-version.log", work, env
+        )
         command([python, "-m", "pip", "freeze"], output / "dependencies.txt", work, env)
         expected = {
             line.split("==")[0].lower().replace("_", "-"): line.split("==")[1].split()[0]
@@ -365,7 +418,7 @@ def execute(args, output, result, spec):
             result["tests"][name] = check_junit(report, phase["count"])
         result["phase"] = "starter"
         command(
-            [python, "-c", STARTER, str(work / "starter")],
+            [python, "-c", STARTER, str(work / "starter"), cli_name(spec)],
             output / "starter.log",
             checks,
             dict(env, PYTHONPATH=str(checks)),

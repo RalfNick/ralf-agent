@@ -12,7 +12,7 @@ Responses 推理续接使用独立、显式启用的适配器，见[推理续接
 ## Register ordinary Python functions
 
 ```python
-from ralf_agent import ToolRegistry
+from relf_agent import ToolRegistry
 
 tools = ToolRegistry()
 
@@ -85,7 +85,7 @@ Existing low-level registration and manifests stay unchanged.
 ## Native Responses
 
 ```python
-from ralf_agent import OpenAIResponsesProvider
+from relf_agent import OpenAIResponsesProvider
 
 provider = OpenAIResponsesProvider(
     "YOUR_ACTUAL_MODEL",
@@ -132,9 +132,9 @@ References: [function calling](https://developers.openai.com/api/docs/guides/fun
 ## Bounded compatibility checks
 
 ```sh
-ralf-check-model                         # not_run; no key reads or network calls
-ralf-check-model --offline               # deterministic fixtures; not model quality
-ralf init my-model-check --template model-check
+relf-check-model                         # not_run; no key reads or network calls
+relf-check-model --offline               # deterministic fixtures; not model quality
+relf init my-model-check --template model-check
 cd my-model-check
 python -m agent_app
 ```
@@ -142,7 +142,7 @@ python -m agent_app
 A real check is explicit and may incur fees:
 
 ```sh
-ralf-check-model --adapter openai-responses --model YOUR_ACTUAL_MODEL \
+relf-check-model --adapter openai-responses --model YOUR_ACTUAL_MODEL \
   --api-key-env MY_MODEL_KEY --max-calls 6 --max-output-tokens 1024 \
   --timeout 30 --evidence-dir PRIVATE_FRESH_DIRECTORY
 ```

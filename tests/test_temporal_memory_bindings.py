@@ -3,7 +3,7 @@ from dataclasses import asdict
 
 import pytest
 
-from ralf_agent import (
+from relf_agent import (
     AgentBindingDescriptor,
     AgentDefinition,
     AgentSpec,
@@ -21,11 +21,11 @@ from ralf_agent import (
     ToolRegistry,
     WorkflowSpec,
 )
-from ralf_agent.errors import AuthorizationDenied, DefinitionMismatch, ValidationError
-from ralf_agent.temporal_activities import TemporalRuntime
-from ralf_agent.temporal_parent_state import TemporalParentState
-from ralf_agent.temporal_state import TemporalRunState, validate_request
-from ralf_agent.types import submission_request
+from relf_agent.errors import AuthorizationDenied, DefinitionMismatch, ValidationError
+from relf_agent.temporal_activities import TemporalRuntime
+from relf_agent.temporal_parent_state import TemporalParentState
+from relf_agent.temporal_state import TemporalRunState, validate_request
+from relf_agent.types import submission_request
 
 
 class Provider:
@@ -52,7 +52,7 @@ def setup():
 
 
 async def grant(state, request):
-    from ralf_agent.types import digest
+    from relf_agent.types import digest
 
     return state.admit_context_dispatch(
         {
@@ -75,7 +75,7 @@ def test_bound_agent_dispatches_selected_provider_and_fixed_context():
                 context=BindingSelection.ref("plain", "1"),
             ),
         )
-        from ralf_agent.temporal_bindings import normalize_request
+        from relf_agent.temporal_bindings import normalize_request
 
         request = normalize_request(submission_request(spec, "task"))
         state = TemporalRunState("run", asdict(Scope()), "s", request, runtime.manifest)
@@ -114,7 +114,7 @@ def test_original_parent_projects_each_declared_binding_subtree(kind):
         spec = TeamSpec("t", {"a": WorkflowSpec("w", [a])})
         path, child_path = "team/members/a/sequence/steps/0", "sequence/steps/0"
     descriptor = AgentBindingDescriptor(provider=BindingSelection.ref("chosen", "1"))
-    from ralf_agent.temporal_bindings import normalize_request
+    from relf_agent.temporal_bindings import normalize_request
 
     request = normalize_request(
         submission_request(BoundDefinition(spec, {path: descriptor}), "task")
@@ -122,7 +122,7 @@ def test_original_parent_projects_each_declared_binding_subtree(kind):
     state = TemporalParentState(
         "parent", asdict(Scope()), "s", request, runtime.orchestration_release
     )
-    from ralf_agent.orchestration_types import ChildCall
+    from relf_agent.orchestration_types import ChildCall
 
     call = state.delegate(ChildCall("one", "a", "task"))
     assert set(call["request"]["agent_bindings"]) == {child_path}
@@ -136,7 +136,7 @@ def test_original_parent_projects_each_declared_binding_subtree(kind):
 def test_unavailable_temporal_binding_refused_before_run(role):
     runtime, _, _, _ = setup()
     descriptor = AgentBindingDescriptor(**{role: BindingSelection.ref("missing", "1")})
-    from ralf_agent.temporal_bindings import normalize_request
+    from relf_agent.temporal_bindings import normalize_request
 
     request = normalize_request(
         submission_request(AgentDefinition(AgentSpec("a", "answer"), descriptor), "task")
@@ -148,7 +148,7 @@ def test_unavailable_temporal_binding_refused_before_run(role):
 
 def test_foreign_catalog_scope_cannot_accept_bound_agent():
     runtime, _, _, _ = setup()
-    from ralf_agent.temporal_bindings import normalize_request
+    from relf_agent.temporal_bindings import normalize_request
 
     request = normalize_request(
         submission_request(
@@ -187,7 +187,7 @@ def test_selected_context_and_knowledge_reach_actual_model():
         runtime = TemporalRuntime(
             providers={"default": provider}, tools=ToolRegistry(), binding_catalog=catalog
         )
-        from ralf_agent.temporal_bindings import normalize_request
+        from relf_agent.temporal_bindings import normalize_request
 
         request = normalize_request(
             submission_request(
@@ -217,7 +217,7 @@ def test_tool_set_cannot_expand_declared_business_grant():
     runtime = TemporalRuntime(
         providers=runtime.providers, tools=ToolRegistry(), binding_catalog=catalog
     )
-    from ralf_agent.temporal_bindings import normalize_request
+    from relf_agent.temporal_bindings import normalize_request
 
     request = normalize_request(
         submission_request(
@@ -237,7 +237,7 @@ def test_binding_can_supply_provider_when_legacy_default_alias_is_unconfigured()
     runtime = TemporalRuntime(
         providers={"business": first}, tools=ToolRegistry(), binding_catalog=catalog
     )
-    from ralf_agent.temporal_bindings import normalize_request
+    from relf_agent.temporal_bindings import normalize_request
 
     request = normalize_request(
         submission_request(
@@ -254,7 +254,7 @@ def test_binding_can_supply_provider_when_legacy_default_alias_is_unconfigured()
 
 def test_resource_selectors_are_rejected_without_silent_fallback():
     runtime, _, _, _ = setup()
-    from ralf_agent.temporal_bindings import normalize_request
+    from relf_agent.temporal_bindings import normalize_request
 
     request = normalize_request(
         submission_request(

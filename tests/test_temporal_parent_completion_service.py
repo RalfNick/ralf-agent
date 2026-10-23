@@ -12,9 +12,9 @@ from pathlib import Path
 
 import pytest
 
-from ralf_agent import RunRef, Runtime, Scope
-from ralf_agent.temporal import TemporalEngine, replay_temporal_history
-from ralf_agent.types import digest
+from relf_agent import RunRef, Runtime, Scope
+from relf_agent.temporal import TemporalEngine, replay_temporal_history
+from relf_agent.types import digest
 from tests.temporal_parent_completion_worker import SESSION_WINDOWS, runtime
 
 pytestmark = pytest.mark.skipif(
@@ -41,7 +41,7 @@ def test_parent_verdict_child_receipts_and_session_survive_real_worker_loss(tmp_
 async def recover(root, kind, window):
     from temporalio.client import Client
 
-    import ralf_agent
+    import relf_agent
 
     address = os.environ["RALF_TEST_TEMPORAL_ADDRESS"]
     queue = "parent-completion-" + uuid.uuid4().hex
@@ -74,7 +74,7 @@ async def recover(root, kind, window):
         environment = {
             "PATH": os.environ.get("PATH", "/usr/bin:/bin"),
             "PYTHONPATH": os.pathsep.join(
-                [str(Path(ralf_agent.__file__).parents[1]), str(Path(__file__).parents[1])]
+                [str(Path(relf_agent.__file__).parents[1]), str(Path(__file__).parents[1])]
             ),
             "RALF_TEST_TEMPORAL_ADDRESS": address,
             "RALF_TEST_TEMPORAL_QUEUE": queue,
@@ -409,7 +409,7 @@ async def recover(root, kind, window):
             async with asyncio.timeout(20):
                 while (await session.status()).busy:  # noqa: ASYNC110 -- original Session publication
                     await asyncio.sleep(0.1)
-            from ralf_agent.temporal_session_state import workflow_id
+            from relf_agent.temporal_session_state import workflow_id
 
             run_ids.add(workflow_id(session.ref.key))
             if window == "lost-session-ack":

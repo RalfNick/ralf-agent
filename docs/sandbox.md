@@ -11,7 +11,7 @@ Docker、拉取镜像或注入宿主凭据。镜像带隐式 Volumes 时拒绝�
 以下代码可放入已有异步应用；用实际 Unix socket 和镜像 SHA256 替换参数。
 
 ```python
-from ralf_agent import (
+from relf_agent import (
     DockerSandbox,
     SandboxToolSource,
     Scope,

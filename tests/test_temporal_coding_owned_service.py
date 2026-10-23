@@ -10,9 +10,9 @@ from pathlib import Path
 
 import pytest
 
-from ralf_agent import AgentSpec, ComponentRegistry, Scope, TemporalProfile, TemporalRuntimeBuilder
-from ralf_agent.errors import CloseIncomplete, ValidationError
-from ralf_agent.temporal import replay_temporal_history
+from relf_agent import AgentSpec, ComponentRegistry, Scope, TemporalProfile, TemporalRuntimeBuilder
+from relf_agent.errors import CloseIncomplete, ValidationError
+from relf_agent.temporal import replay_temporal_history
 from tests.temporal_coding_worker_fixture import Provider
 from tests.test_codex_runner import native_fixture
 from tests.test_temporal_coding_service import wait_until

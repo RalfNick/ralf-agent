@@ -13,7 +13,7 @@ dev48 提供 `HTTPReranker`，实现原 `AsyncReranker`。先由已有 lexical�
 ## 配置语义知识组合
 
 ```python
-from ralf_agent import RuntimeBuilder, recommended_profile
+from relf_agent import RuntimeBuilder, recommended_profile
 
 profile = recommended_profile(
     "semantic-knowledge",
@@ -71,7 +71,7 @@ anonymous = true
 ## SDK 替换及生命周期
 
 ```python
-from ralf_agent import HTTPReranker, HybridRetriever
+from relf_agent import HTTPReranker, HybridRetriever
 
 ranker = HTTPReranker("YOUR_MODEL", base_url="https://YOUR_SERVICE/v2", api_key=host_key)
 retriever = HybridRetriever(knowledge_store, branches, reranker=ranker)

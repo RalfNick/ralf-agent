@@ -3,7 +3,7 @@
 import asyncio
 from dataclasses import asdict
 
-from ralf_agent import (
+from relf_agent import (
     Document,
     InMemoryArtifactStore,
     InMemoryKnowledgeStore,
@@ -12,9 +12,9 @@ from ralf_agent import (
     RelevantDataContext,
     Scope,
 )
-from ralf_agent.temporal_activities import TemporalRuntime
-from ralf_agent.temporal_state import TemporalRunState
-from ralf_agent.types import submission_request
+from relf_agent.temporal_activities import TemporalRuntime
+from relf_agent.temporal_state import TemporalRunState
+from relf_agent.types import submission_request
 from tests.test_composite_data_context import Provider, agent, registry
 from tests.test_temporal_managed_context import finish
 

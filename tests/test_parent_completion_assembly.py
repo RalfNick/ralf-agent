@@ -4,15 +4,15 @@ import asyncio
 
 import pytest
 
-from ralf_agent.errors import ValidationError
-from ralf_agent.runtime_builder import ComponentRegistry, EchoProvider, RuntimeBuilder
-from ralf_agent.runtime_config import RuntimeProfile
-from ralf_agent.temporal_profile import TemporalProfile
+from relf_agent.errors import ValidationError
+from relf_agent.runtime_builder import ComponentRegistry, EchoProvider, RuntimeBuilder
+from relf_agent.runtime_config import RuntimeProfile
+from relf_agent.temporal_profile import TemporalProfile
 
 
 def build_mode(mode, profile, registry, path, calls):
     if mode == "temporal":
-        from ralf_agent.temporal_builder import TemporalRuntimeBuilder
+        from relf_agent.temporal_builder import TemporalRuntimeBuilder
 
         return asyncio.run(TemporalRuntimeBuilder(registry, base_dir=path.parent).abuild(profile))
     builder = RuntimeBuilder(registry, store_factory=lambda p: calls.append("store"))
@@ -71,17 +71,17 @@ def test_configured_parent_policy_factory_is_registered_and_validated():
 
 
 def test_parent_completion_sdk_exports_public_contracts():
-    import ralf_agent as sdk
-    from ralf_agent.parent_completion import (
+    import relf_agent as sdk
+    from relf_agent.parent_completion import (
         ParentCompletionPolicy,
         ParentCompletionRequest,
         ParentCompletionVerdict,
     )
-    from ralf_agent.parent_completion_rules import (
+    from relf_agent.parent_completion_rules import (
         InventoryParentCompletionGate,
         ReceiptParentCompletionGate,
     )
-    from ralf_agent.parent_verification_stage import ModelParentVerificationStage
+    from relf_agent.parent_verification_stage import ModelParentVerificationStage
 
     for public in (
         ParentCompletionPolicy,
@@ -135,7 +135,7 @@ def test_missing_stage_provider_rejected_before_owned_factories(tmp_path):
 @pytest.mark.parametrize("mode", ["sync", "async", "temporal"])
 @pytest.mark.parametrize("missing", ["alias", "provider-ref", "context-ref", "pure-context"])
 def test_parent_stage_preflight_is_zero_io_for_each_assembly_mode(tmp_path, mode, missing):
-    from ralf_agent.binding_types import AgentBindingDescriptor, BindingSelection
+    from relf_agent.binding_types import AgentBindingDescriptor, BindingSelection
 
     calls = []
     registry = ComponentRegistry().register(
@@ -166,8 +166,8 @@ def test_parent_stage_preflight_is_zero_io_for_each_assembly_mode(tmp_path, mode
 
 @pytest.mark.parametrize("cls", [RuntimeProfile, TemporalProfile])
 def test_explicit_pure_context_ref_can_replace_a_managed_host_context(cls):
-    from ralf_agent.binding_types import AgentBindingDescriptor, BindingSelection
-    from ralf_agent.parent_completion_factories import preflight_parent_completion_providers
+    from relf_agent.binding_types import AgentBindingDescriptor, BindingSelection
+    from relf_agent.parent_completion_factories import preflight_parent_completion_providers
 
     component = declaration()
     component["config"]["policies"]["business"]["model_stage"] = {

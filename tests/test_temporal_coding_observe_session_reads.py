@@ -5,15 +5,15 @@ from collections import Counter
 
 import pytest
 
-from ralf_agent import temporal_coding_composition_state as composition
-from ralf_agent import temporal_deployment_coding_validation as validation
-from ralf_agent import temporal_deployment_control_transport as transport
-from ralf_agent import temporal_deployment_execution as execution
-from ralf_agent import temporal_session_deployment_verification as verification
-from ralf_agent.errors import DefinitionMismatch
-from ralf_agent.temporal_coding_runtime import callbacks
-from ralf_agent.temporal_deployment_coding_bridge import _ReadOnlyClient
-from ralf_agent.types import digest
+from relf_agent import temporal_coding_composition_state as composition
+from relf_agent import temporal_deployment_coding_validation as validation
+from relf_agent import temporal_deployment_control_transport as transport
+from relf_agent import temporal_deployment_execution as execution
+from relf_agent import temporal_session_deployment_verification as verification
+from relf_agent.errors import DefinitionMismatch
+from relf_agent.temporal_coding_runtime import callbacks
+from relf_agent.temporal_deployment_coding_bridge import _ReadOnlyClient
+from relf_agent.types import digest
 from tests.test_temporal_coding_observe_validation import environment
 
 SESSION_QUERIES = {"deployment_session_intent", "deployment_session_command"}

@@ -3,14 +3,14 @@ import importlib.util
 
 import pytest
 
-from ralf_agent import AgentSpec, DynamicWorkflowSpec, Literal, ValueRef
+from relf_agent import AgentSpec, DynamicWorkflowSpec, Literal, ValueRef
 
 from .test_orchestration import make_engine
 
 
 def test_dynamic_dag_binds_confirmed_dependency_output(tmp_path):
-    assert importlib.util.find_spec("ralf_agent.dag_planning"), "Missing managed DAG planning"
-    from ralf_agent.dag_planning import DAGNode, DAGProposal
+    assert importlib.util.find_spec("relf_agent.dag_planning"), "Missing managed DAG planning"
+    from relf_agent.dag_planning import DAGNode, DAGProposal
 
     class Planner:
         identity = {"kind": "test-dag", "version": "1"}
@@ -45,7 +45,7 @@ def test_dynamic_dag_binds_confirmed_dependency_output(tmp_path):
 
 
 def test_team_can_delegate_a_nested_sequence(tmp_path):
-    from ralf_agent import TeamSpec, WorkflowSpec
+    from relf_agent import TeamSpec, WorkflowSpec
 
     flow = WorkflowSpec("inner", (AgentSpec("one", "One"), AgentSpec("two", "Two")))
     spec = TeamSpec("outer", {"flow": flow}, child_budget=4, max_depth=3)
@@ -57,8 +57,8 @@ def test_team_can_delegate_a_nested_sequence(tmp_path):
 
 
 def test_default_dag_planner_and_all_skipped_result(tmp_path):
-    from ralf_agent import BranchCondition
-    from ralf_agent.dag_planning import DAGNode, DAGProposal
+    from relf_agent import BranchCondition
+    from relf_agent.dag_planning import DAGNode, DAGProposal
 
     with make_engine(tmp_path / "default.sqlite") as engine:
         spec = DynamicWorkflowSpec("default", {"one": AgentSpec("one", "One")}, plan_mode="dag")
@@ -82,9 +82,9 @@ def test_default_dag_planner_and_all_skipped_result(tmp_path):
 
 
 def test_dag_patch_cas_replay_and_frozen_dispatched_node(tmp_path):
-    from ralf_agent import ModelResponse, ToolRegistry, ToolSpec
-    from ralf_agent.dag_planning import DAGNode, DAGProposal
-    from ralf_agent.errors import IdempotencyConflict, ValidationError
+    from relf_agent import ModelResponse, ToolRegistry, ToolSpec
+    from relf_agent.dag_planning import DAGNode, DAGProposal
+    from relf_agent.errors import IdempotencyConflict, ValidationError
 
     from .helpers import ScriptedProvider, tool_response
     from .test_engine import engine as configured_engine
@@ -165,8 +165,8 @@ def test_dag_patch_cas_replay_and_frozen_dispatched_node(tmp_path):
 
 
 def test_nested_team_and_graph_pin_parent_release_and_settle_tree(tmp_path):
-    from ralf_agent import GraphNode, GraphWorkflowSpec, TeamSpec
-    from ralf_agent.errors import DefinitionMismatch
+    from relf_agent import GraphNode, GraphWorkflowSpec, TeamSpec
+    from relf_agent.errors import DefinitionMismatch
 
     inner = TeamSpec("inner", {"leaf": AgentSpec("leaf", "Leaf")}, child_budget=2)
     graph = GraphWorkflowSpec("graph", [GraphNode("one", agent=AgentSpec("one", "One"))])
@@ -188,8 +188,8 @@ def test_nested_team_and_graph_pin_parent_release_and_settle_tree(tmp_path):
 
 @pytest.mark.parametrize("invalid", ["cycle", "reference", "member"])
 def test_dag_rejects_invalid_structure_before_delegation(tmp_path, invalid):
-    from ralf_agent.dag_planning import DAGNode, DAGProposal
-    from ralf_agent.errors import ValidationError
+    from relf_agent.dag_planning import DAGNode, DAGProposal
+    from relf_agent.errors import ValidationError
 
     if invalid == "cycle":
         with pytest.raises(ValidationError, match="cycle"):
@@ -207,7 +207,7 @@ def test_dag_rejects_invalid_structure_before_delegation(tmp_path, invalid):
 def test_nested_root_session_stays_reserved_until_real_child_thread_finishes(tmp_path):
     import threading
 
-    from ralf_agent import (
+    from relf_agent import (
         LocalEngine,
         ModelResponse,
         SQLiteStore,
@@ -216,7 +216,7 @@ def test_nested_root_session_stays_reserved_until_real_child_thread_finishes(tmp
         ToolRegistry,
         ToolSpec,
     )
-    from ralf_agent.errors import ValidationError
+    from relf_agent.errors import ValidationError
 
     async def scenario():
         started, failed = asyncio.Event(), asyncio.Event()
@@ -288,7 +288,7 @@ def test_nested_root_session_stays_reserved_until_real_child_thread_finishes(tmp
 
 
 def test_dag_planner_receives_registered_capabilities_and_remaining_limits(tmp_path):
-    from ralf_agent.dag_planning import DAGNode, DAGProposal
+    from relf_agent.dag_planning import DAGNode, DAGProposal
 
     class Planner:
         identity = {"kind": "capability-aware", "version": "1"}
@@ -312,8 +312,8 @@ def test_dag_planner_receives_registered_capabilities_and_remaining_limits(tmp_p
 
 
 def test_dag_parallel_roots_join_confirmed_results_under_capacity(tmp_path):
-    from ralf_agent import InputMap, LocalEngine, ModelResponse, SQLiteStore, ToolRegistry
-    from ralf_agent.dag_planning import DAGNode, DAGProposal
+    from relf_agent import InputMap, LocalEngine, ModelResponse, SQLiteStore, ToolRegistry
+    from relf_agent.dag_planning import DAGNode, DAGProposal
 
     async def scenario():
         overlap = asyncio.Event()
@@ -386,7 +386,7 @@ def test_dag_parallel_roots_join_confirmed_results_under_capacity(tmp_path):
 
 @pytest.mark.parametrize("status", ["refused", "needs_input"])
 def test_model_dag_conclusion_stops_without_worker_dispatch(tmp_path, status):
-    from ralf_agent import LocalEngine, ModelDAGPlanner, ModelResponse, SQLiteStore, ToolRegistry
+    from relf_agent import LocalEngine, ModelDAGPlanner, ModelResponse, SQLiteStore, ToolRegistry
 
     class Provider:
         identity = {"kind": "dag-stop", "version": "1"}
@@ -425,7 +425,7 @@ def test_model_dag_conclusion_stops_without_worker_dispatch(tmp_path, status):
 
 
 def test_nested_depth_limit_refuses_leaf_before_model_dispatch(tmp_path):
-    from ralf_agent import TeamSpec
+    from relf_agent import TeamSpec
 
     inner = TeamSpec("inner", {"leaf": AgentSpec("leaf", "leaf")}, child_budget=2)
     outer = TeamSpec("outer", {"inner": inner}, child_budget=4, max_depth=1)
@@ -438,9 +438,9 @@ def test_nested_depth_limit_refuses_leaf_before_model_dispatch(tmp_path):
 
 
 def test_dag_condition_rejects_unknown_fields():
-    from ralf_agent import BranchCondition
-    from ralf_agent.dag_planning import DAGNode
-    from ralf_agent.errors import ValidationError
+    from relf_agent import BranchCondition
+    from relf_agent.dag_planning import DAGNode
+    from relf_agent.errors import ValidationError
 
     node = DAGNode("one", "one", when=BranchCondition(ValueRef(), "ok")).to_dict()
     node["when"]["negatte"] = True

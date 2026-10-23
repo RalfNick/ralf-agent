@@ -8,7 +8,7 @@ import uuid
 
 import pytest
 
-from ralf_agent import (
+from relf_agent import (
     AgentSpec,
     ComponentRegistry,
     ModelResponse,
@@ -17,7 +17,7 @@ from ralf_agent import (
     TemporalRuntimeBuilder,
     ToolCall,
 )
-from ralf_agent.temporal import replay_temporal_history
+from relf_agent.temporal import replay_temporal_history
 
 from .mcp_http_fixture import peer
 from .test_mcp_http import business_calls

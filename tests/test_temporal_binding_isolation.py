@@ -6,7 +6,7 @@ from dataclasses import asdict
 
 import pytest
 
-from ralf_agent import (
+from relf_agent import (
     AgentBindingDescriptor,
     AgentDefinition,
     AgentSpec,
@@ -21,11 +21,11 @@ from ralf_agent import (
     ToolRegistry,
     WorkflowSpec,
 )
-from ralf_agent.temporal_activities import TemporalRuntime
-from ralf_agent.temporal_bindings import normalize_request
-from ralf_agent.temporal_managed_context import artifact_records
-from ralf_agent.temporal_state import TemporalRunState
-from ralf_agent.types import submission_request
+from relf_agent.temporal_activities import TemporalRuntime
+from relf_agent.temporal_bindings import normalize_request
+from relf_agent.temporal_managed_context import artifact_records
+from relf_agent.temporal_state import TemporalRunState
+from relf_agent.types import submission_request
 from tests.test_temporal_memory_bindings import grant
 
 

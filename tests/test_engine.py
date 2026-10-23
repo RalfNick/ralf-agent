@@ -2,7 +2,7 @@ import asyncio
 
 import pytest
 
-from ralf_agent import (
+from relf_agent import (
     AgentSpec,
     InMemoryMemory,
     LocalEngine,
@@ -12,13 +12,13 @@ from ralf_agent import (
     ToolSpec,
     WorkflowSpec,
 )
-from ralf_agent.errors import (
+from relf_agent.errors import (
     AuthorizationDenied,
     CoordinatorBusy,
     DefinitionMismatch,
     ValidationError,
 )
-from ralf_agent.storage import SQLiteStore
+from relf_agent.storage import SQLiteStore
 
 from .helpers import ScriptedProvider, tool_response
 

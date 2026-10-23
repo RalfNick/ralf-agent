@@ -6,14 +6,14 @@ import secrets
 
 import pytest
 
-from ralf_agent import BindingSelection, Scope, TemporalProfile, TemporalProfileCatalog
-from ralf_agent.codex_connected_runner import ConnectedCodexCodingRunner
-from ralf_agent.codex_credentials import EnvironmentCodingCredentials
-from ralf_agent.errors import CoordinatorBusy, ValidationError
-from ralf_agent.runner_journal import RunnerJournal
-from ralf_agent.runtime_builder import RuntimeBuilder
-from ralf_agent.runtime_config import RuntimeProfile, load_catalog
-from ralf_agent.temporal_journal import PostgresEffectJournal
+from relf_agent import BindingSelection, Scope, TemporalProfile, TemporalProfileCatalog
+from relf_agent.codex_connected_runner import ConnectedCodexCodingRunner
+from relf_agent.codex_credentials import EnvironmentCodingCredentials
+from relf_agent.errors import CoordinatorBusy, ValidationError
+from relf_agent.runner_journal import RunnerJournal
+from relf_agent.runtime_builder import RuntimeBuilder
+from relf_agent.runtime_config import RuntimeProfile, load_catalog
+from relf_agent.temporal_journal import PostgresEffectJournal
 from tests.test_connected_coding_factories import entry
 from tests.test_temporal_coding_factories import Connection, publish_initialization
 
@@ -199,7 +199,7 @@ def test_local_sdk_json_toml_assemble_same_lazy_identity_and_close_owned_journal
 def test_postgres_sdk_json_toml_borrow_same_effect_owner_and_close_owned_resources(
     tmp_path, monkeypatch, multiple
 ):
-    from ralf_agent import TemporalRuntimeBuilder
+    from relf_agent import TemporalRuntimeBuilder
 
     key = "synthetic-declaration-" + secrets.token_hex(24)
     monkeypatch.setenv("CODING_TEST_KEY", key)

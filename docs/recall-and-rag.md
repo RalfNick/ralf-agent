@@ -7,7 +7,7 @@
 安装 SDK 后，无需克隆仓库：
 
 ```sh
-ralf init my-knowledge-agent --template rag
+relf init my-knowledge-agent --template rag
 cd my-knowledge-agent
 python -m agent_app --query '缓存连接失败怎么恢复'
 python -m agent_app --query 'postgres connection refused'
@@ -18,8 +18,8 @@ python -m agent_app --query 'quantum entanglement teleportation'
 
 ```sh
 python -m agent_app --query '缓存连接失败怎么恢复' --submit-only
-ralf --db .ralf/runs.sqlite --factory agent_app.runtime:create_engine --format text inspect RUN_ID
-ralf --db .ralf/runs.sqlite --factory agent_app.runtime:create_engine resume RUN_ID
+relf --db .ralf/runs.sqlite --factory agent_app.runtime:create_engine --format text inspect RUN_ID
+relf --db .ralf/runs.sqlite --factory agent_app.runtime:create_engine resume RUN_ID
 ```
 
 将 `RUN_ID` 替换为提交结果。该 Agent 执行阶段只读知识，不产生需要审批的业务写入。默认执行库为 `.ralf/runs.sqlite`；知识库位置是固定执行库绝对路径加 `.knowledge.sqlite`。跨工作目录时传入同一绝对 `--db`，并确保原工厂模块可导入：安装应用包，或显式配置它的导入路径。CLI 不会从任意目录自动发现一个尚未安装的项目。
@@ -32,17 +32,17 @@ ralf --db .ralf/runs.sqlite --factory agent_app.runtime:create_engine resume RUN
 
 ```sh
 python -m examples.knowledge_agent --query '缓存连接失败怎么恢复'
-ralf --db .ralf/runs.sqlite --factory examples.knowledge_agent:create_engine --format text inspect RUN_ID
+relf --db .ralf/runs.sqlite --factory examples.knowledge_agent:create_engine --format text inspect RUN_ID
 ```
 
-`examples` 不包含在 wheel 内；wheel 使用者使用 `ralf init --template rag`。原有 `ralf init DEST` 默认仍是 `oncall` 模板。生成目标必须是新目录或从外部访问的空目录，不能覆盖用户文件或替换调用者当前工作目录。
+`examples` 不包含在 wheel 内；wheel 使用者使用 `relf init --template rag`。原有 `relf init DEST` 默认仍是 `oncall` 模板。生成目标必须是新目录或从外部访问的空目录，不能覆盖用户文件或替换调用者当前工作目录。
 
 ## 2. 有界记忆的选择和一致性
 
 显式设置 `recall_policy=MemoryRecallPolicy()` 使用新的召回契约；未设置时保留原来的 Session/Facts 接入行为，避免静默改变既有应用的上下文选择。
 
 ```python
-from ralf_agent.memory import MemoryRecallPolicy, RecallQuery
+from relf_agent.memory import MemoryRecallPolicy, RecallQuery
 
 policy = MemoryRecallPolicy(
     facts=RecallQuery(max_items=32, max_chars=8000, scan_limit=256),
@@ -67,8 +67,8 @@ Facts 页使用插入序号的 keyset 游标。写入改变命名空间 generati
 ## 3. 文档摄入、版本和检索
 
 ```python
-from ralf_agent import Scope
-from ralf_agent.retrieval import (
+from relf_agent import Scope
+from relf_agent.retrieval import (
     Document,
     KnowledgeContext,
     LexicalRetriever,
@@ -105,7 +105,7 @@ knowledge = KnowledgeContext(LexicalRetriever(store), namespace="runbooks", limi
 ## 4. 注入 embedding 的真实 cosine 检索
 
 ```python
-from ralf_agent.vector import SQLiteVectorIndex, VectorRetriever
+from relf_agent.vector import SQLiteVectorIndex, VectorRetriever
 
 
 async def make_vector_knowledge(store, embedding_provider):

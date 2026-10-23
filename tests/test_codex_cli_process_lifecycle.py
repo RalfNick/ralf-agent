@@ -8,8 +8,8 @@ from types import SimpleNamespace
 
 import pytest
 
-from ralf_agent import codex_environment as module
-from ralf_agent.errors import ExecutionHostFailed
+from relf_agent import codex_environment as module
+from relf_agent.errors import ExecutionHostFailed
 
 
 def bare_owner(tmp_path, program, *, timeout=2):
@@ -150,7 +150,7 @@ def test_custom_sigchld_refuses_before_cli_spawn(tmp_path):
 
 
 def test_missing_monitor_support_refuses_before_cli_spawn(tmp_path, monkeypatch):
-    from ralf_agent import coding_process_wait
+    from relf_agent import coding_process_wait
 
     marker = tmp_path / "spawned"
     owner = bare_owner(tmp_path, f"from pathlib import Path\nPath({str(marker)!r}).touch()\n")

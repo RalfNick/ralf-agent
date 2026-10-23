@@ -5,10 +5,10 @@ import copy
 
 import pytest
 
-from ralf_agent import AgentSpec, LocalEngine, ModelResponse, Scope, SQLiteStore, ToolRegistry
-from ralf_agent.memory import InMemoryMemory
-from ralf_agent.recall import MemoryRecallPolicy, RecallQuery
-from ralf_agent.retrieval import InMemoryKnowledgeStore, KnowledgeContext, LexicalRetriever
+from relf_agent import AgentSpec, LocalEngine, ModelResponse, Scope, SQLiteStore, ToolRegistry
+from relf_agent.memory import InMemoryMemory
+from relf_agent.recall import MemoryRecallPolicy, RecallQuery
+from relf_agent.retrieval import InMemoryKnowledgeStore, KnowledgeContext, LexicalRetriever
 
 
 class ReviewProvider:
@@ -30,7 +30,7 @@ def test_fact_changed_while_loading_other_references_is_not_injected_as_current_
     tmp_path, monkeypatch, change
 ):
     clock = {"now": 1000.0}
-    monkeypatch.setattr("ralf_agent.memory.time.time", lambda: clock["now"])
+    monkeypatch.setattr("relf_agent.memory.time.time", lambda: clock["now"])
 
     async def scenario():
         class SlowKnowledge(KnowledgeContext):
@@ -93,7 +93,7 @@ def test_unknown_model_retry_rejects_changed_facts_without_recall_or_snapshot_re
     tmp_path, monkeypatch, change
 ):
     clock = {"now": 1000.0}
-    monkeypatch.setattr("ralf_agent.memory.time.time", lambda: clock["now"])
+    monkeypatch.setattr("relf_agent.memory.time.time", lambda: clock["now"])
 
     class CountedMemory(InMemoryMemory):
         recall_calls = 0
@@ -134,7 +134,7 @@ def test_unknown_model_retry_rejects_changed_facts_without_recall_or_snapshot_re
 
 
 def test_recorded_model_response_is_adopted_after_source_changes_without_retrieval(tmp_path):
-    from ralf_agent.retrieval import Document
+    from relf_agent.retrieval import Document
 
     from .receipt_runtime import ReceiptWindowStore
 
@@ -189,10 +189,10 @@ def test_recorded_model_response_is_adopted_after_source_changes_without_retriev
 def test_source_expiry_during_later_source_validation_blocks_the_actual_model_request(
     tmp_path, monkeypatch
 ):
-    from ralf_agent.retrieval import Document
+    from relf_agent.retrieval import Document
 
     clock = {"now": 1000.0}
-    monkeypatch.setattr("ralf_agent.retrieval.time.time", lambda: clock["now"])
+    monkeypatch.setattr("relf_agent.retrieval.time.time", lambda: clock["now"])
     authority = InMemoryKnowledgeStore()
     authority.put(
         Scope(),
@@ -247,11 +247,11 @@ def test_source_expiry_during_later_source_validation_blocks_the_actual_model_re
 
 
 def test_standalone_knowledge_validation_rejects_sources_expiring_during_later_reads(monkeypatch):
-    from ralf_agent.errors import ValidationError
-    from ralf_agent.retrieval import Document
+    from relf_agent.errors import ValidationError
+    from relf_agent.retrieval import Document
 
     clock = {"now": 1000.0}
-    monkeypatch.setattr("ralf_agent.retrieval.time.time", lambda: clock["now"])
+    monkeypatch.setattr("relf_agent.retrieval.time.time", lambda: clock["now"])
     authority = InMemoryKnowledgeStore()
     authority.put(
         Scope(),
@@ -288,11 +288,11 @@ def test_standalone_knowledge_validation_rejects_sources_expiring_during_later_r
 def test_custom_async_retriever_validation_cannot_bypass_facade_expiry(
     monkeypatch, expires_during_validation
 ):
-    from ralf_agent.errors import ValidationError
-    from ralf_agent.retrieval import Document
+    from relf_agent.errors import ValidationError
+    from relf_agent.retrieval import Document
 
     clock = {"now": 1000.0}
-    monkeypatch.setattr("ralf_agent.retrieval.time.time", lambda: clock["now"])
+    monkeypatch.setattr("relf_agent.retrieval.time.time", lambda: clock["now"])
     authority = InMemoryKnowledgeStore()
     authority.put(
         Scope(),
@@ -366,7 +366,7 @@ def test_multiple_pages_share_one_item_character_and_candidate_allowance(tmp_pat
 
 @pytest.mark.parametrize("operation", ["read_page", "recall", "validate_facts"])
 def test_delegated_async_method_cannot_hide_its_actual_backend_change(tmp_path, operation):
-    from ralf_agent.errors import ValidationError
+    from relf_agent.errors import ValidationError
 
     async def scenario():
         class RemoteClient(InMemoryMemory):

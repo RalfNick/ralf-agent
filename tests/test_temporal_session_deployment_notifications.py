@@ -6,13 +6,13 @@ from types import SimpleNamespace
 
 import pytest
 
-from ralf_agent import temporal_deployment_execution_state as admission
-from ralf_agent import temporal_deployment_release_state as release
-from ralf_agent import temporal_workflow as product
-from ralf_agent.temporal_parent_workflow import TemporalParentWorkflow
-from ralf_agent.temporal_session_deployment_dto import ORIGIN_FIELDS
-from ralf_agent.temporal_session_workflow import TemporalSessionWorkflow
-from ralf_agent.temporal_state import TemporalRunState
+from relf_agent import temporal_deployment_execution_state as admission
+from relf_agent import temporal_deployment_release_state as release
+from relf_agent import temporal_workflow as product
+from relf_agent.temporal_parent_workflow import TemporalParentWorkflow
+from relf_agent.temporal_session_deployment_dto import ORIGIN_FIELDS
+from relf_agent.temporal_session_workflow import TemporalSessionWorkflow
+from relf_agent.temporal_state import TemporalRunState
 from tests.test_temporal_session_deployment_dto import reservation
 from tests.test_temporal_session_deployment_state import registration, session_state, submit_session
 

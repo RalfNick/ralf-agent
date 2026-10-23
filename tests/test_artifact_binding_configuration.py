@@ -5,9 +5,9 @@ import json
 
 import pytest
 
-import ralf_agent as r
-from ralf_agent.errors import ValidationError
-from ralf_agent.runtime_config import load_catalog
+import relf_agent as r
+from relf_agent.errors import ValidationError
+from relf_agent.runtime_config import load_catalog
 
 
 def declaration(config=None):
@@ -181,7 +181,7 @@ def test_native_async_store_replacement_and_owned_rollback(tmp_path):
         assert allocated[0].closed
         # The second factory fails after allocation; original ownership rolls
         # both clients back before returning the build error.
-        from ralf_agent.errors import RalfError
+        from relf_agent.errors import RalfError
 
         with pytest.raises(RalfError):
             failed = declaration({"backend": {"adapter": "broken"}})

@@ -2,16 +2,16 @@
 
 import pytest
 
-import ralf_agent
-from ralf_agent import AgentSpec, WorkflowSpec
-from ralf_agent.errors import ValidationError
+import relf_agent
+from relf_agent import AgentSpec, WorkflowSpec
+from relf_agent.errors import ValidationError
 
 
 @pytest.fixture
 def wf():
     class PublicAPI:
         def __getattr__(self, name):
-            value = getattr(ralf_agent, name, None)
+            value = getattr(relf_agent, name, None)
             assert callable(value), f"Public static Workflow API is missing: {name}"
             return value
 

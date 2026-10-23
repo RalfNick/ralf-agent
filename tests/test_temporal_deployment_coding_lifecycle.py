@@ -3,13 +3,13 @@
 import asyncio
 from types import SimpleNamespace
 
-from ralf_agent import Scope, TemporalProfile
-from ralf_agent.runtime_lifecycle import BuildContext
-from ralf_agent.temporal_assembly_lifecycle import TemporalRuntimeAssembly
+from relf_agent import Scope, TemporalProfile
+from relf_agent.runtime_lifecycle import BuildContext
+from relf_agent.temporal_assembly_lifecycle import TemporalRuntimeAssembly
 
 
 def test_owned_coding_close_supplies_original_queue_before_client_cleanup(tmp_path, monkeypatch):
-    from ralf_agent import temporal_deployment_coding_bridge as bridge
+    from relf_agent import temporal_deployment_coding_bridge as bridge
 
     async def run():
         events = []

@@ -5,8 +5,8 @@ from contextlib import closing
 
 import pytest
 
-import ralf_agent
-from ralf_agent import (
+import relf_agent
+from relf_agent import (
     AgentSpec,
     DynamicWorkflowSpec,
     GraphNode,
@@ -19,7 +19,7 @@ from ralf_agent import (
     ToolSpec,
     WorkflowSpec,
 )
-from ralf_agent.errors import DefinitionMismatch
+from relf_agent.errors import DefinitionMismatch
 from tests.context_crash_assertions import assert_context_crash_effects
 from tests.test_managed_data_context import context
 from tests.test_managed_memory_stage import engine, schema
@@ -146,7 +146,7 @@ def test_parallel_frame_tampering_is_rejected_before_resume(tmp_path):
 
 
 def test_terminal_parallel_run_recovers_received_summary_accounting(tmp_path, monkeypatch):
-    from ralf_agent import context_preparation
+    from relf_agent import context_preparation
     from tests.test_context_preparation import PowerLoss
 
     artifacts, provider, writes = InMemoryArtifactStore(backend_id="artifacts"), Provider(), []
@@ -205,7 +205,7 @@ def test_actual_composite_process_death_restores_without_repeating_effects(
     env = {
         "PATH": os.environ.get("PATH", "/usr/bin:/bin"),
         "PYTHONPATH": os.pathsep.join(
-            [str(Path(ralf_agent.__file__).parents[1]), str(Path(__file__).parents[1])]
+            [str(Path(relf_agent.__file__).parents[1]), str(Path(__file__).parents[1])]
         ),
     }
     first = subprocess.run(

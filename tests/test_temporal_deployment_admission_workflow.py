@@ -7,8 +7,8 @@ from types import SimpleNamespace
 
 import pytest
 
-from ralf_agent import DeploymentAdmissionPolicy, Scope
-from ralf_agent.types import digest
+from relf_agent import DeploymentAdmissionPolicy, Scope
+from relf_agent.types import digest
 
 pytest.importorskip("temporalio")
 
@@ -22,7 +22,7 @@ class EnvelopeSubclass(dict):
 
 
 def selected(monkeypatch, *, accepted=None, **info):
-    from ralf_agent.temporal_workflow import TemporalCommandRegistryWorkflow, workflow
+    from relf_agent.temporal_workflow import TemporalCommandRegistryWorkflow, workflow
 
     monkeypatch.setattr(
         workflow,
@@ -95,7 +95,7 @@ def test_full_update_has_typed_transient_capacity_error_without_record(monkeypat
     [{"namespace": "replacement"}, {"workflow_id": "wrong-original-registry"}],
 )
 def test_registry_initialization_rejects_actual_address_mismatch(monkeypatch, info):
-    from ralf_agent.errors import DefinitionMismatch
+    from relf_agent.errors import DefinitionMismatch
 
     with pytest.raises(DefinitionMismatch):
         selected(monkeypatch, **info)
@@ -125,7 +125,7 @@ def test_registry_initialization_rejects_actual_address_mismatch(monkeypatch, in
     ],
 )
 def test_registry_initialization_requires_exact_explicit_envelope(monkeypatch, accepted):
-    from ralf_agent.errors import RalfError
+    from relf_agent.errors import RalfError
 
     with pytest.raises(RalfError):
         selected(monkeypatch, accepted=accepted)
@@ -143,8 +143,8 @@ def test_registry_initialization_requires_exact_explicit_envelope(monkeypatch, a
     ],
 )
 def test_registry_initialization_rejects_nonplain_outer_envelope(monkeypatch, accepted):
-    from ralf_agent.errors import DefinitionMismatch
-    from ralf_agent.temporal_workflow import TemporalCommandRegistryWorkflow
+    from relf_agent.errors import DefinitionMismatch
+    from relf_agent.temporal_workflow import TemporalCommandRegistryWorkflow
 
     selected(monkeypatch)
     with pytest.raises(DefinitionMismatch):
@@ -176,7 +176,7 @@ def test_selected_query_rejects_malformed_or_unscoped_observation(monkeypatch, e
 def test_binding_update_is_explicit_and_does_not_exist_in_default_mode(monkeypatch):
     from temporalio.exceptions import ApplicationError
 
-    from ralf_agent.temporal_workflow import TemporalCommandRegistryWorkflow
+    from relf_agent.temporal_workflow import TemporalCommandRegistryWorkflow
 
     registry = selected(monkeypatch)
     assert asyncio.iscoroutinefunction(registry.bind_deployment_root)

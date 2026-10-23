@@ -8,9 +8,9 @@ from pathlib import Path
 
 import pytest
 
-from ralf_agent import InvocationContext, Scope, SQLiteStore
-from ralf_agent.errors import ValidationError
-from ralf_agent.executors import DispatchEnvelope
+from relf_agent import InvocationContext, Scope, SQLiteStore
+from relf_agent.errors import ValidationError
+from relf_agent.executors import DispatchEnvelope
 
 ROOT = Path(__file__).resolve().parents[1]
 FACTORY = "examples.execution_components:create_engine"
@@ -91,7 +91,7 @@ def test_custom_component_example_stays_approved_and_recovers_via_cli(tmp_path, 
     assert model["received_response"]["tool_calls"][0]["arguments"]["plan"] == (
         "restart fixture cache"
     )
-    cli = [sys.executable, "-m", "ralf_agent", "--db", database, "--factory", FACTORY]
+    cli = [sys.executable, "-m", "relf_agent", "--db", database, "--factory", FACTORY]
     approval = json.loads(
         process(
             [
@@ -140,7 +140,7 @@ def test_custom_example_queries_an_effect_committed_before_process_crash(tmp_pat
         )
     )
     pending = waiting["pending"][0]
-    cli = [sys.executable, "-m", "ralf_agent", "--db", database, "--factory", FACTORY]
+    cli = [sys.executable, "-m", "relf_agent", "--db", database, "--factory", FACTORY]
     process(
         [
             *cli,

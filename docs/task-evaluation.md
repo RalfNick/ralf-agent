@@ -3,7 +3,7 @@
 显式 `evaluate_orchestration(..., completion_gate=True)`／CLI `--completion-gate`启用库存父级回执门禁，并用独立oracle复核当前修订、原工具和采纳结果。安装后例子见[业务完成验证](parent-completion.md)。默认False保留旧报告和两成员评分；fixtures继续`model_quality=null`。
 
 dev86 提供可安装的 SDK 和 CLI，复用版本 2 推荐 Runtime、原摄取、检索和受管理 Agent。
-此处评测完整任务执行；原 `ralf-evaluate-planning` 仍只评估规划提案。
+此处评测完整任务执行；原 `relf-evaluate-planning` 仍只评估规划提案。
 Gemini 原生函数选 `--provider gemini-functions`，DeepSeek 思考选 `--provider deepseek-thinking`，Responses 推理选 `--provider openai-responses-reasoning`；SDK 显式传 `model_continuation=True`。
 旧 `gemini` 保留文本模式；续接接入及协议边界见[模型续接](model-continuation.md)。
 离线样例用于运行协议回归，真实质量与框架对等比较需要单独的实际证据。
@@ -14,9 +14,9 @@ Plan 默认使用原规则 DAG，Team 使用固定 Supervisor；自主模型规�
 
 ```sh
 pip install relf-agent
-ralf-evaluate-rag --offline
-ralf-evaluate-orchestration --offline --kind plan-and-execute
-ralf-evaluate-orchestration --offline --kind team
+relf-evaluate-rag --offline
+relf-evaluate-orchestration --offline --kind plan-and-execute
+relf-evaluate-orchestration --offline --kind team
 ```
 
 源码未发布时，先从仓库构建 wheel，再安装该本地 wheel；无需复制 `examples`。
@@ -28,7 +28,7 @@ ralf-evaluate-orchestration --offline --kind team
 
 ```python
 import asyncio
-from ralf_agent import (
+from relf_agent import (
     EvaluationLimits,
     OfflineRAGProvider,
     OfflineOrchestrationProvider,
@@ -72,7 +72,7 @@ Plan／Team 必须有工具能力；当前 Gemini 适配器仅支持文本，配
 以下环境变量名只是用户自己设置的配置入口，不会推断模型型号、复制凭据或自动下载模型。
 
 ```sh
-ralf-evaluate-rag --provider openai \
+relf-evaluate-rag --provider openai \
   --model-env RALF_GENERATION_MODEL --base-url-env RALF_GENERATION_URL \
   --key-env RALF_GENERATION_KEY \
   --embedding-model-env RALF_EMBEDDING_MODEL \
@@ -82,7 +82,7 @@ ralf-evaluate-rag --provider openai \
   --max-output-tokens 2048 --timeout 60 \
   --evidence-dir ./private-rag-evidence --report ./rag-report.json
 
-ralf-evaluate-orchestration --provider openai --kind team \
+relf-evaluate-orchestration --provider openai --kind team \
   --model-env RALF_GENERATION_MODEL --base-url-env RALF_GENERATION_URL \
   --key-env RALF_GENERATION_KEY --repeats 3 --max-calls 64
 ```

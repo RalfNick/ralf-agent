@@ -4,7 +4,7 @@ import threading
 
 import pytest
 
-from ralf_agent import (
+from relf_agent import (
     AgentSpec,
     LocalEngine,
     ModelResponse,
@@ -14,7 +14,7 @@ from ralf_agent import (
     ToolRegistry,
     ToolSpec,
 )
-from ralf_agent.errors import AuthorizationDenied, IdempotencyConflict, ValidationError
+from relf_agent.errors import AuthorizationDenied, IdempotencyConflict, ValidationError
 
 from .helpers import ScriptedProvider
 

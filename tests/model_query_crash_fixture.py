@@ -8,7 +8,7 @@ import sys
 from contextlib import contextmanager
 from pathlib import Path
 
-from ralf_agent import (
+from relf_agent import (
     AgentSpec,
     ComponentRegistry,
     Document,

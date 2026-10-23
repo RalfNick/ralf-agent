@@ -7,9 +7,9 @@ from types import MethodType, SimpleNamespace
 
 import pytest
 
-from ralf_agent import AgentSpec, InMemoryMemory, LocalEngine, ModelResponse, ToolRegistry
-from ralf_agent.errors import DefinitionMismatch, ValidationError
-from ralf_agent.governance import LocalExecutionPolicy
+from relf_agent import AgentSpec, InMemoryMemory, LocalEngine, ModelResponse, ToolRegistry
+from relf_agent.errors import DefinitionMismatch, ValidationError
+from relf_agent.governance import LocalExecutionPolicy
 
 from .helpers import ScriptedProvider
 from .test_extension_contracts import HostCoordinator, StoreAdapter
@@ -40,7 +40,7 @@ def engine(store, provider=None, **options):
 def test_connection_hidden_store_restores_original_deadline_without_model_dispatch(
     tmp_path, monkeypatch
 ):
-    import ralf_agent.local_deadlines as deadlines
+    import relf_agent.local_deadlines as deadlines
 
     path = tmp_path / "execution.sqlite"
     spec = AgentSpec("agent", "Answer")

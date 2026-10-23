@@ -5,11 +5,11 @@ import copy
 
 import pytest
 
-from ralf_agent import AgentSpec, Scope
-from ralf_agent.errors import CapacityExceeded, CloseIncomplete, DefinitionMismatch
-from ralf_agent.session_types import SessionRef
-from ralf_agent.temporal_session_client import TemporalSessionClient
-from ralf_agent.types import digest
+from relf_agent import AgentSpec, Scope
+from relf_agent.errors import CapacityExceeded, CloseIncomplete, DefinitionMismatch
+from relf_agent.session_types import SessionRef
+from relf_agent.temporal_session_client import TemporalSessionClient
+from relf_agent.types import digest
 from tests.test_temporal_deployment_session_registry import NAMESPACE, POLICY, command
 from tests.test_temporal_session_deployment_client import Backend, Handle
 
@@ -47,7 +47,7 @@ class Runtime:
 
 
 def fixture():
-    from ralf_agent import TemporalEngine
+    from relf_agent import TemporalEngine
 
     backend = CloseBackend()
     manifest = command()["session_submission"]["binding"]["manifest"]
@@ -60,7 +60,7 @@ def fixture():
 
 
 async def close(runtime, backend, scope):
-    from ralf_agent.temporal_session_deployment_close import close as close_sessions
+    from relf_agent.temporal_session_deployment_close import close as close_sessions
 
     return await close_sessions(
         runtime, client=backend, scope=scope, task_queue="original-queue", wait_timeout=0

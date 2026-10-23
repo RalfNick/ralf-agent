@@ -5,16 +5,16 @@ import sys
 
 import pytest
 
-from ralf_agent import AgentSpec, LocalEngine, Scope, ToolRegistry
-from ralf_agent.errors import IdempotencyConflict, ValidationError
-from ralf_agent.storage import SQLiteStore
+from relf_agent import AgentSpec, LocalEngine, Scope, ToolRegistry
+from relf_agent.errors import IdempotencyConflict, ValidationError
+from relf_agent.storage import SQLiteStore
 
 from .helpers import ScriptedProvider
 
 
 def test_outbox_and_inbox_reopen_preserve_scoped_identity(tmp_path):
-    from ralf_agent.handoff import SQLiteInbox, SQLiteOutbox
-    from ralf_agent.messaging import InMemoryMessageBus, MessageEnvelope
+    from relf_agent.handoff import SQLiteInbox, SQLiteOutbox
+    from relf_agent.messaging import InMemoryMessageBus, MessageEnvelope
 
     scope = Scope()
     message = MessageEnvelope("stable", "commands", {"kind": "cancel", "run_id": "run"})
@@ -47,13 +47,13 @@ def test_outbox_and_inbox_reopen_preserve_scoped_identity(tmp_path):
 
 
 def test_delivery_replay_after_command_accepted_before_inbox_result(tmp_path):
-    from ralf_agent.handoff import (
+    from relf_agent.handoff import (
         EngineCommandDispatcher,
         LocalCommandAdapter,
         SQLiteInbox,
         consume_delivery,
     )
-    from ralf_agent.messaging import InMemoryMessageBus, MessageEnvelope
+    from relf_agent.messaging import InMemoryMessageBus, MessageEnvelope
 
     scope = Scope()
     runtime = LocalEngine(
@@ -97,14 +97,14 @@ def test_delivery_replay_after_command_accepted_before_inbox_result(tmp_path):
 
 
 def test_inbox_receive_survives_real_process_exit(tmp_path):
-    from ralf_agent.handoff import SQLiteInbox
-    from ralf_agent.messaging import MessageEnvelope
+    from relf_agent.handoff import SQLiteInbox
+    from relf_agent.messaging import MessageEnvelope
 
     path = tmp_path / "crash.db"
     script = """import os,sys
-from ralf_agent.handoff import SQLiteInbox
-from ralf_agent.messaging import MessageEnvelope
-from ralf_agent.types import Scope
+from relf_agent.handoff import SQLiteInbox
+from relf_agent.messaging import MessageEnvelope
+from relf_agent.types import Scope
 inbox=SQLiteInbox(sys.argv[1])
 inbox.accept(Scope(),MessageEnvelope('accepted','commands',{'kind':'cancel','run_id':'run'}))
 os._exit(17)
@@ -127,8 +127,8 @@ os._exit(17)
 
 
 def test_dispatch_control_set_and_reject_async_engine_in_sync_adapter(tmp_path):
-    from ralf_agent.handoff import AsyncCommandAdapter, EngineCommandDispatcher, LocalCommandAdapter
-    from ralf_agent.messaging import MessageEnvelope
+    from relf_agent.handoff import AsyncCommandAdapter, EngineCommandDispatcher, LocalCommandAdapter
+    from relf_agent.messaging import MessageEnvelope
 
     calls = []
 
@@ -179,14 +179,14 @@ def test_dispatch_control_set_and_reject_async_engine_in_sync_adapter(tmp_path):
 
 
 def test_result_persistence_failure_never_acknowledges(tmp_path):
-    from ralf_agent.handoff import (
+    from relf_agent.handoff import (
         EngineCommandDispatcher,
         HandoffError,
         LocalCommandAdapter,
         SQLiteInbox,
         consume_delivery,
     )
-    from ralf_agent.messaging import InMemoryMessageBus, MessageEnvelope
+    from relf_agent.messaging import InMemoryMessageBus, MessageEnvelope
 
     class FailingInbox(SQLiteInbox):
         fail = True
@@ -239,7 +239,7 @@ class ComposedInbox:
     """Third-party port using composition rather than SQLite inheritance."""
 
     def __init__(self, path):
-        from ralf_agent.handoff import SQLiteInbox
+        from relf_agent.handoff import SQLiteInbox
 
         self.inner = SQLiteInbox(path)
         self.completions = 0
@@ -291,7 +291,7 @@ class ComposedAsyncInbox:
 
 @pytest.mark.parametrize("asynchronous", [False, True])
 def test_structural_inbox_and_command_adapter_finish_before_ack(tmp_path, asynchronous):
-    from ralf_agent.handoff import (
+    from relf_agent.handoff import (
         AsyncInbox,
         CommandAdapter,
         EngineCommandDispatcher,
@@ -299,7 +299,7 @@ def test_structural_inbox_and_command_adapter_finish_before_ack(tmp_path, asynch
         consume_delivery,
         validate_inbox,
     )
-    from ralf_agent.messaging import InMemoryMessageBus, MessageEnvelope
+    from relf_agent.messaging import InMemoryMessageBus, MessageEnvelope
 
     inbox = (ComposedAsyncInbox if asynchronous else ComposedInbox)(tmp_path / "composed.db")
     invocations = []
@@ -349,8 +349,8 @@ def test_structural_inbox_and_command_adapter_finish_before_ack(tmp_path, asynch
 
 @pytest.mark.parametrize("lazy", ["coroutine", "generator", "value", "nested_async"])
 def test_malformed_structural_inbox_completion_never_acks(tmp_path, lazy):
-    from ralf_agent.handoff import EngineCommandDispatcher, consume_delivery
-    from ralf_agent.messaging import InMemoryMessageBus, MessageEnvelope
+    from relf_agent.handoff import EngineCommandDispatcher, consume_delivery
+    from relf_agent.messaging import InMemoryMessageBus, MessageEnvelope
 
     entered = []
 
@@ -408,7 +408,7 @@ def test_malformed_structural_inbox_completion_never_acks(tmp_path, lazy):
 
 
 def test_structural_ports_reject_mixed_or_fake_async_methods_before_io(tmp_path):
-    from ralf_agent.handoff import (
+    from relf_agent.handoff import (
         EngineCommandDispatcher,
         Outbox,
         SQLiteOutbox,
@@ -442,8 +442,8 @@ def test_structural_ports_reject_mixed_or_fake_async_methods_before_io(tmp_path)
 
 @pytest.mark.parametrize("asynchronous", [False, True])
 def test_composed_outbox_ports_retain_identity_and_publish_once(tmp_path, asynchronous):
-    from ralf_agent.handoff import AsyncOutbox, Outbox, SQLiteOutbox, flush_outbox, validate_outbox
-    from ralf_agent.messaging import InMemoryMessageBus, MessageEnvelope
+    from relf_agent.handoff import AsyncOutbox, Outbox, SQLiteOutbox, flush_outbox, validate_outbox
+    from relf_agent.messaging import InMemoryMessageBus, MessageEnvelope
 
     inner = SQLiteOutbox(tmp_path / "outbox.db")
 
@@ -504,8 +504,8 @@ def test_composed_outbox_ports_retain_identity_and_publish_once(tmp_path, asynch
 
 
 def test_custom_command_adapter_scope_drift_and_nested_lazy_receipt_are_rejected():
-    from ralf_agent.handoff import EngineCommandDispatcher
-    from ralf_agent.messaging import MessageEnvelope
+    from relf_agent.handoff import EngineCommandDispatcher
+    from relf_agent.messaging import MessageEnvelope
 
     entered = []
 

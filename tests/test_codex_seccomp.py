@@ -10,7 +10,7 @@ from pathlib import Path
 import pytest
 
 ROOT = Path(__file__).resolve().parents[1]
-PROFILE = ROOT / "src/ralf_agent/_codex_coding_seccomp.json"
+PROFILE = ROOT / "src/relf_agent/_codex_coding_seccomp.json"
 VERIFIER = ROOT / "tools/verify_codex_seccomp.py"
 BASELINE_SHA256 = "01536f1d1df938ae611eba20d6349e0de7a99b6ecdee1549427a0b01b8301e28"
 PROFILE_SHA256 = "569e7aa0a4d8ed2b0bfada839187309d880c21350c36eaa2b55f15c0c85b41aa"

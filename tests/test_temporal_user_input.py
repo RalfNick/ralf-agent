@@ -7,12 +7,12 @@ from dataclasses import asdict
 
 import pytest
 
-from ralf_agent import AgentSpec, DynamicWorkflowSpec, ModelResponse, Scope, ToolCall, ToolRegistry
-from ralf_agent.errors import AuthorizationDenied, IdempotencyConflict, ValidationError
-from ralf_agent.temporal_activities import TemporalRuntime
-from ralf_agent.temporal_parent_state import TemporalParentState
-from ralf_agent.temporal_state import TemporalRunState
-from ralf_agent.types import submission_request
+from relf_agent import AgentSpec, DynamicWorkflowSpec, ModelResponse, Scope, ToolCall, ToolRegistry
+from relf_agent.errors import AuthorizationDenied, IdempotencyConflict, ValidationError
+from relf_agent.temporal_activities import TemporalRuntime
+from relf_agent.temporal_parent_state import TemporalParentState
+from relf_agent.temporal_state import TemporalRunState
+from relf_agent.types import submission_request
 from tests.test_temporal_memory_bindings import grant
 
 
@@ -36,13 +36,13 @@ def parts(*, policy=None, native=False):
     assert "user_input_policies" in inspect.signature(TemporalRuntime).parameters, (
         "Missing explicit Temporal input-policy registration"
     )
-    from ralf_agent.user_input import UserInputPolicy, register_user_input
+    from relf_agent.user_input import UserInputPolicy, register_user_input
 
     tools = ToolRegistry()
     register_user_input(tools, policy=policy or UserInputPolicy())
     options = {}
     if native:
-        from ralf_agent import CompleteModelHistory
+        from relf_agent import CompleteModelHistory
 
         options.update(
             model_continuation=True,
@@ -215,7 +215,7 @@ def test_foreign_reply_fails_before_command_acceptance():
 @pytest.mark.parametrize("mode", ["flat", "dag"])
 def test_selected_planner_question_resumes_new_revision_with_supplemental_lineage(mode):
     assert "user_input_policies" in inspect.signature(TemporalRuntime).parameters
-    from ralf_agent.user_input import UserInputPolicy
+    from relf_agent.user_input import UserInputPolicy
 
     runtime = TemporalRuntime(
         providers={"default": QuestionProvider()},
@@ -251,7 +251,7 @@ def test_selected_planner_question_resumes_new_revision_with_supplemental_lineag
 
 def test_planner_cannot_create_wait_without_resume_revision():
     assert "user_input_policies" in inspect.signature(TemporalRuntime).parameters
-    from ralf_agent.user_input import UserInputPolicy
+    from relf_agent.user_input import UserInputPolicy
 
     runtime = TemporalRuntime(
         providers={"default": QuestionProvider()},
@@ -394,8 +394,8 @@ def test_input_authorization_rechecks_runtime_release_before_returning_evidence(
 
 def test_copied_intrinsic_configuration_does_not_create_a_wait():
     async def run():
-        from ralf_agent.tools import ToolSpec
-        from ralf_agent.user_input import UserInputPolicy, register_user_input
+        from relf_agent.tools import ToolSpec
+        from relf_agent.user_input import UserInputPolicy, register_user_input
 
         original = ToolRegistry()
         register_user_input(original, policy=UserInputPolicy())
@@ -443,10 +443,10 @@ def test_tampered_original_tool_source_cannot_receive_a_reply():
 @pytest.mark.parametrize("surface", ["records", "snapshot", "send_input", "observed_journal"])
 def test_restored_input_request_must_match_original_tool_question(fault, surface):
     async def run():
-        from ralf_agent.errors import DefinitionMismatch
-        from ralf_agent.temporal_user_input import observed_journal, records
-        from ralf_agent.types import digest
-        from ralf_agent.user_input import PendingInput, UserInputPolicy
+        from relf_agent.errors import DefinitionMismatch
+        from relf_agent.temporal_user_input import observed_journal, records
+        from relf_agent.types import digest
+        from relf_agent.user_input import PendingInput, UserInputPolicy
 
         policy = (
             UserInputPolicy(max_prompt_chars=len("Which item?"))
@@ -530,9 +530,9 @@ def test_malformed_null_revision_is_not_an_accepted_command():
 
 def test_parent_completion_preserves_child_reply_lineage_without_business_receipt():
     async def run():
-        from ralf_agent import CompleteModelHistory, ParentCompletionPolicy, TeamSpec
-        from ralf_agent.temporal_parent_completion_state import source
-        from ralf_agent.user_input import register_user_input
+        from relf_agent import CompleteModelHistory, ParentCompletionPolicy, TeamSpec
+        from relf_agent.temporal_parent_completion_state import source
+        from relf_agent.user_input import register_user_input
         from tests.test_temporal_parent_completion import Gate
 
         tools = ToolRegistry()
@@ -593,7 +593,7 @@ def test_parent_completion_preserves_child_reply_lineage_without_business_receip
 
 def test_answered_journal_cannot_mask_a_changed_native_tool_reply():
     async def run():
-        from ralf_agent.errors import DefinitionMismatch
+        from relf_agent.errors import DefinitionMismatch
 
         runtime, state = parts(native=True)
         item = await question(runtime, state)
@@ -632,8 +632,8 @@ def test_reply_preserves_original_exhausted_allowance(limit):
 
 def test_intrinsic_cannot_share_a_model_decision_with_a_business_tool():
     async def run():
-        from ralf_agent.tools import ToolSpec
-        from ralf_agent.user_input import register_user_input
+        from relf_agent.tools import ToolSpec
+        from relf_agent.user_input import register_user_input
 
         class Mixed(QuestionProvider):
             identity = {"kind": "mixed-input-fixture", "version": "1"}
@@ -676,9 +676,9 @@ def test_intrinsic_cannot_share_a_model_decision_with_a_business_tool():
 
 
 def test_planner_question_cannot_replace_its_accepted_original_conclusion():
-    from ralf_agent.errors import DefinitionMismatch
-    from ralf_agent.types import digest
-    from ralf_agent.user_input import UserInputPolicy, make_input_record
+    from relf_agent.errors import DefinitionMismatch
+    from relf_agent.types import digest
+    from relf_agent.user_input import UserInputPolicy, make_input_record
 
     policy = UserInputPolicy()
     runtime = TemporalRuntime(

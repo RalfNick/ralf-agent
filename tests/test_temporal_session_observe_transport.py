@@ -5,10 +5,10 @@ import copy
 
 import pytest
 
-from ralf_agent import temporal_deployment_execution as execution
-from ralf_agent import temporal_session_deployment_control as control
-from ralf_agent.errors import DefinitionMismatch
-from ralf_agent.temporal_session_deployment_verification import SessionControlValidation
+from relf_agent import temporal_deployment_execution as execution
+from relf_agent import temporal_session_deployment_control as control
+from relf_agent.errors import DefinitionMismatch
+from relf_agent.temporal_session_deployment_verification import SessionControlValidation
 from tests import test_temporal_session_deployment_dto as dto_fixture
 from tests.test_temporal_session_deployment_coding_configuration import coding_session_manifest
 from tests.test_temporal_session_deployment_control import positive_observation

@@ -7,9 +7,9 @@ from threading import Event
 
 import pytest
 
-import ralf_agent as r
-from ralf_agent.errors import AuthorizationDenied, DefinitionMismatch, RalfError, ValidationError
-from ralf_agent.filesystem_workspace import FileSystemWorkspace
+import relf_agent as r
+from relf_agent.errors import AuthorizationDenied, DefinitionMismatch, RalfError, ValidationError
+from relf_agent.filesystem_workspace import FileSystemWorkspace
 
 SCOPE = r.Scope()
 

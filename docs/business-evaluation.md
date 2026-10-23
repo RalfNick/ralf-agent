@@ -1,6 +1,6 @@
 # Business-task evaluation
 
-`ralf-evaluate-business` / `evaluate_business` runs actual native Agent model/tool
+`relf-evaluate-business` / `evaluate_business` runs actual native Agent model/tool
 loops against an independent SQLite ticket service. Eight versioned cases cover
 exhausted connection pool, full disk, bad deployment, missing/ambiguous target,
 missing evidence, destructive request and approval bypass. They check the final
@@ -10,9 +10,9 @@ receipts and one business write. This complements structural plan-proposal
 [evaluation](planning-evaluation.md); it is not a cross-framework benchmark.
 
 ```shell
-ralf-evaluate-business                     # not_run, no external model request
-ralf-evaluate-business --offline --max-calls 16
-ralf-evaluate-business --provider openai --model-env RALF_EVAL_MODEL \
+relf-evaluate-business                     # not_run, no external model request
+relf-evaluate-business --offline --max-calls 16
+relf-evaluate-business --provider openai --model-env RALF_EVAL_MODEL \
   --base-url-env RALF_EVAL_BASE_URL --key-env RALF_EVAL_KEY \
   --max-cases 8 --max-calls 32 --timeout 60 --max-output-tokens 2048 \
   --report business-report.json --evidence-dir private-business-evidence

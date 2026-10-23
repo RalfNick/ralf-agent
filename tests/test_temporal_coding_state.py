@@ -5,11 +5,11 @@ from dataclasses import asdict
 
 import pytest
 
-import ralf_agent as r
-from ralf_agent.errors import RalfError
-from ralf_agent.temporal_activities import TemporalRuntime
-from ralf_agent.temporal_state import TemporalRunState
-from ralf_agent.types import digest, submission_request
+import relf_agent as r
+from relf_agent.errors import RalfError
+from relf_agent.temporal_activities import TemporalRuntime
+from relf_agent.temporal_state import TemporalRunState
+from relf_agent.types import digest, submission_request
 
 from .test_temporal_engine import Provider, registry
 from .test_temporal_tool_execution import admission, proof
@@ -43,7 +43,7 @@ def ready():
     )
     # Pure History tests exercise a pinned selected Tool; runtime publication is
     # tested through the concrete PG/Codex integration suite.
-    from ralf_agent.temporal_coding_protocol import JOURNAL_METHODS, RUNNER_METHODS, implementation
+    from relf_agent.temporal_coding_protocol import JOURNAL_METHODS, RUNNER_METHODS, implementation
 
     state.manifest["coding_execution_protocol"] = {
         "version": 6,
@@ -192,7 +192,7 @@ def test_stop_admission_recovers_original_only_and_never_claims_new_business():
 def test_workflow_routes_original_stop_before_next_business(monkeypatch):
     import asyncio
 
-    from ralf_agent.temporal_workflow import TemporalRunWorkflow, workflow
+    from relf_agent.temporal_workflow import TemporalRunWorkflow, workflow
 
     state, action, request = ready()
     grant(state, request)
@@ -519,7 +519,7 @@ def test_lost_response_before_first_grant_still_queries_original_pg_resource():
 
 
 def test_scoped_workflow_cleanup_reads_immutable_original_coding_requests():
-    from ralf_agent.temporal_workflow import TemporalRunWorkflow
+    from relf_agent.temporal_workflow import TemporalRunWorkflow
 
     state, action, request = ready()
     wf = object.__new__(TemporalRunWorkflow)

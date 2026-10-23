@@ -18,10 +18,10 @@
 
 ## 2. Harness：同步、确定且可独立验证
 
-公开接口从 `ralf_agent` 导入：`Harness`、`NativeHarness`、`ModelRequest`、`DecisionProposal`。
+公开接口从 `relf_agent` 导入：`Harness`、`NativeHarness`、`ModelRequest`、`DecisionProposal`。
 
 ```python
-from ralf_agent import ModelRequest, NativeHarness
+from relf_agent import ModelRequest, NativeHarness
 
 
 class EvidenceHarness(NativeHarness):
@@ -67,7 +67,7 @@ Envelope／Observation 在内部保存 canonical JSON；arguments、tool_manifes
 `PythonToolExecutor` 检查 Registry 与固定工具 Manifest，使用原 InvocationContext 调用可信 handler／reconciler。同步调用使用框架管理的线程，异步调用直接等待。自定义执行器也必须保留原 effect_key、操作参数和单次 Attempt；不得绕过审批、隐藏业务重试或把不确定结果报告为已确认。
 
 ```python
-from ralf_agent import EffectObservation, PythonToolExecutor
+from relf_agent import EffectObservation, PythonToolExecutor
 
 
 class TaggedExecutor:
@@ -138,7 +138,7 @@ CLI inspect 的 recorded_evidence 列出等待采纳的 Action、阶段与证据
 
 ```bash
 python -m examples.execution_components --db .ralf/components.sqlite --ticket INC-COMPONENTS
-ralf --db .ralf/components.sqlite --factory examples.execution_components:create_engine --format text inspect RUN_ID
+relf --db .ralf/components.sqlite --factory examples.execution_components:create_engine --format text inspect RUN_ID
 ```
 
 例子完全离线，入口自动推进至 waiting_approval。检查 inspect 中的写参数和摘要后，复制其 approve／resume 命令继续；`--workflow` 使用同一工厂运行顺序流程。它是源码示例，wheel 使用者仍可使用独立 starter，或自行把组件放进可导入项目包。

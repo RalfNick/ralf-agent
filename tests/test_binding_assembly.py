@@ -5,11 +5,11 @@ import json
 
 import pytest
 
-from ralf_agent import AgentSpec, Scope
-from ralf_agent.errors import ValidationError
-from ralf_agent.runtime_builder import ComponentRegistry, RuntimeBuilder
-from ralf_agent.runtime_config import RuntimeCatalog, RuntimeProfile, load_catalog
-from ralf_agent.runtime_router import ProfiledEngine
+from relf_agent import AgentSpec, Scope
+from relf_agent.errors import ValidationError
+from relf_agent.runtime_builder import ComponentRegistry, RuntimeBuilder
+from relf_agent.runtime_config import RuntimeCatalog, RuntimeProfile, load_catalog
+from relf_agent.runtime_router import ProfiledEngine
 
 from .test_binding_execution import RecordingProvider, choice, definition
 
@@ -250,7 +250,7 @@ def test_v2_tool_subset_factory_preserves_host_registry(tmp_path):
 
 
 def test_new_public_types_are_importable_without_optional_dependencies():
-    from ralf_agent import (
+    from relf_agent import (
         AgentBindingDescriptor,
         AgentDefinition,
         BindingCatalog,

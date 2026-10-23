@@ -16,9 +16,9 @@ from pathlib import Path
 
 import pytest
 
-from ralf_agent.errors import AuthorizationDenied, DefinitionMismatch, IdempotencyConflict
-from ralf_agent.temporal import TemporalEngine, build_temporal_worker, replay_temporal_history
-from ralf_agent.types import AgentSpec, Scope, WorkflowSpec
+from relf_agent.errors import AuthorizationDenied, DefinitionMismatch, IdempotencyConflict
+from relf_agent.temporal import TemporalEngine, build_temporal_worker, replay_temporal_history
+from relf_agent.types import AgentSpec, Scope, WorkflowSpec
 
 fixture_spec = importlib.util.spec_from_file_location(
     "temporal_worker_fixture", Path(__file__).with_name("temporal_worker_fixture.py")

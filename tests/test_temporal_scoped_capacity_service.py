@@ -10,11 +10,11 @@ from pathlib import Path
 
 import pytest
 
-from ralf_agent import Scope
-from ralf_agent.errors import ValidationError
-from ralf_agent.temporal import TemporalEngine, build_temporal_worker, replay_temporal_history
-from ralf_agent.temporal_activities import TemporalRuntime
-from ralf_agent.temporal_state import COMMAND_REGISTRY_CAPACITY
+from relf_agent import Scope
+from relf_agent.errors import ValidationError
+from relf_agent.temporal import TemporalEngine, build_temporal_worker, replay_temporal_history
+from relf_agent.temporal_activities import TemporalRuntime
+from relf_agent.temporal_state import COMMAND_REGISTRY_CAPACITY
 from tests.test_temporal_deployment_admission_service import _clients
 from tests.test_temporal_deployment_dispatch_service import BusinessProbe, _agent, _eventually
 
@@ -208,7 +208,7 @@ def test_actual_old_scoped_worker_uses_confirmed_legacy_update_and_replays(tmp_p
                 )
                 await replay_temporal_history(history, namespace=namespace["name"])
                 (tmp_path / "legacy-registry-history.json").write_text(history.to_json())
-                from ralf_agent import AgentSpec, GraphNode, GraphWorkflowSpec
+                from relf_agent import AgentSpec, GraphNode, GraphWorkflowSpec
 
                 await engine.aclose()
                 ready = json.loads((tmp_path / "ready.json").read_text())

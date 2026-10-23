@@ -8,7 +8,7 @@ import sys
 from dataclasses import asdict
 from pathlib import Path
 
-import ralf_agent as r
+import relf_agent as r
 
 
 def create(directory, phase, kind, window):

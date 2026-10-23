@@ -5,9 +5,9 @@ import importlib
 
 import pytest
 
-from ralf_agent import GraphNode, GraphWorkflowSpec, Literal
-from ralf_agent.errors import DefinitionMismatch, ValidationError
-from ralf_agent.node_execution import NodeEngine, create_frame
+from relf_agent import GraphNode, GraphWorkflowSpec, Literal
+from relf_agent.errors import DefinitionMismatch, ValidationError
+from relf_agent.node_execution import NodeEngine, create_frame
 
 from .test_parallel_workflow import runtime
 
@@ -42,7 +42,7 @@ def prepared(tmp_path):
 
 
 def projection_api():
-    spec = importlib.util.find_spec("ralf_agent.node_coding_projection")
+    spec = importlib.util.find_spec("relf_agent.node_coding_projection")
     assert spec is not None, "Exact original node Coding authority mapping is missing"
     return importlib.import_module(spec.name)
 
@@ -126,8 +126,8 @@ def test_failed_frame_cannot_promote_parent_with_pending_sibling(tmp_path):
 def test_same_runner_selected_nodes_hold_without_second_original_attempt(tmp_path):
     import asyncio
 
-    from ralf_agent import LocalEngine, SQLiteStore, ToolRegistry
-    from ralf_agent.delegated_coding import register_coding_tool
+    from relf_agent import LocalEngine, SQLiteStore, ToolRegistry
+    from relf_agent.delegated_coding import register_coding_tool
 
     from .test_local_delegated_coding import LifecycleRunner
 
@@ -178,8 +178,8 @@ def test_same_runner_selected_nodes_hold_without_second_original_attempt(tmp_pat
 
 
 def test_scheduler_holds_same_actual_resource_but_admits_unique_resource(tmp_path):
-    from ralf_agent.delegated_coding import register_coding_tool
-    from ralf_agent.workflow_parallel import ParallelWorkflowRuntime
+    from relf_agent.delegated_coding import register_coding_tool
+    from relf_agent.workflow_parallel import ParallelWorkflowRuntime
 
     from .test_local_delegated_coding import LifecycleRunner
 
@@ -236,8 +236,8 @@ def test_coding_parent_failure_waits_for_actual_frame_worker_after_fence(tmp_pat
 
 
 def coding_graph_engine(tmp_path, left, right):
-    from ralf_agent import LocalEngine, SQLiteStore, ToolRegistry
-    from ralf_agent.delegated_coding import register_coding_tool
+    from relf_agent import LocalEngine, SQLiteStore, ToolRegistry
+    from relf_agent.delegated_coding import register_coding_tool
 
     tools = ToolRegistry()
     register_coding_tool(tools, left, name="coding-left")
@@ -268,7 +268,7 @@ async def approve_graph(engine, run_id):
 def test_distinct_runners_overlap_with_original_request_digests_and_indices(tmp_path):
     import asyncio
 
-    from ralf_agent.types import digest
+    from relf_agent.types import digest
 
     from .test_local_delegated_coding import LifecycleRunner
 
@@ -345,8 +345,8 @@ def test_cold_parallel_cancel_retries_original_stop_without_new_frame_attempt(tm
 def test_scheduler_failure_waits_for_fenced_but_live_coding_worker(tmp_path):
     import asyncio
 
-    from ralf_agent import LocalEngine, SQLiteStore, StaticWorkflowScheduler, ToolRegistry, ValueRef
-    from ralf_agent.delegated_coding import register_coding_tool
+    from relf_agent import LocalEngine, SQLiteStore, StaticWorkflowScheduler, ToolRegistry, ValueRef
+    from relf_agent.delegated_coding import register_coding_tool
 
     from .test_local_delegated_coding import LifecycleRunner
 
@@ -417,8 +417,8 @@ def test_scheduler_failure_waits_for_fenced_but_live_coding_worker(tmp_path):
 def test_busy_resource_prefix_does_not_block_independent_ready_runner(tmp_path):
     import asyncio
 
-    from ralf_agent import LocalEngine, SQLiteStore, ToolRegistry
-    from ralf_agent.delegated_coding import register_coding_tool
+    from relf_agent import LocalEngine, SQLiteStore, ToolRegistry
+    from relf_agent.delegated_coding import register_coding_tool
 
     from .test_local_delegated_coding import LifecycleRunner
 
@@ -459,7 +459,7 @@ def test_busy_resource_prefix_does_not_block_independent_ready_runner(tmp_path):
 
 @pytest.mark.parametrize("resource", ["tools", "_threads"])
 def test_projection_refuses_replaced_actual_shared_resource(tmp_path, resource):
-    from ralf_agent import ToolRegistry
+    from relf_agent import ToolRegistry
 
     engine, run_id = prepared(tmp_path)
     try:
@@ -473,11 +473,11 @@ def test_projection_refuses_replaced_actual_shared_resource(tmp_path, resource):
 
 @pytest.mark.parametrize("selected", [False, True])
 def test_bound_excluded_coding_resource_does_not_hold_ordinary_node(tmp_path, selected):
-    from ralf_agent import AgentSpec, LocalEngine, SQLiteStore, ToolRegistry
-    from ralf_agent.binding_definitions import BoundDefinition
-    from ralf_agent.binding_types import AgentBindingDescriptor, BindingSelection
-    from ralf_agent.delegated_coding import register_coding_tool
-    from ralf_agent.workflow_parallel import ParallelWorkflowRuntime
+    from relf_agent import AgentSpec, LocalEngine, SQLiteStore, ToolRegistry
+    from relf_agent.binding_definitions import BoundDefinition
+    from relf_agent.binding_types import AgentBindingDescriptor, BindingSelection
+    from relf_agent.delegated_coding import register_coding_tool
+    from relf_agent.workflow_parallel import ParallelWorkflowRuntime
 
     from .helpers import ScriptedProvider
     from .test_local_delegated_coding import LifecycleRunner

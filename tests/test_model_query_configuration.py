@@ -3,7 +3,7 @@ import json
 
 import pytest
 
-from ralf_agent import (
+from relf_agent import (
     ComponentRegistry,
     Document,
     ModelResponse,
@@ -12,7 +12,7 @@ from ralf_agent import (
     load_catalog,
     recommended_profile,
 )
-from ralf_agent.errors import ValidationError
+from relf_agent.errors import ValidationError
 from tests.test_model_query import QueryModel
 from tests.test_semantic_configuration import embedding
 
@@ -127,7 +127,7 @@ def test_missing_query_provider_fails_before_execution_database(location, tmp_pa
 
 def test_unrelated_custom_adapter_query_named_field_is_not_interpreted(tmp_path):
     components = ComponentRegistry()
-    from ralf_agent import ContextAssembler
+    from relf_agent import ContextAssembler
 
     components.register("context_assembler", "custom", lambda c, ctx: ContextAssembler())
     selected = RuntimeProfile(
@@ -257,7 +257,7 @@ def test_invalid_model_query_declaration_preflight(config, tmp_path):
 
 
 def test_scoped_knowledge_binding_uses_shared_query_model_and_preserves_namespace(tmp_path):
-    from ralf_agent import AgentBindingDescriptor, AgentDefinition, AgentSpec, BindingSelection
+    from relf_agent import AgentBindingDescriptor, AgentDefinition, AgentSpec, BindingSelection
 
     class Reader:
         identity = {"kind": "scoped-query-reader", "version": "1"}

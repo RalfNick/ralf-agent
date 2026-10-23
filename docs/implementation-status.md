@@ -1,5 +1,9 @@
 # Implementation status — Local SDK Alpha
 
+**当前a6入口迁移（2026-10-23）：** `relf-agent==0.1.0a6`统一Python导入`relf_agent`、CLI`relf`／`relf-*`。仅移动已有实现和公共入口，不扩功能；`RALF_*`、`.ralf`、数据库及协议标识保持。新旧任务使用独立版本环境，不提供自动History或指纹迁移。原a5及更早制品、记录和历史失败保留。当前独立制品、实际验收和待办见[a6说明](releases/0.1.0a6.md)、[a6清单](alpha6-validation-status.md)和[PyPI准备](pypi-publishing.md)。本轮只本地提交，不推送、触发远端CI、配置账号或公开发布。
+
+以下a5及更早条目保留其各批次范围，不作为a6实际资格。
+
 **当前维护（2026-10-23）：a5发行名统一。** `relf-agent==0.1.0a5`保留`ralf_agent`导入和`ralf`CLI，继承a4既有行为，只更新发行元数据、安装提示和发布校验；不关闭新的R项，不扩大能力或兼容承诺。实际范围见[a5清单](alpha5-validation-status.md)。原a4制品、Linux验收及所有历史失败保持；完整SDK CI的既有失败见[独立记录](../architecture/reviews/2026-10-23-sdk-ci-dependency-fix.md)。工程优化后置，本轮不推送或公开发布。
 
 **前批a4维护（2026-10-23）：** 准备独立 `0.1.0a4` 候选，包含 `210a79e` 取消回执、starter 提示、Agent 工具入口和内置检索直接方法漂移修复，以及 `672d0cf` Coding 测试夹具准备与失败装配修正。不增加能力、依赖、Schema 或执行权威；本批产品相对修复后基线仅版本赋值变化。当前源码已推送，并以 `b545aba` 建立默认 `main`；官网已上线。原 a2 是现有公开安装入口，a4原包的Linux ARM64／原生AMD64三Python版本固定门禁已通过；账号配置、上传与公开安装仍待验收，原 a3 两包及失败保留但发布暂停。a4 制品、本地安装及未完成平台／发布状态见[a4 清单](alpha4-validation-status.md)，下方原制品资格不自动继承。

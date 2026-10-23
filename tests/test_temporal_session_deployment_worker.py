@@ -4,10 +4,10 @@ from types import SimpleNamespace
 
 import pytest
 
-from ralf_agent import DeploymentAdmissionPolicy, Scope, ToolRegistry
-from ralf_agent.errors import DefinitionMismatch
-from ralf_agent.runtime_builder import EchoProvider
-from ralf_agent.temporal_activities import TemporalRuntime
+from relf_agent import DeploymentAdmissionPolicy, Scope, ToolRegistry
+from relf_agent.errors import DefinitionMismatch
+from relf_agent.runtime_builder import EchoProvider
+from relf_agent.temporal_activities import TemporalRuntime
 
 
 def runtime():
@@ -27,7 +27,7 @@ def client():
 
 
 def test_selected_run_keeps_public_call_ledger_and_seal():
-    from ralf_agent.temporal_deployment_release_state import initialize
+    from relf_agent.temporal_deployment_release_state import initialize
 
     state = SimpleNamespace(manifest=runtime().manifest)
     initialize(state)
@@ -40,14 +40,14 @@ def test_worker_registers_exact_session_and_registry_transports(monkeypatch):
     import temporalio.worker
     from temporalio import activity
 
-    from ralf_agent.temporal import build_temporal_worker
-    from ralf_agent.temporal_assembly_lifecycle import WorkerExecutionOwner
-    from ralf_agent.temporal_session_deployment_control import (
+    from relf_agent.temporal import build_temporal_worker
+    from relf_agent.temporal_assembly_lifecycle import WorkerExecutionOwner
+    from relf_agent.temporal_session_deployment_control import (
         REGISTRY_ACTIVITY,
         is_registered_activity,
         is_registered_registry_activity,
     )
-    from ralf_agent.temporal_session_state import SESSION_ACTIVITY
+    from relf_agent.temporal_session_state import SESSION_ACTIVITY
 
     selected, connection = runtime(), client()
     captured = {}
@@ -66,8 +66,8 @@ def test_worker_registers_exact_session_and_registry_transports(monkeypatch):
 def test_transport_factory_bypasses_business_gate_but_same_name_is_refused(registry):
     from temporalio import activity
 
-    from ralf_agent.temporal_deployment_execution import wrap_activities
-    from ralf_agent.temporal_session_deployment_control import (
+    from relf_agent.temporal_deployment_execution import wrap_activities
+    from relf_agent.temporal_session_deployment_control import (
         registered_registry_session_activities,
         registered_session_deployment_activities,
     )
@@ -94,8 +94,8 @@ def test_closing_observer_body_survives_caller_cancel_and_drains_original_end_ac
 
     from temporalio import activity
 
-    from ralf_agent.temporal_assembly_lifecycle import WorkerExecutionOwner
-    from ralf_agent.temporal_session_deployment_control import (
+    from relf_agent.temporal_assembly_lifecycle import WorkerExecutionOwner
+    from relf_agent.temporal_session_deployment_control import (
         registered_session_deployment_activities,
     )
     from tests.test_temporal_session_deployment_control import positive_observation
@@ -173,8 +173,8 @@ def test_closing_worker_refuses_new_session_or_root_registration_before_factory_
 
     from temporalio import activity
 
-    from ralf_agent.temporal_assembly_lifecycle import WorkerExecutionOwner
-    from ralf_agent.temporal_session_deployment_control import (
+    from relf_agent.temporal_assembly_lifecycle import WorkerExecutionOwner
+    from relf_agent.temporal_session_deployment_control import (
         REGISTRY_ACTIVITY,
         registered_registry_session_activities,
         registered_session_deployment_activities,
@@ -222,8 +222,8 @@ def test_closing_worker_refuses_new_session_or_root_registration_before_factory_
 def test_worker_maintenance_requires_this_factory_object_and_original_ports(registry, change):
     from types import FunctionType
 
-    from ralf_agent.temporal_assembly_lifecycle import WorkerExecutionOwner
-    from ralf_agent.temporal_session_deployment_control import (
+    from relf_agent.temporal_assembly_lifecycle import WorkerExecutionOwner
+    from relf_agent.temporal_session_deployment_control import (
         registered_registry_session_activities,
         registered_session_deployment_activities,
     )

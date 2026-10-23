@@ -4,9 +4,9 @@ import asyncio
 
 import pytest
 
-import ralf_agent as r
-from ralf_agent.binding_catalog import BindingCatalog
-from ralf_agent.errors import MemoryBackendError
+import relf_agent as r
+from relf_agent.binding_catalog import BindingCatalog
+from relf_agent.errors import MemoryBackendError
 
 from .helpers import ScriptedProvider
 from .test_postgres_adapter import postgres_dsn as postgres_dsn

@@ -9,18 +9,18 @@ from pathlib import Path
 
 import pytest
 
-from ralf_agent import AgentSpec, ComponentRegistry, LocalEngine, SQLiteStore, TemporalProfile
-from ralf_agent.errors import DefinitionMismatch, ValidationError
-from ralf_agent.governance import TemporalExecutionPolicy
-from ralf_agent.runtime_builder import EchoProvider, RuntimeBuilder
-from ralf_agent.runtime_config import RuntimeCatalog, RuntimeProfile, load_catalog
-from ralf_agent.temporal_builder import TemporalRuntimeBuilder
-from ralf_agent.tools import ToolRegistry
-from ralf_agent.types import canonical
+from relf_agent import AgentSpec, ComponentRegistry, LocalEngine, SQLiteStore, TemporalProfile
+from relf_agent.errors import DefinitionMismatch, ValidationError
+from relf_agent.governance import TemporalExecutionPolicy
+from relf_agent.runtime_builder import EchoProvider, RuntimeBuilder
+from relf_agent.runtime_config import RuntimeCatalog, RuntimeProfile, load_catalog
+from relf_agent.temporal_builder import TemporalRuntimeBuilder
+from relf_agent.tools import ToolRegistry
+from relf_agent.types import canonical
 
 
 def policy_type():
-    return importlib.import_module("ralf_agent.governance").LocalExecutionPolicy
+    return importlib.import_module("relf_agent.governance").LocalExecutionPolicy
 
 
 def profile(config=None, *, adapter="local-bounded", provider="offline-echo", version="1"):

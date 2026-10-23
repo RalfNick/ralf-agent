@@ -5,9 +5,9 @@ import threading
 
 import pytest
 
-from ralf_agent import InMemoryMemory, Scope, ThreadedMemoryAdapter
-from ralf_agent.errors import CloseIncomplete, MemoryBackendError, ValidationError
-from ralf_agent.recall import RecallQuery
+from relf_agent import InMemoryMemory, Scope, ThreadedMemoryAdapter
+from relf_agent.errors import CloseIncomplete, MemoryBackendError, ValidationError
+from relf_agent.recall import RecallQuery
 
 
 def proof(action="run-a:context:0:1", epoch="epoch-a"):
@@ -21,7 +21,7 @@ def proof(action="run-a:context:0:1", epoch="epoch-a"):
 
 
 def owner(**options):
-    from ralf_agent.temporal_context_execution import ContextExecutionOwner
+    from relf_agent.temporal_context_execution import ContextExecutionOwner
 
     return ContextExecutionOwner(**options)
 

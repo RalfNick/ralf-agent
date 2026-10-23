@@ -9,9 +9,9 @@
 安装本地构建的 wheel 后，以下命令可以在 checkout 外运行，无需模型密钥或远程服务：
 
 ```sh
-python -m ralf_agent.parent_completion_starter --kind plan
-python -m ralf_agent.parent_completion_starter --kind team --model-verification
-python -m ralf_agent.parent_completion_starter --kind plan --task '{"dataset_id":"warehouse-a","target":null,"quantity":3}'
+python -m relf_agent.parent_completion_starter --kind plan
+python -m relf_agent.parent_completion_starter --kind team --model-verification
+python -m relf_agent.parent_completion_starter --kind plan --task '{"dataset_id":"warehouse-a","target":null,"quantity":3}'
 ```
 
 参考组合提供真实 Python 库存查询和整数计算工具、研究成员、写作成员及 `InventoryParentCompletionGate`。Plan 使用原 DAG，Team 使用原 Supervisor。默认三单位 wire 的总价为 1275 分；缺输入返回 needs_input，未知 SKU 返回 not_found，库存不足停止计算。报告包含原回执、gate/adopted 结论、子 Run 和额度。默认 Provider 是离线协议 fixture，`model_quality`始终为空；它验证链路和恢复，不代表模型质量。
@@ -20,7 +20,7 @@ python -m ralf_agent.parent_completion_starter --kind plan --task '{"dataset_id"
 
 ```python
 import asyncio
-from ralf_agent.parent_completion_starter import run_reference
+from relf_agent.parent_completion_starter import run_reference
 
 report = asyncio.run(run_reference("team", model_verification=True))
 assert report["state"] == "succeeded"
@@ -40,8 +40,8 @@ assert report["model_quality"] is None
 旧默认为 False，定义、额度和报告保持；启用后是新定义，请使用新数据库或原恢复工厂。
 
 ```sh
-python -m ralf_agent.parent_completion_starter --kind plan --member-verification --db-path ./plan.sqlite
-python -m ralf_agent.parent_completion_starter --kind team --member-verification --db-path ./team.sqlite
+python -m relf_agent.parent_completion_starter --kind plan --member-verification --db-path ./plan.sqlite
+python -m relf_agent.parent_completion_starter --kind team --member-verification --db-path ./team.sqlite
 ```
 
 下面在安装后执行原五个库存案例，生成配置固定并且每个案例重复三次；更换 `kind`
@@ -52,7 +52,7 @@ python -m ralf_agent.parent_completion_starter --kind team --member-verification
 import asyncio
 import os
 import httpx
-from ralf_agent import DeepSeekChatProvider, EvaluationLimits, evaluate_orchestration
+from relf_agent import DeepSeekChatProvider, EvaluationLimits, evaluate_orchestration
 
 async def main():
     async with httpx.AsyncClient(timeout=45) as client:
@@ -74,7 +74,7 @@ async def main():
 report = asyncio.run(main())
 ```
 
-CLI `ralf-evaluate-orchestration --member-verification --completion-gate` 也支持原
+CLI `relf-evaluate-orchestration --member-verification --completion-gate` 也支持原
 已注册 Provider 配置；启用成员验证但未启用父级 gate 时在客户端创建前拒绝。原 JSON／TOML 能力绑定
 可显式注册自定义 CompletionVerifier；参考政策仅约束库存业务，不成为所有 Agent 的默认。
 阶段质量结果及支持边界见 [delivery-gates.md](delivery-gates.md)。
@@ -122,7 +122,7 @@ pointer = "/total"
 ```python
 import asyncio
 import json
-from ralf_agent import (
+from relf_agent import (
     AgentSpec,
     ComponentRegistry,
     ModelResponse,
@@ -224,8 +224,8 @@ source冻结期间外部DAG patch会拒绝，避免验证旧候选时悄悄改�
 ## 独立评测和能力边界
 
 ```sh
-ralf-evaluate-orchestration --offline --kind plan-and-execute --completion-gate --repeats 3
-ralf-evaluate-orchestration --offline --kind team --completion-gate --repeats 3
+relf-evaluate-orchestration --offline --kind plan-and-execute --completion-gate --repeats 3
+relf-evaluate-orchestration --offline --kind team --completion-gate --repeats 3
 ```
 
 显式评测模式保留原业务 oracle、实际参数／结果／消费／停止检查，新增当前 revision lineage 和门禁采纳检查。旧报告默认不变化。历史修订的好回执不能替代当前任务证据；原错误尝试仍保存，不能删除以提高分数。

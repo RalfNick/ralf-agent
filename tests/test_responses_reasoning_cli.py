@@ -17,7 +17,7 @@ NAMES = [
 
 
 def cli(name):
-    return importlib.import_module("ralf_agent." + name)
+    return importlib.import_module("relf_agent." + name)
 
 
 def selection(name, provider="openai-responses-reasoning"):
@@ -189,9 +189,9 @@ def plain_messages(items):
 def test_responses_cli_runs_managed_evaluation_and_replays_native_reasoning(
     name, tmp_path, monkeypatch, capsys
 ):
-    from ralf_agent.embeddings import HashEmbeddingProvider
-    from ralf_agent.orchestration_evaluation import OfflineOrchestrationProvider
-    from ralf_agent.rag_evaluation import OfflineRAGProvider
+    from relf_agent.embeddings import HashEmbeddingProvider
+    from relf_agent.orchestration_evaluation import OfflineOrchestrationProvider
+    from relf_agent.rag_evaluation import OfflineRAGProvider
     from tests.test_planning_evaluation import proposal
 
     native_client = httpx.AsyncClient
@@ -240,7 +240,7 @@ def test_responses_cli_runs_managed_evaluation_and_replays_native_reasoning(
             response = await OfflineOrchestrationProvider().complete(messages, tools)
             output, calls = response.output, response.tool_calls
         elif not any(item.get("type") == "function_call_output" for item in body["input"]):
-            from ralf_agent import ToolCall
+            from relf_agent import ToolCall
 
             output, calls = (
                 None,

@@ -4,9 +4,9 @@ import asyncio
 
 import pytest
 
-import ralf_agent as r
-from ralf_agent.errors import ValidationError
-from ralf_agent.runtime_builder import ComponentRegistry
+import relf_agent as r
+from relf_agent.errors import ValidationError
+from relf_agent.runtime_builder import ComponentRegistry
 
 from .composite_session_fixture import definitions
 from .remote_session_fixture import RemoteMemory

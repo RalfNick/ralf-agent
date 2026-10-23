@@ -5,13 +5,13 @@ from types import SimpleNamespace
 
 import pytest
 
-from ralf_agent import AgentSpec, LocalEngine, ModelResponse, SQLiteStore, ToolRegistry
-from ralf_agent.binding_catalog import component_identity as binding_identity
-from ralf_agent.context import ContextAssembler
-from ralf_agent.errors import ValidationError
-from ralf_agent.runtime_builder import ComponentRegistry, RuntimeBuilder
-from ralf_agent.runtime_config import RuntimeProfile
-from ralf_agent.temporal_activities import component_identity as temporal_identity
+from relf_agent import AgentSpec, LocalEngine, ModelResponse, SQLiteStore, ToolRegistry
+from relf_agent.binding_catalog import component_identity as binding_identity
+from relf_agent.context import ContextAssembler
+from relf_agent.errors import ValidationError
+from relf_agent.runtime_builder import ComponentRegistry, RuntimeBuilder
+from relf_agent.runtime_config import RuntimeProfile
+from relf_agent.temporal_activities import component_identity as temporal_identity
 
 
 class AsyncComplete:

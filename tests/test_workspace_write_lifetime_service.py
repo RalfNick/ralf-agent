@@ -13,9 +13,9 @@ from pathlib import Path
 
 import pytest
 
-import ralf_agent as r
-from ralf_agent.errors import CloseIncomplete, CoordinatorBusy
-from ralf_agent.temporal import replay_temporal_history
+import relf_agent as r
+from relf_agent.errors import CloseIncomplete, CoordinatorBusy
+from relf_agent.temporal import replay_temporal_history
 
 from .test_workspace_write_configuration import Writer
 from .test_workspace_write_execution import definition
@@ -130,7 +130,7 @@ def test_actual_native_cancel_close_original_thread_and_root_lease(
         factories.register_async("tools", "roots", tools)
 
         async def journal(config, context):
-            from ralf_agent.temporal_journal import PostgresEffectJournal
+            from relf_agent.temporal_journal import PostgresEffectJournal
 
             original_journal = context.own_async(
                 await PostgresEffectJournal.connect(
@@ -214,8 +214,8 @@ def test_actual_native_cancel_close_original_thread_and_root_lease(
             with pytest.raises(CoordinatorBusy):
                 r.FileSystemWritableWorkspace(roots[name], version="1", scopes=[scope])
             command = (
-                "import sys; from ralf_agent import FileSystemWritableWorkspace; "
-                "from ralf_agent.errors import CoordinatorBusy; "
+                "import sys; from relf_agent import FileSystemWritableWorkspace; "
+                "from relf_agent.errors import CoordinatorBusy; "
                 "\ntry: FileSystemWritableWorkspace(sys.argv[1], version='1')"
                 "\nexcept CoordinatorBusy: sys.exit(18)"
                 "\nelse: sys.exit(0)"

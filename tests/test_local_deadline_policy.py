@@ -2,8 +2,8 @@ import dataclasses
 
 import pytest
 
-from ralf_agent import governance
-from ralf_agent.errors import ValidationError
+from relf_agent import governance
+from relf_agent.errors import ValidationError
 
 
 def test_local_policy_is_immutable_and_separate_from_temporal_policy():

@@ -7,12 +7,12 @@ from pathlib import Path
 
 import pytest
 
-from ralf_agent import component_fingerprint as fp
+from relf_agent import component_fingerprint as fp
 
 PROBE = r"""
 import json, sys
 sys.path.insert(0, sys.argv[1])
-from ralf_agent import component_fingerprint as fp
+from relf_agent import component_fingerprint as fp
 role, drift, kind = sys.argv[2:]
 def target(value):
     return 42

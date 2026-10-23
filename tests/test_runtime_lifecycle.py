@@ -3,7 +3,7 @@ import threading
 
 import pytest
 
-from ralf_agent import (
+from relf_agent import (
     AgentSpec,
     ComponentRegistry,
     ModelResponse,
@@ -16,7 +16,7 @@ from ralf_agent import (
     ToolRegistry,
     ToolSpec,
 )
-from ralf_agent.errors import CoordinatorBusy, ValidationError
+from relf_agent.errors import CoordinatorBusy, ValidationError
 
 
 def test_cancelled_tasks_cannot_switch_profiles_while_a_real_handler_thread_is_alive(tmp_path):

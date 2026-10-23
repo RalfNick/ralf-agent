@@ -7,14 +7,14 @@ from pathlib import Path
 
 import pytest
 
-from ralf_agent.adapter_contract_types import (
+from relf_agent.adapter_contract_types import (
     SUITE_DIGEST,
     AdapterContractCaseResult,
     AdapterContractReport,
 )
-from ralf_agent.adapter_contracts import AdapterContractSuite
-from ralf_agent.errors import ValidationError
-from ralf_agent.types import canonical
+from relf_agent.adapter_contracts import AdapterContractSuite
+from relf_agent.errors import ValidationError
+from relf_agent.types import canonical
 
 
 def session_cases(count=10):
@@ -64,7 +64,7 @@ def test_reports_cannot_hide_or_substitute_session_requirements(selection):
 
 @pytest.mark.parametrize("profile,count", [("core", 10), ("receipts", 14)])
 def test_session_missing_fixture_performs_no_testing_io(profile, count, tmp_path, monkeypatch):
-    import ralf_agent.adapter_contracts as module
+    import relf_agent.adapter_contracts as module
 
     def forbidden(*args, **kwargs):
         pytest.fail("Unconfigured Session contract performed I/O")
@@ -95,7 +95,7 @@ def test_invalid_profile_fails_before_testing(role, profile):
 
 @pytest.mark.parametrize("profile,count", [("core", 10), ("receipts", 14)])
 def test_session_dispatch_remains_suite_owned_redacted_and_complete(profile, count, monkeypatch):
-    import ralf_agent.adapter_contracts as module
+    import relf_agent.adapter_contracts as module
 
     calls = []
     secret = "private query and credential body"
@@ -129,7 +129,7 @@ def test_session_observations_do_not_expand_knowledge_v1_allowlist():
 
 @pytest.mark.parametrize("profile", ["core", "receipts"])
 def test_session_observer_cancel_drains_actual_case_before_workspace_release(profile, monkeypatch):
-    import ralf_agent.adapter_contracts as module
+    import relf_agent.adapter_contracts as module
 
     async def exercise():
         entered, cleaning, release = asyncio.Event(), asyncio.Event(), asyncio.Event()
@@ -166,9 +166,9 @@ def test_session_observer_cancel_drains_actual_case_before_workspace_release(pro
 
 
 def test_session_failed_cleanup_retains_selected_complete_catalog_and_original_owner(monkeypatch):
-    import ralf_agent.adapter_contracts as module
-    from ralf_agent.adapter_contract_types import AdapterContractCleanupPending
-    from ralf_agent.errors import CloseIncomplete
+    import relf_agent.adapter_contracts as module
+    from relf_agent.adapter_contract_types import AdapterContractCleanupPending
+    from relf_agent.errors import CloseIncomplete
 
     async def exercise():
         calls, retries, workspaces = [], [], []

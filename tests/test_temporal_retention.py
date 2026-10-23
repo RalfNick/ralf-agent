@@ -7,9 +7,9 @@ from types import SimpleNamespace
 
 import pytest
 
-from ralf_agent import Scope
-from ralf_agent.errors import DefinitionMismatch, ValidationError
-from ralf_agent.temporal_journal import PostgresEffectJournal
+from relf_agent import Scope
+from relf_agent.errors import DefinitionMismatch, ValidationError
+from relf_agent.temporal_journal import PostgresEffectJournal
 from tests.test_temporal_deployment_release import environment
 
 
@@ -56,7 +56,7 @@ def configured(monkeypatch):
 
 
 async def seal(runtime, client, state, info):
-    from ralf_agent.temporal_deployment_release import execute
+    from relf_agent.temporal_deployment_release import execute
 
     await execute(
         runtime,
@@ -73,7 +73,7 @@ async def seal(runtime, client, state, info):
 
 def test_full_original_seal_is_read_only_and_preserves_authority(monkeypatch):
     async def run():
-        from ralf_agent.temporal_retention import compact_effect_evidence
+        from relf_agent.temporal_retention import compact_effect_evidence
 
         engine, runtime, client, state, proof, info, calls = configured(monkeypatch)
         await seal(runtime, client, state, info)
@@ -106,7 +106,7 @@ def test_full_original_seal_is_read_only_and_preserves_authority(monkeypatch):
 )
 def test_original_obligations_or_wrong_binding_prevent_sql(monkeypatch, condition):
     async def run():
-        from ralf_agent.temporal_retention import compact_effect_evidence
+        from relf_agent.temporal_retention import compact_effect_evidence
 
         engine, runtime, client, state, proof, info, calls = configured(monkeypatch)
         if condition != "no_seal":
@@ -134,7 +134,7 @@ def test_original_obligations_or_wrong_binding_prevent_sql(monkeypatch, conditio
 
 def test_scope_change_during_sdk_await_is_rejected_before_pruning(monkeypatch):
     async def run():
-        from ralf_agent.temporal_retention import compact_effect_evidence
+        from relf_agent.temporal_retention import compact_effect_evidence
 
         engine, runtime, client, state, proof, info, calls = configured(monkeypatch)
         await seal(runtime, client, state, info)
@@ -155,7 +155,7 @@ def test_scope_change_during_sdk_await_is_rejected_before_pruning(monkeypatch):
 
 def test_namespace_uuid_change_during_compaction_is_rejected(monkeypatch):
     async def run():
-        from ralf_agent.temporal_retention import compact_effect_evidence
+        from relf_agent.temporal_retention import compact_effect_evidence
 
         engine, runtime, client, state, proof, info, calls = configured(monkeypatch)
         await seal(runtime, client, state, info)
@@ -175,7 +175,7 @@ def test_namespace_uuid_change_during_compaction_is_rejected(monkeypatch):
 
 @pytest.mark.parametrize("limit", [True, 0, 1001, 1.5])
 def test_bad_limit_precedes_all_io(monkeypatch, limit):
-    from ralf_agent.temporal_retention import compact_effect_evidence
+    from relf_agent.temporal_retention import compact_effect_evidence
 
     engine, runtime, client, state, proof, info, calls = configured(monkeypatch)
     with pytest.raises(ValidationError):

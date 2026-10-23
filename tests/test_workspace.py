@@ -4,8 +4,8 @@ import hashlib
 
 import pytest
 
-import ralf_agent as ralf
-from ralf_agent.errors import AuthorizationDenied, ValidationError
+import relf_agent as ralf
+from relf_agent.errors import AuthorizationDenied, ValidationError
 
 SCOPE = ralf.Scope("documents", "reader")
 

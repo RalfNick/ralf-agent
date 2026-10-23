@@ -4,8 +4,8 @@ import os
 
 import pytest
 
-from ralf_agent import Scope
-from ralf_agent.errors import DefinitionMismatch, ValidationError
+from relf_agent import Scope
+from relf_agent.errors import DefinitionMismatch, ValidationError
 
 from .test_workspace import api
 

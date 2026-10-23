@@ -7,10 +7,10 @@ from dataclasses import replace
 
 import pytest
 
-from ralf_agent.errors import DefinitionMismatch, ValidationError
-from ralf_agent.memory import InMemoryMemory, SQLiteMemory
-from ralf_agent.recall import LegacyMemoryRecallAdapter, RecallPage
-from ralf_agent.types import Scope, canonical
+from relf_agent.errors import DefinitionMismatch, ValidationError
+from relf_agent.memory import InMemoryMemory, SQLiteMemory
+from relf_agent.recall import LegacyMemoryRecallAdapter, RecallPage
+from relf_agent.types import Scope, canonical
 
 STREAM = "a" * 64
 ADDRESS = "ralf-native-model-history-v1:" + STREAM
@@ -18,7 +18,7 @@ ADDRESS = "ralf-native-model-history-v1:" + STREAM
 
 def api():
     try:
-        return importlib.import_module("ralf_agent.native_session_history")
+        return importlib.import_module("relf_agent.native_session_history")
     except ModuleNotFoundError:
         pytest.fail("Complete native Session read adapter is missing")
 
@@ -265,7 +265,7 @@ def test_native_reader_rechecks_mutated_page_json_before_copying_a_deferred_valu
 
 
 def test_native_reader_refuses_session_view_legacy_fallback_before_full_read():
-    from ralf_agent.binding_sessions import SessionBindingResource
+    from relf_agent.binding_sessions import SessionBindingResource
 
     class Legacy:
         backend_id = "legacy-view"

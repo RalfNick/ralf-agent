@@ -4,7 +4,7 @@ from contextlib import contextmanager
 
 import pytest
 
-from ralf_agent import (
+from relf_agent import (
     AgentSpec,
     ArtifactReference,
     InMemoryArtifactStore,
@@ -15,14 +15,14 @@ from ralf_agent import (
     ToolRegistry,
     ToolSpec,
 )
-from ralf_agent.errors import AuthorizationDenied, DefinitionMismatch, ValidationError
-from ralf_agent.types import canonical
+from relf_agent.errors import AuthorizationDenied, DefinitionMismatch, ValidationError
+from relf_agent.types import canonical
 from tests.helpers import ScriptedProvider
 from tests.test_managed_memory_stage import engine, schema
 
 
 def context(store, **kwargs):
-    from ralf_agent.data_context import ManagedDataContext
+    from relf_agent.data_context import ManagedDataContext
 
     return ManagedDataContext(store, tool_result_chars=1024, preview_chars=64, **kwargs)
 
@@ -82,7 +82,7 @@ def test_actual_backend_cannot_move_behind_an_unchanged_declared_identity():
 
 @pytest.mark.parametrize("kwargs", [{"preview_chars": True}, {"reference_chars": 0}])
 def test_invalid_projection_budget_is_rejected(kwargs):
-    from ralf_agent.data_context import ManagedDataContext
+    from relf_agent.data_context import ManagedDataContext
 
     with pytest.raises(ValidationError):
         ManagedDataContext(InMemoryArtifactStore(), **kwargs)
@@ -461,7 +461,7 @@ def test_cancel_during_initial_artifact_lookup_prevents_a_new_put(tmp_path):
 
 
 def test_fact_change_during_final_artifact_read_blocks_stale_model_disclosure(tmp_path):
-    from ralf_agent import InMemoryMemory, MemoryRecallPolicy
+    from relf_agent import InMemoryMemory, MemoryRecallPolicy
 
     memory = InMemoryMemory(backend_id="facts")
     memory.put_fact(Scope(), "a", "state", "BEFORE", expected_version=0)
@@ -523,7 +523,7 @@ def test_dispatched_artifact_cannot_be_downgraded_to_prepared(tmp_path):
         with pytest.raises(Crash):
             asyncio.run(local.drive(h.run_id))
         # Restore normal transaction behavior; deliberately corrupt one field.
-        from ralf_agent.storage import SQLiteStore
+        from relf_agent.storage import SQLiteStore
 
         local.store.transaction = SQLiteStore.transaction.__get__(local.store)
         run = local.store.run(h.run_id)

@@ -2,8 +2,8 @@
 
 import pytest
 
-from ralf_agent.codex_environment import DockerCodingEnvironment
-from ralf_agent.errors import ValidationError
+from relf_agent.codex_environment import DockerCodingEnvironment
+from relf_agent.errors import ValidationError
 from tests.test_codex_environment import resource as resource
 
 
@@ -60,8 +60,8 @@ def test_original_supervision_sources_cannot_move_before_preparation(resource, m
     import asyncio
     import os
 
-    from ralf_agent import coding_create_inventory
-    from ralf_agent.errors import DefinitionMismatch
+    from relf_agent import coding_create_inventory
+    from relf_agent.errors import DefinitionMismatch
 
     owner = environment(resource, create_supervision=True)
     original = coding_create_inventory.source_inventory()

@@ -3,7 +3,7 @@ import importlib
 
 import pytest
 
-from ralf_agent import (
+from relf_agent import (
     InMemoryMemory,
     InMemoryVectorIndex,
     RecallQuery,
@@ -11,7 +11,7 @@ from ralf_agent import (
     SQLiteMemory,
     SQLiteVectorIndex,
 )
-from ralf_agent.errors import ValidationError
+from relf_agent.errors import ValidationError
 
 
 class Embedding:
@@ -29,8 +29,8 @@ class Embedding:
 def test_qdrant_collection_change_rebuilds_instead_of_reusing_another_collection_receipt():
     import httpx
 
-    from ralf_agent import FactIndexCatalog, IndexedMemoryStore
-    from ralf_agent.qdrant import QdrantVectorIndex
+    from relf_agent import FactIndexCatalog, IndexedMemoryStore
+    from relf_agent.qdrant import QdrantVectorIndex
     from tests.test_qdrant_adapter import QdrantHTTP
 
     async def run():
@@ -73,7 +73,7 @@ def test_qdrant_collection_change_rebuilds_instead_of_reusing_another_collection
 
 
 def api():
-    module = importlib.import_module("ralf_agent")
+    module = importlib.import_module("relf_agent")
     assert hasattr(module, "IndexedMemoryStore"), "Missing complete-corpus derived Facts index"
     assert hasattr(module, "FactIndexCatalog"), "Missing replaceable index publication catalog"
     return module.IndexedMemoryStore, module.FactIndexCatalog
@@ -178,7 +178,7 @@ def test_index_catalog_lazy_load_is_rejected_without_executing_generator():
 
 
 def test_total_index_record_budget_stops_before_next_embedding_and_activation():
-    from ralf_agent.errors import BudgetExceeded
+    from relf_agent.errors import BudgetExceeded
 
     cls, catalog_cls = api()
     source, embedding = InMemoryMemory(), Embedding()
@@ -204,7 +204,7 @@ def test_total_index_record_budget_stops_before_next_embedding_and_activation():
 
 
 def test_internal_adoption_hook_drift_is_rejected_before_io():
-    from ralf_agent.errors import DefinitionMismatch
+    from relf_agent.errors import DefinitionMismatch
 
     cls, catalog_cls = api()
     embedding = Embedding()
@@ -284,12 +284,12 @@ def test_real_process_recovery_reuses_accepted_embeddings_and_original_publicati
     import sys
     from pathlib import Path
 
-    import ralf_agent
+    import relf_agent
 
     env = {
         "PATH": os.defpath,
         "PYTHONPATH": os.pathsep.join(
-            [str(Path(ralf_agent.__file__).parents[1]), str(Path(__file__).parents[1])]
+            [str(Path(relf_agent.__file__).parents[1]), str(Path(__file__).parents[1])]
         ),
     }
     for mode, expected in [("crash", 79), ("resume", 0)]:
@@ -355,8 +355,8 @@ def test_partial_cursor_cannot_be_forged_into_complete_active_state():
 
 
 def test_same_snapshot_clone_cannot_replace_actual_source_resource_during_embedding(tmp_path):
-    from ralf_agent import SQLiteStore
-    from ralf_agent.errors import DefinitionMismatch
+    from relf_agent import SQLiteStore
+    from relf_agent.errors import DefinitionMismatch
 
     source, metadata = SQLiteMemory(tmp_path / "source.sqlite"), InMemoryMemory()
     replacement = SQLiteStore(tmp_path / "cloned.sqlite")
@@ -412,7 +412,7 @@ def test_index_recall_cursor_preserves_byte_stop_without_repeating_first_hit():
 
 
 def test_host_scoped_view_can_collect_multiple_indexed_facts_and_validate_provenance():
-    from ralf_agent.binding_data import FactsView
+    from relf_agent.binding_data import FactsView
 
     cls, catalog_cls = api()
     source = InMemoryMemory()

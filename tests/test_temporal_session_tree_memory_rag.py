@@ -6,7 +6,7 @@ import uuid
 
 import pytest
 
-from ralf_agent import (
+from relf_agent import (
     Document,
     InMemoryKnowledgeStore,
     KnowledgeContext,
@@ -15,9 +15,9 @@ from ralf_agent import (
     Scope,
     SQLiteMemory,
 )
-from ralf_agent.temporal import TemporalEngine, build_temporal_worker, replay_temporal_history
-from ralf_agent.temporal_activities import TemporalRuntime
-from ralf_agent.temporal_session_topology import CompositeSessionTopology
+from relf_agent.temporal import TemporalEngine, build_temporal_worker, replay_temporal_history
+from relf_agent.temporal_activities import TemporalRuntime
+from relf_agent.temporal_session_topology import CompositeSessionTopology
 from tests.temporal_memory_worker import definition
 from tests.temporal_memory_worker import runtime as memory_runtime
 
@@ -118,7 +118,7 @@ def test_actual_tree_bound_memory_and_rag_finish_before_root_save(
                     assert members == 2
                     assert sessions.read(scope, entry.ref.key.storage_key)[0] == index + 1
                 for namespace in ("one", "two"):
-                    from ralf_agent.recall import RecallQuery
+                    from relf_agent.recall import RecallQuery
 
                     record = facts.recall(scope, namespace, RecallQuery())
                     assert record.items, namespace

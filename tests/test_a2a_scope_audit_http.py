@@ -14,8 +14,8 @@ from pathlib import Path
 import httpx
 import pytest
 
-from ralf_agent.a2a import A2AClient
-from ralf_agent.types import canonical
+from relf_agent.a2a import A2AClient
+from relf_agent.types import canonical
 from tests.test_a2a_scope_isolation import persisted
 
 

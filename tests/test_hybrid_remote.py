@@ -8,7 +8,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 import httpx
 import pytest
 
-from ralf_agent import (
+from relf_agent import (
     HashEmbeddingProvider,
     IngestionCoordinator,
     RetrievalQuery,
@@ -16,7 +16,7 @@ from ralf_agent import (
     RuntimeProfile,
     SourceDocument,
 )
-from ralf_agent.errors import ValidationError
+from relf_agent.errors import ValidationError
 
 
 @pytest.fixture

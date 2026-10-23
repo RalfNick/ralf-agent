@@ -6,14 +6,14 @@ from threading import Event
 
 import pytest
 
-import ralf_agent as r
-from ralf_agent.errors import (
+import relf_agent as r
+from relf_agent.errors import (
     CoordinatorBusy,
     DefinitionMismatch,
     IdempotencyConflict,
     ValidationError,
 )
-from ralf_agent.workspace import WorkspaceError
+from relf_agent.workspace import WorkspaceError
 
 SCOPE = r.Scope()
 

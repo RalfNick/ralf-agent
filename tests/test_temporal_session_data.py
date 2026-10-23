@@ -3,7 +3,7 @@ from dataclasses import asdict
 
 import pytest
 
-from ralf_agent import (
+from relf_agent import (
     AgentBindingDescriptor,
     AgentDefinition,
     AgentSpec,
@@ -14,17 +14,17 @@ from ralf_agent import (
     SessionBindingResource,
     ToolRegistry,
 )
-from ralf_agent.errors import AuthorizationDenied, DefinitionMismatch, ValidationError
-from ralf_agent.temporal_activities import TemporalRuntime
-from ralf_agent.temporal_bindings import normalize_request
-from ralf_agent.temporal_state import TemporalRunState
-from ralf_agent.types import submission_request
+from relf_agent.errors import AuthorizationDenied, DefinitionMismatch, ValidationError
+from relf_agent.temporal_activities import TemporalRuntime
+from relf_agent.temporal_bindings import normalize_request
+from relf_agent.temporal_state import TemporalRunState
+from relf_agent.types import submission_request
 
 from .test_temporal_facts import Provider
 
 
 def setup(*, selected="ref", backend=None, managed=False):
-    from ralf_agent import ManagedContextPipeline
+    from relf_agent import ManagedContextPipeline
 
     scope = Scope("sessions", "alice")
     backend = backend or InMemoryMemory(backend_id="session-source")
@@ -65,7 +65,7 @@ def test_session_role_registers_an_opt_in_fixed_read_protocol():
 
 
 def test_scoped_read_is_bounded_does_not_call_full_read(monkeypatch):
-    from ralf_agent.temporal_session_data import private_address
+    from relf_agent.temporal_session_data import private_address
 
     async def run():
         runtime, state, backend, _, scope = setup()
@@ -164,7 +164,7 @@ def test_session_requires_native_bounded_port():
 def test_original_session_snapshot_survives_data_changes_before_model_and_restore(managed):
     import copy
 
-    from ralf_agent.temporal_session_data import private_address
+    from relf_agent.temporal_session_data import private_address
 
     from .test_temporal_binding_isolation import advance
 
@@ -256,7 +256,7 @@ def test_memory_instance_identity_differs_for_equal_declared_backend_names():
 
 
 def test_private_read_cannot_be_mistaken_for_a_durable_history_session():
-    from ralf_agent.temporal_session_state import validate_binding
+    from relf_agent.temporal_session_state import validate_binding
 
     runtime, state, _, _, scope = setup()
     # Turn admission must fail before command reservation, Model or data I/O.
@@ -274,8 +274,8 @@ def test_private_read_cannot_be_mistaken_for_a_durable_history_session():
 
 
 def test_composite_session_binding_is_not_enabled_without_stable_child_addresses():
-    from ralf_agent import BoundDefinition, TeamSpec
-    from ralf_agent.temporal_parent_state import TemporalParentState
+    from relf_agent import BoundDefinition, TeamSpec
+    from relf_agent.temporal_parent_state import TemporalParentState
 
     runtime, _, _, _, scope = setup()
     spec = BoundDefinition(
@@ -321,7 +321,7 @@ def test_same_identity_client_replacement_is_rejected():
 
 
 def test_threaded_wrapped_source_replacement_is_rejected_before_read():
-    from ralf_agent import ThreadedMemoryAdapter
+    from relf_agent import ThreadedMemoryAdapter
 
     bridge = ThreadedMemoryAdapter(InMemoryMemory(backend_id="same"))
     runtime = TemporalRuntime(
@@ -333,7 +333,7 @@ def test_threaded_wrapped_source_replacement_is_rejected_before_read():
 
 
 def test_catalog_session_sources_allow_an_explicit_read_budget():
-    from ralf_agent.recall import RecallQuery
+    from relf_agent.recall import RecallQuery
 
     scope = Scope()
     catalog = BindingCatalog(scope=scope)
@@ -353,7 +353,7 @@ def test_catalog_session_sources_allow_an_explicit_read_budget():
 
 
 def test_threaded_session_requires_original_bounded_port_without_legacy_fallback():
-    from ralf_agent import ThreadedMemoryAdapter
+    from relf_agent import ThreadedMemoryAdapter
 
     source = InMemoryMemory()
     source.read_page = None
@@ -367,7 +367,7 @@ def test_threaded_session_requires_original_bounded_port_without_legacy_fallback
 
 
 def test_threaded_original_bounded_method_replacement_rejected():
-    from ralf_agent import ThreadedMemoryAdapter
+    from relf_agent import ThreadedMemoryAdapter
 
     source = InMemoryMemory()
     runtime = TemporalRuntime(
@@ -382,8 +382,8 @@ def test_threaded_original_bounded_method_replacement_rejected():
 
 @pytest.mark.parametrize("nested", [False, True])
 def test_dynamic_model_planner_external_session_is_checked_before_admission(nested):
-    from ralf_agent import BoundDefinition, DynamicWorkflowSpec, TeamSpec
-    from ralf_agent.temporal_parent_state import TemporalParentState
+    from relf_agent import BoundDefinition, DynamicWorkflowSpec, TeamSpec
+    from relf_agent.temporal_parent_state import TemporalParentState
 
     runtime = TemporalRuntime(
         providers={"default": Provider()}, tools=ToolRegistry(), session_store=InMemoryMemory()

@@ -1,7 +1,7 @@
 import pytest
 
-from ralf_agent import component_fingerprint as fp
-from ralf_agent.types import digest
+from relf_agent import component_fingerprint as fp
+from relf_agent.types import digest
 
 
 @pytest.mark.parametrize("defaults", [False, True])

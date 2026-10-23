@@ -5,7 +5,7 @@ dev13 提供 AsyncLifecycle、register_async、abuild、own_async 和 RuntimeIns
 ## 从安装包开始
 
 ```shell
-ralf --format text init my-async-agent --template async
+relf --format text init my-async-agent --template async
 cd my-async-agent
 python -m agent_app --input hello --command-id first
 python -m agent_app --input hello --command-id first
@@ -16,7 +16,7 @@ python -m agent_app --input hello --command-id first
 ```shell
 python -m agent_app --input hello --command-id queued --submit-only
 python -m agent_app --resume RUN_ID
-ralf --db .ralf/runs.sqlite --format text inspect RUN_ID
+relf --db .ralf/runs.sqlite --format text inspect RUN_ID
 ```
 
 runtime.toml 声明 Profile；provider_factory 注册 async-demo，调用 context.own_async(client) 后返回 Provider。create_runtime 根据原 Run 身份选择保留的 Profile；更改 default 只影响新任务。替换 transport/工厂接入真实模型时，显式配置服务与凭据并更新版本；原代码和声明仍需保留。
@@ -28,7 +28,7 @@ register_async 显式注册 async 函数、bound method、partial 或 async call
 ```python
 import asyncio
 
-from ralf_agent import AgentSpec, ComponentRegistry, ModelResponse, RuntimeBuilder, RuntimeProfile
+from relf_agent import AgentSpec, ComponentRegistry, ModelResponse, RuntimeBuilder, RuntimeProfile
 
 
 class Client:

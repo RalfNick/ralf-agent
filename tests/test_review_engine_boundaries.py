@@ -3,7 +3,7 @@ import inspect
 
 import pytest
 
-from ralf_agent import (
+from relf_agent import (
     AgentSpec,
     InMemoryMemory,
     LocalEngine,
@@ -12,7 +12,7 @@ from ralf_agent import (
     ToolRegistry,
     ToolSpec,
 )
-from ralf_agent.errors import AuthorizationDenied, ValidationError
+from relf_agent.errors import AuthorizationDenied, ValidationError
 
 from .helpers import ScriptedProvider, tool_response
 

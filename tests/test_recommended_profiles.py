@@ -2,14 +2,14 @@ import asyncio
 
 import pytest
 
-from ralf_agent import AgentSpec, RuntimeBuilder, RuntimeProfile
-from ralf_agent.errors import ValidationError
+from relf_agent import AgentSpec, RuntimeBuilder, RuntimeProfile
+from relf_agent.errors import ValidationError
 
 
 @pytest.mark.parametrize("kind", ["local-basic", "local-knowledge", "managed-memory"])
 @pytest.mark.parametrize("assembly", ["sync", "async"])
 def test_recommended_profile_is_offline_usable_and_reconnects(tmp_path, kind, assembly):
-    from ralf_agent.recommended import recommended_profile
+    from relf_agent.recommended import recommended_profile
 
     selected = recommended_profile(kind)
 
@@ -55,7 +55,7 @@ def test_invalid_data_factory_is_rejected_before_database_creation(tmp_path):
 
 
 def test_unknown_preset_does_not_silently_select_defaults():
-    from ralf_agent.recommended import recommended_profile
+    from relf_agent.recommended import recommended_profile
 
     with pytest.raises(ValidationError):
         recommended_profile("enterprise")
@@ -64,7 +64,7 @@ def test_unknown_preset_does_not_silently_select_defaults():
 @pytest.mark.parametrize("kind", ["graph", "parallel", "team", "dynamic", "dynamic-dag", "nested"])
 @pytest.mark.parametrize("assembly", ["sync", "async"])
 def test_managed_memory_preset_advanced_facade_reconnects(tmp_path, kind, assembly):
-    from ralf_agent import Runtime, recommended_profile
+    from relf_agent import Runtime, recommended_profile
     from tests.test_composite_memory_stages import definition, records
 
     profile = recommended_profile("managed-memory")
@@ -93,7 +93,7 @@ def test_managed_memory_preset_advanced_facade_reconnects(tmp_path, kind, assemb
 
 
 def test_async_artifact_factory_can_be_replaced_and_owned_resources_close(tmp_path):
-    from ralf_agent import ComponentRegistry, InMemoryArtifactStore, recommended_profile
+    from relf_agent import ComponentRegistry, InMemoryArtifactStore, recommended_profile
 
     resources = []
 
@@ -146,7 +146,7 @@ def test_async_artifact_factory_can_be_replaced_and_owned_resources_close(tmp_pa
 def test_recommended_profile_roundtrips_json_and_toml(tmp_path):
     import json
 
-    from ralf_agent import load_catalog, recommended_profile
+    from relf_agent import load_catalog, recommended_profile
 
     profile = recommended_profile("local-knowledge", version="application-1")
     payload = {

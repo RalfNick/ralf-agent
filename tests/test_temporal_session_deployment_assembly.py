@@ -5,20 +5,20 @@ from types import SimpleNamespace
 
 import pytest
 
-from ralf_agent import (
+from relf_agent import (
     ComponentRegistry,
     DeploymentAdmissionPolicy,
     TemporalProfile,
     TemporalRuntimeBuilder,
 )
-from ralf_agent.errors import CloseIncomplete
-from ralf_agent.runtime_builder import EchoProvider
+from relf_agent.errors import CloseIncomplete
+from relf_agent.runtime_builder import EchoProvider
 
 
 def test_session_close_keeps_receiver_and_owned_resources_for_retry(tmp_path, monkeypatch):
     async def run():
-        from ralf_agent import temporal
-        from ralf_agent import temporal_session_deployment_close as closing
+        from relf_agent import temporal
+        from relf_agent import temporal_session_deployment_close as closing
 
         events = []
 

@@ -6,13 +6,13 @@ import logging
 import pytest
 from temporalio.service import RPCError, RPCStatusCode
 
-from ralf_agent.errors import DefinitionMismatch
-from ralf_agent.temporal_session_deployment_control import owned_control_body
-from ralf_agent.types import digest
+from relf_agent.errors import DefinitionMismatch
+from relf_agent.temporal_session_deployment_control import owned_control_body
+from relf_agent.types import digest
 from tests.test_temporal_session_deployment_control import validation
 
 SECRET = "private-dsn-and-payload-marker"
-LOGGER = "ralf_agent.temporal_session_deployment_control"
+LOGGER = "relf_agent.temporal_session_deployment_control"
 
 
 def failed_body(error):

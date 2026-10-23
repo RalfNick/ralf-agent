@@ -2,8 +2,8 @@ import asyncio
 
 import pytest
 
-import ralf_agent as r
-from ralf_agent.errors import DefinitionMismatch, ValidationError
+import relf_agent as r
+from relf_agent.errors import DefinitionMismatch, ValidationError
 
 from .composite_session_fixture import definitions, root_messages
 from .conversation_namespace_fixture import engine
@@ -76,7 +76,7 @@ def test_original_namespace_approval_and_receipts_survive_restart_default_move(t
                 )
                 from dataclasses import asdict
 
-                from ralf_agent.types import canonical
+                from relf_agent.types import canonical
 
                 assert canonical(asdict(again)) == first
             assert (
@@ -357,7 +357,7 @@ def test_changed_resource_or_scope_refuses_child_dispatch_and_observation_stays_
                 )
             else:
                 raw.scope = r.Scope("other", "principal")
-            from ralf_agent.errors import AuthorizationDenied
+            from relf_agent.errors import AuthorizationDenied
 
             with pytest.raises((DefinitionMismatch, AuthorizationDenied)):
                 await raw.drive(accepted.run_id)

@@ -11,7 +11,7 @@ from pathlib import Path
 from agent_app.adapter import ReferenceFactsSource, register_facts_reference_components
 from agent_app.runtime import create_engine
 
-from ralf_agent import (
+from relf_agent import (
     AgentSpec,
     ComponentRegistry,
     ProfiledEngine,

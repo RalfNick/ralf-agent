@@ -9,7 +9,7 @@ import pytest
 pytest.importorskip("temporalio")
 from temporalio.exceptions import ApplicationError
 
-from ralf_agent.temporal_workflow import TemporalCommandRegistryWorkflow, workflow
+from relf_agent.temporal_workflow import TemporalCommandRegistryWorkflow, workflow
 from tests.test_temporal_deployment_descendant_control_state import original, query, retire
 from tests.test_temporal_deployment_registry_epoch import sdk_info
 

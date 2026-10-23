@@ -1,8 +1,8 @@
 import pytest
 
-from ralf_agent import AgentSpec, Scope, WorkflowSpec
-from ralf_agent.errors import ValidationError
-from ralf_agent.types import credits
+from relf_agent import AgentSpec, Scope, WorkflowSpec
+from relf_agent.errors import ValidationError
+from relf_agent.types import credits
 
 
 @pytest.mark.parametrize("field", ["name", "instructions", "provider", "version"])

@@ -6,15 +6,15 @@ from dataclasses import asdict
 
 import pytest
 
-import ralf_agent as r
-from ralf_agent.binding_sandbox import validate_sandbox_protocol
-from ralf_agent.errors import DefinitionMismatch
-from ralf_agent.temporal_activities import TemporalRuntime
-from ralf_agent.temporal_bindings import effective_step, normalize_request
-from ralf_agent.temporal_parent_state import TemporalParentState
-from ralf_agent.temporal_state import TemporalRunState, validate_manifest
-from ralf_agent.types import canonical, submission_request
-from ralf_agent.user_input import register_user_input
+import relf_agent as r
+from relf_agent.binding_sandbox import validate_sandbox_protocol
+from relf_agent.errors import DefinitionMismatch
+from relf_agent.temporal_activities import TemporalRuntime
+from relf_agent.temporal_bindings import effective_step, normalize_request
+from relf_agent.temporal_parent_state import TemporalParentState
+from relf_agent.temporal_state import TemporalRunState, validate_manifest
+from relf_agent.types import canonical, submission_request
+from relf_agent.user_input import register_user_input
 from tests.test_sandbox_bindings import registered as registered
 from tests.test_temporal_parent_completion import Gate
 from tests.test_temporal_user_input import QuestionProvider, question

@@ -5,7 +5,7 @@ from dataclasses import asdict
 
 import pytest
 
-from ralf_agent import (
+from relf_agent import (
     AgentSpec,
     LocalEngine,
     ModelResponse,
@@ -15,13 +15,13 @@ from ralf_agent import (
     ToolRegistry,
     evaluate_model_compatibility,
 )
-from ralf_agent.errors import (
+from relf_agent.errors import (
     AuthorizationDenied,
     DefinitionMismatch,
     ProviderError,
     ValidationError,
 )
-from ralf_agent.responses_stream import ResponsesStream
+from relf_agent.responses_stream import ResponsesStream
 
 from .test_model_compatibility import Provider
 from .test_responses_provider import call, completed, message
@@ -240,7 +240,7 @@ def test_policy_sees_effective_defaults_before_business_write(tmp_path):
 
 
 def test_temporal_model_activity_resolves_defaults_before_history_adoption():
-    from ralf_agent.temporal_activities import TemporalRuntime
+    from relf_agent.temporal_activities import TemporalRuntime
 
     def write(target: str = "prod"):
         return target

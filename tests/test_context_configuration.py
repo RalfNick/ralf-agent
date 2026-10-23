@@ -3,8 +3,8 @@ import importlib
 
 import pytest
 
-from ralf_agent import AgentSpec, RuntimeBuilder, RuntimeProfile
-from ralf_agent.errors import ValidationError
+from relf_agent import AgentSpec, RuntimeBuilder, RuntimeProfile
+from relf_agent.errors import ValidationError
 
 
 def profile(**config):
@@ -66,10 +66,10 @@ def test_bad_context_factory_declarations_fail_before_store_created(tmp_path, co
 
 
 def test_harness_transform_is_measured_at_actual_request_boundary(tmp_path):
-    from ralf_agent import LocalEngine, ModelRequest, ModelResponse, SQLiteStore, ToolRegistry
-    from ralf_agent.harness import NativeHarness
+    from relf_agent import LocalEngine, ModelRequest, ModelResponse, SQLiteStore, ToolRegistry
+    from relf_agent.harness import NativeHarness
 
-    a = importlib.import_module("ralf_agent.context_pipeline")
+    a = importlib.import_module("relf_agent.context_pipeline")
     called = []
 
     class Provider:
@@ -101,9 +101,9 @@ def test_harness_transform_is_measured_at_actual_request_boundary(tmp_path):
 
 
 def test_real_request_snapshot_survives_reopen_with_opt_in_builder(tmp_path):
-    from ralf_agent import LocalEngine, ModelResponse, SQLiteStore, ToolCall, ToolRegistry, ToolSpec
+    from relf_agent import LocalEngine, ModelResponse, SQLiteStore, ToolCall, ToolRegistry, ToolSpec
 
-    a = importlib.import_module("ralf_agent.context_pipeline")
+    a = importlib.import_module("relf_agent.context_pipeline")
     path = tmp_path / "runs.sqlite"
     dispatches = []
     writes = []

@@ -9,8 +9,8 @@ from pathlib import Path
 
 import pytest
 
-from ralf_agent.adapter_contract_types import CASE_IDS, AdapterContractCaseResult
-from ralf_agent.errors import ValidationError
+from relf_agent.adapter_contract_types import CASE_IDS, AdapterContractCaseResult
+from relf_agent.errors import ValidationError
 
 
 def async_test(method):
@@ -22,8 +22,8 @@ def async_test(method):
 
 
 def api():
-    assert importlib.util.find_spec("ralf_agent.adapter_contracts") is not None
-    return importlib.import_module("ralf_agent.adapter_contracts")
+    assert importlib.util.find_spec("relf_agent.adapter_contracts") is not None
+    return importlib.import_module("relf_agent.adapter_contracts")
 
 
 @async_test
@@ -218,11 +218,11 @@ async def test_evidence_rejects_symlink_workspace_without_writing_target(tmp_pat
 @async_test
 async def test_failed_owned_cleanup_keeps_original_owner_and_workspace_until_retry(monkeypatch):
     module = api()
-    types = importlib.import_module("ralf_agent.adapter_contract_types")
+    types = importlib.import_module("relf_agent.adapter_contract_types")
     assert hasattr(types, "AdapterContractCleanupPending")
-    from ralf_agent.errors import CloseIncomplete
-    from ralf_agent.runtime_lifecycle import BuildContext
-    from ralf_agent.types import Scope
+    from relf_agent.errors import CloseIncomplete
+    from relf_agent.runtime_lifecycle import BuildContext
+    from relf_agent.types import Scope
 
     calls, workspaces = [], []
 
@@ -280,7 +280,7 @@ async def test_failed_owned_cleanup_keeps_original_owner_and_workspace_until_ret
 @async_test
 async def test_cancelled_case_with_failed_cleanup_retains_original_retry(monkeypatch):
     module = api()
-    types = importlib.import_module("ralf_agent.adapter_contract_types")
+    types = importlib.import_module("relf_agent.adapter_contract_types")
     assert hasattr(types, "AdapterContractCleanupPending")
     entered, released = asyncio.Event(), asyncio.Event()
     workspaces, cleaned = [], []
@@ -316,7 +316,7 @@ async def test_cancelled_case_with_failed_cleanup_retains_original_retry(monkeyp
 @async_test
 async def test_cleanup_observer_cancellation_waits_for_actual_exit(monkeypatch):
     module = api()
-    types = importlib.import_module("ralf_agent.adapter_contract_types")
+    types = importlib.import_module("relf_agent.adapter_contract_types")
     assert hasattr(types, "AdapterContractCleanupPending")
     entered, release = asyncio.Event(), asyncio.Event()
     workspaces, completed = [], []

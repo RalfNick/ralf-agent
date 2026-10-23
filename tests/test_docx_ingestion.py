@@ -3,17 +3,17 @@ import hashlib
 
 import pytest
 
-from ralf_agent import IngestionCoordinator, Scope, SourceDocument, SQLiteKnowledgeStore
-from ralf_agent.errors import ValidationError
-from ralf_agent.retrieval import RetrievalQuery
+from relf_agent import IngestionCoordinator, Scope, SourceDocument, SQLiteKnowledgeStore
+from relf_agent.errors import ValidationError
+from relf_agent.retrieval import RetrievalQuery
 from tests.docx_fixture import BODY, CONTENT_TYPES, MIME, RELS, STRICT, WORD, docx, xml
 
 
 def parser():
-    import ralf_agent
+    import relf_agent
 
-    assert hasattr(ralf_agent, "DocxDocumentParser"), "Missing native DOCX parser"
-    return ralf_agent.DocxDocumentParser()
+    assert hasattr(relf_agent, "DocxDocumentParser"), "Missing native DOCX parser"
+    return relf_agent.DocxDocumentParser()
 
 
 @pytest.mark.parametrize("namespace", [WORD, STRICT], ids=["transitional", "strict"])
@@ -159,7 +159,7 @@ def test_docx_process_loss_keeps_all_knowledge_evidence_atomic(tmp_path, mode):
     import sys
     from pathlib import Path
 
-    import ralf_agent
+    import relf_agent
 
     path = tmp_path / "knowledge.sqlite"
     result = subprocess.run(
@@ -172,7 +172,7 @@ def test_docx_process_loss_keeps_all_knowledge_evidence_atomic(tmp_path, mode):
         cwd=tmp_path,
         env={
             "PATH": os.defpath,
-            "PYTHONPATH": str(Path(ralf_agent.__file__).resolve().parent.parent),
+            "PYTHONPATH": str(Path(relf_agent.__file__).resolve().parent.parent),
         },
         text=True,
         capture_output=True,
@@ -209,8 +209,8 @@ def test_docx_process_loss_keeps_all_knowledge_evidence_atomic(tmp_path, mode):
 
 @pytest.mark.parametrize("change", ["policy", "helper"])
 def test_docx_registered_behavior_changes_fail_before_commit(tmp_path, monkeypatch, change):
-    import ralf_agent.docx_parsing as parsing
-    from ralf_agent.errors import DefinitionMismatch
+    import relf_agent.docx_parsing as parsing
+    from relf_agent.errors import DefinitionMismatch
 
     async def run():
         with SQLiteKnowledgeStore(tmp_path / "knowledge.sqlite") as store:

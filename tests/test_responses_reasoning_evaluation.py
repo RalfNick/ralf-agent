@@ -7,16 +7,16 @@ import json
 import httpx
 import pytest
 
-from ralf_agent.model_check_cli import OfflineCompatibilityProvider
-from ralf_agent.model_compatibility import evaluate_model_compatibility
-from ralf_agent.orchestration_evaluation import (
+from relf_agent.model_check_cli import OfflineCompatibilityProvider
+from relf_agent.model_compatibility import evaluate_model_compatibility
+from relf_agent.orchestration_evaluation import (
     OfflineOrchestrationProvider,
     evaluate_orchestration,
     load_orchestration_cases,
 )
-from ralf_agent.rag_evaluation import OfflineRAGProvider, evaluate_rag, load_rag_cases
-from ralf_agent.storage import SQLiteStore
-from ralf_agent.types import canonical
+from relf_agent.rag_evaluation import OfflineRAGProvider, evaluate_rag, load_rag_cases
+from relf_agent.storage import SQLiteStore
+from relf_agent.types import canonical
 from tests.test_responses_reasoning_runtime import provider, text_item, wire_response
 
 _PRIVATE = "opaque-encrypted-evaluation-evidence"

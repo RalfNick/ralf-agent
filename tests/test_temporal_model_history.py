@@ -6,7 +6,7 @@ from dataclasses import asdict
 
 import pytest
 
-from ralf_agent import (
+from relf_agent import (
     AgentSpec,
     CompletionVerdict,
     ModelResponse,
@@ -14,11 +14,11 @@ from ralf_agent import (
     Scope,
     ToolRegistry,
 )
-from ralf_agent.errors import DefinitionMismatch, ValidationError
-from ralf_agent.model_continuation import ContinuedModelResponse, ModelContinuation
-from ralf_agent.temporal_activities import TemporalRuntime
-from ralf_agent.temporal_state import TemporalRunState, validate_manifest
-from ralf_agent.types import digest, submission_request
+from relf_agent.errors import DefinitionMismatch, ValidationError
+from relf_agent.model_continuation import ContinuedModelResponse, ModelContinuation
+from relf_agent.temporal_activities import TemporalRuntime
+from relf_agent.temporal_state import TemporalRunState, validate_manifest
+from relf_agent.types import digest, submission_request
 from tests.test_temporal_memory_bindings import grant
 
 
@@ -54,7 +54,7 @@ class AlwaysRetry:
 
 
 def setup(*, history=True, provider=None, **kwargs):
-    from ralf_agent.model_history import CompleteModelHistory
+    from relf_agent.model_history import CompleteModelHistory
 
     provider = provider or SignedFinal()
     runtime = TemporalRuntime(
@@ -148,7 +148,7 @@ def test_signed_final_is_saved_for_success_without_verifier():
 
 
 def test_history_requires_opt_in_before_any_model_io():
-    from ralf_agent.model_history import CompleteModelHistory
+    from relf_agent.model_history import CompleteModelHistory
 
     with pytest.raises(ValidationError):
         TemporalRuntime(
@@ -228,9 +228,9 @@ async def advance(runtime, state):
 def test_managed_artifact_projection_is_explicit_and_never_summarizes_native_chain(
     allow_projection,
 ):
-    from ralf_agent import InMemoryArtifactStore, ToolCall, ToolSpec
-    from ralf_agent.data_context import ManagedDataContext
-    from ralf_agent.model_history import CompleteModelHistory
+    from relf_agent import InMemoryArtifactStore, ToolCall, ToolSpec
+    from relf_agent.data_context import ManagedDataContext
+    from relf_agent.model_history import CompleteModelHistory
 
     class Provider:
         identity = {"kind": "complete-artifact-provider", "version": "1"}
@@ -306,7 +306,7 @@ def test_original_history_rejects_forged_prepared_receipt_after_recording_model_
 
 
 def test_joint_seven_does_not_implicitly_enable_context_or_tool_owners():
-    from ralf_agent.tool_execution import ToolExecutionOwner
+    from relf_agent.tool_execution import ToolExecutionOwner
 
     async def run():
         runtime, _, _ = setup(
@@ -325,8 +325,8 @@ def test_joint_seven_does_not_implicitly_enable_context_or_tool_owners():
 
 
 def test_joint_seven_artifact_bindings_keep_the_original_template_contract():
-    from ralf_agent.model_history import CompleteModelHistory
-    from ralf_agent.temporal_bindings import effective_manifest, selected_runtime
+    from relf_agent.model_history import CompleteModelHistory
+    from relf_agent.temporal_bindings import effective_manifest, selected_runtime
     from tests.test_artifact_binding_temporal import host, request
 
     old, stores = host()
@@ -355,10 +355,10 @@ def test_joint_seven_artifact_bindings_keep_the_original_template_contract():
 
 
 def test_joint_seven_sandbox_grants_keep_original_tool_owner(registered):
-    from ralf_agent import AgentBindingDescriptor, BindingCatalog, BindingSelection
-    from ralf_agent.binding_sandbox import SandboxBindingResource
-    from ralf_agent.model_history import CompleteModelHistory
-    from ralf_agent.temporal_bindings import effective_step
+    from relf_agent import AgentBindingDescriptor, BindingCatalog, BindingSelection
+    from relf_agent.binding_sandbox import SandboxBindingResource
+    from relf_agent.model_history import CompleteModelHistory
+    from relf_agent.temporal_bindings import effective_step
     from tests.test_sandbox_binding_execution import Reader
 
     registry, _ = registered
@@ -391,8 +391,8 @@ from tests.test_sandbox_bindings import registered as registered  # noqa: E402,F
 
 
 def test_complete_history_budget_failure_does_not_dispatch_summary_or_second_business_model():
-    from ralf_agent.managed_context import ManagedContextPipeline
-    from ralf_agent.model_history import CompleteModelHistory
+    from relf_agent.managed_context import ManagedContextPipeline
+    from relf_agent.model_history import CompleteModelHistory
 
     class LargeFinal:
         identity = {"kind": "large-final", "version": "1"}
@@ -435,7 +435,7 @@ def test_complete_history_budget_failure_does_not_dispatch_summary_or_second_bus
 
 
 def test_custom_history_policy_cannot_bypass_framework_source_guard():
-    from ralf_agent.model_history import CompleteModelHistory
+    from relf_agent.model_history import CompleteModelHistory
 
     class UnsafePolicy(CompleteModelHistory):
         @property
@@ -462,8 +462,8 @@ def test_custom_history_policy_cannot_bypass_framework_source_guard():
 
 @pytest.mark.parametrize("value", [None, {"answer": 42}, "unstructured"])
 def test_new_final_history_preserves_json_value_and_null_without_normalized_projection(value):
-    from ralf_agent.model_history import CompleteModelHistory
-    from ralf_agent.types import canonical
+    from relf_agent.model_history import CompleteModelHistory
+    from relf_agent.types import canonical
 
     class Provider:
         identity = {"kind": "raw-final", "version": "1"}
@@ -493,9 +493,9 @@ def test_new_final_history_preserves_json_value_and_null_without_normalized_proj
 
 @pytest.mark.parametrize("signed", [False, True])
 def test_plain_tool_history_preserves_pre_default_model_arguments_and_json_content(signed):
-    from ralf_agent import ToolCall
-    from ralf_agent.model_history import CompleteModelHistory
-    from ralf_agent.types import canonical
+    from relf_agent import ToolCall
+    from relf_agent.model_history import CompleteModelHistory
+    from relf_agent.types import canonical
 
     class PlainProvider:
         identity = {"kind": "plain-history-defaults", "version": "1"}
@@ -554,8 +554,8 @@ def test_plain_tool_history_preserves_pre_default_model_arguments_and_json_conte
 
 @pytest.mark.parametrize("managed", [False, True])
 def test_joint_seven_recreates_only_once_fenced_context_or_plan_without_grant(managed):
-    from ralf_agent.context_pipeline import BudgetedContextAssembler
-    from ralf_agent.managed_context import ManagedContextPipeline
+    from relf_agent.context_pipeline import BudgetedContextAssembler
+    from relf_agent.managed_context import ManagedContextPipeline
 
     async def run():
         runtime, state, provider = setup(
@@ -598,8 +598,8 @@ def test_joint_seven_recreates_only_once_fenced_context_or_plan_without_grant(ma
 
 @pytest.mark.parametrize("managed", [False, True])
 def test_joint_seven_never_recreates_context_unknown_after_original_grant(managed):
-    from ralf_agent.context_pipeline import BudgetedContextAssembler
-    from ralf_agent.managed_context import ManagedContextPipeline
+    from relf_agent.context_pipeline import BudgetedContextAssembler
+    from relf_agent.managed_context import ManagedContextPipeline
 
     async def run():
         runtime, state, _ = setup(
@@ -632,10 +632,10 @@ def test_joint_seven_never_recreates_context_unknown_after_original_grant(manage
 
 @pytest.mark.parametrize("managed", [False, True])
 def test_original_reference_guard_precedes_custom_policy_excerpt_and_model_io(managed):
-    from ralf_agent import InMemoryArtifactStore
-    from ralf_agent.data_context import ManagedDataContext
-    from ralf_agent.model_history import CompleteModelHistory
-    from ralf_agent.types import canonical
+    from relf_agent import InMemoryArtifactStore
+    from relf_agent.data_context import ManagedDataContext
+    from relf_agent.model_history import CompleteModelHistory
+    from relf_agent.types import canonical
 
     continuation = {
         "protocol": "opaque-reference-v1",
@@ -668,7 +668,7 @@ def test_original_reference_guard_precedes_custom_policy_excerpt_and_model_io(ma
             }
 
         def assemble(self, history, references, max_chars, *, context):
-            from ralf_agent.data_context import ManagedDataContext
+            from relf_agent.data_context import ManagedDataContext
 
             self.calls += 1
             projected = (
@@ -711,8 +711,8 @@ def test_original_reference_guard_precedes_custom_policy_excerpt_and_model_io(ma
 
 @pytest.mark.parametrize("managed", [False, True])
 def test_legacy_joint_six_does_not_recreate_unadmitted_context_timeout(managed):
-    from ralf_agent.context_pipeline import BudgetedContextAssembler
-    from ralf_agent.managed_context import ManagedContextPipeline
+    from relf_agent.context_pipeline import BudgetedContextAssembler
+    from relf_agent.managed_context import ManagedContextPipeline
 
     async def run():
         runtime, state, _ = setup(
@@ -742,7 +742,7 @@ def test_workflow_plain_context_maps_only_new_joint_seven_sdk_timeout_to_unknown
     pytest.importorskip("temporalio")
     from temporalio.exceptions import ActivityError, ApplicationError, TimeoutError, TimeoutType
 
-    from ralf_agent import temporal_workflow
+    from relf_agent import temporal_workflow
 
     class LoopFinished(BaseException):
         pass

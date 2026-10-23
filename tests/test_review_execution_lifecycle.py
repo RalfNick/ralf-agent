@@ -3,8 +3,8 @@ import copy
 
 import pytest
 
-from ralf_agent import AgentSpec, LocalEngine, ModelResponse, SQLiteStore, ToolRegistry
-from ralf_agent.errors import DefinitionMismatch, IdempotencyConflict
+from relf_agent import AgentSpec, LocalEngine, ModelResponse, SQLiteStore, ToolRegistry
+from relf_agent.errors import DefinitionMismatch, IdempotencyConflict
 
 from .helpers import ScriptedProvider
 

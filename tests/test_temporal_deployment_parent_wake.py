@@ -8,9 +8,9 @@ from types import SimpleNamespace
 import pytest
 
 pytest.importorskip("temporalio")
-from ralf_agent import temporal_deployment_execution_state as admission
-from ralf_agent.temporal_parent_workflow import CONTROL_ACTIVITY, TemporalParentWorkflow, workflow
-from ralf_agent.types import digest
+from relf_agent import temporal_deployment_execution_state as admission
+from relf_agent.temporal_parent_workflow import CONTROL_ACTIVITY, TemporalParentWorkflow, workflow
+from relf_agent.types import digest
 
 
 class SleepReached(Exception):
@@ -130,7 +130,7 @@ def test_external_business_wake_during_own_activity_is_not_consumed(monkeypatch,
         if external == "cancel":
             value.state.command = lambda *args: {"record_state": "durably_recorded"}
         else:
-            from ralf_agent import temporal_coding_composition_state as composition
+            from relf_agent import temporal_coding_composition_state as composition
 
             monkeypatch.setattr(composition, "validate_parent_update", lambda *args: ("child", {}))
             monkeypatch.setattr(
@@ -199,7 +199,7 @@ def test_first_end_during_retirement_await_wakes_once_without_duplicate_spin(mon
 def test_terminal_financial_quiescence_does_not_replace_composition_physical_stop(
     monkeypatch, version, physical_stopped
 ):
-    from ralf_agent import temporal_coding_composition_state as composition
+    from relf_agent import temporal_coding_composition_state as composition
 
     async def run():
         value = parent(monkeypatch, version, terminal=True)
@@ -221,7 +221,7 @@ def test_terminal_financial_quiescence_does_not_replace_composition_physical_sto
 
 
 def test_sdk_registers_parent_overrides_for_the_original_update_names():
-    from ralf_agent.temporal_workflow import TemporalRunWorkflow
+    from relf_agent.temporal_workflow import TemporalRunWorkflow
 
     definition = workflow._Definition.must_from_class(TemporalParentWorkflow)
     for name in ("deployment_call_started", "deployment_call_ended"):

@@ -5,14 +5,14 @@ from dataclasses import replace
 
 import pytest
 
-from ralf_agent import AliasQueryTransform, RecallQuery, Scope
-from ralf_agent.errors import DefinitionMismatch, ValidationError
+from relf_agent import AliasQueryTransform, RecallQuery, Scope
+from relf_agent.errors import DefinitionMismatch, ValidationError
 
 from .semantic_fixture import Embedding, facts
 
 
 def test_semantic_recall_finds_nonlexical_fact_and_preserves_raw_records():
-    from ralf_agent import SemanticMemoryStore
+    from relf_agent import SemanticMemoryStore
 
     async def run():
         backend = facts()
@@ -35,7 +35,7 @@ def test_semantic_recall_finds_nonlexical_fact_and_preserves_raw_records():
 
 
 def test_candidate_window_clears_lexical_filter_and_obeys_scan_budget():
-    from ralf_agent import SemanticMemoryStore
+    from relf_agent import SemanticMemoryStore
 
     async def run():
         backend = facts()
@@ -56,7 +56,7 @@ def test_candidate_window_clears_lexical_filter_and_obeys_scan_budget():
 
 
 def test_transformed_queries_rank_by_best_cosine_and_min_score_is_explicit():
-    from ralf_agent import SemanticMemoryStore
+    from relf_agent import SemanticMemoryStore
 
     async def run():
         memory = SemanticMemoryStore(
@@ -82,7 +82,7 @@ def test_transformed_queries_rank_by_best_cosine_and_min_score_is_explicit():
     ],
 )
 def test_invalid_query_never_reads_or_embeds(query):
-    from ralf_agent import SemanticMemoryStore
+    from relf_agent import SemanticMemoryStore
 
     async def run():
         backend = facts()
@@ -101,7 +101,7 @@ def test_invalid_query_never_reads_or_embeds(query):
     "value", [[], [[1, 0]], [[True, 0]] * 4, [[0, 0]] * 4, [[float("nan"), 0]] * 4, [[1, 0, 0]] * 4]
 )
 def test_invalid_embedding_response_fails_without_lexical_fallback(value):
-    from ralf_agent import SemanticMemoryStore
+    from relf_agent import SemanticMemoryStore
 
     class Invalid(Embedding):
         async def embed(self, texts):
@@ -118,7 +118,7 @@ def test_invalid_embedding_response_fails_without_lexical_fallback(value):
 
 @pytest.mark.parametrize("change", ["source", "expiry", "backend", "method", "embedding", "inputs"])
 def test_changes_during_embedding_cannot_adopt_stale_or_incompatible_facts(change):
-    from ralf_agent import SemanticMemoryStore
+    from relf_agent import SemanticMemoryStore
 
     async def run():
         backend = facts()
@@ -157,7 +157,7 @@ def test_changes_during_embedding_cannot_adopt_stale_or_incompatible_facts(chang
 
 
 def test_empty_and_oversized_candidates_do_not_call_embedding():
-    from ralf_agent import InMemoryMemory, SemanticMemoryStore
+    from relf_agent import InMemoryMemory, SemanticMemoryStore
 
     class Forbidden(Embedding):
         async def embed(self, texts):
@@ -191,7 +191,7 @@ def test_empty_and_oversized_candidates_do_not_call_embedding():
 
 
 def test_cancelled_semantic_recall_keeps_embedding_coroutine_owned_until_exit():
-    from ralf_agent import SemanticMemoryStore
+    from relf_agent import SemanticMemoryStore
 
     async def run():
         started, finished = asyncio.Event(), asyncio.Event()
@@ -218,7 +218,7 @@ def test_cancelled_semantic_recall_keeps_embedding_coroutine_owned_until_exit():
 
 
 def test_native_async_source_and_input_volume_guards():
-    from ralf_agent import InMemoryMemory, SemanticMemoryStore
+    from relf_agent import InMemoryMemory, SemanticMemoryStore
 
     async def run():
         backend = facts()
@@ -263,7 +263,7 @@ def test_native_async_source_and_input_volume_guards():
 
 
 def test_cosine_roundoff_does_not_filter_default_opposite_candidate():
-    from ralf_agent import InMemoryMemory, SemanticMemoryStore
+    from relf_agent import InMemoryMemory, SemanticMemoryStore
 
     class Opposite:
         dimensions = 3
@@ -284,7 +284,7 @@ def test_cosine_roundoff_does_not_filter_default_opposite_candidate():
 
 
 def test_cached_expired_candidate_is_rejected_even_if_custom_validator_accepts():
-    from ralf_agent import SemanticMemoryStore
+    from relf_agent import SemanticMemoryStore
 
     async def run():
         backend = facts()

@@ -8,7 +8,7 @@ from dataclasses import asdict, replace
 
 import pytest
 
-from ralf_agent import (
+from relf_agent import (
     FactIndexCatalog,
     GraphNode,
     GraphWorkflowSpec,
@@ -23,8 +23,8 @@ from ralf_agent import (
     ValueRef,
     register_tool_source,
 )
-from ralf_agent.embeddings import HashEmbeddingProvider
-from ralf_agent.errors import (
+from relf_agent.embeddings import HashEmbeddingProvider
+from relf_agent.errors import (
     AuthorizationDenied,
     BudgetExceeded,
     CloseIncomplete,
@@ -32,12 +32,12 @@ from ralf_agent.errors import (
     IdempotencyConflict,
     ValidationError,
 )
-from ralf_agent.fact_index_generation import GenerationIndexedMemoryStore
-from ralf_agent.memory import SQLiteMemory
-from ralf_agent.temporal_context_execution import ContextExecutionOwner
-from ralf_agent.tool_execution import ToolExecutionOwner
-from ralf_agent.types import InvocationContext, digest
-from ralf_agent.vector import SQLiteVectorIndex
+from relf_agent.fact_index_generation import GenerationIndexedMemoryStore
+from relf_agent.memory import SQLiteMemory
+from relf_agent.temporal_context_execution import ContextExecutionOwner
+from relf_agent.tool_execution import ToolExecutionOwner
+from relf_agent.types import InvocationContext, digest
+from relf_agent.vector import SQLiteVectorIndex
 
 SCOPE = Scope("private-index-tools", "author")
 NS = "facts"
@@ -84,7 +84,7 @@ class Ports:
         self.pages = pages
 
     def prepare(self):
-        module = importlib.import_module("ralf_agent.fact_index_maintenance_tools")
+        module = importlib.import_module("relf_agent.fact_index_maintenance_tools")
         self.source = module.FactIndexMaintenanceToolSource(
             self.index,
             version="private-1",
@@ -479,7 +479,7 @@ def test_actual_same_generation_cas_competitor_does_not_complete_original_effect
     async def run(p):
         p.seed(1)
         first = (await p.registry()).get(NAME)
-        module = importlib.import_module("ralf_agent.fact_index_maintenance_tools")
+        module = importlib.import_module("relf_agent.fact_index_maintenance_tools")
         other_source = module.FactIndexMaintenanceToolSource(
             p.index,
             version="private-1",
@@ -584,7 +584,7 @@ def test_source_method_drift_during_owned_call_refuses_completion_attribution(tm
 @pytest.mark.parametrize("pages", [0, 257, True])
 def test_per_dispatch_page_bounds_refused_before_original_journal(tmp_path, pages):
     async def run(p):
-        module = importlib.import_module("ralf_agent.fact_index_maintenance_tools")
+        module = importlib.import_module("relf_agent.fact_index_maintenance_tools")
         with pytest.raises(ValidationError):
             module.FactIndexMaintenanceToolSource(
                 p.index,
@@ -619,7 +619,7 @@ def test_original_graph_action_receipt_budget_and_ready_gate(tmp_path, records, 
             ),
             read,
         )
-        module = importlib.import_module("ralf_agent.fact_index_maintenance_tools")
+        module = importlib.import_module("relf_agent.fact_index_maintenance_tools")
         spec = GraphWorkflowSpec(
             "private-maintenance",
             [

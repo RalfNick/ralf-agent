@@ -5,7 +5,7 @@ from dataclasses import replace
 
 import pytest
 
-from ralf_agent import (
+from relf_agent import (
     AgentBindingDescriptor,
     AgentDefinition,
     AgentSpec,
@@ -14,8 +14,8 @@ from ralf_agent import (
     Scope,
     SQLiteMemory,
 )
-from ralf_agent.errors import ValidationError
-from ralf_agent.recall import MemoryRecallPolicy, RecallQuery
+from relf_agent.errors import ValidationError
+from relf_agent.recall import MemoryRecallPolicy, RecallQuery
 
 from .test_binding_execution import bound_catalog, engine
 from .test_data_binding_resources import resources

@@ -6,7 +6,7 @@ dev49 沿原 Retriever／RecallMemoryStore 增加组合能力，原 Run／Histor
 ## 查询改写
 
 ```python
-from ralf_agent import AliasQueryTransform, QueryTransformRetriever, KnowledgeContext
+from relf_agent import AliasQueryTransform, QueryTransformRetriever, KnowledgeContext
 
 transform = AliasQueryTransform({"car": "automobile"})
 retriever = QueryTransformRetriever(my_retriever, transform)
@@ -42,7 +42,7 @@ JSON／TOML 内置声明支持 `identity`／`aliases`；dev50 增加显式 `mode
 ## 语义长期记忆召回
 
 ```python
-from ralf_agent import AgentSpec, RuntimeBuilder, recommended_profile
+from relf_agent import AgentSpec, RuntimeBuilder, recommended_profile
 
 profile = recommended_profile(
     "semantic-memory",

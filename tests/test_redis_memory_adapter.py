@@ -10,13 +10,13 @@ from pathlib import Path
 
 import pytest
 
-from ralf_agent.errors import IdempotencyConflict, MemoryBackendError, ValidationError
-from ralf_agent.recall import RecallQuery, _binding, _encode_cursor
-from ralf_agent.types import Scope
+from relf_agent.errors import IdempotencyConflict, MemoryBackendError, ValidationError
+from relf_agent.recall import RecallQuery, _binding, _encode_cursor
+from relf_agent.types import Scope
 
 
 def adapter():
-    name = "ralf_agent.redis_memory"
+    name = "relf_agent.redis_memory"
     assert importlib.util.find_spec(name) is not None, "Missing RedisMemory adapter"
     return importlib.import_module(name).RedisMemory
 
@@ -472,7 +472,7 @@ def test_owned_adapter_closes_real_connection_through_build_context(redis_servic
     async def check():
         from redis.asyncio import Redis
 
-        from ralf_agent.runtime_lifecycle import BuildContext
+        from relf_agent.runtime_lifecycle import BuildContext
 
         client = Redis.from_url(redis_service, socket_timeout=1)
         memory = adapter()(client, backend_id="context", owns_client=True)

@@ -3,11 +3,11 @@ import json
 
 import pytest
 
-from ralf_agent.errors import DefinitionMismatch, ValidationError
+from relf_agent.errors import DefinitionMismatch, ValidationError
 
 
 def api():
-    return importlib.import_module("ralf_agent.runtime_config")
+    return importlib.import_module("relf_agent.runtime_config")
 
 
 def declaration(version="1", label="first"):

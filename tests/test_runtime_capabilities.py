@@ -2,7 +2,7 @@
 
 import pytest
 
-from ralf_agent import InMemoryMemory, LocalEngine, Runtime, SQLiteStore, ToolRegistry
+from relf_agent import InMemoryMemory, LocalEngine, Runtime, SQLiteStore, ToolRegistry
 
 from .test_extension_contracts import HostCoordinator, StoreAdapter
 

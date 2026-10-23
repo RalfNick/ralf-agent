@@ -6,12 +6,12 @@ from types import SimpleNamespace
 
 import pytest
 
-from ralf_agent import temporal_deployment_execution_state as admission
-from ralf_agent import temporal_deployment_release as release
-from ralf_agent import temporal_deployment_release_state as state_module
-from ralf_agent.errors import DefinitionMismatch, ValidationError
-from ralf_agent.temporal_state import TOOL_ACTIVITY
-from ralf_agent.types import digest
+from relf_agent import temporal_deployment_execution_state as admission
+from relf_agent import temporal_deployment_release as release
+from relf_agent import temporal_deployment_release_state as state_module
+from relf_agent.errors import DefinitionMismatch, ValidationError
+from relf_agent.temporal_state import TOOL_ACTIVITY
+from relf_agent.types import digest
 from tests.test_temporal_deployment_coding_validation import Runtime
 from tests.test_temporal_session_coding_ancestry import coding_original
 from tests.test_temporal_session_deployment_execution import (

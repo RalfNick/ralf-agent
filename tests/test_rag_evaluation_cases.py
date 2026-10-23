@@ -7,18 +7,18 @@ from pathlib import Path
 import pytest
 from jsonschema import Draft202012Validator
 
-from ralf_agent.errors import ValidationError
-from ralf_agent.retrieval import (
+from relf_agent.errors import ValidationError
+from relf_agent.retrieval import (
     Document,
     InMemoryKnowledgeStore,
     KnowledgeContext,
     LexicalRetriever,
 )
-from ralf_agent.types import Scope, canonical, digest
+from relf_agent.types import Scope, canonical, digest
 
 
 def api():
-    return importlib.import_module("ralf_agent.rag_evaluation_cases")
+    return importlib.import_module("relf_agent.rag_evaluation_cases")
 
 
 @pytest.fixture

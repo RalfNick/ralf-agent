@@ -7,7 +7,7 @@ from dataclasses import asdict
 
 import pytest
 
-from ralf_agent.temporal_coding_composition_control import _command
+from relf_agent.temporal_coding_composition_control import _command
 from tests.test_temporal_deployment_dispatch_service import _case
 from tests.test_temporal_deployment_public_service import public_system
 

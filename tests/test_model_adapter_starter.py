@@ -27,7 +27,7 @@ def isolated_generated_application_modules():
 
 def application(tmp_path):
     try:
-        module = importlib.import_module("ralf_agent.model_adapter_contract_starter")
+        module = importlib.import_module("relf_agent.model_adapter_contract_starter")
     except ModuleNotFoundError:
         pytest.fail("Independent editable ModelProvider application is missing")
     project = tmp_path / "application"
@@ -103,7 +103,7 @@ def test_same_business_data_has_four_modes_and_provider_only_replacements(tmp_pa
     with sqlite3.connect(project / ".ralf/business.sqlite") as connection:
         assert connection.execute("SELECT count(*) FROM business_documents").fetchone()[0] == 1
     copied = (project / "agent_app/adapter.py").read_text()
-    assert "ralf_agent.model_adapter_contract_reference" not in copied
+    assert "relf_agent.model_adapter_contract_reference" not in copied
 
 
 def test_observation_factory_never_opens_or_seeds_business_source(tmp_path):
@@ -146,7 +146,7 @@ def test_flat_rule_plan_and_sdk_json_toml_profile_equivalence(tmp_path):
     assert actual["member_receipts"] == 2
     program = """
 from agent_app.runtime import sdk_profile
-from ralf_agent import load_catalog
+from relf_agent import load_catalog
 for kind in ('agent','rag','plan','team'):
     for variant in ('primary','alternate'):
         sdk = sdk_profile(kind, variant)
@@ -206,7 +206,7 @@ def test_business_verifier_rejects_plausible_completion_without_actual_tool_rece
         [
             sys.executable,
             "-c",
-            "from agent_app.adapter import BusinessCompletionVerifier; from ralf_agent.completion import CompletionRequest; assert BusinessCompletionVerifier().verify(CompletionRequest('cache', {'recommendation':'Inspect connection pool before changing cache timeout.'}, [])).status == 'reject'",
+            "from agent_app.adapter import BusinessCompletionVerifier; from relf_agent.completion import CompletionRequest; assert BusinessCompletionVerifier().verify(CompletionRequest('cache', {'recommendation':'Inspect connection pool before changing cache timeout.'}, [])).status == 'reject'",
         ],
         cwd=project,
         env=sdk_env(),
@@ -223,9 +223,9 @@ def test_parent_business_gate_refuses_result_that_disagrees_with_original_tool_r
     actual = invoke(project, "run", "--kind", "team", "--command-id", "parent-proof")
     program = """import copy,json
 from agent_app.adapter import BusinessParentGate
-from ralf_agent import SQLiteStore
-from ralf_agent.parent_completion import ParentCompletionRequest
-from ralf_agent.types import digest
+from relf_agent import SQLiteStore
+from relf_agent.parent_completion import ParentCompletionRequest
+from relf_agent.types import digest
 with SQLiteStore(".ralf/runs.sqlite", readonly=True) as store:
     run=store.run(RUN_ID)
     source=copy.deepcopy(next(iter(run["parent_completion_stages"].values()))["source"])
@@ -253,7 +253,7 @@ def test_cancelled_application_retains_original_supplier_and_retry_owner_until_r
 ):
     import asyncio
 
-    from ralf_agent import Runtime as ActualRuntime
+    from relf_agent import Runtime as ActualRuntime
 
     project = application(tmp_path)
     monkeypatch.chdir(project)
@@ -329,7 +329,7 @@ def test_application_close_error_retains_original_owner_for_same_loop_retry(
 ):
     import asyncio
 
-    from ralf_agent.errors import CloseIncomplete
+    from relf_agent.errors import CloseIncomplete
 
     project = application(tmp_path)
     monkeypatch.chdir(project)
@@ -405,7 +405,7 @@ from pathlib import Path
 
 from agent_app.adapter import ReferenceModelSource
 from agent_app.runtime import components, create_engine, definition, sdk_profile, source_path
-from ralf_agent import AgentSpec, RuntimeBuilder, SQLiteStore
+from relf_agent import AgentSpec, RuntimeBuilder, SQLiteStore
 
 window = sys.argv[1]
 
@@ -514,7 +514,7 @@ with create_engine(".ralf/runs.sqlite") as engine:
         program = """import asyncio,json
 from dataclasses import asdict
 from agent_app.runtime import create_engine
-from ralf_agent import AgentSpec
+from relf_agent import AgentSpec
 async def run():
     refs=json.load(open("refs.json"))
     with create_engine(".ralf/runs.sqlite") as engine:

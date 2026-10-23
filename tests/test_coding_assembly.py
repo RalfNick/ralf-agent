@@ -5,10 +5,10 @@ import json
 
 import pytest
 
-from ralf_agent import BindingSelection, Scope
-from ralf_agent.errors import ValidationError
-from ralf_agent.runtime_builder import ComponentRegistry, RuntimeBuilder
-from ralf_agent.runtime_config import RuntimeProfile
+from relf_agent import BindingSelection, Scope
+from relf_agent.errors import ValidationError
+from relf_agent.runtime_builder import ComponentRegistry, RuntimeBuilder
+from relf_agent.runtime_config import RuntimeProfile
 
 
 def options(tmp_path):
@@ -68,7 +68,7 @@ def test_async_assembly_borrows_the_registered_runner_and_closes_journal(tmp_pat
             assert list((tmp_path / "runner").iterdir()) == []
         finally:
             await runtime.aclose()
-        from ralf_agent.runner_journal import RunnerJournal
+        from relf_agent.runner_journal import RunnerJournal
 
         reopened = RunnerJournal(config["journal_path"], identity=config["fixed_dependencies"])
         reopened.close()
@@ -148,7 +148,7 @@ def test_invalid_entry_refused_before_any_resource_io(tmp_path, monkeypatch, cha
     config = options(tmp_path)
     config.update(change)
     selected = profile(config)
-    import ralf_agent.coding_factories as factories
+    import relf_agent.coding_factories as factories
 
     def forbidden(*args, **kwargs):
         pytest.fail("Invalid declaration performed filesystem admission or resource acquisition")
@@ -226,7 +226,7 @@ def test_all_filesystem_runner_admissions_precede_any_journal_open(tmp_path):
 
 
 def test_json_and_toml_load_equivalent_explicit_coding_assembly(tmp_path):
-    from ralf_agent.runtime_config import load_catalog
+    from relf_agent.runtime_config import load_catalog
 
     config = options(tmp_path)
     source = profile({"tools": [config]})
@@ -314,9 +314,9 @@ def test_physical_root_aliases_rejected_before_journal_acquisition(tmp_path):
 
 
 def test_partial_journal_identity_failure_closes_first_runner_then_journal(tmp_path, monkeypatch):
-    from ralf_agent.codex_runner import CodexCodingRunner
-    from ralf_agent.errors import DefinitionMismatch
-    from ralf_agent.runner_journal import RunnerJournal
+    from relf_agent.codex_runner import CodexCodingRunner
+    from relf_agent.errors import DefinitionMismatch
+    from relf_agent.runner_journal import RunnerJournal
 
     a, b = tmp_path / "a", tmp_path / "b"
     a.mkdir(mode=0o700)
@@ -355,10 +355,10 @@ def test_partial_journal_identity_failure_closes_first_runner_then_journal(tmp_p
 
 
 def test_factory_cleanup_failure_retains_journal_lease_until_retry(tmp_path, monkeypatch):
-    from ralf_agent.codex_runner import CodexCodingRunner
-    from ralf_agent.errors import CoordinatorBusy
-    from ralf_agent.runner_journal import RunnerJournal
-    from ralf_agent.runtime_builder import RuntimeBuildError
+    from relf_agent.codex_runner import CodexCodingRunner
+    from relf_agent.errors import CoordinatorBusy
+    from relf_agent.runner_journal import RunnerJournal
+    from relf_agent.runtime_builder import RuntimeBuildError
 
     config = options(tmp_path)
     close = CodexCodingRunner.aclose
@@ -407,7 +407,7 @@ def test_factory_cleanup_failure_retains_journal_lease_until_retry(tmp_path, mon
 
 
 def test_cancellation_after_tools_releases_actual_runner_journal(tmp_path):
-    from ralf_agent.runner_journal import RunnerJournal
+    from relf_agent.runner_journal import RunnerJournal
 
     config = options(tmp_path)
 
@@ -451,11 +451,11 @@ def test_cancellation_after_tools_releases_actual_runner_journal(tmp_path):
 
 @pytest.mark.parametrize("mutation", ["identity", "method", "resource"])
 def test_registered_tool_factory_refuses_changed_original_resource(tmp_path, mutation):
-    from ralf_agent.codex_runner import CodexCodingRunner
-    from ralf_agent.delegated_coding import register_coding_tool
-    from ralf_agent.errors import DefinitionMismatch
-    from ralf_agent.runner_journal import RunnerJournal
-    from ralf_agent.tools import ToolRegistry
+    from relf_agent.codex_runner import CodexCodingRunner
+    from relf_agent.delegated_coding import register_coding_tool
+    from relf_agent.errors import DefinitionMismatch
+    from relf_agent.runner_journal import RunnerJournal
+    from relf_agent.tools import ToolRegistry
 
     config = options(tmp_path)
     journal = RunnerJournal(config["journal_path"], identity=config["fixed_dependencies"])
@@ -508,11 +508,11 @@ def test_default_registry_keeps_posix_native_coding_imports_optional(tmp_path):
             "-c",
             """import sys
 sys.modules["fcntl"] = None
-from ralf_agent.runtime_builder import RuntimeBuilder
+from relf_agent.runtime_builder import RuntimeBuilder
 builder = RuntimeBuilder()
 builder.registry.prepare("provider", {"adapter": "offline-echo", "config": {}})
-assert "ralf_agent.codex_runner" not in sys.modules
-assert "ralf_agent.runner_journal" not in sys.modules
+assert "relf_agent.codex_runner" not in sys.modules
+assert "relf_agent.runner_journal" not in sys.modules
 """,
             str(tmp_path / "default.sqlite"),
         ],

@@ -2,10 +2,10 @@ import asyncio
 import copy
 from dataclasses import asdict
 
-from ralf_agent import InMemoryArtifactStore, Scope
-from ralf_agent.temporal_activities import TemporalRuntime
-from ralf_agent.temporal_state import TemporalRunState
-from ralf_agent.types import digest, submission_request
+from relf_agent import InMemoryArtifactStore, Scope
+from relf_agent.temporal_activities import TemporalRuntime
+from relf_agent.temporal_state import TemporalRunState
+from relf_agent.types import digest, submission_request
 from tests.test_composite_data_context import Provider, agent, registry
 from tests.test_managed_data_context import context
 
@@ -313,7 +313,7 @@ def test_completed_malformed_summary_is_charged_once_and_uses_frozen_fallback():
 
 
 def test_real_knowledge_context_port_integrates_with_managed_temporal_context():
-    from ralf_agent import InMemoryKnowledgeStore, KnowledgeContext, LexicalRetriever
+    from relf_agent import InMemoryKnowledgeStore, KnowledgeContext, LexicalRetriever
 
     async def run():
         runtime, state, provider, writes = setup()
@@ -402,7 +402,7 @@ def test_cancel_during_final_artifact_read_prevents_new_provider_request():
 
 
 def test_real_knowledge_version_changed_during_artifact_await_blocks_provider():
-    from ralf_agent import Document, InMemoryKnowledgeStore, KnowledgeContext, LexicalRetriever
+    from relf_agent import Document, InMemoryKnowledgeStore, KnowledgeContext, LexicalRetriever
 
     store = InMemoryKnowledgeStore()
     store.put(Scope(), "docs", Document("guide", "task evidence " * 60), expected_version=0)
@@ -452,8 +452,8 @@ def test_real_knowledge_version_changed_during_artifact_await_blocks_provider():
 
 
 def test_unknown_artifact_execution_prevents_parent_allowance_release():
-    from ralf_agent import TeamSpec
-    from ralf_agent.temporal_parent_state import TemporalParentState
+    from relf_agent import TeamSpec
+    from relf_agent.temporal_parent_state import TemporalParentState
 
     async def run():
         runtime, _, _, _ = setup()

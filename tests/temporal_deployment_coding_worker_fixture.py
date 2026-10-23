@@ -19,7 +19,7 @@ from dataclasses import asdict
 from datetime import timedelta
 from pathlib import Path
 
-from ralf_agent import (
+from relf_agent import (
     ComponentRegistry,
     ModelResponse,
     Scope,
@@ -27,7 +27,7 @@ from ralf_agent import (
     TemporalProfileCatalog,
     TemporalRuntimeBuilder,
 )
-from ralf_agent.governance import DeploymentAdmissionPolicy
+from relf_agent.governance import DeploymentAdmissionPolicy
 from tests.test_temporal_connected_coding_integration import (
     StructuralCompletionGate,
     StructuralProvider,
@@ -45,11 +45,11 @@ def definition_mismatch_trace(directory):
         enabled = enabled and monitoring is not None
         if enabled:
             marker.touch(mode=0o600)
-            import ralf_agent
-            from ralf_agent.codex_rpc import CodexRPCError
-            from ralf_agent.errors import CloseIncomplete, RalfError
+            import relf_agent
+            from relf_agent.codex_rpc import CodexRPCError
+            from relf_agent.errors import CloseIncomplete, RalfError
 
-            prefix = str(Path(ralf_agent.__file__).parent) + os.sep
+            prefix = str(Path(relf_agent.__file__).parent) + os.sep
             path = Path(directory) / "definition-mismatch-locations.jsonl"
     except Exception:
         enabled = False
@@ -64,9 +64,9 @@ def definition_mismatch_trace(directory):
         try:
             kind = (type(exception).__module__, type(exception).__name__)
             if kind[0] not in {
-                "ralf_agent.errors",
-                "ralf_agent.codex_runner",
-                "ralf_agent.codex_rpc",
+                "relf_agent.errors",
+                "relf_agent.codex_runner",
+                "relf_agent.codex_rpc",
             } or not isinstance(exception, (RalfError, CodexRPCError)):
                 return None
             report = None
@@ -187,7 +187,7 @@ def provider_factory(config, context):
 
 
 def completion_factory(config, context):
-    from ralf_agent import ModelParentVerificationStage, ParentCompletionPolicy
+    from relf_agent import ModelParentVerificationStage, ParentCompletionPolicy
 
     return {
         "checked": ParentCompletionPolicy(
@@ -364,7 +364,7 @@ async def application(directory):
     directory = Path(directory)
     data = json.loads((directory / "application.json").read_text())
     if data.get("never_go"):
-        from ralf_agent.codex_create_supervisor import CreateSupervisor
+        from relf_agent.codex_create_supervisor import CreateSupervisor
         from tests.test_temporal_coding_create_supervision_integration import abort_before_go
 
         os.environ["RALF_CONNECTED_DIRECTORY"] = str(directory)
@@ -966,7 +966,7 @@ async def workflow_receiver(built, client):
 async def worker():
     from temporalio.client import Client
 
-    from ralf_agent.temporal import build_temporal_worker
+    from relf_agent.temporal import build_temporal_worker
 
     directory = Path(os.environ["RALF_DEPLOYMENT_CODING_DIRECTORY"])
     with definition_mismatch_trace(directory):

@@ -6,12 +6,12 @@ import json
 import httpx
 import pytest
 
-from ralf_agent.errors import ProviderError, ValidationError
+from relf_agent.errors import ProviderError, ValidationError
 
 
 def provider(**kwargs):
-    assert importlib.util.find_spec("ralf_agent.embedding_http"), "Missing HTTP embedding adapter"
-    return importlib.import_module("ralf_agent.embedding_http").OpenAIEmbeddingProvider(
+    assert importlib.util.find_spec("relf_agent.embedding_http"), "Missing HTTP embedding adapter"
+    return importlib.import_module("relf_agent.embedding_http").OpenAIEmbeddingProvider(
         "embed", dimensions=2, base_url="http://embedding.test/v1", **kwargs
     )
 

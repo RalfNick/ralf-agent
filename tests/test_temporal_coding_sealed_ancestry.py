@@ -5,8 +5,8 @@ import copy
 
 import pytest
 
-from ralf_agent.errors import CloseIncomplete, DefinitionMismatch
-from ralf_agent.types import digest
+from relf_agent.errors import CloseIncomplete, DefinitionMismatch
+from relf_agent.types import digest
 from tests import test_temporal_coding_composition_control as fixture
 from tests.test_temporal_coding_nested_control import namespace as namespace
 from tests.test_temporal_coding_nested_control import tree as tree

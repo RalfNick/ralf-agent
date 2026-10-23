@@ -8,9 +8,9 @@ from pathlib import Path
 
 import pytest
 
-from ralf_agent import Runtime, Scope, SessionRef
-from ralf_agent.temporal import TemporalEngine, replay_temporal_history
-from ralf_agent.temporal_session_state import workflow_id
+from relf_agent import Runtime, Scope, SessionRef
+from relf_agent.temporal import TemporalEngine, replay_temporal_history
+from relf_agent.temporal_session_state import workflow_id
 from tests.temporal_knowledge_worker import runtime
 
 pytestmark = pytest.mark.skipif(
@@ -24,7 +24,7 @@ def test_original_turn_and_conversation_survive_actual_worker_kill(tmp_path, kin
     async def run():
         from temporalio.client import Client
 
-        import ralf_agent
+        import relf_agent
 
         client = await Client.connect(os.environ["RALF_TEST_TEMPORAL_ADDRESS"])
         queue = "session-recovery-" + uuid.uuid4().hex
@@ -44,7 +44,7 @@ def test_original_turn_and_conversation_survive_actual_worker_kill(tmp_path, kin
             env = {
                 "PATH": os.environ.get("PATH", "/usr/bin:/bin"),
                 "PYTHONPATH": os.pathsep.join(
-                    [str(Path(ralf_agent.__file__).parents[1]), str(Path(__file__).parents[1])]
+                    [str(Path(relf_agent.__file__).parents[1]), str(Path(__file__).parents[1])]
                 ),
                 "RALF_TEST_TEMPORAL_ADDRESS": os.environ["RALF_TEST_TEMPORAL_ADDRESS"],
                 "RALF_TEST_TEMPORAL_QUEUE": queue,

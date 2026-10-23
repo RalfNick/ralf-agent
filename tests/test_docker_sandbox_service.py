@@ -7,7 +7,7 @@ import uuid
 
 import pytest
 
-import ralf_agent as r
+import relf_agent as r
 
 pytestmark = pytest.mark.skipif(
     not os.getenv("RALF_TEST_DOCKER_IMAGE"),

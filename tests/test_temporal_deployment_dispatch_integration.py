@@ -5,8 +5,8 @@ from types import SimpleNamespace
 
 import pytest
 
-from ralf_agent import DeploymentAdmissionPolicy, ModelResponse, TemporalRuntime, ToolRegistry
-from ralf_agent.errors import DefinitionMismatch, ValidationError
+from relf_agent import DeploymentAdmissionPolicy, ModelResponse, TemporalRuntime, ToolRegistry
+from relf_agent.errors import DefinitionMismatch, ValidationError
 
 
 class Provider:
@@ -69,7 +69,7 @@ def test_worker_policy_owner_and_identity_cannot_change(change):
 
 
 def test_public_engine_refuses_incomplete_worker_only_protocol_before_network():
-    from ralf_agent.temporal import TemporalEngine
+    from relf_agent.temporal import TemporalEngine
 
     selected = runtime(_deployment_admission_policy=DeploymentAdmissionPolicy("worker-only"))
     with pytest.raises(ValidationError, match="deployment"):
@@ -89,8 +89,8 @@ def test_selected_worker_wraps_all_registered_activity_categories(monkeypatch):
     import temporalio.worker
     from temporalio import activity
 
-    from ralf_agent.temporal import build_temporal_worker
-    from ralf_agent.temporal_deployment_execution import ACTIVITY
+    from relf_agent.temporal import build_temporal_worker
+    from relf_agent.temporal_deployment_execution import ACTIVITY
 
     recorded = {}
 
@@ -118,8 +118,8 @@ def test_selected_worker_wraps_all_registered_activity_categories(monkeypatch):
 
 def test_both_original_workflow_types_use_admission_before_business():
     pytest.importorskip("temporalio")
-    from ralf_agent.temporal_parent_workflow import TemporalParentWorkflow
-    from ralf_agent.temporal_workflow import TemporalRunWorkflow
+    from relf_agent.temporal_parent_workflow import TemporalParentWorkflow
+    from relf_agent.temporal_workflow import TemporalRunWorkflow
 
     assert asyncio.iscoroutinefunction(TemporalRunWorkflow._ensure_deployment_admission)
     assert (

@@ -4,13 +4,13 @@ import asyncio
 
 import pytest
 
-from ralf_agent import AgentSpec, LocalEngine, ModelResponse, Scope, ToolRegistry, WorkflowSpec
-from ralf_agent.binding_catalog import BindingCatalog
-from ralf_agent.binding_definitions import AgentDefinition, BoundDefinition
-from ralf_agent.binding_types import AgentBindingDescriptor, BindingSelection
-from ralf_agent.delegated_coding import register_coding_tool
-from ralf_agent.errors import DefinitionMismatch, ValidationError
-from ralf_agent.storage import SQLiteStore
+from relf_agent import AgentSpec, LocalEngine, ModelResponse, Scope, ToolRegistry, WorkflowSpec
+from relf_agent.binding_catalog import BindingCatalog
+from relf_agent.binding_definitions import AgentDefinition, BoundDefinition
+from relf_agent.binding_types import AgentBindingDescriptor, BindingSelection
+from relf_agent.delegated_coding import register_coding_tool
+from relf_agent.errors import DefinitionMismatch, ValidationError
+from relf_agent.storage import SQLiteStore
 
 from .helpers import ScriptedProvider, tool_response
 from .test_local_delegated_coding import LifecycleRunner
@@ -231,7 +231,7 @@ def test_unselected_coding_grant_does_not_activate_delegated_protocol(tmp_path):
 
 @pytest.mark.parametrize("parent_kind", ["team", "dynamic"])
 def test_nested_explicit_runner_disabled_keeps_no_business_grant(tmp_path, parent_kind):
-    from ralf_agent import DynamicWorkflowSpec, TeamSpec
+    from relf_agent import DynamicWorkflowSpec, TeamSpec
 
     engine, provider, _ = setup_bound(tmp_path, {"coding": LifecycleRunner()}, [])
     parent = (TeamSpec if parent_kind == "team" else DynamicWorkflowSpec)(
@@ -259,8 +259,8 @@ def test_nested_explicit_runner_disabled_keeps_no_business_grant(tmp_path, paren
 @pytest.mark.parametrize("bound", [False, True])
 @pytest.mark.parametrize("physical", ["root", "docker", "journal"])
 def test_concrete_physical_drift_rejected_before_model(tmp_path, bound, physical):
-    from ralf_agent.codex_runner import CodexCodingRunner
-    from ralf_agent.runner_journal import RunnerJournal
+    from relf_agent.codex_runner import CodexCodingRunner
+    from relf_agent.runner_journal import RunnerJournal
 
     async def exercise():
         root, journal_dir, executable = tmp_path / "root", tmp_path / "journal", tmp_path / "docker"

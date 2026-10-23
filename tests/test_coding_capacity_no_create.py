@@ -5,8 +5,8 @@ import json
 
 import pytest
 
-from ralf_agent import coding_execution_rules as rules
-from ralf_agent.errors import RalfError
+from relf_agent import coding_execution_rules as rules
+from relf_agent.errors import RalfError
 from tests.test_codex_runner_capacity import DISPATCH, GENERATION, RUNNER, slot
 from tests.test_codex_runner_capacity import root as root
 from tests.test_coding_create_not_dispatched import environment, no_create

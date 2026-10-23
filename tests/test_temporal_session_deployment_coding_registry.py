@@ -4,8 +4,8 @@ import copy
 
 import pytest
 
-from ralf_agent.errors import DefinitionMismatch
-from ralf_agent.types import digest
+from relf_agent.errors import DefinitionMismatch
+from relf_agent.types import digest
 from tests.test_temporal_deployment_session_registry import (
     NAMESPACE,
     POLICY,

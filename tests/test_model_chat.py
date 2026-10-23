@@ -6,9 +6,9 @@ from contextlib import aclosing
 import httpx
 import pytest
 
-from ralf_agent import AgentSpec, LocalEngine, SQLiteStore, ToolRegistry, ToolSpec
-from ralf_agent.errors import ProviderError, ValidationError
-from ralf_agent.providers import OpenAIChatProvider
+from relf_agent import AgentSpec, LocalEngine, SQLiteStore, ToolRegistry, ToolSpec
+from relf_agent.errors import ProviderError, ValidationError
+from relf_agent.providers import OpenAIChatProvider
 
 
 class Frames(httpx.AsyncByteStream):
@@ -260,7 +260,7 @@ def test_early_stream_consumer_close_closes_response_but_keeps_injected_client_o
 
 
 def test_capability_refusal_precedes_model_action_reservation(tmp_path):
-    api = importlib.import_module("ralf_agent.providers")
+    api = importlib.import_module("relf_agent.providers")
     requests = []
 
     async def run():

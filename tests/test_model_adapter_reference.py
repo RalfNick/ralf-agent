@@ -7,13 +7,13 @@ import sqlite3
 
 import pytest
 
-from ralf_agent import AgentSpec, ComponentRegistry, RuntimeBuilder, recommended_profile
-from ralf_agent.errors import DefinitionMismatch, ProviderError, ValidationError
+from relf_agent import AgentSpec, ComponentRegistry, RuntimeBuilder, recommended_profile
+from relf_agent.errors import DefinitionMismatch, ProviderError, ValidationError
 
 
 def reference():
     try:
-        return importlib.import_module("ralf_agent.model_adapter_contract_reference")
+        return importlib.import_module("relf_agent.model_adapter_contract_reference")
     except ModuleNotFoundError:
         pytest.fail("Independent ModelProvider source is missing")
 
@@ -198,7 +198,7 @@ def test_fixture_provider_domain_error_records_actual_request_before_failure(tmp
     ],
 )
 def test_original_run_rejects_actual_receipt_for_a_different_requested_incident(tmp_path, task):
-    from ralf_agent import ModelResponse, RuntimeProfile, ToolCall
+    from relf_agent import ModelResponse, RuntimeProfile, ToolCall
 
     async def exercise():
         api = reference()
@@ -269,8 +269,8 @@ def test_original_run_rejects_actual_receipt_for_a_different_requested_incident(
 def test_original_parent_rejects_consistent_child_receipts_for_a_different_parent_incident(
     tmp_path,
 ):
-    from ralf_agent import DynamicWorkflowSpec, RuntimeProfile
-    from ralf_agent.planning import PlanProposal, PlanStep
+    from relf_agent import DynamicWorkflowSpec, RuntimeProfile
+    from relf_agent.planning import PlanProposal, PlanStep
 
     async def exercise():
         api = reference()
@@ -357,7 +357,7 @@ def test_original_parent_rejects_consistent_child_receipts_for_a_different_paren
     ],
 )
 def test_original_run_accepts_requested_incident_in_object_string_and_child_wrapper(tmp_path, task):
-    from ralf_agent import RuntimeProfile
+    from relf_agent import RuntimeProfile
 
     async def exercise():
         api = reference()

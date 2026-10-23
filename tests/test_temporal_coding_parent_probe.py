@@ -6,7 +6,7 @@ import sys
 
 import pytest
 
-from ralf_agent.temporal_coding_composition_control import _adopt
+from relf_agent.temporal_coding_composition_control import _adopt
 from tests.test_temporal_deployment_coding_parent_capacity_service import (
     observe_original_parent_rpc,
 )
@@ -23,7 +23,7 @@ pytestmark = pytest.mark.skipif(
 def test_observer_records_original_parent_rpc_without_replacing_or_swallowing_it(
     tmp_path, monkeypatch, limit
 ):
-    from ralf_agent import temporal_session_activities
+    from relf_agent import temporal_session_activities
 
     async def namespace_id(client):
         return "11111111-1111-1111-1111-111111111111"

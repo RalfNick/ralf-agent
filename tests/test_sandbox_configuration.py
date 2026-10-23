@@ -4,8 +4,8 @@ import asyncio
 
 import pytest
 
-import ralf_agent as r
-from ralf_agent.errors import ValidationError
+import relf_agent as r
+from relf_agent.errors import ValidationError
 
 
 def config():
@@ -13,7 +13,7 @@ def config():
 
 
 def test_native_sandbox_default_is_registered_as_async_only():
-    from ralf_agent.ports import is_async_callable
+    from relf_agent.ports import is_async_callable
 
     factory, _ = r.ComponentRegistry().prepare(
         "tools", {"adapter": "sandbox-docker", "config": config()}
@@ -66,8 +66,8 @@ def test_sync_build_refuses_native_async_admission_before_store(tmp_path):
 def test_partial_native_admission_failure_closes_owned_provider_without_store(
     tmp_path, monkeypatch
 ):
-    from ralf_agent import sandbox_factories
-    from ralf_agent.errors import RalfError
+    from relf_agent import sandbox_factories
+    from relf_agent.errors import RalfError
 
     owned = []
 

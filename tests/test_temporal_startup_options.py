@@ -5,11 +5,11 @@ from datetime import timedelta
 
 import pytest
 
-from ralf_agent.errors import DefinitionMismatch, ValidationError
+from relf_agent.errors import DefinitionMismatch, ValidationError
 
 
 def options():
-    return importlib.import_module("ralf_agent.temporal_startup_options")
+    return importlib.import_module("relf_agent.temporal_startup_options")
 
 
 @pytest.mark.parametrize("value", [True, None, 0, -1, 86401, float("nan"), float("inf"), "1"])
@@ -114,7 +114,7 @@ def test_cross_field_constraints_and_all_profile_build_ids(monkeypatch):
     assert module.validate_worker_options(
         {"max_cached_workflows": 0, "max_concurrent_workflow_tasks": 1}, releases=[]
     ) == {"max_cached_workflows": 0, "max_concurrent_workflow_tasks": 1}
-    from ralf_agent.types import digest
+    from relf_agent.types import digest
 
     first, second = {"release": "1"}, {"release": "2"}
     with pytest.raises(DefinitionMismatch):

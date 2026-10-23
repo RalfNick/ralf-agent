@@ -2,7 +2,7 @@ import asyncio
 
 import pytest
 
-from ralf_agent import (
+from relf_agent import (
     AgentSpec,
     LocalEngine,
     ModelResponse,
@@ -12,9 +12,9 @@ from ralf_agent import (
     ToolSpec,
     WorkflowSpec,
 )
-from ralf_agent.errors import DefinitionMismatch, ValidationError
-from ralf_agent.executors import EffectObservation
-from ralf_agent.harness import DecisionProposal, ModelRequest, NativeHarness
+from relf_agent.errors import DefinitionMismatch, ValidationError
+from relf_agent.executors import EffectObservation
+from relf_agent.harness import DecisionProposal, ModelRequest, NativeHarness
 
 
 class RecordingProvider:

@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.0a6 — 公共入口统一候选
+
+- Python包统一为`relf_agent`，CLI及工具统一为`relf`／`relf-*`；发行名仍为`relf-agent`。
+- 同步动态导入、生成应用、操作提示、当前文档与显式发布身份校验；不新增能力。
+- 原配置、数据和协议标识保持，旧环境／原包和验收保留，不提供旧Run或History自动迁移。
+
+
 ## 0.1.0a5 — Distribution rename candidate
 
 - Rename the Python distribution to `relf-agent`; retain `ralf_agent`, `ralf` and existing execution protocol identities. Update install guidance and metadata URLs without adding capabilities.

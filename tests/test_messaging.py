@@ -1,12 +1,12 @@
 import asyncio
 import importlib.util
 
-from ralf_agent import Scope
+from relf_agent import Scope
 
 
 def test_default_bus_delivers_once_per_acknowledged_group():
-    assert importlib.util.find_spec("ralf_agent.messaging"), "Missing MessageBus defaults"
-    from ralf_agent.messaging import InMemoryMessageBus, MessageEnvelope
+    assert importlib.util.find_spec("relf_agent.messaging"), "Missing MessageBus defaults"
+    from relf_agent.messaging import InMemoryMessageBus, MessageEnvelope
 
     async def scenario():
         bus = InMemoryMessageBus()

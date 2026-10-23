@@ -6,7 +6,7 @@
 
 ~~~python
 import asyncio
-from ralf_agent import (
+from relf_agent import (
     AgentBindingDescriptor,
     AgentDefinition,
     AgentSpec,
@@ -18,7 +18,7 @@ from ralf_agent import (
     SQLiteStore,
     ToolRegistry,
 )
-from ralf_agent.runtime_builder import EchoProvider
+from relf_agent.runtime_builder import EchoProvider
 
 scope = Scope()
 history = InMemoryMemory(backend_id="private-session-v1")
@@ -44,7 +44,7 @@ with LocalEngine(
 ## 共享客户端与允许的 namespace
 
 ~~~python
-from ralf_agent import SessionBindingResource
+from relf_agent import SessionBindingResource
 
 resource = SessionBindingResource(
     history,

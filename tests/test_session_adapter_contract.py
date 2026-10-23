@@ -8,15 +8,15 @@ from pathlib import Path
 
 import pytest
 
-from ralf_agent import InMemoryMemory, Scope, SQLiteMemory
-from ralf_agent.adapter_contract_types import AdapterContractCleanupPending
-from ralf_agent.errors import CloseIncomplete
-from ralf_agent.session_adapter_contract_reference import offline_session_fixture
-from ralf_agent.types import canonical
+from relf_agent import InMemoryMemory, Scope, SQLiteMemory
+from relf_agent.adapter_contract_types import AdapterContractCleanupPending
+from relf_agent.errors import CloseIncomplete
+from relf_agent.session_adapter_contract_reference import offline_session_fixture
+from relf_agent.types import canonical
 
 
 def api():
-    return importlib.import_module("ralf_agent.session_adapter_contract")
+    return importlib.import_module("relf_agent.session_adapter_contract")
 
 
 @pytest.mark.parametrize("case_id", [f"S{number:02}" for number in range(1, 15)])
@@ -296,7 +296,7 @@ def test_cancelled_prepare_drains_original_preparation_then_closes_once(tmp_path
 
 
 def test_suite_retains_failed_owner_workspace_and_retries_same_cleanup(tmp_path):
-    from ralf_agent.adapter_contracts import AdapterContractSuite
+    from relf_agent.adapter_contracts import AdapterContractSuite
 
     allowed = False
 
@@ -369,7 +369,7 @@ def test_lost_ack_refusal_before_commit_does_not_certify_accepted_write(tmp_path
 
 
 def test_core_requires_no_receipt_pagination_or_database_attributes(tmp_path):
-    from ralf_agent.session_adapter_contract_reference import ReferenceSQLiteSessionStore
+    from relf_agent.session_adapter_contract_reference import ReferenceSQLiteSessionStore
 
     def change(session):
         core = ReferenceSQLiteSessionStore(session.store._original_source)
@@ -387,7 +387,7 @@ def test_role_runner_rejects_foreign_case_without_preparation(case_id, tmp_path)
         def prepare(self, *args):
             pytest.fail("invalid case cannot prepare a resource")
 
-    from ralf_agent.errors import ValidationError
+    from relf_agent.errors import ValidationError
 
     with pytest.raises(ValidationError):
         asyncio.run(api().run_session_case(case_id, Fixture(), tmp_path))

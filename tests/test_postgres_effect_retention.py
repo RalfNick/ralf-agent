@@ -7,11 +7,11 @@ from contextlib import asynccontextmanager
 
 import pytest
 
-from ralf_agent.errors import DefinitionMismatch, ValidationError
-from ralf_agent.executors import DispatchEnvelope, EffectObservation
-from ralf_agent.postgres import _advisory_key
-from ralf_agent.temporal_journal import PostgresEffectJournal
-from ralf_agent.types import InvocationContext, Scope, canonical, digest
+from relf_agent.errors import DefinitionMismatch, ValidationError
+from relf_agent.executors import DispatchEnvelope, EffectObservation
+from relf_agent.postgres import _advisory_key
+from relf_agent.temporal_journal import PostgresEffectJournal
+from relf_agent.types import InvocationContext, Scope, canonical, digest
 
 SCOPE = Scope("effect-retention", "alice")
 TABLES = ("ralf_temporal_effects", "ralf_temporal_effect_evidence")

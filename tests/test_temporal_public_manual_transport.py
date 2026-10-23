@@ -9,14 +9,14 @@ import pytest
 
 pytest.importorskip("temporalio")
 
-from ralf_agent.errors import RalfError
-from ralf_agent.temporal_workflow import TemporalCommandRegistryWorkflow, workflow
+from relf_agent.errors import RalfError
+from relf_agent.temporal_workflow import TemporalCommandRegistryWorkflow, workflow
 from tests.test_temporal_manual_recovery import manual_request, verified
 from tests.test_temporal_recovery_capacity import full_registry
 
 
 def api():
-    return import_module("ralf_agent.temporal_public_manual_transport")
+    return import_module("relf_agent.temporal_public_manual_transport")
 
 
 def fixture(monkeypatch, *, version=2, hold=False, failure=False):
@@ -47,7 +47,7 @@ def fixture(monkeypatch, *, version=2, hold=False, failure=False):
     monkeypatch.setattr(workflow, "info", lambda: info)
 
     async def execute(name, value, **options):
-        from ralf_agent.temporal_deployment_release import RELEASE_ACTIVITY
+        from relf_agent.temporal_deployment_release import RELEASE_ACTIVITY
 
         assert name == RELEASE_ACTIVITY and value["mode"] == "manual_control"
         assert value["registry_execution_epoch"] == info.run_id

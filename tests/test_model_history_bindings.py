@@ -5,16 +5,16 @@ from dataclasses import asdict
 
 import pytest
 
-from ralf_agent import AgentSpec, CompleteModelHistory, Scope, TeamSpec, WorkflowSpec
-from ralf_agent.binding_catalog import BindingCatalog
-from ralf_agent.binding_definitions import AgentDefinition, BoundDefinition, decode_definition
-from ralf_agent.binding_paths import member_spec
-from ralf_agent.binding_runtime import descriptor_for, unwrap_definition
-from ralf_agent.binding_types import AgentBindingDescriptor, BindingSelection
-from ralf_agent.errors import DefinitionMismatch, ValidationError
-from ralf_agent.memory import ThreadedMemoryAdapter
-from ralf_agent.model_history import model_history_registration
-from ralf_agent.recall import LegacyMemoryRecallAdapter
+from relf_agent import AgentSpec, CompleteModelHistory, Scope, TeamSpec, WorkflowSpec
+from relf_agent.binding_catalog import BindingCatalog
+from relf_agent.binding_definitions import AgentDefinition, BoundDefinition, decode_definition
+from relf_agent.binding_paths import member_spec
+from relf_agent.binding_runtime import descriptor_for, unwrap_definition
+from relf_agent.binding_types import AgentBindingDescriptor, BindingSelection
+from relf_agent.errors import DefinitionMismatch, ValidationError
+from relf_agent.memory import ThreadedMemoryAdapter
+from relf_agent.model_history import model_history_registration
+from relf_agent.recall import LegacyMemoryRecallAdapter
 
 from .test_binding_execution import engine
 from .test_sandbox_bindings import registered as registered
@@ -247,7 +247,7 @@ def test_session_history_requires_a_real_bounded_page_port_before_resolution(tmp
 
 
 def test_temporal_joint_eight_keeps_native_sandbox_binding_guard(registered):
-    from ralf_agent.binding_sandbox import validate_sandbox_protocol
+    from relf_agent.binding_sandbox import validate_sandbox_protocol
 
     registry, _ = registered
     manifest = {

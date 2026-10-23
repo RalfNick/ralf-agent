@@ -4,8 +4,8 @@ import json
 
 import pytest
 
-from ralf_agent import EvaluationLimits, ModelResponse, ModelStreamEvent, ToolCall
-from ralf_agent.errors import ValidationError
+from relf_agent import EvaluationLimits, ModelResponse, ModelStreamEvent, ToolCall
+from relf_agent.errors import ValidationError
 
 
 class Provider:
@@ -41,7 +41,7 @@ class Provider:
 
 
 def evaluate(*args, **kwargs):
-    api = importlib.import_module("ralf_agent")
+    api = importlib.import_module("relf_agent")
     assert hasattr(api, "evaluate_model_compatibility"), "Model compatibility suite is missing"
     return api.evaluate_model_compatibility(*args, **kwargs)
 

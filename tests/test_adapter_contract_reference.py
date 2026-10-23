@@ -9,15 +9,15 @@ from dataclasses import asdict, replace
 
 import pytest
 
-from ralf_agent import KnowledgeContext, Scope
-from ralf_agent.errors import DefinitionMismatch, ValidationError
-from ralf_agent.retrieval import RetrievalQuery
-from ralf_agent.types import canonical
+from relf_agent import KnowledgeContext, Scope
+from relf_agent.errors import DefinitionMismatch, ValidationError
+from relf_agent.retrieval import RetrievalQuery
+from relf_agent.types import canonical
 
 
 def reference():
     try:
-        return importlib.import_module("ralf_agent.adapter_contract_reference")
+        return importlib.import_module("relf_agent.adapter_contract_reference")
     except ModuleNotFoundError:
         pytest.fail("The independent installed adapter reference is missing")
 
@@ -136,7 +136,7 @@ def test_reference_rejects_a_different_real_database_at_the_original_path(
 
 @pytest.mark.parametrize("phase", ["retrieve", "validate"])
 def test_reference_refuses_actual_file_replacement_during_suspended_original_io(tmp_path, phase):
-    from ralf_agent.knowledge_adapter_contract import KnowledgeContractSession
+    from relf_agent.knowledge_adapter_contract import KnowledgeContractSession
 
     api = reference()
 
@@ -172,7 +172,7 @@ def test_reference_refuses_actual_file_replacement_during_suspended_original_io(
 def test_partial_offline_fixture_preparation_closes_its_real_source_before_raising(
     tmp_path, monkeypatch, phase
 ):
-    import ralf_agent.knowledge_adapter_contract as contracts
+    import relf_agent.knowledge_adapter_contract as contracts
 
     api = reference()
     created = []
@@ -234,7 +234,7 @@ def test_reference_is_structural_and_context_uses_real_references(tmp_path, asyn
     )
     cls = api.AsyncReferenceSQLiteRetriever if asynchronous else api.ReferenceSQLiteRetriever
     adapter = cls(source)
-    assert not any("ralf_agent.retrieval" == base.__module__ for base in cls.__mro__)
+    assert not any("relf_agent.retrieval" == base.__module__ for base in cls.__mro__)
     implementation = inspect.getsource(cls) + inspect.getsource(api.ReferenceKnowledgeSource)
     assert "LexicalRetriever(" not in implementation
     assert "KnowledgeStore(" not in implementation
@@ -254,7 +254,7 @@ def test_reference_is_structural_and_context_uses_real_references(tmp_path, asyn
 def test_registered_reference_factory_completely_replaces_semantic_default_and_owns_explicitly(
     tmp_path, asynchronous, owned
 ):
-    from ralf_agent import (
+    from relf_agent import (
         AgentSpec,
         ComponentRegistry,
         Runtime,
@@ -306,7 +306,7 @@ def test_registered_reference_factory_completely_replaces_semantic_default_and_o
 
 @pytest.mark.parametrize("case_id", [f"K{number:02}" for number in range(1, 13)])
 def test_explicit_independent_offline_fixture_satisfies_original_black_box_case(tmp_path, case_id):
-    from ralf_agent.knowledge_adapter_contract import run_knowledge_case
+    from relf_agent.knowledge_adapter_contract import run_knowledge_case
 
     actual = asyncio.run(
         run_knowledge_case(case_id, reference().offline_knowledge_fixture(), tmp_path)

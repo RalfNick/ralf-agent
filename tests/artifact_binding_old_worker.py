@@ -128,9 +128,8 @@ async def close_runtime(execution, resources):
 
 
 async def worker(mode):
-    from temporalio.client import Client
-
     from ralf_agent.temporal import build_temporal_worker
+    from temporalio.client import Client
 
     client = await Client.connect(os.environ["RALF_TEST_TEMPORAL_ADDRESS"])
     execution, resources = await runtime(mode)

@@ -6,9 +6,9 @@ import importlib
 
 import pytest
 
-from ralf_agent.codex_runner import CodexCodingRunner
-from ralf_agent.errors import AuthorizationDenied, IdempotencyConflict, ValidationError
-from ralf_agent.types import digest
+from relf_agent.codex_runner import CodexCodingRunner
+from relf_agent.errors import AuthorizationDenied, IdempotencyConflict, ValidationError
+from relf_agent.types import digest
 from tests.test_codex_runner import envelope, runner
 from tests.test_codex_runner import runner_parts as runner_parts
 from tests.test_postgres_runner_journal import journals, unopened
@@ -16,13 +16,13 @@ from tests.test_postgres_runner_journal import postgres_dsn as postgres_dsn
 
 
 def resource_rules():
-    spec = importlib.util.find_spec("ralf_agent.postgres_coding_resources")
+    spec = importlib.util.find_spec("relf_agent.postgres_coding_resources")
     assert spec is not None, "Missing original PG resource-intent rules"
-    return importlib.import_module("ralf_agent.postgres_coding_resources")
+    return importlib.import_module("relf_agent.postgres_coding_resources")
 
 
 def intent():
-    from ralf_agent.codex_runner import _dispatch
+    from relf_agent.codex_runner import _dispatch
 
     value = envelope()
     request = {
@@ -161,9 +161,9 @@ def test_pg_atomic_resource_intent_original_startup_and_pending(postgres_dsn):
 def test_pg_history_native_same_loop_receipt_recovery_never_submits_again(
     postgres_dsn, tmp_path, lost_receipt
 ):
-    from ralf_agent.codex_runner import RunnerOutcomeUnknown, _dispatch
-    from ralf_agent.coding_execution_rules import adopt, grant
-    from ralf_agent.temporal_coding_authority import TemporalCodingAuthority
+    from relf_agent.codex_runner import RunnerOutcomeUnknown, _dispatch
+    from relf_agent.coding_execution_rules import adopt, grant
+    from relf_agent.temporal_coding_authority import TemporalCodingAuthority
     from tests.test_codex_runner import native_fixture
 
     async def scenario():
@@ -337,7 +337,7 @@ def test_ungranted_resource_tombstone_clears_pending_without_manufacturing_nativ
 def test_retirement_receipt_fault_keeps_same_owner_and_retries_after_environment_close(
     runner_parts, tmp_path
 ):
-    from ralf_agent.codex_environment import DockerCodingEnvironment
+    from relf_agent.codex_environment import DockerCodingEnvironment
     from tests.test_codex_environment import FAKE_DOCKER
 
     class ReceiptSink:
@@ -407,10 +407,10 @@ def test_resource_fence_receipt_refuses_other_resource_or_untyped_completion(cha
 
 
 def test_pg_resource_cas_capacity_scope_and_rollback(postgres_dsn):
-    from ralf_agent.codex_runner import _dispatch
-    from ralf_agent.errors import MemoryBackendError
-    from ralf_agent.executors import DispatchEnvelope
-    from ralf_agent.types import InvocationContext, Scope
+    from relf_agent.codex_runner import _dispatch
+    from relf_agent.errors import MemoryBackendError
+    from relf_agent.executors import DispatchEnvelope
+    from relf_agent.types import InvocationContext, Scope
 
     async def scenario():
         async with journals(postgres_dsn, capacity=1) as (views, effects, connections, _):
@@ -470,7 +470,7 @@ def test_pg_resource_cas_capacity_scope_and_rollback(postgres_dsn):
 def test_namespace_absence_query_does_not_prepare_create_or_fabricate_container(tmp_path):
     import sys
 
-    from ralf_agent.codex_environment import DockerCodingEnvironment
+    from relf_agent.codex_environment import DockerCodingEnvironment
     from tests.test_codex_environment import FAKE_DOCKER
 
     async def scenario():
@@ -544,10 +544,10 @@ def test_pg_dead_original_owner_prepare_grant_loss_queries_absence_without_nativ
     import tempfile
     from pathlib import Path
 
-    from ralf_agent.codex_runner import _dispatch
-    from ralf_agent.coding_execution_rules import grant
-    from ralf_agent.temporal_coding_authority import TemporalCodingAuthority
-    from ralf_agent.temporal_coding_runtime import deployment, process_start
+    from relf_agent.codex_runner import _dispatch
+    from relf_agent.coding_execution_rules import grant
+    from relf_agent.temporal_coding_authority import TemporalCodingAuthority
+    from relf_agent.temporal_coding_runtime import deployment, process_start
     from tests.test_codex_environment import FAKE_DOCKER
 
     async def scenario():
@@ -662,7 +662,7 @@ def test_pg_dead_original_owner_prepare_grant_loss_queries_absence_without_nativ
                         update=update,
                         validate=validate,
                     )
-                    from ralf_agent.errors import CloseIncomplete
+                    from relf_agent.errors import CloseIncomplete
 
                     with pytest.raises(CloseIncomplete):
                         await native.stop_history(value, authority)
@@ -691,7 +691,7 @@ def test_pg_dead_original_owner_prepare_grant_loss_queries_absence_without_nativ
 def test_pg_await_revalidates_full_original_registration_before_and_after(postgres_dsn, tmp_path):
     import sys
 
-    from ralf_agent.temporal_coding_authority import TemporalCodingAuthority
+    from relf_agent.temporal_coding_authority import TemporalCodingAuthority
 
     async def scenario():
         async with journals(postgres_dsn) as (views, _, _, _):

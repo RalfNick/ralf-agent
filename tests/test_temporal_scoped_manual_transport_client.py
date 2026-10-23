@@ -7,10 +7,10 @@ from types import SimpleNamespace
 
 import pytest
 
-from ralf_agent.errors import RalfError
-from ralf_agent.temporal_scoped_manual_recovery import commit, configuration, prepare
-from ralf_agent.temporal_state import COMMAND_REGISTRY_NAME
-from ralf_agent.types import digest
+from relf_agent.errors import RalfError
+from relf_agent.temporal_scoped_manual_recovery import commit, configuration, prepare
+from relf_agent.temporal_state import COMMAND_REGISTRY_NAME
+from relf_agent.types import digest
 from tests.test_temporal_scoped_manual_recovery_state import (
     SCOPE,
     expected_receipt,
@@ -21,7 +21,7 @@ from tests.test_temporal_scoped_manual_recovery_state import (
 
 
 def api():
-    return import_module("ralf_agent.temporal_scoped_manual_transport")
+    return import_module("relf_agent.temporal_scoped_manual_transport")
 
 
 class FakeClient:

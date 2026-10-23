@@ -2,7 +2,7 @@ import json
 
 import pytest
 
-from ralf_agent import SQLiteStore
+from relf_agent import SQLiteStore
 
 from .receipt_runtime import create_engine
 from .test_cli import cli

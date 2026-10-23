@@ -4,7 +4,7 @@ import asyncio
 
 import pytest
 
-from ralf_agent import (
+from relf_agent import (
     AgentSpec,
     LocalEngine,
     ModelResponse,
@@ -13,7 +13,7 @@ from ralf_agent import (
     ToolRegistry,
     ToolSpec,
 )
-from ralf_agent.executors import EffectObservation
+from relf_agent.executors import EffectObservation
 
 from .helpers import ScriptedProvider
 from .receipt_runtime import ReceiptWindowStore

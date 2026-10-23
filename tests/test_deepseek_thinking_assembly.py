@@ -7,7 +7,7 @@ import json
 import httpx
 import pytest
 
-from ralf_agent import (
+from relf_agent import (
     AgentBindingDescriptor,
     AgentDefinition,
     AgentSpec,
@@ -18,9 +18,9 @@ from ralf_agent import (
     TemporalProfile,
     TemporalRuntimeBuilder,
 )
-from ralf_agent.errors import ValidationError
-from ralf_agent.runtime_builder import EchoProvider
-from ralf_agent.temporal_bindings import provider_alias
+from relf_agent.errors import ValidationError
+from relf_agent.runtime_builder import EchoProvider
+from relf_agent.temporal_bindings import provider_alias
 
 
 def declaration(**config):
@@ -49,11 +49,11 @@ def bound_agent():
 
 
 def test_sdk_exports_independent_thinking_provider():
-    api = importlib.import_module("ralf_agent")
+    api = importlib.import_module("relf_agent")
     assert getattr(api, "DeepSeekThinkingProvider", None) is not None
     assert (
         api.DeepSeekThinkingProvider
-        is importlib.import_module("ralf_agent.deepseek_thinking").DeepSeekThinkingProvider
+        is importlib.import_module("relf_agent.deepseek_thinking").DeepSeekThinkingProvider
     )
     assert api.DeepSeekThinkingProvider is not api.DeepSeekChatProvider
 
@@ -338,7 +338,7 @@ def test_unrelated_model_configuration_rejects_effort_before_database(tmp_path, 
 
 
 def cli(name):
-    return importlib.import_module("ralf_agent." + name)
+    return importlib.import_module("relf_agent." + name)
 
 
 @pytest.mark.parametrize(
@@ -395,9 +395,9 @@ def test_cli_defaults_still_do_not_infer_deepseek_model_or_credentials(name, mon
 def test_thinking_cli_runs_actual_managed_evaluation_with_explicit_effort(
     name, tmp_path, monkeypatch, capsys
 ):
-    from ralf_agent.embeddings import HashEmbeddingProvider
-    from ralf_agent.orchestration_evaluation import OfflineOrchestrationProvider
-    from ralf_agent.rag_evaluation import OfflineRAGProvider
+    from relf_agent.embeddings import HashEmbeddingProvider
+    from relf_agent.orchestration_evaluation import OfflineOrchestrationProvider
+    from relf_agent.rag_evaluation import OfflineRAGProvider
     from tests.test_planning_evaluation import proposal
 
     native_client = httpx.AsyncClient
@@ -435,7 +435,7 @@ def test_thinking_cli_runs_actual_managed_evaluation_with_explicit_effort(
             )
             output, calls = response.output, response.tool_calls
         elif not any(m["role"] == "tool" for m in body["messages"]):
-            from ralf_agent import ToolCall
+            from relf_agent import ToolCall
 
             output, calls = (
                 None,

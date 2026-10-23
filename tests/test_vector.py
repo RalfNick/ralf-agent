@@ -3,12 +3,12 @@ import importlib
 
 import pytest
 
-from ralf_agent.errors import DefinitionMismatch, MemoryBackendError, ValidationError
-from ralf_agent.types import Scope, digest
+from relf_agent.errors import DefinitionMismatch, MemoryBackendError, ValidationError
+from relf_agent.types import Scope, digest
 
 
 def api():
-    return importlib.import_module("ralf_agent.vector")
+    return importlib.import_module("relf_agent.vector")
 
 
 @pytest.fixture(params=["memory", "sqlite"])
@@ -80,7 +80,7 @@ class ExplicitEmbedding:
 
 def test_vector_retriever_accepts_native_async_callable_embedding(index):
     module = api()
-    retrieval = importlib.import_module("ralf_agent.retrieval")
+    retrieval = importlib.import_module("relf_agent.retrieval")
 
     class Embed:
         async def __call__(self, texts):
@@ -110,7 +110,7 @@ def test_vector_retriever_accepts_native_async_callable_embedding(index):
 
 def test_vector_retriever_hydrates_authority_and_never_revives_stale_hits(index):
     module = api()
-    retrieval = importlib.import_module("ralf_agent.retrieval")
+    retrieval = importlib.import_module("relf_agent.retrieval")
     with retrieval.InMemoryKnowledgeStore() as store:
         store.put(Scope(), "n", retrieval.Document("a", "apple"), expected_version=0)
         store.put(Scope(), "n", retrieval.Document("b", "banana"), expected_version=0)
@@ -131,7 +131,7 @@ def test_vector_retriever_hydrates_authority_and_never_revives_stale_hits(index)
 
 def test_embedding_model_namespaces_do_not_mix_on_shared_index(index):
     module = api()
-    retrieval = importlib.import_module("ralf_agent.retrieval")
+    retrieval = importlib.import_module("relf_agent.retrieval")
     with retrieval.InMemoryKnowledgeStore() as store:
         store.put(Scope(), "n", retrieval.Document("a", "apple"), expected_version=0)
         first = module.VectorRetriever(store, index, ExplicitEmbedding())
@@ -147,7 +147,7 @@ def test_embedding_model_namespaces_do_not_mix_on_shared_index(index):
 
 def test_embedding_configuration_change_during_indexing_prevents_index_write(index):
     module = api()
-    retrieval = importlib.import_module("ralf_agent.retrieval")
+    retrieval = importlib.import_module("relf_agent.retrieval")
 
     class ChangingEmbedding(ExplicitEmbedding):
         async def embed(self, texts):
@@ -164,7 +164,7 @@ def test_embedding_configuration_change_during_indexing_prevents_index_write(ind
 
 def test_source_update_during_embedding_prevents_stale_index_write(index):
     module = api()
-    retrieval = importlib.import_module("ralf_agent.retrieval")
+    retrieval = importlib.import_module("relf_agent.retrieval")
     with retrieval.InMemoryKnowledgeStore() as store:
         store.put(Scope(), "n", retrieval.Document("a", "apple"), expected_version=0)
 
@@ -192,7 +192,7 @@ def test_sqlite_vector_configuration_and_data_survive_reopen(tmp_path):
 
 def test_indexing_rejects_foreign_document_record_even_if_chunks_look_valid(index):
     module = api()
-    retrieval = importlib.import_module("ralf_agent.retrieval")
+    retrieval = importlib.import_module("relf_agent.retrieval")
     with retrieval.InMemoryKnowledgeStore() as store:
         store.put(Scope(), "n", retrieval.Document("a", "apple"), expected_version=0)
 
@@ -225,7 +225,7 @@ def test_indexing_rejects_foreign_document_record_even_if_chunks_look_valid(inde
 
 def test_partial_remote_index_failure_is_repaired_by_explicit_reindex():
     module = api()
-    retrieval = importlib.import_module("ralf_agent.retrieval")
+    retrieval = importlib.import_module("relf_agent.retrieval")
 
     class PartialIndex(module.InMemoryVectorIndex):
         fail = True

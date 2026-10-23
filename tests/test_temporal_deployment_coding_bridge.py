@@ -9,14 +9,14 @@ from types import SimpleNamespace
 
 import pytest
 
-from ralf_agent import AgentSpec, Scope
-from ralf_agent.binding_definitions import AgentDefinition
-from ralf_agent.binding_types import AgentBindingDescriptor, BindingSelection
-from ralf_agent.errors import CloseIncomplete, DefinitionMismatch
-from ralf_agent.governance import DeploymentAdmissionPolicy
-from ralf_agent.temporal_deployment_admission import registry_id
-from ralf_agent.temporal_state import COMMAND_REGISTRY_NAME, TOOL_ACTIVITY
-from ralf_agent.types import canonical, digest
+from relf_agent import AgentSpec, Scope
+from relf_agent.binding_definitions import AgentDefinition
+from relf_agent.binding_types import AgentBindingDescriptor, BindingSelection
+from relf_agent.errors import CloseIncomplete, DefinitionMismatch
+from relf_agent.governance import DeploymentAdmissionPolicy
+from relf_agent.temporal_deployment_admission import registry_id
+from relf_agent.temporal_state import COMMAND_REGISTRY_NAME, TOOL_ACTIVITY
+from relf_agent.types import canonical, digest
 
 
 @pytest.fixture(autouse=True, scope="module")
@@ -43,7 +43,7 @@ RUNNER = {"kind": "original-runner", "version": "1"}
 
 
 def module():
-    name = "ralf_agent.temporal_deployment_coding_bridge"
+    name = "relf_agent.temporal_deployment_coding_bridge"
     assert importlib.util.find_spec(name), "Missing original Coding deployment bridge"
     return importlib.import_module(name)
 
@@ -183,7 +183,7 @@ def proof(run_id="root", epoch="root-epoch"):
 
 
 def install_proofs(monkeypatch, original=None):
-    from ralf_agent import temporal_deployment_execution as execution
+    from relf_agent import temporal_deployment_execution as execution
 
     original = proof() if original is None else original
 
@@ -297,8 +297,8 @@ def test_sideband_descendant_binds_only_original_root_and_preserves_closed_stop_
 
 
 def test_combined_control_validates_both_edges_then_executes_original_operation_once(monkeypatch):
-    from ralf_agent import temporal_coding_composition_control as coding
-    from ralf_agent import temporal_deployment_execution as execution
+    from relf_agent import temporal_coding_composition_control as coding
+    from relf_agent import temporal_deployment_execution as execution
 
     async def run():
         calls = []
@@ -366,7 +366,7 @@ def test_native_grant_guard_only_reads_original_root_index(monkeypatch, closed):
         original["manifest"] = manifest
         client.candidate["manifest_digest"] = digest(manifest)
         client.candidate["close_requested"] = closed
-        from ralf_agent import temporal_deployment_execution as execution
+        from relf_agent import temporal_deployment_execution as execution
 
         async def read(*args, **kwargs):
             return copy.deepcopy(original)
@@ -390,7 +390,7 @@ def test_native_grant_guard_only_reads_original_root_index(monkeypatch, closed):
 
 
 def test_readonly_grant_guard_refuses_hidden_ancestry_pin_before_sdk_mutation(monkeypatch):
-    from ralf_agent import temporal_deployment_execution as execution
+    from relf_agent import temporal_deployment_execution as execution
 
     async def run():
         client, runtime = Client(), Runtime()
@@ -479,7 +479,7 @@ def stopped_call(client):
 def test_call_stop_verifier_reads_original_candidate_before_original_birth_check(
     monkeypatch, changed
 ):
-    from ralf_agent import delegated_coding, temporal_coding_runtime
+    from relf_agent import delegated_coding, temporal_coding_runtime
 
     async def run():
         client, runtime = Client(), Runtime()
@@ -507,7 +507,7 @@ def test_call_stop_verifier_reads_original_candidate_before_original_birth_check
         elif changed == "caller-proof":
             value["attestation"] = candidate
         elif changed == "stop-handler":
-            from ralf_agent.temporal_coding_state import CODING_STOP_ACTIVITY
+            from relf_agent.temporal_coding_state import CODING_STOP_ACTIVITY
 
             identity["activity_name"] = CODING_STOP_ACTIVITY
         info = SimpleNamespace(
@@ -542,10 +542,10 @@ def test_stop_activity_registration_marker_is_exact_and_runtime_bound():
 
 
 def test_verifier_consumes_real_original_history_cold_candidate(monkeypatch):
-    from ralf_agent import delegated_coding, temporal_coding_runtime
-    from ralf_agent import temporal_deployment_execution as execution
-    from ralf_agent import temporal_deployment_execution_state as admission_state
-    from ralf_agent.temporal_deployment_coding_state import coding_call_candidate
+    from relf_agent import delegated_coding, temporal_coding_runtime
+    from relf_agent import temporal_deployment_execution as execution
+    from relf_agent import temporal_deployment_execution_state as admission_state
+    from relf_agent.temporal_deployment_coding_state import coding_call_candidate
 
     from .test_temporal_deployment_coding_state import cold
 
@@ -598,8 +598,8 @@ def test_verifier_consumes_real_original_history_cold_candidate(monkeypatch):
 def test_close_scans_native_candidates_without_pg_rows_and_never_infers_missing_root(
     monkeypatch, missing
 ):
-    from ralf_agent import temporal_coding_composition_control as coding
-    from ralf_agent import temporal_deployment_execution as execution
+    from relf_agent import temporal_coding_composition_control as coding
+    from relf_agent import temporal_deployment_execution as execution
 
     async def run():
         runtime, client, events = Runtime(), Client(), []
@@ -654,8 +654,8 @@ def test_close_scans_native_candidates_without_pg_rows_and_never_infers_missing_
 def test_v3_close_accepts_original_sdk_planner_arrays_but_refuses_changed_manifest(
     monkeypatch, binding, changed
 ):
-    from ralf_agent import temporal_coding_composition_control as coding
-    from ralf_agent import temporal_coding_runtime as native
+    from relf_agent import temporal_coding_composition_control as coding
+    from relf_agent import temporal_coding_runtime as native
 
     async def run():
         runtime, client, events = Runtime(), Client(), []
@@ -724,7 +724,7 @@ def test_owned_close_uses_original_registry3_authority_without_business_acceptan
 ):
     from temporalio.common import WorkflowIDConflictPolicy, WorkflowIDReusePolicy
 
-    from ralf_agent import temporal_coding_composition_control as coding
+    from relf_agent import temporal_coding_composition_control as coding
 
     async def run():
         runtime, client, closed = Runtime(), Client(), []
@@ -841,7 +841,7 @@ def test_borrowed_close_and_proxy_diagnostics_never_create_missing_registry():
 
 @pytest.mark.parametrize("lost", [False, True])
 def test_owned_close_racing_or_lost_registry_start_keeps_same_authority(monkeypatch, lost):
-    from ralf_agent import temporal_coding_composition_control as coding
+    from relf_agent import temporal_coding_composition_control as coding
 
     async def run():
         client, closed = Client(), []

@@ -4,7 +4,7 @@
 原默认 `TextDocumentParser` 仍仅支持 text/plain、text/markdown；无需新依赖，不自动读取文件或抓取 URL。
 
 ```python
-from ralf_agent import (
+from relf_agent import (
     HtmlDocumentParser,
     IngestionCoordinator,
     Scope,
@@ -47,7 +47,7 @@ UTF-8 BOM 可以存在；其他编码或带 charset 参数的 media_type 需由�
 ## 开箱即用
 
 ```sh
-ralf init my-docs --template ingest
+relf init my-docs --template ingest
 cd my-docs
 python -m agent_app ingest /absolute/path/runbook.html --document-id runbook --command-id ingest-first --expected-version 0
 python -m agent_app query --query 'pool timeout' --command-id answer-first

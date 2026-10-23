@@ -2,8 +2,8 @@
 
 from functools import wraps
 
-from ralf_agent import component_fingerprint as module
-from ralf_agent.types import digest
+from relf_agent import component_fingerprint as module
+from relf_agent.types import digest
 
 
 def original(method):
@@ -112,14 +112,14 @@ def test_adding_defaults_or_wrapper_after_caching_is_observed():
 def test_static_and_dynamic_runtime_inventory_digests_keep_original_algorithm():
     from importlib import import_module
 
-    from ralf_agent.temporal_coding_composition_protocol import (
+    from relf_agent.temporal_coding_composition_protocol import (
         _pure_sources,
         _resolve,
         _worker_sources,
     )
 
     for module_name, names in {**_pure_sources(), **_worker_sources()}.values():
-        owner = import_module("ralf_agent." + module_name)
+        owner = import_module("relf_agent." + module_name)
         for name in names:
             method = _resolve(owner, name)
             assert module.executable_digest(method) == original(method), (module_name, name)

@@ -35,9 +35,9 @@ def rows(directory):
 
 
 def runtime():
-    from ralf_agent import ToolRegistry
-    from ralf_agent.runtime_builder import EchoProvider
-    from ralf_agent.temporal_activities import TemporalRuntime
+    from relf_agent import ToolRegistry
+    from relf_agent.runtime_builder import EchoProvider
+    from relf_agent.temporal_activities import TemporalRuntime
 
     return TemporalRuntime(providers={"default": EchoProvider("cpu")}, tools=ToolRegistry())
 
@@ -163,7 +163,7 @@ def test_selected_stacks_are_independent_between_threads(tmp_path, monitoring):
 
 def test_original_return_and_exception_objects_and_unwind_stack(tmp_path, monitoring):
     helper = fixture_module()
-    from ralf_agent.temporal_session_deployment_verification import SessionControlValidation
+    from relf_agent.temporal_session_deployment_verification import SessionControlValidation
     from tests.test_temporal_session_deployment_control import Client, Runtime, fixture
 
     deployment, value, info = fixture()
@@ -196,8 +196,8 @@ def test_original_return_and_exception_objects_and_unwind_stack(tmp_path, monito
 def test_equivalent_reimported_code_is_outside_host_only_coverage(tmp_path, monitoring):
     from types import FunctionType
 
-    from ralf_agent.errors import RalfError
-    from ralf_agent.temporal_session_deployment_dto import validate_intent
+    from relf_agent.errors import RalfError
+    from relf_agent.temporal_session_deployment_dto import validate_intent
     from tests.test_temporal_session_deployment_dto import DEPLOYMENT, intent
 
     helper = fixture_module()

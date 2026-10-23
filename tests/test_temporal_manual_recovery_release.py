@@ -5,8 +5,8 @@ from types import SimpleNamespace
 
 import pytest
 
-from ralf_agent.errors import RalfError
-from ralf_agent.types import digest
+from relf_agent.errors import RalfError
+from relf_agent.types import digest
 from tests.test_temporal_deployment_control_release import environment
 
 
@@ -15,7 +15,7 @@ from tests.test_temporal_deployment_control_release import environment
 def test_registry_manual_verification_pins_root_or_descendant_without_updates(
     monkeypatch, root_target, fault
 ):
-    from ralf_agent import temporal_deployment_release as release
+    from relf_agent import temporal_deployment_release as release
 
     async def run():
         runtime, client, value, info, binding = environment(monkeypatch, nested=True)

@@ -10,7 +10,7 @@ from pathlib import Path
 
 import pytest
 
-import ralf_agent
+import relf_agent
 from tests.context_crash_assertions import assert_context_crash_effects
 
 
@@ -23,7 +23,7 @@ def test_relevant_context_restores_original_summary_and_effects(tmp_path, kind, 
     env = {
         "PATH": os.defpath,
         "PYTHONPATH": os.pathsep.join(
-            [str(Path(ralf_agent.__file__).parents[1]), str(Path(__file__).parents[1])]
+            [str(Path(relf_agent.__file__).parents[1]), str(Path(__file__).parents[1])]
         ),
     }
     for mode, expected in (("crash", 77), ("resume", 0)):

@@ -19,7 +19,7 @@ Graph 的 Agent 节点与直接 Tool 节点支持串行和并行；Team／Dynami
 改为 `2` 允许无依赖节点并行。节点有依赖时仍按原 Graph 的依赖关系执行。
 
 ```python
-from ralf_agent import (
+from relf_agent import (
     AgentBindingDescriptor, AgentSpec, BindingSelection, BoundDefinition,
     GraphNode, GraphWorkflowSpec, Literal,
 )
@@ -72,7 +72,7 @@ Agent descriptor，使用该节点实际选择的注册工具及固定 Runner。
 `a`、`b`、`bindings_a` 和 `bindings_b`；`WorkflowSpec` 是顺序 sequence。
 
 ```python
-from ralf_agent import BoundDefinition, DynamicWorkflowSpec, TeamSpec, WorkflowSpec
+from relf_agent import BoundDefinition, DynamicWorkflowSpec, TeamSpec, WorkflowSpec
 
 team = BoundDefinition(
     TeamSpec("coding-team", {"first": a, "second": b}, child_budget=8),

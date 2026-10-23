@@ -10,7 +10,7 @@ from pathlib import Path
 
 import pytest
 
-from ralf_agent import (
+from relf_agent import (
     AgentSpec,
     DynamicWorkflowSpec,
     GraphNode,
@@ -21,8 +21,8 @@ from ralf_agent import (
     TeamSpec,
     ValueRef,
 )
-from ralf_agent.errors import NotFound
-from ralf_agent.temporal import TemporalEngine, replay_temporal_history
+from relf_agent.errors import NotFound
+from relf_agent.temporal import TemporalEngine, replay_temporal_history
 
 from .test_temporal_service import wait_effect, wait_status
 
@@ -43,7 +43,7 @@ pytestmark = pytest.mark.skipif(
 async def system(tmp_path, policy=None, *, rag=False):
     import importlib.util
 
-    assert importlib.util.find_spec("ralf_agent.temporal_parent_workflow"), (
+    assert importlib.util.find_spec("relf_agent.temporal_parent_workflow"), (
         "Missing registered distributed parent Workflow"
     )
     from temporalio.client import Client
@@ -53,7 +53,7 @@ async def system(tmp_path, policy=None, *, rag=False):
     execution = await fixture.runtime(rag_collection=collection)
     queue = "composite-" + uuid.uuid4().hex
     if policy is not None:
-        from ralf_agent.temporal_activities import TemporalRuntime
+        from relf_agent.temporal_activities import TemporalRuntime
 
         execution = TemporalRuntime(
             providers=execution.providers,
@@ -233,7 +233,7 @@ def test_real_nested_team_model_dag_child_approval_and_worker_restart(tmp_path):
 
 
 def test_real_deadline_retains_active_model_cap_and_late_evidence(tmp_path):
-    from ralf_agent.governance import TemporalExecutionPolicy
+    from relf_agent.governance import TemporalExecutionPolicy
 
     async def run():
         async with system(tmp_path, TemporalExecutionPolicy(run_timeout_seconds=1)) as (
@@ -269,7 +269,7 @@ def test_real_deadline_retains_active_model_cap_and_late_evidence(tmp_path):
 
 
 def test_real_approval_expiry_is_fixed_across_repeated_drive_controls(tmp_path):
-    from ralf_agent.governance import TemporalExecutionPolicy
+    from relf_agent.governance import TemporalExecutionPolicy
 
     async def run():
         async with system(tmp_path, TemporalExecutionPolicy(approval_timeout_seconds=0.5)) as (
@@ -304,7 +304,7 @@ def test_real_approval_expiry_is_fixed_across_repeated_drive_controls(tmp_path):
 
 @pytest.mark.skipif(not os.getenv("RALF_TEST_QDRANT_URL"), reason="Requires actual Qdrant")
 def test_real_distributed_rag_uses_shared_postgres_qdrant_and_replays_snapshot(tmp_path):
-    from ralf_agent import Document
+    from relf_agent import Document
 
     async def run():
         async with system(tmp_path, rag=True) as (engine, execution, processes, kill, start):
@@ -471,7 +471,7 @@ def test_real_parent_cancel_releases_cap_after_actual_child_model_completion(tmp
 
 
 def test_real_dynamic_dag_patch_adds_pending_node_with_durable_cas(tmp_path):
-    from ralf_agent import DAGNode, DAGProposal
+    from relf_agent import DAGNode, DAGProposal
 
     async def run():
         async with system(tmp_path) as (engine, _, _, _, _):
@@ -515,7 +515,7 @@ def test_real_dynamic_dag_patch_adds_pending_node_with_durable_cas(tmp_path):
                 )
                 == receipt
             )
-            from ralf_agent.errors import ValidationError
+            from relf_agent.errors import ValidationError
 
             with pytest.raises(ValidationError):
                 await engine.patch_plan(

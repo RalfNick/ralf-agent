@@ -5,8 +5,8 @@ import copy
 
 import pytest
 
-import ralf_agent
-from ralf_agent import (
+import relf_agent
+from relf_agent import (
     BindingCatalog,
     BindingSelection,
     InMemoryWorkspace,
@@ -17,13 +17,13 @@ from ralf_agent import (
     WorkspaceToolSource,
     register_tool_source,
 )
-from ralf_agent.errors import AuthorizationDenied, DefinitionMismatch, ValidationError
+from relf_agent.errors import AuthorizationDenied, DefinitionMismatch, ValidationError
 
 
 def api():
-    value = getattr(ralf_agent, "WorkspaceBindingResource", None)
+    value = getattr(relf_agent, "WorkspaceBindingResource", None)
     assert value is not None, "WorkspaceBindingResource public API is missing"
-    from ralf_agent.binding_workspace import select_workspace_tools
+    from relf_agent.binding_workspace import select_workspace_tools
 
     return value, select_workspace_tools
 

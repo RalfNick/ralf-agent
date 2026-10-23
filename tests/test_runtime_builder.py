@@ -3,18 +3,18 @@ import importlib
 
 import pytest
 
-from ralf_agent import AgentSpec, ModelResponse, SQLiteStore
-from ralf_agent.errors import CoordinatorBusy, ValidationError
+from relf_agent import AgentSpec, ModelResponse, SQLiteStore
+from relf_agent.errors import CoordinatorBusy, ValidationError
 
 from .test_runtime_config import declaration
 
 
 def api():
-    return importlib.import_module("ralf_agent.runtime_builder")
+    return importlib.import_module("relf_agent.runtime_builder")
 
 
 def profile(**changes):
-    module = importlib.import_module("ralf_agent.runtime_config")
+    module = importlib.import_module("relf_agent.runtime_config")
     return module.RuntimeProfile(**{**declaration(), **changes})
 
 
@@ -156,7 +156,7 @@ def test_chat_adapter_rejects_inline_secrets_and_uses_explicit_environment_refer
 
 
 def test_incomplete_engine_close_cannot_mark_runtime_closed_or_release_resources(tmp_path):
-    from ralf_agent import LocalEngine
+    from relf_agent import LocalEngine
 
     resources = []
 

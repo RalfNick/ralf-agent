@@ -5,11 +5,11 @@ from dataclasses import asdict
 
 import pytest
 
-from ralf_agent import AgentSpec, GraphNode, GraphWorkflowSpec, InputMap, Scope, ValueRef
-from ralf_agent.errors import RalfError
-from ralf_agent.temporal_activities import TemporalRuntime
-from ralf_agent.temporal_parent_state import TemporalParentState
-from ralf_agent.types import submission_request
+from relf_agent import AgentSpec, GraphNode, GraphWorkflowSpec, InputMap, Scope, ValueRef
+from relf_agent.errors import RalfError
+from relf_agent.temporal_activities import TemporalRuntime
+from relf_agent.temporal_parent_state import TemporalParentState
+from relf_agent.types import submission_request
 from tests.test_temporal_coding_composition_state import bind_namespace, composition, leaf
 from tests.test_temporal_engine import Provider, registry
 
@@ -71,7 +71,7 @@ def observe(state, call, child):
 
 
 def resource_parent(*, tools_a=("coding",), tools_b=("coding",), exclude_a=False, third=False):
-    from ralf_agent import AgentBindingDescriptor, BindingSelection
+    from relf_agent import AgentBindingDescriptor, BindingSelection
     from tests.test_temporal_coding_composition_configuration import composition_manifest
 
     state = parent(
@@ -200,7 +200,7 @@ def test_settled_child_without_original_stop_proof_still_occupies_physical_concu
 def test_original_resource_scheduler_helper_drift_is_rejected_before_history_use(
     helper, monkeypatch
 ):
-    from ralf_agent.temporal_coding_composition_protocol import validate_protocol
+    from relf_agent.temporal_coding_composition_protocol import validate_protocol
     from tests.test_temporal_coding_composition_configuration import composition_manifest
 
     selected = composition_manifest()
@@ -276,8 +276,8 @@ def test_running_blocked_business_still_rechecks_original_action_without_dispatc
 def test_original_stop_only_recovery_implementation_drift_is_refused_before_history_use(
     monkeypatch,
 ):
-    from ralf_agent.temporal_coding_composition_protocol import validate_protocol
-    from ralf_agent.temporal_state import TemporalRunState
+    from relf_agent.temporal_coding_composition_protocol import validate_protocol
+    from relf_agent.temporal_state import TemporalRunState
     from tests.test_temporal_coding_composition_configuration import composition_manifest
 
     selected = composition_manifest()
@@ -426,7 +426,7 @@ def test_independent_stops_preserve_unknown_cap_and_first_terminal_intent():
 
 
 def test_stop_proof_is_per_original_child_and_stale_evidence_cannot_reopen_it():
-    from ralf_agent.types import digest
+    from relf_agent.types import digest
 
     state = parent()
     bind_namespace(state)
@@ -456,7 +456,7 @@ def test_parallel_parent_requires_its_distinct_history_marker(monkeypatch):
 
     from temporalio.exceptions import ApplicationError
 
-    from ralf_agent import temporal_parent_workflow
+    from relf_agent import temporal_parent_workflow
 
     instance = object.__new__(temporal_parent_workflow.TemporalParentWorkflow)
     instance.state, instance.wake_revision = parent(), 0

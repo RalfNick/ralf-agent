@@ -6,13 +6,13 @@ import weakref
 
 import pytest
 
-import ralf_agent as r
-from ralf_agent.errors import DefinitionMismatch, ValidationError
-from ralf_agent.runtime_lifecycle import BuildContext
+import relf_agent as r
+from relf_agent.errors import DefinitionMismatch, ValidationError
+from relf_agent.runtime_lifecycle import BuildContext
 
 
 def factories():
-    from ralf_agent import fact_index_maintenance_factories
+    from relf_agent import fact_index_maintenance_factories
 
     return fact_index_maintenance_factories
 
@@ -85,9 +85,9 @@ def test_sdk_owner_close_binding_drift_retains_original_source_and_native_ports(
     import json
     import os
 
-    from ralf_agent.embeddings import HashEmbeddingProvider
-    from ralf_agent.errors import CloseIncomplete
-    from ralf_agent.types import InvocationContext
+    from relf_agent.embeddings import HashEmbeddingProvider
+    from relf_agent.errors import CloseIncomplete
+    from relf_agent.types import InvocationContext
 
     async def run():
         entered, release = asyncio.Event(), asyncio.Event()
@@ -344,10 +344,10 @@ def test_actual_cancelled_handler_keeps_native_connections_until_original_owner_
 ):
     import json
 
-    import ralf_agent.fact_index_maintenance_tools as tool_module
-    from ralf_agent.embeddings import HashEmbeddingProvider
-    from ralf_agent.errors import CloseIncomplete
-    from ralf_agent.types import InvocationContext
+    import relf_agent.fact_index_maintenance_tools as tool_module
+    from relf_agent.embeddings import HashEmbeddingProvider
+    from relf_agent.errors import CloseIncomplete
+    from relf_agent.types import InvocationContext
 
     async def run():
         f = factories()
@@ -437,8 +437,8 @@ def test_actual_cancelled_handler_keeps_native_connections_until_original_owner_
 
 
 def test_borrowed_construction_close_error_retains_original_owner_for_retry(tmp_path, monkeypatch):
-    from ralf_agent.memory import SQLiteMemory
-    from ralf_agent.vector import SQLiteVectorIndex
+    from relf_agent.memory import SQLiteMemory
+    from relf_agent.vector import SQLiteVectorIndex
 
     f = factories()
     vector = SQLiteVectorIndex(tmp_path / "vectors.sqlite", dimensions=9)
@@ -495,11 +495,11 @@ def test_sdk_owner_source_drift_keeps_original_handler_and_databases_until_actua
     import json
     import os
 
-    from ralf_agent.embeddings import HashEmbeddingProvider
-    from ralf_agent.errors import CloseIncomplete
-    from ralf_agent.tool_sources import ToolPolicy, register_tool_source
-    from ralf_agent.tools import ToolRegistry
-    from ralf_agent.types import InvocationContext
+    from relf_agent.embeddings import HashEmbeddingProvider
+    from relf_agent.errors import CloseIncomplete
+    from relf_agent.tool_sources import ToolPolicy, register_tool_source
+    from relf_agent.tools import ToolRegistry
+    from relf_agent.types import InvocationContext
 
     async def run():
         entered, release = asyncio.Event(), asyncio.Event()

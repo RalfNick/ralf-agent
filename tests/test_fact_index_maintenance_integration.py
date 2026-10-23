@@ -9,13 +9,13 @@ from pathlib import Path
 
 import pytest
 
-from ralf_agent import ComponentRegistry, RuntimeBuilder, RuntimeProfile
-from ralf_agent.errors import ValidationError
-from ralf_agent.starter import create_starter
+from relf_agent import ComponentRegistry, RuntimeBuilder, RuntimeProfile
+from relf_agent.errors import ValidationError
+from relf_agent.starter import create_starter
 
 
 def test_public_sdk_exports_match_the_selected_implementations():
-    sdk = importlib.import_module("ralf_agent")
+    sdk = importlib.import_module("relf_agent")
     for module, names in (
         ("fact_index_generation", ("GenerationIndexedMemoryStore", "GenerationSourceChanged")),
         ("fact_index_maintenance_tools", ("FactIndexMaintenanceToolSource",)),
@@ -28,13 +28,13 @@ def test_public_sdk_exports_match_the_selected_implementations():
             ),
         ),
     ):
-        implementation = importlib.import_module("ralf_agent." + module)
+        implementation = importlib.import_module("relf_agent." + module)
         for name in names:
             assert getattr(sdk, name, None) is getattr(implementation, name)
 
 
 def test_default_registry_admits_paired_configuration_but_sync_build_allocates_nothing(tmp_path):
-    factories = importlib.import_module("ralf_agent.fact_index_maintenance_factories")
+    factories = importlib.import_module("relf_agent.fact_index_maintenance_factories")
     components = factories.fact_index_maintenance_components(
         {"resource_id": "personal", "namespace": "reader"}
     )
@@ -56,7 +56,7 @@ def test_cli_can_publish_the_complete_editable_memory_index_application(tmp_path
     target = tmp_path / "app"
     env = {"PATH": os.environ.get("PATH", ""), "PYTHONPATH": str(Path.cwd() / "src")}
     completed = subprocess.run(
-        [sys.executable, "-m", "ralf_agent", "init", str(target), "--template", "memory-index"],
+        [sys.executable, "-m", "relf_agent", "init", str(target), "--template", "memory-index"],
         env=env,
         capture_output=True,
         text=True,

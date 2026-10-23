@@ -6,11 +6,11 @@ import importlib
 
 import pytest
 
-from ralf_agent import codex_environment, codex_runner_capacity
-from ralf_agent import temporal_coding_protocol as protocol
-from ralf_agent.codex_environment import DockerCodingEnvironment
-from ralf_agent.codex_runner import CodexCodingRunner
-from ralf_agent.errors import DefinitionMismatch
+from relf_agent import codex_environment, codex_runner_capacity
+from relf_agent import temporal_coding_protocol as protocol
+from relf_agent.codex_environment import DockerCodingEnvironment
+from relf_agent.codex_runner import CodexCodingRunner
+from relf_agent.errors import DefinitionMismatch
 
 # Literal inventories name the physical decisions each mutation must invalidate.
 CAPACITY_FUNCTIONS = ("_require", "_hex", "_pin", "_private_file", "_pairs")
@@ -84,11 +84,11 @@ ENVIRONMENT_CONSTANTS = (
 
 @pytest.fixture
 def registered(tmp_path, monkeypatch, request):
-    from ralf_agent.delegated_coding import register_coding_tool
-    from ralf_agent.postgres_runner_journal import PostgresRunnerJournal
-    from ralf_agent.temporal_activities import TemporalRuntime
-    from ralf_agent.temporal_journal import PostgresEffectJournal
-    from ralf_agent.tools import ToolRegistry
+    from relf_agent.delegated_coding import register_coding_tool
+    from relf_agent.postgres_runner_journal import PostgresRunnerJournal
+    from relf_agent.temporal_activities import TemporalRuntime
+    from relf_agent.temporal_journal import PostgresEffectJournal
+    from relf_agent.tools import ToolRegistry
     from tests.test_temporal_coding_factories import Connection, entry, publish_initialization
     from tests.test_temporal_engine import Provider
 
@@ -301,7 +301,7 @@ def test_worker_refuses_substituted_physical_getter_fingerprint_function(registe
 
 @pytest.mark.parametrize("target", ["inventory", "constructor", "cached_environment"])
 def test_physical_support_publication_changes_without_invoking_replaced_entry(monkeypatch, target):
-    from ralf_agent import codex_runner
+    from relf_agent import codex_runner
 
     original = protocol.implementation()
     if target == "inventory":
@@ -335,7 +335,7 @@ def test_history_requires_original_constructor_and_slot_validation_pin(registere
 
 
 def policy():
-    name = "ralf_agent.coding_resource_fingerprint"
+    name = "relf_agent.coding_resource_fingerprint"
     assert importlib.util.find_spec(name) is not None, "Typed resource policy is not implemented"
     return importlib.import_module(name).policy_value
 
@@ -346,7 +346,7 @@ class DifferentTmpfs(str):
 
 
 def test_environment_constant_subclass_cannot_preserve_sha_but_change_docker_semantics(monkeypatch):
-    from ralf_agent.types import digest
+    from relf_agent.types import digest
 
     original = codex_environment._REGISTRY_OPTIONS
     changed = DifferentTmpfs(original)
@@ -409,7 +409,7 @@ def test_policy_preserves_builtin_container_and_scalar_types():
             "unordered": {"frozenset": ["a", "b"]},
         },
     }
-    from ralf_agent.types import digest
+    from relf_agent.types import digest
 
     assert digest(policy()(["one"])) != digest(policy()(("one",)))
     assert digest(policy()(True)) != digest(policy()(1))
@@ -428,7 +428,7 @@ def test_policy_rejects_cycles_and_bounded_depth_without_recursion_leak():
 
 
 def test_cached_policy_helper_cannot_hide_entry_mutation(monkeypatch):
-    name = "ralf_agent.coding_resource_fingerprint"
+    name = "relf_agent.coding_resource_fingerprint"
     actual = policy()
     module = importlib.import_module(name)
     protocol.implementation()

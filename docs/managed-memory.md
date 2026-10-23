@@ -7,7 +7,7 @@ memory ports. Business success and memory completion have separate receipts.
 Importing the SDK or using a normal LocalEngine does not enable model extraction.
 
 ```bash
-ralf init my-memory-app --template memory
+relf init my-memory-app --template memory
 cd my-memory-app
 python -m agent_app
 python -m agent_app  # same task, duplicate observations after process restart
@@ -18,7 +18,7 @@ provider and result fields to fit your application. The previous 17 templates
 retain their original contents.
 
 ```python
-from ralf_agent import (
+from relf_agent import (
     AgentSpec,
     LocalEngine,
     MemoryAdmissionPolicy,
@@ -27,7 +27,7 @@ from ralf_agent import (
     SQLiteStore,
     ToolRegistry,
 )
-from ralf_agent.providers import DeepSeekChatProvider
+from relf_agent.providers import DeepSeekChatProvider
 
 provider = DeepSeekChatProvider(
     "deepseek-flash",
@@ -108,7 +108,7 @@ transactions are not implemented.
 For model summaries, prepare one managed proposal explicitly:
 
 ```python
-from ralf_agent import (
+from relf_agent import (
     BudgetedContextAssembler,
     FrozenContextSummarizer,
     ManagedModelSummarizer,

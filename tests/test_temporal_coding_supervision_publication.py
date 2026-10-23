@@ -2,8 +2,8 @@
 
 import pytest
 
-from ralf_agent.errors import DefinitionMismatch
-from ralf_agent.temporal_coding_protocol import validate_protocol
+from relf_agent.errors import DefinitionMismatch
+from relf_agent.temporal_coding_protocol import validate_protocol
 from tests.test_temporal_coding_configuration import manifest
 
 

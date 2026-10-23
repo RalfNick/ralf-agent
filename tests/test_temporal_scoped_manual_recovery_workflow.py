@@ -6,8 +6,8 @@ from types import SimpleNamespace as NS
 import pytest
 from temporalio.exceptions import ApplicationError
 
-from ralf_agent.temporal_workflow import TemporalCommandRegistryWorkflow, workflow
-from ralf_agent.types import digest
+from relf_agent.temporal_workflow import TemporalCommandRegistryWorkflow, workflow
+from relf_agent.types import digest
 from tests.test_temporal_scoped_manual_recovery_state import (
     manual_request,
     original_state,
@@ -16,7 +16,7 @@ from tests.test_temporal_scoped_manual_recovery_state import (
 
 
 def test_scoped_update_invokes_only_original_control_verifier_then_rechecks(monkeypatch):
-    from ralf_agent.temporal_scoped_manual_recovery import prepare
+    from relf_agent.temporal_scoped_manual_recovery import prepare
 
     state, _ = original_state()
     request = manual_request()
@@ -56,7 +56,7 @@ def test_scoped_update_invokes_only_original_control_verifier_then_rechecks(monk
 
 @pytest.mark.parametrize("fault", ["epoch", "foreign", "failure", "race"])
 def test_scoped_control_failure_never_creates_unverified_slot(monkeypatch, fault):
-    from ralf_agent.temporal_scoped_manual_recovery import prepare
+    from relf_agent.temporal_scoped_manual_recovery import prepare
 
     state, _ = original_state()
     request = manual_request()

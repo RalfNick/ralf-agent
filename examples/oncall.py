@@ -4,7 +4,7 @@ import asyncio
 import json
 from dataclasses import asdict
 
-from ralf_agent.demo import create_demo_engine, demo_spec
+from relf_agent.demo import create_demo_engine, demo_spec
 
 
 async def main():

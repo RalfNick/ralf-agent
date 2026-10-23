@@ -5,9 +5,9 @@ import copy
 
 import pytest
 
-import ralf_agent as r
-from ralf_agent.errors import AuthorizationDenied, DefinitionMismatch, ValidationError
-from ralf_agent.types import InvocationContext
+import relf_agent as r
+from relf_agent.errors import AuthorizationDenied, DefinitionMismatch, ValidationError
+from relf_agent.types import InvocationContext
 
 
 def port():

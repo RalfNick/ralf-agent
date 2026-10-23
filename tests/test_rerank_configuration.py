@@ -3,14 +3,14 @@ import json
 
 import pytest
 
-from ralf_agent import (
+from relf_agent import (
     ComponentRegistry,
     RuntimeBuilder,
     RuntimeProfile,
     load_catalog,
     recommended_profile,
 )
-from ralf_agent.errors import ValidationError
+from relf_agent.errors import ValidationError
 
 
 def declaration():
@@ -146,7 +146,7 @@ def test_pure_knowledge_factory_rejects_http_rerank_before_database(tmp_path):
 
 
 def test_later_factory_failure_closes_owned_reranker_and_source(tmp_path, monkeypatch):
-    from ralf_agent import HTTPReranker
+    from relf_agent import HTTPReranker
 
     closed = []
     original = HTTPReranker.aclose

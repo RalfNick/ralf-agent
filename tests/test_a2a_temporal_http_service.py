@@ -14,11 +14,11 @@ from pathlib import Path
 import httpx
 import pytest
 
-from ralf_agent import ModelResponse, ToolCall, ToolExecutionOwner, ToolRegistry, ToolSpec
-from ralf_agent.a2a import A2AClient, A2ARemoteError
-from ralf_agent.temporal_deployment_admission import root_run_id
-from ralf_agent.temporal_journal import PostgresEffectJournal
-from ralf_agent.types import canonical
+from relf_agent import ModelResponse, ToolCall, ToolExecutionOwner, ToolRegistry, ToolSpec
+from relf_agent.a2a import A2AClient, A2ARemoteError
+from relf_agent.temporal_deployment_admission import root_run_id
+from relf_agent.temporal_journal import PostgresEffectJournal
+from relf_agent.types import canonical
 from tests.test_temporal_deployment_public_service import public_system
 
 pytestmark = pytest.mark.skipif(

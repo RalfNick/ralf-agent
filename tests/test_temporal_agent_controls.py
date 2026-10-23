@@ -5,10 +5,10 @@ from types import MethodType
 
 import pytest
 
-import ralf_agent as r
-from ralf_agent.errors import DefinitionMismatch, NotFound, ValidationError
-from ralf_agent.temporal import TemporalEngine
-from ralf_agent.types import digest
+import relf_agent as r
+from relf_agent.errors import DefinitionMismatch, NotFound, ValidationError
+from relf_agent.temporal import TemporalEngine
+from relf_agent.types import digest
 
 from .temporal_agent_fixture import StateClient, engine
 from .temporal_composite_agent_fixture import CompositeClient, definitions

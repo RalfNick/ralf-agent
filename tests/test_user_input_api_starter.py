@@ -7,7 +7,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-from ralf_agent.starter import create_starter
+from relf_agent.starter import create_starter
 
 
 def execute(project, *arguments):
@@ -62,7 +62,7 @@ def test_standard_cli_inspection_and_json_reply_complete_starter_run(tmp_path):
 
     def cli(*arguments):
         result = subprocess.run(
-            [sys.executable, "-m", "ralf_agent", *arguments],
+            [sys.executable, "-m", "relf_agent", *arguments],
             cwd=project,
             env=env,
             capture_output=True,
@@ -76,7 +76,7 @@ def test_standard_cli_inspection_and_json_reply_complete_starter_run(tmp_path):
     report = cli(*options, "inspect", first["run_id"])
     question = report["pending"][0]
     hint = shlex.split(question["send_input_command"])
-    assert hint.pop(0) == "ralf"
+    assert hint.pop(0) == "relf"
     hint[hint.index("--value-json") + 1] = '"staging"'
     receipt = cli(*hint)
     assert receipt["kind"] == "send_input" and receipt["apply_state"] == "applied"

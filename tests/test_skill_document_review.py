@@ -2,13 +2,13 @@
 
 import pytest
 
-import ralf_agent as r
-from ralf_agent.errors import ValidationError
+import relf_agent as r
+from relf_agent.errors import ValidationError
 
 
 @pytest.mark.parametrize("kind", ["shared_graph", "large_string", "too_many", "unknown"])
 def test_public_metadata_rejects_before_recursive_copy(monkeypatch, kind):
-    import ralf_agent.skill_documents as module
+    import relf_agent.skill_documents as module
 
     node = "x"
     for _ in range(14):
@@ -69,7 +69,7 @@ def test_parsed_body_capacity_stops_before_next_parse(tmp_path, kind):
     "kind", ["description", "version", "wrong_skill", "missing_skill", "metadata", "metadata_json"]
 )
 def test_malformed_exact_parser_results_refuse_at_adoption(tmp_path, monkeypatch, kind):
-    import ralf_agent.filesystem_skill_documents as module
+    import relf_agent.filesystem_skill_documents as module
 
     paths = documents(tmp_path, 1)
     allocated, original = [], module.FileSystemWorkspace

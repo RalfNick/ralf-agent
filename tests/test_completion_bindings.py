@@ -4,7 +4,7 @@ import asyncio
 
 import pytest
 
-from ralf_agent import (
+from relf_agent import (
     AgentBindingDescriptor,
     AgentDefinition,
     AgentSpec,
@@ -22,13 +22,13 @@ from ralf_agent import (
     ToolRegistry,
     WorkflowSpec,
 )
-from ralf_agent.business_evaluation import evaluate_business, load_business_cases
-from ralf_agent.completion import SchemaCompletionVerifier, ToolReceiptVerifier
-from ralf_agent.errors import DefinitionMismatch, ValidationError
-from ralf_agent.runtime_builder import ComponentRegistry, RuntimeBuilder
-from ralf_agent.runtime_config import RuntimeProfile
-from ralf_agent.tools import ToolSpec
-from ralf_agent.types import ToolCall
+from relf_agent.business_evaluation import evaluate_business, load_business_cases
+from relf_agent.completion import SchemaCompletionVerifier, ToolReceiptVerifier
+from relf_agent.errors import DefinitionMismatch, ValidationError
+from relf_agent.runtime_builder import ComponentRegistry, RuntimeBuilder
+from relf_agent.runtime_config import RuntimeProfile
+from relf_agent.tools import ToolSpec
+from relf_agent.types import ToolCall
 
 from .helpers import ScriptedProvider
 
@@ -342,7 +342,7 @@ def test_evaluator_gate_keeps_independent_business_oracle(tmp_path):
 def test_cli_offline_receipt_gate_is_explicit(capsys):
     import json
 
-    from ralf_agent.business_evaluation_cli import main
+    from relf_agent.business_evaluation_cli import main
 
     assert main(["--offline", "--receipt-gate"]) == 0
     report = json.loads(capsys.readouterr().out)

@@ -5,8 +5,8 @@ from pathlib import Path
 
 import pytest
 
-from ralf_agent import ModelResponse
-from ralf_agent.planning_evaluation import (
+from relf_agent import ModelResponse
+from relf_agent.planning_evaluation import (
     evaluate_planning,
     load_planning_cases,
     score_planning_proposal,
@@ -52,7 +52,7 @@ def test_static_object_binding_is_checked_against_the_complete_member_schema(sch
 
 
 def test_nested_static_object_binding_does_not_skip_joint_schema_constraints():
-    from ralf_agent.planning_evaluation import _argument_schema
+    from relf_agent.planning_evaluation import _argument_schema
 
     binding = {
         "kind": "object",
@@ -105,7 +105,7 @@ def test_invalid_provider_preflight_cannot_dispatch_a_planning_request(mode):
         raise ValidationError("Request must be rejected before model I/O")
         yield
 
-    from ralf_agent.errors import ValidationError
+    from relf_agent.errors import ValidationError
 
     provider = Provider()
     provider.validate_request = async_validate if mode == "async" else lazy_validate
@@ -116,7 +116,7 @@ def test_invalid_provider_preflight_cannot_dispatch_a_planning_request(mode):
 
 
 def test_public_provider_report_excludes_arbitrary_adapter_metadata():
-    from ralf_agent.planning_evaluation import _safe_identity
+    from relf_agent.planning_evaluation import _safe_identity
 
     class Provider:
         identity = {
@@ -138,7 +138,7 @@ def test_public_provider_report_excludes_arbitrary_adapter_metadata():
 
 
 def test_long_offline_identity_remains_offline_after_report_sanitization():
-    from ralf_agent.business_evaluation import evaluate_business, load_business_cases
+    from relf_agent.business_evaluation import evaluate_business, load_business_cases
 
     class Provider:
         identity = {
@@ -165,8 +165,8 @@ def test_long_offline_identity_remains_offline_after_report_sanitization():
 
 @pytest.mark.parametrize("sanitizer", ["planning", "compatibility"])
 def test_valid_large_json_integer_metadata_does_not_overflow_report(sanitizer):
-    from ralf_agent.model_compatibility import _public_identity
-    from ralf_agent.planning_evaluation import _safe_identity
+    from relf_agent.model_compatibility import _public_identity
+    from relf_agent.planning_evaluation import _safe_identity
 
     class Provider:
         identity = {"kind": "offline", "version": "1", "generation": {"seed": 10**400}}

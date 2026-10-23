@@ -7,11 +7,11 @@ import pstats
 
 import pytest
 
-from ralf_agent import DeploymentAdmissionPolicy, Scope, TemporalRuntime
-from ralf_agent.errors import DefinitionMismatch, ValidationError
-from ralf_agent.runtime_lifecycle import BuildContext
-from ralf_agent.temporal_journal import PostgresEffectJournal
-from ralf_agent.types import canonical
+from relf_agent import DeploymentAdmissionPolicy, Scope, TemporalRuntime
+from relf_agent.errors import DefinitionMismatch, ValidationError
+from relf_agent.runtime_lifecycle import BuildContext
+from relf_agent.temporal_journal import PostgresEffectJournal
+from relf_agent.types import canonical
 from tests.test_temporal_coding_factories import Connection, entry, publish_initialization
 from tests.test_temporal_deployment_public_registry import Provider
 
@@ -22,7 +22,7 @@ def optional_sdk():
 
 
 async def construct(tmp_path, monkeypatch, *, composition=True, selected=True, context_reads=False):
-    from ralf_agent.temporal_coding_factories import build
+    from relf_agent.temporal_coding_factories import build
 
     events = []
     publish_initialization(monkeypatch, events)
@@ -82,9 +82,9 @@ def publication_clones(profile):
 def test_selected3_fresh_pipeline_matches_strict_publication_with_one_final_validation(
     tmp_path, monkeypatch, composition
 ):
-    from ralf_agent import temporal_coding_composition_protocol as tree
-    from ralf_agent import temporal_coding_protocol as native
-    from ralf_agent import temporal_deployment_protocol as deployment
+    from relf_agent import temporal_coding_composition_protocol as tree
+    from relf_agent import temporal_coding_protocol as native
+    from relf_agent import temporal_deployment_protocol as deployment
 
     async def scenario():
         runtime, context = await construct(tmp_path, monkeypatch, composition=composition)
@@ -119,8 +119,8 @@ def test_selected3_fresh_pipeline_matches_strict_publication_with_one_final_vali
 
 
 def test_legacy_runtime_keeps_strict_detached_publication(tmp_path, monkeypatch):
-    from ralf_agent import temporal_coding_composition_protocol as tree
-    from ralf_agent import temporal_coding_protocol as native
+    from relf_agent import temporal_coding_composition_protocol as tree
+    from relf_agent import temporal_coding_protocol as native
 
     async def scenario():
         runtime, context = await construct(tmp_path, monkeypatch, selected=False)
@@ -138,9 +138,9 @@ def test_legacy_runtime_keeps_strict_detached_publication(tmp_path, monkeypatch)
 
 @pytest.mark.parametrize("publisher", ["native", "composition", "deployment"])
 def test_standalone_publish_remains_strict_and_detached(tmp_path, monkeypatch, publisher):
-    from ralf_agent import temporal_coding_composition_protocol as tree
-    from ralf_agent import temporal_coding_protocol as native
-    from ralf_agent import temporal_deployment_protocol as deployment
+    from relf_agent import temporal_coding_composition_protocol as tree
+    from relf_agent import temporal_coding_protocol as native
+    from relf_agent import temporal_deployment_protocol as deployment
 
     async def scenario():
         runtime, context = await construct(tmp_path, monkeypatch)
@@ -184,7 +184,7 @@ def test_standalone_publish_remains_strict_and_detached(tmp_path, monkeypatch, p
 
 
 def test_final_selected3_validation_still_rejects_guard_code_drift(tmp_path, monkeypatch):
-    from ralf_agent import temporal_deployment_coding_state as guards
+    from relf_agent import temporal_deployment_coding_state as guards
 
     async def scenario():
         runtime, context = await construct(tmp_path, monkeypatch)
@@ -201,7 +201,7 @@ def test_final_selected3_validation_still_rejects_guard_code_drift(tmp_path, mon
 
 
 def test_final_deployment_publisher_has_no_validation_disable_option(tmp_path, monkeypatch):
-    from ralf_agent import temporal_deployment_protocol as deployment
+    from relf_agent import temporal_deployment_protocol as deployment
 
     async def scenario():
         runtime, context = await construct(tmp_path, monkeypatch)
@@ -240,8 +240,8 @@ def test_selected3_live_configuration_still_refuses_before_republication(
 
 @pytest.mark.parametrize("publisher", ["native", "composition"])
 def test_owned_no_copy_still_rejects_non_json_before_registration(tmp_path, monkeypatch, publisher):
-    from ralf_agent import temporal_coding_composition_protocol as tree
-    from ralf_agent import temporal_coding_protocol as native
+    from relf_agent import temporal_coding_composition_protocol as tree
+    from relf_agent import temporal_coding_protocol as native
 
     async def scenario():
         runtime, context = await construct(tmp_path, monkeypatch)
@@ -266,9 +266,9 @@ def test_owned_no_copy_still_rejects_non_json_before_registration(tmp_path, monk
 def test_final_validation_rejects_cross_inventory_mismatch_from_owned_intermediates(
     tmp_path, monkeypatch
 ):
-    from ralf_agent import temporal_coding_composition_protocol as tree
-    from ralf_agent import temporal_coding_protocol as native
-    from ralf_agent import temporal_deployment_protocol as deployment
+    from relf_agent import temporal_coding_composition_protocol as tree
+    from relf_agent import temporal_coding_protocol as native
+    from relf_agent import temporal_deployment_protocol as deployment
 
     async def scenario():
         runtime, context = await construct(tmp_path, monkeypatch)

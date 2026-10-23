@@ -2,11 +2,11 @@
 
 import pytest
 
-from ralf_agent import ToolSourceError
+from relf_agent import ToolSourceError
 
 
 def messages(chunks, limit=1024):
-    from ralf_agent.mcp_http_events import iter_sse_messages
+    from relf_agent.mcp_http_events import iter_sse_messages
 
     return list(iter_sse_messages(chunks, limit=limit))
 

@@ -6,11 +6,11 @@ import stat
 
 import pytest
 
-from ralf_agent.errors import ProviderError, ValidationError
+from relf_agent.errors import ProviderError, ValidationError
 
 
 def command(kind):
-    name = f"ralf_agent.{kind}_evaluation_cli"
+    name = f"relf_agent.{kind}_evaluation_cli"
     assert importlib.util.find_spec(name), f"Missing bounded {kind} task evaluation CLI"
     return importlib.import_module(name)
 
@@ -147,7 +147,7 @@ def test_partial_client_lifecycle_is_closed_on_configuration_failure(kind, monke
 
 def test_rag_uses_only_explicit_embedding_model_endpoint_and_key(monkeypatch):
     cli = command("rag")
-    import ralf_agent.embedding_http as embedding_http
+    import relf_agent.embedding_http as embedding_http
 
     captures, closed = [], []
 
@@ -324,8 +324,8 @@ def test_missing_explicit_embedding_configuration_is_not_run(options, reason, mo
 def test_actual_native_http_rag_clients_close_and_separate_credentials(monkeypatch, capsys):
     import httpx
 
-    from ralf_agent.embeddings import HashEmbeddingProvider
-    from ralf_agent.rag_evaluation import OfflineRAGProvider
+    from relf_agent.embeddings import HashEmbeddingProvider
+    from relf_agent.rag_evaluation import OfflineRAGProvider
 
     cli = command("rag")
     native_client = httpx.AsyncClient
@@ -420,7 +420,7 @@ def test_native_http_orchestration_executes_and_closes_each_tool_continuation(
 ):
     import httpx
 
-    from ralf_agent.orchestration_evaluation import OfflineOrchestrationProvider
+    from relf_agent.orchestration_evaluation import OfflineOrchestrationProvider
 
     cli = command("orchestration")
     native_client = httpx.AsyncClient

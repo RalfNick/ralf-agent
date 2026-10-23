@@ -5,8 +5,8 @@ from dataclasses import FrozenInstanceError, replace
 
 import pytest
 
-import ralf_agent as r
-from ralf_agent.errors import RalfError
+import relf_agent as r
+from relf_agent.errors import RalfError
 
 NATIVE = "a" * 64
 
@@ -192,7 +192,7 @@ def test_wire_decoders_reject_unknown_or_missing_fields(name, payload):
 
 def test_contract_import_does_not_require_optional_container_sdk():
     api("SandboxRequest")(["/bin/echo"])
-    assert importlib.util.find_spec("ralf_agent.sandbox") is not None
+    assert importlib.util.find_spec("relf_agent.sandbox") is not None
 
 
 @pytest.mark.parametrize("target", ["result", "observation"])

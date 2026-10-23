@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from ralf_agent import AgentSpec, __version__
+from relf_agent import AgentSpec, __version__
 
 from .cli_runtime import create_engine
 
@@ -17,7 +17,7 @@ ROOT = Path(__file__).resolve().parents[1]
 def cli(db, *args, check=True):
     env = subprocess_env()
     result = subprocess.run(
-        [sys.executable, "-m", "ralf_agent", "--db", str(db), *args],
+        [sys.executable, "-m", "relf_agent", "--db", str(db), *args],
         env=env,
         capture_output=True,
         text=True,

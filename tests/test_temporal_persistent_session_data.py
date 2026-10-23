@@ -2,7 +2,7 @@ from dataclasses import asdict
 
 import pytest
 
-from ralf_agent import (
+from relf_agent import (
     AgentBindingDescriptor,
     AgentSpec,
     BindingSelection,
@@ -13,11 +13,11 @@ from ralf_agent import (
     ToolRegistry,
     WorkflowSpec,
 )
-from ralf_agent.errors import ValidationError
-from ralf_agent.temporal_activities import TemporalRuntime
-from ralf_agent.temporal_bindings import normalize_request
-from ralf_agent.temporal_session_state import TemporalSessionState
-from ralf_agent.types import submission_request
+from relf_agent.errors import ValidationError
+from relf_agent.temporal_activities import TemporalRuntime
+from relf_agent.temporal_bindings import normalize_request
+from relf_agent.temporal_session_state import TemporalSessionState
+from relf_agent.types import submission_request
 
 from .test_temporal_facts import Provider
 
@@ -75,7 +75,7 @@ def test_sqlite_dataset_replacement_is_refused_before_model(tmp_path):
     import asyncio
     import uuid
 
-    from ralf_agent.errors import DefinitionMismatch
+    from relf_agent.errors import DefinitionMismatch
 
     source = SQLiteMemory(tmp_path / "data.sqlite")
     execution = runtime(source)
@@ -101,7 +101,7 @@ def test_sequence_cannot_mix_disabled_and_persistent_sources():
 
 
 def test_idle_rebind_can_change_definition_but_cannot_migrate_dataset():
-    from ralf_agent.errors import DefinitionMismatch
+    from relf_agent.errors import DefinitionMismatch
 
     source = InMemoryMemory()
     session = TemporalSessionState(accepted(runtime(source)))
@@ -133,17 +133,17 @@ def test_idle_rebind_can_change_definition_but_cannot_migrate_dataset():
                 "binding": other_binding,
             }
         )
-    from ralf_agent.types import digest
+    from relf_agent.types import digest
 
     assert session.binding_revision == 2 and digest(session.binding) == digest(binding)
 
 
 def test_native_turn_reads_stable_root_address_across_runs():
-    from ralf_agent.temporal_session_data_state import expected_read
+    from relf_agent.temporal_session_data_state import expected_read
 
     state = TemporalSessionState(accepted(runtime(InMemoryMemory())))
     ref = state.ref
-    from ralf_agent.temporal_bindings import effective_manifest
+    from relf_agent.temporal_bindings import effective_manifest
 
     manifest = effective_manifest(state.binding["manifest"], AgentBindingDescriptor().to_dict())
     reads = []
@@ -180,7 +180,7 @@ def test_native_turn_reads_stable_root_address_across_runs():
 def test_complete_native_turns_save_and_recall_external_data_once(managed, sequence):
     import asyncio
 
-    from ralf_agent.temporal_state import TemporalRunState
+    from relf_agent.temporal_state import TemporalRunState
 
     from .test_temporal_memory_bindings import grant
 
@@ -188,7 +188,7 @@ def test_complete_native_turns_save_and_recall_external_data_once(managed, seque
         source = InMemoryMemory()
         options = {}
         if managed:
-            from ralf_agent import InMemoryArtifactStore
+            from relf_agent import InMemoryArtifactStore
 
             from .test_managed_data_context import context
 

@@ -5,7 +5,7 @@ from contextlib import contextmanager
 
 import pytest
 
-from ralf_agent import (
+from relf_agent import (
     AgentSpec,
     LocalEngine,
     ModelResponse,
@@ -15,13 +15,13 @@ from ralf_agent import (
     ToolCall,
     ToolRegistry,
 )
-from ralf_agent.errors import DefinitionMismatch, ValidationError
-from ralf_agent.executors import DispatchEnvelope
-from ralf_agent.types import InvocationContext, Scope
+from relf_agent.errors import DefinitionMismatch, ValidationError
+from relf_agent.executors import DispatchEnvelope
+from relf_agent.types import InvocationContext, Scope
 
 
 def api(name):
-    module = importlib.import_module("ralf_agent")
+    module = importlib.import_module("relf_agent")
     assert hasattr(module, name), "Missing middleware API: " + name
     return getattr(module, name)
 
@@ -265,7 +265,7 @@ def test_tool_observers_preserve_approved_arguments_effect_key_and_receipt(tmp_p
 
 
 def test_before_tool_failure_preserves_unknown_intent_without_a_write(tmp_path):
-    from ralf_agent.executors import EffectObservation
+    from relf_agent.executors import EffectObservation
 
     calls = []
 
@@ -341,7 +341,7 @@ def test_after_diagnostic_logging_failure_cannot_discard_known_response():
         def emit(self, record):
             raise RuntimeError("logging failure")
 
-    logger = logging.getLogger("ralf_agent.middleware")
+    logger = logging.getLogger("relf_agent.middleware")
     handler = BrokenHandler()
     logger.addHandler(handler)
     try:

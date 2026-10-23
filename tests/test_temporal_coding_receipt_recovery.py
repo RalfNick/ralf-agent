@@ -4,8 +4,8 @@ import copy
 
 import pytest
 
-from ralf_agent.errors import RalfError
-from ralf_agent.types import canonical
+from relf_agent.errors import RalfError
+from relf_agent.types import canonical
 from tests.test_temporal_coding_state import OWNER, bind, no_prepare_recovery
 from tests.test_temporal_tool_execution import admission, proof
 

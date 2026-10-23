@@ -5,10 +5,10 @@ import json
 import httpx
 import pytest
 
-from ralf_agent.errors import ProviderError, ValidationError
-from ralf_agent.model_continuation import ContinuedModelResponse, assistant_message
-from ralf_agent.model_responses import OpenAIResponsesProvider
-from ralf_agent.types import canonical
+from relf_agent.errors import ProviderError, ValidationError
+from relf_agent.model_continuation import ContinuedModelResponse, assistant_message
+from relf_agent.model_responses import OpenAIResponsesProvider
+from relf_agent.types import canonical
 
 TOOL = {
     "type": "function",
@@ -23,10 +23,10 @@ TOOL = {
 def provider(**kwargs):
     try:
         cls = importlib.import_module(
-            "ralf_agent.responses_reasoning"
+            "relf_agent.responses_reasoning"
         ).OpenAIResponsesReasoningProvider
     except ModuleNotFoundError as exc:
-        if exc.name != "ralf_agent.responses_reasoning":
+        if exc.name != "relf_agent.responses_reasoning":
             raise
         cls = OpenAIResponsesProvider
     return cls("fixture", api_key="fixture-secret", **kwargs)

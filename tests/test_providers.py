@@ -4,8 +4,8 @@ import json
 import httpx
 import pytest
 
-from ralf_agent.errors import ProviderError, ValidationError
-from ralf_agent.providers import OpenAIChatProvider
+from relf_agent.errors import ProviderError, ValidationError
+from relf_agent.providers import OpenAIChatProvider
 
 
 def test_chat_provider_normalizes_tools_usage_and_sends_no_hidden_retries():

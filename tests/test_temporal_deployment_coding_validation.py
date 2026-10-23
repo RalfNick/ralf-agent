@@ -7,13 +7,13 @@ from types import SimpleNamespace
 
 import pytest
 
-from ralf_agent.errors import DefinitionMismatch
-from ralf_agent.governance import DeploymentAdmissionPolicy
-from ralf_agent.temporal_bindings import request_release_digest
-from ralf_agent.temporal_deployment_admission import registry_id, root_run_id
-from ralf_agent.temporal_parent_state import PARENT_WORKFLOW_NAME, child_run_id
-from ralf_agent.temporal_state import COMMAND_REGISTRY_NAME, WORKFLOW_NAME
-from ralf_agent.types import digest
+from relf_agent.errors import DefinitionMismatch
+from relf_agent.governance import DeploymentAdmissionPolicy
+from relf_agent.temporal_bindings import request_release_digest
+from relf_agent.temporal_deployment_admission import registry_id, root_run_id
+from relf_agent.temporal_parent_state import PARENT_WORKFLOW_NAME, child_run_id
+from relf_agent.temporal_state import COMMAND_REGISTRY_NAME, WORKFLOW_NAME
+from relf_agent.types import digest
 
 
 @pytest.fixture(autouse=True, scope="module")
@@ -32,7 +32,7 @@ def identity(name):
 
 
 def module():
-    name = "ralf_agent.temporal_deployment_coding_validation"
+    name = "relf_agent.temporal_deployment_coding_validation"
     assert importlib.util.find_spec(name), "Missing selected3 compact native validator"
     return importlib.import_module(name)
 
@@ -119,9 +119,9 @@ def environment(monkeypatch, depth=0):
     """SDK proofs are injected; all compact DTOs and actual RPC checks are real."""
     from temporalio.client import WorkflowExecutionStatus
 
-    from ralf_agent import temporal_coding_composition_control as composition
-    from ralf_agent import temporal_deployment_execution as execution
-    from ralf_agent.temporal_deployment_control_projection import (
+    from relf_agent import temporal_coding_composition_control as composition
+    from relf_agent import temporal_deployment_execution as execution
+    from relf_agent.temporal_deployment_control_projection import (
         edge_identity_digest,
         node_identity_digest,
         root_identity_digest,
@@ -133,7 +133,7 @@ def environment(monkeypatch, depth=0):
 
     manifest = copy.deepcopy(coding_request()["root_admission"]["submission"]["manifest"])
     if depth:
-        from ralf_agent.temporal_coding_composition_protocol import publish
+        from relf_agent.temporal_coding_composition_protocol import publish
 
         manifest = publish(
             manifest, SimpleNamespace(coding_execution=True, coding_composition=True)
@@ -488,8 +488,8 @@ def test_cleanup_validation_survives_close_but_permission_is_fresh(monkeypatch, 
     ],
 )
 def test_real_native_grants_keep_fresh_permission_until_actual_stop(monkeypatch, intent):
-    from ralf_agent import temporal_deployment_execution_state as deployment
-    from ralf_agent.temporal_deployment_control_projection import node
+    from relf_agent import temporal_deployment_execution_state as deployment
+    from relf_agent.temporal_deployment_control_projection import node
     from tests.test_temporal_deployment_control_projection import granted_native_phases
 
     runtime, client, request, info, _ = environment(monkeypatch)
@@ -752,7 +752,7 @@ def test_compact_wire_and_helper_source_checks_remain_strict(monkeypatch, change
                 runtime, "validate_release", lambda manifest=None: copy.deepcopy(runtime.manifest)
             )
         elif change == "helper_port":
-            from ralf_agent import temporal_deployment_control_projection as projection
+            from relf_agent import temporal_deployment_control_projection as projection
 
             monkeypatch.setattr(
                 projection, "node_identity_digest", lambda *args: digest("new code")

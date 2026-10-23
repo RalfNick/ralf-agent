@@ -7,8 +7,8 @@ from pathlib import Path
 
 import pytest
 
-from ralf_agent.cli_views import render_result
-from ralf_agent.starter import create_starter
+from relf_agent.cli_views import render_result
+from relf_agent.starter import create_starter
 
 
 @pytest.mark.parametrize(

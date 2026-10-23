@@ -4,8 +4,8 @@ import time
 
 import pytest
 
-from ralf_agent.errors import ValidationError
-from ralf_agent.starter import create_starter
+from relf_agent.errors import ValidationError
+from relf_agent.starter import create_starter
 
 from .test_starter import installed_wheel as _installed_wheel
 from .test_starter import subprocess_result
@@ -17,7 +17,7 @@ def test_cli_generates_an_editable_standalone_rag_template(tmp_path):
     destination = tmp_path / "knowledge-agent"
     project = json.loads(
         subprocess_result(
-            [sys.executable, "-m", "ralf_agent.cli", "init", destination, "--template", "rag"],
+            [sys.executable, "-m", "relf_agent.cli", "init", destination, "--template", "rag"],
             cwd=tmp_path,
         )
     )
@@ -46,8 +46,8 @@ def test_rag_template_preserves_existing_user_files(tmp_path):
 
 @pytest.mark.parametrize("retired", ["deleted", "expired"])
 def test_generated_rag_initializer_respects_retired_seed_documents(tmp_path, retired):
-    from ralf_agent import Scope
-    from ralf_agent.retrieval import Document, SQLiteKnowledgeStore
+    from relf_agent import Scope
+    from relf_agent.retrieval import Document, SQLiteKnowledgeStore
 
     destination = tmp_path / "rag"
     create_starter(destination, template="rag")
@@ -103,7 +103,7 @@ def test_installed_wheel_rag_app_retrieves_and_recovers_without_repository_impor
     # leaves the project directory. No repository path or PYTHONPATH is supplied.
     resume_from_elsewhere = (
         "import sys; sys.path.insert(0, sys.argv[1]); "
-        "from ralf_agent.cli import main; raise SystemExit(main(sys.argv[2:]))"
+        "from relf_agent.cli import main; raise SystemExit(main(sys.argv[2:]))"
     )
     resumed = json.loads(
         subprocess_result(
@@ -132,8 +132,8 @@ def test_installed_wheel_rag_app_retrieves_and_recovers_without_repository_impor
         read_documents = """
 import json
 import sys
-from ralf_agent import Scope
-from ralf_agent.retrieval import SQLiteKnowledgeStore
+from relf_agent import Scope
+from relf_agent.retrieval import SQLiteKnowledgeStore
 
 with SQLiteKnowledgeStore(sys.argv[1]) as knowledge:
     print(json.dumps([

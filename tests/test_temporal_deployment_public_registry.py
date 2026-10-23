@@ -5,17 +5,17 @@ from dataclasses import asdict
 
 import pytest
 
-from ralf_agent import AgentSpec, DeploymentAdmissionPolicy, ModelResponse, Scope, ToolRegistry
-from ralf_agent.errors import (
+from relf_agent import AgentSpec, DeploymentAdmissionPolicy, ModelResponse, Scope, ToolRegistry
+from relf_agent.errors import (
     CapacityExceeded,
     DefinitionMismatch,
     IdempotencyConflict,
     ValidationError,
 )
-from ralf_agent.temporal_activities import TemporalRuntime
-from ralf_agent.temporal_deployment_admission import root_run_id
-from ralf_agent.temporal_state import TemporalCommandRegistryState
-from ralf_agent.types import digest, submission_request
+from relf_agent.temporal_activities import TemporalRuntime
+from relf_agent.temporal_deployment_admission import root_run_id
+from relf_agent.temporal_state import TemporalCommandRegistryState
+from relf_agent.types import digest, submission_request
 
 POLICY = DeploymentAdmissionPolicy("public-registry", max_active_root_runs=1)
 NAMESPACE = {"name": "default", "id": "11111111-1111-1111-1111-111111111111"}

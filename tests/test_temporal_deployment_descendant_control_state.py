@@ -6,9 +6,9 @@ import sys
 
 import pytest
 
-from ralf_agent.errors import RalfError
-from ralf_agent.temporal_state import TemporalCommandRegistryState
-from ralf_agent.types import digest
+from relf_agent.errors import RalfError
+from relf_agent.temporal_state import TemporalCommandRegistryState
+from relf_agent.types import digest
 from tests.test_temporal_deployment_coding_registry import coding_request
 from tests.test_temporal_deployment_public_registry import NAMESPACE, POLICY, SCOPE, setup
 

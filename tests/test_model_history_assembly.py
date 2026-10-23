@@ -4,11 +4,11 @@ import asyncio
 
 import pytest
 
-from ralf_agent import AgentSpec, CompleteModelHistory, RuntimeBuilder, RuntimeProfile
-from ralf_agent.errors import ValidationError
-from ralf_agent.runtime_builder import ComponentRegistry
-from ralf_agent.temporal_builder import TemporalRuntimeBuilder
-from ralf_agent.temporal_profile import TemporalProfile
+from relf_agent import AgentSpec, CompleteModelHistory, RuntimeBuilder, RuntimeProfile
+from relf_agent.errors import ValidationError
+from relf_agent.runtime_builder import ComponentRegistry
+from relf_agent.temporal_builder import TemporalRuntimeBuilder
+from relf_agent.temporal_profile import TemporalProfile
 
 
 @pytest.mark.parametrize("asynchronous", [False, True])

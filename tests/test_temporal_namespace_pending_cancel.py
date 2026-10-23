@@ -5,8 +5,8 @@ from types import SimpleNamespace as NS
 
 import pytest
 
-from ralf_agent.errors import DefinitionMismatch
-from ralf_agent.temporal_session_activities import namespace_id
+from relf_agent.errors import DefinitionMismatch
+from relf_agent.temporal_session_activities import namespace_id
 from tests.test_temporal_namespace_cancellation import client_with, suppressed_prior_cancel
 
 pytest.importorskip("temporalio")

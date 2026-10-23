@@ -5,11 +5,11 @@ from dataclasses import replace
 
 import pytest
 
-import ralf_agent as r
-from ralf_agent.errors import RalfError
-from ralf_agent.temporal_activities import TemporalRuntime
-from ralf_agent.temporal_bindings import effective_step, normalize_request
-from ralf_agent.types import submission_request
+import relf_agent as r
+from relf_agent.errors import RalfError
+from relf_agent.temporal_activities import TemporalRuntime
+from relf_agent.temporal_bindings import effective_step, normalize_request
+from relf_agent.types import submission_request
 
 from .test_skill_bindings import registered as registered
 

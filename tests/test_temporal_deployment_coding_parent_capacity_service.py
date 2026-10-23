@@ -10,8 +10,8 @@ from datetime import timedelta
 
 import pytest
 
-from ralf_agent.temporal import build_temporal_worker
-from ralf_agent.types import digest
+from relf_agent.temporal import build_temporal_worker
+from relf_agent.types import digest
 from tests.test_temporal_deployment_coding_service import (
     _eventually,
     coding_system,
@@ -34,7 +34,7 @@ def observe_original_parent_rpc(directory):
     """Observe host exceptions without replacing any pinned product code."""
     from temporalio.service import RPCError
 
-    from ralf_agent.temporal_coding_composition_control import _adopt
+    from relf_agent.temporal_coding_composition_control import _adopt
 
     monitoring = sys.monitoring
     tool = next(i for i in reversed(range(6)) if monitoring.get_tool(i) is None)

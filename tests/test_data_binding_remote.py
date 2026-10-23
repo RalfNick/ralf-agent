@@ -4,10 +4,10 @@ import asyncio
 
 import pytest
 
-from ralf_agent import Scope
-from ralf_agent.errors import AuthorizationDenied
-from ralf_agent.recall import RecallQuery
-from ralf_agent.retrieval import Document, KnowledgeContext, LexicalRetriever
+from relf_agent import Scope
+from relf_agent.errors import AuthorizationDenied
+from relf_agent.recall import RecallQuery
+from relf_agent.retrieval import Document, KnowledgeContext, LexicalRetriever
 
 from .test_data_binding_resources import resources
 from .test_postgres_adapter import postgres_dsn as postgres_dsn

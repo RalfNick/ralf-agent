@@ -1,7 +1,7 @@
 import json
 import sys
 
-from ralf_agent.starter import create_starter
+from relf_agent.starter import create_starter
 from tests.test_ingestion_starter import subprocess_result
 
 
@@ -20,7 +20,7 @@ def test_installed_context_starter_artifacts_and_factory_restart(tmp_path):
             [
                 sys.executable,
                 "-m",
-                "ralf_agent.cli",
+                "relf_agent.cli",
                 "--db",
                 ".ralf/runs.sqlite",
                 "--factory",

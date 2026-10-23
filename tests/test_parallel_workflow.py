@@ -3,7 +3,7 @@ import threading
 
 import pytest
 
-from ralf_agent import (
+from relf_agent import (
     AgentSpec,
     GraphNode,
     GraphWorkflowSpec,
@@ -16,7 +16,7 @@ from ralf_agent import (
     ToolSpec,
     ValueRef,
 )
-from ralf_agent.errors import CoordinatorBusy, ValidationError
+from relf_agent.errors import CoordinatorBusy, ValidationError
 
 
 def runtime(path, handler=None, *, effect="read_only", approval=False, provider=None, **options):
@@ -297,7 +297,7 @@ def test_bulk_task_cancel_still_tracks_real_sync_handler(tmp_path):
 
 @pytest.mark.parametrize("attack", ["wrong-input", "early-join", "oversized", "mutate-identity"])
 def test_bad_scheduler_cannot_start_effects(tmp_path, attack):
-    from ralf_agent import StaticWorkflowScheduler, WorkflowBatch, WorkflowSelection
+    from relf_agent import StaticWorkflowScheduler, WorkflowBatch, WorkflowSelection
 
     calls = []
 
@@ -326,7 +326,7 @@ def test_bad_scheduler_cannot_start_effects(tmp_path, attack):
 
 
 def test_manual_reconciliation_updates_agent_context_while_sibling_waits(tmp_path):
-    from ralf_agent import ToolCall
+    from relf_agent import ToolCall
 
     async def run():
         started, release = asyncio.Event(), asyncio.Event()
@@ -532,7 +532,7 @@ def test_rejected_parallel_approval_closes_other_branches(tmp_path):
 
 
 def test_parallel_conditional_join_uses_skipped_default(tmp_path):
-    from ralf_agent import BranchCondition
+    from relf_agent import BranchCondition
 
     spec = GraphWorkflowSpec(
         "branches",
@@ -603,7 +603,7 @@ def test_policy_reconciliation_never_redispatches_confirmed_write(tmp_path, para
 
 
 def test_failed_parallel_run_holds_sessions_until_append_finishes(tmp_path):
-    from ralf_agent import InMemoryMemory
+    from relf_agent import InMemoryMemory
 
     async def run():
         entered, release = asyncio.Event(), asyncio.Event()
@@ -681,7 +681,7 @@ def test_branch_failure_emits_parent_failure_exactly_once(tmp_path):
 
 
 def test_failed_parallel_sessions_survive_bulk_cancel_until_real_memory_thread_exits(tmp_path):
-    from ralf_agent import InMemoryMemory, ThreadedMemoryAdapter
+    from relf_agent import InMemoryMemory, ThreadedMemoryAdapter
 
     entered, release = threading.Event(), threading.Event()
 

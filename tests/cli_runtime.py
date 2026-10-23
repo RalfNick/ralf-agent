@@ -1,6 +1,6 @@
 """Importable custom runtime profile for CLI conformance tests."""
 
-from ralf_agent import LocalEngine, ModelResponse, SQLiteStore, ToolCall, ToolRegistry, ToolSpec
+from relf_agent import LocalEngine, ModelResponse, SQLiteStore, ToolCall, ToolRegistry, ToolSpec
 
 
 class CustomProvider:

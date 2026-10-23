@@ -6,18 +6,18 @@ from types import SimpleNamespace
 
 import pytest
 
-from ralf_agent.errors import DefinitionMismatch, ValidationError
-from ralf_agent.types import digest
+from relf_agent.errors import DefinitionMismatch, ValidationError
+from relf_agent.types import digest
 
 
 def module():
-    name = "ralf_agent.temporal_deployment_release_state"
+    name = "relf_agent.temporal_deployment_release_state"
     assert importlib.util.find_spec(name), "Original persistent closure authority is missing"
     return importlib.import_module(name)
 
 
 def original(monkeypatch, *, parent=False):
-    from ralf_agent import temporal_deployment_execution_state as admission
+    from relf_agent import temporal_deployment_execution_state as admission
 
     manifest = {"deployment_admission_protocol": {"version": 2}}
     state = SimpleNamespace(
@@ -90,7 +90,7 @@ def test_legacy_initialization_and_guard_preserve_state():
 
 
 def test_pending_admission_remains_readable_but_cannot_begin_or_seal(monkeypatch):
-    from ralf_agent import temporal_deployment_execution_state as admission
+    from relf_agent import temporal_deployment_execution_state as admission
 
     state = original(monkeypatch)
     monkeypatch.setattr(admission, "admitted", lambda current: False)
@@ -284,10 +284,10 @@ def test_actual_cancelled_completion_stage_seals_without_running_verifier(monkey
     import asyncio
     from functools import partial
 
-    from ralf_agent import DeploymentAdmissionPolicy, TemporalRuntime
-    from ralf_agent import temporal_deployment_execution_state as admission
-    from ralf_agent.temporal_deployment_admission import registry_id, root_run_id
-    from ralf_agent.temporal_state import TemporalRunState
+    from relf_agent import DeploymentAdmissionPolicy, TemporalRuntime
+    from relf_agent import temporal_deployment_execution_state as admission
+    from relf_agent.temporal_deployment_admission import registry_id, root_run_id
+    from relf_agent.temporal_state import TemporalRunState
     from tests import test_temporal_completion as fixture
 
     policy = DeploymentAdmissionPolicy("actual-closure-stage")

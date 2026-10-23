@@ -21,10 +21,10 @@ dev32 增加 [Agent.open_session／AgentSession／SessionRef](session-api.md)，
 
 ## 定义与装配
 
-从 `ralf_agent` 导入常用类型：
+从 `relf_agent` 导入常用类型：
 
 ```python
-from ralf_agent import (
+from relf_agent import (
     AgentSpec,
     WorkflowSpec,
     LocalEngine,
@@ -89,7 +89,7 @@ from ralf_agent import (
 | `DispatchEnvelope(context, tool_manifest, arguments, operation_digest)` | 固定的派发上下文与 JSON 数据；对象不是权限令牌 |
 | `EffectObservation(result, source="tool-handler")` | 未采纳的确认结果；result 视图与内部快照分离 |
 
-这些类型也从 `ralf_agent` 导入。组件必须提供非空有限 JSON identity，影响行为的非秘密配置／版本固定在 Manifest。完整装配和阶段说明见 [执行组件指南](execution-components.md)。
+这些类型也从 `relf_agent` 导入。组件必须提供非空有限 JSON identity，影响行为的非秘密配置／版本固定在 Manifest。完整装配和阶段说明见 [执行组件指南](execution-components.md)。
 
 没有工具提案时，输出必须完整且非空白。合法 JSON 的 `0`／`False`／空容器可以作为结果；`None` 需要显式允许 null 的输出 Schema。启用 Schema 时，字符串先按 JSON 解析，然后校验。
 
@@ -151,7 +151,7 @@ tools.register(
 
 handler 接收 JSON 参数和 InvocationContext。Context 提供 scope、run_id、action_id、attempt_id、effect_key 和 execution_epoch。业务重试／核验使用原 effect_key；effect 可选 read_only、idempotent_write、queryable_write、unqueryable_write。需要审批时设置 `requires_approval=True`，核验函数通过 `register(..., reconciler=...)` 注入。SDK 不隐藏业务重试。
 
-`policy(scope, tool_spec, arguments) -> None` 必须同步完成授权。拒绝抛 `ralf_agent.errors.AuthorizationDenied`；True／False、上下文对象、awaitable 等返回值一律拒绝。默认 Python 工具为可信宿主代码；隔离执行需要显式配置 [Sandbox 工具源](sandbox.md)，不自动隔离任意 Python handler。
+`policy(scope, tool_spec, arguments) -> None` 必须同步完成授权。拒绝抛 `relf_agent.errors.AuthorizationDenied`；True／False、上下文对象、awaitable 等返回值一律拒绝。默认 Python 工具为可信宿主代码；隔离执行需要显式配置 [Sandbox 工具源](sandbox.md)，不自动隔离任意 Python handler。
 
 | 记忆方法 | 契约 |
 | --- | --- |
@@ -162,7 +162,7 @@ handler 接收 JSON 参数和 InvocationContext。Context 提供 scope、run_id�
 
 `InMemoryMemory` 和 `SQLiteMemory` 提供本地实现；RedisMemory 与 PostgresMemory 提供异步远程实现。线程安全同步后端可用 ThreadedMemoryAdapter。`backend_id` 必须稳定且不含秘密。可选依赖、初始化与资源归属见[远程数据](remote-data.md)。
 
-召回与知识常用类型也从 `ralf_agent` 导入：
+召回与知识常用类型也从 `relf_agent` 导入：
 
 | API | 契约 |
 | --- | --- |
@@ -197,7 +197,7 @@ Knowledge／Vector 组件由应用管理生命周期。召回输出额度不限�
 
 ## CLI
 
-全局参数置于子命令前：`ralf --db PATH --factory MODULE:CALLABLE --format text COMMAND ...`。默认 JSON；text 适合终端阅读。工厂只用于显式可信配置的执行／控制，接收 db_path 并返回 LocalEngine。
+全局参数置于子命令前：`relf --db PATH --factory MODULE:CALLABLE --format text COMMAND ...`。默认 JSON；text 适合终端阅读。工厂只用于显式可信配置的执行／控制，接收 db_path 并返回 LocalEngine。
 
 | 子命令 | 用途 |
 | --- | --- |
@@ -210,7 +210,7 @@ Knowledge／Vector 组件由应用管理生命周期。召回输出额度不限�
 | `resume RUN_ID` | 原工厂下继续执行 |
 | `cancel RUN_ID --command-id ID` | 显式取消 |
 
-CLI 没有独立的 submit／reconcile／增额命令；新任务通过生成项目入口或 SDK 提交。CLI 观察仅支持默认 Scope／SQLite。常见 typed error 从 `ralf_agent.errors` 导入，CLI 错误输出到 stderr、返回 2；成功处理命令返回 0，仍需检查 Run state。
+CLI 没有独立的 submit／reconcile／增额命令；新任务通过生成项目入口或 SDK 提交。CLI 观察仅支持默认 Scope／SQLite。常见 typed error 从 `relf_agent.errors` 导入，CLI 错误输出到 stderr、返回 2；成功处理命令返回 0，仍需检查 Run state。
 
 `GraphWorkflowSpec(..., max_concurrency=1)` 默认串行，2..32 显式并行。`WorkflowScheduler`／`StaticWorkflowScheduler` 返回 detached `WorkflowBatch`；通过 Engine 参数或 Profile 的 `workflow_scheduler` 组件替换。节点隔离与恢复见[并行指南](parallel-workflows.md)。
 
@@ -238,18 +238,18 @@ DAGNode/DAGProposal, RuleDAGPlanner/ModelDAGPlanner and PlanningConclusion exten
 
 MessageBus with InMemoryMessageBus/RedisStreamsBus; Inbox/AsyncInbox and Outbox/AsyncOutbox with SQLite defaults; CommandAdapter with LocalCommandAdapter/AsyncCommandAdapter; EngineCommandDispatcher and consume_delivery. Public validation/call helpers enforce native async vs completed sync boundaries without inheritance. A2AClientPort/A2AClient, A2AApplication and A2AToolSource expose the fixed polling subset. See [handoff](remote-handoff.md).
 
-AsyncExecutionEngine/AsyncRuntimeDiagnostics are separate from synchronous local ports. TemporalEngine, TemporalRuntime, build_temporal_worker, replay_temporal_history and EffectJournal/PostgresEffectJournal provide explicit registered distributed execution. See the [capability subset](temporal-execution.md). EvaluationLimits/evaluate_planning/load_planning_cases/score_planning_proposal and ralf-evaluate-planning expose [proposal evaluation](planning-evaluation.md).
+AsyncExecutionEngine/AsyncRuntimeDiagnostics are separate from synchronous local ports. TemporalEngine, TemporalRuntime, build_temporal_worker, replay_temporal_history and EffectJournal/PostgresEffectJournal provide explicit registered distributed execution. See the [capability subset](temporal-execution.md). EvaluationLimits/evaluate_planning/load_planning_cases/score_planning_proposal and relf-evaluate-planning expose [proposal evaluation](planning-evaluation.md).
 
 
 ## 异步交接与服务
 
-SyncTaskControls/AsyncTaskControls 与 TaskControlBridge 是独立的完成控制端口，支持结构化委托和可调用对象；不转移执行权威或资源所有权。PostgresInbox/PostgresOutbox.connect + initialize 提供共享持久交接，LocalA2AService 提供单机 ASGI lifespan、drive 跟踪与真实 handler drain。`ralf init --template a2a` 生成可编辑独立服务。参数、容量、重放与远程资源关闭见[异步交接](async-handoff.md)。
+SyncTaskControls/AsyncTaskControls 与 TaskControlBridge 是独立的完成控制端口，支持结构化委托和可调用对象；不转移执行权威或资源所有权。PostgresInbox/PostgresOutbox.connect + initialize 提供共享持久交接，LocalA2AService 提供单机 ASGI lifespan、drive 跟踪与真实 handler drain。`relf init --template a2a` 生成可编辑独立服务。参数、容量、重放与远程资源关闭见[异步交接](async-handoff.md)。
 
 ## 分布式编排与业务评测
 
 `TemporalRuntime(..., team_strategies={}, planners={}, plan_verifiers={}, knowledge=None, execution_policy=None)` 提供显式组件替换；`runtime.orchestration_release` 固定扩展发布，配合 `build_temporal_worker(..., release=release)` 与 `TemporalEngine(..., release=release)`。原生默认用 `runtime.manifest`。`TemporalExecutionPolicy` 是不可变的每任务限制。`patch_plan` 使用原计划修订号 CAS；审批与核验针对实际叶子 Run。详见 [分布式指南](temporal-composition.md)。
 
-`evaluate_business(provider=None, *, cases=None, limits=None, evidence_dir=None, offline=False, prices=None)` 默认不调用模型；`load_business_cases(path=None)` 返回独立任务集。CLI 为 `ralf-evaluate-business`；[评测指南](business-evaluation.md)说明预算与结果边界。
+`evaluate_business(provider=None, *, cases=None, limits=None, evidence_dir=None, offline=False, prices=None)` 默认不调用模型；`load_business_cases(path=None)` 返回独立任务集。CLI 为 `relf-evaluate-business`；[评测指南](business-evaluation.md)说明预算与结果边界。
 
 ## Document ingestion (dev18)
 

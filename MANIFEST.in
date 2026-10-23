@@ -7,6 +7,7 @@ include tools/stage_alpha1_candidate.py
 include tools/check_alpha3_publication.py tools/release_gate_manifest.alpha3.json
 include tools/check_alpha4_publication.py tools/release_gate_manifest.alpha4.json
 include tools/check_alpha5_publication.py tools/release_gate_manifest.alpha5.json
+include tools/check_alpha6_publication.py tools/release_gate_manifest.alpha6.json
 include tools/release_gate_manifest.json tools/release_gate_manifest.alpha1.json tools/release_gate_manifest.alpha2-original.json tools/release_gate_requirements.lock
 recursive-include architecture *.md
 recursive-include docs *.md
@@ -16,4 +17,5 @@ recursive-include .github *.md *.yml
 recursive-include tests *.py
 include tests/codex_control_fixture.json
 include tests/fixtures/codex_environment_local105.json
+include tests/fixtures/release_gate_alpha2_agent_sessions.txt
 recursive-include evals *.json

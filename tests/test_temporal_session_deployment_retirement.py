@@ -6,10 +6,10 @@ from types import SimpleNamespace
 
 import pytest
 
-from ralf_agent import Scope
-from ralf_agent.errors import DefinitionMismatch
-from ralf_agent.temporal_deployment_submissions import recover_retirement
-from ralf_agent.types import digest
+from relf_agent import Scope
+from relf_agent.errors import DefinitionMismatch
+from relf_agent.temporal_deployment_submissions import recover_retirement
+from relf_agent.types import digest
 from tests.test_temporal_session_deployment_control import positive_observation
 
 

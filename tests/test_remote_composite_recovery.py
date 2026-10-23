@@ -5,8 +5,8 @@ import copy
 
 import pytest
 
-import ralf_agent as r
-from ralf_agent.errors import DefinitionMismatch
+import relf_agent as r
+from relf_agent.errors import DefinitionMismatch
 
 from .composite_session_fixture import definitions, engine
 from .remote_session_fixture import RemoteMemory
@@ -237,7 +237,7 @@ def test_remote_root_approval_restart_and_single_business_effect(tmp_path, kind)
 
 def test_remote_native_composite_idle_rebind_preserves_one_address(tmp_path):
     async def scenario():
-        from ralf_agent.binding_catalog import BindingCatalog
+        from relf_agent.binding_catalog import BindingCatalog
 
         backend = RemoteMemory(tmp_path / "data.sqlite")
         catalog = BindingCatalog(scope=r.Scope())
@@ -283,7 +283,7 @@ def test_remote_native_composite_idle_rebind_preserves_one_address(tmp_path):
 @pytest.mark.parametrize("failure", [False, True])
 def test_cancellation_during_frozen_root_recovery_finishes_authoritatively(tmp_path, kind, failure):
     async def scenario():
-        from ralf_agent.errors import MemoryBackendError
+        from relf_agent.errors import MemoryBackendError
 
         backend = RemoteMemory(tmp_path / "data.sqlite")
         backend.fail_after_append = 1

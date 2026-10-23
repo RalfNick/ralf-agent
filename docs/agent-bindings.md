@@ -18,7 +18,7 @@ Facts／Knowledge 宿主 namespace selector 和默认 History Session 已实现�
 
 ~~~python
 import asyncio
-from ralf_agent import (
+from relf_agent import (
     AgentBindingDescriptor,
     AgentDefinition,
     AgentSpec,
@@ -91,7 +91,7 @@ disabled Session 与显式 session_id 组合在接受前拒绝。Run/Action 事�
 
 ~~~python
 import asyncio
-from ralf_agent import (
+from relf_agent import (
     AgentBindingDescriptor,
     AgentDefinition,
     AgentSpec,
@@ -103,7 +103,7 @@ from ralf_agent import (
     SQLiteStore,
     ToolRegistry,
 )
-from ralf_agent.runtime_builder import EchoProvider
+from relf_agent.runtime_builder import EchoProvider
 
 scope = Scope("workspace", "owner")
 catalog = BindingCatalog(scope=scope)
@@ -137,7 +137,7 @@ BuildContext.own/own_async 显式登记自己创建的资源，沿用 RuntimeBui
 ## 4. 顺序 Workflow
 
 ~~~python
-from ralf_agent import BoundDefinition, WorkflowSpec
+from relf_agent import BoundDefinition, WorkflowSpec
 
 workflow = BoundDefinition(
     WorkflowSpec(
@@ -163,7 +163,7 @@ dev26 将相同六类选择扩展到本地图、团队、动态规划和嵌套�
 ### 图、团队与嵌套路径
 
 ~~~python
-from ralf_agent import GraphNode, GraphWorkflowSpec, TeamSpec
+from relf_agent import GraphNode, GraphWorkflowSpec, TeamSpec
 
 research = GraphWorkflowSpec(
     "research",

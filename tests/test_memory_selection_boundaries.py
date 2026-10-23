@@ -2,8 +2,8 @@ import asyncio
 
 import pytest
 
-import ralf_agent as r
-from ralf_agent.errors import ProviderError
+import relf_agent as r
+from relf_agent.errors import ProviderError
 from tests.test_memory_selection import Provider
 
 

@@ -12,8 +12,8 @@ from dataclasses import asdict
 
 import pytest
 
-from ralf_agent.temporal_deployment_admission import registry_id
-from ralf_agent.types import canonical
+from relf_agent.temporal_deployment_admission import registry_id
+from relf_agent.types import canonical
 from tests.test_temporal_deployment_dispatch_service import _case, _eventually
 from tests.test_temporal_deployment_public_service import public_system
 

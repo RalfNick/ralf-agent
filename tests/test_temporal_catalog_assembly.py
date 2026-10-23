@@ -4,14 +4,14 @@ import asyncio
 
 import pytest
 
-from ralf_agent import (
+from relf_agent import (
     ComponentRegistry,
     TemporalProfile,
     TemporalProfileCatalog,
     TemporalRuntimeBuilder,
 )
-from ralf_agent.errors import ValidationError
-from ralf_agent.runtime_builder import EchoProvider, RuntimeBuildError
+from relf_agent.errors import ValidationError
+from relf_agent.runtime_builder import EchoProvider, RuntimeBuildError
 
 
 def catalog(adapter="offline-echo", **second):
@@ -32,9 +32,9 @@ def test_profiles_are_detached_immutable_values():
 
 
 def test_public_profile_host_export():
-    from ralf_agent import TemporalProfileHost
+    from relf_agent import TemporalProfileHost
 
-    assert TemporalProfileHost.__module__ == "ralf_agent.temporal_profile_host"
+    assert TemporalProfileHost.__module__ == "relf_agent.temporal_profile_host"
 
 
 def test_host_snapshot_does_not_follow_external_default_or_registrations(tmp_path):

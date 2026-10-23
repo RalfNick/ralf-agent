@@ -5,18 +5,18 @@ from types import MethodType, SimpleNamespace
 
 import pytest
 
-from ralf_agent import Scope
-from ralf_agent.errors import DefinitionMismatch, ValidationError
-from ralf_agent.temporal_activities import TemporalRuntime
-from ralf_agent.temporal_state import ACK_ACTIVITY
+from relf_agent import Scope
+from relf_agent.errors import DefinitionMismatch, ValidationError
+from relf_agent.temporal_activities import TemporalRuntime
+from relf_agent.temporal_state import ACK_ACTIVITY
 
 
 def environment(monkeypatch):
     from temporalio import activity
 
-    from ralf_agent import temporal_activities as activities
-    from ralf_agent.temporal_assembly_lifecycle import WorkerExecutionOwner
-    from ralf_agent.temporal_deployment_execution import wrap_activities
+    from relf_agent import temporal_activities as activities
+    from relf_agent.temporal_assembly_lifecycle import WorkerExecutionOwner
+    from relf_agent.temporal_deployment_execution import wrap_activities
     from tests.test_temporal_session_deployment_control import positive_observation
 
     proof, client = positive_observation()
@@ -233,8 +233,8 @@ def test_actual_worker_registers_each_original_evidence_wrapper_without_overwrit
     import temporalio.worker
     from temporalio import activity
 
-    from ralf_agent.temporal import build_temporal_worker
-    from ralf_agent.temporal_assembly_lifecycle import WorkerExecutionOwner, _evidence_registration
+    from relf_agent.temporal import build_temporal_worker
+    from relf_agent.temporal_assembly_lifecycle import WorkerExecutionOwner, _evidence_registration
     from tests.test_temporal_session_deployment_worker import client, runtime
 
     selected, connection = runtime(), client()

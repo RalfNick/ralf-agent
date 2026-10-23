@@ -5,8 +5,8 @@ import copy
 
 import pytest
 
-from ralf_agent import ContextExecutionOwner, InMemoryMemory, ManagedContextPipeline
-from ralf_agent.errors import CloseIncomplete
+from relf_agent import ContextExecutionOwner, InMemoryMemory, ManagedContextPipeline
+from relf_agent.errors import CloseIncomplete
 
 from .test_temporal_context_read_runtime import call, turn
 from .test_temporal_context_read_state import admission, proof, state_for
@@ -168,7 +168,7 @@ def test_sdk_repeat_guard_cannot_reuse_server_cached_allow_after_end():
             return copy.deepcopy(self.cache[id])
 
     async def run():
-        from ralf_agent.temporal_context_read_activities import callbacks
+        from relf_agent.temporal_context_read_activities import callbacks
 
         state, _, request, _, info = setup()
         client = CachedClient(state)

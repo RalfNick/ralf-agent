@@ -6,12 +6,12 @@ from types import SimpleNamespace
 
 import pytest
 
-from ralf_agent import AgentSpec, ComponentRegistry, Scope, TemporalRuntimeBuilder
-from ralf_agent.errors import CloseIncomplete, DefinitionMismatch
-from ralf_agent.runtime_builder import EchoProvider
-from ralf_agent.temporal_session_state import SESSION_WORKFLOW, TemporalSessionState, workflow_id
-from ralf_agent.temporal_state import WORKFLOW_NAME
-from ralf_agent.types import digest, submission_request
+from relf_agent import AgentSpec, ComponentRegistry, Scope, TemporalRuntimeBuilder
+from relf_agent.errors import CloseIncomplete, DefinitionMismatch
+from relf_agent.runtime_builder import EchoProvider
+from relf_agent.temporal_session_state import SESSION_WORKFLOW, TemporalSessionState, workflow_id
+from relf_agent.temporal_state import WORKFLOW_NAME
+from relf_agent.types import digest, submission_request
 
 from .test_temporal_catalog_assembly import catalog
 from .test_temporal_host_sessions import profiles
@@ -56,7 +56,7 @@ def test_ordinary_session_open_refuses_replaced_namespace_before_admission(
         async def namespace(client):
             return current[0]
 
-        monkeypatch.setattr("ralf_agent.temporal_session_activities.namespace_id", namespace)
+        monkeypatch.setattr("relf_agent.temporal_session_activities.namespace_id", namespace)
         host = await TemporalRuntimeBuilder(base_dir=tmp_path).abuild_catalog(profiles())
         await host.start_workers(sdk.client)
         calls = []

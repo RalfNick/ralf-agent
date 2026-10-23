@@ -7,10 +7,10 @@ from pathlib import Path
 
 import pytest
 
-import ralf_agent as api
-from ralf_agent import InvocationContext, Scope, ToolDescriptor
-from ralf_agent.errors import DefinitionMismatch, ValidationError
-from ralf_agent.tools import ThreadExecutionTracker, current_thread_group, current_thread_tracker
+import relf_agent as api
+from relf_agent import InvocationContext, Scope, ToolDescriptor
+from relf_agent.errors import DefinitionMismatch, ValidationError
+from relf_agent.tools import ThreadExecutionTracker, current_thread_group, current_thread_tracker
 
 
 def public():
@@ -282,7 +282,7 @@ def test_explicit_none_cwd_uses_current_directory(tmp_path, monkeypatch):
 def test_both_trackers_keep_cancelled_handler_until_actual_cleanup(tmp_path, monkeypatch):
     import threading
 
-    from ralf_agent import cli_process
+    from relf_agent import cli_process
 
     entered, release = threading.Event(), threading.Event()
     original = cli_process.stop_process

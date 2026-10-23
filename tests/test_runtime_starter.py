@@ -1,7 +1,7 @@
 import json
 import sys
 
-from ralf_agent.starter import create_starter
+from relf_agent.starter import create_starter
 
 from .test_starter import installed_wheel as _installed_wheel
 from .test_starter import subprocess_result
@@ -23,7 +23,7 @@ def test_config_starter_runs_without_editing_python_and_keeps_original_version(t
     path.write_text(contents.replace('version = "1"', 'version = "2"', 1))
     completed = json.loads(
         subprocess_result(
-            [sys.executable, "-m", "ralf_agent", "--config", path, "resume", submitted["run_id"]],
+            [sys.executable, "-m", "relf_agent", "--config", path, "resume", submitted["run_id"]],
             cwd=project,
         )
     )

@@ -4,7 +4,7 @@ import json
 
 import pytest
 
-from ralf_agent import (
+from relf_agent import (
     AgentSpec,
     LocalEngine,
     ModelResponse,
@@ -15,11 +15,11 @@ from ralf_agent import (
     SQLiteStore,
     ToolRegistry,
 )
-from ralf_agent.errors import AuthorizationDenied, DefinitionMismatch, ValidationError
+from relf_agent.errors import AuthorizationDenied, DefinitionMismatch, ValidationError
 
 
 def api(name):
-    module = importlib.import_module("ralf_agent")
+    module = importlib.import_module("relf_agent")
     assert hasattr(module, name), "Missing event subscription API: " + name
     return getattr(module, name)
 

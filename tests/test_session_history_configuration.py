@@ -4,13 +4,13 @@ import asyncio
 
 import pytest
 
-import ralf_agent
-from ralf_agent import CompleteModelHistory, RuntimeBuilder, RuntimeProfile
-from ralf_agent.binding_types import AgentBindingDescriptor, BindingSelection
-from ralf_agent.errors import ValidationError
-from ralf_agent.runtime_builder import ComponentRegistry
-from ralf_agent.temporal_builder import TemporalRuntimeBuilder
-from ralf_agent.temporal_profile import TemporalProfile
+import relf_agent
+from relf_agent import CompleteModelHistory, RuntimeBuilder, RuntimeProfile
+from relf_agent.binding_types import AgentBindingDescriptor, BindingSelection
+from relf_agent.errors import ValidationError
+from relf_agent.runtime_builder import ComponentRegistry
+from relf_agent.temporal_builder import TemporalRuntimeBuilder
+from relf_agent.temporal_profile import TemporalProfile
 
 PROVIDERS = {"default": {"adapter": "offline-echo"}}
 
@@ -188,11 +188,11 @@ def test_async_custom_binding_history_uses_existing_owned_resource_lifetime(tmp_
 
 
 def test_sdk_exports_native_history_helpers_for_replacement_components():
-    assert ralf_agent.native_history_address("a" * 64) == "ralf-native-model-history-v1:" + "a" * 64
+    assert relf_agent.native_history_address("a" * 64) == "ralf-native-model-history-v1:" + "a" * 64
     for name in (
         "native_history_envelope",
         "validate_native_history_envelope",
         "validate_model_history_frame",
         "read_native_history",
     ):
-        assert callable(getattr(ralf_agent, name))
+        assert callable(getattr(relf_agent, name))

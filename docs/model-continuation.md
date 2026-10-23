@@ -50,8 +50,8 @@ Temporal 使用独立声明 `TemporalProfile(..., execution={"model_continuation
 普通模型继续返回原三字段 `ModelResponse`。需要原生状态的 Provider 返回：
 
 ```python
-from ralf_agent import ContinuedModelResponse, ModelContinuation, ToolCall
-from ralf_agent.types import digest
+from relf_agent import ContinuedModelResponse, ModelContinuation, ToolCall
+from relf_agent.types import digest
 
 raw = {
     "output": None,
@@ -112,8 +112,8 @@ Activity 完成被服务记录之前的进程退出仍可能丢失响应，不�
 ## 显式验收入口
 
 ```sh
-ralf-check-model --adapter gemini-functions --model YOUR_ACTUAL_MODEL --cases text,structured,tool,stream,stream_close
-ralf-evaluate-orchestration --provider gemini-functions --model YOUR_ACTUAL_MODEL --kind team
+relf-check-model --adapter gemini-functions --model YOUR_ACTUAL_MODEL --cases text,structured,tool,stream,stream_close
+relf-evaluate-orchestration --provider gemini-functions --model YOUR_ACTUAL_MODEL --kind team
 ```
 
 `--adapter`／`--provider` 的新选项显式启用续接。RAG 的生成模型同样可用

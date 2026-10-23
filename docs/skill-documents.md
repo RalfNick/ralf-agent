@@ -14,7 +14,7 @@
 ```python
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from ralf_agent import FileSkillDocumentCatalog, Scope
+from relf_agent import FileSkillDocumentCatalog, Scope
 
 with TemporaryDirectory() as directory:
     root = Path(directory)
@@ -57,7 +57,7 @@ Profile 固定原资源和策略，受管理读取是原 read-only Action，Loca
 ```python
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from ralf_agent import FileSkillDocumentCatalog, ParsedSkillDocument, Scope, SkillSpec
+from relf_agent import FileSkillDocumentCatalog, ParsedSkillDocument, Scope, SkillSpec
 
 
 class AppParser:

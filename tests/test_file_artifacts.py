@@ -9,13 +9,13 @@ from pathlib import Path
 
 import pytest
 
-from ralf_agent import Scope
-from ralf_agent.errors import BudgetExceeded, DefinitionMismatch, NotFound, ValidationError
+from relf_agent import Scope
+from relf_agent.errors import BudgetExceeded, DefinitionMismatch, NotFound, ValidationError
 from tests.context_crash_assertions import assert_context_crash_effects
 
 
 def api():
-    module = importlib.import_module("ralf_agent")
+    module = importlib.import_module("relf_agent")
     assert hasattr(module, "FileArtifactStore"), "Missing durable file artifact backend"
     return module.FileArtifactStore
 
@@ -112,7 +112,7 @@ def test_two_handles_preserve_atomic_namespace_capacity(tmp_path):
 
 
 def test_owned_index_cannot_move_behind_unchanged_backend_identity(tmp_path):
-    from ralf_agent import SQLiteArtifactStore
+    from relf_agent import SQLiteArtifactStore
 
     with api()(tmp_path / "artifacts") as store:
         original = store._index
@@ -169,7 +169,7 @@ def test_new_root_is_private_and_parent_directory_creation_is_synced(tmp_path, m
 
 
 def test_index_swap_during_publication_cannot_write_replacement_index(tmp_path):
-    from ralf_agent import SQLiteArtifactStore
+    from relf_agent import SQLiteArtifactStore
 
     replacement = SQLiteArtifactStore(tmp_path / "replacement.sqlite")
 
@@ -209,7 +209,7 @@ def test_index_file_change_during_payload_read_is_refused_before_confirmation(tm
 def test_configured_file_adapter_owns_lifecycle_and_reopens_original_receipt(
     tmp_path, extension, assembly
 ):
-    from ralf_agent import AgentSpec, RuntimeBuilder, load_catalog
+    from relf_agent import AgentSpec, RuntimeBuilder, load_catalog
 
     config = {
         "adapter": "managed-data",
@@ -292,12 +292,12 @@ capacity = 1
 
 
 def package_env():
-    import ralf_agent
+    import relf_agent
 
     return {
         "PATH": os.defpath,
         "PYTHONPATH": os.pathsep.join(
-            [str(Path(ralf_agent.__file__).parents[1]), str(Path(__file__).parents[1])]
+            [str(Path(relf_agent.__file__).parents[1]), str(Path(__file__).parents[1])]
         ),
     }
 
@@ -306,7 +306,7 @@ def package_env():
     "phase", ["before-publish", "payload-published", "before-index-commit", "after-index-commit"]
 )
 def test_process_loss_never_confirms_unindexed_payload_and_replays_exact_reference(tmp_path, phase):
-    from ralf_agent import ArtifactReference
+    from relf_agent import ArtifactReference
 
     crashed = subprocess.run(
         [sys.executable, "-m", "tests.file_artifact_crash_fixture", str(tmp_path), phase],
@@ -338,8 +338,8 @@ def test_concurrent_processes_share_capacity_and_original_duplicate_reference(tm
     with api()(path, capacity=1):
         pass
     code = """import sys,json
-from ralf_agent import FileArtifactStore,Scope
-from ralf_agent.errors import BudgetExceeded
+from relf_agent import FileArtifactStore,Scope
+from relf_agent.errors import BudgetExceeded
 with FileArtifactStore(sys.argv[1],capacity=1) as store:
  try:
   ref=store.put(Scope(),'results',{'value':sys.argv[2]})
@@ -454,7 +454,7 @@ def test_orphan_replay_syncs_payload_and_directory_before_receipt_commit(tmp_pat
     )
     assert outcome.returncode == 79, outcome.stderr
     root = tmp_path / "artifacts"
-    import ralf_agent.file_artifacts as module
+    import relf_agent.file_artifacts as module
 
     original_sync = os.fsync
     synced = []

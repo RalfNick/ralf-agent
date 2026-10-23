@@ -6,10 +6,10 @@ import uuid
 
 import pytest
 
-from ralf_agent import Runtime, Scope, SQLiteMemory, TeamSpec
-from ralf_agent.temporal import TemporalEngine, build_temporal_worker, replay_temporal_history
-from ralf_agent.temporal_activities import TemporalRuntime
-from ralf_agent.temporal_session_topology import CompositeSessionTopology
+from relf_agent import Runtime, Scope, SQLiteMemory, TeamSpec
+from relf_agent.temporal import TemporalEngine, build_temporal_worker, replay_temporal_history
+from relf_agent.temporal_activities import TemporalRuntime
+from relf_agent.temporal_session_topology import CompositeSessionTopology
 from tests.temporal_managed_context_worker import runtime as data_runtime
 from tests.test_composite_data_context import agent
 

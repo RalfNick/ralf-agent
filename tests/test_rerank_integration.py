@@ -8,7 +8,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 import httpx
 import pytest
 
-from ralf_agent import (
+from relf_agent import (
     AgentSpec,
     ComponentRegistry,
     Document,
@@ -19,8 +19,8 @@ from ralf_agent import (
     RuntimeBuilder,
     Scope,
 )
-from ralf_agent.errors import ProviderError, ValidationError
-from ralf_agent.types import canonical
+from relf_agent.errors import ProviderError, ValidationError
+from relf_agent.types import canonical
 from tests.test_hybrid_retrieval import Branch, docs
 from tests.test_rerank_configuration import profile
 
@@ -86,7 +86,7 @@ def test_real_http_rerank_combination_orders_authoritative_evidence_for_native_a
             "config": {"model": "fixture", "base_url": endpoint, "anonymous": True},
         },
     )
-    from ralf_agent import RuntimeProfile
+    from relf_agent import RuntimeProfile
 
     selected = RuntimeProfile(
         base.name, base.version, {"default": {"adapter": "evidence"}}, base.components

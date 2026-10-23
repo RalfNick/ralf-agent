@@ -4,7 +4,7 @@ import asyncio
 
 import pytest
 
-from ralf_agent import (
+from relf_agent import (
     AgentBindingDescriptor,
     AgentDefinition,
     AgentSpec,
@@ -22,10 +22,10 @@ from ralf_agent import (
     ToolRegistry,
     WorkflowSpec,
 )
-from ralf_agent.agent_limits import FixedAgentLimits
-from ralf_agent.errors import DefinitionMismatch, ValidationError
-from ralf_agent.runtime_builder import ComponentRegistry, RuntimeBuilder
-from ralf_agent.runtime_config import RuntimeProfile
+from relf_agent.agent_limits import FixedAgentLimits
+from relf_agent.errors import DefinitionMismatch, ValidationError
+from relf_agent.runtime_builder import ComponentRegistry, RuntimeBuilder
+from relf_agent.runtime_config import RuntimeProfile
 
 from .helpers import ScriptedProvider
 
@@ -101,8 +101,8 @@ def test_limits_ref_enforces_decision_cap_through_all_local_boundaries(kind, tmp
             raw, {path: AgentBindingDescriptor(limits=BindingSelection.ref("tiny", "1"))}
         )
     )
-    from ralf_agent import ToolSpec
-    from ralf_agent.types import ToolCall
+    from relf_agent import ToolSpec
+    from relf_agent.types import ToolCall
 
     tools = ToolRegistry()
     tools.register(
@@ -126,8 +126,8 @@ def test_limits_ref_enforces_decision_cap_through_all_local_boundaries(kind, tmp
 
 @pytest.mark.parametrize("kind", ["sequence", "graph", "parallel", "team", "dynamic", "nested"])
 def test_each_agent_node_has_an_independent_tool_action_quota(kind, tmp_path):
-    from ralf_agent import ToolSpec
-    from ralf_agent.types import ToolCall
+    from relf_agent import ToolSpec
+    from relf_agent.types import ToolCall
 
     class Provider:
         def __init__(self, label):
@@ -182,8 +182,8 @@ def test_each_agent_node_has_an_independent_tool_action_quota(kind, tmp_path):
 def test_parallel_projection_cannot_replace_parent_accepted_caps(tmp_path):
     import inspect
 
-    from ralf_agent import AgentLimitProposal, ToolSpec
-    from ralf_agent.types import ToolCall
+    from relf_agent import AgentLimitProposal, ToolSpec
+    from relf_agent.types import ToolCall
 
     class Policy:
         identity = {"kind": "projection-sensitive-policy", "version": "1"}
@@ -227,8 +227,8 @@ def test_parallel_projection_cannot_replace_parent_accepted_caps(tmp_path):
 def test_managed_children_cannot_replace_parent_accepted_caps(kind, bound, tmp_path):
     import inspect
 
-    from ralf_agent import AgentLimitProposal, ToolSpec
-    from ralf_agent.types import ToolCall
+    from relf_agent import AgentLimitProposal, ToolSpec
+    from relf_agent.types import ToolCall
 
     class Policy:
         identity = {"kind": "delegation-sensitive-policy", "version": "1"}
@@ -237,8 +237,8 @@ def test_managed_children_cannot_replace_parent_accepted_caps(kind, bound, tmp_p
             parent_context = any(
                 frame.function == "manifest"
                 and (
-                    frame.frame.f_globals.get("__name__") == "ralf_agent.orchestration"
-                    or frame.frame.f_globals.get("__name__") == "ralf_agent.binding_runtime"
+                    frame.frame.f_globals.get("__name__") == "relf_agent.orchestration"
+                    or frame.frame.f_globals.get("__name__") == "relf_agent.binding_runtime"
                     and frame.frame.f_locals.get("definition", {}).get("kind")
                     in {"team", "dynamic"}
                 )
@@ -305,7 +305,7 @@ def test_managed_children_cannot_replace_parent_accepted_caps(kind, bound, tmp_p
 def test_limit_configuration_round_trip_and_effective_snapshot(extension, tmp_path):
     import json
 
-    from ralf_agent.runtime_config import load_catalog
+    from relf_agent.runtime_config import load_catalog
 
     path = tmp_path / ("profile." + extension)
     if extension == "json":
@@ -374,8 +374,8 @@ max_decisions = 1
 @pytest.mark.parametrize("kind", ["team", "dynamic", "nested"])
 @pytest.mark.parametrize("bound", [False, True])
 def test_fixed_member_caps_survive_approval_and_engine_restart(kind, bound, tmp_path):
-    from ralf_agent import ToolSpec
-    from ralf_agent.types import ToolCall
+    from relf_agent import ToolSpec
+    from relf_agent.types import ToolCall
 
     agent = AgentSpec("a", "a", ("change",))
     member = WorkflowSpec("s", [agent]) if kind == "nested" else agent
@@ -434,7 +434,7 @@ def test_fixed_member_caps_survive_approval_and_engine_restart(kind, bound, tmp_
 
 @pytest.mark.parametrize("bound", [False, True])
 def test_managed_model_planner_and_member_keep_their_accepted_caps(bound, tmp_path):
-    from ralf_agent.planning import ModelPlanner
+    from relf_agent.planning import ModelPlanner
 
     raw = DynamicWorkflowSpec("d", {"one": AgentSpec("one", "One")}, planner="model")
     if bound:

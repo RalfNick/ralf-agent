@@ -8,10 +8,10 @@ from contextlib import asynccontextmanager
 
 import pytest
 
-from ralf_agent.errors import IdempotencyConflict, ValidationError
-from ralf_agent.handoff import HandoffError, validate_inbox, validate_outbox
-from ralf_agent.messaging import InMemoryMessageBus, MessageEnvelope
-from ralf_agent.types import Scope
+from relf_agent.errors import IdempotencyConflict, ValidationError
+from relf_agent.handoff import HandoffError, validate_inbox, validate_outbox
+from relf_agent.messaging import InMemoryMessageBus, MessageEnvelope
+from relf_agent.types import Scope
 
 from .test_postgres_adapter import BoundaryConnection
 from .test_postgres_adapter import postgres_dsn as _postgres_dsn
@@ -20,8 +20,8 @@ postgres_dsn = _postgres_dsn
 
 
 def adapter(name):
-    assert importlib.util.find_spec("ralf_agent.postgres_handoff"), "Missing shared handoff adapter"
-    return getattr(importlib.import_module("ralf_agent.postgres_handoff"), name)
+    assert importlib.util.find_spec("relf_agent.postgres_handoff"), "Missing shared handoff adapter"
+    return getattr(importlib.import_module("relf_agent.postgres_handoff"), name)
 
 
 @pytest.mark.parametrize("name", ["PostgresInbox", "PostgresOutbox"])

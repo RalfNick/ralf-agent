@@ -7,11 +7,11 @@ import threading
 
 import pytest
 
-import ralf_agent as r
-from ralf_agent.errors import CoordinatorBusy, DefinitionMismatch, ValidationError
-from ralf_agent.tools import ThreadExecutionTracker, current_thread_group, current_thread_tracker
-from ralf_agent.types import InvocationContext
-from ralf_agent.workspace import WorkspaceError
+import relf_agent as r
+from relf_agent.errors import CoordinatorBusy, DefinitionMismatch, ValidationError
+from relf_agent.tools import ThreadExecutionTracker, current_thread_group, current_thread_tracker
+from relf_agent.types import InvocationContext
+from relf_agent.workspace import WorkspaceError
 
 from .test_thread_execution import wait_until_started
 

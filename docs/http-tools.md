@@ -7,7 +7,7 @@
 ## SDK 注入
 
 ```python
-from ralf_agent import (
+from relf_agent import (
     HTTPToolSource,
     ToolDescriptor,
     ToolPolicy,

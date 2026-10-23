@@ -5,13 +5,13 @@ from contextlib import asynccontextmanager
 
 import pytest
 
-from ralf_agent import Document, Scope
-from ralf_agent.chunking import ParagraphChunker
-from ralf_agent.errors import BudgetExceeded, IdempotencyConflict, MemoryBackendError
-from ralf_agent.ingestion import IngestionCoordinator
-from ralf_agent.ingestion_types import SourceDocument
-from ralf_agent.postgres import PostgresKnowledgeStore
-from ralf_agent.retrieval import KnowledgeVersionConflict, RetrievalQuery
+from relf_agent import Document, Scope
+from relf_agent.chunking import ParagraphChunker
+from relf_agent.errors import BudgetExceeded, IdempotencyConflict, MemoryBackendError
+from relf_agent.ingestion import IngestionCoordinator
+from relf_agent.ingestion_types import SourceDocument
+from relf_agent.postgres import PostgresKnowledgeStore
+from relf_agent.retrieval import KnowledgeVersionConflict, RetrievalQuery
 
 from .test_postgres_adapter import postgres_dsn as _postgres_dsn
 
@@ -160,7 +160,7 @@ def test_actual_postgres_independent_connections_serialize_command_admission(pos
 def test_actual_postgres_receipt_capacity_rejects_new_write_but_preserves_replay(
     postgres_dsn, monkeypatch
 ):
-    monkeypatch.setattr("ralf_agent.postgres_ingestion.INGESTION_CAPACITY", 2)
+    monkeypatch.setattr("relf_agent.postgres_ingestion.INGESTION_CAPACITY", 2)
 
     async def run():
         async with store(postgres_dsn) as (s, scope):
@@ -193,7 +193,7 @@ def test_actual_ingestion_pg_qdrant_requires_explicit_index_and_hydrates_current
 
     import httpx
 
-    from ralf_agent import (
+    from relf_agent import (
         CharacterChunker,
         HashEmbeddingProvider,
         QdrantVectorIndex,

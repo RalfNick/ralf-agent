@@ -4,10 +4,10 @@ import asyncio
 import os
 import sys
 
-from ralf_agent import Scope, SQLiteKnowledgeStore
-from ralf_agent.ingestion import IngestionCoordinator
-from ralf_agent.ingestion_types import SourceDocument
-from ralf_agent.postgres import PostgresKnowledgeStore
+from relf_agent import Scope, SQLiteKnowledgeStore
+from relf_agent.ingestion import IngestionCoordinator
+from relf_agent.ingestion_types import SourceDocument
+from relf_agent.postgres import PostgresKnowledgeStore
 
 
 def crash():
@@ -54,7 +54,7 @@ async def run():
 
         store = await Store.connect(os.environ["RALF_TEST_POSTGRES_DSN"], backend_id="crash-pg")
         await store.initialize()
-    from ralf_agent import TokenChunker
+    from relf_agent import TokenChunker
 
     await IngestionCoordinator(
         store, **({"chunker": TokenChunker(size=7, overlap=3)} if token_mode else {})

@@ -6,7 +6,7 @@ from types import SimpleNamespace
 
 import pytest
 
-from ralf_agent import (
+from relf_agent import (
     AgentSpec,
     LocalEngine,
     ModelResponse,
@@ -15,17 +15,17 @@ from ralf_agent import (
     ToolRegistry,
     ToolSpec,
 )
-from ralf_agent.dag_planning import DAGNode, DAGProposal
-from ralf_agent.errors import ExecutionHostFailed
-from ralf_agent.governance import LocalExecutionPolicy
-from ralf_agent.orchestration_types import ChildCall, DynamicWorkflowSpec, TeamSelection, TeamSpec
-from ralf_agent.planning import PlanProposal
+from relf_agent.dag_planning import DAGNode, DAGProposal
+from relf_agent.errors import ExecutionHostFailed
+from relf_agent.governance import LocalExecutionPolicy
+from relf_agent.orchestration_types import ChildCall, DynamicWorkflowSpec, TeamSelection, TeamSpec
+from relf_agent.planning import PlanProposal
 
 from .helpers import ScriptedProvider, tool_response
 
 
 def test_expired_team_selection_cannot_admit_a_new_child_run(tmp_path, monkeypatch):
-    import ralf_agent.local_deadlines as deadlines
+    import relf_agent.local_deadlines as deadlines
 
     clock = [1000000000.0]
     monkeypatch.setattr(deadlines, "time", SimpleNamespace(time=lambda: clock[0]))
@@ -65,7 +65,7 @@ def test_expired_team_selection_cannot_admit_a_new_child_run(tmp_path, monkeypat
 def test_expired_planner_result_cannot_adopt_a_revision_or_admit_a_child(
     tmp_path, monkeypatch, mode
 ):
-    import ralf_agent.local_deadlines as deadlines
+    import relf_agent.local_deadlines as deadlines
 
     clock = [1000000000.0]
     monkeypatch.setattr(deadlines, "time", SimpleNamespace(time=lambda: clock[0]))
@@ -109,7 +109,7 @@ def test_expired_planner_result_cannot_adopt_a_revision_or_admit_a_child(
 def test_child_admission_rechecks_cutoff_after_the_store_transaction_is_acquired(
     tmp_path, monkeypatch
 ):
-    import ralf_agent.local_deadlines as deadlines
+    import relf_agent.local_deadlines as deadlines
 
     clock = [1000000000.0]
     monkeypatch.setattr(deadlines, "time", SimpleNamespace(time=lambda: clock[0]))

@@ -2,9 +2,9 @@ from decimal import Decimal
 
 import pytest
 
-from ralf_agent.errors import ValidationError
-from ralf_agent.memory import InMemoryMemory, SQLiteMemory
-from ralf_agent.types import Scope
+from relf_agent.errors import ValidationError
+from relf_agent.memory import InMemoryMemory, SQLiteMemory
+from relf_agent.types import Scope
 
 
 @pytest.fixture(params=["memory", "sqlite"])

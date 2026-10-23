@@ -5,8 +5,8 @@ import copy
 
 import pytest
 
-from ralf_agent.errors import DefinitionMismatch
-from ralf_agent.temporal_session_deployment_verification import SessionControlValidation
+from relf_agent.errors import DefinitionMismatch
+from relf_agent.temporal_session_deployment_verification import SessionControlValidation
 from tests.test_temporal_session_deployment_control import Client, Runtime, fixture
 
 

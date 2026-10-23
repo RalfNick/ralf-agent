@@ -12,7 +12,7 @@
 回执结果 Schema，以及从最终输出映射到工具参数的 JSON Pointer。
 
 ```python
-from ralf_agent import ToolReceiptVerifier
+from relf_agent import ToolReceiptVerifier
 
 verifier = ToolReceiptVerifier(
     "apply_fix",
@@ -41,7 +41,7 @@ verifier = ToolReceiptVerifier(
 ## 自定义策略
 
 ```python
-from ralf_agent import CompletionVerdict
+from relf_agent import CompletionVerdict
 
 
 class MyVerifier:
@@ -62,7 +62,7 @@ class MyVerifier:
 ## 绑定与配置
 
 ```python
-from ralf_agent import AgentBindingDescriptor, AgentDefinition, BindingSelection
+from relf_agent import AgentBindingDescriptor, AgentDefinition, BindingSelection
 
 catalog.register("verifier", "business", "1", verifier)
 definition = AgentDefinition(
@@ -92,7 +92,7 @@ Temporal dev62 支持宿主／每 Agent 纯完成规则，见[History 采纳与�
 ## 业务评测
 
 ```bash
-ralf-evaluate-business --offline --receipt-gate
+relf-evaluate-business --offline --receipt-gate
 ```
 
 SDK 对应 `evaluate_business(..., completion_verifier=verifier)`。

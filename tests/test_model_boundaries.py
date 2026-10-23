@@ -3,7 +3,7 @@ import asyncio
 import httpx
 import pytest
 
-from ralf_agent import (
+from relf_agent import (
     AgentSpec,
     LocalEngine,
     ModelCapabilities,
@@ -12,7 +12,7 @@ from ralf_agent import (
     SQLiteStore,
     ToolRegistry,
 )
-from ralf_agent.errors import ProviderError
+from relf_agent.errors import ProviderError
 
 from .test_model_chat import Frames, chunk, sse
 
@@ -80,7 +80,7 @@ def test_reasoning_tool_continuation_is_never_silently_discarded(streaming):
 
 @pytest.mark.parametrize("boundary", ["frame", "total"])
 def test_stream_limits_close_response_and_return_no_complete_proposal(monkeypatch, boundary):
-    from ralf_agent import model_http
+    from relf_agent import model_http
 
     if boundary == "frame":
         monkeypatch.setattr(model_http, "MAX_FRAME_BYTES", 40)

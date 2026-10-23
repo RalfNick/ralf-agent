@@ -3,14 +3,14 @@ import json
 
 import pytest
 
-from ralf_agent import (
+from relf_agent import (
     ComponentRegistry,
     RuntimeBuilder,
     RuntimeProfile,
     load_catalog,
     recommended_profile,
 )
-from ralf_agent.errors import ValidationError
+from relf_agent.errors import ValidationError
 
 
 def embedding():
@@ -132,7 +132,7 @@ def test_query_knowledge_composes_original_hybrid_and_lexical_without_default_ch
         },
     )
     with RuntimeBuilder(base_dir=tmp_path).build(profile, tmp_path / "runs.sqlite") as instance:
-        from ralf_agent import Document
+        from relf_agent import Document
 
         wrapper = instance.knowledge.retriever
         store = wrapper.retriever.store
@@ -142,7 +142,7 @@ def test_query_knowledge_composes_original_hybrid_and_lexical_without_default_ch
 
 
 def test_later_factory_failure_releases_owned_embedding(tmp_path, monkeypatch):
-    from ralf_agent.semantic_embedding import ManagedEmbeddingProvider
+    from relf_agent.semantic_embedding import ManagedEmbeddingProvider
 
     closed = []
     original = ManagedEmbeddingProvider.aclose
@@ -237,7 +237,7 @@ car="automobile"
 
 
 def test_semantic_reference_order_is_not_overwritten_by_lexical_overlap():
-    from ralf_agent import InMemoryArtifactStore, OrderedReferenceSelector, RelevantDataContext
+    from relf_agent import InMemoryArtifactStore, OrderedReferenceSelector, RelevantDataContext
 
     context = RelevantDataContext(InMemoryArtifactStore(), selector=OrderedReferenceSelector())
     history = [{"role": "system", "content": "Answer"}, {"role": "user", "content": "car"}]

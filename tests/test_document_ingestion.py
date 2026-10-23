@@ -5,22 +5,22 @@ from dataclasses import asdict
 
 import pytest
 
-from ralf_agent import Document, DocumentRecord, Scope
-from ralf_agent.errors import ValidationError
-from ralf_agent.types import digest
+from relf_agent import Document, DocumentRecord, Scope
+from relf_agent.errors import ValidationError
+from relf_agent.types import digest
 
 
 def api():
-    assert importlib.util.find_spec("ralf_agent.ingestion_types"), (
+    assert importlib.util.find_spec("relf_agent.ingestion_types"), (
         "Missing replaceable ingestion DTOs"
     )
-    return importlib.import_module("ralf_agent.ingestion_types")
+    return importlib.import_module("relf_agent.ingestion_types")
 
 
 def components():
     api()
-    return importlib.import_module("ralf_agent.document_parsing"), importlib.import_module(
-        "ralf_agent.chunking"
+    return importlib.import_module("relf_agent.document_parsing"), importlib.import_module(
+        "relf_agent.chunking"
     )
 
 
@@ -75,7 +75,7 @@ def test_default_chunker_preserves_legacy_text_identifiers_and_metadata():
     assert [c.text for c in actual] == ["abcdefgh", "ghijklmn", "mnop"]
     assert [c.chunk_id for c in actual] == [digest(["a", 1, start]) for start in [0, 6, 12]]
     assert [c.metadata for c in actual] == [{"kind": "ops"}] * 3
-    from ralf_agent.retrieval import _make_chunks
+    from relf_agent.retrieval import _make_chunks
 
     assert [asdict(c) for c in actual] == [asdict(c) for c in _make_chunks(record, 8, 2)]
 
@@ -141,7 +141,7 @@ def test_empty_document_has_no_chunks_and_finite_expiry_is_required():
 def test_atomic_prepared_validation_rechecks_all_bounded_fields(damage):
     dto = api()
     parsing, chunking = components()
-    from ralf_agent.types import canonical
+    from relf_agent.types import canonical
 
     source = dto.SourceDocument("a", b"abc")
     parsed = parsing.TextDocumentParser().parse(source)

@@ -8,13 +8,13 @@
 
 Relf-Agent 把模型决策、工具调用、人工审批和业务结果保存为明确的执行步骤，让 Agent 任务在进程重启后继续。模型、工具、上下文、记忆和检索组件可以独立替换，从本地 SQLite 的单 Agent 逐步组合到 Workflow、Plan／Team 与 Temporal 执行。
 
-原项目名为 Ralf-Agent，仓库现为 [RalfNick/relf-agent](https://github.com/RalfNick/relf-agent)。从 `0.1.0a5` 起发行包名为 `relf-agent`；Python 导入仍为 `ralf_agent`，命令仍为 `ralf`。历史 a2／a3／a4 使用 `ralf-agent`，原制品及恢复标识保持不变。详见[名称与兼容边界](https://github.com/RalfNick/relf-agent/blob/main/docs/project-naming.md)。
+原项目名为 Ralf-Agent，仓库现为 [RalfNick/relf-agent](https://github.com/RalfNick/relf-agent)。从 `0.1.0a6` 起发行名、Python 导入与命令统一为 `relf-agent`、`relf_agent`、`relf`；a5已改发行名，但仍使用旧导入和旧命令。历史 a2／a3／a4 使用 `ralf-agent`，原制品及恢复标识保持不变。详见[名称与兼容边界](https://github.com/RalfNick/relf-agent/blob/main/docs/project-naming.md)。
 
 [官网](https://relfagent.com/) · [快速开始](#快速开始) · [文档目录](https://github.com/RalfNick/relf-agent/blob/main/docs/README.md) · [示例](https://github.com/RalfNick/relf-agent/blob/main/examples/README.md) · [贡献指南](https://github.com/RalfNick/relf-agent/blob/main/CONTRIBUTING.md) · [更新记录](https://github.com/RalfNick/relf-agent/blob/main/CHANGELOG.md)
 
-> 当前源码版本为 **0.1.0a5 Alpha**，承接 a4 修复并统一发行名与安装提示，不新增功能。各版本的候选／公开状态、安装入口与验收范围以[发行记录](https://github.com/RalfNick/relf-agent/blob/main/docs/releasing.md)和[a5 说明](https://github.com/RalfNick/relf-agent/blob/main/docs/releases/0.1.0a5.md)为准；下方固定安装示例使用已核验的 **[a2 原包](https://github.com/RalfNick/relf-agent/releases/tag/v0.1.0a2)**。API 与部署能力仍在演进，使用范围见[实现清单](https://github.com/RalfNick/relf-agent/blob/main/docs/implementation-status.md)。默认本地入门无需模型密钥、Redis、Temporal 或 Docker。
+> 当前源码版本为 **0.1.0a6 Alpha**，承接 a5 并统一 Python／CLI 入口，不新增功能。各版本的候选／公开状态、安装入口与验收范围以[发行记录](https://github.com/RalfNick/relf-agent/blob/main/docs/releasing.md)和[a6 说明](https://github.com/RalfNick/relf-agent/blob/main/docs/releases/0.1.0a6.md)为准；原公开历史制品为 **[a2 原包](https://github.com/RalfNick/relf-agent/releases/tag/v0.1.0a2)**。API 与部署能力仍在演进，使用范围见[实现清单](https://github.com/RalfNick/relf-agent/blob/main/docs/implementation-status.md)。默认本地入门无需模型密钥、Redis、Temporal 或 Docker。
 
-> 源码默认分支为 `main`，基于已审核的 `b545aba`；原 `feat/m1-local-runtime` 分支保留，以维持既有包内链接。官网已经上线。a5 制品、平台与公开发行分别验收，当前公开安装仍使用下方 a2 原包。
+> 源码默认分支为 `main`，基于已审核的 `b545aba`；原 `feat/m1-local-runtime` 分支保留，以维持既有包内链接。官网已经上线。a6 制品、平台与公开发行分别验收；原公开 a2 使用旧入口，不与当前源码示例混用。
 
 ## 为什么使用 Relf-Agent
 
@@ -26,21 +26,22 @@ Relf-Agent 把模型决策、工具调用、人工审批和业务结果保存为
 
 ## 快速开始
 
-需要 Python 3.11+，已验收平台见[Alpha说明](https://github.com/RalfNick/relf-agent/blob/main/docs/releases/0.1.0a2.md)。从公开的精确wheel安装：
+需要 Python 3.11+。以下命令在包含 a6 的当前源码目录运行，或先安装经过核对的 a6 本地 wheel；具体原包、平台和公开状态见[安装指南](https://github.com/RalfNick/relf-agent/blob/main/docs/installation.md)。
 
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
-python -m pip install 'https://github.com/RalfNick/relf-agent/releases/download/v0.1.0a2/ralf_agent-0.1.0a2-py3-none-any.whl#sha256=dfac0e38b2a879d8eb0c23dd5889774a0d64860c9ffe1945f9ef945629f95a46'
-ralf --db .ralf/demo.sqlite --format text demo --ticket INC-001
+python -m pip install -e .
+relf --version
+relf --db .ralf/demo.sqlite --format text demo --ticket INC-001
 ```
 
 Demo 使用离线脚本 Provider 和本地测试业务，停在 `waiting_approval`。检查输出中的工具与参数，执行输出给出的批准命令，再执行恢复命令；完成后状态为 `succeeded`。可随时查看原任务：
 
 ```bash
-ralf --db .ralf/demo.sqlite --format text inspect RUN_ID
-ralf --db .ralf/demo.sqlite --format text resume RUN_ID
-ralf --db .ralf/demo.sqlite status RUN_ID
+relf --db .ralf/demo.sqlite --format text inspect RUN_ID
+relf --db .ralf/demo.sqlite --format text resume RUN_ID
+relf --db .ralf/demo.sqlite status RUN_ID
 ```
 
 将 `RUN_ID` 替换为实际值。`--db`、`--factory`、`--format` 是全局参数，放在子命令前；默认输出 JSON。审批回执表示决定已保存，任务结果通过 `resume`／`status` 获取。
@@ -48,10 +49,10 @@ ralf --db .ralf/demo.sqlite status RUN_ID
 创建可编辑的独立工程：
 
 ```bash
-ralf --format text init ../my-agent
+relf --format text init ../my-agent
 cd ../my-agent
 python -m agent_app --ticket INC-001
-ralf --factory agent_app.runtime:create_engine --format text inspect RUN_ID
+relf --factory agent_app.runtime:create_engine --format text inspect RUN_ID
 ```
 
 生成的 `agent_app/runtime.py` 包含 Provider、Python 工具、业务回执和恢复工厂。检查操作后按 `inspect` 输出审批与恢复；自定义工程使用自己的原工厂。完整步骤见[首用教程](https://github.com/RalfNick/relf-agent/blob/main/docs/getting-started.md)，wheel 与可选依赖见[安装指南](https://github.com/RalfNick/relf-agent/blob/main/docs/installation.md)。
@@ -64,7 +65,7 @@ ralf --factory agent_app.runtime:create_engine --format text inspect RUN_ID
 import asyncio
 import os
 
-from ralf_agent import (
+from relf_agent import (
     AgentSpec,
     LocalEngine,
     OpenAIChatProvider,
@@ -128,3 +129,11 @@ Python 工具与配置工厂属于可信宿主代码。沙箱与服务身份需�
 ## 开源协议
 
 Relf-Agent 采用 [Apache License 2.0](https://github.com/RalfNick/relf-agent/blob/main/LICENSE)，第三方归属信息见 [NOTICE](https://github.com/RalfNick/relf-agent/blob/main/NOTICE)。再分发与修改请遵循许可证要求；外部模型服务、模型权重和第三方依赖适用各自的许可或服务条款。贡献许可见 [CONTRIBUTING.md](https://github.com/RalfNick/relf-agent/blob/main/CONTRIBUTING.md#license)。
+
+## 历史公开 a2
+
+原a2继续保留旧导入`ralf_agent`和旧命令`ralf`，使用独立环境与其原教程，不运行上面的a6入口示例。原下载地址与SHA保持：
+
+```bash
+python -m pip install 'https://github.com/RalfNick/relf-agent/releases/download/v0.1.0a2/ralf_agent-0.1.0a2-py3-none-any.whl#sha256=dfac0e38b2a879d8eb0c23dd5889774a0d64860c9ffe1945f9ef945629f95a46'
+```

@@ -5,7 +5,7 @@ from types import SimpleNamespace
 
 import pytest
 
-from ralf_agent import (
+from relf_agent import (
     ComponentRegistry,
     DeploymentAdmissionPolicy,
     ModelResponse,
@@ -15,7 +15,7 @@ from ralf_agent import (
     TemporalRuntimeBuilder,
     ToolRegistry,
 )
-from ralf_agent.errors import ValidationError
+from relf_agent.errors import ValidationError
 
 
 class Provider:
@@ -130,7 +130,7 @@ def test_declared_wrong_policy_result_does_not_silently_disable_admission():
 
 def test_catalog_host_policy_is_never_silently_omitted_and_conflicts_before_io():
     async def run():
-        from ralf_agent import TemporalProfileCatalog
+        from relf_agent import TemporalProfileCatalog
 
         calls = []
         registry = ComponentRegistry()

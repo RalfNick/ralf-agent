@@ -6,11 +6,11 @@ from contextlib import contextmanager
 import httpx
 import pytest
 
-from ralf_agent import AgentSpec, EventCursor, LocalEngine, ModelResponse, Scope, ToolRegistry
-from ralf_agent.a2a import A2AApplication, A2AClient, A2AError
-from ralf_agent.errors import AuthorizationDenied
-from ralf_agent.handoff import SQLiteInbox
-from ralf_agent.storage import SQLiteStore
+from relf_agent import AgentSpec, EventCursor, LocalEngine, ModelResponse, Scope, ToolRegistry
+from relf_agent.a2a import A2AApplication, A2AClient, A2AError
+from relf_agent.errors import AuthorizationDenied
+from relf_agent.handoff import SQLiteInbox
+from relf_agent.storage import SQLiteStore
 from tests.helpers import ScriptedProvider
 
 
@@ -201,7 +201,7 @@ def test_canceling_http_event_read_ends_observation_without_canceling_business(t
     "corrupt", ["gap", "foreign_task", "wrong_cursor", "extra_field", "empty_jump"]
 )
 def test_client_rejects_remote_event_page_without_adopting_invalid_cursor(corrupt):
-    from ralf_agent import EventEnvelope, RunEvent
+    from relf_agent import EventEnvelope, RunEvent
 
     async def run():
         start = EventCursor(Scope(), "task")
@@ -283,7 +283,7 @@ def test_byte_limited_pages_resume_at_last_returned_event(tmp_path):
                     start.after + 3,
                 ]
                 engine.store.emit(task["id"], "too_large", {"value": "x" * 5000})
-                from ralf_agent.a2a import A2ARemoteError
+                from relf_agent.a2a import A2ARemoteError
 
                 with pytest.raises(A2ARemoteError) as large:
                     await client.get_events(task["id"], cursor=rest["cursor_token"])

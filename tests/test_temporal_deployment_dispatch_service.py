@@ -14,7 +14,7 @@ from datetime import timedelta
 
 import pytest
 
-from ralf_agent import (
+from relf_agent import (
     AgentSpec,
     DynamicWorkflowSpec,
     GraphNode,
@@ -25,14 +25,14 @@ from ralf_agent import (
     ValueRef,
     WorkflowSpec,
 )
-from ralf_agent.governance import DeploymentAdmissionPolicy
-from ralf_agent.temporal import build_temporal_worker, replay_temporal_history
-from ralf_agent.temporal_activities import TemporalRuntime
-from ralf_agent.temporal_deployment_admission import root_run_id
-from ralf_agent.temporal_parent_state import PARENT_WORKFLOW_NAME
-from ralf_agent.temporal_state import WORKFLOW_NAME
-from ralf_agent.tools import ToolRegistry, ToolSpec
-from ralf_agent.types import canonical, digest, submission_request
+from relf_agent.governance import DeploymentAdmissionPolicy
+from relf_agent.temporal import build_temporal_worker, replay_temporal_history
+from relf_agent.temporal_activities import TemporalRuntime
+from relf_agent.temporal_deployment_admission import root_run_id
+from relf_agent.temporal_parent_state import PARENT_WORKFLOW_NAME
+from relf_agent.temporal_state import WORKFLOW_NAME
+from relf_agent.tools import ToolRegistry, ToolSpec
+from relf_agent.types import canonical, digest, submission_request
 
 from .test_temporal_deployment_admission_service import (
     _clients,
@@ -193,7 +193,7 @@ class DispatchSystem:
         return worker
 
     async def reserve(self, spec, value, *, command_id="first"):
-        from ralf_agent.temporal_bindings import normalize_request
+        from relf_agent.temporal_bindings import normalize_request
 
         # SDK JSON encodes AgentSpec's Python tuples as arrays. Freeze that same
         # business request representation before reservation and acceptance.
@@ -425,7 +425,7 @@ def test_actual_selected_per_agent_rag_and_managed_data_preserve_original_stage_
     async def scenario():
         import sqlite3
 
-        from ralf_agent import (
+        from relf_agent import (
             AgentBindingDescriptor,
             BindingCatalog,
             BindingSelection,

@@ -19,7 +19,7 @@ import asyncio
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
-from ralf_agent import (
+from relf_agent import (
     AgentBindingDescriptor,
     AgentDefinition,
     AgentSpec,
@@ -102,7 +102,7 @@ import asyncio
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
-from ralf_agent import Scope, TemporalProfile, TemporalRuntimeBuilder
+from relf_agent import Scope, TemporalProfile, TemporalRuntimeBuilder
 
 
 async def main():
@@ -173,7 +173,7 @@ it demonstrates the port and borrowing behavior, not a remote storage implementa
 
 ```python
 import asyncio
-from ralf_agent import ArtifactBindingResource, InMemoryArtifactStore, Scope
+from relf_agent import ArtifactBindingResource, InMemoryArtifactStore, Scope
 
 
 class CustomSyncStore:
@@ -227,7 +227,7 @@ import asyncio
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
-from ralf_agent import (
+from relf_agent import (
     BindingSelection,
     ComponentRegistry,
     InMemoryArtifactStore,

@@ -4,7 +4,7 @@ from dataclasses import asdict
 
 import pytest
 
-from ralf_agent import (
+from relf_agent import (
     AgentBindingDescriptor,
     AgentDefinition,
     AgentSpec,
@@ -17,10 +17,10 @@ from ralf_agent import (
     Scope,
     ToolRegistry,
 )
-from ralf_agent.temporal_activities import TemporalRuntime
-from ralf_agent.temporal_bindings import normalize_request
-from ralf_agent.temporal_state import TemporalRunState
-from ralf_agent.types import submission_request
+from relf_agent.temporal_activities import TemporalRuntime
+from relf_agent.temporal_bindings import normalize_request
+from relf_agent.temporal_state import TemporalRunState
+from relf_agent.types import submission_request
 from tests.test_temporal_memory_bindings import grant
 
 
@@ -261,7 +261,7 @@ def test_lazy_worker_result_is_refused(kind):
 
 
 def test_sequence_input_is_previous_normalized_result_and_receipts_are_node_scoped():
-    from ralf_agent import ToolCall, ToolRegistry, ToolSpec, WorkflowSpec
+    from relf_agent import ToolCall, ToolRegistry, ToolSpec, WorkflowSpec
 
     class Calls(Provider):
         async def complete(self, messages, tools):
@@ -317,7 +317,7 @@ def test_sequence_input_is_previous_normalized_result_and_receipts_are_node_scop
 
 
 def test_tool_receipt_verifier_retries_then_requires_original_approval_and_result():
-    from ralf_agent import ToolCall, ToolReceiptVerifier, ToolSpec
+    from relf_agent import ToolCall, ToolReceiptVerifier, ToolSpec
 
     class Calls(Provider):
         async def complete(self, messages, tools):
@@ -390,8 +390,8 @@ def test_tool_receipt_verifier_retries_then_requires_original_approval_and_resul
 
 
 def test_invalid_protocol_and_foreign_binding_refused_before_execution():
-    from ralf_agent.errors import AuthorizationDenied, RalfError
-    from ralf_agent.temporal_state import validate_manifest
+    from relf_agent.errors import AuthorizationDenied, RalfError
+    from relf_agent.temporal_state import validate_manifest
 
     runtime, state, _, _ = setup(selected=Verifier())
     for mutation in ("protocol", "registration"):
@@ -415,8 +415,8 @@ def test_invalid_protocol_and_foreign_binding_refused_before_execution():
 
 @pytest.mark.parametrize("budgeted", [False, True])
 def test_managed_context_keeps_latest_completion_feedback_and_following_tool_group(budgeted):
-    from ralf_agent import BudgetedContextAssembler, ContextAssembler
-    from ralf_agent.errors import ValidationError
+    from relf_agent import BudgetedContextAssembler, ContextAssembler
+    from relf_agent.errors import ValidationError
 
     history = [
         {"role": "system", "content": "answer"},
@@ -445,7 +445,7 @@ def test_managed_context_keeps_latest_completion_feedback_and_following_tool_gro
 
 
 def test_local_completion_retry_works_with_managed_default_context(tmp_path):
-    from ralf_agent import LocalEngine, ManagedContextPipeline, SQLiteStore
+    from relf_agent import LocalEngine, ManagedContextPipeline, SQLiteStore
 
     class Once(Verifier):
         def verify(self, request):

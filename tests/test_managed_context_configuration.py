@@ -3,8 +3,8 @@ import json
 
 import pytest
 
-from ralf_agent import AgentSpec, RuntimeBuilder, load_catalog
-from ralf_agent.errors import ValidationError
+from relf_agent import AgentSpec, RuntimeBuilder, load_catalog
+from relf_agent.errors import ValidationError
 from tests.test_context_preparation import Provider, spec, tools
 
 
@@ -58,7 +58,7 @@ mode = "model"
 counter = "utf8-estimate"
 max_units = 10000
 """)
-    from ralf_agent import ComponentRegistry
+    from relf_agent import ComponentRegistry
 
     registry = ComponentRegistry()
     registry.register("provider", "fixture", lambda c, ctx: Provider())
@@ -107,7 +107,7 @@ max_units = 10000
     ],
 )
 def test_invalid_factory_is_rejected_before_store_creation(tmp_path, config):
-    from ralf_agent import RuntimeProfile
+    from relf_agent import RuntimeProfile
 
     selected = RuntimeProfile(
         "app",
@@ -122,7 +122,7 @@ def test_invalid_factory_is_rejected_before_store_creation(tmp_path, config):
 
 
 def test_export_is_additive_and_default_factory_has_no_extra_model_io(tmp_path):
-    from ralf_agent import ManagedContextPipeline, RuntimeProfile
+    from relf_agent import ManagedContextPipeline, RuntimeProfile
 
     assert ManagedContextPipeline().identity["mode"] == "excerpt"
     p = RuntimeProfile(
@@ -141,7 +141,7 @@ def test_sdk_version_matches_package_declaration():
     import tomllib
     from pathlib import Path
 
-    from ralf_agent import __version__
+    from relf_agent import __version__
 
     assert (
         __version__

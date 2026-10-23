@@ -7,9 +7,9 @@ import uuid
 
 import pytest
 
-import ralf_agent as r
-from ralf_agent.temporal import TemporalEngine, build_temporal_worker, replay_temporal_history
-from ralf_agent.temporal_activities import TemporalRuntime
+import relf_agent as r
+from relf_agent.temporal import TemporalEngine, build_temporal_worker, replay_temporal_history
+from relf_agent.temporal_activities import TemporalRuntime
 
 from .test_artifact_binding_execution import Reader, definition
 

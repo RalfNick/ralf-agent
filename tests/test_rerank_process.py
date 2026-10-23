@@ -5,7 +5,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-import ralf_agent
+import relf_agent
 from tests.test_rerank_integration import rerank_service  # noqa: F401
 
 
@@ -17,7 +17,7 @@ def test_received_model_response_reuses_rerank_snapshot_through_process_exit_and
     env = {
         "PATH": os.defpath,
         "PYTHONPATH": os.pathsep.join(
-            [str(Path(ralf_agent.__file__).parents[1]), str(Path(__file__).parents[1])]
+            [str(Path(relf_agent.__file__).parents[1]), str(Path(__file__).parents[1])]
         ),
     }
     for mode, expected in (("crash", 77), ("waiting", 0), ("finish", 0)):

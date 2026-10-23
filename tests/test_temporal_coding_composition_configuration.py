@@ -6,12 +6,12 @@ from dataclasses import asdict
 
 import pytest
 
-from ralf_agent import AgentSpec, BindingSelection, Scope, TemporalProfile, TemporalRuntime
-from ralf_agent.binding_definitions import BoundDefinition
-from ralf_agent.binding_types import AgentBindingDescriptor
-from ralf_agent.errors import AuthorizationDenied, DefinitionMismatch, ValidationError
-from ralf_agent.temporal_bindings import normalize_request, project_child
-from ralf_agent.types import digest, submission_request
+from relf_agent import AgentSpec, BindingSelection, Scope, TemporalProfile, TemporalRuntime
+from relf_agent.binding_definitions import BoundDefinition
+from relf_agent.binding_types import AgentBindingDescriptor
+from relf_agent.errors import AuthorizationDenied, DefinitionMismatch, ValidationError
+from relf_agent.temporal_bindings import normalize_request, project_child
+from relf_agent.types import digest, submission_request
 from tests.test_sandbox_bindings import registered as registered
 from tests.test_temporal_coding_configuration import manifest as leaf_manifest
 from tests.test_temporal_engine import Provider
@@ -24,8 +24,8 @@ def profile(execution=None):
 
 
 def protocol():
-    assert importlib.util.find_spec("ralf_agent.temporal_coding_composition_protocol") is not None
-    from ralf_agent import temporal_coding_composition_protocol
+    assert importlib.util.find_spec("relf_agent.temporal_coding_composition_protocol") is not None
+    from relf_agent import temporal_coding_composition_protocol
 
     return temporal_coding_composition_protocol
 
@@ -66,7 +66,7 @@ def test_sdk_composition_requires_coding_before_resource_access():
 
 
 def test_disabled_sdk_composition_keeps_original_default_release():
-    from ralf_agent import ToolRegistry
+    from relf_agent import ToolRegistry
 
     ordinary = TemporalRuntime(providers={"default": Provider()}, tools=ToolRegistry())
     disabled = TemporalRuntime(
@@ -96,8 +96,8 @@ def test_selected_sdk_requires_original_execution_identity_before_resource_acces
 
 
 def test_selected_builder_rejects_missing_sdk_identity_before_any_factory(monkeypatch, tmp_path):
-    from ralf_agent import TemporalRuntimeBuilder, ToolRegistry
-    from ralf_agent.runtime_builder import ComponentRegistry
+    from relf_agent import TemporalRuntimeBuilder, ToolRegistry
+    from relf_agent.runtime_builder import ComponentRegistry
 
     hide_original_execution_field(monkeypatch)
     acquired = []
@@ -126,8 +126,8 @@ def test_selected_builder_rejects_missing_sdk_identity_before_any_factory(monkey
 
 
 def test_profile_declaration_and_unselected_runtime_do_not_require_new_sdk_identity(monkeypatch):
-    from ralf_agent import ToolRegistry
-    from ralf_agent.temporal_coding_factories import preflight_coding_references
+    from relf_agent import ToolRegistry
+    from relf_agent.temporal_coding_factories import preflight_coding_references
 
     expected = TemporalRuntime(providers={"default": Provider()}, tools=ToolRegistry()).manifest
     hide_original_execution_field(monkeypatch)
@@ -161,7 +161,7 @@ def test_selected_runtime_registration_rechecks_sdk_before_tool_registry_access(
 def test_missing_optional_sdk_only_blocks_selected_composition(monkeypatch):
     import builtins
 
-    from ralf_agent import ToolRegistry
+    from relf_agent import ToolRegistry
 
     original = builtins.__import__
 
@@ -182,7 +182,7 @@ def test_missing_optional_sdk_only_blocks_selected_composition(monkeypatch):
 
 
 def graph_request(*, tools=("coding",), bindings=None, concurrency=1):
-    from ralf_agent import GraphNode, GraphWorkflowSpec
+    from relf_agent import GraphNode, GraphWorkflowSpec
 
     graph = GraphWorkflowSpec(
         "serial",
@@ -222,7 +222,7 @@ def test_finite_gate_disabled_runner_never_grants_selected_coding():
 
 
 def test_coding_protocol_23_never_accepts_missing_composition_marker():
-    from ralf_agent.temporal_coding_protocol import validate_protocol
+    from relf_agent.temporal_coding_protocol import validate_protocol
 
     value = manifest()
     value["binding_protocol"] = 23
@@ -251,7 +251,7 @@ def test_composition_marker_is_refused_on_current_leaf_22_release():
     ],
 )
 def test_root_guard_only_records_selected_original_graph_admission(version, kind, linked, expected):
-    from ralf_agent.temporal import TemporalEngine
+    from relf_agent.temporal import TemporalEngine
 
     requests = []
 
@@ -302,7 +302,7 @@ def test_root_guard_only_records_selected_original_graph_admission(version, kind
 def test_composition_joint_version_retains_original_optional_validation(kind, registered):
     import copy
 
-    from ralf_agent import (
+    from relf_agent import (
         temporal_artifact_bindings,
         temporal_context_read_protocol,
         temporal_decision_state,
@@ -310,7 +310,7 @@ def test_composition_joint_version_retains_original_optional_validation(kind, re
         temporal_tool_execution,
         temporal_user_input,
     )
-    from ralf_agent.binding_sandbox import validate_sandbox_protocol
+    from relf_agent.binding_sandbox import validate_sandbox_protocol
     from tests.test_sandbox_temporal_protocol import runtime_for
     from tests.test_temporal_coding_joint_protocols import candidate
 
@@ -354,7 +354,7 @@ def composition_manifest():
 def test_composition_history_validation_checks_complete_pure_groups():
     import copy
 
-    from ralf_agent.temporal_coding_protocol import validate_protocol
+    from relf_agent.temporal_coding_protocol import validate_protocol
 
     value = composition_manifest()
     validate_protocol(value)
@@ -421,7 +421,7 @@ def test_composition_history_pins_the_exact_worker_callable_inventory(monkeypatc
 
 @pytest.mark.parametrize("helper", ["_link_fields", "_view_fields"])
 def test_composition_history_pins_complete_link_and_stop_proof_shapes(monkeypatch, helper):
-    from ralf_agent import temporal_coding_composition_state
+    from relf_agent import temporal_coding_composition_state
 
     value = composition_manifest()
 
@@ -434,7 +434,7 @@ def test_composition_history_pins_complete_link_and_stop_proof_shapes(monkeypatc
 
 
 def test_composition_capability_requires_explicit_marker():
-    from ralf_agent.temporal_bindings import capabilities
+    from relf_agent.temporal_bindings import capabilities
 
     assert "coding_composition" not in capabilities(manifest())
     assert (
@@ -444,7 +444,7 @@ def test_composition_capability_requires_explicit_marker():
 
 
 def test_composition_capability_refuses_an_unverified_publication():
-    from ralf_agent.temporal_bindings import capabilities
+    from relf_agent.temporal_bindings import capabilities
 
     value = manifest()
     value.update(binding_protocol=23, coding_composition_protocol={})
@@ -453,7 +453,7 @@ def test_composition_capability_refuses_an_unverified_publication():
 
 
 def test_selected_engine_exposes_only_its_finite_original_topology():
-    from ralf_agent.temporal import TemporalEngine
+    from relf_agent.temporal import TemporalEngine
 
     engine = object.__new__(TemporalEngine)
     engine._release = {**composition_manifest(), "orchestration": {"version": "1"}}
@@ -473,7 +473,7 @@ def test_selected_engine_exposes_only_its_finite_original_topology():
 
 
 def test_original_engine_topology_exposure_is_preserved():
-    from ralf_agent.temporal import TemporalEngine
+    from relf_agent.temporal import TemporalEngine
 
     engine = object.__new__(TemporalEngine)
     engine._release = {**manifest(), "orchestration": {"version": "1"}}
@@ -488,9 +488,9 @@ def test_original_engine_topology_exposure_is_preserved():
 
 
 def test_owned_submit_keeps_original_submission_under_mechanical_owner():
-    from ralf_agent import ToolRegistry
-    from ralf_agent.temporal import TemporalEngine
-    from ralf_agent.types import CommandReceipt
+    from relf_agent import ToolRegistry
+    from relf_agent.temporal import TemporalEngine
+    from relf_agent.types import CommandReceipt
 
     metadata = []
 
@@ -543,7 +543,7 @@ def test_owned_submit_keeps_original_submission_under_mechanical_owner():
 
 
 def test_closed_owned_submit_refuses_before_encoding_or_owner_permission():
-    from ralf_agent.temporal import TemporalEngine
+    from relf_agent.temporal import TemporalEngine
 
     engine = object.__new__(TemporalEngine)
     engine._closed, engine._coding_submission_owner = True, object()
@@ -552,7 +552,7 @@ def test_closed_owned_submit_refuses_before_encoding_or_owner_permission():
 
 
 def test_serial_graph_distinct_original_leaf_resources_do_not_conflict():
-    from ralf_agent import GraphNode, GraphWorkflowSpec
+    from relf_agent import GraphNode, GraphWorkflowSpec
 
     request = submission_request(
         GraphWorkflowSpec(
@@ -600,9 +600,9 @@ def test_selected_composition_refuses_missing_direct_agent_members(kind):
 def test_actual_factory_publication_keeps_leaf_group_and_pins_new_worker_helpers(
     tmp_path, monkeypatch, changed_helper
 ):
-    from ralf_agent.runtime_lifecycle import BuildContext
-    from ralf_agent.temporal_coding_factories import build
-    from ralf_agent.temporal_journal import PostgresEffectJournal
+    from relf_agent.runtime_lifecycle import BuildContext
+    from relf_agent.temporal_coding_factories import build
+    from relf_agent.temporal_journal import PostgresEffectJournal
     from tests.test_temporal_coding_factories import Connection, entry, publish_initialization
 
     events = []
@@ -644,9 +644,9 @@ def test_actual_factory_publication_keeps_leaf_group_and_pins_new_worker_helpers
                 setattr(selected, field, True)
             # A substituted shutdown implementation has valid syntax but cannot
             # acquire permission on this actual registered Worker.
-            from ralf_agent import temporal_coding_composition_control
-            from ralf_agent.temporal_assembly_lifecycle import TemporalRuntimeAssembly
-            from ralf_agent.temporal_parent_workflow import TemporalParentWorkflow
+            from relf_agent import temporal_coding_composition_control
+            from relf_agent.temporal_assembly_lifecycle import TemporalRuntimeAssembly
+            from relf_agent.temporal_parent_workflow import TemporalParentWorkflow
 
             async def foreign_close(runtime, *, client, scope):
                 return None

@@ -7,10 +7,10 @@ import sys
 from dataclasses import asdict
 from pathlib import Path
 
-import ralf_agent as r
-from ralf_agent.governance import LocalExecutionPolicy
-from ralf_agent.runtime_builder import RuntimeBuilder
-from ralf_agent.runtime_config import load_catalog
+import relf_agent as r
+from relf_agent.governance import LocalExecutionPolicy
+from relf_agent.runtime_builder import RuntimeBuilder
+from relf_agent.runtime_config import load_catalog
 
 PRODUCT_FILE = str(Path(r.__file__).resolve())
 

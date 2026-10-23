@@ -7,10 +7,10 @@ from pathlib import Path
 
 import httpx
 
-from ralf_agent import AgentSpec, CompleteModelHistory, GraphNode, GraphWorkflowSpec, ToolRegistry
-from ralf_agent.temporal import build_temporal_worker
-from ralf_agent.temporal_activities import TemporalRuntime
-from ralf_agent.types import digest
+from relf_agent import AgentSpec, CompleteModelHistory, GraphNode, GraphWorkflowSpec, ToolRegistry
+from relf_agent.temporal import build_temporal_worker
+from relf_agent.temporal_activities import TemporalRuntime
+from relf_agent.types import digest
 
 RAW_ARGUMENTS = ' \n { "quantity" : 3 } \t '
 NATIVE_MESSAGE = {
@@ -33,7 +33,7 @@ FINAL_MESSAGE = {
 
 
 def runtime(root, kind="native"):
-    from ralf_agent.deepseek_thinking import DeepSeekThinkingProvider
+    from relf_agent.deepseek_thinking import DeepSeekThinkingProvider
 
     root = Path(root)
 

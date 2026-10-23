@@ -12,9 +12,9 @@ from pathlib import Path
 
 import pytest
 
-from ralf_agent import RunRef, Runtime, Scope
-from ralf_agent.temporal import TemporalEngine, replay_temporal_history
-from ralf_agent.temporal_session_state import workflow_id
+from relf_agent import RunRef, Runtime, Scope
+from relf_agent.temporal import TemporalEngine, replay_temporal_history
+from relf_agent.temporal_session_state import workflow_id
 from tests.temporal_responses_reasoning_worker import FINAL_OUTPUT, NATIVE_OUTPUT, runtime
 
 pytestmark = pytest.mark.skipif(
@@ -39,7 +39,7 @@ def test_final_session_receipt_recovers_without_dispatch_and_turn_two_echoes_ori
 async def recover(root, kind, window):
     from temporalio.client import Client
 
-    import ralf_agent
+    import relf_agent
 
     address, session = os.environ["RALF_TEST_TEMPORAL_ADDRESS"], window == "final-session"
     client = await Client.connect(address)
@@ -68,7 +68,7 @@ async def recover(root, kind, window):
         environment = {
             "PATH": os.environ.get("PATH", "/usr/bin:/bin"),
             "PYTHONPATH": os.pathsep.join(
-                [str(Path(ralf_agent.__file__).parents[1]), str(Path(__file__).parents[1])]
+                [str(Path(relf_agent.__file__).parents[1]), str(Path(__file__).parents[1])]
             ),
             "RALF_TEST_TEMPORAL_ADDRESS": address,
             "RALF_TEST_TEMPORAL_QUEUE": queue,

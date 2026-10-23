@@ -9,7 +9,7 @@ Session 保存后，自动提炼宿主允许的结果字段。默认关闭；原
 来源、提案、写入意图、回执和恢复，没有额外执行权威或后台任务。
 
 ```python
-from ralf_agent import (
+from relf_agent import (
     AgentSpec,
     LocalEngine,
     ManagedMemoryPolicy,

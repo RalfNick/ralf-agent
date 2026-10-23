@@ -7,7 +7,7 @@ session_writes=True)` 显式启用 tree-v1／save-v2。不注册拓扑时保留�
 已有真实 Temporal Service／Client 是前提；离线原型或接口声明不代表分布式验收。
 
 ```python
-from ralf_agent import (
+from relf_agent import (
     AgentSpec,
     CompositeSessionTopology,
     GraphNode,
@@ -21,7 +21,7 @@ from ralf_agent import (
     ToolRegistry,
     build_temporal_worker,
 )
-from ralf_agent.runtime_builder import EchoProvider
+from relf_agent.runtime_builder import EchoProvider
 
 
 async def example(client):

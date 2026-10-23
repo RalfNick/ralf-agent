@@ -6,14 +6,14 @@ import time
 
 import pytest
 
-from ralf_agent import Chunk, RetrievalQuery, RetrievalResult, RetrievedChunk, Scope
-from ralf_agent.errors import AuthorizationDenied, DefinitionMismatch, ValidationError
-from ralf_agent.types import canonical
+from relf_agent import Chunk, RetrievalQuery, RetrievalResult, RetrievedChunk, Scope
+from relf_agent.errors import AuthorizationDenied, DefinitionMismatch, ValidationError
+from relf_agent.types import canonical
 
 
 def contract_api():
     try:
-        return importlib.import_module("ralf_agent.knowledge_adapter_contract")
+        return importlib.import_module("relf_agent.knowledge_adapter_contract")
     except ModuleNotFoundError:
         pytest.fail("The installed SDK has no KnowledgeRetriever contract cases")
 
@@ -270,7 +270,7 @@ def test_direct_borrowed_adapter_is_not_closed(tmp_path):
 
 def test_cleanup_failure_is_not_a_pass_and_private_exception_is_redacted(tmp_path):
     api = contract_api()
-    types = importlib.import_module("ralf_agent.adapter_contract_types")
+    types = importlib.import_module("relf_agent.adapter_contract_types")
     fixture = ExternalFixture(fail_close=True)
 
     async def run():
@@ -328,7 +328,7 @@ def test_query_and_system_source_strings_are_not_disclosed_reference_evidence(tm
 @pytest.mark.parametrize("changed", ["metadata", "scope", "digest", "version", "expiry"])
 def test_consumer_requires_exact_original_reference_provenance(changed, tmp_path):
     api = contract_api()
-    from ralf_agent import KnowledgeContext
+    from relf_agent import KnowledgeContext
 
     fixture = ExternalFixture()
     session = fixture.prepare("K12", tmp_path)
@@ -401,7 +401,7 @@ def test_repeated_observer_cancellation_does_not_close_before_real_retrieval(tmp
 
 def test_cleanup_retry_does_not_repeat_already_closed_resources(tmp_path):
     api = contract_api()
-    types = importlib.import_module("ralf_agent.adapter_contract_types")
+    types = importlib.import_module("relf_agent.adapter_contract_types")
     fixture = ExternalFixture(fail_close=True)
     already_closed = Source()
     original_prepare = fixture.prepare
@@ -462,8 +462,8 @@ def test_cancelled_local_context_read_uses_original_run_cancel_before_provider(
     tmp_path, monkeypatch
 ):
     api = contract_api()
-    from ralf_agent import engine as engine_module
-    from ralf_agent.runtime_router import SQLiteRunReader
+    from relf_agent import engine as engine_module
+    from relf_agent.runtime_router import SQLiteRunReader
 
     handles = []
 
@@ -521,7 +521,7 @@ def test_cancelled_local_context_read_uses_original_run_cancel_before_provider(
 @pytest.mark.parametrize("failure", ["raise", "non-none", "generator", "coroutine"])
 def test_failed_release_retains_live_call_and_original_owner_until_cleanup_retry(failure, tmp_path):
     api = contract_api()
-    types = importlib.import_module("ralf_agent.adapter_contract_types")
+    types = importlib.import_module("relf_agent.adapter_contract_types")
     fixture = ExternalFixture()
     original_prepare = fixture.prepare
     enabled = True

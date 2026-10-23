@@ -6,10 +6,10 @@ from types import SimpleNamespace
 
 import pytest
 
-from ralf_agent import ComponentRegistry, TemporalRuntimeBuilder
-from ralf_agent.errors import CloseIncomplete, DefinitionMismatch
-from ralf_agent.runtime_builder import EchoProvider
-from ralf_agent.temporal_state import COMMAND_REGISTRY_NAME
+from relf_agent import ComponentRegistry, TemporalRuntimeBuilder
+from relf_agent.errors import CloseIncomplete, DefinitionMismatch
+from relf_agent.runtime_builder import EchoProvider
+from relf_agent.temporal_state import COMMAND_REGISTRY_NAME
 
 from .test_temporal_catalog_assembly import catalog
 
@@ -75,8 +75,8 @@ def sdk(monkeypatch):
     async def namespace(client):
         return "namespace-uuid"
 
-    monkeypatch.setattr("ralf_agent.temporal.build_temporal_worker", worker)
-    monkeypatch.setattr("ralf_agent.temporal_session_activities.namespace_id", namespace)
+    monkeypatch.setattr("relf_agent.temporal.build_temporal_worker", worker)
+    monkeypatch.setattr("relf_agent.temporal_session_activities.namespace_id", namespace)
     return SimpleNamespace(client=Client(), events=events, workers=workers)
 
 
@@ -173,7 +173,7 @@ def test_namespace_change_during_startup_refuses_before_worker(tmp_path, sdk, mo
         client.namespace = "changed"
         return "namespace-uuid"
 
-    monkeypatch.setattr("ralf_agent.temporal_session_activities.namespace_id", namespace)
+    monkeypatch.setattr("relf_agent.temporal_session_activities.namespace_id", namespace)
 
     async def run():
         host = await TemporalRuntimeBuilder(base_dir=tmp_path).abuild_catalog(catalog())

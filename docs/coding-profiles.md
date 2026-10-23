@@ -50,7 +50,7 @@ Runner 根目录必须存在、属于当前用户、权限为 `0700`，且不是
 ```python
 import asyncio
 
-from ralf_agent import (
+from relf_agent import (
     BindingSelection, RuntimeBuilder, RuntimeProfile, Scope,
 )
 
@@ -257,7 +257,7 @@ adapter = "registered-tool"
 name = "coding_b"
 ```
 
-从 `ralf_agent.runtime_config` 导入 `load_catalog`。两种文件均通过 `load_catalog("runtime.json").default` 或
+从 `relf_agent.runtime_config` 导入 `load_catalog`。两种文件均通过 `load_catalog("runtime.json").default` 或
 `load_catalog("runtime.toml").default` 取得 Profile，再调用
 `await RuntimeBuilder().abuild(profile, db_path)`。单 Runner 也可把一项的全部字段直接
 放进 `codex-coding` 的 `config`，但不能混用这种形式与 `tools` 数组。
@@ -273,7 +273,7 @@ name = "coding_b"
 `submit → drive → approve → drive` 流程，不能直接调用 handler 或 Runner 来授予执行权。
 
 ```python
-from ralf_agent import (
+from relf_agent import (
     AgentBindingDescriptor, AgentDefinition, AgentSpec,
     BindingSelection, BoundDefinition, WorkflowSpec,
 )
@@ -321,12 +321,12 @@ handle，在修复原资源依赖后、同一事件循环中再次 `await runtim
 不能用新 Runner、重建环境或另一个 Run 代替原停止处理。
 
 构造中途失败或取消也按原资源账本清理已取得的资源。若清理失败，
-`ralf_agent.runtime_builder.RuntimeBuildError` 的 `cleanup` 保存重试 handle。
+`relf_agent.runtime_builder.RuntimeBuildError` 的 `cleanup` 保存重试 handle。
 下面的片段放在调用方的异步函数内：
 
 ```python
-from ralf_agent import RuntimeBuilder
-from ralf_agent.runtime_builder import RuntimeBuildError
+from relf_agent import RuntimeBuilder
+from relf_agent.runtime_builder import RuntimeBuildError
 
 builder = RuntimeBuilder()
 db_path = "/private/tmp/ralf-coding-profile/runs.sqlite"

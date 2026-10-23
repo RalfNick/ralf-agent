@@ -6,7 +6,7 @@ import uuid
 
 import pytest
 
-from ralf_agent import (
+from relf_agent import (
     AgentSpec,
     DynamicWorkflowSpec,
     GraphNode,
@@ -20,9 +20,9 @@ from ralf_agent import (
     TeamSpec,
     ToolRegistry,
 )
-from ralf_agent.temporal import TemporalEngine, build_temporal_worker, replay_temporal_history
-from ralf_agent.temporal_activities import TemporalRuntime
-from ralf_agent.temporal_session_topology import CompositeSessionTopology
+from relf_agent.temporal import TemporalEngine, build_temporal_worker, replay_temporal_history
+from relf_agent.temporal_activities import TemporalRuntime
+from relf_agent.temporal_session_topology import CompositeSessionTopology
 
 pytestmark = pytest.mark.skipif(
     not os.getenv("RALF_TEST_TEMPORAL_ADDRESS"), reason="requires actual Temporal Service"
@@ -127,8 +127,8 @@ def test_cancelled_parent_retains_actual_root_handler_until_late_receipt(tmp_pat
 
         from temporalio.client import Client
 
-        from ralf_agent import InMemoryMemory, ThreadedMemoryAdapter
-        from ralf_agent.errors import CloseIncomplete, SessionBusy
+        from relf_agent import InMemoryMemory, ThreadedMemoryAdapter
+        from relf_agent.errors import CloseIncomplete, SessionBusy
 
         committed, finish = threading.Event(), threading.Event()
 
@@ -212,7 +212,7 @@ def test_additional_original_tree_execution_shapes(tmp_path, kind):
     async def run():
         from temporalio.client import Client
 
-        from ralf_agent import DAGNode, DAGProposal, ValueRef, WorkflowSpec
+        from relf_agent import DAGNode, DAGProposal, ValueRef, WorkflowSpec
 
         class PlanningProvider(Provider):
             identity = {"kind": "tree-shapes-service", "version": "1"}
@@ -316,8 +316,8 @@ def test_root_read_timeout_owns_actual_thread_and_turn_until_end(tmp_path):
 
         from temporalio.client import Client
 
-        from ralf_agent import InMemoryMemory, ThreadedMemoryAdapter
-        from ralf_agent.errors import CloseIncomplete, SessionBusy
+        from relf_agent import InMemoryMemory, ThreadedMemoryAdapter
+        from relf_agent.errors import CloseIncomplete, SessionBusy
 
         started, finish, stopped = threading.Event(), threading.Event(), threading.Event()
 

@@ -5,7 +5,7 @@ import os
 import sqlite3
 from pathlib import Path
 
-from ralf_agent import (
+from relf_agent import (
     AgentBindingDescriptor,
     AgentDefinition,
     AgentSpec,
@@ -26,8 +26,8 @@ from ralf_agent import (
     ToolRegistry,
     WorkflowSpec,
 )
-from ralf_agent.temporal import build_temporal_worker
-from ralf_agent.temporal_activities import TemporalRuntime
+from relf_agent.temporal import build_temporal_worker
+from relf_agent.temporal_activities import TemporalRuntime
 
 
 def runtime(root, queue):
@@ -68,7 +68,7 @@ def runtime(root, queue):
         async def put_fact(self, *args, **kwargs):
             if os.getenv("RALF_MEMORY_MODE") == "no-fact":
                 audit("dispatch", args[1])
-                from ralf_agent.errors import MemoryBackendError
+                from relf_agent.errors import MemoryBackendError
 
                 raise MemoryBackendError("not visible yet")
             result = super().put_fact(*args, **kwargs)
@@ -76,7 +76,7 @@ def runtime(root, queue):
             if os.getenv("RALF_MEMORY_MODE") == "cas-active":
                 (root / "cas-ready").touch()
                 await asyncio.Event().wait()
-            from ralf_agent.errors import MemoryBackendError
+            from relf_agent.errors import MemoryBackendError
 
             if os.getenv("RALF_MEMORY_WINDOW") == "cas":
                 raise MemoryBackendError("lost CAS acknowledgement")

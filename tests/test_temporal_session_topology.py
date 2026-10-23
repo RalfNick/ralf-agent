@@ -4,9 +4,9 @@ from dataclasses import replace
 
 import pytest
 
-from ralf_agent import SessionKey, SessionRef
-from ralf_agent.errors import DefinitionMismatch, ValidationError
-from ralf_agent.types import digest
+from relf_agent import SessionKey, SessionRef
+from relf_agent.errors import DefinitionMismatch, ValidationError
+from relf_agent.types import digest
 
 
 def root():
@@ -15,7 +15,7 @@ def root():
 
 
 def topology():
-    from ralf_agent.temporal_session_topology import CompositeSessionTopology
+    from relf_agent.temporal_session_topology import CompositeSessionTopology
 
     return CompositeSessionTopology()
 
@@ -61,8 +61,8 @@ def test_invalid_member_paths_are_rejected(path):
 
 
 def test_native_topology_keeps_existing_private_and_root_addresses():
-    from ralf_agent.temporal_session_data_state import private_address, session_storage_key
-    from ralf_agent.temporal_session_topology import NativeSessionTopology
+    from relf_agent.temporal_session_data_state import private_address, session_storage_key
+    from relf_agent.temporal_session_topology import NativeSessionTopology
 
     layout = NativeSessionTopology()
     assert layout.root_address(root()) == root().key.storage_key
@@ -79,7 +79,7 @@ def test_separator_in_atom_does_not_alias_nested_member():
 
 
 def registration(value):
-    from ralf_agent.temporal_session_topology import SessionTopologyRegistration
+    from relf_agent.temporal_session_topology import SessionTopologyRegistration
 
     return SessionTopologyRegistration(value)
 
@@ -96,7 +96,7 @@ class CustomTopology:
         return session.key.storage_key
 
     def member_address(self, session, path, definition_digest, *, namespace=None):
-        from ralf_agent.temporal_session_data_state import session_storage_key
+        from relf_agent.temporal_session_data_state import session_storage_key
 
         base = topology().member_address(session, path, definition_digest)
         return session_storage_key(namespace, base + ":" + self.suffix)
@@ -176,7 +176,7 @@ def test_invalid_selected_member_namespace_refuses_before_policy(namespace):
 
 
 def test_public_topology_ports_are_importable_from_package():
-    from ralf_agent import CompositeSessionTopology, NativeSessionTopology, SessionTopology
+    from relf_agent import CompositeSessionTopology, NativeSessionTopology, SessionTopology
 
     assert CompositeSessionTopology().root_address(root()) == root().key.storage_key
     assert NativeSessionTopology().root_address(root()) == root().key.storage_key

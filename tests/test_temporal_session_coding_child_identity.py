@@ -6,15 +6,15 @@ import warnings
 
 import pytest
 
-from ralf_agent import AgentSpec, GraphNode, GraphWorkflowSpec, TemporalRuntime, ToolRegistry
-from ralf_agent import temporal_coding_composition_state as composition
-from ralf_agent import temporal_deployment_control_projection as projection
-from ralf_agent import temporal_deployment_control_transport as transport
-from ralf_agent.errors import RalfError
-from ralf_agent.runtime_builder import EchoProvider
-from ralf_agent.temporal_parent_state import TemporalParentState
-from ralf_agent.temporal_session_state import TemporalSessionState
-from ralf_agent.types import digest, submission_request
+from relf_agent import AgentSpec, GraphNode, GraphWorkflowSpec, TemporalRuntime, ToolRegistry
+from relf_agent import temporal_coding_composition_state as composition
+from relf_agent import temporal_deployment_control_projection as projection
+from relf_agent import temporal_deployment_control_transport as transport
+from relf_agent.errors import RalfError
+from relf_agent.runtime_builder import EchoProvider
+from relf_agent.temporal_parent_state import TemporalParentState
+from relf_agent.temporal_session_state import TemporalSessionState
+from relf_agent.types import digest, submission_request
 from tests.test_temporal_deployment_control_projection import add_child, original
 from tests.test_temporal_deployment_session_registry import state as registry_state
 from tests.test_temporal_session_deployment_coding_registry import coding_intent_request
@@ -175,15 +175,15 @@ def test_original_parent_activation_can_construct_session_child_control_request(
     from temporalio.worker.workflow_sandbox._importer import Importer
     from temporalio.worker.workflow_sandbox._restrictions import RestrictionContext
 
-    from ralf_agent.temporal import _workflow_runner
+    from relf_agent.temporal import _workflow_runner
 
     parent, call = original_child()
-    importlib.import_module("ralf_agent.temporal_parent_workflow")
+    importlib.import_module("relf_agent.temporal_parent_workflow")
     context = RestrictionContext()
     importer = Importer(_workflow_runner().restrictions, context)
     with importer.applied():
-        importlib.import_module("ralf_agent.temporal_parent_workflow")
-        product = importlib.import_module("ralf_agent.temporal_deployment_control_transport")
+        importlib.import_module("relf_agent.temporal_parent_workflow")
+        product = importlib.import_module("relf_agent.temporal_deployment_control_transport")
         context.is_runtime = True
         context.in_activation = True
         try:

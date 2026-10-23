@@ -6,8 +6,8 @@ from types import SimpleNamespace as NS
 
 import pytest
 
-from ralf_agent.errors import RalfError
-from ralf_agent.temporal_state import WORKFLOW_NAME
+from relf_agent.errors import RalfError
+from relf_agent.temporal_state import WORKFLOW_NAME
 from tests.test_temporal_coding_recovery_transport import OPERATIONS, api, fixture
 
 

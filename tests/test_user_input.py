@@ -12,16 +12,16 @@ import math
 
 import pytest
 
-from ralf_agent.errors import DefinitionMismatch, ValidationError
-from ralf_agent.tools import ToolRegistry, ToolSpec
-from ralf_agent.types import Scope, digest
+from relf_agent.errors import DefinitionMismatch, ValidationError
+from relf_agent.tools import ToolRegistry, ToolSpec
+from relf_agent.types import Scope, digest
 
 
 def api():
-    assert importlib.util.find_spec("ralf_agent.user_input") is not None, (
+    assert importlib.util.find_spec("relf_agent.user_input") is not None, (
         "The shared durable input protocol is not implemented"
     )
-    return importlib.import_module("ralf_agent.user_input")
+    return importlib.import_module("relf_agent.user_input")
 
 
 def question(*, policy=None, source=None, ordinal=1):

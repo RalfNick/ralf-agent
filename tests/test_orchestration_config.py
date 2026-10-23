@@ -2,12 +2,12 @@ import json
 
 import pytest
 
-from ralf_agent import AgentSpec, ComponentRegistry, RuntimeBuilder, RuntimeProfile, load_spec
-from ralf_agent.errors import ValidationError
+from relf_agent import AgentSpec, ComponentRegistry, RuntimeBuilder, RuntimeProfile, load_spec
+from relf_agent.errors import ValidationError
 
 
 def test_public_sdk_exports_all_new_layers():
-    import ralf_agent
+    import relf_agent
 
     names = [
         "RedisMemory",
@@ -31,13 +31,13 @@ def test_public_sdk_exports_all_new_layers():
         "Verification",
     ]
     for name in names:
-        assert name in ralf_agent.__all__, f"Missing public API {name}"
-        assert getattr(ralf_agent, name)
+        assert name in relf_agent.__all__, f"Missing public API {name}"
+        assert getattr(relf_agent, name)
 
 
 @pytest.mark.parametrize("kind", ["team", "dynamic"])
 def test_json_definition_round_trip_keeps_member_order(tmp_path, kind):
-    from ralf_agent.orchestration_types import DynamicWorkflowSpec, TeamSpec
+    from relf_agent.orchestration_types import DynamicWorkflowSpec, TeamSpec
 
     cls = TeamSpec if kind == "team" else DynamicWorkflowSpec
     spec = cls("app", {"z": AgentSpec("z", "Z"), "a": AgentSpec("a", "A")})
@@ -47,7 +47,7 @@ def test_json_definition_round_trip_keeps_member_order(tmp_path, kind):
 
 
 def test_default_registered_orchestration_components_run(tmp_path):
-    from ralf_agent.orchestration_types import DynamicWorkflowSpec
+    from relf_agent.orchestration_types import DynamicWorkflowSpec
 
     selected = RuntimeProfile(
         "app",
@@ -102,7 +102,7 @@ def test_remote_factory_requires_explicit_env_before_allocating_authority(
 def test_default_hash_embedding_is_explicit_deterministic_and_local():
     import asyncio
 
-    from ralf_agent import HashEmbeddingProvider
+    from relf_agent import HashEmbeddingProvider
 
     embedding = HashEmbeddingProvider(dimensions=16)
     vectors = asyncio.run(embedding.embed(["Redis 数据库", "Redis 数据库", ""]))

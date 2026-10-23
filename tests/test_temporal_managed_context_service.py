@@ -8,8 +8,8 @@ from pathlib import Path
 
 import pytest
 
-from ralf_agent import Scope
-from ralf_agent.temporal import TemporalEngine, replay_temporal_history
+from relf_agent import Scope
+from relf_agent.temporal import TemporalEngine, replay_temporal_history
 from tests.temporal_managed_context_worker import runtime
 from tests.test_composite_data_context import agent, definition
 

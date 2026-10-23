@@ -4,8 +4,8 @@ import asyncio
 
 import pytest
 
-from ralf_agent import RuntimeProfile, TemporalProfile, TemporalRuntimeBuilder
-from ralf_agent.errors import ValidationError
+from relf_agent import RuntimeProfile, TemporalProfile, TemporalRuntimeBuilder
+from relf_agent.errors import ValidationError
 
 
 def selected(config):
@@ -41,7 +41,7 @@ def test_journal_config_and_environment_preflight_before_factory(tmp_path):
 
 
 def test_declared_journal_connect_initialize_and_owned_close(tmp_path, monkeypatch):
-    from ralf_agent.temporal_journal import PostgresEffectJournal
+    from relf_agent.temporal_journal import PostgresEffectJournal
 
     async def run():
         events = []

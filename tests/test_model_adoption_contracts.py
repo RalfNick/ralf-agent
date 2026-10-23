@@ -6,8 +6,8 @@ from dataclasses import asdict
 
 import pytest
 
-from ralf_agent import AgentSpec, LocalEngine, ModelResponse, Scope, SQLiteStore, ToolCall
-from ralf_agent.tools import ToolRegistry, ToolSpec
+from relf_agent import AgentSpec, LocalEngine, ModelResponse, Scope, SQLiteStore, ToolCall
+from relf_agent.tools import ToolRegistry, ToolSpec
 
 
 class Provider:
@@ -44,9 +44,9 @@ def tools():
 
 
 async def temporal_case(spec, response, *, cancel=False, drift=False):
-    from ralf_agent.temporal_activities import TemporalRuntime
-    from ralf_agent.temporal_state import TemporalRunState
-    from ralf_agent.types import submission_request
+    from relf_agent.temporal_activities import TemporalRuntime
+    from relf_agent.temporal_state import TemporalRunState
+    from relf_agent.types import submission_request
 
     runtime = TemporalRuntime(providers={"default": Provider(response, drift=drift)}, tools=tools())
     state = TemporalRunState(
@@ -149,9 +149,9 @@ def test_temporal_completed_response_survives_cancel_or_release_refusal(cancel, 
 
 
 def test_shared_validation_detaches_valid_proposals_and_checks_fallback_ids():
-    from ralf_agent import decisions
-    from ralf_agent.errors import ValidationError
-    from ralf_agent.harness import DecisionProposal
+    from relf_agent import decisions
+    from relf_agent.errors import ValidationError
+    from relf_agent.harness import DecisionProposal
 
     validator = getattr(decisions, "validate_decision", None)
     assert callable(validator), "Missing common decision acceptance boundary"
@@ -166,8 +166,8 @@ def test_shared_validation_detaches_valid_proposals_and_checks_fallback_ids():
 def test_legacy_temporal_response_replays_its_recorded_result():
     async def run():
         state, _, _ = await temporal_case(AgentSpec("a", "Answer"), ModelResponse(output="ok"))
-        from ralf_agent.temporal_state import TemporalRunState
-        from ralf_agent.types import submission_request
+        from relf_agent.temporal_state import TemporalRunState
+        from relf_agent.types import submission_request
 
         legacy = TemporalRunState(
             "old",
@@ -198,7 +198,7 @@ def test_actual_temporal_rejected_receipt_replays_without_unknown_execution(kind
     async def run():
         from temporalio.client import Client, WorkflowHistory
 
-        from ralf_agent import (
+        from relf_agent import (
             TemporalEngine,
             TemporalRuntime,
             build_temporal_worker,

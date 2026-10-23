@@ -20,7 +20,7 @@ import asyncio
 from tempfile import TemporaryDirectory
 from pathlib import Path
 
-from ralf_agent import (
+from relf_agent import (
     AgentBindingDescriptor,
     AgentDefinition,
     AgentSpec,

@@ -5,11 +5,11 @@ from types import SimpleNamespace
 
 import pytest
 
-from ralf_agent import AgentSpec, ComponentRegistry, Scope
-from ralf_agent.errors import ValidationError
-from ralf_agent.runtime_builder import EchoProvider, RuntimeBuildError
-from ralf_agent.temporal_builder import TemporalRuntimeBuilder
-from ralf_agent.temporal_profile import TemporalProfile
+from relf_agent import AgentSpec, ComponentRegistry, Scope
+from relf_agent.errors import ValidationError
+from relf_agent.runtime_builder import EchoProvider, RuntimeBuildError
+from relf_agent.temporal_builder import TemporalRuntimeBuilder
+from relf_agent.temporal_profile import TemporalProfile
 
 
 def profile(adapter="offline-echo"):
@@ -24,7 +24,7 @@ def builder(factory, tmp_path):
 
 @pytest.mark.parametrize("failure", ["startup", "shutdown"])
 def test_failed_worker_lifecycle_can_still_release_resources(tmp_path, monkeypatch, failure):
-    import ralf_agent.temporal
+    import relf_agent.temporal
 
     async def run():
         events = []
@@ -48,7 +48,7 @@ def test_failed_worker_lifecycle_can_still_release_resources(tmp_path, monkeypat
                 if failure == "shutdown" and events.count("worker-stop") == 1:
                     raise ConnectionError("stop failure")
 
-        monkeypatch.setattr(ralf_agent.temporal, "build_temporal_worker", lambda *a, **kw: Worker())
+        monkeypatch.setattr(relf_agent.temporal, "build_temporal_worker", lambda *a, **kw: Worker())
         assembly = await builder(factory, tmp_path).abuild(profile("managed"))
         if failure == "startup":
             with pytest.raises(ConnectionError):
@@ -132,12 +132,12 @@ def test_cancelled_resource_cleanup_wait_keeps_single_actual_close(tmp_path):
 
 
 def test_engine_creation_pins_worker_queue_and_blocks_resource_transfer(tmp_path, monkeypatch):
-    import ralf_agent.temporal
+    import relf_agent.temporal
 
     async def run():
         calls = []
         monkeypatch.setattr(
-            ralf_agent.temporal, "build_temporal_worker", lambda *a, **kw: calls.append("start")
+            relf_agent.temporal, "build_temporal_worker", lambda *a, **kw: calls.append("start")
         )
         assembly = await TemporalRuntimeBuilder(base_dir=tmp_path).abuild(profile())
         client = SimpleNamespace(namespace="original")
@@ -170,7 +170,7 @@ def test_profile_and_scope_are_readonly_assembly_bindings(tmp_path):
 
 
 def test_sdk_fatal_worker_cancellation_closes_future_entry(tmp_path, monkeypatch):
-    import ralf_agent.temporal
+    import relf_agent.temporal
 
     async def run():
         class Worker:
@@ -182,7 +182,7 @@ def test_sdk_fatal_worker_cancellation_closes_future_entry(tmp_path, monkeypatch
                 pass
 
         worker = Worker()
-        monkeypatch.setattr(ralf_agent.temporal, "build_temporal_worker", lambda *a, **kw: worker)
+        monkeypatch.setattr(relf_agent.temporal, "build_temporal_worker", lambda *a, **kw: worker)
         assembled = await TemporalRuntimeBuilder(base_dir=tmp_path).abuild(profile())
         client = SimpleNamespace(namespace="original")
         try:

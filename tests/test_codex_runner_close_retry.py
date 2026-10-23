@@ -6,8 +6,8 @@ supervision and cleanup-task ownership methods execute unchanged.
 
 import asyncio
 
-from ralf_agent.codex_runner import CodexCodingRunner
-from ralf_agent.errors import CloseIncomplete
+from relf_agent.codex_runner import CodexCodingRunner
+from relf_agent.errors import CloseIncomplete
 
 
 def test_fault_removal_preserves_inflight_failure_until_next_explicit_close():

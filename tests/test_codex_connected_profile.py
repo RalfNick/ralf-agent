@@ -7,9 +7,9 @@ from pathlib import Path
 
 import pytest
 
-from ralf_agent.codex_coding_profile import CodexCodingProfile
-from ralf_agent.codex_model_connection import CodexModelConnection
-from ralf_agent.errors import ValidationError
+from relf_agent.codex_coding_profile import CodexCodingProfile
+from relf_agent.codex_model_connection import CodexModelConnection
+from relf_agent.errors import ValidationError
 
 
 def connection(**kwargs):
@@ -25,7 +25,7 @@ def connection(**kwargs):
 
 def profile(value=None):
     return importlib.import_module(
-        "ralf_agent.codex_connected_profile"
+        "relf_agent.codex_connected_profile"
     ).ConnectedCodexCodingProfile(connection() if value is None else value)
 
 
@@ -191,9 +191,9 @@ def test_profile_refuses_unvalidated_connection_and_supports_separate_model_choi
 
 @pytest.mark.parametrize("name", ["__init__", "identity"])
 def test_authored_connected_profile_methods_are_executable_fingerprintable(name):
-    from ralf_agent.component_fingerprint import executable_digest
+    from relf_agent.component_fingerprint import executable_digest
 
-    module = importlib.import_module("ralf_agent.codex_connected_profile")
+    module = importlib.import_module("relf_agent.codex_connected_profile")
     method = vars(module.ConnectedCodexCodingProfile)[name]
     if isinstance(method, property):
         method = method.fget

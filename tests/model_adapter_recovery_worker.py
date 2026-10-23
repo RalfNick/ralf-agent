@@ -9,12 +9,12 @@ from contextlib import closing, contextmanager
 from dataclasses import asdict
 from pathlib import Path
 
-from ralf_agent import AgentSpec, LocalEngine, SQLiteStore, ToolRegistry
-from ralf_agent.model_adapter_contract_reference import (
+from relf_agent import AgentSpec, LocalEngine, SQLiteStore, ToolRegistry
+from relf_agent.model_adapter_contract_reference import (
     ReferenceModelSource,
     ReferenceSQLiteModelProvider,
 )
-from ralf_agent.types import canonical, digest
+from relf_agent.types import canonical, digest
 
 
 async def main(root, phase, window):
@@ -70,7 +70,7 @@ async def main(root, phase, window):
         return {"written": arguments["value"], "effect_key": context.effect_key}
 
     registry = ToolRegistry()
-    from ralf_agent import ToolSpec
+    from relf_agent import ToolSpec
 
     registry.register(
         ToolSpec(

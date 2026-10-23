@@ -4,9 +4,9 @@ import copy
 
 import pytest
 
-from ralf_agent.errors import AuthorizationDenied, IdempotencyConflict, ValidationError
-from ralf_agent.temporal_state import TemporalCommandRegistryState
-from ralf_agent.types import digest
+from relf_agent.errors import AuthorizationDenied, IdempotencyConflict, ValidationError
+from relf_agent.temporal_state import TemporalCommandRegistryState
+from relf_agent.types import digest
 from tests.test_temporal_deployment_public_registry import NAMESPACE, POLICY, SCOPE, setup
 
 
@@ -76,7 +76,7 @@ def test_full_public_registry_keeps_original_cancel_and_drive_slots(version):
             state.reserve(control(request, kind, "different-" + kind))
     fresh = copy.deepcopy(request)
     fresh["command_id"] = "new-submit"
-    from ralf_agent.temporal_deployment_admission import root_run_id
+    from relf_agent.temporal_deployment_admission import root_run_id
 
     fresh["target"] = root_run_id(POLICY.deployment_id, SCOPE, "new-submit")
     with pytest.raises(ValidationError, match="capacity"):
@@ -181,10 +181,10 @@ def test_public_drive_reuses_identity_but_each_update_wakes_original_history(
     from types import SimpleNamespace
 
     pytest.importorskip("temporalio")
-    from ralf_agent import Scope
-    from ralf_agent.temporal import TemporalEngine
-    from ralf_agent.temporal_workflow import TemporalRunWorkflow, workflow
-    from ralf_agent.types import CommandReceipt
+    from relf_agent import Scope
+    from relf_agent.temporal import TemporalEngine
+    from relf_agent.temporal_workflow import TemporalRunWorkflow, workflow
+    from relf_agent.types import CommandReceipt
 
     state, request = full_registry()
     if collision:
@@ -276,8 +276,8 @@ def test_repeated_public_parent_wake_rechecks_children_without_reopening_busines
     import asyncio
 
     pytest.importorskip("temporalio")
-    from ralf_agent.temporal_parent_state import TemporalParentState
-    from ralf_agent.temporal_parent_workflow import TemporalParentWorkflow
+    from relf_agent.temporal_parent_state import TemporalParentState
+    from relf_agent.temporal_parent_workflow import TemporalParentWorkflow
     from tests.test_temporal_deployment_control_projection import add_child, original
 
     bootstrap = original(parent=True)

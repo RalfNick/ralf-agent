@@ -10,10 +10,10 @@ from pathlib import Path
 
 import pytest
 
-from ralf_agent import AgentSpec, Scope
-from ralf_agent.temporal import TemporalEngine, replay_temporal_history
-from ralf_agent.temporal_execution_end_transport import execute
-from ralf_agent.types import digest
+from relf_agent import AgentSpec, Scope
+from relf_agent.temporal import TemporalEngine, replay_temporal_history
+from relf_agent.temporal_execution_end_transport import execute
+from relf_agent.types import digest
 from tests.test_temporal_deployment_admission_service import _clients
 from tests.test_temporal_deployment_dispatch_service import _eventually
 
@@ -169,7 +169,7 @@ def test_actual_end_client_reuses_original_legacy_end_id_without_signals(tmp_pat
             identities["slow_end_proof_digest"] = digest(proof)
             (tmp_path / "original-identities.json").write_text(json.dumps(identities))
             if public:
-                from ralf_agent.temporal_deployment_lifecycle_transport import execute as lifecycle
+                from relf_agent.temporal_deployment_lifecycle_transport import execute as lifecycle
 
                 before = await handle.fetch_history()
                 accepted_before = [

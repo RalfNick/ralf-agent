@@ -10,7 +10,7 @@ from datetime import timedelta
 
 import pytest
 
-from ralf_agent import (
+from relf_agent import (
     AgentSpec,
     ModelResponse,
     Scope,
@@ -19,14 +19,14 @@ from ralf_agent import (
     ToolRegistry,
     ToolSpec,
 )
-from ralf_agent.errors import DefinitionMismatch, ValidationError
-from ralf_agent.governance import DeploymentAdmissionPolicy
-from ralf_agent.temporal import TemporalEngine, build_temporal_worker, replay_temporal_history
-from ralf_agent.temporal_activities import TemporalRuntime
-from ralf_agent.temporal_deployment_admission import registry_id
-from ralf_agent.temporal_deployment_release import check_owner, close_owner
-from ralf_agent.temporal_journal import PostgresEffectJournal
-from ralf_agent.types import canonical, digest
+from relf_agent.errors import DefinitionMismatch, ValidationError
+from relf_agent.governance import DeploymentAdmissionPolicy
+from relf_agent.temporal import TemporalEngine, build_temporal_worker, replay_temporal_history
+from relf_agent.temporal_activities import TemporalRuntime
+from relf_agent.temporal_deployment_admission import registry_id
+from relf_agent.temporal_deployment_release import check_owner, close_owner
+from relf_agent.temporal_journal import PostgresEffectJournal
+from relf_agent.types import canonical, digest
 from tests.temporal_backup_restore_fixture import OwnedServices, write_private
 
 pytestmark = pytest.mark.skipif(

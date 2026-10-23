@@ -4,9 +4,9 @@ import asyncio
 
 import pytest
 
-import ralf_agent as r
-from ralf_agent.errors import RalfError
-from ralf_agent.temporal_tool_execution import ToolExecutionRegistration
+import relf_agent as r
+from relf_agent.errors import RalfError
+from relf_agent.temporal_tool_execution import ToolExecutionRegistration
 
 from .test_temporal_tool_execution import admission, proof
 from .test_temporal_tool_execution import state_for as claimed_state_for
@@ -116,7 +116,7 @@ def test_true_operation_has_one_fixed_end_and_duplicate_refuses_without_dispatch
 
 
 def test_tool_and_context_owner_protocols_compose_without_changing_context_version():
-    from ralf_agent.temporal_activities import TemporalRuntime
+    from relf_agent.temporal_activities import TemporalRuntime
 
     from .test_temporal_engine import Provider, registry
 
@@ -154,7 +154,7 @@ def test_lazy_owner_methods_refuse_at_construction(kind):
 def test_callback_pins_original_handle_and_refuses_namespace_drift():
     from types import SimpleNamespace
 
-    from ralf_agent.temporal_tool_execution_activities import callbacks
+    from relf_agent.temporal_tool_execution_activities import callbacks
 
     _, state, _, request = state_for()
     calls = []
@@ -166,7 +166,7 @@ def test_callback_pins_original_handle_and_refuses_namespace_drift():
             return state.snapshot()
 
         async def describe(self):
-            from ralf_agent.temporal_state import WORKFLOW_NAME
+            from relf_agent.temporal_state import WORKFLOW_NAME
 
             return SimpleNamespace(
                 id=state.run_id,
@@ -182,7 +182,7 @@ def test_callback_pins_original_handle_and_refuses_namespace_drift():
         async def execute_update(self, name, value, **options):
             calls.append((name, value))
             if name == "tool_execution_ended":
-                from ralf_agent.types import digest
+                from relf_agent.types import digest
 
                 assert options["id"] == "ralf-tool-ended:" + digest(value)
                 return {"action_id": request["action_id"], "recorded": True}

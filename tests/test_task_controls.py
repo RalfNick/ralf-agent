@@ -3,9 +3,9 @@ from dataclasses import replace
 
 import pytest
 
-from ralf_agent import AgentSpec, Scope
-from ralf_agent.errors import AuthorizationDenied, DefinitionMismatch, ValidationError
-from ralf_agent.types import CommandReceipt, RunHandle, RunSnapshot
+from relf_agent import AgentSpec, Scope
+from relf_agent.errors import AuthorizationDenied, DefinitionMismatch, ValidationError
+from relf_agent.types import CommandReceipt, RunHandle, RunSnapshot
 
 
 class Controls:
@@ -22,7 +22,7 @@ class Controls:
 
 
 def bridge(engine):
-    from ralf_agent.task_controls import TaskControlBridge
+    from relf_agent.task_controls import TaskControlBridge
 
     return TaskControlBridge(engine, engine.scope)
 
@@ -132,7 +132,7 @@ def test_submit_receipt_must_match_original_command_and_run():
 
 
 def test_public_runtime_instance_delegation_works_without_concrete_inheritance(tmp_path):
-    from ralf_agent import RuntimeBuilder, RuntimeProfile
+    from relf_agent import RuntimeBuilder, RuntimeProfile
 
     async def run():
         with RuntimeBuilder().build(

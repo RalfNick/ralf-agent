@@ -5,7 +5,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-import ralf_agent
+import relf_agent
 from tests.test_h3_semantic_http import synonym_endpoint  # noqa: F401
 
 
@@ -17,7 +17,7 @@ def test_received_model_reuses_query_and_semantic_fact_snapshots_after_process_d
     env = {
         "PATH": os.defpath,
         "PYTHONPATH": os.pathsep.join(
-            [str(Path(ralf_agent.__file__).parents[1]), str(Path(__file__).parents[1])]
+            [str(Path(relf_agent.__file__).parents[1]), str(Path(__file__).parents[1])]
         ),
     }
     for mode, expected in (("crash", 77), ("waiting", 0), ("finish", 0)):

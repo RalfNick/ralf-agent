@@ -6,8 +6,8 @@ import threading
 
 import pytest
 
-import ralf_agent as r
-from ralf_agent.errors import CoordinatorBusy, ValidationError
+import relf_agent as r
+from relf_agent.errors import CoordinatorBusy, ValidationError
 from tests.test_local_native_history_remote_save import ReceiptMemory
 from tests.test_local_session_history_compositions import MemberProvider, definition
 from tests.test_local_session_model_history import options, spec, tools

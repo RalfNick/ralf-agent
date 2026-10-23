@@ -7,7 +7,7 @@ import time
 
 import pytest
 
-from ralf_agent import errors
+from relf_agent import errors
 from tests import temporal_deployment_coding_worker_fixture as fixture
 
 MONITORING = getattr(sys, "monitoring", None)
@@ -139,7 +139,7 @@ def test_enabled_monitor_preserves_exact_exception_and_safe_line_location(
         "monotonic",
     }
     assert (rows[0]["exception_module"], rows[0]["exception_class"]) == (
-        "ralf_agent.errors",
+        "relf_agent.errors",
         "DefinitionMismatch",
     )
     assert (
@@ -230,8 +230,8 @@ def test_different_safe_reports_at_same_raise_location_remain_distinct(tmp_path,
 
 
 def test_monitoring_preserves_original_bytecode_and_executable_digest(tmp_path, monitoring):
-    from ralf_agent import component_fingerprint as fingerprint
-    from ralf_agent.types import digest
+    from relf_agent import component_fingerprint as fingerprint
+    from relf_agent.types import digest
 
     function = source_raise()
 
@@ -265,8 +265,8 @@ def test_monitoring_preserves_original_bytecode_and_executable_digest(tmp_path, 
 def test_allowed_error_classes_log_static_type_only_and_preserve_instance(
     tmp_path, monitoring, kind
 ):
-    from ralf_agent.codex_rpc import CodexRPCError
-    from ralf_agent.codex_runner import RunnerOutcomeUnknown, RunnerUnavailable
+    from relf_agent.codex_rpc import CodexRPCError
+    from relf_agent.codex_runner import RunnerOutcomeUnknown, RunnerUnavailable
 
     secret = "postgresql://private:user-password@host/db sk-fixture-secret"
     exception = {

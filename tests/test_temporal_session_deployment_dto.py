@@ -5,15 +5,15 @@ import json
 
 import pytest
 
-from ralf_agent import AgentSpec, ToolRegistry
-from ralf_agent import temporal_session_deployment_dto as dto
-from ralf_agent.errors import RalfError
-from ralf_agent.runtime_builder import EchoProvider
-from ralf_agent.session_types import SessionKey, SessionRef
-from ralf_agent.temporal_activities import TemporalRuntime
-from ralf_agent.temporal_deployment_admission import registry_id, root_run_id
-from ralf_agent.temporal_session_state import SESSION_ACTIVITY, resource_id, workflow_id
-from ralf_agent.types import canonical, digest, submission_request
+from relf_agent import AgentSpec, ToolRegistry
+from relf_agent import temporal_session_deployment_dto as dto
+from relf_agent.errors import RalfError
+from relf_agent.runtime_builder import EchoProvider
+from relf_agent.session_types import SessionKey, SessionRef
+from relf_agent.temporal_activities import TemporalRuntime
+from relf_agent.temporal_deployment_admission import registry_id, root_run_id
+from relf_agent.temporal_session_state import SESSION_ACTIVITY, resource_id, workflow_id
+from relf_agent.types import canonical, digest, submission_request
 
 DEPLOYMENT = "original-deployment"
 REGISTRY_EPOCH = "original-registry-epoch"
@@ -420,7 +420,7 @@ def test_call_end_hashes_separate_body_and_keeps_original_invocation():
     "change", ["input-limit", "malformed-binding", "malformed-history", "cyclic"]
 )
 def test_existing_session_limits_and_malformed_data_are_typed_refusals(change):
-    from ralf_agent.temporal_session_state import HISTORY_CHARS
+    from relf_agent.temporal_session_state import HISTORY_CHARS
 
     value = intent()
     if change == "input-limit":

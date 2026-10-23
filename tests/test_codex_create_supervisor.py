@@ -12,12 +12,12 @@ from pathlib import Path
 
 import pytest
 
-from ralf_agent.errors import DefinitionMismatch, ExecutionHostFailed, ValidationError
+from relf_agent.errors import DefinitionMismatch, ExecutionHostFailed, ValidationError
 from tests.coding_cli_fixture import ready_cli
 
 
 def supervisor():
-    name = "ralf_agent.codex_create_supervisor"
+    name = "relf_agent.codex_create_supervisor"
     assert importlib.util.find_spec(name) is not None, "Original CREATE supervisor is missing"
     return importlib.import_module(name).CreateSupervisor
 
@@ -71,7 +71,7 @@ print('d'*64,flush=True)
         (root / "finish").touch()
         declaration_path = root / ".create-operation" / "declaration.json"
         if declaration_path.exists():
-            from ralf_agent.codex_create_journal import lock_released
+            from relf_agent.codex_create_journal import lock_released
 
             declaration = json.loads(declaration_path.read_text())
             eventually(lambda: lock_released(declaration["operation_lock"]), timeout=8)
@@ -355,7 +355,7 @@ def test_real_worker_exit_keeps_broker_control_and_cold_drain(operation, send_go
         "hold",
     ]
     code = """import json,pathlib,sys,time
-from ralf_agent.codex_create_supervisor import CreateSupervisor
+from relf_agent.codex_create_supervisor import CreateSupervisor
 root=pathlib.Path(sys.argv[1]);binding=json.loads(sys.argv[3]);argv=json.loads(sys.argv[4])
 handle=CreateSupervisor.create(root,binding=binding,argv=argv,namespace_lease_fd=int(sys.argv[2]),cli_env={'PATH':'/usr/bin:/bin'},timeout=3,output_limit=65536)
 handle.launch()
@@ -445,8 +445,8 @@ def test_accepted_inner_gate_with_failed_exec_record_stays_maybe_dispatched(oper
 def test_fixed_bootstrap_checks_all_bytes_before_import_and_skips_package_init(tmp_path):
     import hashlib
 
-    from ralf_agent import coding_create_inventory
-    from ralf_agent.codex_create_supervisor import _BOOTSTRAP
+    from relf_agent import coding_create_inventory
+    from relf_agent.codex_create_supervisor import _BOOTSTRAP
 
     directory = tmp_path / "installed-package"
     directory.mkdir()
@@ -511,7 +511,7 @@ def test_completion_cannot_relabel_original_accepted_gate_as_negative(operation)
 def test_cold_end_observation_handles_exit_between_birth_and_status(monkeypatch):
     from types import SimpleNamespace
 
-    from ralf_agent import codex_create_journal
+    from relf_agent import codex_create_journal
 
     observed = iter(["original-birth", None])
     monkeypatch.setattr(codex_create_journal, "birth", lambda pid: next(observed))

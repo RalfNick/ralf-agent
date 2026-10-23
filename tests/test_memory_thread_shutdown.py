@@ -4,7 +4,7 @@ from concurrent.futures import ThreadPoolExecutor
 
 import pytest
 
-from ralf_agent import (
+from relf_agent import (
     AgentSpec,
     InMemoryMemory,
     LocalEngine,
@@ -13,8 +13,8 @@ from ralf_agent import (
     ThreadedMemoryAdapter,
     ToolRegistry,
 )
-from ralf_agent.errors import CoordinatorBusy, ValidationError
-from ralf_agent.memory import MemoryRecallPolicy
+from relf_agent.errors import CoordinatorBusy, ValidationError
+from relf_agent.memory import MemoryRecallPolicy
 
 from .helpers import ScriptedProvider
 from .test_review_shutdown import cancel_all_tasks
@@ -77,7 +77,7 @@ def test_threaded_memory_retains_ownership_after_service_loop_closes(tmp_path, o
     path = tmp_path / "runs.db"
     memory = BlockingMemory()
     if operation == "validate_facts":
-        from ralf_agent import Scope
+        from relf_agent import Scope
 
         memory.put_fact(Scope(), "a", "fixture", "active", expected_version=0)
     runtime = LocalEngine(

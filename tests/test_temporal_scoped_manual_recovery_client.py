@@ -5,12 +5,12 @@ from types import SimpleNamespace as NS
 
 import pytest
 
-from ralf_agent import Scope, TemporalRuntime
-from ralf_agent.errors import RalfError
-from ralf_agent.temporal import TemporalEngine
-from ralf_agent.temporal_scoped_manual_recovery import commit, configuration, prepare
-from ralf_agent.temporal_scoped_reservation import accept, observe
-from ralf_agent.types import digest
+from relf_agent import Scope, TemporalRuntime
+from relf_agent.errors import RalfError
+from relf_agent.temporal import TemporalEngine
+from relf_agent.temporal_scoped_manual_recovery import commit, configuration, prepare
+from relf_agent.temporal_scoped_reservation import accept, observe
+from relf_agent.types import digest
 from tests.test_temporal_engine import Provider, registry
 from tests.test_temporal_scoped_manual_recovery_state import (
     manual_request,
@@ -117,7 +117,7 @@ def namespace(monkeypatch):
     async def original(client):
         return "11111111-1111-1111-1111-111111111111"
 
-    monkeypatch.setattr("ralf_agent.temporal_session_activities.namespace_id", original)
+    monkeypatch.setattr("relf_agent.temporal_session_activities.namespace_id", original)
 
 
 def test_full_registry_manual_recovery_and_duplicate_command_use_original_epoch():
@@ -163,7 +163,7 @@ def test_namespace_change_during_uuid_read_never_sends_business_command(monkeypa
             client.namespace = "another-namespace"
             return "11111111-1111-1111-1111-111111111111"
 
-        monkeypatch.setattr("ralf_agent.temporal_session_activities.namespace_id", changed)
+        monkeypatch.setattr("relf_agent.temporal_session_activities.namespace_id", changed)
         with pytest.raises(RalfError):
             await engine.reconcile(
                 request["target"], "original-action", "confirmed", command_id="confirm"

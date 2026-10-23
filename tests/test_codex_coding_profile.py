@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from ralf_agent.errors import ValidationError
+from relf_agent.errors import ValidationError
 
 
 def native_results():
@@ -14,12 +14,12 @@ def native_results():
 
 
 def profile():
-    module = importlib.import_module("ralf_agent.codex_coding_profile")
+    module = importlib.import_module("relf_agent.codex_coding_profile")
     return module.CodexCodingProfile()
 
 
 def test_native_fixture_is_nine_complete_stable_control_result_shapes():
-    from ralf_agent.codex_protocol import CodexControlProtocol
+    from relf_agent.codex_protocol import CodexControlProtocol
 
     values = json.loads(Path(__file__).with_name("codex_control_fixture.json").read_text())
     protocol = CodexControlProtocol()

@@ -3,8 +3,8 @@
 import asyncio
 import os
 
-from ralf_agent.temporal import build_temporal_worker
-from ralf_agent.temporal_activities import TemporalRuntime
+from relf_agent.temporal import build_temporal_worker
+from relf_agent.temporal_activities import TemporalRuntime
 from tests import temporal_coding_worker_fixture as leaf
 
 

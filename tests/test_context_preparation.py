@@ -3,8 +3,8 @@ import copy
 
 import pytest
 
-from ralf_agent import AgentSpec, ModelResponse, ToolCall, ToolRegistry, ToolSpec
-from ralf_agent.types import canonical
+from relf_agent import AgentSpec, ModelResponse, ToolCall, ToolRegistry, ToolSpec
+from relf_agent.types import canonical
 from tests.test_managed_context import pipeline
 from tests.test_managed_memory_stage import engine
 
@@ -126,7 +126,7 @@ class PowerLoss(BaseException):
 
 
 def checkpoint(monkeypatch, event, *, before=False):
-    from ralf_agent import context_preparation
+    from relf_agent import context_preparation
 
     if event == "context_preparation_dispatched":
         dispatch = context_preparation._dispatch
@@ -220,7 +220,7 @@ def test_terminal_recovery_never_starts_models(tmp_path, monkeypatch, event):
     ],
 )
 def test_missing_or_contradictory_evidence_fails_closed(tmp_path, mutation):
-    from ralf_agent.errors import DefinitionMismatch
+    from relf_agent.errors import DefinitionMismatch
 
     provider = Provider()
     with engine(
@@ -285,7 +285,7 @@ def test_provider_drift_keeps_response_for_offline_terminal_settlement(tmp_path)
 
 
 def test_cancellation_waits_for_managed_summary_and_stops_business_dispatch(tmp_path):
-    from ralf_agent.errors import ValidationError
+    from relf_agent.errors import ValidationError
 
     async def exercise():
         entered, release = asyncio.Event(), asyncio.Event()
@@ -345,7 +345,7 @@ def test_budget_or_input_limit_skips_summary_without_hidden_calls(tmp_path):
 
 
 def test_fixed_fact_versions_are_revalidated_after_summary(tmp_path):
-    from ralf_agent import InMemoryMemory, MemoryRecallPolicy, Scope
+    from relf_agent import InMemoryMemory, MemoryRecallPolicy, Scope
 
     memory = InMemoryMemory(backend_id="facts")
     memory.put_fact(Scope(), "a", "known", "old", expected_version=0)
@@ -374,7 +374,7 @@ def test_fixed_fact_versions_are_revalidated_after_summary(tmp_path):
 
 
 def test_sequence_and_rule_memory_share_original_budget_and_authority(tmp_path):
-    from ralf_agent import InMemoryMemory, MemoryAdmissionPolicy, WorkflowSpec
+    from relf_agent import InMemoryMemory, MemoryAdmissionPolicy, WorkflowSpec
     from tests.test_managed_memory_stage import policy
 
     memory = InMemoryMemory(backend_id="write-facts")
@@ -415,7 +415,7 @@ def test_completed_malformed_provider_value_is_charged(tmp_path):
 
 
 def test_summary_request_validation_runs_before_reservation_and_dispatch(tmp_path):
-    from ralf_agent.errors import ValidationError
+    from relf_agent.errors import ValidationError
 
     class Validating(Provider):
         def validate_request(self, messages, tools):
@@ -437,7 +437,7 @@ def test_summary_request_validation_runs_before_reservation_and_dispatch(tmp_pat
 def test_prepared_stage_cannot_reuse_existing_dispatch_reservation(
     tmp_path, monkeypatch, proof_state
 ):
-    from ralf_agent.errors import DefinitionMismatch
+    from relf_agent.errors import DefinitionMismatch
 
     provider = Provider()
     path = tmp_path / "run.sqlite"

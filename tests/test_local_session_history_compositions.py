@@ -6,9 +6,9 @@ from collections import Counter, defaultdict
 
 import pytest
 
-import ralf_agent as r
-from ralf_agent.model_continuation import ContinuedModelResponse, ModelContinuation
-from ralf_agent.types import canonical, digest
+import relf_agent as r
+from relf_agent.model_continuation import ContinuedModelResponse, ModelContinuation
+from relf_agent.types import canonical, digest
 from tests.test_local_session_model_history import CurrentKnowledge, tools
 
 
@@ -162,8 +162,8 @@ def test_two_turn_compositions_restore_each_original_member_episode(tmp_path, ki
 @pytest.mark.parametrize("selected", ["disabled", "run"])
 def test_member_history_selection_changes_only_that_actual_agent(tmp_path, kind, selected):
     async def scenario():
-        from ralf_agent.binding_paths import agent_paths
-        from ralf_agent.spec_codec import encode_spec
+        from relf_agent.binding_paths import agent_paths
+        from relf_agent.spec_codec import encode_spec
 
         spec = definition(kind)
         paths = agent_paths(encode_spec(spec))

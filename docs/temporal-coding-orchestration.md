@@ -15,7 +15,7 @@ dev113 新发布为 native version 6／binding 22、组合 version 7／binding 2
 凭证只通过可信宿主中的声明环境变量延迟解析。
 
 ```python
-from ralf_agent import AgentSpec, DynamicWorkflowSpec, TeamSpec, WorkflowSpec
+from relf_agent import AgentSpec, DynamicWorkflowSpec, TeamSpec, WorkflowSpec
 
 coder = AgentSpec(
     "coder", "Use the approved coding tool and report the verified result.",

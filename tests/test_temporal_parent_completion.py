@@ -7,12 +7,12 @@ from dataclasses import asdict
 
 import pytest
 
-from ralf_agent import AgentSpec, DynamicWorkflowSpec, ModelResponse, Scope, TeamSpec, ToolRegistry
-from ralf_agent.errors import RalfError
-from ralf_agent.temporal_activities import TemporalRuntime
-from ralf_agent.temporal_bindings import request_release_digest
-from ralf_agent.temporal_parent_state import TemporalParentState
-from ralf_agent.types import canonical, digest, submission_request
+from relf_agent import AgentSpec, DynamicWorkflowSpec, ModelResponse, Scope, TeamSpec, ToolRegistry
+from relf_agent.errors import RalfError
+from relf_agent.temporal_activities import TemporalRuntime
+from relf_agent.temporal_bindings import request_release_digest
+from relf_agent.temporal_parent_state import TemporalParentState
+from relf_agent.types import canonical, digest, submission_request
 
 
 class Provider:
@@ -34,7 +34,7 @@ class Gate:
         self.calls = []
 
     def verify(self, request):
-        from ralf_agent.parent_completion import ParentCompletionVerdict
+        from relf_agent.parent_completion import ParentCompletionVerdict
 
         self.calls.append(request.to_dict())
         return ParentCompletionVerdict(
@@ -46,9 +46,9 @@ class Gate:
 
 def public(name):
     module = importlib.import_module(
-        "ralf_agent.parent_verification_stage"
+        "relf_agent.parent_verification_stage"
         if name == "ModelParentVerificationStage"
-        else "ralf_agent.parent_completion"
+        else "relf_agent.parent_completion"
     )
     value = getattr(module, name, None)
     assert value is not None, "Missing parent completion public contract: " + name
@@ -161,8 +161,8 @@ def evaluate(runtime, state):
 
 
 def review_dag(*, stage=False):
-    from ralf_agent.dag_planning import DAGNode, DAGProposal
-    from ralf_agent.workflow import Literal
+    from relf_agent.dag_planning import DAGNode, DAGProposal
+    from relf_agent.workflow import Literal
 
     runtime, _, gate, provider = setup(kind="dynamic", stage=stage)
     definition = DynamicWorkflowSpec(
@@ -191,8 +191,8 @@ def review_dag(*, stage=False):
 
 @pytest.mark.parametrize("managed", [False, True])
 def test_review_patch_rejected_while_gate_or_model_awaits(managed):
-    from ralf_agent.dag_planning import DAGNode, DAGProposal
-    from ralf_agent.workflow import ValueRef
+    from relf_agent.dag_planning import DAGNode, DAGProposal
+    from relf_agent.workflow import ValueRef
 
     runtime, state, first, _, _, _ = review_dag(stage=managed)
     if managed:
@@ -276,8 +276,8 @@ def test_review_verifier_accounting_normalization_cannot_hide_over_cap_spend():
 
 
 def test_review_execution_patch_retains_real_settled_node_lineage():
-    from ralf_agent.dag_planning import DAGNode, DAGProposal
-    from ralf_agent.workflow import Literal, ValueRef
+    from relf_agent.dag_planning import DAGNode, DAGProposal
+    from relf_agent.workflow import Literal, ValueRef
 
     runtime, _, _, _ = setup(kind="dynamic")
     definition = DynamicWorkflowSpec(
@@ -313,7 +313,7 @@ def test_review_execution_patch_retains_real_settled_node_lineage():
 
 @pytest.mark.parametrize("status", ["needs_input", "refused"])
 def test_review_stopping_conclusion_has_exact_proposal_and_no_old_business_source(status):
-    from ralf_agent import ChildCall, PlanProposal
+    from relf_agent import ChildCall, PlanProposal
 
     runtime, state, gate, _ = setup(kind="dynamic")
     state.accept_selection(PlanProposal([ChildCall("one", "a", {"q": 2})]).to_dict())
@@ -332,16 +332,16 @@ def test_review_stopping_conclusion_has_exact_proposal_and_no_old_business_sourc
 
 
 def test_review_policy_then_original_verifier_replans_reach_actual_revision2_model_planner():
-    from ralf_agent import ChildCall, ModelPlanner
-    from ralf_agent.parent_completion import ParentCompletionPolicy
-    from ralf_agent.temporal_control_activities import select
-    from ralf_agent.temporal_state import TemporalRunState
+    from relf_agent import ChildCall, ModelPlanner
+    from relf_agent.parent_completion import ParentCompletionPolicy
+    from relf_agent.temporal_control_activities import select
+    from relf_agent.temporal_state import TemporalRunState
 
     class ReplanGate:
         identity = {"kind": "review-mixed-gate", "version": "1"}
 
         def verify(self, request):
-            from ralf_agent.parent_completion import ParentCompletionVerdict
+            from relf_agent.parent_completion import ParentCompletionVerdict
 
             return (
                 ParentCompletionVerdict("replan", feedback="first policy feedback")
@@ -353,7 +353,7 @@ def test_review_policy_then_original_verifier_replans_reach_actual_revision2_mod
         identity = {"kind": "review-mixed-old-verifier", "version": "1"}
 
         def verify(self, request):
-            from ralf_agent import Verification
+            from relf_agent import Verification
 
             return (
                 Verification("replan")
@@ -503,13 +503,13 @@ def test_review_received_session_ack_must_still_match_revision_and_stop(fault):
 
 
 def _review_final_session_publication(fault, *, lost_reply=False):
-    from ralf_agent import InMemoryMemory
-    from ralf_agent.dag_planning import DAGNode, DAGProposal
-    from ralf_agent.parent_completion import ParentCompletionPolicy
-    from ralf_agent.temporal_session_state import TemporalSessionState
-    from ralf_agent.temporal_session_topology import CompositeSessionTopology
-    from ralf_agent.temporal_state import TemporalRunState
-    from ralf_agent.workflow import Literal, ValueRef
+    from relf_agent import InMemoryMemory
+    from relf_agent.dag_planning import DAGNode, DAGProposal
+    from relf_agent.parent_completion import ParentCompletionPolicy
+    from relf_agent.temporal_session_state import TemporalSessionState
+    from relf_agent.temporal_session_topology import CompositeSessionTopology
+    from relf_agent.temporal_state import TemporalRunState
+    from relf_agent.workflow import Literal, ValueRef
     from tests.test_temporal_memory_bindings import grant
     from tests.test_temporal_session_tree_execution import complete_child, ended, root_operation
 
@@ -763,7 +763,7 @@ def test_managed_policy_activity_accepts_actual_temporal_json_normalization():
 
 
 def test_default_managed_stage_executes_plain_chat_without_native_protocols():
-    from ralf_agent.temporal_state import TemporalRunState
+    from relf_agent.temporal_state import TemporalRunState
 
     async def run():
         runtime, parent, gate, provider = setup(stage=True)
@@ -792,21 +792,21 @@ def test_default_managed_stage_executes_plain_chat_without_native_protocols():
 
 @pytest.mark.parametrize("kind", ["fake", "wrapped-reader"])
 def test_verifier_context_registration_rejects_fake_builtin_and_reader_wrappers(kind):
-    from ralf_agent import (
+    from relf_agent import (
         AgentBindingDescriptor,
         BindingCatalog,
         BindingSelection,
         BudgetedContextAssembler,
     )
-    from ralf_agent.errors import ValidationError
-    from ralf_agent.parent_completion import ParentCompletionPolicy
-    from ralf_agent.parent_verification_stage import ModelParentVerificationStage
+    from relf_agent.errors import ValidationError
+    from relf_agent.parent_completion import ParentCompletionPolicy
+    from relf_agent.parent_verification_stage import ModelParentVerificationStage
 
     class FakeContext:
         identity = {"kind": "bounded-context", "version": "2"}
 
         def assemble(self, history, references, max_chars):
-            from ralf_agent import ContextAssembler
+            from relf_agent import ContextAssembler
 
             return ContextAssembler().assemble(history, references, max_chars)
 
@@ -883,7 +883,7 @@ def test_checked_team_cannot_execute_same_business_member_under_new_call_id():
 
 
 def test_host_child_limit_counts_verifier_and_does_not_release_business_spend():
-    from ralf_agent.governance import TemporalExecutionPolicy
+    from relf_agent.governance import TemporalExecutionPolicy
 
     runtime, state, _, provider = setup(
         stage=True, execution_policy=TemporalExecutionPolicy(max_children=1)
@@ -918,7 +918,7 @@ def test_parent_source_rejects_missing_or_foreign_original_child_evidence(mutati
 
 
 def test_plan_replan_feedback_is_next_actual_planning_input_and_bounded():
-    from ralf_agent import ChildCall, PlanProposal
+    from relf_agent import ChildCall, PlanProposal
 
     runtime, state, gate, provider = setup(kind="dynamic", status="replan")
     state.accept_selection(PlanProposal([ChildCall("one", "a", {"q": 2})]).to_dict())
@@ -948,8 +948,8 @@ def test_plan_replan_feedback_is_next_actual_planning_input_and_bounded():
 
 
 def test_protocol9_preserves_complete_session_history2_composition():
-    from ralf_agent import CompleteModelHistory
-    from ralf_agent.temporal_state import validate_manifest
+    from relf_agent import CompleteModelHistory
+    from relf_agent.temporal_state import validate_manifest
 
     runtime, _, _, _ = setup(
         model_continuation=True,
@@ -1049,9 +1049,9 @@ async def drive_native(runtime, state):
 def test_actual_native_receipts_are_consumed_before_configured_gate_and_managed_stage(
     tmp_path, kind
 ):
-    from ralf_agent import ChildCall
-    from ralf_agent.temporal_control_activities import select
-    from ralf_agent.temporal_state import TemporalRunState
+    from relf_agent import ChildCall
+    from relf_agent.temporal_control_activities import select
+    from relf_agent.temporal_state import TemporalRunState
     from tests.temporal_parent_completion_worker import runtime as fixture_runtime
 
     async def run():
@@ -1156,9 +1156,9 @@ def test_actual_native_receipts_are_consumed_before_configured_gate_and_managed_
 
 @pytest.mark.parametrize("container", ["sequence", "graph"])
 def test_nested_container_keeps_real_run_ids_and_final_model_slots(container):
-    from ralf_agent import GraphNode, GraphWorkflowSpec, ToolCall, WorkflowSpec
-    from ralf_agent.parent_completion import ParentCompletionPolicy
-    from ralf_agent.temporal_state import TemporalRunState
+    from relf_agent import GraphNode, GraphWorkflowSpec, ToolCall, WorkflowSpec
+    from relf_agent.parent_completion import ParentCompletionPolicy
+    from relf_agent.temporal_state import TemporalRunState
 
     class CalculationProvider:
         identity = {"kind": "container-receipt-provider", "version": "1"}
@@ -1253,10 +1253,10 @@ def test_nested_container_keeps_real_run_ids_and_final_model_slots(container):
 
 
 def test_public_receipt_dsl_uses_logical_member_paths_across_original_authorities():
-    from ralf_agent import LocalEngine, SQLiteStore, ToolCall
-    from ralf_agent.parent_completion import ParentCompletionPolicy
-    from ralf_agent.parent_completion_rules import ReceiptParentCompletionGate
-    from ralf_agent.temporal_state import TemporalRunState
+    from relf_agent import LocalEngine, SQLiteStore, ToolCall
+    from relf_agent.parent_completion import ParentCompletionPolicy
+    from relf_agent.parent_completion_rules import ReceiptParentCompletionGate
+    from relf_agent.temporal_state import TemporalRunState
 
     class Calculator:
         identity = {"kind": "portable-parent-receipt-fixture", "version": "1"}
@@ -1347,7 +1347,7 @@ def test_public_receipt_dsl_uses_logical_member_paths_across_original_authoritie
 
 
 def test_custom_stage_bound_provider_session_and_native_history_use_original_scope_and_caps():
-    from ralf_agent import (
+    from relf_agent import (
         AgentBindingDescriptor,
         AgentDefinition,
         BindingCatalog,
@@ -1357,11 +1357,11 @@ def test_custom_stage_bound_provider_session_and_native_history_use_original_sco
         InMemoryMemory,
         SessionBindingResource,
     )
-    from ralf_agent.parent_completion import ParentCompletionPolicy
-    from ralf_agent.parent_verification_stage import ModelParentVerificationStage
-    from ralf_agent.temporal_session_state import TemporalSessionState
-    from ralf_agent.temporal_session_topology import CompositeSessionTopology
-    from ralf_agent.temporal_state import TemporalRunState
+    from relf_agent.parent_completion import ParentCompletionPolicy
+    from relf_agent.parent_verification_stage import ModelParentVerificationStage
+    from relf_agent.temporal_session_state import TemporalSessionState
+    from relf_agent.temporal_session_topology import CompositeSessionTopology
+    from relf_agent.temporal_state import TemporalRunState
     from tests.test_temporal_session_model_history import drive
 
     class Judge(Provider):
@@ -1398,7 +1398,7 @@ def test_custom_stage_bound_provider_session_and_native_history_use_original_sco
             return request.to_dict()
 
         def interpret(self, request, output):
-            from ralf_agent.parent_completion import ParentCompletionVerdict
+            from relf_agent.parent_completion import ParentCompletionVerdict
 
             return ParentCompletionVerdict.from_dict(output)
 

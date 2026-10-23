@@ -11,9 +11,9 @@ dev70 增加多版本 `TemporalProfileHost`，保留原队列并按原 Run／Ses
 
 ```sh
 pip install 'relf-agent[temporal]'
-python -m ralf_agent.temporal_profile_example --data-dir ./profile-demo
+python -m relf_agent.temporal_profile_example --data-dir ./profile-demo
 # 启动自己的 Temporal 后，显式指定服务地址：
-python -m ralf_agent.temporal_profile_example --data-dir ./profile-demo --address localhost:7233
+python -m relf_agent.temporal_profile_example --data-dir ./profile-demo --address localhost:7233
 ```
 
 第一条示例命令仅写 TOML，不调用 SDK、网络或模型。第二条以离线 Echo 模型运行图、
@@ -21,7 +21,7 @@ python -m ralf_agent.temporal_profile_example --data-dir ./profile-demo --addres
 重复运行使用相同命令身份和原回执；修改已接受版本需要保留原配置用于恢复。
 
 ```python
-from ralf_agent import Scope, TemporalProfileCatalog, TemporalRuntimeBuilder
+from relf_agent import Scope, TemporalProfileCatalog, TemporalRuntimeBuilder
 
 catalog = TemporalProfileCatalog.from_file("./profile-demo/temporal.toml")
 assembly = await TemporalRuntimeBuilder(base_dir=catalog.base_dir).abuild(
@@ -43,8 +43,8 @@ finally:
 ## 多版本 Host
 
 ```sh
-python -m ralf_agent.temporal_catalog_example --data-dir ./catalog-demo
-python -m ralf_agent.temporal_catalog_example --data-dir ./catalog-demo --address localhost:7233
+python -m relf_agent.temporal_catalog_example --data-dir ./catalog-demo
+python -m relf_agent.temporal_catalog_example --data-dir ./catalog-demo --address localhost:7233
 ```
 
 第一条只写两版本 JSON，不需要 SDK 或连接服务。第二条显式启动两个版本的 Worker，

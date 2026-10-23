@@ -5,7 +5,7 @@ from dataclasses import asdict
 
 import pytest
 
-from ralf_agent import (
+from relf_agent import (
     AgentBindingDescriptor,
     AgentDefinition,
     AgentSpec,
@@ -19,10 +19,10 @@ from ralf_agent import (
     ToolRegistry,
     ToolSpec,
 )
-from ralf_agent.temporal_activities import TemporalRuntime
-from ralf_agent.temporal_bindings import normalize_request
-from ralf_agent.temporal_state import TemporalRunState
-from ralf_agent.types import digest, submission_request
+from relf_agent.temporal_activities import TemporalRuntime
+from relf_agent.temporal_bindings import normalize_request
+from relf_agent.temporal_state import TemporalRunState
+from relf_agent.types import digest, submission_request
 from tests.test_temporal_memory_bindings import grant
 
 
@@ -289,8 +289,8 @@ def test_original_history_rejects_mismatched_decision_evidence(mutation):
 
 @pytest.mark.parametrize("mutation", ["boolean", "missing", "digest", "identity"])
 def test_invalid_decision_protocol_is_refused_before_dispatch(mutation):
-    from ralf_agent.errors import DefinitionMismatch, ValidationError
-    from ralf_agent.temporal_state import validate_manifest
+    from relf_agent.errors import DefinitionMismatch, ValidationError
+    from relf_agent.temporal_state import validate_manifest
 
     runtime, _, _, _, _ = setup()
     value = runtime.manifest
@@ -365,11 +365,11 @@ def test_super_base_method_drift_is_pinned_after_model(monkeypatch):
 class GovernedPolicy(Policy):
     def propose(self, spec, response):
         if self.identity["label"] == "undeclared":
-            from ralf_agent import ToolCall
+            from relf_agent import ToolCall
 
             return DecisionProposal(tool_calls=(ToolCall("forbidden", {}),))
         if self.identity["label"] == "limit":
-            from ralf_agent import ToolCall
+            from relf_agent import ToolCall
 
             return DecisionProposal(tool_calls=(ToolCall("read", {}), ToolCall("other", {})))
         return DecisionProposal(output={"answer": "shaped"})
@@ -384,7 +384,7 @@ class GovernedPolicy(Policy):
     ],
 )
 def test_custom_decision_cannot_bypass_original_schema_grants_or_tool_limits(mode, code):
-    from ralf_agent import FixedAgentLimits
+    from relf_agent import FixedAgentLimits
 
     async def run():
         original, _, provider, policy, _ = setup(GovernedPolicy(mode))
@@ -448,7 +448,7 @@ class DirectClassAccess(NativeHarness):
 
 
 def test_super_capture_does_not_permit_unpinned_direct_class_access():
-    from ralf_agent.errors import ValidationError
+    from relf_agent.errors import ValidationError
 
     with pytest.raises(ValidationError):
         setup(DirectClassAccess())

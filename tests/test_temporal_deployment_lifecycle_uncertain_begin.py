@@ -8,8 +8,8 @@ import pytest
 
 pytest.importorskip("temporalio")
 
-from ralf_agent.errors import CloseIncomplete, DefinitionMismatch
-from ralf_agent.types import digest
+from relf_agent.errors import CloseIncomplete, DefinitionMismatch
+from relf_agent.types import digest
 from tests.test_temporal_deployment_release import environment, module
 
 
@@ -124,9 +124,9 @@ def test_original_handler_refusal_closes_owner_without_grant_business_or_end(
     from temporalio.client import WorkflowUpdateFailedError
     from temporalio.exceptions import ApplicationError
 
-    from ralf_agent import temporal_deployment_lifecycle_transport as lifecycle
-    from ralf_agent.temporal_state import TemporalRunState
-    from ralf_agent.temporal_workflow import TemporalRunWorkflow
+    from relf_agent import temporal_deployment_lifecycle_transport as lifecycle
+    from relf_agent.temporal_state import TemporalRunState
+    from relf_agent.temporal_workflow import TemporalRunWorkflow
 
     async def run():
         runtime, client, state, proof, info = environment(monkeypatch)

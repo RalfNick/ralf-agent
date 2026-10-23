@@ -1,82 +1,72 @@
 # 安装与环境
 
-[文档目录](README.md) · [首用教程](getting-started.md)
+需要Python3.11+。默认本地SDK使用SQLite，不要求Redis、PostgreSQL、Temporal、Docker或模型凭据。完整能力、可选依赖及平台资格分别验收，见[当前支持](implementation-status.md)。
 
-Relf-Agent 需要 Python 3.11+。本地开发使用 Linux 或 macOS，本轮实测平台见[Alpha范围](releases/0.1.0a2.md)，CI配置不等于已运行通过；CI的Python版本与检查以[贡献指南](../CONTRIBUTING.md)和[工作流](../.github/workflows/ci.yml)为准。
+## 当前a6源码或本地原包
 
-## 当前 a5 改名候选与原制品
+`relf-agent==0.1.0a6`统一`relf_agent`导入与`relf`／`relf-*`命令。原包、精确SHA、本地及外部待办见[a6说明](releases/0.1.0a6.md)和[a6清单](alpha6-validation-status.md)。未验证的PyPI／远端安装不作为已交付入口。
 
-当前源码为 `relf-agent==0.1.0a5`，保留 `ralf_agent` 导入和 `ralf` CLI；继承 a4 功能，只统一发行元数据、安装提示和发布流程。原 wheel／sdist、实际本地验证和外部待办见[a5说明](releases/0.1.0a5.md)与[a5清单](alpha5-validation-status.md)。本轮不推送、触发远端CI或公开发布，`pip install relf-agent==0.1.0a5` 尚不是已验收的公开安装入口。
-
-原a4的Linux ARM64／原生AMD64三Python版本成绩属于其原包，详见[a4清单](alpha4-validation-status.md)，不沿用为a5资格。a2／a3／a4的原包、manifest、历史失败与恢复环境保持；公开安装仍使用下方a2 URL。新旧发行共享导入文件和CLI，请使用独立虚拟环境，不要共装`ralf-agent`和`relf-agent`。
-
-## 从公开 Alpha 安装
-
-当前公开入口是[GitHub Release v0.1.0a2](https://github.com/RalfNick/relf-agent/releases/tag/v0.1.0a2)，尚未发布到PyPI。原wheel已在源码目录外的新环境实际安装，审批、崩溃恢复和重复提交通过；仓库改名后的以下下载地址另经匿名下载核对，原包SHA保持：
+在**包含a6的源码目录**创建新环境：
 
 ```bash
-python3 -m venv .venv
-source .venv/bin/activate
-python -m pip install 'https://github.com/RalfNick/relf-agent/releases/download/v0.1.0a2/ralf_agent-0.1.0a2-py3-none-any.whl#sha256=dfac0e38b2a879d8eb0c23dd5889774a0d64860c9ffe1945f9ef945629f95a46'
-ralf --version
-ralf --format text init my-agent
-```
-
-Release同时提供原sdist和只列这两包的`SHA256SUMS`。公开安装实测为macOS ARM64／Python3.12、正常PyPI基础依赖解析；Linux ARM64／原生AMD64三Python版本使用冻结依赖门禁分别验收。具体范围和原失败见[公开交付记录](../architecture/reviews/2026-10-22-alpha2-public-release.md)。
-
-## 从源码安装
-
-```bash
-git clone https://github.com/RalfNick/relf-agent.git
-cd relf-agent
-python3 -m venv .venv
+python3.12 -m venv .venv
 source .venv/bin/activate
 python -m pip install -e .
-ralf --version
+python -c 'import relf_agent; print(relf_agent.__version__)'
+relf --version
 ```
 
-基础运行依赖为 `httpx` 和 `jsonschema`。默认 SQLite、离线 Demo 与独立 starter 不需要模型密钥或外部服务。安装后按[首用教程](getting-started.md)完成提交、审批与恢复。
-
-上面的 clone 命令默认获取 `main`，演示当前 Alpha 源码安装；[官网](https://relfagent.com/)提供双语入门。公开Tag`v0.1.0a2`固定验收代码`3a92720`；默认分支另维护最新安装文档。要复现交付请使用下方精确wheel，或对应源码提交，并核对`ralf --version`。制品的固定来源、平台和追加测试校正见[验证清单](alpha2-validation-status.md)，不能仅凭远端分支名称推导同一验收范围。
-
-## 从本地 wheel 安装
-
-在独立虚拟环境中，把占位路径替换为实际制品路径：
+维护者也可以安装精确的本地原wheel：
 
 ```bash
-python3 -m venv .venv
-source .venv/bin/activate
-python -m pip install "/path/to/relf_agent-0.1.0a5-py3-none-any.whl"
-ralf --version
-ralf init my-agent
+python3.12 -m venv /tmp/relf-a6
+source /tmp/relf-a6/bin/activate
+python -m pip install /ABS/relf_agent-0.1.0a6-py3-none-any.whl
+python -m pip show relf-agent
+python -m pip check
+python -m relf_agent --version
+relf --version
 ```
 
-当前本地候选为`relf-agent==0.1.0a5`，目录及SHA校验见[a5说明](releases/0.1.0a5.md)；公开安装推荐仍为 a2，见[发布指南](releasing.md)。dev123及更早目录属于历史制品，不要仅按同名 wheel 选择。GitHub Release的对应原包已公开核验；PyPI未发布。wheel 包含独立工程生成器，仓库 `examples/` 通过源码获取。
+预期版本`0.1.0a6`，CLI显示`Relf-Agent 0.1.0a6`。`pip show`检查的是发行名`relf-agent`，Python导入检查的是`relf_agent`，两者用途不同。新包不提供`ralf_agent`和`ralf`别名。
 
-## 按需安装可选依赖
+安装后按[首用教程](getting-started.md)生成自己的工程，再用[连续教程](support-journey.md)逐步接入Session、RAG、记忆和Workflow。wheel包含生成器，仓库`examples/`从源码或sdist获取。
 
-以下命令在源码仓库根目录、已激活的虚拟环境中执行。只安装所选功能需要的 extra；依赖声明以 [pyproject.toml](../pyproject.toml) 为准。
+## 可选能力
 
-| 功能 | 安装命令 | 使用说明 |
-| --- | --- | --- |
-| 解析标准 Skill 文档 | `python -m pip install -e '.[skills]'` | [Skill 文档](skill-documents.md) |
-| 文本 PDF 摄取 | `python -m pip install -e '.[pdf]'` | [PDF 摄取](pdf-ingestion.md) |
-| tiktoken 计量 | `python -m pip install -e '.[tokenizer]'` | [Token 与分块](tokenization.md) |
-| Redis 适配器 | `python -m pip install -e '.[redis]'` | [远程数据](remote-data.md) |
-| PostgreSQL 适配器 | `python -m pip install -e '.[postgres]'` | [远程数据](remote-data.md) |
-| Redis 与 PostgreSQL | `python -m pip install -e '.[remote]'` | [异步装配](async-assembly.md) |
-| Temporal 与 PostgreSQL 客户端 | `python -m pip install -e '.[temporal]'` | [Temporal 执行](temporal-execution.md) |
-| ASGI 服务启动 | `python -m pip install -e '.[server]'` | [异步服务](async-handoff.md) |
-| 开发、测试与打包 | `python -m pip install -e '.[dev]'` | [贡献指南](../CONTRIBUTING.md) |
+从当前源码安装可使用`python -m pip install -e '.[pdf,tokenizer]'`；从已核对的本地wheel安装extra可使用`python -m pip install '/ABS/relf_agent-0.1.0a6-py3-none-any.whl[pdf,tokenizer]'`。发布后才使用相应索引的`relf-agent[extra]`并独立验证。
 
-安装客户端依赖不会创建 Redis、PostgreSQL、Temporal 或 Docker 服务。服务地址、凭据、资源权限和生命周期由运行方显式配置。
-
-## 常见安装问题
-
-| 现象 | 检查方式 |
+| extra | 用途 |
 | --- | --- |
-| 找不到 `ralf` | 激活安装时使用的虚拟环境，执行 `python -m pip show relf-agent`（原a2／a4环境查`ralf-agent`） 确认环境 |
-| 无法导入 `agent_app.runtime` | 在生成项目的目录中执行；`--factory` 指向该工程原工厂 |
-| 无法导入 `examples` | 使用源码仓库并从根目录执行，或改用 wheel 中的 `ralf init` 模板 |
-| 提示缺少可选模块 | 根据上表安装 extra，再按对应指南配置外部资源 |
-| 任务配置不匹配 | 保留原数据库和原配置，按[恢复指南](recovery-guide.md)处理，避免切换新默认续跑旧任务 |
+| `pdf` | 受限文本PDF解析 |
+| `tokenizer` | tiktoken协议计量 |
+| `skills` | YAML Skill文档 |
+| `redis`／`postgres`／`remote` | 对应远程数据适配 |
+| `temporal` | Temporal执行与对应存储依赖 |
+| `server` | HTTP服务运行 |
+| `dev` | 本地开发、构建和测试工具 |
+
+extra只是依赖选择，不等于某个服务组合已经验收。`RALF_*`配置、`.ralf`数据目录与现有协议名保持。
+
+<a id="从公开-alpha-安装"></a>
+
+## 历史公开a2及原a3–a5
+
+原公开a2下载地址和SHA保持，其导入是`ralf_agent`、CLI是`ralf`：
+
+```bash
+python -m pip install 'https://github.com/RalfNick/relf-agent/releases/download/v0.1.0a2/ralf_agent-0.1.0a2-py3-none-any.whl#sha256=dfac0e38b2a879d8eb0c23dd5889774a0d64860c9ffe1945f9ef945629f95a46'
+ralf --version
+```
+
+这组命令只在独立旧环境使用，配合[a2原说明](releases/0.1.0a2.md)，不要接着运行上文a6示例。原a3／a4的发行名也是`ralf-agent`；a5发行名已为`relf-agent`，但仍是旧导入与旧CLI。旧任务必须保留原环境和匹配Worker；原包／验收不回写，不自动迁移History、未知效果或指纹。详见[名称边界](project-naming.md)。
+
+## 排障
+
+| 现象 | 检查 |
+| --- | --- |
+| 找不到`relf` | 激活a6环境，执行`python -m pip show relf-agent`核对位置及版本 |
+| `import relf_agent`失败 | 是否实际安装了a5或更早包，是否使用另一个Python环境 |
+| 只有`ralf`能运行 | 当前是旧SDK环境，不要以别名掩盖版本差异 |
+| 缺少可选依赖 | 为同一a6环境安装对应extra，参照专题能力边界 |
+| 原Run提示定义／绑定不匹配 | 保留旧版本、旧定义和组件，按[恢复指南](recovery-guide.md)核对，不清除身份检查 |

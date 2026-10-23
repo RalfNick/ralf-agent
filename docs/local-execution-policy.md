@@ -16,7 +16,7 @@
 
 ```python
 import time
-from ralf_agent import AgentSpec, LocalEngine, LocalExecutionPolicy, SQLiteStore
+from relf_agent import AgentSpec, LocalEngine, LocalExecutionPolicy, SQLiteStore
 
 # providers、tools 由应用按原模型／工具端口装配。
 engine = LocalEngine(
@@ -107,7 +107,7 @@ approval_timeout_seconds = 120
 ```
 
 ```python
-from ralf_agent import RuntimeBuilder, load_catalog
+from relf_agent import RuntimeBuilder, load_catalog
 
 catalog = load_catalog("runtime.toml")
 builder = RuntimeBuilder(base_dir=catalog.base_dir)
@@ -119,7 +119,7 @@ instance = builder.build(catalog.default, "runs.sqlite")
 应用可以注册自己的同步或异步策略工厂：
 
 ```python
-from ralf_agent import ComponentRegistry, LocalExecutionPolicy
+from relf_agent import ComponentRegistry, LocalExecutionPolicy
 
 registry = ComponentRegistry()
 
@@ -136,7 +136,7 @@ registry.register("execution_policy", "business-deadline", factory, validator=va
 
 ## 存储与 Schema
 
-替换执行存储沿原 mandatory `ExecutionStore` v1，并为期限显式实现可选 `ralf_agent.ports.LocalDeadlineExecutionStore`：
+替换执行存储沿原 mandatory `ExecutionStore` v1，并为期限显式实现可选 `relf_agent.ports.LocalDeadlineExecutionStore`：
 
 ```python
 local_deadline_version = 1

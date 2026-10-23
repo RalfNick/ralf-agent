@@ -4,15 +4,15 @@ import asyncio
 
 import pytest
 
-from ralf_agent.temporal_coding_runtime import callbacks
-from ralf_agent.types import digest
+from relf_agent.temporal_coding_runtime import callbacks
+from relf_agent.types import digest
 from tests.test_temporal_session_coding_projection import sdk_session_environment
 from tests.test_temporal_session_deployment_control import Client as SessionClient
 from tests.test_temporal_session_deployment_control import Handle as SessionHandle
 
 
 def environment(monkeypatch):
-    from ralf_agent import temporal_session_deployment_verification as verification
+    from relf_agent import temporal_session_deployment_verification as verification
 
     original_origin = verification.validate_session_origin
     runtime, client, request, info = sdk_session_environment(monkeypatch)
@@ -80,9 +80,9 @@ def test_warm_callback_aggregates_coding_checks_but_retains_all_session_sdk_fact
 def test_resource_observation_keeps_two_fresh_validation_sets_without_duplicate_query(monkeypatch):
     from dataclasses import asdict
 
-    from ralf_agent.executors import DispatchEnvelope
-    from ralf_agent.temporal_coding_state import CODING_QUERY
-    from ralf_agent.types import InvocationContext, Scope
+    from relf_agent.executors import DispatchEnvelope
+    from relf_agent.temporal_coding_state import CODING_QUERY
+    from relf_agent.types import InvocationContext, Scope
 
     async def run():
         runtime, client, session, request, info = environment(monkeypatch)
@@ -149,7 +149,7 @@ def test_resource_observation_keeps_two_fresh_validation_sets_without_duplicate_
 
 
 def test_public_validation_and_permission_keep_complete_runtime_checks(monkeypatch):
-    from ralf_agent.temporal_deployment_coding_validation import CodingValidation
+    from relf_agent.temporal_deployment_coding_validation import CodingValidation
 
     async def run():
         runtime, client, session, request, info = environment(monkeypatch)
@@ -164,7 +164,7 @@ def test_public_validation_and_permission_keep_complete_runtime_checks(monkeypat
 
 
 def test_runtime_drift_during_real_sdk_readset_never_returns_authority(monkeypatch):
-    from ralf_agent.errors import DefinitionMismatch
+    from relf_agent.errors import DefinitionMismatch
 
     async def run():
         runtime, client, session, request, info = environment(monkeypatch)
@@ -183,8 +183,8 @@ def test_runtime_drift_during_real_sdk_readset_never_returns_authority(monkeypat
 
 @pytest.mark.parametrize("when", ["before", "after"])
 def test_outer_runtime_check_is_independent_of_private_inner_readset(monkeypatch, when):
-    from ralf_agent import temporal_deployment_coding_validation as product
-    from ralf_agent.errors import DefinitionMismatch
+    from relf_agent import temporal_deployment_coding_validation as product
+    from relf_agent.errors import DefinitionMismatch
 
     entered = []
 
@@ -221,8 +221,8 @@ def test_outer_runtime_check_is_independent_of_private_inner_readset(monkeypatch
 
 
 def test_private_callback_method_remains_pinned_before_sdk_reads(monkeypatch):
-    from ralf_agent.errors import DefinitionMismatch
-    from ralf_agent.temporal_deployment_coding_validation import CodingValidation
+    from relf_agent.errors import DefinitionMismatch
+    from relf_agent.temporal_deployment_coding_validation import CodingValidation
 
     async def changed(self):
         raise AssertionError("Replaced private validator must not execute")
@@ -244,8 +244,8 @@ def test_private_callback_method_remains_pinned_before_sdk_reads(monkeypatch):
 @pytest.mark.parametrize("value", [None, 0, 1, "false"])
 @pytest.mark.parametrize("method", ["_fresh", "_session_origin"])
 def test_full_release_selection_requires_exact_bool_before_sdk_reads(monkeypatch, value, method):
-    from ralf_agent.errors import DefinitionMismatch
-    from ralf_agent.temporal_deployment_coding_validation import CodingValidation
+    from relf_agent.errors import DefinitionMismatch
+    from relf_agent.temporal_deployment_coding_validation import CodingValidation
 
     async def run():
         runtime, client, session, request, info = environment(monkeypatch)
@@ -293,7 +293,7 @@ def test_publication_three_callback_keeps_public_full_validation(monkeypatch):
 def test_default_callback_keeps_original_tree_validator(monkeypatch):
     from types import SimpleNamespace
 
-    from ralf_agent import temporal_session_activities
+    from relf_agent import temporal_session_activities
     from tests.test_temporal_coding_authority import setup
     from tests.test_temporal_session_deployment_control import Runtime
 
@@ -343,8 +343,8 @@ def test_first_cold_callback_keeps_original_complete_bootstrap_checks(monkeypatc
 def test_session_full_release_flag_requires_exact_bool_before_sdk_reads(
     monkeypatch, value, boundary
 ):
-    from ralf_agent.errors import DefinitionMismatch
-    from ralf_agent.temporal_session_deployment_verification import SessionControlValidation
+    from relf_agent.errors import DefinitionMismatch
+    from relf_agent.temporal_session_deployment_verification import SessionControlValidation
 
     async def run():
         runtime, client, session, request, info = environment(monkeypatch)
@@ -390,7 +390,7 @@ def test_unmatched_or_unselected_session_boundary_keeps_all_three_full_checks(
     import copy
     from collections import Counter
 
-    from ralf_agent.temporal_session_deployment_verification import validate_session_origin
+    from relf_agent.temporal_session_deployment_verification import validate_session_origin
     from tests.test_temporal_session_deployment_dto import origin, seal
 
     async def run():

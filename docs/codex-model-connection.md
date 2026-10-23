@@ -64,7 +64,7 @@ journal 父目录须存在。长期恢复应使用调用方保留的持久私有
 ```python
 import asyncio
 
-from ralf_agent import BindingSelection, RuntimeBuilder, RuntimeProfile, Scope
+from relf_agent import BindingSelection, RuntimeBuilder, RuntimeProfile, Scope
 
 entry = {
     "name": "coding",
@@ -121,7 +121,7 @@ JSON 使用 `schema_version=2` 的 Local catalog。将上述完整 `entry` 放�
 ```python
 import json
 from pathlib import Path
-from ralf_agent.runtime_config import load_catalog
+from relf_agent.runtime_config import load_catalog
 
 path = Path("runtime.json")
 path.write_text(json.dumps({
@@ -192,7 +192,7 @@ name = "coding"
 配置覆盖。Temporal 服务、PostgreSQL 和 Docker 前提由部署方提供。
 
 ```python
-from ralf_agent import TemporalProfile, TemporalRuntimeBuilder
+from relf_agent import TemporalProfile, TemporalRuntimeBuilder
 
 pg_entry = {name: value for name, value in entry.items() if name != "journal_path"}
 temporal_profile = TemporalProfile(
@@ -243,7 +243,7 @@ Local 工厂拥有其创建的 Runner 和 `RunnerJournal`，Runtime 异步关闭
 
 直接 SDK 使用可显式构造 `ConnectedCodexCodingRunner(root, connection=connection,
 credential_source=source, journal=journal, ...)`。自定义 source 实现
-`ralf_agent.codex_credentials.CodingCredentialSource` 的 `identity` 属性和
+`relf_agent.codex_credentials.CodingCredentialSource` 的 `identity` 属性和
 `async resolve(connection: dict) -> str`：identity 须为有界非敏感 JSON，resolve 实现须
 可验证。source 返回值只供原 startup phase 使用，错误转换为固定非敏感失败。
 凭证字符串当前限制为 1–8192 个可打印 ASCII 字符（码点 33–126）。

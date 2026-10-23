@@ -3,18 +3,18 @@ from dataclasses import replace
 
 import pytest
 
-from ralf_agent.errors import (
+from relf_agent.errors import (
     AuthorizationDenied,
     BudgetExceeded,
     DefinitionMismatch,
     NotFound,
     ValidationError,
 )
-from ralf_agent.types import Scope, digest
+from relf_agent.types import Scope, digest
 
 
 def api():
-    return importlib.import_module("ralf_agent.artifacts")
+    return importlib.import_module("relf_agent.artifacts")
 
 
 @pytest.fixture(params=["memory", "sqlite", "file"])
@@ -25,7 +25,7 @@ def store(request, tmp_path):
         if request.param == "memory"
         else a.SQLiteArtifactStore(tmp_path / "artifacts.sqlite", max_bytes=1024, capacity=2)
         if request.param == "sqlite"
-        else importlib.import_module("ralf_agent").FileArtifactStore(
+        else importlib.import_module("relf_agent").FileArtifactStore(
             tmp_path / "artifacts", max_bytes=1024, capacity=2
         )
     )

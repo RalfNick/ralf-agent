@@ -6,7 +6,7 @@ import uuid
 
 import pytest
 
-from ralf_agent import (
+from relf_agent import (
     AgentSpec,
     ComponentRegistry,
     ModelResponse,
@@ -15,7 +15,7 @@ from ralf_agent import (
     TemporalRuntimeBuilder,
     ToolCall,
 )
-from ralf_agent.temporal import replay_temporal_history
+from relf_agent.temporal import replay_temporal_history
 
 from .test_cli_tool_configuration import config
 
@@ -108,7 +108,7 @@ def test_actual_cli_write_uses_durable_journal_and_once_business_effect(tmp_path
     import sqlite3
     import sys
 
-    from ralf_agent.cli_starter import CLI_FILES
+    from relf_agent.cli_starter import CLI_FILES
 
     async def run():
         from temporalio.client import Client

@@ -6,8 +6,8 @@ import uuid
 
 import pytest
 
-import ralf_agent as r
-from ralf_agent.temporal import replay_temporal_history
+import relf_agent as r
+from relf_agent.temporal import replay_temporal_history
 
 from .test_sandbox_binding_execution import Reader, definition
 

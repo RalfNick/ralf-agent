@@ -7,12 +7,12 @@ from dataclasses import asdict
 
 import pytest
 
-from ralf_agent import AgentSpec, ToolExecutionOwner
-from ralf_agent.errors import IdempotencyConflict
-from ralf_agent.temporal_deployment_admission import registry_id
-from ralf_agent.temporal_deployment_submissions import _update
-from ralf_agent.temporal_state import COMMAND_REGISTRY_CAPACITY
-from ralf_agent.types import digest
+from relf_agent import AgentSpec, ToolExecutionOwner
+from relf_agent.errors import IdempotencyConflict
+from relf_agent.temporal_deployment_admission import registry_id
+from relf_agent.temporal_deployment_submissions import _update
+from relf_agent.temporal_state import COMMAND_REGISTRY_CAPACITY
+from relf_agent.types import digest
 from tests.test_temporal_deployment_dispatch_service import _eventually
 from tests.test_temporal_deployment_public_service import (
     CommittedThreadWrite,

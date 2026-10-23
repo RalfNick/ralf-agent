@@ -6,10 +6,10 @@ from dataclasses import asdict
 
 import pytest
 
-from ralf_agent import AgentSpec, ModelResponse, Scope, ToolRegistry
-from ralf_agent.temporal_activities import TemporalRuntime
-from ralf_agent.temporal_state import TemporalRunState
-from ralf_agent.types import submission_request
+from relf_agent import AgentSpec, ModelResponse, Scope, ToolRegistry
+from relf_agent.temporal_activities import TemporalRuntime
+from relf_agent.temporal_state import TemporalRunState
+from relf_agent.types import submission_request
 
 
 class Provider:
@@ -27,7 +27,7 @@ def session(**components):
     runtime = TemporalRuntime(
         providers={"default": Provider()}, tools=ToolRegistry(), enable_sessions=True, **components
     )
-    module = importlib.import_module("ralf_agent.temporal_session_state")
+    module = importlib.import_module("relf_agent.temporal_session_state")
     accepted = {
         "scope": asdict(Scope()),
         "namespace_id": "namespace-uuid",
@@ -66,7 +66,7 @@ def submit(state, command="turn", value="question", ref=None):
     ],
 )
 def test_rebind_rejects_invalid_execution_binding_without_changing_revision(field, value):
-    from ralf_agent.errors import ValidationError
+    from relf_agent.errors import ValidationError
 
     state, _ = session()
     binding = copy.deepcopy(state.binding)
@@ -101,9 +101,9 @@ def test_turn_receipt_and_busy_rejection_survive_restore():
 
 
 def nested_proof():
-    from ralf_agent import TeamSpec
-    from ralf_agent.temporal_parent_state import TemporalParentState
-    from ralf_agent.temporal_session_state import TemporalSessionState
+    from relf_agent import TeamSpec
+    from relf_agent.temporal_parent_state import TemporalParentState
+    from relf_agent.temporal_session_state import TemporalSessionState
 
     host = TemporalRuntime(
         providers={"default": Provider()}, tools=ToolRegistry(), enable_sessions=True
@@ -168,7 +168,7 @@ def nested_proof():
 
 @pytest.mark.parametrize("damage", ["missing", "foreign", "deferred-ack", "not-quiet"])
 def test_nested_leaf_evidence_is_required_even_after_parent_is_terminal(damage):
-    from ralf_agent.errors import DefinitionMismatch
+    from relf_agent.errors import DefinitionMismatch
 
     state, proof = nested_proof()
     damaged = copy.deepcopy(proof)
@@ -229,7 +229,7 @@ def test_original_run_quiescence_and_ack_are_required_before_next_turn():
     ],
 )
 def test_unconfirmed_or_foreign_run_cannot_release_lane(damage):
-    from ralf_agent.errors import RalfError
+    from relf_agent.errors import RalfError
 
     state, runtime = session()
     submit(state)
@@ -291,7 +291,7 @@ def test_idle_rebind_cas_preserves_old_open_receipt_and_ref_replay():
 def test_session_history_does_not_replace_current_knowledge_query(managed):
     import asyncio
 
-    from ralf_agent import (
+    from relf_agent import (
         Document,
         InMemoryKnowledgeStore,
         KnowledgeContext,
@@ -333,10 +333,10 @@ def test_session_history_does_not_replace_current_knowledge_query(managed):
 def test_closed_session_run_refuses_model_at_original_history_admission(cancel_during_source_read):
     import asyncio
 
-    from ralf_agent.types import digest
+    from relf_agent.types import digest
 
     async def check():
-        from ralf_agent import InMemoryKnowledgeStore, KnowledgeContext, LexicalRetriever
+        from relf_agent import InMemoryKnowledgeStore, KnowledgeContext, LexicalRetriever
 
         entered, release = asyncio.Event(), asyncio.Event()
 

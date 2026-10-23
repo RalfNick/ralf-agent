@@ -6,7 +6,7 @@ from contextlib import closing
 
 import pytest
 
-from ralf_agent import (
+from relf_agent import (
     AgentBindingDescriptor,
     AgentDefinition,
     AgentSpec,
@@ -23,15 +23,15 @@ from ralf_agent import (
     ToolRegistry,
     WorkflowSpec,
 )
-from ralf_agent.errors import DefinitionMismatch, ValidationError
-from ralf_agent.recall import MemoryRecallPolicy
-from ralf_agent.retrieval import (
+from relf_agent.errors import DefinitionMismatch, ValidationError
+from relf_agent.recall import MemoryRecallPolicy
+from relf_agent.retrieval import (
     Document,
     InMemoryKnowledgeStore,
     KnowledgeContext,
     LexicalRetriever,
 )
-from ralf_agent.types import canonical
+from relf_agent.types import canonical
 
 from .test_binding_execution import RecordingProvider, bound_catalog, engine
 from .test_data_binding_resources import resources

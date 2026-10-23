@@ -3,7 +3,7 @@
 Run from the repository root with the SDK installed:
     python -m examples.execution_components --db .ralf/components.sqlite
 
-Use `ralf --db DB --factory examples.execution_components:create_engine
+Use `relf --db DB --factory examples.execution_components:create_engine
 --format text inspect RUN_ID` to review the proposed write and copy the explicit
 approval/resume commands. Add `--workflow` for a two-step sequential workflow.
 This fixture uses local SQLite, not a remote service or a live model.
@@ -19,7 +19,7 @@ import sys
 from dataclasses import asdict
 from pathlib import Path
 
-from ralf_agent import (
+from relf_agent import (
     AgentSpec,
     LocalEngine,
     ModelResponse,
@@ -29,11 +29,11 @@ from ralf_agent import (
     ToolSpec,
     WorkflowSpec,
 )
-from ralf_agent.errors import RalfError, ValidationError
-from ralf_agent.executors import DispatchEnvelope, EffectObservation
-from ralf_agent.harness import DecisionProposal, ModelRequest
-from ralf_agent.tools import current_thread_tracker
-from ralf_agent.types import canonical, digest
+from relf_agent.errors import RalfError, ValidationError
+from relf_agent.executors import DispatchEnvelope, EffectObservation
+from relf_agent.harness import DecisionProposal, ModelRequest
+from relf_agent.tools import current_thread_tracker
+from relf_agent.types import canonical, digest
 
 
 class ReviewHarness:

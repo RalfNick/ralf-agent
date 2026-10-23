@@ -1,6 +1,6 @@
 {
   "profile": "codex-contained-coding-docker29-ns-v1",
-  "asset": "src/ralf_agent/_codex_coding_seccomp.json",
+  "asset": "src/relf_agent/_codex_coding_seccomp.json",
   "upstream": {
     "project": "github.com/moby/profiles/seccomp",
     "module_version": "v0.1.0",

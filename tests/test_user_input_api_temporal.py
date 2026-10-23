@@ -6,11 +6,11 @@ from types import MethodType
 
 import pytest
 
-from ralf_agent import AgentSpec, Runtime
-from ralf_agent.errors import DefinitionMismatch, ValidationError
-from ralf_agent.temporal_activities import TemporalRuntime
-from ralf_agent.tools import ToolRegistry
-from ralf_agent.user_input import register_user_input
+from relf_agent import AgentSpec, Runtime
+from relf_agent.errors import DefinitionMismatch, ValidationError
+from relf_agent.temporal_activities import TemporalRuntime
+from relf_agent.tools import ToolRegistry
+from relf_agent.user_input import register_user_input
 
 from .temporal_agent_fixture import StateClient, engine
 from .test_temporal_memory_bindings import grant

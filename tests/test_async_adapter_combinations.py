@@ -5,7 +5,7 @@ import inspect
 
 import pytest
 
-from ralf_agent import (
+from relf_agent import (
     AgentSpec,
     InMemoryArtifactStore,
     InvocationContext,
@@ -19,8 +19,8 @@ from ralf_agent import (
     ToolSpec,
     register_tool_source,
 )
-from ralf_agent.errors import ValidationError
-from ralf_agent.ports import validate_engine
+from relf_agent.errors import ValidationError
+from relf_agent.ports import validate_engine
 
 from .helpers import ScriptedProvider
 
@@ -49,9 +49,9 @@ class SyncOperation:
 def test_callable_engine_operations_work_through_the_existing_local_service(tmp_path):
     import httpx
 
-    from ralf_agent.a2a import A2AClient
-    from ralf_agent.handoff import SQLiteInbox
-    from ralf_agent.service_lifecycle import LocalA2AService
+    from relf_agent.a2a import A2AClient
+    from relf_agent.handoff import SQLiteInbox
+    from relf_agent.service_lifecycle import LocalA2AService
 
     class EngineView:
         def __init__(self, engine):
@@ -108,12 +108,12 @@ def test_callable_engine_operations_work_through_the_existing_local_service(tmp_
 
 
 def test_callable_tool_source_retains_approval_and_single_dispatch_after_restart(tmp_path):
-    import ralf_agent
+    import relf_agent
 
     from .test_tool_sources import Source, descriptor
 
     async def run():
-        source = Source([descriptor(ralf_agent)])
+        source = Source([descriptor(relf_agent)])
         source.list_tools = AsyncOperation(source.list_tools)
         source.call_tool = AsyncOperation(source.call_tool)
         registry = ToolRegistry()
@@ -156,7 +156,7 @@ def test_callable_tool_source_retains_approval_and_single_dispatch_after_restart
 
 
 def test_callable_mcp_transport_discovers_and_executes_the_pinned_tool():
-    from ralf_agent.mcp import MCPToolSource
+    from relf_agent.mcp import MCPToolSource
 
     class Transport:
         identity = {"kind": "offline-callable-mcp", "version": "1"}
@@ -190,8 +190,8 @@ def test_callable_mcp_transport_discovers_and_executes_the_pinned_tool():
 
 
 def test_callable_memory_extractor_retains_grounding_and_duplicate_consolidation(tmp_path):
-    from ralf_agent.memory_extraction import MemoryAdmissionPolicy, RuleMemoryExtractor
-    from ralf_agent.memory_pipeline import MemoryPipeline
+    from relf_agent.memory_extraction import MemoryAdmissionPolicy, RuleMemoryExtractor
+    from relf_agent.memory_pipeline import MemoryPipeline
 
     async def run():
         provider = ScriptedProvider([ModelResponse(output={"language": "中文"})])
@@ -215,7 +215,7 @@ def test_callable_memory_extractor_retains_grounding_and_duplicate_consolidation
 
 
 def test_callable_artifact_ports_offload_without_losing_raw_tool_evidence(tmp_path):
-    from ralf_agent.data_context import ManagedDataContext
+    from relf_agent.data_context import ManagedDataContext
 
     class Artifacts:
         def __init__(self):
@@ -252,8 +252,8 @@ def test_callable_artifact_ports_offload_without_losing_raw_tool_evidence(tmp_pa
                 assert (await engine.drive(handle.run_id)).state == "succeeded"
                 references = engine.context_artifacts(handle.run_id)
                 assert references
-                from ralf_agent import ArtifactReference
-                from ralf_agent.types import canonical
+                from relf_agent import ArtifactReference
+                from relf_agent.types import canonical
 
                 assert artifacts.base.get(
                     Scope(), ArtifactReference.from_dict(references[0]["intent"]["reference"])
@@ -266,7 +266,7 @@ def test_callable_artifact_ports_offload_without_losing_raw_tool_evidence(tmp_pa
 
 
 def test_callable_generation_ports_preserve_existing_index_maintenance_receipts(tmp_path):
-    from ralf_agent import RecallQuery
+    from relf_agent import RecallQuery
 
     from .test_fact_index_maintenance_tools import NAME, NS, SCOPE, ctx, run_ports
 
@@ -298,10 +298,10 @@ def test_callable_generation_ports_preserve_existing_index_maintenance_receipts(
 
 @pytest.mark.parametrize("port", ["engine", "source", "mcp", "extractor", "artifacts"])
 def test_sync_factories_are_refused_before_their_lazy_operations_are_entered(tmp_path, port):
-    from ralf_agent.data_context import ManagedDataContext
-    from ralf_agent.mcp import MCPToolSource
-    from ralf_agent.memory_extraction import RuleMemoryExtractor
-    from ralf_agent.memory_pipeline import MemoryPipeline
+    from relf_agent.data_context import ManagedDataContext
+    from relf_agent.mcp import MCPToolSource
+    from relf_agent.memory_extraction import RuleMemoryExtractor
+    from relf_agent.memory_pipeline import MemoryPipeline
 
     from .test_tool_sources import Source
 

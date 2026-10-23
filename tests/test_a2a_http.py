@@ -67,7 +67,7 @@ def a2a_http_service(tmp_path, request):
 
 
 def test_true_http_native_tasks_dedup_cancel_and_unknown_lookup(a2a_http_service):
-    from ralf_agent.a2a import A2AClient, A2ARemoteError
+    from relf_agent.a2a import A2AClient, A2ARemoteError
 
     async def check():
         client = A2AClient(a2a_http_service, headers={"Authorization": "Bearer test-owner"})
@@ -103,7 +103,7 @@ def test_true_http_native_tasks_dedup_cancel_and_unknown_lookup(a2a_http_service
 @pytest.mark.parametrize("a2a_http_service", [1], indirect=True)
 def test_full_inbox_preserves_http_lookup_replay_and_cancellation(a2a_http_service, tmp_path):
     """P3-3 preparation: existing controls remain reachable at receipt capacity."""
-    from ralf_agent.a2a import A2AClient, A2ARemoteError
+    from relf_agent.a2a import A2AClient, A2ARemoteError
 
     async def check():
         client = A2AClient(a2a_http_service, headers={"Authorization": "Bearer test-owner"})
@@ -151,8 +151,8 @@ def test_full_inbox_preserves_http_lookup_replay_and_cancellation(a2a_http_servi
 @pytest.mark.parametrize("a2a_http_service", [{"capacity": 1, "events": True}], indirect=True)
 def test_true_http_event_cursor_reconnect_keeps_original_business(a2a_http_service, tmp_path):
     async def run():
-        from ralf_agent import EventCursor
-        from ralf_agent.a2a import A2AClient
+        from relf_agent import EventCursor
+        from relf_agent.a2a import A2AClient
 
         client = A2AClient(a2a_http_service, headers={"Authorization": "Bearer test-owner"})
         try:

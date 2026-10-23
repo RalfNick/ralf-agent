@@ -5,12 +5,12 @@ import importlib
 
 import pytest
 
-from ralf_agent.errors import DefinitionMismatch, ValidationError
-from ralf_agent.types import digest
+from relf_agent.errors import DefinitionMismatch, ValidationError
+from relf_agent.types import digest
 
 
 def module():
-    name = "ralf_agent.temporal_session_deployment_state"
+    name = "relf_agent.temporal_session_deployment_state"
     assert importlib.util.find_spec(name), "Original Session deployment lifecycle is missing"
     return importlib.import_module(name)
 
@@ -139,7 +139,7 @@ def test_separate_session_ledger_requires_original_end_and_no_replacement_owner(
 
 
 def advance(state):
-    from ralf_agent.temporal_state import TemporalRunState
+    from relf_agent.temporal_state import TemporalRunState
     from tests.test_temporal_session_deployment_dto import origin, reservation
 
     intent = state.intent
@@ -315,8 +315,8 @@ def test_build_intent_preserves_first_envelope_and_deployment_run_identity():
 
 
 def session_state():
-    from ralf_agent import temporal_deployment_protocol
-    from ralf_agent.temporal_session_state import TemporalSessionState
+    from relf_agent import temporal_deployment_protocol
+    from relf_agent.temporal_session_state import TemporalSessionState
     from tests.test_temporal_deployment_protocol import POLICY
     from tests.test_temporal_session_deployment_dto import NAMESPACE, intent
 
@@ -363,7 +363,7 @@ def selector(entry):
 
 
 def test_existing_session_accepts_deployment_intent_before_any_reservation_and_keeps_legacy_ids():
-    from ralf_agent.temporal_deployment_admission import root_run_id
+    from relf_agent.temporal_deployment_admission import root_run_id
     from tests.test_temporal_sessions import session, submit
 
     state = session_state()
@@ -458,7 +458,7 @@ def test_selected_workflow_issues_original_start_once_and_requires_positive_regi
 ):
     import asyncio
 
-    from ralf_agent import temporal_session_workflow as product
+    from relf_agent import temporal_session_workflow as product
 
     state = session_state()
     submit_session(state)
@@ -526,7 +526,7 @@ def test_selected_workflow_issues_original_start_once_and_requires_positive_regi
 def test_matching_retirement_hint_during_observe_keeps_new_dirty_generation(monkeypatch):
     import asyncio
 
-    from ralf_agent import temporal_session_workflow as product
+    from relf_agent import temporal_session_workflow as product
     from tests.test_temporal_session_deployment_dto import call
 
     state = session_state()
@@ -641,7 +641,7 @@ def test_two_consecutive_turns_publish_once_only_after_retirement_and_own_ack():
 def test_full_selected_query_and_callback_abi_preserves_original_start_views():
     import asyncio
 
-    from ralf_agent import temporal_session_workflow as product
+    from relf_agent import temporal_session_workflow as product
     from tests.test_temporal_session_deployment_dto import call
 
     state = session_state()
@@ -684,7 +684,7 @@ def test_full_selected_query_and_callback_abi_preserves_original_start_views():
 
 
 def test_selected_binding_query_returns_original_revision_for_stale_ref_rejection():
-    from ralf_agent import temporal_session_workflow as product
+    from relf_agent import temporal_session_workflow as product
 
     state = session_state()
     original = state.ref.to_dict()
@@ -758,8 +758,8 @@ def test_selected_coordinator_initialization_rejects_changed_actual_sdk_identity
 ):
     from types import SimpleNamespace
 
-    from ralf_agent import temporal_session_workflow as product
-    from ralf_agent.temporal_session_state import workflow_id
+    from relf_agent import temporal_session_workflow as product
+    from relf_agent.temporal_session_state import workflow_id
 
     state = session_state()
     accepted = {
@@ -829,7 +829,7 @@ def test_selected_status_inventories_original_session_call_debt_after_root_retir
 def test_late_original_observer_end_body_recovers_after_sdk_timeout_once(monkeypatch):
     import asyncio
 
-    from ralf_agent import temporal_session_workflow as product
+    from relf_agent import temporal_session_workflow as product
     from tests.test_temporal_session_deployment_dto import call
 
     state = session_state()
@@ -902,7 +902,7 @@ def test_end_rejects_forged_full_result_before_mutating_original_call():
 def test_nonpositive_late_body_closes_debt_without_automatic_observer_wake(positive):
     import asyncio
 
-    from ralf_agent import temporal_session_workflow as product
+    from relf_agent import temporal_session_workflow as product
     from tests.test_temporal_session_deployment_dto import call
 
     state = session_state()

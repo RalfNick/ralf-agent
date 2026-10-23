@@ -10,7 +10,7 @@ from pathlib import Path
 
 import pytest
 
-import ralf_agent as r
+import relf_agent as r
 
 WORKER = Path(__file__).with_name("local_deadline_worker.py")
 

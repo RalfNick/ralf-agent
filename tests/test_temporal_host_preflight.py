@@ -5,9 +5,9 @@ from datetime import timedelta
 
 import pytest
 
-from ralf_agent import TemporalRuntimeBuilder
-from ralf_agent.errors import DefinitionMismatch, ValidationError
-from ralf_agent.types import digest
+from relf_agent import TemporalRuntimeBuilder
+from relf_agent.errors import DefinitionMismatch, ValidationError
+from relf_agent.types import digest
 
 from .test_temporal_catalog_assembly import catalog
 from .test_temporal_profile_host import sdk as sdk_fixture
@@ -40,7 +40,7 @@ def test_invalid_options_before_rpc_state_or_worker_and_corrected_retry(
             calls.append("namespace")
             return "namespace-uuid"
 
-        monkeypatch.setattr("ralf_agent.temporal_session_activities.namespace_id", namespace)
+        monkeypatch.setattr("relf_agent.temporal_session_activities.namespace_id", namespace)
         host = await TemporalRuntimeBuilder(base_dir=tmp_path).abuild_catalog(catalog())
         if value == "first-profile-build":
             selected = {"build_id": digest(host._assemblies[0].release)}
@@ -71,7 +71,7 @@ def test_valid_options_snapshot_survives_caller_mutation_during_namespace_lookup
             await release.wait()
             return "namespace-uuid"
 
-        monkeypatch.setattr("ralf_agent.temporal_session_activities.namespace_id", namespace)
+        monkeypatch.setattr("relf_agent.temporal_session_activities.namespace_id", namespace)
         host = await TemporalRuntimeBuilder(base_dir=tmp_path).abuild_catalog(catalog())
         supplied = {"activity_timeout": 2}
         starting = asyncio.create_task(host.start_workers(sdk.client, engine_options=supplied))

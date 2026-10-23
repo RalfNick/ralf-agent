@@ -2,8 +2,8 @@
 
 import pytest
 
-from ralf_agent import temporal_coding_protocol as protocol
-from ralf_agent.errors import DefinitionMismatch
+from relf_agent import temporal_coding_protocol as protocol
+from relf_agent.errors import DefinitionMismatch
 from tests.test_temporal_coding_configuration import manifest
 
 
@@ -18,7 +18,7 @@ def test_history_validation_does_not_load_worker_io_implementations(monkeypatch)
 
 
 def test_original_permission_helper_drift_is_refused(monkeypatch):
-    from ralf_agent import temporal_coding_state as state
+    from relf_agent import temporal_coding_state as state
 
     value = manifest()
 

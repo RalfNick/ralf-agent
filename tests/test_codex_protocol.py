@@ -6,8 +6,8 @@ from pathlib import Path
 
 import pytest
 
-from ralf_agent.codex_protocol import CodexProtocol
-from ralf_agent.errors import DefinitionMismatch, ValidationError
+from relf_agent.codex_protocol import CodexProtocol
+from relf_agent.errors import DefinitionMismatch, ValidationError
 
 
 def test_protocol_pins_installed_version_and_schema():
@@ -22,7 +22,7 @@ def test_protocol_pins_installed_version_and_schema():
 
 
 def test_schema_resource_tamper_is_rejected_before_native_io(tmp_path, monkeypatch):
-    import ralf_agent.codex_protocol as module
+    import relf_agent.codex_protocol as module
 
     (tmp_path / "_codex_protocol_schema.json").write_text("{}")
     monkeypatch.setattr(module, "files", lambda package: tmp_path)
@@ -119,7 +119,7 @@ def test_unbounded_protocol_values_fail_with_sanitized_typed_error(mode):
 
 
 def test_coding_protocol_combines_frozen_schemas_without_changing_reference_identities():
-    from ralf_agent.codex_protocol import CodexCodingProtocol, CodexControlProtocol
+    from relf_agent.codex_protocol import CodexCodingProtocol, CodexControlProtocol
 
     protocol = CodexCodingProtocol()
     assert protocol.identity["business_protocol"] == CodexProtocol().identity
@@ -178,11 +178,11 @@ def test_coding_protocol_combines_frozen_schemas_without_changing_reference_iden
 def test_coding_protocol_checks_both_reference_resource_integrities(
     tmp_path, monkeypatch, resource
 ):
-    import ralf_agent.codex_protocol as module
-    from ralf_agent.codex_protocol import CodexCodingProtocol
+    import relf_agent.codex_protocol as module
+    from relf_agent.codex_protocol import CodexCodingProtocol
 
     for name in ("_codex_protocol_schema.json", "_codex_control_schema.json"):
-        data = files("ralf_agent").joinpath(name).read_bytes()
+        data = files("relf_agent").joinpath(name).read_bytes()
         (tmp_path / name).write_bytes(b"{}" if name == resource else data)
     monkeypatch.setattr(module, "files", lambda package: tmp_path)
     with pytest.raises(DefinitionMismatch, match="integrity"):
@@ -196,7 +196,7 @@ def test_frozen_native_artifact_bytes_and_business_identity_are_unchanged():
         "_codex_coding_seccomp.json": "569e7aa0a4d8ed2b0bfada839187309d880c21350c36eaa2b55f15c0c85b41aa",
     }
     for name, digest in expected.items():
-        assert hashlib.sha256(files("ralf_agent").joinpath(name).read_bytes()).hexdigest() == digest
+        assert hashlib.sha256(files("relf_agent").joinpath(name).read_bytes()).hexdigest() == digest
     assert CodexProtocol().identity == {
         "kind": "codex-app-server-protocol",
         "version": "1",

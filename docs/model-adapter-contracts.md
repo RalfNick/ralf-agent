@@ -7,10 +7,10 @@ five-scenario model-check evaluator remains separate and retains its quality
 meaning; these replacement checks do not measure model quality.
 
 ```shell
-ralf-check-adapter --role model-provider
-ralf-check-adapter --role model-provider --offline
-ralf-check-adapter --role model-provider --profile tools --offline
-ralf init my-model-adapter --template model-contracts
+relf-check-adapter --role model-provider
+relf-check-adapter --role model-provider --offline
+relf-check-adapter --role model-provider --profile tools --offline
+relf init my-model-adapter --template model-contracts
 cd my-model-adapter
 python -m agent_app check
 python -m agent_app check --profile tools
@@ -25,7 +25,7 @@ null quality fields. They exclude raw messages, outputs, supplier errors and
 credentials. Retained evidence requires a fresh private directory.
 
 ```python
-from ralf_agent import AdapterContractSuite, offline_model_fixture
+from relf_agent import AdapterContractSuite, offline_model_fixture
 
 suite = AdapterContractSuite(role="model-provider", contract_version="1", profile="tools")
 try:
@@ -162,8 +162,8 @@ factory resolves the accepted persisted profile; construction and read-only
 status/events/diagnostics do not open or seed the supplier source.
 
 ```shell
-ralf --db .ralf/runs.sqlite --factory agent_app.runtime:create_engine inspect RUN_ID
-ralf --db .ralf/runs.sqlite --factory agent_app.runtime:create_engine resume RUN_ID
+relf --db .ralf/runs.sqlite --factory agent_app.runtime:create_engine inspect RUN_ID
+relf --db .ralf/runs.sqlite --factory agent_app.runtime:create_engine resume RUN_ID
 ```
 
 Actual waited/reaped process checks exercise three boundaries in the editable

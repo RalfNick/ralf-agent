@@ -7,7 +7,7 @@ stdio Transport；Agent／Workflow仍使用相同MCPToolSource、授权、审批
 ## SDK
 
 ```python
-from ralf_agent import (
+from relf_agent import (
     MCPHTTPTransport,
     MCPToolSource,
     ToolPolicy,

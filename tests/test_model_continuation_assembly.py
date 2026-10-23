@@ -6,22 +6,22 @@ import json
 
 import pytest
 
-from ralf_agent import AgentSpec, RuntimeBuilder, RuntimeProfile
-from ralf_agent.errors import DefinitionMismatch, ValidationError
-from ralf_agent.planning_evaluation import EvaluationLimits
-from ralf_agent.runtime_builder import EchoProvider
-from ralf_agent.task_evaluation_provider import PinnedEvaluationProvider
+from relf_agent import AgentSpec, RuntimeBuilder, RuntimeProfile
+from relf_agent.errors import DefinitionMismatch, ValidationError
+from relf_agent.planning_evaluation import EvaluationLimits
+from relf_agent.runtime_builder import EchoProvider
+from relf_agent.task_evaluation_provider import PinnedEvaluationProvider
 
 
 def test_public_provider_and_continuation_exports():
-    api = importlib.import_module("ralf_agent")
+    api = importlib.import_module("relf_agent")
     for name, module in [
         ("GeminiFunctionProvider", "gemini_functions"),
         ("ModelContinuation", "model_continuation"),
         ("ContinuedModelResponse", "model_continuation"),
     ]:
         assert getattr(api, name, None) is getattr(
-            importlib.import_module("ralf_agent." + module), name
+            importlib.import_module("relf_agent." + module), name
         )
 
 
@@ -94,7 +94,7 @@ def test_audit_wrapper_pins_and_delegates_original_continuation_owner():
 
 @pytest.mark.parametrize("change", ["owner", "identity", "method"])
 def test_completed_signed_response_is_recorded_before_audit_drift_rejection(tmp_path, change):
-    from ralf_agent import LocalEngine, SQLiteStore
+    from relf_agent import LocalEngine, SQLiteStore
     from tests.test_local_model_continuation import Provider, registry, spec
 
     class Changing(Provider):
@@ -139,8 +139,8 @@ def test_completed_signed_response_is_recorded_before_audit_drift_rejection(tmp_
 
 
 def test_temporal_profile_forwards_explicit_execution_option(tmp_path):
-    from ralf_agent.temporal_builder import TemporalRuntimeBuilder
-    from ralf_agent.temporal_profile import TemporalProfile
+    from relf_agent.temporal_builder import TemporalRuntimeBuilder
+    from relf_agent.temporal_profile import TemporalProfile
 
     selected = TemporalProfile(
         "a", "1", {"default": {"adapter": "offline-echo"}}, execution={"model_continuation": True}
@@ -159,7 +159,7 @@ def test_temporal_profile_forwards_explicit_execution_option(tmp_path):
 
 
 def test_middleware_provider_delegates_signed_protocol_and_preserves_tool_loop(tmp_path):
-    from ralf_agent import LocalEngine, MiddlewareProvider, SQLiteStore
+    from relf_agent import LocalEngine, MiddlewareProvider, SQLiteStore
     from tests.test_local_model_continuation import Provider, registry, spec
 
     effects, raw = [], Provider()
@@ -178,7 +178,7 @@ def test_middleware_provider_delegates_signed_protocol_and_preserves_tool_loop(t
 
 @pytest.mark.parametrize("kind", ["rag", "orchestration"])
 def test_task_cli_explicit_gemini_functions_enables_runtime_mode(kind, monkeypatch):
-    module = importlib.import_module(f"ralf_agent.{kind}_evaluation_cli")
+    module = importlib.import_module(f"relf_agent.{kind}_evaluation_cli")
     seen = []
     monkeypatch.setattr(
         module, "_http_provider", lambda args, limits: (EchoProvider("fixture"), None)

@@ -4,10 +4,10 @@ import copy
 
 import pytest
 
-from ralf_agent.errors import DefinitionMismatch
-from ralf_agent.temporal_session_data_state import expected_read
-from ralf_agent.temporal_state import TemporalRunState
-from ralf_agent.types import digest
+from relf_agent.errors import DefinitionMismatch
+from relf_agent.temporal_session_data_state import expected_read
+from relf_agent.temporal_state import TemporalRunState
+from relf_agent.types import digest
 
 from .test_temporal_parent_session import parent, prepare_read
 
@@ -60,14 +60,14 @@ def test_forged_native_member_lineage_is_refused_before_model_or_data(damage):
         request["session_lineage"]["links"][-1]["member"] = "reader"
     else:
         request["session_lineage"]["root_turn"]["session_ref"]["key"]["principal"] = "foreign"
-    from ralf_agent.errors import AuthorizationDenied, ValidationError
+    from relf_agent.errors import AuthorizationDenied, ValidationError
 
     with pytest.raises((DefinitionMismatch, AuthorizationDenied, ValidationError)):
         TemporalRunState(state.run_id, owner.scope, "new", request, owner.manifest)
 
 
 def test_external_root_projection_is_once_and_distinct_from_private_session():
-    from ralf_agent.temporal_session_state import context_evidence
+    from relf_agent.temporal_session_state import context_evidence
 
     state, owner, _ = child()
     source = copy.deepcopy(owner.root_session_snapshot)
@@ -88,22 +88,22 @@ def test_external_root_projection_is_once_and_distinct_from_private_session():
 
 
 def test_private_save_request_keeps_accepted_lineage_and_root_snapshot():
-    from ralf_agent.temporal_session_save_state import prepare
+    from relf_agent.temporal_session_save_state import prepare
 
     state, _, _ = child()
     action, request = state.next_operation()
     expected = expected_read(state.step_manifest, request)
     from dataclasses import asdict
 
-    from ralf_agent import InMemoryMemory, Scope
-    from ralf_agent.recall import RecallQuery
-    from ralf_agent.temporal_session_data_state import references
+    from relf_agent import InMemoryMemory, Scope
+    from relf_agent.recall import RecallQuery
+    from relf_agent.temporal_session_data_state import references
 
     page = InMemoryMemory().read_page(
         Scope(), expected["address"], RecallQuery(**expected["query"])
     )
     source = {**expected, "page": asdict(page), "revision": 0}
-    from ralf_agent.temporal_session_state import context_evidence
+    from relf_agent.temporal_session_state import context_evidence
 
     state.accept_context(
         action["id"],
@@ -130,10 +130,10 @@ def test_private_save_request_keeps_accepted_lineage_and_root_snapshot():
 
 
 def test_managed_context_plan_keeps_the_same_private_and_root_evidence_fields():
-    from ralf_agent import ManagedContextPipeline, Scope, ToolRegistry
-    from ralf_agent.temporal_activities import TemporalRuntime
-    from ralf_agent.temporal_parent_state import TemporalParentState
-    from ralf_agent.temporal_session_state import TemporalSessionState
+    from relf_agent import ManagedContextPipeline, Scope, ToolRegistry
+    from relf_agent.temporal_activities import TemporalRuntime
+    from relf_agent.temporal_parent_state import TemporalParentState
+    from relf_agent.temporal_session_state import TemporalSessionState
 
     from .test_temporal_session_tree_admission import candidate, turn
     from .test_temporal_session_tree_sources import setup
@@ -184,11 +184,11 @@ def test_two_original_turns_recall_separate_root_and_private_records_without_ali
     import json
     from dataclasses import asdict
 
-    from ralf_agent import Scope
-    from ralf_agent.recall import RecallQuery
-    from ralf_agent.temporal_parent_state import TemporalParentState
-    from ralf_agent.temporal_session_data_state import references
-    from ralf_agent.temporal_session_state import TemporalSessionState, context_evidence
+    from relf_agent import Scope
+    from relf_agent.recall import RecallQuery
+    from relf_agent.temporal_parent_state import TemporalParentState
+    from relf_agent.temporal_session_data_state import references
+    from relf_agent.temporal_session_state import TemporalSessionState, context_evidence
 
     from .test_temporal_parent_session import apply_save
     from .test_temporal_session_tree_admission import candidate
@@ -341,7 +341,7 @@ def test_dropping_legacy_observer_fields_cannot_bypass_member_lineage_validation
     request = copy.deepcopy(state.request)
     del request["session_history"]
     del request["session_observer"]
-    from ralf_agent.errors import ValidationError
+    from relf_agent.errors import ValidationError
 
     with pytest.raises((DefinitionMismatch, ValidationError)):
         TemporalRunState(state.run_id, owner.scope, "dropped", request, owner.manifest)
@@ -350,10 +350,10 @@ def test_dropping_legacy_observer_fields_cannot_bypass_member_lineage_validation
 def test_model_request_keeps_the_original_adopted_private_snapshot():
     from dataclasses import asdict
 
-    from ralf_agent import InMemoryMemory, Scope
-    from ralf_agent.recall import RecallQuery
-    from ralf_agent.temporal_session_data_state import references
-    from ralf_agent.temporal_session_state import context_evidence
+    from relf_agent import InMemoryMemory, Scope
+    from relf_agent.recall import RecallQuery
+    from relf_agent.temporal_session_data_state import references
+    from relf_agent.temporal_session_state import context_evidence
 
     state, _, _ = child()
     action, request = state.next_operation()
@@ -385,10 +385,10 @@ def test_adopted_private_snapshot_survives_restore_and_refuses_new_revision():
     import json
     from dataclasses import asdict
 
-    from ralf_agent import InMemoryMemory, Scope
-    from ralf_agent.recall import RecallQuery
-    from ralf_agent.temporal_session_data_state import references, validate_snapshot
-    from ralf_agent.temporal_session_tree_reads import adopt, request_fields
+    from relf_agent import InMemoryMemory, Scope
+    from relf_agent.recall import RecallQuery
+    from relf_agent.temporal_session_data_state import references, validate_snapshot
+    from relf_agent.temporal_session_tree_reads import adopt, request_fields
 
     state, _, _ = child()
     _, request = state.next_operation()

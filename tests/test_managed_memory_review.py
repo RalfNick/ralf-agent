@@ -5,7 +5,7 @@ import time
 import httpx
 import pytest
 
-from ralf_agent import (
+from relf_agent import (
     AgentSpec,
     InMemoryMemory,
     LocalEngine,
@@ -15,9 +15,9 @@ from ralf_agent import (
     SQLiteStore,
     ToolRegistry,
 )
-from ralf_agent.errors import ValidationError
-from ralf_agent.providers import DeepSeekChatProvider
-from ralf_agent.temporal_activities import TemporalRuntime
+from relf_agent.errors import ValidationError
+from relf_agent.providers import DeepSeekChatProvider
+from relf_agent.temporal_activities import TemporalRuntime
 
 
 class Provider:
@@ -195,7 +195,7 @@ def test_lazy_memory_extraction_not_iterated(tmp_path):
 
 
 def test_memory_duplicate_recall_cannot_exceed_page_allowance(tmp_path):
-    from ralf_agent.recall import RecallPage
+    from relf_agent.recall import RecallPage
 
     class Memory(InMemoryMemory):
         oversized = False
@@ -204,7 +204,7 @@ def test_memory_duplicate_recall_cannot_exceed_page_allowance(tmp_path):
             page = super().recall(*args, **kwargs)
             if self.oversized and page.items:
                 items = page.items * 17
-                from ralf_agent.types import canonical
+                from relf_agent.types import canonical
 
                 return RecallPage(items, None, len(canonical(items)), 17, 0, page.snapshot_id)
             return page

@@ -2,9 +2,9 @@
 
 import pytest
 
-import ralf_agent as r
-from ralf_agent.errors import RalfError
-from ralf_agent.skills import skill_metadata
+import relf_agent as r
+from relf_agent.errors import RalfError
+from relf_agent.skills import skill_metadata
 
 
 def api():

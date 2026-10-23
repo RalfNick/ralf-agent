@@ -5,9 +5,9 @@ import json
 
 import pytest
 
-import ralf_agent as r
-from ralf_agent.errors import ValidationError
-from ralf_agent.runtime_config import load_catalog
+import relf_agent as r
+from relf_agent.errors import ValidationError
+from relf_agent.runtime_config import load_catalog
 
 from .test_workspace_binding_execution import finish
 
@@ -165,7 +165,7 @@ def test_invalid_default_write_declaration_is_pure_before_root_or_execution_stor
 def test_partial_binding_failure_drains_source_and_releases_only_owned_writer(
     tmp_path, monkeypatch
 ):
-    import ralf_agent.workspace_write_factories as module
+    import relf_agent.workspace_write_factories as module
 
     root = tmp_path / "files"
     root.mkdir()
@@ -198,7 +198,7 @@ def test_partial_binding_failure_drains_source_and_releases_only_owned_writer(
     )
 
     async def run():
-        from ralf_agent.errors import DefinitionMismatch
+        from relf_agent.errors import DefinitionMismatch
 
         factories = r.ComponentRegistry()
         factories.register("provider", "echo", lambda c, ctx: Writer())
@@ -207,7 +207,7 @@ def test_partial_binding_failure_drains_source_and_releases_only_owned_writer(
 
     asyncio.run(run())
     assert len(allocated) == 1
-    from ralf_agent.workspace import WorkspaceError
+    from relf_agent.workspace import WorkspaceError
 
     with pytest.raises(WorkspaceError):
         allocated[0].write_text(r.Scope(), "note", "A", expected_version=None, effect_key="k")

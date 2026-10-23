@@ -6,7 +6,7 @@ import uuid
 
 import pytest
 
-from ralf_agent import (
+from relf_agent import (
     AgentSpec,
     ManagedContextPipeline,
     ModelResponse,
@@ -14,8 +14,8 @@ from ralf_agent import (
     ToolRegistry,
     WorkflowSpec,
 )
-from ralf_agent.temporal import TemporalEngine, build_temporal_worker, replay_temporal_history
-from ralf_agent.temporal_activities import TemporalRuntime
+from relf_agent.temporal import TemporalEngine, build_temporal_worker, replay_temporal_history
+from relf_agent.temporal_activities import TemporalRuntime
 
 from .test_postgres_adapter import postgres_dsn as postgres_dsn
 from .test_postgres_adapter import stores
@@ -118,7 +118,7 @@ async def scenario(backend, scope, sequence, managed):
 @pytest.mark.parametrize("sequence", [False, True])
 @pytest.mark.parametrize("managed", [False, True])
 def test_actual_redis_turns_lost_ack_and_exact_receipt(redis_service, sequence, managed):
-    from ralf_agent import Scope
+    from relf_agent import Scope
 
     async def run():
         async with memory_at(redis_service, "save-" + uuid.uuid4().hex) as (backend, _):

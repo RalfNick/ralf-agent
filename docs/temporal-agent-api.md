@@ -10,7 +10,7 @@ See [Temporal setup](temporal-execution.md) for the optional SDK, fixed worker
 release, trusted Scope and running Service/Workers.
 
 ```python
-from ralf_agent import AgentSpec, Runtime
+from relf_agent import AgentSpec, Runtime
 
 # engine is a configured TemporalEngine; its Client and Workers are borrowed.
 async with Runtime.from_temporal(engine, owned=False) as runtime:
@@ -30,7 +30,7 @@ client. Standalone `Agent(model=..., db_path=...)` remains the Local default.
 ## Reference and recovery
 
 ```python
-from ralf_agent import RunRef, Runtime
+from relf_agent import RunRef, Runtime
 
 async with Runtime.from_temporal(reconnected_engine) as runtime:
     run = await runtime.aattach(RunRef.from_dict(saved_ref))
@@ -98,7 +98,7 @@ TemporalEngine, as in [distributed composition setup](temporal-composition.md).
 The same submit/reconnect/observe API then accepts the existing definitions:
 
 ```python
-from ralf_agent import AgentSpec, GraphNode, GraphWorkflowSpec, RunRef, TeamSpec
+from relf_agent import AgentSpec, GraphNode, GraphWorkflowSpec, RunRef, TeamSpec
 
 specialist = AgentSpec("lookup", "Answer from the lookup result", ("lookup",))
 graph = GraphWorkflowSpec("investigate", [GraphNode("lookup", agent=specialist)])

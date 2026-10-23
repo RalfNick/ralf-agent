@@ -5,17 +5,17 @@ from dataclasses import asdict
 
 import pytest
 
-from ralf_agent import AgentSpec, GraphNode, GraphWorkflowSpec, Scope
-from ralf_agent.errors import RalfError
-from ralf_agent.temporal_activities import TemporalRuntime
-from ralf_agent.temporal_parent_state import TemporalParentState
-from ralf_agent.temporal_state import TemporalCommandRegistryState, TemporalRunState
-from ralf_agent.types import digest, submission_request
+from relf_agent import AgentSpec, GraphNode, GraphWorkflowSpec, Scope
+from relf_agent.errors import RalfError
+from relf_agent.temporal_activities import TemporalRuntime
+from relf_agent.temporal_parent_state import TemporalParentState
+from relf_agent.temporal_state import TemporalCommandRegistryState, TemporalRunState
+from relf_agent.types import digest, submission_request
 from tests.test_temporal_engine import Provider, registry
 
 
 def composition():
-    from ralf_agent import temporal_coding_composition_state
+    from relf_agent import temporal_coding_composition_state
 
     return temporal_coding_composition_state
 
@@ -70,7 +70,7 @@ def leaf(state, call):
     )
     child.request = copy.deepcopy(call["request"])
     child.manifest = copy.deepcopy(state.manifest)
-    from ralf_agent.temporal_bindings import request_release_digest
+    from relf_agent.temporal_bindings import request_release_digest
 
     child.release_digest = request_release_digest(child.request, child.manifest)
     composition().initialize(child, namespace="test")
@@ -315,7 +315,7 @@ def test_selected_workflow_queries_original_proof_and_registry_close_scope():
 
     from temporalio.exceptions import ApplicationError
 
-    from ralf_agent.temporal_workflow import TemporalCommandRegistryWorkflow, TemporalRunWorkflow
+    from relf_agent.temporal_workflow import TemporalCommandRegistryWorkflow, TemporalRunWorkflow
 
     state = parent()
     workflow = object.__new__(TemporalRunWorkflow)
@@ -351,7 +351,7 @@ def test_workflow_rejects_selected_reset_and_unlinked_child_before_scheduling():
 
     from temporalio.exceptions import ApplicationError
 
-    from ralf_agent.temporal_workflow import TemporalRunWorkflow
+    from relf_agent.temporal_workflow import TemporalRunWorkflow
 
     workflow = object.__new__(TemporalRunWorkflow)
     workflow.state = parent()
@@ -381,7 +381,7 @@ def test_root_workflow_adopts_closed_admission_before_scheduling():
     import asyncio
     from datetime import timedelta
 
-    from ralf_agent.temporal_parent_workflow import TemporalParentWorkflow
+    from relf_agent.temporal_parent_workflow import TemporalParentWorkflow
 
     state = parent()
     workflow = object.__new__(TemporalParentWorkflow)
@@ -488,7 +488,7 @@ def test_native_fence_waits_for_original_actual_owner_and_keeps_unknown_credits(
     child.admit_coding_stop(admission(request, "c" * 32))
     native_stop(child, request)
     child.manifest["binding_protocol"] = 23
-    from ralf_agent.temporal_coding_composition_protocol import implementation
+    from relf_agent.temporal_coding_composition_protocol import implementation
 
     child.manifest["coding_composition_protocol"] = {
         "version": 7,
@@ -512,7 +512,7 @@ def test_invalid_root_admission_receipt_stays_closed_to_business():
     import asyncio
     from datetime import timedelta
 
-    from ralf_agent.temporal_parent_workflow import TemporalParentWorkflow
+    from relf_agent.temporal_parent_workflow import TemporalParentWorkflow
 
     state = parent()
     workflow = object.__new__(TemporalParentWorkflow)
@@ -537,7 +537,7 @@ def test_invalid_root_admission_receipt_stays_closed_to_business():
 
 
 def test_foreign_child_epoch_observation_fails_closed_without_workflow_task_failure():
-    from ralf_agent.temporal_parent_workflow import TemporalParentWorkflow
+    from relf_agent.temporal_parent_workflow import TemporalParentWorkflow
 
     state = parent()
     bind_namespace(state)
@@ -616,8 +616,8 @@ def test_original_child_link_survives_actual_sdk_tuple_to_list_wire_conversion()
 def test_terminal_financially_settled_parent_polls_until_original_physical_proof(monkeypatch):
     import asyncio
 
-    from ralf_agent import temporal_parent_workflow as scheduler
-    from ralf_agent.temporal_parent_workflow import TemporalParentWorkflow
+    from relf_agent import temporal_parent_workflow as scheduler
+    from relf_agent.temporal_parent_workflow import TemporalParentWorkflow
 
     state = parent()
     bind_namespace(state)

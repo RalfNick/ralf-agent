@@ -11,8 +11,8 @@ from pathlib import Path
 
 import pytest
 
-from ralf_agent import AgentSpec, GraphNode, GraphWorkflowSpec, Scope, ValueRef
-from ralf_agent.temporal import TemporalEngine, replay_temporal_history
+from relf_agent import AgentSpec, GraphNode, GraphWorkflowSpec, Scope, ValueRef
+from relf_agent.temporal import TemporalEngine, replay_temporal_history
 from tests import temporal_coding_graph_worker_fixture as fixture
 from tests.test_codex_runner import native_fixture
 from tests.test_temporal_coding_service import wait_until
@@ -122,9 +122,9 @@ def test_actual_serial_coding_graph_original_children_and_recovery(tmp_path, mon
                 max_concurrency=1,
             )
             if mode == "bound_graph":
-                from ralf_agent import BindingSelection
-                from ralf_agent.binding_definitions import BoundDefinition
-                from ralf_agent.binding_types import AgentBindingDescriptor
+                from relf_agent import BindingSelection
+                from relf_agent.binding_definitions import BoundDefinition
+                from relf_agent.binding_types import AgentBindingDescriptor
 
                 graph = BoundDefinition(
                     graph,

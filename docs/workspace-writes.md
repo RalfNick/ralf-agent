@@ -12,7 +12,7 @@ Memory 无额外依赖，适合测试；实例拥有独立、稳定的数据集�
 版本在每次写入后递增，避免 A→B→A 让旧版本重新有效。
 
 ```python
-from ralf_agent import InMemoryWritableWorkspace, Scope
+from relf_agent import InMemoryWritableWorkspace, Scope
 
 scope = Scope()
 files = InMemoryWritableWorkspace(version="app-1")
@@ -35,7 +35,7 @@ POSIX 文件默认保留真实文件、单根写租约与 SQLite 下游回执。
 
 ```python
 from pathlib import Path
-from ralf_agent import FileSystemWritableWorkspace, Scope
+from relf_agent import FileSystemWritableWorkspace, Scope
 
 root = Path("write-workspace")
 root.mkdir(exist_ok=True)
@@ -61,7 +61,7 @@ Memory 继续限制4096文件／64MiB总正文。仅写既有父目录内的普�
 
 ```python
 import asyncio
-from ralf_agent import (
+from relf_agent import (
     InMemoryWritableWorkspace,
     ToolPolicy,
     ToolRegistry,

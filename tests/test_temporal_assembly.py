@@ -4,11 +4,11 @@ import asyncio
 
 import pytest
 
-from ralf_agent import ComponentRegistry, Scope
-from ralf_agent.errors import ValidationError
-from ralf_agent.runtime_builder import EchoProvider
-from ralf_agent.temporal_builder import TemporalRuntimeBuilder
-from ralf_agent.temporal_profile import TemporalProfile
+from relf_agent import ComponentRegistry, Scope
+from relf_agent.errors import ValidationError
+from relf_agent.runtime_builder import EchoProvider
+from relf_agent.temporal_builder import TemporalRuntimeBuilder
+from relf_agent.temporal_profile import TemporalProfile
 
 
 def profile(*, adapter="offline-echo", components=None, **kwargs):
@@ -24,11 +24,11 @@ class Client:
 
 
 def test_public_temporal_builder_and_assembly_exports():
-    from ralf_agent import TemporalRuntimeAssembly
-    from ralf_agent import TemporalRuntimeBuilder as PublicBuilder
+    from relf_agent import TemporalRuntimeAssembly
+    from relf_agent import TemporalRuntimeBuilder as PublicBuilder
 
     assert PublicBuilder is TemporalRuntimeBuilder
-    assert TemporalRuntimeAssembly.__module__ == "ralf_agent.temporal_assembly_lifecycle"
+    assert TemporalRuntimeAssembly.__module__ == "relf_agent.temporal_assembly_lifecycle"
 
 
 def test_default_assembly_has_fixed_profile_and_no_execution_database(tmp_path):
@@ -260,8 +260,8 @@ def test_managed_worker_stays_open_until_actual_call_ends(tmp_path, monkeypatch)
     from dataclasses import asdict
     from types import SimpleNamespace
 
-    import ralf_agent.temporal
-    from ralf_agent.errors import CloseIncomplete
+    import relf_agent.temporal
+    from relf_agent.errors import CloseIncomplete
 
     async def run():
         client = Client()
@@ -282,7 +282,7 @@ def test_managed_worker_stays_open_until_actual_call_ends(tmp_path, monkeypatch)
                 self.closes += 1
 
         worker = Worker()
-        monkeypatch.setattr(ralf_agent.temporal, "build_temporal_worker", lambda *a, **kw: worker)
+        monkeypatch.setattr(relf_agent.temporal, "build_temporal_worker", lambda *a, **kw: worker)
         registry = ComponentRegistry()
         registry.register_async("provider", "owned", factory)
         assembly = await TemporalRuntimeBuilder(registry, base_dir=tmp_path).abuild(
@@ -326,8 +326,8 @@ def test_managed_worker_stays_open_until_actual_call_ends(tmp_path, monkeypatch)
 def test_cancelled_worker_start_is_retained_for_close(tmp_path, monkeypatch):
     from types import SimpleNamespace
 
-    import ralf_agent.temporal
-    from ralf_agent.errors import CloseIncomplete
+    import relf_agent.temporal
+    from relf_agent.errors import CloseIncomplete
 
     async def run():
         started, release = asyncio.Event(), asyncio.Event()
@@ -345,7 +345,7 @@ def test_cancelled_worker_start_is_retained_for_close(tmp_path, monkeypatch):
                 self.closes += 1
 
         worker = Worker()
-        monkeypatch.setattr(ralf_agent.temporal, "build_temporal_worker", lambda *a, **kw: worker)
+        monkeypatch.setattr(relf_agent.temporal, "build_temporal_worker", lambda *a, **kw: worker)
         assembly = await TemporalRuntimeBuilder(base_dir=tmp_path).abuild(profile())
         observer = asyncio.create_task(
             assembly.start_worker(SimpleNamespace(namespace="original"), task_queue="queue")

@@ -4,7 +4,7 @@ import uuid
 
 import pytest
 
-from ralf_agent import (
+from relf_agent import (
     AgentSpec,
     LocalEngine,
     MemoryAdmissionPolicy,
@@ -42,7 +42,7 @@ async def exercise(memory, path):
 
 def test_real_redis_automatic_memory_cas_duplicate(tmp_path, redis_service):
     async def run():
-        from ralf_agent.redis_memory import RedisMemory
+        from relf_agent.redis_memory import RedisMemory
 
         memory = await RedisMemory.connect(redis_service, backend_id="memory-pipeline-redis")
         try:
@@ -58,7 +58,7 @@ def test_real_redis_automatic_memory_cas_duplicate(tmp_path, redis_service):
 @pytest.mark.skipif(not os.getenv("RALF_TEST_POSTGRES_DSN"), reason="requires actual PostgreSQL")
 def test_real_postgres_automatic_memory_cas_duplicate(tmp_path):
     async def run():
-        from ralf_agent.postgres import PostgresMemory
+        from relf_agent.postgres import PostgresMemory
 
         memory = await PostgresMemory.connect(
             os.environ["RALF_TEST_POSTGRES_DSN"], backend_id="memory-pipeline-pg"

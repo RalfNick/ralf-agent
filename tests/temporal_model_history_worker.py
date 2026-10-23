@@ -8,15 +8,15 @@ from pathlib import Path
 
 import httpx
 
-from ralf_agent import AgentSpec, CompletionVerdict, GraphNode, GraphWorkflowSpec
-from ralf_agent.context import ContextAssembler
-from ralf_agent.gemini_functions import GeminiFunctionProvider
-from ralf_agent.managed_context import ManagedContextPipeline
-from ralf_agent.model_history import CompleteModelHistory
-from ralf_agent.temporal import build_temporal_worker
-from ralf_agent.temporal_activities import TemporalRuntime
-from ralf_agent.tools import ToolRegistry
-from ralf_agent.types import digest
+from relf_agent import AgentSpec, CompletionVerdict, GraphNode, GraphWorkflowSpec
+from relf_agent.context import ContextAssembler
+from relf_agent.gemini_functions import GeminiFunctionProvider
+from relf_agent.managed_context import ManagedContextPipeline
+from relf_agent.model_history import CompleteModelHistory
+from relf_agent.temporal import build_temporal_worker
+from relf_agent.temporal_activities import TemporalRuntime
+from relf_agent.tools import ToolRegistry
+from relf_agent.types import digest
 
 FIRST_TEXT = ' { "answer" : 42 } '
 SECOND_TEXT = ' { "answer" : 43 } '

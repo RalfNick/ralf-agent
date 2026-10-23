@@ -6,7 +6,7 @@ Session 数据只提供写入证据，Run/Turn 推进仍由原执行权威负责
 
 ```python
 from contextlib import closing
-from ralf_agent import Scope, SQLiteMemory
+from relf_agent import Scope, SQLiteMemory
 
 scope = Scope()
 with closing(SQLiteMemory("conversation.sqlite")) as sessions:
@@ -34,7 +34,7 @@ Scope、实际存储地址和 message_id 必须匹配；返回值脱离后端对
 `inspect_message` 返回转换后的 storage_key。同步端口可通过 `memory_call` 调用；线程安全的
 同步远端可显式使用 `ThreadedMemoryAdapter`，桥接器会拒绝混合 async inspection 和读取期间后端替换。
 SQLiteMemory 必须在创建线程使用，不能套 ThreadedMemoryAdapter。
-接口类型见 `ralf_agent.session_receipts.SyncSessionReceiptBackend` 与 `SessionReceiptBackend`。
+接口类型见 `relf_agent.session_receipts.SyncSessionReceiptBackend` 与 `SessionReceiptBackend`。
 
 SQLite 在既有消息事务投影旁增加原始字符串 ID 索引，并按 seq 查询单条消息。原整数 ID 不会变成字符串成功回执。干净索引不解码整个会话；旧写者使消息或 ID 投影变脏时，
 同一事务先重建再核验。索引为兼容性增加，不改变原会话 JSON 数据格式。

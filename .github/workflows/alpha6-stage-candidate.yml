@@ -1,0 +1,47 @@
+name: alpha6-private-candidate-stage
+
+"on":
+  workflow_dispatch:
+    inputs:
+      staging_release_id:
+        description: Private unpublished draft id containing the two original Alpha artifacts
+        required: true
+        type: string
+
+# Draft visibility requires push access; the script performs GET requests only.
+permissions:
+  contents: write
+
+jobs:
+  stage:
+    if: github.repository == 'RalfNick/relf-agent'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ github.sha }} # immutable dispatch checkout
+          persist-credentials: false
+      - name: Verify private draft and exact original bytes
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          STAGING_RELEASE_ID: ${{ inputs.staging_release_id }}
+        run: |
+          python3 tools/stage_alpha1_candidate.py --manifest tools/release_gate_manifest.alpha6.json \
+            --repository RalfNick/relf-agent \
+            --release-id "$STAGING_RELEASE_ID" --output "$RUNNER_TEMP/alpha6-stage"
+      - name: Stage verified original candidate as Actions artifact
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: relf-alpha6-original-candidate
+          path: ${{ runner.temp }}/alpha6-stage/candidate
+          if-no-files-found: error
+          retention-days: 14
+      - name: Preserve staging proof on success or failure
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: alpha6-stage-proof-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/alpha6-stage/proof.json
+          if-no-files-found: error
+          retention-days: 14

@@ -11,7 +11,7 @@ from collections import Counter
 import httpx
 import pytest
 
-from ralf_agent import (
+from relf_agent import (
     AgentBindingDescriptor,
     AgentSpec,
     BindingCatalog,
@@ -26,10 +26,10 @@ from ralf_agent import (
     TeamSpec,
     ToolRegistry,
 )
-from ralf_agent.artifacts import InMemoryArtifactStore
-from ralf_agent.data_context import ManagedDataContext
-from ralf_agent.gemini_functions import GeminiFunctionProvider
-from ralf_agent.types import digest
+from relf_agent.artifacts import InMemoryArtifactStore
+from relf_agent.data_context import ManagedDataContext
+from relf_agent.gemini_functions import GeminiFunctionProvider
+from relf_agent.types import digest
 
 
 def native_content(label):
@@ -187,7 +187,7 @@ def test_signed_native_groups_and_ids_survive_composite_approval_and_reconstruct
                     binding_catalog=catalog,
                     model_continuation=True,
                     **(
-                        {"model_history": __import__("ralf_agent").CompleteModelHistory()}
+                        {"model_history": __import__("relf_agent").CompleteModelHistory()}
                         if complete_history
                         else {}
                     ),

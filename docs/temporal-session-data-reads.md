@@ -12,10 +12,10 @@ Context Activity；原 Run History 保存有界读结果与来源证据，普通
 数据后端不调度 Run，不替代 History。现有 History Session 不因这一配置自动变成外置数据库。
 
 ```python
-from ralf_agent import BindingCatalog, Scope, SessionBindingResource, SQLiteMemory, ToolRegistry
-from ralf_agent.runtime_builder import EchoProvider
-from ralf_agent.temporal_activities import TemporalRuntime
-from ralf_agent.recall import RecallQuery
+from relf_agent import BindingCatalog, Scope, SessionBindingResource, SQLiteMemory, ToolRegistry
+from relf_agent.runtime_builder import EchoProvider
+from relf_agent.temporal_activities import TemporalRuntime
+from relf_agent.recall import RecallQuery
 
 scope = Scope("app", "developer")
 sessions = SQLiteMemory("session-data.sqlite")

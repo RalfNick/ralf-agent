@@ -6,9 +6,9 @@ from types import SimpleNamespace
 
 import pytest
 
-from ralf_agent.errors import RalfError
-from ralf_agent.temporal_command_transport import accept, execute, observe
-from ralf_agent.temporal_state import WORKFLOW_NAME
+from relf_agent.errors import RalfError
+from relf_agent.temporal_command_transport import accept, execute, observe
+from relf_agent.temporal_state import WORKFLOW_NAME
 from tests.test_temporal_command_transport import fixture
 
 

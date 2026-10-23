@@ -6,13 +6,13 @@ from dataclasses import asdict
 import httpx
 import pytest
 
-from ralf_agent import AgentSpec, GraphNode, GraphWorkflowSpec, Scope, TeamSpec, ToolRegistry
-from ralf_agent.a2a import A2AApplication, A2AClient, A2ARemoteError
-from ralf_agent.errors import AuthorizationDenied, DefinitionMismatch
-from ralf_agent.handoff import SQLiteInbox
-from ralf_agent.task_controls import TaskControlBridge
-from ralf_agent.types import CommandReceipt, RunDiagnostics, RunSnapshot
-from ralf_agent.user_input import UserInputPolicy, make_input_record
+from relf_agent import AgentSpec, GraphNode, GraphWorkflowSpec, Scope, TeamSpec, ToolRegistry
+from relf_agent.a2a import A2AApplication, A2AClient, A2ARemoteError
+from relf_agent.errors import AuthorizationDenied, DefinitionMismatch
+from relf_agent.handoff import SQLiteInbox
+from relf_agent.task_controls import TaskControlBridge
+from relf_agent.types import CommandReceipt, RunDiagnostics, RunSnapshot
+from relf_agent.user_input import UserInputPolicy, make_input_record
 
 from .test_task_controls import Controls
 
@@ -143,8 +143,8 @@ def test_async_native_temporal_public_question_discovery_and_reply(monkeypatch, 
 
 @pytest.mark.parametrize("kind", ["team", "graph", "nested"])
 def test_async_temporal_original_child_questions_are_public_on_root(monkeypatch, tmp_path, kind):
-    from ralf_agent.temporal_activities import TemporalRuntime
-    from ralf_agent.user_input import register_user_input
+    from relf_agent.temporal_activities import TemporalRuntime
+    from relf_agent.user_input import register_user_input
 
     from .temporal_agent_fixture import engine
     from .temporal_composite_agent_fixture import CompositeClient

@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "relf-agent"
-version = "0.1.0a5"
+version = "0.1.0a6"
 description = "Relf-Agent: reliable and extensible lifecycle framework for intelligent agents"
 readme = "README.md"
 requires-python = ">=3.11"
@@ -40,20 +40,20 @@ server = ["uvicorn>=0.30,<1"]
 dev = ["pytest>=8,<10", "ruff>=0.11,<1", "build>=1,<2", "setuptools>=77"]
 
 [project.scripts]
-ralf = "ralf_agent.cli:main"
-ralf-evaluate-planning = "ralf_agent.planning_evaluation_cli:main"
-ralf-evaluate-business = "ralf_agent.business_evaluation_cli:main"
-ralf-evaluate-rag = "ralf_agent.rag_evaluation_cli:main"
-ralf-evaluate-orchestration = "ralf_agent.orchestration_evaluation_cli:main"
-ralf-check-model = "ralf_agent.model_check_cli:main"
-ralf-check-adapter = "ralf_agent.adapter_contract_cli:main"
-ralf-watch-events = "ralf_agent.event_watch:main"
+relf = "relf_agent.cli:main"
+relf-evaluate-planning = "relf_agent.planning_evaluation_cli:main"
+relf-evaluate-business = "relf_agent.business_evaluation_cli:main"
+relf-evaluate-rag = "relf_agent.rag_evaluation_cli:main"
+relf-evaluate-orchestration = "relf_agent.orchestration_evaluation_cli:main"
+relf-check-model = "relf_agent.model_check_cli:main"
+relf-check-adapter = "relf_agent.adapter_contract_cli:main"
+relf-watch-events = "relf_agent.event_watch:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
 
 [tool.setuptools.package-data]
-ralf_agent = ["_codex_protocol_schema.json", "_codex_control_schema.json", "_codex_coding_seccomp.json"]
+relf_agent = ["_codex_protocol_schema.json", "_codex_control_schema.json", "_codex_coding_seccomp.json"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

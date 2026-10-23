@@ -2,7 +2,7 @@ import asyncio
 
 import pytest
 
-from ralf_agent import (
+from relf_agent import (
     FactIndexCatalog,
     FactScanQuery,
     IndexedMemoryStore,
@@ -10,7 +10,7 @@ from ralf_agent import (
     Scope,
     SQLiteVectorIndex,
 )
-from ralf_agent.errors import BudgetExceeded, ValidationError
+from relf_agent.errors import BudgetExceeded, ValidationError
 from tests.test_fact_index import Embedding
 from tests.test_redis_memory_adapter import memory_at
 from tests.test_redis_memory_adapter import redis_service as redis_service

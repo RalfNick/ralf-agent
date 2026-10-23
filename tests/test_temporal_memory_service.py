@@ -8,9 +8,9 @@ from pathlib import Path
 
 import pytest
 
-from ralf_agent import Runtime, Scope
-from ralf_agent.errors import NotFound
-from ralf_agent.temporal import TemporalEngine, replay_temporal_history
+from relf_agent import Runtime, Scope
+from relf_agent.errors import NotFound
+from relf_agent.temporal import TemporalEngine, replay_temporal_history
 from tests.temporal_memory_worker import definition, runtime
 
 pytestmark = pytest.mark.skipif(
@@ -24,9 +24,9 @@ class Workers:
 
     async def start(self, mode):
         log = self.root / f"worker-{mode}.log"
-        import ralf_agent
+        import relf_agent
 
-        source = str(Path(ralf_agent.__file__).parents[1])
+        source = str(Path(relf_agent.__file__).parents[1])
         env = {
             "PATH": os.environ.get("PATH", "/usr/bin:/bin"),
             "PYTHONPATH": os.pathsep.join([source, str(Path(__file__).parents[1])]),
@@ -191,7 +191,7 @@ def test_explicit_root_resume_recovers_original_terminal_child_facts(tmp_path, n
     async def run():
         from temporalio.client import Client
 
-        from ralf_agent import (
+        from relf_agent import (
             AgentBindingDescriptor,
             AgentSpec,
             BindingSelection,
@@ -277,7 +277,7 @@ def test_cas_worker_timeout_keeps_parent_allowance_despite_fact_proof(tmp_path):
     async def run():
         from temporalio.client import Client
 
-        from ralf_agent import (
+        from relf_agent import (
             AgentBindingDescriptor,
             AgentSpec,
             BindingSelection,

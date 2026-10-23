@@ -6,8 +6,8 @@ import unicodedata
 
 import pytest
 
-from ralf_agent import FileSystemWritableWorkspace, Scope
-from ralf_agent.workspace import WorkspaceError
+from relf_agent import FileSystemWritableWorkspace, Scope
+from relf_agent.workspace import WorkspaceError
 
 from .test_workspace_write_processes import crash, prepared
 

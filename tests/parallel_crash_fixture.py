@@ -8,7 +8,7 @@ import sys
 from contextlib import contextmanager
 from pathlib import Path
 
-from ralf_agent import (
+from relf_agent import (
     AgentSpec,
     GraphNode,
     GraphWorkflowSpec,
@@ -94,7 +94,7 @@ class UnusedProvider:
 
 catalog = None
 if binding_mode is not None:
-    from ralf_agent import BindingCatalog, Scope
+    from relf_agent import BindingCatalog, Scope
 
     catalog = BindingCatalog(scope=Scope())
     catalog.register("provider", "selected", "1", Provider())
@@ -113,7 +113,7 @@ with LocalEngine(
             return value
 
         engine.sessions.append = append
-    from ralf_agent import Literal
+    from relf_agent import Literal
 
     spec = GraphWorkflowSpec(
         "crash",
@@ -126,7 +126,7 @@ with LocalEngine(
         max_concurrency=2,
     )
     if binding_mode is not None:
-        from ralf_agent import AgentBindingDescriptor, BindingSelection, BoundDefinition, TeamSpec
+        from relf_agent import AgentBindingDescriptor, BindingSelection, BoundDefinition, TeamSpec
 
         paths = {
             f"graph/nodes/n{i}": AgentBindingDescriptor(

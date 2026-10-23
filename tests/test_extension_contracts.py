@@ -4,7 +4,7 @@ from contextlib import closing
 
 import pytest
 
-from ralf_agent import (
+from relf_agent import (
     AgentSpec,
     InMemoryMemory,
     LocalEngine,
@@ -12,8 +12,8 @@ from ralf_agent import (
     SQLiteStore,
     ToolRegistry,
 )
-from ralf_agent.context import ContextAssembler
-from ralf_agent.errors import CoordinatorBusy, DefinitionMismatch, ValidationError
+from relf_agent.context import ContextAssembler
+from relf_agent.errors import CoordinatorBusy, DefinitionMismatch, ValidationError
 
 from .helpers import ScriptedProvider
 
@@ -275,7 +275,7 @@ def test_cancel_during_async_final_read_does_not_start_a_session_write(tmp_path)
 
 
 def test_threaded_memory_replacement_invalidates_the_pinned_backend(tmp_path):
-    from ralf_agent import ThreadedMemoryAdapter
+    from relf_agent import ThreadedMemoryAdapter
 
     memory = ThreadedMemoryAdapter(InMemoryMemory(backend_id="remote:first"))
     with LocalEngine(
@@ -291,7 +291,7 @@ def test_threaded_memory_replacement_invalidates_the_pinned_backend(tmp_path):
 
 
 def test_threaded_remote_memory_yields_to_the_coordinator(tmp_path):
-    from ralf_agent import ThreadedMemoryAdapter
+    from relf_agent import ThreadedMemoryAdapter
 
     async def exercise():
         started, release = asyncio.Event(), threading.Event()
@@ -329,7 +329,7 @@ def test_threaded_remote_memory_yields_to_the_coordinator(tmp_path):
 
 
 def test_independent_sqlite_memory_backends_cannot_silently_replace_each_other(tmp_path):
-    from ralf_agent import SQLiteMemory
+    from relf_agent import SQLiteMemory
 
     path = tmp_path / "identity.db"
     with closing(SQLiteMemory(":memory:")) as first, closing(SQLiteMemory(":memory:")) as second:

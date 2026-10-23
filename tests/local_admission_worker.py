@@ -7,10 +7,10 @@ import sys
 from dataclasses import asdict
 from pathlib import Path
 
-import ralf_agent as r
-from ralf_agent.errors import AuthorizationDenied, CapacityExceeded
-from ralf_agent.governance import DeploymentAdmissionPolicy
-from ralf_agent.runtime_config import load_catalog
+import relf_agent as r
+from relf_agent.errors import AuthorizationDenied, CapacityExceeded
+from relf_agent.governance import DeploymentAdmissionPolicy
+from relf_agent.runtime_config import load_catalog
 
 PRODUCT_FILE = str(Path(r.__file__).resolve())
 

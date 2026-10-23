@@ -6,8 +6,8 @@ from types import SimpleNamespace as NS
 
 import pytest
 
-from ralf_agent.errors import DefinitionMismatch, RalfError
-from ralf_agent.temporal_state import COMMAND_REGISTRY_NAME
+from relf_agent.errors import DefinitionMismatch, RalfError
+from relf_agent.temporal_state import COMMAND_REGISTRY_NAME
 from tests.test_temporal_deployment_retirement_transport import api, fixture
 
 

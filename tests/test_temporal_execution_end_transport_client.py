@@ -9,8 +9,8 @@ import pytest
 
 pytest.importorskip("temporalio")
 
-from ralf_agent.errors import RalfError
-from ralf_agent.temporal_state import WORKFLOW_NAME
+from relf_agent.errors import RalfError
+from relf_agent.temporal_state import WORKFLOW_NAME
 from tests.test_temporal_command_transport import fixture
 
 OPERATIONS = (
@@ -22,7 +22,7 @@ OPERATIONS = (
 
 
 def api():
-    return import_module("ralf_agent.temporal_execution_end_transport")
+    return import_module("relf_agent.temporal_execution_end_transport")
 
 
 def proof_for(client, operation):

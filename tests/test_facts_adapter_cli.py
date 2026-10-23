@@ -5,7 +5,7 @@ from types import ModuleType
 
 import pytest
 
-from ralf_agent.adapter_contract_cli import main
+from relf_agent.adapter_contract_cli import main
 
 
 @pytest.mark.parametrize(("profile", "count"), [("core", 10), ("managed", 16)])
@@ -29,12 +29,12 @@ def test_cli_invalid_facts_profile_is_safe(capsys):
 def test_explicit_offline_selects_facts_fixture_only(profile, monkeypatch, capsys):
     import sys
 
-    import ralf_agent.adapter_contract_cli as module
-    from ralf_agent import AdapterContractCaseResult, AdapterContractReport
+    import relf_agent.adapter_contract_cli as module
+    from relf_agent import AdapterContractCaseResult, AdapterContractReport
 
     chosen = object()
     calls = []
-    reference = ModuleType("ralf_agent.facts_adapter_contract_reference")
+    reference = ModuleType("relf_agent.facts_adapter_contract_reference")
 
     def offline():
         calls.append("facts-fixture")

@@ -5,8 +5,8 @@ from dataclasses import replace
 
 import pytest
 
-import ralf_agent as r
-from ralf_agent.errors import AuthorizationDenied, DefinitionMismatch, ValidationError
+import relf_agent as r
+from relf_agent.errors import AuthorizationDenied, DefinitionMismatch, ValidationError
 
 from .helpers import ScriptedProvider
 
@@ -186,7 +186,7 @@ def test_changed_host_scope_refuses_before_any_run_is_accepted(tmp_path):
 @pytest.mark.parametrize("asynchronous", [False, True])
 def test_profile_invalid_close_configuration_does_not_allocate_store(asynchronous, tmp_path):
     async def scenario():
-        from ralf_agent import RuntimeProfile
+        from relf_agent import RuntimeProfile
 
         profile = RuntimeProfile("p", "1", {"default": {"adapter": "offline-echo"}})
         path = tmp_path / "invalid.sqlite"
@@ -209,7 +209,7 @@ def test_standalone_agent_explicit_model_and_typed_tool(tmp_path):
             return {"value": value}
 
         tools.register_function(lookup, effect="read_only")
-        from ralf_agent.types import ToolCall
+        from relf_agent.types import ToolCall
 
         provider = ScriptedProvider(
             [
@@ -295,7 +295,7 @@ def test_missing_original_provider_reports_host_error_without_replacing_run(tmp_
 
 def test_nested_approval_control_wakes_root_and_exposes_original_action_owner(tmp_path):
     async def scenario():
-        from ralf_agent.types import ToolCall
+        from relf_agent.types import ToolCall
 
         writes = []
         tools = r.ToolRegistry()
@@ -330,7 +330,7 @@ def test_nested_approval_control_wakes_root_and_exposes_original_action_owner(tm
 @pytest.mark.parametrize("asynchronous", [False, True])
 def test_rejected_profile_execution_backend_cleans_up_its_real_coordinator(asynchronous, tmp_path):
     async def scenario():
-        from ralf_agent import RuntimeBuilder, RuntimeProfile
+        from relf_agent import RuntimeBuilder, RuntimeProfile
 
         closed = []
 
@@ -370,7 +370,7 @@ def test_rejected_profile_execution_backend_cleans_up_its_real_coordinator(async
 
 def test_control_arriving_before_paused_drive_finishes_is_not_lost(tmp_path):
     async def scenario():
-        from ralf_agent.types import ToolCall
+        from relf_agent.types import ToolCall
 
         paused, finish = asyncio.Event(), asyncio.Event()
 
@@ -429,7 +429,7 @@ def test_profile_entry_retains_explicit_trusted_scope(asynchronous, tmp_path):
 
 def test_nested_wait_reports_root_host_failure_and_allows_explicit_recovery(tmp_path):
     async def scenario():
-        from ralf_agent.types import ToolCall
+        from relf_agent.types import ToolCall
 
         writes = []
         tools = r.ToolRegistry()

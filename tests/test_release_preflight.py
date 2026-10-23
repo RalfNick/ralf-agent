@@ -27,10 +27,12 @@ def preflight(monkeypatch):
 @pytest.fixture
 def candidate(tmp_path, request):
     identity = getattr(request, "param", "0.1.0a1")
-    version, distribution = identity if isinstance(identity, tuple) else (identity, "ralf-agent")
+    parts = identity if isinstance(identity, tuple) else (identity, "ralf-agent")
+    version, distribution = parts[:2]
+    module = parts[2] if len(parts) == 3 else "ralf_agent"
     prefix = f"{distribution.replace('-', '_')}-{version}"
     source = tmp_path / "source"
-    package = source / "src/ralf_agent"
+    package = source / "src" / module
     package.mkdir(parents=True)
     product = f'__version__ = "{version}"\n'.encode()
     (package / "__init__.py").write_bytes(product)
@@ -41,7 +43,12 @@ def candidate(tmp_path, request):
         (source / name).write_text(name + " original\n")
     wheel = tmp_path / f"{prefix}-py3-none-any.whl"
     with zipfile.ZipFile(wheel, "w") as z:
-        z.writestr("ralf_agent/__init__.py", product)
+        z.writestr(f"{module}/__init__.py", product)
+        if module == "relf_agent":
+            z.writestr(
+                f"{prefix}.dist-info/entry_points.txt",
+                "[console_scripts]\nrelf = relf_agent.cli:main\n",
+            )
         z.writestr(
             f"{prefix}.dist-info/METADATA",
             f"Name: {distribution}\nVersion: {version}\nLicense-Expression: Apache-2.0\n",
@@ -79,6 +86,8 @@ def candidate(tmp_path, request):
     }
     if distribution != "ralf-agent":
         spec["distribution_name"] = distribution
+    if module != "ralf_agent":
+        spec.update(python_module=module, cli_name="relf")
     return source, wheel, sdist, spec
 
 

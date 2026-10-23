@@ -13,9 +13,9 @@ from pathlib import Path
 import httpx
 import pytest
 
-import ralf_agent as r
-from ralf_agent.planning import ModelPlanner
-from ralf_agent.types import digest
+import relf_agent as r
+from relf_agent.planning import ModelPlanner
+from relf_agent.types import digest
 
 RAW_ARGUMENTS = ' \n { "quantity" : 3 } \t '
 PLAN_TEXT = ' { "steps" : [ { "id" : "first", "member" : "first", "input" : "task" }, { "id" : "second", "member" : "second", "input" : "task" } ] } '

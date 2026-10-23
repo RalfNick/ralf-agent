@@ -7,9 +7,9 @@ from types import SimpleNamespace
 
 import pytest
 
-from ralf_agent import InMemoryMemory, RecallQuery, Scope, ThreadedMemoryAdapter
-from ralf_agent.errors import CloseIncomplete, DefinitionMismatch
-from ralf_agent.temporal_assembly_lifecycle import WorkerExecutionOwner
+from relf_agent import InMemoryMemory, RecallQuery, Scope, ThreadedMemoryAdapter
+from relf_agent.errors import CloseIncomplete, DefinitionMismatch
+from relf_agent.temporal_assembly_lifecycle import WorkerExecutionOwner
 
 
 def info(**changes):
@@ -118,7 +118,7 @@ def test_foreign_scope_refuses_before_operation():
 
 
 def test_cancelled_tool_task_still_owns_tracker_explicit_run_group():
-    from ralf_agent.tools import invoke
+    from relf_agent.tools import invoke
 
     started, release, stopped = (threading.Event() for _ in range(3))
 

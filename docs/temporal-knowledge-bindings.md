@@ -8,7 +8,7 @@ Context Activity 负责读取，原 Temporal History 负责采纳和执行；没
 ## 最小 SDK 装配
 
 ```python
-from ralf_agent import (
+from relf_agent import (
     AgentBindingDescriptor,
     AgentDefinition,
     AgentSpec,
@@ -22,7 +22,7 @@ from ralf_agent import (
     SQLiteKnowledgeStore,
     ToolRegistry,
 )
-from ralf_agent.temporal_activities import TemporalRuntime
+from relf_agent.temporal_activities import TemporalRuntime
 
 scope = Scope("workspace", "developer")
 store = SQLiteKnowledgeStore("knowledge.sqlite")

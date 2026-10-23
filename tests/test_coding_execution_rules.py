@@ -4,8 +4,8 @@ import copy
 
 import pytest
 
-from ralf_agent.errors import AuthorizationDenied, DefinitionMismatch
-from ralf_agent.types import digest
+from relf_agent.errors import AuthorizationDenied, DefinitionMismatch
+from relf_agent.types import digest
 
 
 def intent():
@@ -25,7 +25,7 @@ def intent():
 
 
 def test_original_prepare_is_granted_once_and_duplicate_has_no_permission():
-    from ralf_agent.coding_execution_rules import grant
+    from relf_agent.coding_execution_rules import grant
 
     state, runner, binding = intent()
     first = grant(state, {"arguments": {"task": "fix"}}, runner, "prepare", {}, binding)
@@ -39,7 +39,7 @@ def test_original_prepare_is_granted_once_and_duplicate_has_no_permission():
 
 
 def test_original_namespace_cannot_be_replaced():
-    from ralf_agent.coding_execution_rules import grant
+    from relf_agent.coding_execution_rules import grant
 
     state, runner, binding = intent()
     changed = copy.deepcopy(binding)
@@ -50,7 +50,7 @@ def test_original_namespace_cannot_be_replaced():
 
 
 def test_read_only_configuration_permission_cannot_be_downgraded():
-    from ralf_agent.coding_execution_rules import grant
+    from relf_agent.coding_execution_rules import grant
 
     state, runner, binding = intent()
     runner["configuration_readonly"] = True
@@ -65,7 +65,7 @@ def test_read_only_configuration_permission_cannot_be_downgraded():
 
 
 def test_fence_blocks_new_native_submission_but_accepts_same_stop_receipt():
-    from ralf_agent.coding_execution_rules import adopt, grant
+    from relf_agent.coding_execution_rules import adopt, grant
 
     state, runner, binding = intent()
     grant(state, {"arguments": {"task": "fix"}}, runner, "prepare", {}, binding)

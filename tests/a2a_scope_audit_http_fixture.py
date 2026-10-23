@@ -11,7 +11,7 @@ from pathlib import Path
 
 import uvicorn
 
-from ralf_agent.service_audit import ServiceAudit
+from relf_agent.service_audit import ServiceAudit
 from tests.test_a2a_scope_isolation import SCOPES, hosted
 
 

@@ -9,7 +9,7 @@ from pathlib import Path
 
 import pytest
 
-from ralf_agent.errors import DefinitionMismatch, ExecutionHostFailed, ValidationError
+from relf_agent.errors import DefinitionMismatch, ExecutionHostFailed, ValidationError
 from tests.coding_cli_fixture import ready_cli
 
 # Removing physical pins, exact inspect checks or retained ID recovery must fail these tests.
@@ -160,7 +160,7 @@ def test_invalid_existing_stop_locator_is_rejected_before_any_io(resource, locat
 
 
 def environment(resource, **kwargs):
-    from ralf_agent.codex_environment import DockerCodingEnvironment
+    from relf_agent.codex_environment import DockerCodingEnvironment
 
     root, cli = resource
     return DockerCodingEnvironment(
@@ -360,7 +360,7 @@ def test_physical_workspace_alias_or_config_drift_fails_closed(resource):
     ],
 )
 def test_constructor_rejects_ambient_or_unbounded_inputs(resource, field, value):
-    from ralf_agent.codex_environment import DockerCodingEnvironment
+    from relf_agent.codex_environment import DockerCodingEnvironment
 
     args = {
         "resource_id": "test-retained",
@@ -578,7 +578,7 @@ def test_cancel_all_loop_tasks_cannot_release_lease_while_real_cli_is_alive(reso
     """Cancelling the to_thread Task must not make its running thread disappear."""
     script = r"""
 import asyncio, os, pathlib, sys
-from ralf_agent.codex_environment import DockerCodingEnvironment
+from relf_agent.codex_environment import DockerCodingEnvironment
 root=pathlib.Path(sys.argv[1]);cli=pathlib.Path(sys.argv[2]);parent=cli.parent
 def resource(): return DockerCodingEnvironment(root,'test-retained',docker_executable=str(cli),docker_host='unix:///fixture/docker.sock',command_timeout=0.8)
 loop=asyncio.new_event_loop();asyncio.set_event_loop(loop);owner=resource()
@@ -821,8 +821,8 @@ def test_unprepared_absence_and_same_root_identity_switch_cannot_be_fenced(resou
 def test_cold_retirement_intent_after_process_exit_reconciles_only_original_id(resource):
     script = r"""
 import asyncio, pathlib, sys
-from ralf_agent.codex_environment import DockerCodingEnvironment
-from ralf_agent.errors import ExecutionHostFailed
+from relf_agent.codex_environment import DockerCodingEnvironment
+from relf_agent.errors import ExecutionHostFailed
 root=pathlib.Path(sys.argv[1]);cli=pathlib.Path(sys.argv[2]);parent=cli.parent
 async def run():
  env=DockerCodingEnvironment(root,'test-retained',docker_executable=str(cli),docker_host='unix:///fixture/docker.sock',retire_on_stop=True,expected_generation='a'*32)

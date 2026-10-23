@@ -6,8 +6,8 @@ from collections import Counter
 
 import pytest
 
-from ralf_agent import temporal_deployment_execution as execution
-from ralf_agent.types import canonical
+from relf_agent import temporal_deployment_execution as execution
+from relf_agent.types import canonical
 from tests.test_temporal_coding_observe_validation import environment
 
 MODEL = "ralf.temporal.model.v1"
@@ -94,7 +94,7 @@ def test_actual_activity_keeps_proof_and_non_session_reads_with_one_session_grou
 
 
 def helper():
-    from ralf_agent.temporal_session_activity_reads import read_activity
+    from relf_agent.temporal_session_activity_reads import read_activity
 
     return read_activity
 
@@ -128,8 +128,8 @@ def test_missing_original_parent_epoch_pin_returns_no_proposal_and_never_writes(
 
 @pytest.mark.parametrize("replacement", ["replaced-original-child", None])
 def test_second_parent_refresh_cannot_replace_the_original_child_epoch(monkeypatch, replacement):
-    from ralf_agent.errors import DefinitionMismatch
-    from ralf_agent.types import digest
+    from relf_agent.errors import DefinitionMismatch
+    from relf_agent.types import digest
 
     async def run():
         e = activity_environment(monkeypatch)
@@ -159,7 +159,7 @@ def test_second_parent_refresh_cannot_replace_the_original_child_epoch(monkeypat
 
 @pytest.mark.parametrize("field", ["epoch", "namespace_uuid", "runtime"])
 def test_original_session_or_runtime_drift_during_group_cannot_return_proof(monkeypatch, field):
-    from ralf_agent.errors import DefinitionMismatch
+    from relf_agent.errors import DefinitionMismatch
 
     async def run():
         e = activity_environment(monkeypatch)
@@ -183,8 +183,8 @@ def test_original_session_or_runtime_drift_during_group_cannot_return_proof(monk
 
 @pytest.mark.parametrize("source", ["node", "session-check"])
 def test_original_reader_methods_cannot_change_after_sdk_await(monkeypatch, source):
-    from ralf_agent import temporal_session_deployment_verification as verification
-    from ralf_agent.errors import DefinitionMismatch
+    from relf_agent import temporal_session_deployment_verification as verification
+    from relf_agent.errors import DefinitionMismatch
 
     async def run():
         e = activity_environment(monkeypatch)
@@ -236,7 +236,7 @@ def test_cancelled_original_reads_return_no_proof_and_retry_fresh(monkeypatch):
 
 @pytest.mark.parametrize("foreign_scope", [False, True])
 def test_original_activity_carrier_keeps_scope_admission_before_reading(monkeypatch, foreign_scope):
-    from ralf_agent.errors import DefinitionMismatch
+    from relf_agent.errors import DefinitionMismatch
 
     async def run():
         e = activity_environment(monkeypatch, CONTEXT)
@@ -261,8 +261,8 @@ def test_original_activity_carrier_keeps_scope_admission_before_reading(monkeypa
 
 @pytest.mark.parametrize("source", ["session-class", "session-validate", "intent-validator"])
 def test_final_independent_verifier_cannot_accept_a_changed_baseline(monkeypatch, source):
-    from ralf_agent import temporal_session_deployment_verification as verification
-    from ralf_agent.errors import DefinitionMismatch
+    from relf_agent import temporal_session_deployment_verification as verification
+    from relf_agent.errors import DefinitionMismatch
 
     async def run():
         e = activity_environment(monkeypatch)
@@ -299,7 +299,7 @@ def test_final_independent_verifier_cannot_accept_a_changed_baseline(monkeypatch
 def test_original_sdk_ports_and_actual_activity_claim_remain_pinned(monkeypatch, port):
     from temporalio import activity
 
-    from ralf_agent.errors import DefinitionMismatch
+    from relf_agent.errors import DefinitionMismatch
 
     async def run():
         e = activity_environment(monkeypatch)
@@ -357,7 +357,7 @@ def test_separate_successful_activity_reads_repeat_the_original_raw_fact_set(mon
 
 @pytest.mark.parametrize("release_kind", ["ordinary-four", "coding-three"])
 def test_other_original_public_releases_do_not_select_the_private_reader(monkeypatch, release_kind):
-    from ralf_agent.errors import DefinitionMismatch
+    from relf_agent.errors import DefinitionMismatch
     from tests.test_temporal_deployment_coding_registry import coding_request
     from tests.test_temporal_deployment_session_registry import deployment_intent
 
@@ -395,8 +395,8 @@ def test_original_default_public_entry_keeps_its_complete_proof():
 
 @pytest.mark.parametrize("port", ["handle", "namespace", "service"])
 def test_readonly_instance_ports_cannot_be_replaced_after_original_sdk_read(monkeypatch, port):
-    from ralf_agent import temporal_session_activity_reads as reading
-    from ralf_agent.errors import DefinitionMismatch
+    from relf_agent import temporal_session_activity_reads as reading
+    from relf_agent.errors import DefinitionMismatch
 
     async def run():
         e = activity_environment(monkeypatch)

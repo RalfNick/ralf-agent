@@ -4,9 +4,9 @@ import os
 import sys
 from pathlib import Path
 
-import ralf_agent.file_artifacts as module
-from ralf_agent import FileArtifactStore, Scope, SQLiteArtifactStore
-from ralf_agent.types import canonical
+import relf_agent.file_artifacts as module
+from relf_agent import FileArtifactStore, Scope, SQLiteArtifactStore
+from relf_agent.types import canonical
 
 root, phase = Path(sys.argv[1]), sys.argv[2]
 

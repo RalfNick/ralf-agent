@@ -1,12 +1,13 @@
 # 可替换的文档解析、分块与原子摄取
 
+当前可执行示例使用a6的`relf_agent`／`relf`入口和独立环境；下文dev版本号标记能力最初引入批次，不把原批次验收授予a6。原包入口见[名称边界](project-naming.md)。
 `0.1.0.dev18` 提供独立 DocumentParser、Chunker、IngestionCoordinator 和同步／异步原子存储端口。默认 UTF-8 文本／Markdown、字符分块、SQLite 词法检索无需模型或外部服务。内存、SQLite 和 PostgreSQL 实现相同的原子摄取回执契约。
 
 ## 安装后直接使用
 
 ```sh
-pip install /path/to/ralf_agent-0.1.0.dev18-py3-none-any.whl
-ralf init my-doc-agent --template ingest
+pip install /path/to/relf_agent-0.1.0a6-py3-none-any.whl
+relf init my-doc-agent --template ingest
 cd my-doc-agent
 python -m agent_app ingest /absolute/path/runbook.md --document-id runbook --command-id ingest-first --expected-version 0
 python -m agent_app query --query 'pool timeout' --command-id answer-first
@@ -17,14 +18,14 @@ python -m agent_app query --query 'pool timeout' --command-id answer-first
 默认执行库为 `.ralf/runs.sqlite`，知识库为 `.ralf/runs.sqlite.knowledge.sqlite`。选择其他路径时，将 `--db PATH` 放在 `ingest`／`query` 子命令之前。查询可加 `--submit-only`，再通过原工厂恢复：
 
 ```sh
-ralf --db .ralf/runs.sqlite --factory agent_app.runtime:create_engine resume RUN_ID
+relf --db .ralf/runs.sqlite --factory agent_app.runtime:create_engine resume RUN_ID
 ```
 
 ## SDK 默认链路
 
 ```python
 import asyncio
-from ralf_agent import IngestionCoordinator, Scope, SourceDocument, SQLiteKnowledgeStore
+from relf_agent import IngestionCoordinator, Scope, SourceDocument, SQLiteKnowledgeStore
 
 
 async def main():
@@ -55,7 +56,7 @@ asyncio.run(main())
 无需继承框架基类。实现同步纯方法和明确 identity 即可；框架在数据库写入前冻结并校验完整返回值：
 
 ```python
-from ralf_agent import ChunkSpan, IngestionCoordinator, ParagraphChunker
+from relf_agent import ChunkSpan, IngestionCoordinator, ParagraphChunker
 
 
 class WholeDocumentChunker:
@@ -91,7 +92,7 @@ Parser／Chunker 不做 I/O，不能返回 coroutine、generator、contextmanage
 
 ```python
 # 已初始化的 index 与显式提供的 embedding；宿主拥有它们的生命周期。
-from ralf_agent import VectorRetriever
+from relf_agent import VectorRetriever
 
 retriever = VectorRetriever(store, index, embedding)
 await retriever.index_document(scope, "runbooks", "pool")

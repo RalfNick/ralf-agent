@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from ralf_agent import (
+from relf_agent import (
     ComponentRegistry,
     GraphNode,
     GraphWorkflowSpec,
@@ -18,9 +18,9 @@ from ralf_agent import (
     ValueRef,
     load_spec,
 )
-from ralf_agent.cli_views import inspection, render_inspection
-from ralf_agent.errors import ValidationError
-from ralf_agent.starter import create_starter
+from relf_agent.cli_views import inspection, render_inspection
+from relf_agent.errors import ValidationError
+from relf_agent.starter import create_starter
 
 
 def test_json_graph_loader_uses_same_public_definition(tmp_path):
@@ -164,13 +164,13 @@ def test_graph_starter_and_cli_resume_across_processes(tmp_path, input, selected
 
     queued = command("-m", "agent_app", "--input", input, "--submit-only")
     run_id = queued["run_id"]
-    done = command("-m", "ralf_agent", "--config", "runtime.toml", "resume", run_id)
+    done = command("-m", "relf_agent", "--config", "runtime.toml", "resume", run_id)
     assert done["state"] == "succeeded"
     assert (
         done["result"][selected] == {"echo": input, "label": "graph-demo"}
         and done["result"][skipped] is None
     )
-    report = command("-m", "ralf_agent", "inspect", run_id)
+    report = command("-m", "relf_agent", "inspect", run_id)
     assert report["workflow"]["nodes"][skipped]["state"] == "skipped"
     assert report["workflow"]["nodes"][selected]["state"] == "completed"
     replay = command("-m", "agent_app", "--input", input)

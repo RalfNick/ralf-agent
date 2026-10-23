@@ -6,17 +6,17 @@ import importlib
 
 import pytest
 
-from ralf_agent import AgentSpec, LocalEngine, SQLiteStore, ToolCall
-from ralf_agent.completion import CompletionVerdict
-from ralf_agent.errors import DefinitionMismatch, ValidationError
-from ralf_agent.harness import ModelRequest, NativeHarness
-from ralf_agent.model_continuation import ContinuedModelResponse, ModelContinuation
-from ralf_agent.tools import ToolRegistry
-from ralf_agent.types import digest
+from relf_agent import AgentSpec, LocalEngine, SQLiteStore, ToolCall
+from relf_agent.completion import CompletionVerdict
+from relf_agent.errors import DefinitionMismatch, ValidationError
+from relf_agent.harness import ModelRequest, NativeHarness
+from relf_agent.model_continuation import ContinuedModelResponse, ModelContinuation
+from relf_agent.tools import ToolRegistry
+from relf_agent.types import digest
 
 
 def history_policy(**kwargs):
-    api = importlib.import_module("ralf_agent")
+    api = importlib.import_module("relf_agent")
     assert hasattr(api, "CompleteModelHistory"), "Complete model history is a public capability"
     return api.CompleteModelHistory(**kwargs)
 
@@ -69,7 +69,7 @@ def final_spec():
 
 @pytest.mark.parametrize("binding", ["native", "agent", "sequence"])
 def test_signed_final_retry_keeps_raw_json_once_and_normalizes_business_result(tmp_path, binding):
-    from ralf_agent import AgentDefinition, BoundDefinition, WorkflowSpec
+    from relf_agent import AgentDefinition, BoundDefinition, WorkflowSpec
 
     calls = []
     definition = (
@@ -245,7 +245,7 @@ def test_legacy_continuation_without_history_keeps_original_final_projection(tmp
 def test_complete_history_does_not_drop_early_native_tools_or_dispatch_summary(
     tmp_path, context_kind
 ):
-    from ralf_agent import BudgetedContextAssembler, ManagedContextPipeline, ModelResponse
+    from relf_agent import BudgetedContextAssembler, ManagedContextPipeline, ModelResponse
 
     calls, summary_calls = [], []
 
@@ -334,7 +334,7 @@ def test_policy_bound_method_from_another_instance_is_not_the_executing_componen
 
 
 def test_unsigned_original_arguments_survive_while_actions_apply_typed_defaults(tmp_path):
-    from ralf_agent import ModelResponse
+    from relf_agent import ModelResponse
 
     class Unsigned:
         identity = {"kind": "unsigned-original-arguments", "version": "1"}
@@ -370,7 +370,7 @@ def test_unsigned_original_arguments_survive_while_actions_apply_typed_defaults(
 
 @pytest.mark.parametrize("custom", [False, True])
 def test_opaque_reference_cannot_be_hidden_by_data_context_excerpts(tmp_path, custom):
-    from ralf_agent import InMemoryArtifactStore, ManagedDataContext
+    from relf_agent import InMemoryArtifactStore, ManagedDataContext
 
     class Custom(history_policy().__class__):
         def assemble(self, history, references, max_chars, *, context):

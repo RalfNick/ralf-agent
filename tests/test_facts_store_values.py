@@ -4,7 +4,7 @@ import importlib
 
 import pytest
 
-from ralf_agent import (
+from relf_agent import (
     AgentSpec,
     InMemoryMemory,
     LocalEngine,
@@ -12,12 +12,12 @@ from ralf_agent import (
     SQLiteStore,
     ToolRegistry,
 )
-from ralf_agent.errors import ValidationError
+from relf_agent.errors import ValidationError
 
 
 def read_value(value):
     try:
-        module = importlib.import_module("ralf_agent.facts_store_values")
+        module = importlib.import_module("relf_agent.facts_store_values")
     except ModuleNotFoundError:
         pytest.fail("The completed Facts adoption boundary is missing")
     return module.facts_read_value(value)

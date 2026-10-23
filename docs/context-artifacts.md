@@ -11,11 +11,11 @@ enterprise data governance.
 Install the preview wheel, then create an editable standalone application:
 
 ```shell
-ralf init my-context-agent --template context
+relf init my-context-agent --template context
 cd my-context-agent
 python -m agent_app --input 'pool timeout' --command-id first
 python -m agent_app --input 'pool timeout' --command-id queued --submit-only
-ralf --db .ralf/runs.sqlite --factory agent_app.runtime:create_engine resume RUN_ID
+relf --db .ralf/runs.sqlite --factory agent_app.runtime:create_engine resume RUN_ID
 ```
 
 The first explicit application tool stores 256 offline evidence rows and returns
@@ -27,7 +27,7 @@ after Engine shutdown. Keep code, configuration and both databases for recovery.
 ## Pure context assembly
 
 ```python
-from ralf_agent import (
+from relf_agent import (
     BudgetedContextAssembler,
     ExcerptContextSummarizer,
     UTF8TokenEstimator,
@@ -94,7 +94,7 @@ MessageCounter with your explicitly installed tokenizer/model identity for a
 closer bound, and leave room for tool/protocol overhead.
 
 ```python
-from ralf_agent import ContextMeasure
+from relf_agent import ContextMeasure
 
 
 class MyCounter:
@@ -138,7 +138,7 @@ hot reload, optional tokenizer import or live configuration migration.
 ## Explicit scoped artifact storage
 
 ```python
-from ralf_agent import Scope, SQLiteArtifactStore, ArtifactReference
+from relf_agent import Scope, SQLiteArtifactStore, ArtifactReference
 
 scope = Scope("project", "alice")  # derive from the trusted host
 with SQLiteArtifactStore(".ralf/artifacts.sqlite", max_bytes=65536, capacity=128) as artifacts:

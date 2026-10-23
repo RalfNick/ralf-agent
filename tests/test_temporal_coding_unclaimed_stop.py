@@ -5,7 +5,7 @@ import copy
 
 import pytest
 
-from ralf_agent.errors import AuthorizationDenied, DefinitionMismatch
+from relf_agent.errors import AuthorizationDenied, DefinitionMismatch
 from tests.test_temporal_coding_recovery_transport import api, fixture
 from tests.test_temporal_coding_recovery_transport_client import Client
 from tests.test_temporal_coding_state import bind, ready

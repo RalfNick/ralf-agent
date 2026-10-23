@@ -7,13 +7,13 @@ from dataclasses import replace
 
 import pytest
 
-from ralf_agent.errors import DefinitionMismatch, ValidationError
-from ralf_agent.memory import InMemoryMemory, SQLiteMemory, ThreadedMemoryAdapter
-from ralf_agent.types import Scope, canonical
+from relf_agent.errors import DefinitionMismatch, ValidationError
+from relf_agent.memory import InMemoryMemory, SQLiteMemory, ThreadedMemoryAdapter
+from relf_agent.types import Scope, canonical
 
 
 def api():
-    return importlib.import_module("ralf_agent.recall")
+    return importlib.import_module("relf_agent.recall")
 
 
 @pytest.fixture(params=["memory", "sqlite"])
@@ -208,13 +208,13 @@ def test_cursor_large_position_and_deep_json_are_typed_rejections(memory, malfor
 
 
 def test_ttl_is_rechecked_per_page_and_expiration_preserves_cas(memory, monkeypatch):
-    monkeypatch.setattr("ralf_agent.memory.time.time", lambda: 100)
+    monkeypatch.setattr("relf_agent.memory.time.time", lambda: 100)
     scope = Scope()
     memory.put_fact(scope, "a", "first", 1, expected_version=0)
     memory.put_fact(scope, "a", "expires", 2, expected_version=0, expires_at=110)
     request = query(max_items=1)
     first = memory.recall(scope, "a", request)
-    monkeypatch.setattr("ralf_agent.memory.time.time", lambda: 111)
+    monkeypatch.setattr("relf_agent.memory.time.time", lambda: 111)
     page = memory.recall(scope, "a", replace(request, cursor=first.next_cursor))
     assert page.items == [] and page.scanned == page.skipped == 1
     with pytest.raises(ValidationError):
@@ -553,7 +553,7 @@ def test_thread_recall_pins_delegated_method_owner_not_only_proxy_identity(legac
 
 
 def test_fact_reference_validation_checks_current_version_scope_and_ttl(memory, monkeypatch):
-    monkeypatch.setattr("ralf_agent.memory.time.time", lambda: 100)
+    monkeypatch.setattr("relf_agent.memory.time.time", lambda: 100)
     memory.put_fact(Scope(), "a", "key", "value", expected_version=0, expires_at=110)
     references = memory.recall(Scope(), "a", query()).items
     assert memory.validate_facts(Scope(), "a", references) is None
@@ -561,10 +561,10 @@ def test_fact_reference_validation_checks_current_version_scope_and_ttl(memory, 
         memory.validate_facts(Scope(principal="other"), "a", references)
     with pytest.raises(ValidationError):
         memory.validate_facts(Scope(), "another", references)
-    monkeypatch.setattr("ralf_agent.memory.time.time", lambda: 111)
+    monkeypatch.setattr("relf_agent.memory.time.time", lambda: 111)
     with pytest.raises(ValidationError):
         memory.validate_facts(Scope(), "a", references)
-    monkeypatch.setattr("ralf_agent.memory.time.time", lambda: 100)
+    monkeypatch.setattr("relf_agent.memory.time.time", lambda: 100)
     memory.put_fact(Scope(), "a", "key", "new", expected_version=1, expires_at=110)
     with pytest.raises(ValidationError):
         memory.validate_facts(Scope(), "a", references)
@@ -629,7 +629,7 @@ def test_legacy_fact_validator_reads_full_backend_and_checks_original_value(asyn
     adapter = api().LegacyMemoryRecallAdapter(backend)
 
     async def check():
-        from ralf_agent.memory import memory_call
+        from relf_agent.memory import memory_call
 
         assert await memory_call(adapter.validate_facts, Scope(), "a", original) is None
         assert backend.reads == 1

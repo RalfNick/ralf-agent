@@ -5,8 +5,8 @@ import copy
 import json
 from dataclasses import asdict
 
-from ralf_agent import SQLiteMemory, SQLiteStore
-from ralf_agent.errors import MemoryBackendError
+from relf_agent import SQLiteMemory, SQLiteStore
+from relf_agent.errors import MemoryBackendError
 
 
 class RemoteMemory:

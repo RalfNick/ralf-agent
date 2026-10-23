@@ -6,7 +6,7 @@ from dataclasses import asdict
 
 import pytest
 
-from ralf_agent import (
+from relf_agent import (
     AgentBindingDescriptor,
     AgentDefinition,
     AgentSpec,
@@ -22,12 +22,12 @@ from ralf_agent import (
     WorkspaceToolSource,
     register_tool_source,
 )
-from ralf_agent.binding_workspace import select_workspace_tools
-from ralf_agent.errors import DefinitionMismatch, ValidationError
-from ralf_agent.temporal_activities import TemporalRuntime
-from ralf_agent.temporal_bindings import normalize_request
-from ralf_agent.temporal_state import TemporalRunState
-from ralf_agent.types import submission_request
+from relf_agent.binding_workspace import select_workspace_tools
+from relf_agent.errors import DefinitionMismatch, ValidationError
+from relf_agent.temporal_activities import TemporalRuntime
+from relf_agent.temporal_bindings import normalize_request
+from relf_agent.temporal_state import TemporalRunState
+from relf_agent.types import submission_request
 
 from .test_workspace_binding_execution import Reader
 

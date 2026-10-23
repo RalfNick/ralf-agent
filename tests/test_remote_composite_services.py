@@ -4,8 +4,8 @@ import asyncio
 
 import pytest
 
-import ralf_agent as r
-from ralf_agent.errors import MemoryBackendError
+import relf_agent as r
+from relf_agent.errors import MemoryBackendError
 
 from .composite_session_fixture import definitions
 from .test_postgres_adapter import postgres_dsn as postgres_dsn

@@ -5,9 +5,9 @@ from types import SimpleNamespace
 
 import pytest
 
-from ralf_agent.errors import DefinitionMismatch
-from ralf_agent.temporal_state import COMMAND_REGISTRY_NAME
-from ralf_agent.types import digest
+from relf_agent.errors import DefinitionMismatch
+from relf_agent.temporal_state import COMMAND_REGISTRY_NAME
+from relf_agent.types import digest
 
 
 @pytest.fixture(autouse=True, scope="module")
@@ -93,7 +93,7 @@ def environment(monkeypatch, publication=2, registry_version=2, *, nested=False)
 def test_control_verifier_reads_complete_original_ancestry_without_mutation(
     monkeypatch, publication, registry_version, nested
 ):
-    from ralf_agent import temporal_deployment_release as release
+    from relf_agent import temporal_deployment_release as release
 
     async def run():
         runtime, client, value, info, binding = environment(
@@ -133,7 +133,7 @@ def test_control_verifier_refuses_unverified_identity_without_any_history_mutati
 ):
     from temporalio.client import WorkflowExecutionStatus
 
-    from ralf_agent import temporal_deployment_release as release
+    from relf_agent import temporal_deployment_release as release
     from tests.test_temporal_deployment_execution import sealed
 
     async def run():
@@ -191,7 +191,7 @@ def test_control_verifier_refuses_unverified_identity_without_any_history_mutati
 def test_fixed_release_registration_wraps_control_result_and_sanitized_refusal(monkeypatch):
     from temporalio import activity
 
-    from ralf_agent import temporal_deployment_release as release
+    from relf_agent import temporal_deployment_release as release
 
     async def run():
         runtime, client, value, info, binding = environment(monkeypatch)

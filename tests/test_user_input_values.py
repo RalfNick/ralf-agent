@@ -6,11 +6,11 @@ from types import SimpleNamespace
 
 import pytest
 
-from ralf_agent import AgentSpec, DynamicWorkflowSpec, ParentCompletionRequest, PlanningRequest
-from ralf_agent.errors import ValidationError
-from ralf_agent.planning import ModelPlanner
-from ralf_agent.types import Scope
-from ralf_agent.user_input import UserInputPolicy, answered_input, make_input_record
+from relf_agent import AgentSpec, DynamicWorkflowSpec, ParentCompletionRequest, PlanningRequest
+from relf_agent.errors import ValidationError
+from relf_agent.planning import ModelPlanner
+from relf_agent.types import Scope
+from relf_agent.user_input import UserInputPolicy, answered_input, make_input_record
 
 
 def evidence():
@@ -123,20 +123,30 @@ def test_model_planner_default_identity_and_schema_are_unchanged():
     assert "oneOf" in selected.agent.output_schema
 
 
-def test_default_temporal_planner_retains_published_implementation_identity():
-    from ralf_agent.temporal_components import default_components, orchestration_identity
+def test_default_temporal_planner_retains_alpha6_implementation_identity():
+    from relf_agent.temporal_components import default_components, orchestration_identity
+    from relf_agent.tools import _callable_identity
+    from relf_agent.types import digest
 
     teams, planners, verifiers = default_components()
-    published = "15977fd630e3210e1666f235e6128a12eeaea2890e0ea333ba34cf1842e9c7f9"
+    published = "6191cb0e91b6446deb63d317efe5e579a145b90508103b903bec8f35972a3228"
     manifest = orchestration_identity(teams, planners, verifiers)
     assert manifest["planners"]["model"]["implementation_digest"] == published
+    # a6 changes the Python namespace, not the published plan implementation.
+    # The old identity remains evidence for old Workers, not an a6 replay promise.
+    previous = _callable_identity(planners["model"].plan)
+    assert previous["owner"] == "relf_agent.planning.ModelPlanner"
+    assert previous["function"]["module"] == "relf_agent.planning"
+    previous["owner"] = "ralf_agent.planning.ModelPlanner"
+    previous["function"]["module"] = "ralf_agent.planning"
+    assert digest([previous]) == "15977fd630e3210e1666f235e6128a12eeaea2890e0ea333ba34cf1842e9c7f9"
     planners["model"] = ModelPlanner(input_requests=True)
     selected = orchestration_identity(teams, planners, verifiers)
     assert selected["planners"]["model"]["implementation_digest"] != published
 
 
 def test_explicit_flat_model_planner_returns_typed_input_conclusion():
-    from ralf_agent.dag_planning import PlanningConclusion
+    from relf_agent.dag_planning import PlanningConclusion
 
     class Caller:
         async def call(self, call_id, member, value):

@@ -12,8 +12,8 @@ Action 委托集成使用；**尚无可运行 Coding Agent 工厂，完整 Runne
 ## 组件与使用边界
 
 ```python
-from ralf_agent.codex_coding_profile import CodexCodingProfile
-from ralf_agent.codex_control import CodexControlProbe
+from relf_agent.codex_coding_profile import CodexCodingProfile
+from relf_agent.codex_control import CodexControlProbe
 
 profile = CodexCodingProfile()  # 纯构造，不下载、启动或读取宿主配置
 config_text = profile.config_text

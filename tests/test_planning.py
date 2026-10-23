@@ -3,15 +3,15 @@ import importlib.util
 
 import pytest
 
-from ralf_agent import AgentSpec
+from relf_agent import AgentSpec
 
 from .test_orchestration import make_engine
 
 
 def api():
-    assert importlib.util.find_spec("ralf_agent.planning"), "Missing managed planning subsystem"
-    from ralf_agent.orchestration_types import DynamicWorkflowSpec
-    from ralf_agent.planning import PlanProposal, PlanStep, RulePlanner, Verification
+    assert importlib.util.find_spec("relf_agent.planning"), "Missing managed planning subsystem"
+    from relf_agent.orchestration_types import DynamicWorkflowSpec
+    from relf_agent.planning import PlanProposal, PlanStep, RulePlanner, Verification
 
     return DynamicWorkflowSpec, PlanProposal, PlanStep, RulePlanner, Verification
 
@@ -92,8 +92,8 @@ def test_planner_cannot_call_unregistered_member(tmp_path):
 
 
 def test_model_planner_runs_as_a_tool_free_budgeted_child(tmp_path):
-    from ralf_agent import ModelResponse, ToolRegistry
-    from ralf_agent.planning import ModelPlanner
+    from relf_agent import ModelResponse, ToolRegistry
+    from relf_agent.planning import ModelPlanner
 
     from .helpers import ScriptedProvider
     from .test_engine import engine
@@ -166,8 +166,8 @@ def test_planner_caller_cannot_execute_worker_before_proposal(tmp_path):
 
 
 def test_model_plan_worker_id_cannot_collide_with_planning_call(tmp_path):
-    from ralf_agent import ModelResponse, ToolRegistry
-    from ralf_agent.planning import ModelPlanner
+    from relf_agent import ModelResponse, ToolRegistry
+    from relf_agent.planning import ModelPlanner
 
     from .helpers import ScriptedProvider
     from .test_engine import engine
@@ -193,7 +193,7 @@ def test_model_plan_worker_id_cannot_collide_with_planning_call(tmp_path):
 
 @pytest.mark.parametrize("limit", [1, 2])
 def test_custom_planner_managed_calls_respect_parent_concurrency(tmp_path, limit):
-    from ralf_agent import LocalEngine, ModelResponse, SQLiteStore, ToolRegistry
+    from relf_agent import LocalEngine, ModelResponse, SQLiteStore, ToolRegistry
 
     Spec, Proposal, Step, *_ = api()
 

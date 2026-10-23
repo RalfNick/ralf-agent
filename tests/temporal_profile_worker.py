@@ -6,7 +6,7 @@ import os
 import sqlite3
 from pathlib import Path
 
-from ralf_agent import (
+from relf_agent import (
     ComponentRegistry,
     ModelResponse,
     Scope,

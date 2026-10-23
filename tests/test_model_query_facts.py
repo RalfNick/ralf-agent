@@ -2,7 +2,7 @@ import asyncio
 
 import pytest
 
-from ralf_agent import (
+from relf_agent import (
     InMemoryMemory,
     ModelQueryTransform,
     ModelResponse,
@@ -11,7 +11,7 @@ from ralf_agent import (
     SemanticMemoryStore,
     ToolCall,
 )
-from ralf_agent.errors import DefinitionMismatch, ValidationError
+from relf_agent.errors import DefinitionMismatch, ValidationError
 from tests.semantic_fixture import Embedding, facts
 from tests.test_model_query import QueryModel
 

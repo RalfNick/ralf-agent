@@ -8,7 +8,7 @@ from dataclasses import asdict
 
 import pytest
 
-from ralf_agent import (
+from relf_agent import (
     AgentSpec,
     ComponentRegistry,
     ModelResponse,
@@ -17,9 +17,9 @@ from ralf_agent import (
     TemporalProfileCatalog,
     TemporalRuntimeBuilder,
 )
-from ralf_agent.errors import CloseIncomplete
-from ralf_agent.governance import TemporalExecutionPolicy
-from ralf_agent.temporal import replay_temporal_history
+from relf_agent.errors import CloseIncomplete
+from relf_agent.governance import TemporalExecutionPolicy
+from relf_agent.temporal import replay_temporal_history
 
 from .test_temporal_composite_service import fixture
 

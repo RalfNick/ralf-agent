@@ -5,8 +5,8 @@ from types import SimpleNamespace
 
 import pytest
 
-from ralf_agent.errors import DefinitionMismatch
-from ralf_agent.temporal_session_activities import namespace_id
+from relf_agent.errors import DefinitionMismatch
+from relf_agent.temporal_session_activities import namespace_id
 
 pytest.importorskip("temporalio")
 from temporalio.service import RPCError, RPCStatusCode  # noqa: E402

@@ -28,7 +28,7 @@ python -m pip install -e ".[remote]"
 import asyncio
 import os
 
-from ralf_agent import PostgresMemory, Scope
+from relf_agent import PostgresMemory, Scope
 
 
 async def application():
@@ -62,7 +62,7 @@ session_store/memory_store 注册了 async `redis`、`postgres`；knowledge 注�
 ```python
 import asyncio
 
-from ralf_agent import AgentSpec, RuntimeBuilder, RuntimeProfile
+from relf_agent import AgentSpec, RuntimeBuilder, RuntimeProfile
 
 
 async def application():

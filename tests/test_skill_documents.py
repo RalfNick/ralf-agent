@@ -4,8 +4,8 @@ import builtins
 
 import pytest
 
-import ralf_agent as r
-from ralf_agent.errors import RalfError, ValidationError
+import relf_agent as r
+from relf_agent.errors import RalfError, ValidationError
 
 
 def api():
@@ -256,7 +256,7 @@ def test_markdown_body_can_include_horizontal_rules_and_frontmatter_like_text():
 
 
 def test_yaml_shared_alias_expansion_refuses_before_plain_copy(monkeypatch):
-    import ralf_agent.skill_documents as module
+    import relf_agent.skill_documents as module
 
     parser = module.YamlSkillDocumentParser(version="1")
     original = module._plain

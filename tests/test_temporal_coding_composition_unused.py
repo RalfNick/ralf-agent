@@ -4,11 +4,11 @@ import asyncio
 
 import pytest
 
-from ralf_agent import Scope
-from ralf_agent.errors import CloseIncomplete
-from ralf_agent.postgres_runner_journal import PostgresRunnerJournal
-from ralf_agent.temporal_activities import TemporalRuntime
-from ralf_agent.temporal_assembly_lifecycle import TemporalRuntimeAssembly
+from relf_agent import Scope
+from relf_agent.errors import CloseIncomplete
+from relf_agent.postgres_runner_journal import PostgresRunnerJournal
+from relf_agent.temporal_activities import TemporalRuntime
+from relf_agent.temporal_assembly_lifecycle import TemporalRuntimeAssembly
 from tests.test_temporal_coding_close_boundary import owned_assembly
 from tests.test_temporal_coding_factories import publish_initialization
 

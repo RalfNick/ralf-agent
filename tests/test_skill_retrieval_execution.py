@@ -5,9 +5,9 @@ import json
 
 import pytest
 
-import ralf_agent as r
-from ralf_agent.binding_definitions import decode_definition
-from ralf_agent.retrieval import KnowledgeContext
+import relf_agent as r
+from relf_agent.binding_definitions import decode_definition
+from relf_agent.retrieval import KnowledgeContext
 
 from .test_skill_binding_execution import definition as original_definition
 from .test_workspace_binding_execution import finish

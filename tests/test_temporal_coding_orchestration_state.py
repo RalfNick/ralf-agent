@@ -5,7 +5,7 @@ from dataclasses import asdict
 
 import pytest
 
-from ralf_agent import (
+from relf_agent import (
     AgentBindingDescriptor,
     AgentSpec,
     BindingSelection,
@@ -16,14 +16,14 @@ from ralf_agent import (
     TeamSpec,
     ValueRef,
 )
-from ralf_agent.dag_planning import DAGNode, DAGProposal
-from ralf_agent.errors import RalfError
-from ralf_agent.orchestration_types import ChildCall, TeamRequest, TeamSelection
-from ralf_agent.teams import RouterTeam, SequentialTeam, SupervisorTeam
-from ralf_agent.temporal_activities import TemporalRuntime
-from ralf_agent.temporal_bindings import request_release_digest
-from ralf_agent.temporal_parent_state import TemporalParentState
-from ralf_agent.types import digest, submission_request
+from relf_agent.dag_planning import DAGNode, DAGProposal
+from relf_agent.errors import RalfError
+from relf_agent.orchestration_types import ChildCall, TeamRequest, TeamSelection
+from relf_agent.teams import RouterTeam, SequentialTeam, SupervisorTeam
+from relf_agent.temporal_activities import TemporalRuntime
+from relf_agent.temporal_bindings import request_release_digest
+from relf_agent.temporal_parent_state import TemporalParentState
+from relf_agent.types import digest, submission_request
 from tests.test_temporal_coding_composition_configuration import composition_manifest
 from tests.test_temporal_coding_composition_state import bind_namespace, composition
 from tests.test_temporal_coding_parallel_state import observe, start
@@ -384,7 +384,7 @@ def test_replanning_input_keeps_original_adopted_result_after_late_diagnostics()
 
 
 def test_completion_source_keeps_original_adopted_result_after_late_diagnostics():
-    from ralf_agent.temporal_parent_completion_state import source
+    from relf_agent.temporal_parent_completion_state import source
     from tests.test_temporal_parent_completion import setup
 
     state = parent("team", concurrency=1)
@@ -510,7 +510,7 @@ def test_workflow_stage_activity_waits_for_original_stop_after_financial_settlem
 ):
     import asyncio
 
-    from ralf_agent import temporal_parent_workflow as scheduler
+    from relf_agent import temporal_parent_workflow as scheduler
 
     state = parent("team" if stage == "select" else "dynamic")
     if state.kind == "team":

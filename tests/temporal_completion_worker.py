@@ -5,7 +5,7 @@ import json
 import os
 from pathlib import Path
 
-from ralf_agent import (
+from relf_agent import (
     AgentBindingDescriptor,
     AgentDefinition,
     AgentSpec,
@@ -31,8 +31,8 @@ from ralf_agent import (
     ToolSpec,
     WorkflowSpec,
 )
-from ralf_agent.temporal import build_temporal_worker
-from ralf_agent.temporal_activities import TemporalRuntime
+from relf_agent.temporal import build_temporal_worker
+from relf_agent.temporal_activities import TemporalRuntime
 
 
 class Context:

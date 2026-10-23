@@ -15,8 +15,8 @@ def test_final_sdk_exit_checks_expected_release_without_duplicate_reconstruction
 ):
     from temporalio import activity
 
-    from ralf_agent import temporal_deployment_execution as execution
-    from ralf_agent import temporal_deployment_release as release
+    from relf_agent import temporal_deployment_execution as execution
+    from relf_agent import temporal_deployment_release as release
     from tests.test_temporal_deployment_release import environment
 
     events = []

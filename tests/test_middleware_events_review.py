@@ -3,7 +3,7 @@ import copy
 
 import pytest
 
-from ralf_agent import (
+from relf_agent import (
     AgentSpec,
     LocalEngine,
     MiddlewareProvider,
@@ -15,9 +15,9 @@ from ralf_agent import (
     SQLiteStore,
     ToolRegistry,
 )
-from ralf_agent.errors import DefinitionMismatch
-from ralf_agent.executors import DispatchEnvelope, EffectObservation
-from ralf_agent.types import InvocationContext
+from relf_agent.errors import DefinitionMismatch
+from relf_agent.executors import DispatchEnvelope, EffectObservation
+from relf_agent.types import InvocationContext
 
 
 class Provider:

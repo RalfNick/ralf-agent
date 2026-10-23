@@ -4,8 +4,8 @@ import asyncio
 
 import pytest
 
-import ralf_agent as r
-from ralf_agent.errors import RalfError
+import relf_agent as r
+from relf_agent.errors import RalfError
 
 
 def profile(config):
@@ -67,7 +67,7 @@ def test_local_profile_refuses_temporal_only_owner():
 
 
 def test_borrowed_direct_owner_is_waited_but_not_closed():
-    from ralf_agent.temporal_activities import TemporalRuntime
+    from relf_agent.temporal_activities import TemporalRuntime
 
     async def run():
         from .test_temporal_engine import Provider

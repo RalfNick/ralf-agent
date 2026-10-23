@@ -3,10 +3,10 @@ import copy
 
 import pytest
 
-from ralf_agent import AgentSpec, LocalEngine, ModelResponse, Scope, SQLiteStore, ToolRegistry
-from ralf_agent.context import ContextAssembler
-from ralf_agent.errors import DefinitionMismatch
-from ralf_agent.memory import InMemoryMemory, SQLiteMemory
+from relf_agent import AgentSpec, LocalEngine, ModelResponse, Scope, SQLiteStore, ToolRegistry
+from relf_agent.context import ContextAssembler
+from relf_agent.errors import DefinitionMismatch
+from relf_agent.memory import InMemoryMemory, SQLiteMemory
 
 
 class RecordingProvider:
@@ -24,7 +24,7 @@ class RecordingProvider:
 
 
 def policy(**kwargs):
-    from ralf_agent.recall import MemoryRecallPolicy, RecallQuery
+    from relf_agent.recall import MemoryRecallPolicy, RecallQuery
 
     return MemoryRecallPolicy(
         facts=RecallQuery(max_items=2, max_chars=1024, scan_limit=8),
@@ -79,7 +79,7 @@ def test_opt_in_recall_uses_bounded_ports_and_recent_complete_session_records(tm
 
 
 def test_multiple_empty_pages_can_progress_without_exceeding_total_recall_quota(tmp_path):
-    from ralf_agent.recall import MemoryRecallPolicy, RecallQuery
+    from relf_agent.recall import MemoryRecallPolicy, RecallQuery
 
     memory = InMemoryMemory(backend_id="bounded-pages:v1")
     for index in range(4):
@@ -129,7 +129,7 @@ def test_default_profile_keeps_manifest_and_submit_identity_without_new_capabili
 
 
 def test_changed_recall_policy_cannot_continue_a_pinned_run(tmp_path):
-    from ralf_agent.recall import MemoryRecallPolicy, RecallQuery
+    from relf_agent.recall import MemoryRecallPolicy, RecallQuery
 
     provider = RecordingProvider()
     with LocalEngine(
@@ -146,7 +146,7 @@ def test_changed_recall_policy_cannot_continue_a_pinned_run(tmp_path):
 
 
 def knowledge_context():
-    from ralf_agent.retrieval import (
+    from relf_agent.retrieval import (
         Document,
         InMemoryKnowledgeStore,
         KnowledgeContext,
@@ -214,7 +214,7 @@ def test_source_deleted_during_assembly_is_rejected_before_provider_call(tmp_pat
 
 
 def test_model_retry_reuses_original_knowledge_snapshot_without_new_retrieval(tmp_path):
-    from ralf_agent.retrieval import KnowledgeContext
+    from relf_agent.retrieval import KnowledgeContext
 
     store, initial = knowledge_context()
 
@@ -244,7 +244,7 @@ def test_model_retry_reuses_original_knowledge_snapshot_without_new_retrieval(tm
 
 
 def test_model_retry_refuses_changed_source_instead_of_replacing_original_snapshot(tmp_path):
-    from ralf_agent.retrieval import Document
+    from relf_agent.retrieval import Document
 
     store, knowledge = knowledge_context()
     provider = RecordingProvider(fail_once=True)

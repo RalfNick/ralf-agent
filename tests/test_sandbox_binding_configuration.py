@@ -5,9 +5,9 @@ import json
 
 import pytest
 
-import ralf_agent as r
-from ralf_agent.errors import RalfError, ValidationError
-from ralf_agent.runtime_config import load_catalog
+import relf_agent as r
+from relf_agent.errors import RalfError, ValidationError
+from relf_agent.runtime_config import load_catalog
 
 from .test_sandbox_binding_execution import Reader
 from .test_sandbox_bindings import registered as registered
@@ -88,7 +88,7 @@ def test_invalid_binding_preflight_does_not_allocate_store(tmp_path, config):
 
 
 def test_owned_file_catalog_closed_after_wrong_registered_family(tmp_path, monkeypatch):
-    import ralf_agent.skill_factories as module
+    import relf_agent.skill_factories as module
 
     root = tmp_path / "skills"
     root.mkdir()

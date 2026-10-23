@@ -1,9 +1,9 @@
 import asyncio
 from functools import partial
 
-from ralf_agent import Scope, ToolRegistry, ToolSpec
-from ralf_agent.tools import invoke
-from ralf_agent.types import InvocationContext, digest
+from relf_agent import Scope, ToolRegistry, ToolSpec
+from relf_agent.tools import invoke
+from relf_agent.types import InvocationContext, digest
 
 
 def test_registered_spec_and_manifest_are_defensive_snapshots():

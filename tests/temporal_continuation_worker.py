@@ -7,7 +7,7 @@ from pathlib import Path
 
 import httpx
 
-from ralf_agent import (
+from relf_agent import (
     AgentSpec,
     GraphNode,
     GraphWorkflowSpec,
@@ -15,10 +15,10 @@ from ralf_agent import (
     ToolExecutionOwner,
     ToolRegistry,
 )
-from ralf_agent.gemini_functions import GeminiFunctionProvider
-from ralf_agent.temporal import build_temporal_worker
-from ralf_agent.temporal_activities import TemporalRuntime
-from ralf_agent.types import digest
+from relf_agent.gemini_functions import GeminiFunctionProvider
+from relf_agent.temporal import build_temporal_worker
+from relf_agent.temporal_activities import TemporalRuntime
+from relf_agent.types import digest
 
 PARTS = [
     {"text": "private fixture reasoning", "thought": True, "thoughtSignature": "dGhvdWdodA=="},

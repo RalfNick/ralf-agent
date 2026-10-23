@@ -7,15 +7,15 @@ from types import SimpleNamespace
 
 import pytest
 
-from ralf_agent import (
+from relf_agent import (
     ComponentRegistry,
     InMemoryMemory,
     RecallQuery,
     TemporalRuntimeBuilder,
     ThreadedMemoryAdapter,
 )
-from ralf_agent.errors import CloseIncomplete, RuntimeClosed
-from ralf_agent.runtime_builder import EchoProvider
+from relf_agent.errors import CloseIncomplete, RuntimeClosed
+from relf_agent.runtime_builder import EchoProvider
 
 from .test_temporal_catalog_assembly import catalog
 from .test_temporal_profile_host import sdk as sdk_fixture
@@ -46,7 +46,7 @@ def test_cancelled_startup_keeps_partial_worker_until_original_enter_finishes(
             workers.append(value)
             return value
 
-        monkeypatch.setattr("ralf_agent.temporal.build_temporal_worker", create)
+        monkeypatch.setattr("relf_agent.temporal.build_temporal_worker", create)
         host = await TemporalRuntimeBuilder(base_dir=tmp_path).abuild_catalog(catalog())
         startup = asyncio.create_task(host.start_workers(sdk.client))
         try:
@@ -170,7 +170,7 @@ def test_actual_sdk_fatal_sibling_closes_all_entry_then_reports_after_cleanup(
             workers.append(value)
             return value
 
-        monkeypatch.setattr("ralf_agent.temporal.build_temporal_worker", create)
+        monkeypatch.setattr("relf_agent.temporal.build_temporal_worker", create)
         registry = ComponentRegistry()
         registry.register_async("provider", "test", factory)
         host = await TemporalRuntimeBuilder(registry, base_dir=tmp_path).abuild_catalog(

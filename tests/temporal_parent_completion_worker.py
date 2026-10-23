@@ -9,7 +9,7 @@ from pathlib import Path
 
 import httpx
 
-from ralf_agent import (
+from relf_agent import (
     AgentSpec,
     CompleteModelHistory,
     DynamicWorkflowSpec,
@@ -18,11 +18,11 @@ from ralf_agent import (
     TeamSpec,
     ToolRegistry,
 )
-from ralf_agent.parent_completion import ParentCompletionPolicy
-from ralf_agent.parent_completion_rules import ReceiptParentCompletionGate
-from ralf_agent.parent_verification_stage import ModelParentVerificationStage
-from ralf_agent.temporal import build_temporal_worker
-from ralf_agent.temporal_activities import TemporalRuntime
+from relf_agent.parent_completion import ParentCompletionPolicy
+from relf_agent.parent_completion_rules import ReceiptParentCompletionGate
+from relf_agent.parent_verification_stage import ModelParentVerificationStage
+from relf_agent.temporal import build_temporal_worker
+from relf_agent.temporal_activities import TemporalRuntime
 from tests.test_responses_reasoning_runtime import native_output, provider, wire_response
 
 SESSION_WINDOWS = frozenset({"final-session", "lost-session-ack"})
@@ -234,7 +234,7 @@ def runtime(root, kind="team", *, window="proposal", mode="host"):
         if session
         else None
     )
-    from ralf_agent.temporal_session_topology import CompositeSessionTopology
+    from relf_agent.temporal_session_topology import CompositeSessionTopology
 
     execution = GatedRuntime(
         providers={

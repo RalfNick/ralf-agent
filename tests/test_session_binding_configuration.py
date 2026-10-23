@@ -6,11 +6,11 @@ from contextlib import closing
 
 import pytest
 
-from ralf_agent import InMemoryMemory, RuntimeBuilder, RuntimeProfile, Scope
-from ralf_agent.cli import main
-from ralf_agent.errors import ValidationError
-from ralf_agent.runtime_builder import ComponentRegistry
-from ralf_agent.runtime_config import load_catalog
+from relf_agent import InMemoryMemory, RuntimeBuilder, RuntimeProfile, Scope
+from relf_agent.cli import main
+from relf_agent.errors import ValidationError
+from relf_agent.runtime_builder import ComponentRegistry
+from relf_agent.runtime_config import load_catalog
 
 from .test_session_binding_execution import session_agent
 
@@ -140,7 +140,7 @@ def test_async_session_resource_factory_preserves_owned_cleanup(tmp_path):
 
 
 def test_invalid_namespace_config_does_not_create_database(tmp_path):
-    from ralf_agent.errors import ValidationError
+    from relf_agent.errors import ValidationError
 
     values = declarations()
     values[0]["component"]["config"]["namespaces"] = [""]
@@ -154,7 +154,7 @@ def test_invalid_namespace_config_does_not_create_database(tmp_path):
 
 
 def test_session_resource_export_is_optional_dependency_safe():
-    from ralf_agent import SessionBindingResource
+    from relf_agent import SessionBindingResource
 
     assert (
         SessionBindingResource(InMemoryMemory(backend_id="test")).identity["backend_id"] == "test"
@@ -162,8 +162,8 @@ def test_session_resource_export_is_optional_dependency_safe():
 
 
 def test_prepared_session_factory_freezes_default_namespace(tmp_path):
-    from ralf_agent import SQLiteStore
-    from ralf_agent.runtime_lifecycle import BuildContext
+    from relf_agent import SQLiteStore
+    from relf_agent.runtime_lifecycle import BuildContext
 
     registry = ComponentRegistry()
     declaration = declarations({"adapter": "in-memory", "config": {"backend_id": "memory"}})[0][

@@ -9,8 +9,8 @@ Candidate source checks are separate from final installed release acceptance.
 Install the locally built wheel and create the editable application:
 
 ```sh
-python -m pip install /path/to/relf_agent-0.1.0a5-py3-none-any.whl
-ralf init application --template memory-index
+python -m pip install /path/to/relf_agent-0.1.0a6-py3-none-any.whl
+relf init application --template memory-index
 cd application
 python -m agent_app run --format toml --command-prefix first
 python -m agent_app run --format json --borrowed --session-id borrowed-preferences --command-prefix second
@@ -43,7 +43,7 @@ remaining R01–R26/H3/M1 requirements.
 ## SDK composition
 
 ```python
-from ralf_agent import (
+from relf_agent import (
     AgentSpec, ComponentRegistry, ModelResponse, RuntimeBuilder, RuntimeProfile,
     fact_index_maintenance_components, fact_index_maintenance_writer,
     maintained_agent_workflow,
@@ -143,7 +143,7 @@ through `abuild`, reconnects the recorded Session reference and resumes the orig
 Run. A changed default alias cannot replace that profile. Missing/changed originals
 fail before maintenance effects. Preserve the generated source/catalog for recovery.
 
-The existing synchronous `ralf --factory agent_app.runtime:create_engine resume`
+The existing synchronous `relf --factory agent_app.runtime:create_engine resume`
 cannot construct these async tools and is not advertised as a continuation path.
 Explicit resume retains original authority semantics, including separately reserved
 new Attempts and old unknown holds where the original recovery contract permits them.

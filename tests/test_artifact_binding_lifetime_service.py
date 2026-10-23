@@ -12,11 +12,11 @@ from pathlib import Path
 
 import pytest
 
-import ralf_agent as r
-from ralf_agent.errors import CloseIncomplete
-from ralf_agent.temporal import TemporalEngine, build_temporal_worker, replay_temporal_history
-from ralf_agent.temporal_activities import TemporalRuntime
-from ralf_agent.types import digest
+import relf_agent as r
+from relf_agent.errors import CloseIncomplete
+from relf_agent.temporal import TemporalEngine, build_temporal_worker, replay_temporal_history
+from relf_agent.temporal_activities import TemporalRuntime
+from relf_agent.types import digest
 
 from .artifact_binding_crash_worker import runtime as process_runtime
 from .test_artifact_binding_execution import Reader, definition

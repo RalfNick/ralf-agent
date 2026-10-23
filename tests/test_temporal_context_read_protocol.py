@@ -4,11 +4,11 @@ import copy
 
 import pytest
 
-from ralf_agent import AgentSpec, ToolRegistry
-from ralf_agent.errors import DefinitionMismatch
-from ralf_agent.temporal_activities import TemporalRuntime
-from ralf_agent.temporal_state import TemporalRunState, validate_manifest
-from ralf_agent.types import submission_request
+from relf_agent import AgentSpec, ToolRegistry
+from relf_agent.errors import DefinitionMismatch
+from relf_agent.temporal_activities import TemporalRuntime
+from relf_agent.temporal_state import TemporalRunState, validate_manifest
+from relf_agent.types import submission_request
 
 from .test_temporal_context_execution import owner
 from .test_temporal_sessions import Provider
@@ -19,7 +19,7 @@ def native():
 
 
 def candidate(manifest=None, registration=None):
-    from ralf_agent.temporal_context_read_protocol import ContextExecutionRegistration, publish
+    from relf_agent.temporal_context_read_protocol import ContextExecutionRegistration, publish
 
     return publish(
         native() if manifest is None else manifest,
@@ -66,7 +66,7 @@ def test_invalid_read_release_refuses_before_execution(mutation):
 
 
 def test_registration_refuses_configuration_and_method_changes():
-    from ralf_agent.temporal_context_read_protocol import ContextExecutionRegistration
+    from relf_agent.temporal_context_read_protocol import ContextExecutionRegistration
 
     component = owner()
     registered = ContextExecutionRegistration(component)

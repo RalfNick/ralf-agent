@@ -11,7 +11,7 @@ from urllib.parse import urlsplit
 
 import pytest
 
-from ralf_agent import (
+from relf_agent import (
     AgentSpec,
     ComponentRegistry,
     DeploymentAdmissionPolicy,
@@ -21,10 +21,10 @@ from ralf_agent import (
     TemporalProfile,
     TemporalRuntimeBuilder,
 )
-from ralf_agent.temporal_deployment_admission import registry_id, root_run_id
-from ralf_agent.temporal_deployment_release import _binding
-from ralf_agent.temporal_session_state import workflow_id
-from ralf_agent.types import digest
+from relf_agent.temporal_deployment_admission import registry_id, root_run_id
+from relf_agent.temporal_deployment_release import _binding
+from relf_agent.temporal_session_state import workflow_id
+from relf_agent.types import digest
 from tests.test_temporal_deployment_admission_service import _clients
 from tests.test_temporal_deployment_dispatch_service import _eventually
 
@@ -313,9 +313,9 @@ def test_actual_session_approval_worker_restart_and_lost_completed_replies(tmp_p
         from temporalio.client import WorkflowExecutionStatus
         from temporalio.service import RPCError, RPCStatusCode
 
-        from ralf_agent import ToolCall, ToolRegistry, ToolSpec
-        from ralf_agent.temporal import TemporalEngine, build_temporal_worker
-        from ralf_agent.temporal_activities import TemporalRuntime
+        from relf_agent import ToolCall, ToolRegistry, ToolSpec
+        from relf_agent.temporal import TemporalEngine, build_temporal_worker
+        from relf_agent.temporal_activities import TemporalRuntime
         from tests.test_temporal_deployment_public_service import SDKFaultClient, SDKFaultHandle
 
         class StartReceiptLossHandle(SDKFaultHandle):
@@ -468,7 +468,7 @@ def test_actual_session_approval_worker_restart_and_lost_completed_replies(tmp_p
                 )
                 assert reopened.receipt == open_receipt and reopened.ref == original_ref
                 pending = (await replay.pending())[0]
-                from ralf_agent import RunRef
+                from relf_agent import RunRef
 
                 owner = await facade.aattach(RunRef.from_dict(pending["ref"]))
                 approval = await owner.approve(

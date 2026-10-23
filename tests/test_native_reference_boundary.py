@@ -5,9 +5,9 @@ import copy
 
 import pytest
 
-import ralf_agent as r
-from ralf_agent.session_model_history import native_history_envelope
-from ralf_agent.types import canonical, digest
+import relf_agent as r
+from relf_agent.session_model_history import native_history_envelope
+from relf_agent.types import canonical, digest
 
 
 class UnpublishedReferences:
@@ -102,7 +102,7 @@ def test_native_reference_rejected_before_replaceable_policy_or_provider(
                 handle = engine.submit(spec, "task", session_id="chat", command_id="turn")
                 assert (await engine.drive(handle.run_id)).state == "failed"
         else:
-            from ralf_agent.temporal_state import TemporalRunState
+            from relf_agent.temporal_state import TemporalRunState
             from tests.test_temporal_session_model_history import drive, setup
 
             host, session, _ = setup(spec, policy=policy, provider=provider, knowledge=knowledge)

@@ -10,7 +10,7 @@ from functools import partial
 
 import pytest
 
-import ralf_agent as r
+import relf_agent as r
 
 pytestmark = pytest.mark.skipif(
     not os.getenv("RALF_TEST_DOCKER_IMAGE"), reason="requires explicit actual Docker fixture"
@@ -23,7 +23,7 @@ def test_actual_dead_dispatcher_queries_same_running_native_container(tmp_path):
     child_code = """
 import asyncio,json,os,sys
 from pathlib import Path
-import ralf_agent as r
+import relf_agent as r
 async def main():
  p=r.DockerSandbox(os.environ['RALF_TEST_DOCKER_SOCKET'],os.environ['RALF_TEST_DOCKER_IMAGE'],version='cold-test')
  await p.aopen()

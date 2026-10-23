@@ -4,8 +4,8 @@ import asyncio
 
 import pytest
 
-from ralf_agent.errors import DefinitionMismatch
-from ralf_agent.types import digest
+from relf_agent.errors import DefinitionMismatch
+from relf_agent.types import digest
 from tests.test_temporal_coding_composition_control import NAMESPACE, Handle, linked_client
 
 MANIFEST = {
@@ -16,7 +16,7 @@ MANIFEST = {
 
 
 def environment(monkeypatch, *, barrier=False):
-    from ralf_agent import temporal_session_activities
+    from relf_agent import temporal_session_activities
 
     client, leaf_id = linked_client()
     client.children[0]["planning_revision"] = 0
@@ -79,7 +79,7 @@ def environment(monkeypatch, *, barrier=False):
 
 
 def test_parent_proof_and_children_start_concurrently_then_namespace_is_checked(monkeypatch):
-    from ralf_agent import temporal_coding_composition_control as control
+    from relf_agent import temporal_coding_composition_control as control
 
     async def run():
         client, leaf = environment(monkeypatch, barrier=True)
@@ -100,7 +100,7 @@ def test_parent_proof_and_children_start_concurrently_then_namespace_is_checked(
     "fault", ["namespace", "parent-epoch", "children-shape", "call-id", "request", "child-epoch"]
 )
 def test_same_walk_parallel_reads_reject_changed_namespace_epoch_or_intent(monkeypatch, fault):
-    from ralf_agent import temporal_coding_composition_control as control
+    from relf_agent import temporal_coding_composition_control as control
 
     async def run():
         client, leaf = environment(monkeypatch)
@@ -131,7 +131,7 @@ def test_same_walk_parallel_reads_reject_changed_namespace_epoch_or_intent(monke
 
 
 def test_parent_cancellation_is_read_fresh_on_every_walk(monkeypatch):
-    from ralf_agent import temporal_coding_composition_control as control
+    from relf_agent import temporal_coding_composition_control as control
 
     async def run():
         client, leaf = environment(monkeypatch)
@@ -150,7 +150,7 @@ def test_parent_cancellation_is_read_fresh_on_every_walk(monkeypatch):
 
 
 def test_missing_child_pin_keeps_before_after_update_checks_and_original_reread(monkeypatch):
-    from ralf_agent import temporal_coding_composition_control as control
+    from relf_agent import temporal_coding_composition_control as control
 
     async def run():
         client, leaf = environment(monkeypatch)
@@ -169,7 +169,7 @@ def test_missing_child_pin_keeps_before_after_update_checks_and_original_reread(
 
 
 def test_read_failure_waits_for_sibling_before_propagating_original_exception(monkeypatch):
-    from ralf_agent import temporal_coding_composition_control as control
+    from relf_agent import temporal_coding_composition_control as control
 
     async def run():
         client, leaf = environment(monkeypatch)
@@ -207,7 +207,7 @@ def test_read_failure_waits_for_sibling_before_propagating_original_exception(mo
 
 
 def test_namespace_drift_during_child_read_is_checked_after_both_reads(monkeypatch):
-    from ralf_agent import temporal_coding_composition_control as control
+    from relf_agent import temporal_coding_composition_control as control
 
     async def run():
         client, leaf = environment(monkeypatch)
@@ -234,7 +234,7 @@ def test_namespace_drift_during_child_read_is_checked_after_both_reads(monkeypat
 
 
 def test_epoch_adoption_still_checks_namespace_after_mutating_await(monkeypatch):
-    from ralf_agent import temporal_coding_composition_control as control
+    from relf_agent import temporal_coding_composition_control as control
 
     async def run():
         client, leaf = environment(monkeypatch)

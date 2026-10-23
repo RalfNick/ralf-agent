@@ -5,12 +5,12 @@ from dataclasses import asdict
 
 import pytest
 
-from ralf_agent import Scope
-from ralf_agent.errors import DefinitionMismatch, ValidationError
-from ralf_agent.recall import RecallQuery
-from ralf_agent.temporal_parent_state import TemporalParentState
-from ralf_agent.temporal_session_state import TemporalSessionState
-from ralf_agent.types import digest
+from relf_agent import Scope
+from relf_agent.errors import DefinitionMismatch, ValidationError
+from relf_agent.recall import RecallQuery
+from relf_agent.temporal_parent_state import TemporalParentState
+from relf_agent.temporal_session_state import TemporalSessionState
+from relf_agent.types import digest
 
 from .test_temporal_session_tree_admission import candidate, turn
 from .test_temporal_session_tree_sources import setup
@@ -43,7 +43,7 @@ def parent(*, budget=32):
 
 def read_response(state, session, store, request):
     page = store.read_page(Scope(), session.key.storage_key, RecallQuery(**request["query"]))
-    from ralf_agent.temporal_session_data_state import references
+    from relf_agent.temporal_session_data_state import references
 
     source = {
         "version": 1,
@@ -249,9 +249,9 @@ def test_root_save_allowance_is_released_when_original_receipt_already_exists():
 
 
 def test_legacy_planning_conclusion_preserves_original_revision_for_control_replay():
-    from ralf_agent import AgentSpec, DynamicWorkflowSpec, ToolRegistry
-    from ralf_agent.temporal_activities import TemporalRuntime
-    from ralf_agent.types import submission_request
+    from relf_agent import AgentSpec, DynamicWorkflowSpec, ToolRegistry
+    from relf_agent.temporal_activities import TemporalRuntime
+    from relf_agent.types import submission_request
 
     from .test_temporal_sessions import Provider
 

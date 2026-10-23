@@ -6,9 +6,9 @@ import uuid
 
 import pytest
 
-from ralf_agent import ManagedContextPipeline, Runtime, Scope, SQLiteMemory
-from ralf_agent.temporal import TemporalEngine, build_temporal_worker, replay_temporal_history
-from ralf_agent.temporal_session_topology import CompositeSessionTopology
+from relf_agent import ManagedContextPipeline, Runtime, Scope, SQLiteMemory
+from relf_agent.temporal import TemporalEngine, build_temporal_worker, replay_temporal_history
+from relf_agent.temporal_session_topology import CompositeSessionTopology
 
 from .test_temporal_context_read_composition import definition
 from .test_temporal_persistent_session_data import runtime
@@ -112,8 +112,8 @@ def test_actual_cancel_or_timeout_keeps_reader_turn_until_original_end(kind, man
 
         from temporalio.client import Client
 
-        from ralf_agent import InMemoryMemory, ThreadedMemoryAdapter
-        from ralf_agent.errors import CloseIncomplete
+        from relf_agent import InMemoryMemory, ThreadedMemoryAdapter
+        from relf_agent.errors import CloseIncomplete
 
         started, release, stopped = (threading.Event() for _ in range(3))
 

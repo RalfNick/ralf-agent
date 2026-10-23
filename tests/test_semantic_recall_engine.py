@@ -2,14 +2,14 @@ import asyncio
 
 import pytest
 
-from ralf_agent import AgentSpec, LocalEngine, ModelResponse, Scope, SQLiteStore, ToolRegistry
-from ralf_agent.errors import ValidationError
+from relf_agent import AgentSpec, LocalEngine, ModelResponse, Scope, SQLiteStore, ToolRegistry
+from relf_agent.errors import ValidationError
 
 from .semantic_fixture import Embedding, facts
 
 
 def test_task_planner_binds_current_facts_query_without_changing_recent_session():
-    from ralf_agent import MemoryRecallPolicy, RecallQuery, TaskRecallPlanner
+    from relf_agent import MemoryRecallPolicy, RecallQuery, TaskRecallPlanner
 
     planner = TaskRecallPlanner()
     result = planner.plan(Scope(), "assistant", "session", "vehicle")
@@ -21,7 +21,7 @@ def test_task_planner_binds_current_facts_query_without_changing_recent_session(
 
 
 def test_original_engine_adopts_semantic_fact_and_keeps_authoritative_reference(tmp_path):
-    from ralf_agent import SemanticMemoryStore, TaskRecallPlanner
+    from relf_agent import SemanticMemoryStore, TaskRecallPlanner
 
     class Provider:
         identity = {"kind": "semantic-reader", "version": "1"}

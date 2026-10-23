@@ -4,14 +4,14 @@ import importlib
 
 import pytest
 
-from ralf_agent import AgentSpec, BudgetedContextAssembler, ContextSummary
-from ralf_agent.errors import DefinitionMismatch, ValidationError
-from ralf_agent.types import canonical, digest
+from relf_agent import AgentSpec, BudgetedContextAssembler, ContextSummary
+from relf_agent.errors import DefinitionMismatch, ValidationError
+from relf_agent.types import canonical, digest
 from tests.test_managed_memory_stage import engine
 
 
 def pipeline(**kwargs):
-    return importlib.import_module("ralf_agent.managed_context").ManagedContextPipeline(**kwargs)
+    return importlib.import_module("relf_agent.managed_context").ManagedContextPipeline(**kwargs)
 
 
 def history():
@@ -97,7 +97,7 @@ def test_pipeline_admission_pins_provider_and_enables_semantic8(tmp_path):
 
 
 def test_advanced_pipeline_activates_composite_schema(tmp_path):
-    from ralf_agent import GraphNode, GraphWorkflowSpec
+    from relf_agent import GraphNode, GraphWorkflowSpec
 
     with engine(tmp_path / "run.sqlite", context_assembler=pipeline()) as local:
         h = local.submit(
@@ -110,7 +110,7 @@ def test_advanced_pipeline_activates_composite_schema(tmp_path):
 
 
 def test_existing_context_binding_selects_pipeline_per_agent(tmp_path):
-    from ralf_agent import (
+    from relf_agent import (
         AgentBindingDescriptor,
         AgentDefinition,
         BindingCatalog,
@@ -136,7 +136,7 @@ def test_existing_context_binding_selects_pipeline_per_agent(tmp_path):
 
 
 def test_pipeline_rejects_lazy_preparation_override():
-    from ralf_agent import ManagedContextPipeline
+    from relf_agent import ManagedContextPipeline
 
     class Lazy(ManagedContextPipeline):
         async def prepare(self, *args):
@@ -148,8 +148,8 @@ def test_pipeline_rejects_lazy_preparation_override():
 
 @pytest.mark.parametrize("mode", ["excerpt", "model"])
 def test_temporal_managed_context_is_explicitly_versioned(mode):
-    from ralf_agent import ManagedContextPipeline, ToolRegistry
-    from ralf_agent.temporal_activities import TemporalRuntime
+    from relf_agent import ManagedContextPipeline, ToolRegistry
+    from relf_agent.temporal_activities import TemporalRuntime
     from tests.helpers import ScriptedProvider
 
     runtime = TemporalRuntime(

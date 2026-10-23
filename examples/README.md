@@ -2,7 +2,7 @@
 
 [项目首页](../README.md) · [文档目录](../docs/README.md) · [首用教程](../docs/getting-started.md)
 
-第一次使用建议通过 `ralf init` 生成自己的工程。安装 wheel 即可生成模板；本目录的 `.py` 示例需要源码仓库，在仓库根目录运行。下列示例使用离线 Provider 验证执行链路，真实模型接入见[模型指南](../docs/model-adapters.md)。
+第一次使用建议通过 `relf init` 生成自己的工程。安装 wheel 即可生成模板；本目录的 `.py` 示例需要源码仓库，在仓库根目录运行。下列示例使用离线 Provider 验证执行链路，真实模型接入见[模型指南](../docs/model-adapters.md)。
 
 ## 选择一个 starter
 
@@ -10,19 +10,19 @@
 
 | 目标 | 生成命令 | 后续指南 |
 | --- | --- | --- |
-| 审批、业务工具与跨进程恢复 | `ralf init my-agent` | [首用教程](../docs/getting-started.md) |
-| 接入自己的模型 | `ralf init my-model --template model` | [先填写模型与凭据配置](../docs/model-adapters.md) |
-| Python 之外的声明式装配 | `ralf init my-config --template config` | [JSON／TOML 配置](../docs/runtime-assembly.md) |
-| 文档证据问答 | `ralf init my-rag --template rag` | [记忆与 RAG](../docs/recall-and-rag.md) |
-| 文档摄取与更新 | `ralf init my-ingest --template ingest` | [摄取指南](../docs/document-ingestion.md) |
-| Embedding 与混合检索 | `ralf init my-hybrid --template hybrid` | [混合检索](../docs/hybrid-retrieval.md) |
-| 工具与 MCP | `ralf init my-mcp --template mcp` | [受管理工具](../docs/managed-tools.md) |
-| 静态依赖图 | `ralf init my-graph --template graph` | [Workflow](../docs/static-workflows.md) |
-| 动态规划 | `ralf init my-plan --template plan` | [Plan／Team](../docs/orchestration.md) |
-| 多 Agent 团队 | `ralf init my-team --template team` | [Plan／Team](../docs/orchestration.md) |
-| 持久用户输入 | `ralf init my-input --template user-input` | [用户输入](../docs/user-input.md) |
+| 审批、业务工具与跨进程恢复 | `relf init my-agent` | [首用教程](../docs/getting-started.md) |
+| 接入自己的模型 | `relf init my-model --template model` | [先填写模型与凭据配置](../docs/model-adapters.md) |
+| Python 之外的声明式装配 | `relf init my-config --template config` | [JSON／TOML 配置](../docs/runtime-assembly.md) |
+| 文档证据问答 | `relf init my-rag --template rag` | [记忆与 RAG](../docs/recall-and-rag.md) |
+| 文档摄取与更新 | `relf init my-ingest --template ingest` | [摄取指南](../docs/document-ingestion.md) |
+| Embedding 与混合检索 | `relf init my-hybrid --template hybrid` | [混合检索](../docs/hybrid-retrieval.md) |
+| 工具与 MCP | `relf init my-mcp --template mcp` | [受管理工具](../docs/managed-tools.md) |
+| 静态依赖图 | `relf init my-graph --template graph` | [Workflow](../docs/static-workflows.md) |
+| 动态规划 | `relf init my-plan --template plan` | [Plan／Team](../docs/orchestration.md) |
+| 多 Agent 团队 | `relf init my-team --template team` | [Plan／Team](../docs/orchestration.md) |
+| 持久用户输入 | `relf init my-input --template user-input` | [用户输入](../docs/user-input.md) |
 
-生成后进入工程目录，按生成的 README 运行。审批示例默认工厂为 `agent_app.runtime:create_engine`；恢复时从工程目录导入原工厂。完整模板列表使用 `ralf init --help` 查看；不同模板的依赖和验证边界见各自指南。
+生成后进入工程目录，按生成的 README 运行。审批示例默认工厂为 `agent_app.runtime:create_engine`；恢复时从工程目录导入原工厂。完整模板列表使用 `relf init --help` 查看；不同模板的依赖和验证边界见各自指南。
 
 ## 运行源码示例
 
@@ -42,8 +42,8 @@
 只读自定义工厂的观察与恢复示例：
 
 ```bash
-ralf --db .ralf/custom.sqlite --factory examples.custom_runtime:create_engine --format text inspect RUN_ID
-ralf --db .ralf/custom.sqlite --factory examples.custom_runtime:create_engine --format text resume RUN_ID
+relf --db .ralf/custom.sqlite --factory examples.custom_runtime:create_engine --format text inspect RUN_ID
+relf --db .ralf/custom.sqlite --factory examples.custom_runtime:create_engine --format text resume RUN_ID
 ```
 
 将 `RUN_ID` 替换为实际值。该只读示例不需要审批；交互式工单与执行器示例需检查待批操作后显式批准。示例使用本地测试数据库，不要替换为生产工具来试验审批流程。

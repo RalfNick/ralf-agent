@@ -6,16 +6,16 @@ from contextlib import contextmanager
 
 import pytest
 
-from ralf_agent import AgentSpec, InMemoryMemory, LocalEngine, ModelResponse, Scope, SQLiteStore
-from ralf_agent.errors import DefinitionMismatch, ValidationError
-from ralf_agent.tools import ToolRegistry, ToolSpec
-from ralf_agent.types import ToolCall
+from relf_agent import AgentSpec, InMemoryMemory, LocalEngine, ModelResponse, Scope, SQLiteStore
+from relf_agent.errors import DefinitionMismatch, ValidationError
+from relf_agent.tools import ToolRegistry, ToolSpec
+from relf_agent.types import ToolCall
 
 from .helpers import ScriptedProvider
 
 
 def api():
-    return importlib.import_module("ralf_agent.completion")
+    return importlib.import_module("relf_agent.completion")
 
 
 OUTPUT = {"status": "resolved", "ticket": "INC-1"}
@@ -130,7 +130,7 @@ def test_local_schema_refs_remain_usable():
 @pytest.mark.parametrize("kind", ["agent", "sequence", "graph"])
 @pytest.mark.parametrize("task", [{"ticket": "INC-1"}, '{"ticket":"INC-1"}', [1, True], None])
 def test_current_task_preserves_json_type_across_execution_forms(tmp_path, kind, task):
-    from ralf_agent import GraphNode, GraphWorkflowSpec, WorkflowSpec
+    from relf_agent import GraphNode, GraphWorkflowSpec, WorkflowSpec
 
     c = api()
 
@@ -165,7 +165,7 @@ def test_current_task_preserves_json_type_across_execution_forms(tmp_path, kind,
 
 
 def test_sequence_successor_task_is_normalized_predecessor_output(tmp_path):
-    from ralf_agent import WorkflowSpec
+    from relf_agent import WorkflowSpec
 
     c = api()
 
@@ -391,7 +391,7 @@ def test_restart_reuses_committed_verification_and_feedback(tmp_path, status):
 
     class StopAfterVerification(LocalEngine):
         async def _finish_node(self, run_id, result):
-            from ralf_agent.completion_runtime import verify_completion
+            from relf_agent.completion_runtime import verify_completion
 
             verify_completion(self, run_id, result)
             raise RuntimeError("simulated process boundary")

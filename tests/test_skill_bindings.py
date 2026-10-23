@@ -4,14 +4,14 @@ import asyncio
 
 import pytest
 
-import ralf_agent as r
-from ralf_agent.errors import AuthorizationDenied, DefinitionMismatch, ValidationError
+import relf_agent as r
+from relf_agent.errors import AuthorizationDenied, DefinitionMismatch, ValidationError
 
 
 def api():
     resource = getattr(r, "SkillBindingResource", None)
     assert resource is not None, "public SkillBindingResource is missing"
-    from ralf_agent.binding_skills import select_skill_tools
+    from relf_agent.binding_skills import select_skill_tools
 
     return resource, select_skill_tools
 

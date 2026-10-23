@@ -7,8 +7,8 @@ from threading import Event
 
 import pytest
 
-import ralf_agent as r
-from ralf_agent.errors import AuthorizationDenied, DefinitionMismatch, RalfError, ValidationError
+import relf_agent as r
+from relf_agent.errors import AuthorizationDenied, DefinitionMismatch, RalfError, ValidationError
 
 
 def api():
@@ -129,7 +129,7 @@ def test_original_files_refuse_silent_refresh(root, change):
 )
 def test_invalid_paths_refuse_before_workspace_allocation(monkeypatch, root, paths):
     cls = api()
-    import ralf_agent.filesystem_skill_documents as module
+    import relf_agent.filesystem_skill_documents as module
 
     calls = []
     monkeypatch.setattr(module, "FileSystemWorkspace", lambda *a, **k: calls.append(True))
@@ -140,7 +140,7 @@ def test_invalid_paths_refuse_before_workspace_allocation(monkeypatch, root, pat
 
 def test_missing_optional_yaml_refuses_before_root_allocation(monkeypatch, root):
     cls = api()
-    import ralf_agent.filesystem_skill_documents as module
+    import relf_agent.filesystem_skill_documents as module
 
     calls = []
     original = builtins.__import__
@@ -190,7 +190,7 @@ def test_sdk_custom_parser_borrowed_and_identity_drift_refuses(root, identity):
 )
 def test_custom_parser_lazy_invalid_value_refuses_and_closes_root(root, monkeypatch, kind):
     cls = api()
-    import ralf_agent.filesystem_skill_documents as module
+    import relf_agent.filesystem_skill_documents as module
 
     original = module.FileSystemWorkspace
     allocated = []
@@ -280,7 +280,7 @@ def test_denied_scope_and_blocked_real_handler_retains_original_fd(root, monkeyp
 @pytest.mark.parametrize("kind", ["missing", "malformed", "wrong_parent"])
 def test_constructor_failure_closes_original_root(root, monkeypatch, kind):
     cls = api()
-    import ralf_agent.filesystem_skill_documents as module
+    import relf_agent.filesystem_skill_documents as module
 
     original, allocated = module.FileSystemWorkspace, []
 
@@ -305,7 +305,7 @@ def test_constructor_failure_closes_original_root(root, monkeypatch, kind):
 @pytest.mark.parametrize("kind", ["async", "generator", "identity"])
 def test_invalid_parser_configuration_refuses_before_root(root, monkeypatch, kind):
     cls = api()
-    import ralf_agent.filesystem_skill_documents as module
+    import relf_agent.filesystem_skill_documents as module
 
     allocated = []
     monkeypatch.setattr(module, "FileSystemWorkspace", lambda *a, **k: allocated.append(True))
@@ -345,7 +345,7 @@ def test_parser_implementation_change_refuses_cached_snapshot(root):
 
 def test_aggregate_raw_document_limit_refuses_before_fifth_read(tmp_path, monkeypatch):
     cls = api()
-    import ralf_agent.filesystem_skill_documents as module
+    import relf_agent.filesystem_skill_documents as module
 
     root = tmp_path / "skills"
     paths = []

@@ -4,8 +4,8 @@ import asyncio
 
 import pytest
 
-import ralf_agent as r
-from ralf_agent.errors import AuthorizationDenied, DefinitionMismatch, RalfError, ValidationError
+import relf_agent as r
+from relf_agent.errors import AuthorizationDenied, DefinitionMismatch, RalfError, ValidationError
 
 from .test_sandbox_tools import Provider
 
@@ -13,7 +13,7 @@ from .test_sandbox_tools import Provider
 def api():
     resource = getattr(r, "SandboxBindingResource", None)
     assert resource is not None, "Missing original SandboxBindingResource"
-    from ralf_agent.binding_sandbox import select_sandbox_tools
+    from relf_agent.binding_sandbox import select_sandbox_tools
 
     return resource, select_sandbox_tools
 

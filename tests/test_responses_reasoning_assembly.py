@@ -6,7 +6,7 @@ import json
 
 import pytest
 
-from ralf_agent import (
+from relf_agent import (
     AgentBindingDescriptor,
     AgentDefinition,
     AgentSpec,
@@ -17,9 +17,9 @@ from ralf_agent import (
     TemporalProfile,
     TemporalRuntimeBuilder,
 )
-from ralf_agent.errors import ValidationError
-from ralf_agent.runtime_builder import EchoProvider
-from ralf_agent.temporal_bindings import provider_alias
+from relf_agent.errors import ValidationError
+from relf_agent.runtime_builder import EchoProvider
+from relf_agent.temporal_bindings import provider_alias
 
 
 def declaration(**config):
@@ -48,7 +48,7 @@ def bound_agent():
 
 
 def test_sdk_exports_independent_responses_reasoning_adapter():
-    api = importlib.import_module("ralf_agent")
+    api = importlib.import_module("relf_agent")
     cls = getattr(api, "OpenAIResponsesReasoningProvider", None)
     assert cls is not None, "The dedicated Responses reasoning adapter must be exported"
     assert cls is not api.OpenAIResponsesProvider
@@ -238,7 +238,7 @@ def test_invalid_bound_configuration_preflight_creates_no_resources(tmp_path, te
 def test_catalog_loads_reasoning_default_and_per_agent_provider_ref(
     tmp_path, monkeypatch, extension
 ):
-    from ralf_agent.runtime_config import load_catalog
+    from relf_agent.runtime_config import load_catalog
 
     monkeypatch.setenv("OPENAI_API_KEY", "CATALOG_FIXTURE")
     selected = RuntimeProfile(

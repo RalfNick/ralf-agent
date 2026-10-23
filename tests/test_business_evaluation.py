@@ -1,15 +1,15 @@
 import asyncio
 import importlib.util
 
-from ralf_agent import ModelResponse, ToolCall
-from ralf_agent.planning_evaluation import EvaluationLimits
+from relf_agent import ModelResponse, ToolCall
+from relf_agent.planning_evaluation import EvaluationLimits
 
 
 def evaluator():
-    assert importlib.util.find_spec("ralf_agent.business_evaluation"), (
+    assert importlib.util.find_spec("relf_agent.business_evaluation"), (
         "Missing end-to-end business evaluation"
     )
-    from ralf_agent.business_evaluation import evaluate_business, load_business_cases
+    from relf_agent.business_evaluation import evaluate_business, load_business_cases
 
     return evaluate_business, load_business_cases
 
@@ -89,7 +89,7 @@ def test_injected_case_paths_are_validated_before_creating_private_evidence(tmp_
 
     import pytest
 
-    from ralf_agent.errors import ValidationError
+    from relf_agent.errors import ValidationError
 
     evaluate, load = evaluator()
     case = copy.deepcopy(load()[0])
@@ -138,7 +138,7 @@ def test_invalid_injected_id_has_typed_preflight_error():
 
     import pytest
 
-    from ralf_agent.errors import ValidationError
+    from relf_agent.errors import ValidationError
 
     evaluate, load = evaluator()
     case = copy.deepcopy(load()[0])
@@ -150,7 +150,7 @@ def test_invalid_injected_id_has_typed_preflight_error():
 def test_offline_cli_runs_distinct_fixtures_with_bounded_calls(capsys):
     import json
 
-    from ralf_agent.business_evaluation_cli import main
+    from relf_agent.business_evaluation_cli import main
 
     assert main(["--offline", "--max-calls", "16"]) == 0
     report = json.loads(capsys.readouterr().out)
@@ -158,7 +158,7 @@ def test_offline_cli_runs_distinct_fixtures_with_bounded_calls(capsys):
 
 
 def test_evaluation_discloses_strict_output_contract_to_real_provider():
-    from ralf_agent.business_evaluation_cli import _OfflineBusinessProvider
+    from relf_agent.business_evaluation_cli import _OfflineBusinessProvider
 
     class ContractProvider(_OfflineBusinessProvider):
         async def complete(self, messages, tools):

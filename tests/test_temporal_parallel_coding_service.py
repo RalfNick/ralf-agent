@@ -12,9 +12,9 @@ from pathlib import Path
 
 import pytest
 
-from ralf_agent import AgentSpec, GraphNode, GraphWorkflowSpec, Scope, ValueRef
-from ralf_agent.errors import CloseIncomplete
-from ralf_agent.temporal import TemporalEngine, replay_temporal_history
+from relf_agent import AgentSpec, GraphNode, GraphWorkflowSpec, Scope, ValueRef
+from relf_agent.errors import CloseIncomplete
+from relf_agent.temporal import TemporalEngine, replay_temporal_history
 from tests import temporal_parallel_coding_worker_fixture as fixture
 from tests.test_codex_runner import native_fixture
 from tests.test_temporal_coding_service import wait_until
@@ -168,7 +168,7 @@ def test_actual_parallel_original_children_and_independent_stopping(tmp_path, mo
                 max_concurrency=2,
             )
             if mode == "separate_runners":
-                from ralf_agent import AgentBindingDescriptor, BindingSelection, BoundDefinition
+                from relf_agent import AgentBindingDescriptor, BindingSelection, BoundDefinition
 
                 graph = BoundDefinition(
                     graph,
@@ -226,7 +226,7 @@ def test_actual_parallel_original_children_and_independent_stopping(tmp_path, mo
             assert diagnostics["budget"]["reserved"] == (8 if mode == "shared_runner" else 16)
             if mode in {"cancel", "close_one_failed"}:
                 if mode == "close_one_failed":
-                    from ralf_agent.temporal_coding_composition_control import close
+                    from relf_agent.temporal_coding_composition_control import close
 
                     children = await root_sdk.query(
                         "view", {"scope": asdict(scope), "kind": "coding_composition_children"}

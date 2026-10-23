@@ -5,10 +5,10 @@ from types import SimpleNamespace
 
 import pytest
 
-from ralf_agent.codex_protocol import CodexCodingProtocol, CodexControlProtocol
-from ralf_agent.codex_runner import RunnerOutcomeUnknown
-from ralf_agent.errors import DefinitionMismatch, ValidationError
-from ralf_agent.temporal_coding_authority import TemporalCodingAuthority
+from relf_agent.codex_protocol import CodexCodingProtocol, CodexControlProtocol
+from relf_agent.codex_runner import RunnerOutcomeUnknown
+from relf_agent.errors import DefinitionMismatch, ValidationError
+from relf_agent.temporal_coding_authority import TemporalCodingAuthority
 from tests.test_codex_deployment_control_validation_cost import fixture
 from tests.test_temporal_coding_authority import setup
 

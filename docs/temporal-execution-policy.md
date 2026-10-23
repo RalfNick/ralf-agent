@@ -25,7 +25,7 @@
 现有直接注入方式：
 
 ```python
-from ralf_agent import TemporalExecutionPolicy, TemporalRuntime
+from relf_agent import TemporalExecutionPolicy, TemporalRuntime
 
 runtime = TemporalRuntime(
     providers=providers,
@@ -96,7 +96,7 @@ max_concurrency = 4
 `ComponentRegistry` 已开放 `execution_policy` 种类，支持同步工厂和显式 `register_async` 工厂。自定义工厂应返回 `TemporalExecutionPolicy`，通过自身 validator 提前检查配置；错误返回值明确拒绝；显式返回 `None` 不能将声明降级为省略策略。
 
 ```python
-from ralf_agent import ComponentRegistry, TemporalExecutionPolicy
+from relf_agent import ComponentRegistry, TemporalExecutionPolicy
 
 registry = ComponentRegistry()
 

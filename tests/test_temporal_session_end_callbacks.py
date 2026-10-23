@@ -9,9 +9,9 @@ import pytest
 pytest.importorskip("temporalio")
 from temporalio import activity
 
-from ralf_agent.errors import DefinitionMismatch
-from ralf_agent.temporal_activities import registered_activities
-from ralf_agent.types import digest
+from relf_agent.errors import DefinitionMismatch
+from relf_agent.temporal_activities import registered_activities
+from relf_agent.types import digest
 
 
 @pytest.mark.parametrize("name", ["managed_session", "session_root_read"])
@@ -42,13 +42,13 @@ def test_original_session_end_keeps_four_field_proof_and_actual_epoch(monkeypatc
             pass
 
         monkeypatch.setattr(
-            "ralf_agent.temporal_session_activities.validate_tree_activity", tree_guard
+            "relf_agent.temporal_session_activities.validate_tree_activity", tree_guard
         )
 
         async def namespace_id(current):
             return "original-uuid" if not calls else "different-uuid"
 
-        monkeypatch.setattr("ralf_agent.temporal_session_activities.namespace_id", namespace_id)
+        monkeypatch.setattr("relf_agent.temporal_session_activities.namespace_id", namespace_id)
 
         async def execute(current, run_id, operation, proof, **options):
             calls.append((run_id, operation, copy.deepcopy(proof), options))
@@ -61,7 +61,7 @@ def test_original_session_end_keeps_four_field_proof_and_actual_epoch(monkeypatc
                 "execution_stopped": 1 if fault == "ack" else True,
             }
 
-        monkeypatch.setattr("ralf_agent.temporal_execution_end_transport.execute", execute)
+        monkeypatch.setattr("relf_agent.temporal_execution_end_transport.execute", execute)
 
         async def capture(value, *, dispatch_guard, on_end):
             callbacks.append(on_end)

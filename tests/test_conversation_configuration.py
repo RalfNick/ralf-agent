@@ -6,8 +6,8 @@ import sqlite3
 
 import pytest
 
-import ralf_agent as r
-from ralf_agent.errors import DefinitionMismatch, ValidationError
+import relf_agent as r
+from relf_agent.errors import DefinitionMismatch, ValidationError
 
 from .composite_session_fixture import definitions, root_messages
 from .runtime_profile_fixture import Provider, business_tools

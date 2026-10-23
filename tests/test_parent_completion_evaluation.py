@@ -8,14 +8,14 @@ import json
 
 import pytest
 
-from ralf_agent.errors import ValidationError
-from ralf_agent.orchestration_evaluation import (
+from relf_agent.errors import ValidationError
+from relf_agent.orchestration_evaluation import (
     OfflineOrchestrationProvider,
     evaluate_orchestration,
     load_orchestration_cases,
 )
-from ralf_agent.storage import SQLiteStore
-from ralf_agent.types import ModelResponse, ToolCall, digest
+from relf_agent.storage import SQLiteStore
+from relf_agent.types import ModelResponse, ToolCall, digest
 
 
 def evaluate(provider, **options):
@@ -26,10 +26,10 @@ def evaluate(provider, **options):
 
 
 def score(case, parent, children, kind):
-    assert importlib.util.find_spec("ralf_agent.parent_completion_evaluation"), (
+    assert importlib.util.find_spec("relf_agent.parent_completion_evaluation"), (
         "Missing independent parent completion evidence oracle"
     )
-    from ralf_agent.parent_completion_evaluation import score_parent_completion
+    from relf_agent.parent_completion_evaluation import score_parent_completion
 
     return score_parent_completion(case, parent, children, kind)
 
@@ -249,8 +249,8 @@ def test_frozen_source_revision_can_precede_current_child_revision(tmp_path):
 
 
 def test_actual_patched_dag_retains_original_r0_node_evidence(tmp_path):
-    from ralf_agent.dag_planning import DAGProposal
-    from ralf_agent.orchestration_evaluation import _assembly
+    from relf_agent.dag_planning import DAGProposal
+    from relf_agent.orchestration_evaluation import _assembly
 
     case = load_orchestration_cases()[0]
 
@@ -362,7 +362,7 @@ def test_invalid_completion_gate_rejected_before_provider_or_evidence_constructi
 
 
 def test_cli_opt_in_and_old_report_remain_compatible(tmp_path):
-    from ralf_agent.orchestration_evaluation_cli import arguments, run
+    from relf_agent.orchestration_evaluation_cli import arguments, run
 
     args = arguments(
         ["--offline", "--completion-gate", "--max-cases", "1", "--evidence-dir", str(tmp_path)]
@@ -379,7 +379,7 @@ def test_cli_opt_in_and_old_report_remain_compatible(tmp_path):
 
 
 def test_invalid_cli_gate_fails_before_owned_provider_construction(monkeypatch):
-    from ralf_agent import orchestration_evaluation_cli as cli
+    from relf_agent import orchestration_evaluation_cli as cli
 
     args = cli.arguments(["--provider", "openai", "--model", "placeholder"])
     args.completion_gate = "yes"

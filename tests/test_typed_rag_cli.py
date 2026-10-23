@@ -5,8 +5,8 @@ import json
 
 import pytest
 
-from ralf_agent.errors import ValidationError
-from ralf_agent.rag_evaluation_cli import arguments, main, run
+from relf_agent.errors import ValidationError
+from relf_agent.rag_evaluation_cli import arguments, main, run
 
 
 def test_typed_answer_option_keeps_legacy_default():
@@ -16,7 +16,7 @@ def test_typed_answer_option_keeps_legacy_default():
 
 @pytest.mark.parametrize("value", [None, 1, "true", [], {}])
 def test_invalid_typed_answers_are_refused_before_clients(value, monkeypatch, tmp_path):
-    import ralf_agent.rag_evaluation_cli as cli
+    import relf_agent.rag_evaluation_cli as cli
 
     args = arguments(["--provider", "openai"])
     args.typed_answers = value

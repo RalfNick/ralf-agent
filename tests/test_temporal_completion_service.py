@@ -8,8 +8,8 @@ from pathlib import Path
 
 import pytest
 
-from ralf_agent import RecallQuery, RunRef, Runtime, Scope
-from ralf_agent.temporal import TemporalEngine, replay_temporal_history
+from relf_agent import RecallQuery, RunRef, Runtime, Scope
+from relf_agent.temporal import TemporalEngine, replay_temporal_history
 from tests.temporal_completion_worker import runtime
 
 pytestmark = pytest.mark.skipif(
@@ -33,7 +33,7 @@ async def recover(tmp_path, kind, managed, window):
 
     from temporalio.client import Client
 
-    import ralf_agent
+    import relf_agent
 
     client = await Client.connect(os.environ["RALF_TEST_TEMPORAL_ADDRESS"])
     queue = "completion-" + uuid.uuid4().hex
@@ -53,7 +53,7 @@ async def recover(tmp_path, kind, managed, window):
         env = {
             "PATH": os.environ.get("PATH", "/usr/bin:/bin"),
             "PYTHONPATH": os.pathsep.join(
-                [str(Path(ralf_agent.__file__).parents[1]), str(Path(__file__).parents[1])]
+                [str(Path(relf_agent.__file__).parents[1]), str(Path(__file__).parents[1])]
             ),
             "RALF_TEST_TEMPORAL_ADDRESS": os.environ["RALF_TEST_TEMPORAL_ADDRESS"],
             "RALF_TEST_TEMPORAL_QUEUE": queue,
@@ -148,15 +148,15 @@ async def recover(tmp_path, kind, managed, window):
 
 @pytest.mark.parametrize("mode", ["reject", "retry-limit", "disabled-schema"])
 def test_actual_host_verifier_rejection_limits_and_schema_are_authoritative(mode):
-    from ralf_agent import (
+    from relf_agent import (
         AgentBindingDescriptor,
         AgentDefinition,
         AgentSpec,
         BindingSelection,
         ToolRegistry,
     )
-    from ralf_agent.temporal import build_temporal_worker
-    from ralf_agent.temporal_activities import TemporalRuntime
+    from relf_agent.temporal import build_temporal_worker
+    from relf_agent.temporal_activities import TemporalRuntime
     from tests.test_temporal_completion import Provider, Verifier
 
     async def run():
@@ -224,9 +224,9 @@ def test_actual_host_verifier_rejection_limits_and_schema_are_authoritative(mode
 
 
 def test_actual_cancelled_verification_keeps_session_busy_until_activity_returns():
-    from ralf_agent import AgentSpec, ToolRegistry
-    from ralf_agent.temporal import build_temporal_worker
-    from ralf_agent.temporal_activities import TemporalRuntime
+    from relf_agent import AgentSpec, ToolRegistry
+    from relf_agent.temporal import build_temporal_worker
+    from relf_agent.temporal_activities import TemporalRuntime
     from tests.test_temporal_completion import Provider, Verifier
 
     async def run():

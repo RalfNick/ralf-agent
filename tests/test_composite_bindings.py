@@ -2,7 +2,7 @@
 
 import pytest
 
-from ralf_agent import (
+from relf_agent import (
     AgentBindingDescriptor,
     AgentSpec,
     BindingSelection,
@@ -13,9 +13,9 @@ from ralf_agent import (
     TeamSpec,
     WorkflowSpec,
 )
-from ralf_agent.binding_definitions import decode_definition
-from ralf_agent.errors import ValidationError
-from ralf_agent.types import submission_request
+from relf_agent.binding_definitions import decode_definition
+from relf_agent.errors import ValidationError
+from relf_agent.types import submission_request
 
 
 def selected(label="chosen", **roles):

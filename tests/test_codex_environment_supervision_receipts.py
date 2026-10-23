@@ -9,9 +9,9 @@ import shutil
 
 import pytest
 
-from ralf_agent.codex_create_supervisor import CreateSupervisor
-from ralf_agent.errors import DefinitionMismatch, ExecutionHostFailed, ValidationError
-from ralf_agent.types import digest
+from relf_agent.codex_create_supervisor import CreateSupervisor
+from relf_agent.errors import DefinitionMismatch, ExecutionHostFailed, ValidationError
+from relf_agent.types import digest
 from tests.test_codex_environment import resource as resource
 from tests.test_codex_environment_supervision import environment
 

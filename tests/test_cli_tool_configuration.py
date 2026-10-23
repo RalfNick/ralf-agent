@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from ralf_agent import (
+from relf_agent import (
     ComponentRegistry,
     GraphNode,
     GraphWorkflowSpec,
@@ -17,7 +17,7 @@ from ralf_agent import (
     TemporalRuntimeBuilder,
     ValueRef,
 )
-from ralf_agent.errors import ValidationError
+from relf_agent.errors import ValidationError
 
 from .test_cli_tools import descriptor
 
@@ -132,7 +132,7 @@ def test_temporal_declares_cli_tools_without_creating_local_authority_or_process
 
 
 def test_partial_factory_failure_closes_every_already_owned_source(tmp_path, monkeypatch):
-    from ralf_agent import RuntimeBuildError, ToolSourceError, cli_tool_factories
+    from relf_agent import RuntimeBuildError, ToolSourceError, cli_tool_factories
 
     discovered = []
     original = cli_tool_factories.register_tool_source
@@ -172,7 +172,7 @@ def test_unknown_cli_response_restarts_with_original_effect_key_and_one_write(tm
     import hashlib
     import sqlite3
 
-    from ralf_agent.cli_starter import CLI_FILES
+    from relf_agent.cli_starter import CLI_FILES
 
     program = tmp_path / "business_tool.py"
     program.write_text(

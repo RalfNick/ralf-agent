@@ -4,10 +4,10 @@ import copy
 
 import pytest
 
-from ralf_agent import temporal_coding_composition_state as composition
-from ralf_agent import temporal_deployment_release_state as release
-from ralf_agent.errors import RalfError
-from ralf_agent.types import digest
+from relf_agent import temporal_coding_composition_state as composition
+from relf_agent import temporal_deployment_release_state as release
+from relf_agent.errors import RalfError
+from relf_agent.types import digest
 
 from .test_temporal_coding_state import completed_native, owner_dead_payload
 from .test_temporal_deployment_coding_state import attach, cold, native
@@ -134,7 +134,7 @@ def test_v3_owner_proof_is_detached_and_unselected_tool_end_behavior_is_unchange
 
 
 def sealed_parent(monkeypatch):
-    from ralf_agent.temporal_bindings import request_release_digest
+    from relf_agent.temporal_bindings import request_release_digest
 
     from .test_temporal_coding_composition_state import bind_namespace, leaf, parent
 
@@ -153,7 +153,7 @@ def sealed_parent(monkeypatch):
         "topology": "bounded-recursive-orchestration",
     }
     # This pure fixture uses its actual old namespace/edge, never an SDK locator.
-    from ralf_agent import temporal_deployment_execution_state as deployment
+    from relf_agent import temporal_deployment_execution_state as deployment
 
     original_view = deployment.view
 

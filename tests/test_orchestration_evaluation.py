@@ -10,17 +10,17 @@ from pathlib import Path
 
 import pytest
 
-from ralf_agent.errors import ProviderError, ValidationError
-from ralf_agent.planning_evaluation import EvaluationLimits
-from ralf_agent.storage import SQLiteStore
-from ralf_agent.types import ModelResponse, ToolCall
+from relf_agent.errors import ProviderError, ValidationError
+from relf_agent.planning_evaluation import EvaluationLimits
+from relf_agent.storage import SQLiteStore
+from relf_agent.types import ModelResponse, ToolCall
 
 
 def api():
-    assert importlib.util.find_spec("ralf_agent.orchestration_evaluation"), (
+    assert importlib.util.find_spec("relf_agent.orchestration_evaluation"), (
         "Missing managed orchestration task evaluation"
     )
-    from ralf_agent.orchestration_evaluation import (
+    from relf_agent.orchestration_evaluation import (
         OfflineOrchestrationProvider,
         evaluate_orchestration,
         load_orchestration_cases,
@@ -63,7 +63,7 @@ def test_borrowed_provider_method_change_rejects_original_result(kind, tmp_path)
 @pytest.mark.parametrize("kind", ["plan-and-execute", "team"])
 def test_known_text_only_provider_is_not_a_model_quality_failure(kind, tmp_path):
     evaluate, load, _ = api()
-    from ralf_agent.model_native import GeminiProvider
+    from relf_agent.model_native import GeminiProvider
 
     provider = GeminiProvider(
         "sample-model",
@@ -358,7 +358,7 @@ def test_missing_quantity_and_stock_stop_without_calculator(kind):
 @pytest.mark.parametrize("kind", ["plan-and-execute", "team"])
 def test_process_exit_with_executing_child_reattaches_observation_only(kind, tmp_path):
     _, load, fixture = api()
-    from ralf_agent.orchestration_evaluation import _assembly, _OrchestrationProvider
+    from relf_agent.orchestration_evaluation import _assembly, _OrchestrationProvider
 
     # Exit after the original engine's durable model_dispatched event, while
     # Provider.complete is executing. Reattachment must not resume that request.
@@ -367,11 +367,11 @@ import asyncio
 import os
 import sys
 from pathlib import Path
-from ralf_agent.orchestration_evaluation import (
+from relf_agent.orchestration_evaluation import (
     OfflineOrchestrationProvider, _OrchestrationProvider, _assembly,
     load_orchestration_cases,
 )
-from ralf_agent.planning_evaluation import EvaluationLimits, _new_evidence_path
+from relf_agent.planning_evaluation import EvaluationLimits, _new_evidence_path
 
 class Exit(OfflineOrchestrationProvider):
     async def complete(self, messages, tools):

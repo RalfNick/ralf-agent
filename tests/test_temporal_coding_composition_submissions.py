@@ -5,12 +5,12 @@ import importlib
 
 import pytest
 
-from ralf_agent.errors import CloseIncomplete, DefinitionMismatch
-from ralf_agent.types import Scope, digest
+from relf_agent.errors import CloseIncomplete, DefinitionMismatch
+from relf_agent.types import Scope, digest
 
 
 def owner():
-    name = "ralf_agent.temporal_coding_composition_submissions"
+    name = "relf_agent.temporal_coding_composition_submissions"
     assert importlib.util.find_spec(name), "Missing original SDK submission owner"
     return importlib.import_module(name).CompositionSubmissionOwner(
         scope=Scope(), release={"original": "release"}

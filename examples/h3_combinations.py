@@ -3,7 +3,7 @@
 import argparse
 import asyncio
 
-from ralf_agent import Runtime, RuntimeBuilder, recommended_harness, recommended_profile
+from relf_agent import Runtime, RuntimeBuilder, recommended_harness, recommended_profile
 
 
 async def main():

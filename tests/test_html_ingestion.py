@@ -3,16 +3,16 @@ import hashlib
 
 import pytest
 
-from ralf_agent import IngestionCoordinator, Scope, SourceDocument, SQLiteKnowledgeStore
-from ralf_agent.errors import ValidationError
-from ralf_agent.retrieval import RetrievalQuery
+from relf_agent import IngestionCoordinator, Scope, SourceDocument, SQLiteKnowledgeStore
+from relf_agent.errors import ValidationError
+from relf_agent.retrieval import RetrievalQuery
 
 
 def parser():
-    import ralf_agent
+    import relf_agent
 
-    assert hasattr(ralf_agent, "HtmlDocumentParser"), "Missing native HTML document parser"
-    return ralf_agent.HtmlDocumentParser()
+    assert hasattr(relf_agent, "HtmlDocumentParser"), "Missing native HTML document parser"
+    return relf_agent.HtmlDocumentParser()
 
 
 def test_html_extraction_keeps_provenance_and_excludes_noncontent():
@@ -137,7 +137,7 @@ def test_html_process_death_preserves_atomic_source_chunks_terms_receipt(tmp_pat
     import sys
     from pathlib import Path
 
-    import ralf_agent
+    import relf_agent
 
     path = tmp_path / "knowledge.sqlite"
     result = subprocess.run(
@@ -149,7 +149,7 @@ def test_html_process_death_preserves_atomic_source_chunks_terms_receipt(tmp_pat
         ],
         env={
             "PATH": os.defpath,
-            "PYTHONPATH": str(Path(ralf_agent.__file__).resolve().parent.parent),
+            "PYTHONPATH": str(Path(relf_agent.__file__).resolve().parent.parent),
         },
         cwd=tmp_path,
         capture_output=True,
@@ -211,8 +211,8 @@ def test_html_preformatted_code_preserves_meaningful_whitespace(html, want):
 def test_html_changed_extraction_behavior_cannot_keep_registered_pipeline(
     tmp_path, monkeypatch, changed
 ):
-    import ralf_agent.html_parsing as html
-    from ralf_agent.errors import DefinitionMismatch
+    import relf_agent.html_parsing as html
+    from relf_agent.errors import DefinitionMismatch
 
     async def run():
         with SQLiteKnowledgeStore(tmp_path / "knowledge.sqlite") as store:

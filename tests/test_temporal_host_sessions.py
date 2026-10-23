@@ -7,10 +7,10 @@ from types import SimpleNamespace
 
 import pytest
 
-from ralf_agent import AgentSpec, TemporalProfile, TemporalProfileCatalog, TemporalRuntimeBuilder
-from ralf_agent.errors import DefinitionMismatch
-from ralf_agent.temporal_session_state import SESSION_WORKFLOW, TemporalSessionState, workflow_id
-from ralf_agent.types import submission_request
+from relf_agent import AgentSpec, TemporalProfile, TemporalProfileCatalog, TemporalRuntimeBuilder
+from relf_agent.errors import DefinitionMismatch
+from relf_agent.temporal_session_state import SESSION_WORKFLOW, TemporalSessionState, workflow_id
+from relf_agent.types import submission_request
 
 from .test_temporal_profile_host import sdk as sdk_fixture
 
@@ -34,10 +34,10 @@ def profiles():
 
 def test_profile_binding_query_is_scoped_detached_and_has_no_state_effect():
     pytest.importorskip("temporalio")
-    from ralf_agent import ToolRegistry
-    from ralf_agent.runtime_builder import EchoProvider
-    from ralf_agent.temporal_activities import TemporalRuntime
-    from ralf_agent.temporal_session_workflow import TemporalSessionWorkflow
+    from relf_agent import ToolRegistry
+    from relf_agent.runtime_builder import EchoProvider
+    from relf_agent.temporal_activities import TemporalRuntime
+    from relf_agent.temporal_session_workflow import TemporalSessionWorkflow
 
     runtime = TemporalRuntime(
         providers={"default": EchoProvider("query")}, tools=ToolRegistry(), enable_sessions=True

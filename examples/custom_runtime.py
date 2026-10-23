@@ -3,7 +3,7 @@
 import argparse
 import json
 
-from ralf_agent import (
+from relf_agent import (
     AgentSpec,
     LocalEngine,
     ModelResponse,

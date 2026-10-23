@@ -10,15 +10,15 @@ from pathlib import Path
 import httpx
 import pytest
 
-from ralf_agent.errors import ProviderError, ValidationError
-from ralf_agent.types import ModelResponse
+from relf_agent.errors import ProviderError, ValidationError
+from relf_agent.types import ModelResponse
 
 
 def test_quality_suite_has_frozen_distinct_tasks_and_oracles():
-    assert importlib.util.find_spec("ralf_agent.planning_evaluation"), (
+    assert importlib.util.find_spec("relf_agent.planning_evaluation"), (
         "Missing planning quality runner"
     )
-    from ralf_agent.planning_evaluation import load_planning_cases
+    from relf_agent.planning_evaluation import load_planning_cases
 
     cases = load_planning_cases()
     assert len(cases) >= 12
@@ -27,10 +27,10 @@ def test_quality_suite_has_frozen_distinct_tasks_and_oracles():
 
 
 def evaluation_api():
-    assert importlib.util.find_spec("ralf_agent.planning_evaluation"), (
+    assert importlib.util.find_spec("relf_agent.planning_evaluation"), (
         "Missing planning quality runner"
     )
-    from ralf_agent.planning_evaluation import (
+    from relf_agent.planning_evaluation import (
         EvaluationLimits,
         evaluate_planning,
         load_planning_cases,
@@ -495,7 +495,7 @@ def test_cli_applies_case_bound_to_larger_offline_fixture():
 
 
 def test_native_http_transport_fixture_keeps_json_text_usage_and_model_identity(tmp_path):
-    from ralf_agent.providers import OpenAIChatProvider
+    from relf_agent.providers import OpenAIChatProvider
 
     Limits, evaluate, _, _ = evaluation_api()
     requests = []
@@ -541,7 +541,7 @@ def test_native_http_transport_fixture_keeps_json_text_usage_and_model_identity(
 
 
 def test_real_http_provider_bounds_are_verified_before_any_call():
-    from ralf_agent.providers import OpenAIChatProvider
+    from relf_agent.providers import OpenAIChatProvider
 
     Limits, evaluate, _, _ = evaluation_api()
     provider = OpenAIChatProvider(

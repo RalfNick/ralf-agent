@@ -6,10 +6,10 @@ from pathlib import Path
 
 import pytest
 
-import ralf_agent as api
-from ralf_agent import InvocationContext, Scope
-from ralf_agent.errors import DefinitionMismatch, ValidationError
-from ralf_agent.tools import ThreadExecutionTracker, current_thread_group, current_thread_tracker
+import relf_agent as api
+from relf_agent import InvocationContext, Scope
+from relf_agent.errors import DefinitionMismatch, ValidationError
+from relf_agent.tools import ThreadExecutionTracker, current_thread_group, current_thread_tracker
 
 
 def public():

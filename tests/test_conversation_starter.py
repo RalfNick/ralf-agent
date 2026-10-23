@@ -8,9 +8,9 @@ from pathlib import Path
 
 import pytest
 
-from ralf_agent import load_catalog
-from ralf_agent.cli import main
-from ralf_agent.starter import create_starter
+from relf_agent import load_catalog
+from relf_agent.cli import main
+from relf_agent.starter import create_starter
 
 from .test_starter import subprocess_result
 

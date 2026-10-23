@@ -13,9 +13,9 @@ from pathlib import Path
 import httpx
 import pytest
 
-from ralf_agent.a2a import A2AClient, A2AError
-from ralf_agent.postgres_handoff import PostgresInbox
-from ralf_agent.temporal import replay_temporal_history
+from relf_agent.a2a import A2AClient, A2AError
+from relf_agent.postgres_handoff import PostgresInbox
+from relf_agent.temporal import replay_temporal_history
 
 from .test_temporal_service import system
 

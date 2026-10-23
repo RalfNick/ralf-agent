@@ -4,8 +4,8 @@ import asyncio
 
 import pytest
 
-import ralf_agent as r
-from ralf_agent.errors import RalfError
+import relf_agent as r
+from relf_agent.errors import RalfError
 
 from .test_skill_document_configuration import bundle
 

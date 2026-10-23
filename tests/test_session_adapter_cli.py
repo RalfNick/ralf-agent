@@ -2,7 +2,7 @@ import json
 
 import pytest
 
-from ralf_agent.adapter_contract_cli import main
+from relf_agent.adapter_contract_cli import main
 
 
 @pytest.mark.parametrize("profile,count", [("core", 10), ("receipts", 14)])
@@ -23,7 +23,7 @@ def test_session_cli_without_fixture_is_explicit_and_has_no_io(
 
 
 def test_cli_rejects_knowledge_receipt_profile_without_importing_fixture(monkeypatch, capsys):
-    import ralf_agent.adapter_contract_reference as reference
+    import relf_agent.adapter_contract_reference as reference
 
     def forbidden():
         pytest.fail("Invalid contract constructed a testing fixture")
@@ -48,9 +48,9 @@ def test_cli_rejects_knowledge_receipt_profile_without_importing_fixture(monkeyp
     ],
 )
 def test_session_contract_extension_is_public_sdk(name):
-    import ralf_agent
+    import relf_agent
 
-    assert hasattr(ralf_agent, name), f"Missing public Session adapter type: {name}"
+    assert hasattr(relf_agent, name), f"Missing public Session adapter type: {name}"
 
 
 def test_explicit_offline_session_receipt_check(tmp_path, capsys):
@@ -74,11 +74,11 @@ def test_explicit_offline_session_receipt_check(tmp_path, capsys):
 
 
 def test_session_contract_starter_public_template(tmp_path):
-    from ralf_agent.starter import create_starter
+    from relf_agent.starter import create_starter
 
     project = create_starter(tmp_path / "app", template="session-contracts")
     assert project.module == "agent_app"
     assert project.factory == "agent_app.runtime:create_engine"
     source = (tmp_path / "app" / "agent_app/adapter.py").read_text()
     assert "class ReferenceSQLiteSessionStore:" in source
-    assert "ralf_agent.session_adapter_contract_reference" not in source
+    assert "relf_agent.session_adapter_contract_reference" not in source

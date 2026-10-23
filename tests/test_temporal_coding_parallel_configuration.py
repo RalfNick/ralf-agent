@@ -7,16 +7,16 @@ from types import SimpleNamespace
 
 import pytest
 
-from ralf_agent import AgentSpec, GraphNode, GraphWorkflowSpec, Scope, TemporalExecutionPolicy
-from ralf_agent.errors import DefinitionMismatch, ValidationError
-from ralf_agent.temporal import TemporalEngine
-from ralf_agent.temporal_coding_composition_protocol import (
+from relf_agent import AgentSpec, GraphNode, GraphWorkflowSpec, Scope, TemporalExecutionPolicy
+from relf_agent.errors import DefinitionMismatch, ValidationError
+from relf_agent.temporal import TemporalEngine
+from relf_agent.temporal_coding_composition_protocol import (
     publish,
     validate_protocol,
     validate_topology,
 )
-from ralf_agent.temporal_state import validate_request
-from ralf_agent.types import digest, submission_request
+from relf_agent.temporal_state import validate_request
+from relf_agent.types import digest, submission_request
 from tests.test_temporal_coding_composition_configuration import (
     composition_manifest,
     graph_request,
@@ -40,8 +40,8 @@ def test_existing_boolean_composition_publishes_bounded_version_23():
 )
 @pytest.mark.parametrize("gate", ["history", "worker"])
 def test_original_resource_capacity_helper_mutation_is_refused(monkeypatch, helper, gate):
-    from ralf_agent import temporal_coding_composition_state
-    from ralf_agent.temporal_coding_composition_protocol import check
+    from relf_agent import temporal_coding_composition_state
+    from relf_agent.temporal_coding_composition_protocol import check
 
     runtime = SimpleNamespace(coding_execution=True, coding_composition=True)
     release = publish(manifest(), runtime)
@@ -61,8 +61,8 @@ def test_original_resource_capacity_helper_mutation_is_refused(monkeypatch, help
 
 @pytest.mark.parametrize("gate", ["history", "worker"])
 def test_original_blocked_retry_stop_gate_mutation_is_refused(monkeypatch, gate):
-    from ralf_agent.temporal_coding_composition_protocol import check
-    from ralf_agent.temporal_state import TemporalRunState
+    from relf_agent.temporal_coding_composition_protocol import check
+    from relf_agent.temporal_state import TemporalRunState
 
     runtime = SimpleNamespace(coding_execution=True, coding_composition=True)
     release = publish(manifest(), runtime)
@@ -113,7 +113,7 @@ def test_parallel_graph_checks_runner_grants_on_every_original_leaf():
 
 
 def test_registered_policy_still_limits_bounded_graph_capacity():
-    from ralf_agent import TemporalRuntime
+    from relf_agent import TemporalRuntime
 
     host = TemporalRuntime(
         providers={"default": Provider()},

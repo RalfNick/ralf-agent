@@ -9,7 +9,7 @@ from pathlib import Path
 
 import pytest
 
-import ralf_agent
+import relf_agent
 
 
 @pytest.fixture
@@ -82,7 +82,7 @@ def test_received_model_recovery_reuses_model_query_and_embedding_preparation(
     env = {
         "PATH": os.defpath,
         "PYTHONPATH": os.pathsep.join(
-            [str(Path(ralf_agent.__file__).parents[1]), str(Path(__file__).parents[1])]
+            [str(Path(relf_agent.__file__).parents[1]), str(Path(__file__).parents[1])]
         ),
         "QUERY_FIXTURE_KEY": "fixture-key",
     }

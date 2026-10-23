@@ -6,11 +6,11 @@ from collections import Counter
 
 import pytest
 
-from ralf_agent import temporal_deployment_execution as execution
-from ralf_agent import temporal_deployment_execution_state as admission
-from ralf_agent import temporal_session_deployment_verification as verification
-from ralf_agent.errors import DefinitionMismatch
-from ralf_agent.types import canonical
+from relf_agent import temporal_deployment_execution as execution
+from relf_agent import temporal_deployment_execution_state as admission
+from relf_agent import temporal_session_deployment_verification as verification
+from relf_agent.errors import DefinitionMismatch
+from relf_agent.types import canonical
 from tests.test_temporal_session_deployment_dto import origin
 from tests.test_temporal_session_tree_reading import ready, tree_environment
 

@@ -8,8 +8,8 @@ from pathlib import Path
 
 import pytest
 
-from ralf_agent import AgentSpec, ManagedModelSummarizer, Scope
-from ralf_agent.temporal import TemporalEngine, replay_temporal_history
+from relf_agent import AgentSpec, ManagedModelSummarizer, Scope
+from relf_agent.temporal import TemporalEngine, replay_temporal_history
 
 pytestmark = pytest.mark.skipif(
     not os.getenv("RALF_TEST_TEMPORAL_ADDRESS"), reason="requires actual Temporal Service"

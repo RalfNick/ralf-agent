@@ -5,7 +5,7 @@ import threading
 
 import pytest
 
-from ralf_agent import (
+from relf_agent import (
     AgentSpec,
     DeploymentAdmissionPolicy,
     GraphNode,
@@ -17,11 +17,11 @@ from ralf_agent import (
     TeamSpec,
     ToolRegistry,
 )
-from ralf_agent.errors import CapacityExceeded, CoordinatorBusy, ValidationError
-from ralf_agent.executors import PythonToolExecutor
-from ralf_agent.parent_completion import ParentCompletionPolicy, ParentCompletionVerdict
-from ralf_agent.parent_verification_stage import ModelParentVerificationStage
-from ralf_agent.runtime_builder import EchoProvider
+from relf_agent.errors import CapacityExceeded, CoordinatorBusy, ValidationError
+from relf_agent.executors import PythonToolExecutor
+from relf_agent.parent_completion import ParentCompletionPolicy, ParentCompletionVerdict
+from relf_agent.parent_verification_stage import ModelParentVerificationStage
+from relf_agent.runtime_builder import EchoProvider
 
 from .helpers import ScriptedProvider, tool_response
 from .test_local_admission import tools_with

@@ -6,13 +6,13 @@ from types import SimpleNamespace
 import pytest
 from temporalio.exceptions import ApplicationError
 
-from ralf_agent.temporal_state import TemporalCommandRegistryState
+from relf_agent.temporal_state import TemporalCommandRegistryState
 from tests.test_temporal_deployment_session_registry import NAMESPACE, POLICY, intent_request
 
 
 def registry(monkeypatch):
-    from ralf_agent import temporal_workflow as module
-    from ralf_agent.temporal_deployment_admission import registry_id
+    from relf_agent import temporal_workflow as module
+    from relf_agent.temporal_deployment_admission import registry_id
 
     info = SimpleNamespace(
         namespace=NAMESPACE["name"],

@@ -47,7 +47,7 @@ retained = RetainedConnections()
 
 
 def retain_assembly_clients(assembly, processes, directory):
-    from ralf_agent.temporal_journal import PostgresEffectJournal
+    from relf_agent.temporal_journal import PostgresEffectJournal
 
     if assembly is None or getattr(assembly, "_closed", False):
         return

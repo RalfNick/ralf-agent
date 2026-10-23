@@ -4,7 +4,7 @@ from dataclasses import asdict
 
 import pytest
 
-from ralf_agent import (
+from relf_agent import (
     AgentBindingDescriptor,
     AgentDefinition,
     AgentLimitProposal,
@@ -16,10 +16,10 @@ from ralf_agent import (
     Scope,
     ToolRegistry,
 )
-from ralf_agent.temporal_activities import TemporalRuntime
-from ralf_agent.temporal_bindings import normalize_request
-from ralf_agent.temporal_state import TemporalRunState
-from ralf_agent.types import submission_request
+from relf_agent.temporal_activities import TemporalRuntime
+from relf_agent.temporal_bindings import normalize_request
+from relf_agent.temporal_state import TemporalRunState
+from relf_agent.types import submission_request
 
 
 class Provider:
@@ -178,8 +178,8 @@ def test_lazy_or_untyped_policy_result_fails_closed(kind):
 
 @pytest.mark.parametrize("change", ["boolean_protocol", "missing_registration"])
 def test_invalid_release_is_refused_before_workflow_start(change):
-    from ralf_agent.errors import RalfError
-    from ralf_agent.temporal_state import validate_manifest
+    from relf_agent.errors import RalfError
+    from relf_agent.temporal_state import validate_manifest
 
     runtime, _, _ = setup()
     manifest = runtime.manifest
@@ -194,7 +194,7 @@ def test_invalid_release_is_refused_before_workflow_start(change):
 
 
 def test_complete_tool_batch_is_rejected_before_creating_any_action():
-    from ralf_agent import ToolCall, ToolSpec
+    from relf_agent import ToolCall, ToolSpec
     from tests.test_temporal_memory_bindings import grant
 
     async def handler(arguments, context):
@@ -234,7 +234,7 @@ def test_complete_tool_batch_is_rejected_before_creating_any_action():
 
 
 def test_foreign_catalog_scope_and_selectors_are_rejected():
-    from ralf_agent.errors import AuthorizationDenied, ValidationError
+    from relf_agent.errors import AuthorizationDenied, ValidationError
 
     runtime, state, _ = setup()
     with pytest.raises(AuthorizationDenied):
@@ -252,7 +252,7 @@ def test_foreign_catalog_scope_and_selectors_are_rejected():
 
 
 def test_identical_sequence_steps_keep_distinct_policy_caps_after_restore():
-    from ralf_agent import BoundDefinition, WorkflowSpec
+    from relf_agent import BoundDefinition, WorkflowSpec
     from tests.test_temporal_memory_bindings import grant
 
     async def run():
@@ -361,7 +361,7 @@ def test_invalid_failure_code_keeps_stable_public_error(code):
 
 @pytest.mark.parametrize("field", ["max_decisions", "max_context_chars", "max_tool_actions"])
 def test_fixed_cap_is_enforced_after_restore(field):
-    from ralf_agent import ToolCall, ToolSpec
+    from relf_agent import ToolCall, ToolSpec
     from tests.test_temporal_memory_bindings import grant
 
     calls = []

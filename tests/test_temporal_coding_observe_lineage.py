@@ -6,9 +6,9 @@ from types import SimpleNamespace
 
 import pytest
 
-from ralf_agent import temporal_deployment_coding_validation as validation
-from ralf_agent import temporal_deployment_execution as execution
-from ralf_agent.errors import DefinitionMismatch
+from relf_agent import temporal_deployment_coding_validation as validation
+from relf_agent import temporal_deployment_execution as execution
+from relf_agent.errors import DefinitionMismatch
 from tests.test_temporal_coding_observe_validation import environment
 
 

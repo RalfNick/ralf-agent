@@ -6,10 +6,10 @@ from dataclasses import asdict
 
 import pytest
 
-import ralf_agent as r
-from ralf_agent.errors import AuthorizationDenied, IdempotencyConflict, ValidationError
-from ralf_agent.types import digest
-from ralf_agent.workspace import WorkspaceError
+import relf_agent as r
+from relf_agent.errors import AuthorizationDenied, IdempotencyConflict, ValidationError
+from relf_agent.types import digest
+from relf_agent.workspace import WorkspaceError
 
 SCOPE = r.Scope()
 
@@ -219,10 +219,10 @@ def test_successful_close_is_idempotent_and_refuses_all_later_operations():
 
 
 def test_pure_receipt_validation_preserves_exact_request_and_scope():
-    assert importlib.util.find_spec("ralf_agent.workspace_writes") is not None, (
+    assert importlib.util.find_spec("relf_agent.workspace_writes") is not None, (
         "write helpers missing"
     )
-    from ralf_agent.workspace_writes import validate_write_receipt, write_receipt, write_request
+    from relf_agent.workspace_writes import validate_write_receipt, write_receipt, write_request
 
     request, data = write_request(SCOPE, "note", "界", None, "k", max_bytes=3)
     assert data == "界".encode()

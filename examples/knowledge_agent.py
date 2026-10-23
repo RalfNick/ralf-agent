@@ -14,10 +14,10 @@ import json
 import sys
 from dataclasses import asdict
 
-from ralf_agent import AgentSpec, LocalEngine, ModelResponse, Scope, SQLiteStore, ToolRegistry
-from ralf_agent.errors import RalfError
-from ralf_agent.memory import MemoryRecallPolicy
-from ralf_agent.retrieval import (
+from relf_agent import AgentSpec, LocalEngine, ModelResponse, Scope, SQLiteStore, ToolRegistry
+from relf_agent.errors import RalfError
+from relf_agent.memory import MemoryRecallPolicy
+from relf_agent.retrieval import (
     Document,
     KnowledgeContext,
     KnowledgeVersionConflict,

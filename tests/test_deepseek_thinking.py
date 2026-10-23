@@ -6,14 +6,14 @@ import json
 import httpx
 import pytest
 
-from ralf_agent.errors import ProviderError, ValidationError
-from ralf_agent.model_continuation import ContinuedModelResponse, assistant_message
-from ralf_agent.providers import DeepSeekChatProvider
-from ralf_agent.types import digest
+from relf_agent.errors import ProviderError, ValidationError
+from relf_agent.model_continuation import ContinuedModelResponse, assistant_message
+from relf_agent.providers import DeepSeekChatProvider
+from relf_agent.types import digest
 
 
 def provider(**kwargs):
-    module = importlib.import_module("ralf_agent.deepseek_thinking")
+    module = importlib.import_module("relf_agent.deepseek_thinking")
     return module.DeepSeekThinkingProvider("fixture", api_key="dummy", **kwargs)
 
 
@@ -101,7 +101,7 @@ def history(adapter):
 
 
 def test_new_adapter_is_required_for_reasoning_tool_responses():
-    assert importlib.util.find_spec("ralf_agent.deepseek_thinking") is not None
+    assert importlib.util.find_spec("relf_agent.deepseek_thinking") is not None
     with pytest.raises(ValueError, match="reasoning"):
         DeepSeekChatProvider("fixture", api_key="dummy")._parse(
             json.dumps(completion(CALL_MESSAGE))
@@ -410,7 +410,7 @@ def test_ignored_service_parameters_are_not_exposed(kwargs):
 
 
 def test_model_is_explicit_and_credentials_never_enter_identity(monkeypatch):
-    module = importlib.import_module("ralf_agent.deepseek_thinking")
+    module = importlib.import_module("relf_agent.deepseek_thinking")
     monkeypatch.setenv("DEEPSEEK_API_KEY", "env-fixture")
     with pytest.raises(TypeError):
         module.DeepSeekThinkingProvider()

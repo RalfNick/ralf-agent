@@ -3,12 +3,12 @@ import importlib
 
 import pytest
 
-from ralf_agent import AgentSpec, InMemoryMemory, LocalEngine, SQLiteStore, ToolRegistry
-from ralf_agent.errors import ValidationError
+from relf_agent import AgentSpec, InMemoryMemory, LocalEngine, SQLiteStore, ToolRegistry
+from relf_agent.errors import ValidationError
 
 
 def api():
-    return importlib.import_module("ralf_agent.session_store_values")
+    return importlib.import_module("relf_agent.session_store_values")
 
 
 @pytest.mark.parametrize(

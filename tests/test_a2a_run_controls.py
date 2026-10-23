@@ -7,7 +7,7 @@ from contextlib import asynccontextmanager
 import httpx
 import pytest
 
-from ralf_agent import (
+from relf_agent import (
     AgentSpec,
     LocalEngine,
     ModelResponse,
@@ -16,11 +16,11 @@ from ralf_agent import (
     ToolRegistry,
     ToolSpec,
 )
-from ralf_agent.a2a import A2AClient, A2ARemoteError
-from ralf_agent.errors import AuthorizationDenied
-from ralf_agent.handoff import SQLiteInbox
-from ralf_agent.service_lifecycle import LocalA2AService
-from ralf_agent.storage import SQLiteStore
+from relf_agent.a2a import A2AClient, A2ARemoteError
+from relf_agent.errors import AuthorizationDenied
+from relf_agent.handoff import SQLiteInbox
+from relf_agent.service_lifecycle import LocalA2AService
+from relf_agent.storage import SQLiteStore
 
 
 class Provider:
@@ -284,7 +284,7 @@ def test_lost_reply_after_control_acceptance_replays_original_receipt(tmp_path):
 
 @pytest.mark.parametrize("uncertain", [False, True])
 def test_native_async_ports_forward_original_control_receipts(tmp_path, uncertain):
-    from ralf_agent.a2a import A2AApplication
+    from relf_agent.a2a import A2AApplication
     from tests.test_a2a_events import AsyncControls
 
     class Native(AsyncControls):
@@ -347,7 +347,7 @@ def test_native_async_ports_forward_original_control_receipts(tmp_path, uncertai
 def test_client_refuses_foreign_or_nondurable_control_receipts(field, value):
     import json
 
-    from ralf_agent.a2a import A2AError
+    from relf_agent.a2a import A2AError
 
     receipt = {
         "run_id": "task",

@@ -8,7 +8,7 @@ on:
       - '.github/workflows/website.yml'
       - 'README.md'
       - 'docs/**'
-      - 'src/ralf_agent/**'
+      - 'src/relf_agent/**'
       - 'pyproject.toml'
   push:
     paths:
@@ -16,7 +16,7 @@ on:
       - '.github/workflows/website.yml'
       - 'README.md'
       - 'docs/**'
-      - 'src/ralf_agent/**'
+      - 'src/relf_agent/**'
       - 'pyproject.toml'
 
 permissions:

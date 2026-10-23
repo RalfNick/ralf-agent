@@ -2,11 +2,11 @@ import asyncio
 
 import pytest
 
-from ralf_agent.errors import ValidationError
+from relf_agent.errors import ValidationError
 
 
 def summarize(rows):
-    from ralf_agent.evaluation_summary import summarize_evaluation
+    from relf_agent.evaluation_summary import summarize_evaluation
 
     return summarize_evaluation(rows)
 
@@ -86,9 +86,9 @@ def test_empty_summary_has_no_quality_rate():
 
 
 def test_business_evaluator_exports_repeats_without_claiming_offline_quality():
-    from ralf_agent.business_evaluation import evaluate_business, load_business_cases
-    from ralf_agent.business_evaluation_cli import _OfflineBusinessProvider
-    from ralf_agent.planning_evaluation import EvaluationLimits
+    from relf_agent.business_evaluation import evaluate_business, load_business_cases
+    from relf_agent.business_evaluation_cli import _OfflineBusinessProvider
+    from relf_agent.planning_evaluation import EvaluationLimits
 
     report = asyncio.run(
         evaluate_business(
@@ -106,8 +106,8 @@ def test_business_evaluator_exports_repeats_without_claiming_offline_quality():
 
 
 def test_planning_evaluator_exports_unattempted_repeats_and_real_oracle_failures():
-    from ralf_agent import ModelResponse
-    from ralf_agent.planning_evaluation import (
+    from relf_agent import ModelResponse
+    from relf_agent.planning_evaluation import (
         EvaluationLimits,
         evaluate_planning,
         load_planning_cases,

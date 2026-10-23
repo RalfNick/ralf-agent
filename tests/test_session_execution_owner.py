@@ -3,13 +3,13 @@ import threading
 
 import pytest
 
-from ralf_agent import InMemoryMemory, ThreadedMemoryAdapter
-from ralf_agent.recall import RecallQuery
-from ralf_agent.temporal_session_data import SessionReadRegistration
+from relf_agent import InMemoryMemory, ThreadedMemoryAdapter
+from relf_agent.recall import RecallQuery
+from relf_agent.temporal_session_data import SessionReadRegistration
 
 
 def test_cancelled_observer_does_not_discard_the_real_sync_handler():
-    from ralf_agent.temporal_session_execution import SessionExecutionOwner
+    from relf_agent.temporal_session_execution import SessionExecutionOwner
 
     class Source(InMemoryMemory):
         def append(self, *args, **kwargs):
@@ -21,7 +21,7 @@ def test_cancelled_observer_does_not_discard_the_real_sync_handler():
     ended = []
 
     async def run():
-        from ralf_agent import Scope
+        from relf_agent import Scope
 
         owner = SessionExecutionOwner()
         source = SessionReadRegistration(ThreadedMemoryAdapter(Source()), RecallQuery())
@@ -63,14 +63,14 @@ def test_cancelled_observer_does_not_discard_the_real_sync_handler():
 
 
 def test_actual_method_error_still_proves_handler_ended():
-    from ralf_agent.temporal_session_execution import SessionExecutionOwner
+    from relf_agent.temporal_session_execution import SessionExecutionOwner
 
     class Source(InMemoryMemory):
         def append(self, *args, **kwargs):
             raise OSError("stopped")
 
     async def run():
-        from ralf_agent import Scope
+        from relf_agent import Scope
 
         owner = SessionExecutionOwner()
         source = SessionReadRegistration(ThreadedMemoryAdapter(Source()), RecallQuery())
@@ -100,8 +100,8 @@ def test_actual_method_error_still_proves_handler_ended():
 
 
 def test_global_loop_cancellation_keeps_actual_thread_and_later_end_delivery():
-    from ralf_agent import Scope
-    from ralf_agent.temporal_session_execution import SessionExecutionOwner
+    from relf_agent import Scope
+    from relf_agent.temporal_session_execution import SessionExecutionOwner
 
     entered, release = threading.Event(), threading.Event()
     ended = []
@@ -159,9 +159,9 @@ def test_global_loop_cancellation_keeps_actual_thread_and_later_end_delivery():
 
 
 def test_end_notification_failure_retains_proof_and_refuses_close_then_retries():
-    from ralf_agent import Scope
-    from ralf_agent.errors import CloseIncomplete
-    from ralf_agent.temporal_session_execution import SessionExecutionOwner
+    from relf_agent import Scope
+    from relf_agent.errors import CloseIncomplete
+    from relf_agent.temporal_session_execution import SessionExecutionOwner
 
     async def run():
         owner = SessionExecutionOwner()

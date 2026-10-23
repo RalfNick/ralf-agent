@@ -5,8 +5,8 @@ from contextlib import contextmanager
 
 import pytest
 
-import ralf_agent as r
-from ralf_agent.errors import DefinitionMismatch, ValidationError
+import relf_agent as r
+from relf_agent.errors import DefinitionMismatch, ValidationError
 
 from .helpers import ScriptedProvider
 from .test_agent_runtime import engine

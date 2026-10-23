@@ -7,10 +7,10 @@ from pathlib import Path
 
 import pytest
 
-from ralf_agent.codex_environment import DockerCodingEnvironment
-from ralf_agent.codex_runner import CodexCodingRunner
-from ralf_agent.errors import DefinitionMismatch, ValidationError
-from ralf_agent.types import canonical, digest
+from relf_agent.codex_environment import DockerCodingEnvironment
+from relf_agent.codex_runner import CodexCodingRunner
+from relf_agent.errors import DefinitionMismatch, ValidationError
+from relf_agent.types import canonical, digest
 from tests.test_codex_environment import environment, load
 from tests.test_codex_environment import resource as base_resource
 from tests.test_codex_runner import native_fixture

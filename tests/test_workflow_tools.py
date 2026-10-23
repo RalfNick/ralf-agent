@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from ralf_agent import (
+from relf_agent import (
     AgentSpec,
     ExecutionPlan,
     GraphNode,
@@ -20,7 +20,7 @@ from ralf_agent import (
     ToolSpec,
     ValueRef,
 )
-from ralf_agent.errors import AuthorizationDenied, ValidationError
+from relf_agent.errors import AuthorizationDenied, ValidationError
 
 
 def runtime(path, handler, *, effect="read_only", approval=False, reconciler=None, policy=None):
@@ -251,7 +251,7 @@ def test_crash_after_tool_receipt_reuses_confirmed_result(tmp_path):
 
 
 def test_forged_remote_effect_key_fails_before_approval_or_reservation(tmp_path):
-    from ralf_agent import ToolDescriptor, ToolPolicy, register_tool_source
+    from relf_agent import ToolDescriptor, ToolPolicy, register_tool_source
 
     calls = []
 

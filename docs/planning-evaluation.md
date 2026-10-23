@@ -13,7 +13,7 @@ own fixtures and actual business execution.
 
 ```shell
 # Safe default: reports not_run, performs no model call.
-ralf-evaluate-planning
+relf-evaluate-planning
 # Source-only explicit offline fixture: tests scoring and managed evidence.
 python examples/evaluate_planning.py --fixture evals/planning-fixtures.json --evidence-dir /tmp/ralf-offline-new
 ```
@@ -22,7 +22,7 @@ Offline fixture results always have `model_quality: null`, including perfect
 scores. A real configured run can use:
 
 ```shell
-ralf-evaluate-planning --provider openai --model-env RALF_PLANNING_MODEL --key-env OPENAI_API_KEY --max-cases 20 --max-calls 20 --max-output-tokens 2048 --timeout 60 --evidence-dir /tmp/ralf-live-new --report /tmp/ralf-live-new.json
+relf-evaluate-planning --provider openai --model-env RALF_PLANNING_MODEL --key-env OPENAI_API_KEY --max-cases 20 --max-calls 20 --max-output-tokens 2048 --timeout 60 --evidence-dir /tmp/ralf-live-new --report /tmp/ralf-live-new.json
 ```
 
 Set credentials locally; values are not printed. `--provider anthropic|gemini`

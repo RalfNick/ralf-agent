@@ -26,7 +26,7 @@ Runner 的节点由原父 History 排队，调用方不需要加锁。授权中�
 原子 Run 审批和关闭方式沿用[组合接入指南](temporal-coding-composition.md)。
 
 ```python
-from ralf_agent import AgentSpec, GraphNode, GraphWorkflowSpec, InputMap, ValueRef
+from relf_agent import AgentSpec, GraphNode, GraphWorkflowSpec, InputMap, ValueRef
 
 workflow = GraphWorkflowSpec(
     "two-coders",

@@ -4,15 +4,15 @@ import copy
 
 import pytest
 
-from ralf_agent.errors import (
+from relf_agent.errors import (
     AuthorizationDenied,
     CapacityExceeded,
     DefinitionMismatch,
     IdempotencyConflict,
     ValidationError,
 )
-from ralf_agent.temporal_state import TemporalCommandRegistryState
-from ralf_agent.types import digest
+from relf_agent.temporal_state import TemporalCommandRegistryState
+from relf_agent.types import digest
 
 POLICY = {
     "kind": "deployment-admission-policy",
@@ -281,7 +281,7 @@ def test_selected_mode_refuses_old_composition_routes_and_unknown_queries():
 
 
 def test_stable_ids_exclude_policy_queue_and_separate_scopes_and_deployments():
-    from ralf_agent.temporal_deployment_admission import registry_id, root_run_id
+    from relf_agent.temporal_deployment_admission import registry_id, root_run_id
 
     assert registry_id("state-deployment") == "ralf-temporal-deployment-" + digest(
         "state-deployment"

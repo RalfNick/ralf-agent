@@ -3,7 +3,7 @@ import threading
 
 import pytest
 
-from ralf_agent import (
+from relf_agent import (
     AgentSpec,
     LocalEngine,
     ModelResponse,
@@ -13,12 +13,12 @@ from ralf_agent import (
     ToolRegistry,
     ToolSpec,
 )
-from ralf_agent.errors import CoordinatorBusy, ValidationError
-from ralf_agent.handoff import SQLiteInbox
+from relf_agent.errors import CoordinatorBusy, ValidationError
+from relf_agent.handoff import SQLiteInbox
 
 
 def test_owned_local_service_shutdown_retains_lease_until_real_handler_exit(tmp_path):
-    from ralf_agent.service_lifecycle import LocalA2AService
+    from relf_agent.service_lifecycle import LocalA2AService
 
     async def run():
         started = asyncio.Event()
@@ -81,8 +81,8 @@ def test_owned_local_service_shutdown_retains_lease_until_real_handler_exit(tmp_
 
 
 def test_inbox_close_failure_retries_without_reopening_engine(tmp_path):
-    from ralf_agent.runtime_builder import EchoProvider
-    from ralf_agent.service_lifecycle import LocalA2AService
+    from relf_agent.runtime_builder import EchoProvider
+    from relf_agent.service_lifecycle import LocalA2AService
 
     class Inbox(SQLiteInbox):
         fail = True

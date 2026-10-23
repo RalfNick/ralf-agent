@@ -5,13 +5,13 @@ from dataclasses import asdict
 
 import pytest
 
-from ralf_agent import AgentSpec, Scope, ToolRegistry, ToolSpec, WorkflowSpec
-from ralf_agent.binding_catalog import BindingCatalog
-from ralf_agent.binding_definitions import AgentDefinition, BoundDefinition
-from ralf_agent.binding_runtime import unwrap_definition
-from ralf_agent.binding_types import AgentBindingDescriptor, BindingSelection
-from ralf_agent.delegated_coding import register_coding_tool
-from ralf_agent.errors import AuthorizationDenied, DefinitionMismatch, ValidationError
+from relf_agent import AgentSpec, Scope, ToolRegistry, ToolSpec, WorkflowSpec
+from relf_agent.binding_catalog import BindingCatalog
+from relf_agent.binding_definitions import AgentDefinition, BoundDefinition
+from relf_agent.binding_runtime import unwrap_definition
+from relf_agent.binding_types import AgentBindingDescriptor, BindingSelection
+from relf_agent.delegated_coding import register_coding_tool
+from relf_agent.errors import AuthorizationDenied, DefinitionMismatch, ValidationError
 
 from .test_binding_execution import engine
 
@@ -153,7 +153,7 @@ def test_catalog_resolution_does_not_repin_a_receiver_changed_by_late_identity_g
 @pytest.mark.parametrize("method", ["execute", "reconcile", "stop_existing", "aclose"])
 @pytest.mark.parametrize("read", [1, 2])
 def test_original_runner_pin_rejects_receiver_drift_from_ownership_getter(method, read):
-    from ralf_agent.binding_runner import check_runner_binding, pin_runner_binding
+    from relf_agent.binding_runner import check_runner_binding, pin_runner_binding
 
     class WatchedRunner(BorrowedRunner):
         @property
@@ -279,7 +279,7 @@ def test_explicit_runner_without_coding_uses_binding_release_without_delegated_s
 
 
 def test_runner_coexists_with_explicit_disabled_model_history(tmp_path):
-    from ralf_agent import CompleteModelHistory
+    from relf_agent import CompleteModelHistory
 
     runner, history = BorrowedRunner(), CompleteModelHistory()
     with engine(
@@ -343,7 +343,7 @@ def test_explicit_manifest_releases_only_runner_declarations_and_sequence_keeps_
 
 @pytest.mark.parametrize("method", ["execute", "reconcile", "stop_existing", "aclose"])
 def test_ownership_getter_cannot_conceal_preexisting_receiver_replacement(method):
-    from ralf_agent.binding_runner import check_runner_binding, pin_runner_binding
+    from relf_agent.binding_runner import check_runner_binding, pin_runner_binding
 
     class RestoringRunner(BorrowedRunner):
         @property

@@ -5,9 +5,9 @@ import json
 import httpx
 import pytest
 
-from ralf_agent.errors import ProviderError, ValidationError
-from ralf_agent.model_continuation import ContinuedModelResponse
-from ralf_agent.model_protocol import ModelCapabilities
+from relf_agent.errors import ProviderError, ValidationError
+from relf_agent.model_continuation import ContinuedModelResponse
+from relf_agent.model_protocol import ModelCapabilities
 
 from .test_deepseek_thinking import TOOL, USAGE, assistant, provider
 
@@ -288,7 +288,7 @@ def test_reasoning_continuation_utf8_limit_applies_to_sse_without_summarizing():
 
 
 def test_sse_frame_and_total_response_limits_are_reused(monkeypatch):
-    monkeypatch.setattr("ralf_agent.model_http.MAX_FRAME_BYTES", 500)
+    monkeypatch.setattr("relf_agent.model_http.MAX_FRAME_BYTES", 500)
     frames = [
         frame({"role": "assistant", "reasoning_content": "a" * 1000}),
         frame({"content": "done"}, "stop"),
@@ -304,8 +304,8 @@ def test_sse_frame_and_total_response_limits_are_reused(monkeypatch):
                 await provider(client=client, stream=True).complete(
                     [{"role": "user", "content": "q"}], []
                 )
-        monkeypatch.setattr("ralf_agent.model_http.MAX_FRAME_BYTES", 1000000)
-        monkeypatch.setattr("ralf_agent.model_http.MAX_STREAM_BYTES", 500)
+        monkeypatch.setattr("relf_agent.model_http.MAX_FRAME_BYTES", 1000000)
+        monkeypatch.setattr("relf_agent.model_http.MAX_STREAM_BYTES", 500)
         async with httpx.AsyncClient(
             transport=httpx.MockTransport(
                 lambda request: httpx.Response(200, content=stream_bytes(frames))

@@ -6,10 +6,10 @@ from contextlib import contextmanager
 
 import pytest
 
-import ralf_agent as r
-from ralf_agent.errors import AuthorizationDenied, DefinitionMismatch, ValidationError
-from ralf_agent.governance import DeploymentAdmissionPolicy
-from ralf_agent.types import digest
+import relf_agent as r
+from relf_agent.errors import AuthorizationDenied, DefinitionMismatch, ValidationError
+from relf_agent.governance import DeploymentAdmissionPolicy
+from relf_agent.types import digest
 
 DEFAULT = object()
 METHODS = (

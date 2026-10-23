@@ -2,9 +2,9 @@
 
 import pytest
 
-from ralf_agent.errors import ValidationError
-from ralf_agent.temporal_activities import TemporalRuntime
-from ralf_agent.tools import ToolRegistry
+from relf_agent.errors import ValidationError
+from relf_agent.temporal_activities import TemporalRuntime
+from relf_agent.tools import ToolRegistry
 
 
 def test_opt_in_requires_registered_postgres_native_resource():
@@ -40,9 +40,9 @@ def test_unknown_effect_does_not_skip_original_owner_stop_evidence(monkeypatch):
     import asyncio
     from types import SimpleNamespace
 
-    from ralf_agent import delegated_coding, temporal_coding_protocol
-    from ralf_agent import temporal_coding_runtime as module
-    from ralf_agent.codex_runner import RunnerOutcomeUnknown
+    from relf_agent import delegated_coding, temporal_coding_protocol
+    from relf_agent import temporal_coding_runtime as module
+    from relf_agent.codex_runner import RunnerOutcomeUnknown
 
     async def run():
         updates = []
@@ -94,8 +94,8 @@ def test_native_error_preserves_possible_dispatch_and_unknown_reservation(monkey
     import asyncio
     from types import SimpleNamespace
 
-    from ralf_agent import temporal_coding_protocol, temporal_coding_runtime
-    from ralf_agent.codex_runner import RunnerOutcomeUnknown
+    from relf_agent import temporal_coding_protocol, temporal_coding_runtime
+    from relf_agent.codex_runner import RunnerOutcomeUnknown
 
     async def fail(*args):
         raise RunnerOutcomeUnknown("Original native response lost")

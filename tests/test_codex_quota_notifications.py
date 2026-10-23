@@ -6,7 +6,7 @@ import sys
 
 import pytest
 
-from ralf_agent.codex_auth_transport import CodexAuthenticatedTransport
+from relf_agent.codex_auth_transport import CodexAuthenticatedTransport
 from tests.test_codex_auth_transport import CANARY, assert_secret_absent, peer
 
 

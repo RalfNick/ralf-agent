@@ -6,8 +6,8 @@ from contextlib import asynccontextmanager, contextmanager
 
 import pytest
 
-import ralf_agent as r
-from ralf_agent.errors import ValidationError
+import relf_agent as r
+from relf_agent.errors import ValidationError
 from tests.test_extension_contracts import HostCoordinator, StoreAdapter
 from tests.test_local_session_model_history import FIRST_FINAL, options, spec
 

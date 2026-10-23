@@ -4,7 +4,7 @@ import stat
 
 import pytest
 
-from ralf_agent.errors import CloseIncomplete
+from relf_agent.errors import CloseIncomplete
 from tests.temporal_coding_primary_failure import save_primary_failure
 
 
@@ -39,7 +39,7 @@ def test_primary_failure_saves_only_static_exception_and_task_frames(tmp_path):
     value = json.loads(text)
     assert set(value) == {"error", "frames", "pending_tasks"}
     assert value["error"] == {
-        "module": "ralf_agent.errors",
+        "module": "relf_agent.errors",
         "type": "CloseIncomplete",
         "code": "close_incomplete",
     }

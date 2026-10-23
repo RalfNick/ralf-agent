@@ -5,7 +5,7 @@ import threading
 
 import pytest
 
-from ralf_agent import (
+from relf_agent import (
     ComponentRegistry,
     InMemoryMemory,
     RecallQuery,
@@ -13,8 +13,8 @@ from ralf_agent import (
     TemporalRuntimeBuilder,
     ThreadedMemoryAdapter,
 )
-from ralf_agent.errors import CloseIncomplete, ValidationError
-from ralf_agent.runtime_builder import EchoProvider, RuntimeBuildError
+from relf_agent.errors import CloseIncomplete, ValidationError
+from relf_agent.runtime_builder import EchoProvider, RuntimeBuildError
 
 from .test_temporal_catalog_assembly import catalog
 

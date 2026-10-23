@@ -9,15 +9,15 @@ import sys
 
 import pytest
 
-from ralf_agent.errors import (
+from relf_agent.errors import (
     CoordinatorBusy,
     DefinitionMismatch,
     IdempotencyConflict,
     RuntimeClosed,
     ValidationError,
 )
-from ralf_agent.runner_journal import RunnerJournal
-from ralf_agent.types import Scope
+from relf_agent.runner_journal import RunnerJournal
+from relf_agent.types import Scope
 
 IDENTITY = {
     "adapter": "codex/1",
@@ -92,8 +92,8 @@ def test_start_permissions_are_committed_once_and_receipts_remain_detached(tmp_p
 def test_process_kill_preserves_every_committed_startup_stage(tmp_path, stage):
     path = tmp_path / "native.sqlite"
     script = """import json,sys,time
-from ralf_agent.runner_journal import RunnerJournal
-from ralf_agent.types import Scope
+from relf_agent.runner_journal import RunnerJournal
+from relf_agent.types import Scope
 j=RunnerJournal(sys.argv[1],identity=json.loads(sys.argv[2]))
 s=Scope('workspace','principal'); b=json.loads(sys.argv[3]); stage=sys.argv[4]
 j.begin(s,'effect',b)
@@ -143,8 +143,8 @@ def test_second_owner_refused_in_same_and_real_process(tmp_path):
         with pytest.raises(CoordinatorBusy):
             journal(path)
         script = """import json,sys
-from ralf_agent.runner_journal import RunnerJournal
-from ralf_agent.errors import CoordinatorBusy
+from relf_agent.runner_journal import RunnerJournal
+from relf_agent.errors import CoordinatorBusy
 try: j=RunnerJournal(sys.argv[1],identity=json.loads(sys.argv[2]))
 except CoordinatorBusy: print('busy')
 else: j.close();print('owned')

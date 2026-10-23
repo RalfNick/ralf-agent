@@ -10,7 +10,7 @@ from pathlib import Path
 
 import pytest
 
-import ralf_agent as r
+import relf_agent as r
 from tests.test_model_history_process_recovery import (
     FIRST_RAW,
     SECOND_RAW,

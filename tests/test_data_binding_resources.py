@@ -6,21 +6,21 @@ from dataclasses import FrozenInstanceError, replace
 
 import pytest
 
-from ralf_agent import BindingCatalog, BindingSelection, InMemoryMemory, Scope, SQLiteMemory
-from ralf_agent.errors import AuthorizationDenied, DefinitionMismatch, ValidationError
-from ralf_agent.recall import RecallPage, RecallQuery
-from ralf_agent.retrieval import (
+from relf_agent import BindingCatalog, BindingSelection, InMemoryMemory, Scope, SQLiteMemory
+from relf_agent.errors import AuthorizationDenied, DefinitionMismatch, ValidationError
+from relf_agent.recall import RecallPage, RecallQuery
+from relf_agent.retrieval import (
     Document,
     InMemoryKnowledgeStore,
     KnowledgeContext,
     LexicalRetriever,
 )
-from ralf_agent.types import canonical
+from relf_agent.types import canonical
 
 
 def resources():
     try:
-        return importlib.import_module("ralf_agent.binding_data")
+        return importlib.import_module("relf_agent.binding_data")
     except ModuleNotFoundError:
         pytest.fail("H1d scoped data resource module is missing")
 

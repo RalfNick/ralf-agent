@@ -50,7 +50,7 @@ BOOLEAN_OBSERVATIONS = frozenset(
 
 def api():
     try:
-        return importlib.import_module("ralf_agent.adapter_contract_catalog")
+        return importlib.import_module("relf_agent.adapter_contract_catalog")
     except ModuleNotFoundError:
         pytest.fail("The installed SDK has no frozen role/profile contract catalog")
 
@@ -184,7 +184,7 @@ def test_session_observations_are_finite_public_fields_without_knowledge_fields(
 )
 def test_unknown_and_nonordinary_selections_fail_with_public_validation(role, version, profile):
     module = api()
-    from ralf_agent.errors import ValidationError
+    from relf_agent.errors import ValidationError
 
     with pytest.raises(ValidationError):
         module.catalog_for(role, version, profile)
@@ -193,7 +193,7 @@ def test_unknown_and_nonordinary_selections_fail_with_public_validation(role, ve
 @pytest.mark.parametrize("case_id", ["K00", "K13", "S00", "S15", "unknown", None, ["S01"], True])
 def test_unknown_and_nonordinary_cases_fail_with_public_validation(case_id):
     module = api()
-    from ralf_agent.errors import ValidationError
+    from relf_agent.errors import ValidationError
 
     with pytest.raises(ValidationError):
         module.catalog_for_case(case_id)

@@ -7,7 +7,7 @@ import uuid
 
 import pytest
 
-from ralf_agent import (
+from relf_agent import (
     AgentSpec,
     ComponentRegistry,
     InMemoryWorkspace,
@@ -21,7 +21,7 @@ from ralf_agent import (
     WorkspaceToolSource,
     register_tool_source,
 )
-from ralf_agent.temporal import replay_temporal_history
+from relf_agent.temporal import replay_temporal_history
 
 from .test_workspace_configuration import config
 

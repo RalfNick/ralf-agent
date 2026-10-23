@@ -6,7 +6,7 @@
 
 ~~~python
 import asyncio
-from ralf_agent import (
+from relf_agent import (
     AgentBindingDescriptor,
     AgentDefinition,
     AgentSpec,
@@ -20,13 +20,13 @@ from ralf_agent import (
     SQLiteStore,
     ToolRegistry,
 )
-from ralf_agent.retrieval import (
+from relf_agent.retrieval import (
     Document,
     InMemoryKnowledgeStore,
     KnowledgeContext,
     LexicalRetriever,
 )
-from ralf_agent.runtime_builder import EchoProvider
+from relf_agent.runtime_builder import EchoProvider
 
 scope = Scope()
 facts = InMemoryMemory(backend_id="shared-facts-v1")

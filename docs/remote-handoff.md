@@ -10,7 +10,7 @@ PostgresInbox/PostgresOutbox supply shared native async handoff with atomic capa
 and immutable completion; see [async handoff and service setup](async-handoff.md).
 
 ```python
-from ralf_agent import (
+from relf_agent import (
     AgentSpec,
     Scope,
     MessageEnvelope,

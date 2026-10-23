@@ -5,7 +5,7 @@ import sys
 
 import pytest
 
-from ralf_agent import AgentSpec, LocalEngine, Scope, SQLiteStore, ToolRegistry
+from relf_agent import AgentSpec, LocalEngine, Scope, SQLiteStore, ToolRegistry
 
 from .helpers import ScriptedProvider
 from .test_cli import cli, subprocess_env
@@ -23,7 +23,7 @@ def test_init_cannot_replace_the_current_shell_directory(tmp_path, destination):
             "/bin/bash",
             "-c",
             'cd "$1"\n'
-            '"$2" -m ralf_agent init "$3"\n'
+            '"$2" -m relf_agent init "$3"\n'
             "init_status=$?\n"
             'if [ "$init_status" -eq 0 ]; then\n'
             '    "$2" -m agent_app --ticket INIT-CWD\n'

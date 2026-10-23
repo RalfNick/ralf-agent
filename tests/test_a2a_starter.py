@@ -10,7 +10,7 @@ from contextlib import contextmanager
 import httpx
 import pytest
 
-from ralf_agent.starter import create_starter
+from relf_agent.starter import create_starter
 
 from .test_starter import installed_wheel as _installed_wheel
 
@@ -70,7 +70,7 @@ def test_real_source_and_installed_starter_run_replay_restart_and_explicit_auth(
     tmp_path, installed_wheel, installed
 ):
     pytest.importorskip("uvicorn")
-    from ralf_agent import A2AClient, SQLiteStore
+    from relf_agent import A2AClient, SQLiteStore
 
     python = installed_wheel[0] if installed else sys.executable
     project = tmp_path / "service"

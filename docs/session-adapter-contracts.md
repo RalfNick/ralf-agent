@@ -6,7 +6,7 @@ read/append cases, or `receipts` for all fourteen cases including exact write
 evidence and original managed Session save recovery.
 
 ```python
-from ralf_agent import AdapterContractSuite, offline_session_fixture
+from relf_agent import AdapterContractSuite, offline_session_fixture
 
 suite = AdapterContractSuite(role="session-store", contract_version="1", profile="receipts")
 try:
@@ -28,10 +28,10 @@ contain bounded observations and identity digests, excluding raw messages,
 configuration secrets and exception details. Quality fields remain null.
 
 ```shell
-ralf-check-adapter --role session-store
-ralf-check-adapter --role session-store --offline
-ralf-check-adapter --role session-store --profile receipts --offline
-ralf init my-session-adapter --template session-contracts
+relf-check-adapter --role session-store
+relf-check-adapter --role session-store --offline
+relf-check-adapter --role session-store --profile receipts --offline
+relf init my-session-adapter --template session-contracts
 cd my-session-adapter
 python -m agent_app check
 python -m agent_app check --profile receipts
@@ -84,7 +84,7 @@ address. For host-authorized namespaces, register the original backend inside
 the existing storage address. See [binding configuration](data-bindings.md).
 
 ```python
-from ralf_agent import ComponentRegistry, RuntimeBuilder
+from relf_agent import ComponentRegistry, RuntimeBuilder
 
 registry = ComponentRegistry()
 
@@ -169,8 +169,8 @@ status/events/diagnostics and exact command receipt observations does not open
 the Session source.
 
 ```shell
-ralf --db .ralf/runs.sqlite --factory agent_app.runtime:create_engine inspect RUN_ID
-ralf --db .ralf/runs.sqlite --factory agent_app.runtime:create_engine resume RUN_ID
+relf --db .ralf/runs.sqlite --factory agent_app.runtime:create_engine inspect RUN_ID
+relf --db .ralf/runs.sqlite --factory agent_app.runtime:create_engine resume RUN_ID
 ```
 
 ## Supply management evidence

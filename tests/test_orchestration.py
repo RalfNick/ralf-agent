@@ -3,15 +3,15 @@ import importlib.util
 
 import pytest
 
-from ralf_agent import AgentSpec, LocalEngine, SQLiteStore, ToolRegistry
-from ralf_agent.errors import ValidationError
-from ralf_agent.runtime_builder import EchoProvider
+from relf_agent import AgentSpec, LocalEngine, SQLiteStore, ToolRegistry
+from relf_agent.errors import ValidationError
+from relf_agent.runtime_builder import EchoProvider
 
 
 def api():
-    assert importlib.util.find_spec("ralf_agent.teams"), "Missing Team strategy subsystem"
-    from ralf_agent.orchestration_types import TeamSpec
-    from ralf_agent.teams import RouterTeam, SequentialTeam, SupervisorTeam
+    assert importlib.util.find_spec("relf_agent.teams"), "Missing Team strategy subsystem"
+    from relf_agent.orchestration_types import TeamSpec
+    from relf_agent.teams import RouterTeam, SequentialTeam, SupervisorTeam
 
     return TeamSpec, SequentialTeam, RouterTeam, SupervisorTeam
 
@@ -90,7 +90,7 @@ def test_supervisor_workers_then_summary(tmp_path):
 
 
 def test_failed_child_immediately_cancels_running_sibling_before_its_next_tool(tmp_path):
-    from ralf_agent import ModelResponse, ToolSpec
+    from relf_agent import ModelResponse, ToolSpec
 
     from .helpers import tool_response
 
@@ -191,7 +191,7 @@ def test_team_cannot_allocate_past_parent_budget(tmp_path):
 
 
 def test_child_approval_survives_parent_restart_and_replays_once(tmp_path):
-    from ralf_agent import ModelResponse
+    from relf_agent import ModelResponse
 
     from .helpers import ScriptedProvider, tool_response
     from .test_engine import engine, registry
@@ -236,7 +236,7 @@ def test_parent_cancellation_before_child_dispatch_has_no_effect(tmp_path):
 
 
 def test_parent_cancel_propagates_to_running_children(tmp_path):
-    from ralf_agent import ModelResponse
+    from relf_agent import ModelResponse
 
     from .test_engine import engine
 
@@ -278,7 +278,7 @@ def test_parent_cancel_propagates_to_running_children(tmp_path):
 
 
 def test_custom_strategy_cannot_delegate_same_member_twice(tmp_path):
-    from ralf_agent.orchestration_types import ChildCall, TeamSelection
+    from relf_agent.orchestration_types import ChildCall, TeamSelection
 
     TeamSpec, *_ = api()
 
@@ -300,7 +300,7 @@ def test_custom_strategy_cannot_delegate_same_member_twice(tmp_path):
 
 def test_team_call_links_and_escrow_roll_back_together(tmp_path):
     TeamSpec, *_ = api()
-    from ralf_agent.orchestration_types import ChildCall
+    from relf_agent.orchestration_types import ChildCall
 
     with make_engine(tmp_path / "atomic.sqlite") as e:
         h = e.submit(TeamSpec("atomic", {"one": AgentSpec("one", "One")}), "task", command_id="s")
@@ -321,7 +321,7 @@ def test_team_call_links_and_escrow_roll_back_together(tmp_path):
 
 
 def test_child_unknown_write_holds_parent_escrow_until_reconciled(tmp_path):
-    from ralf_agent import ModelResponse
+    from relf_agent import ModelResponse
 
     from .helpers import ScriptedProvider, tool_response
     from .test_engine import engine, registry
@@ -359,7 +359,7 @@ def test_child_unknown_write_holds_parent_escrow_until_reconciled(tmp_path):
 def test_bulk_cancel_keeps_real_child_thread_and_coordinator(tmp_path):
     import threading
 
-    from ralf_agent.errors import CoordinatorBusy
+    from relf_agent.errors import CoordinatorBusy
 
     from .helpers import ScriptedProvider, tool_response
     from .test_engine import engine, registry
@@ -442,7 +442,7 @@ def test_team_definition_and_proposals_are_detached_and_frozen():
 
 
 def test_parent_cli_text_reports_children_and_planning_revisions(tmp_path, capsys):
-    from ralf_agent.cli import main
+    from relf_agent.cli import main
 
     TeamSpec, *_ = api()
     path = tmp_path / "view.sqlite"
@@ -454,8 +454,8 @@ def test_parent_cli_text_reports_children_and_planning_revisions(tmp_path, capsy
 
 
 def test_child_release_binds_parent_and_refuses_changed_parent_strategy(tmp_path):
-    from ralf_agent import SequentialTeam
-    from ralf_agent.errors import DefinitionMismatch
+    from relf_agent import SequentialTeam
+    from relf_agent.errors import DefinitionMismatch
 
     from .helpers import ScriptedProvider, tool_response
     from .test_engine import engine, registry

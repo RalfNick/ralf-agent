@@ -4,8 +4,8 @@ import asyncio
 import json
 import shutil
 
-from ralf_agent.codex_create_supervisor import CreateSupervisor
-from ralf_agent.errors import ExecutionHostFailed
+from relf_agent.codex_create_supervisor import CreateSupervisor
+from relf_agent.errors import ExecutionHostFailed
 from tests.test_codex_runner import original_engine
 
 

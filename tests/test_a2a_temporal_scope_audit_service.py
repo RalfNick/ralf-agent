@@ -14,12 +14,12 @@ from pathlib import Path
 import httpx
 import pytest
 
-from ralf_agent import Scope, ToolExecutionOwner, ToolRegistry, ToolSpec
-from ralf_agent.a2a import A2AClient
-from ralf_agent.temporal import replay_temporal_history
-from ralf_agent.temporal_deployment_admission import root_run_id
-from ralf_agent.temporal_journal import PostgresEffectJournal
-from ralf_agent.types import canonical
+from relf_agent import Scope, ToolExecutionOwner, ToolRegistry, ToolSpec
+from relf_agent.a2a import A2AClient
+from relf_agent.temporal import replay_temporal_history
+from relf_agent.temporal_deployment_admission import root_run_id
+from relf_agent.temporal_journal import PostgresEffectJournal
+from relf_agent.types import canonical
 from tests.test_a2a_temporal_http_service import HTTPProvider, wait_task
 from tests.test_temporal_deployment_public_service import public_system
 

@@ -8,8 +8,8 @@ from types import SimpleNamespace
 import pytest
 
 pytest.importorskip("temporalio")
-from ralf_agent.temporal_deployment_admission import registry_id
-from ralf_agent.temporal_workflow import (
+from relf_agent.temporal_deployment_admission import registry_id
+from relf_agent.temporal_workflow import (
     TemporalCommandRegistryWorkflow,
     TemporalRunWorkflow,
     workflow,
@@ -75,10 +75,10 @@ def test_registry_three_foreign_scope_queries_do_not_expose_the_other_root(monke
 
 
 def test_closed_original_native_admission_cancels_before_any_model_operation(monkeypatch):
-    from ralf_agent import temporal_deployment_execution_state as admission
-    from ralf_agent import temporal_deployment_release_state as release
-    from ralf_agent.temporal_state import TemporalRunState
-    from ralf_agent.types import digest
+    from relf_agent import temporal_deployment_execution_state as admission
+    from relf_agent import temporal_deployment_release_state as release
+    from relf_agent.temporal_state import TemporalRunState
+    from relf_agent.types import digest
     from tests.test_temporal_deployment_coding_registry import registry
 
     commands, request = registry(), coding_request()
@@ -132,7 +132,7 @@ def test_closed_original_native_admission_cancels_before_any_model_operation(mon
 
 
 def test_cold_fence_is_sdk_owned_and_preserves_unknown_effect_obligations(monkeypatch):
-    from ralf_agent.temporal_deployment_coding_state import coding_call_candidate
+    from relf_agent.temporal_deployment_coding_state import coding_call_candidate
     from tests.test_temporal_deployment_coding_state import cold
 
     state, action, _, identity = cold(monkeypatch, cost=0)

@@ -6,7 +6,7 @@ import uuid
 
 import pytest
 
-from ralf_agent import (
+from relf_agent import (
     AgentBindingDescriptor,
     BindingCatalog,
     BindingSelection,
@@ -17,9 +17,9 @@ from ralf_agent import (
     SessionBindingResource,
     ToolRegistry,
 )
-from ralf_agent.temporal import TemporalEngine, build_temporal_worker, replay_temporal_history
-from ralf_agent.temporal_activities import TemporalRuntime
-from ralf_agent.temporal_session_topology import CompositeSessionTopology
+from relf_agent.temporal import TemporalEngine, build_temporal_worker, replay_temporal_history
+from relf_agent.temporal_activities import TemporalRuntime
+from relf_agent.temporal_session_topology import CompositeSessionTopology
 
 from .test_postgres_adapter import postgres_dsn as postgres_dsn
 from .test_postgres_adapter import stores

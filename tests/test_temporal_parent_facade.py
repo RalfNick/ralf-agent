@@ -2,18 +2,18 @@ import asyncio
 
 import pytest
 
-from ralf_agent import AgentSpec, GraphNode, GraphWorkflowSpec, TeamSpec
-from ralf_agent.errors import ValidationError
-from ralf_agent.temporal import TemporalEngine
-from ralf_agent.temporal_activities import TemporalRuntime
-from ralf_agent.tools import ToolRegistry
+from relf_agent import AgentSpec, GraphNode, GraphWorkflowSpec, TeamSpec
+from relf_agent.errors import ValidationError
+from relf_agent.temporal import TemporalEngine
+from relf_agent.temporal_activities import TemporalRuntime
+from relf_agent.tools import ToolRegistry
 
 from .test_temporal_engine import Provider
 
 
 def test_composite_preflight_accepts_extended_registration_without_local_store():
-    from ralf_agent.temporal_state import validate_request
-    from ralf_agent.types import submission_request
+    from relf_agent.temporal_state import validate_request
+    from relf_agent.types import submission_request
 
     runtime = TemporalRuntime(providers={"default": Provider()}, tools=ToolRegistry())
     graph = GraphWorkflowSpec("graph", [GraphNode("a", agent=AgentSpec("a", "Answer"))])
@@ -25,9 +25,9 @@ def test_composite_preflight_accepts_extended_registration_without_local_store()
 
 
 def test_policy_rejects_forbidden_tool_before_any_provider_call():
-    from ralf_agent.governance import TemporalExecutionPolicy
-    from ralf_agent.temporal_state import validate_request
-    from ralf_agent.types import submission_request
+    from relf_agent.governance import TemporalExecutionPolicy
+    from relf_agent.temporal_state import validate_request
+    from relf_agent.types import submission_request
 
     runtime = TemporalRuntime(
         providers={"default": Provider()},
@@ -55,7 +55,7 @@ def test_composite_without_registered_extension_is_refused_before_network():
 def test_extended_release_survives_actual_json_history_normalization():
     import json
 
-    from ralf_agent.types import canonical
+    from relf_agent.types import canonical
 
     runtime = TemporalRuntime(providers={"default": Provider()}, tools=ToolRegistry())
     wire = json.loads(canonical(runtime.orchestration_release))
@@ -63,8 +63,8 @@ def test_extended_release_survives_actual_json_history_normalization():
 
 
 def test_replacing_registry_container_cannot_bypass_pinned_implementation():
-    from ralf_agent import TeamSelection
-    from ralf_agent.errors import DefinitionMismatch
+    from relf_agent import TeamSelection
+    from relf_agent.errors import DefinitionMismatch
 
     runtime = TemporalRuntime(providers={"default": Provider()}, tools=ToolRegistry())
 
@@ -84,12 +84,12 @@ def test_child_control_reference_keeps_original_projected_binding_release(bind_c
     from dataclasses import asdict
     from types import SimpleNamespace
 
-    from ralf_agent import AgentBindingDescriptor, BindingCatalog, BoundDefinition, RunRef, Scope
-    from ralf_agent.temporal_agent_controls import child_reference
-    from ralf_agent.temporal_bindings import normalize_request, request_release_digest
-    from ralf_agent.temporal_parent_state import TemporalParentState
-    from ralf_agent.temporal_state import TemporalRunState
-    from ralf_agent.types import submission_request
+    from relf_agent import AgentBindingDescriptor, BindingCatalog, BoundDefinition, RunRef, Scope
+    from relf_agent.temporal_agent_controls import child_reference
+    from relf_agent.temporal_bindings import normalize_request, request_release_digest
+    from relf_agent.temporal_parent_state import TemporalParentState
+    from relf_agent.temporal_state import TemporalRunState
+    from relf_agent.types import submission_request
 
     scope = Scope()
     runtime = TemporalRuntime(

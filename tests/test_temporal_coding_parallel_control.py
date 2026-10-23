@@ -6,11 +6,11 @@ from types import SimpleNamespace
 
 import pytest
 
-from ralf_agent import temporal_coding_composition_control as control
-from ralf_agent.errors import CloseIncomplete, DefinitionMismatch
-from ralf_agent.postgres_coding_resources import new_resource, receive_resource, validate_resource
-from ralf_agent.temporal_parent_state import child_run_id
-from ralf_agent.types import Scope, canonical, digest
+from relf_agent import temporal_coding_composition_control as control
+from relf_agent.errors import CloseIncomplete, DefinitionMismatch
+from relf_agent.postgres_coding_resources import new_resource, receive_resource, validate_resource
+from relf_agent.temporal_parent_state import child_run_id
+from relf_agent.types import Scope, canonical, digest
 from tests.test_temporal_coding_state import RUNNER, ready
 
 SCOPE = {"workspace": "parallel-close", "principal": "original"}
@@ -240,7 +240,7 @@ class Peer:
 
 @pytest.fixture
 def transport(monkeypatch):
-    from ralf_agent import (
+    from relf_agent import (
         delegated_coding,
         temporal_bindings,
         temporal_coding_runtime,
@@ -332,7 +332,7 @@ def test_close_does_not_aggregate_caller_cancellation(transport, monkeypatch):
     async def interrupted(runtime, request, factory):
         raise asyncio.CancelledError
 
-    from ralf_agent import temporal_coding_runtime
+    from relf_agent import temporal_coding_runtime
 
     monkeypatch.setattr(temporal_coding_runtime, "stop", interrupted)
     with pytest.raises(asyncio.CancelledError):
@@ -408,7 +408,7 @@ def test_final_scan_late_original_intent_cannot_be_ignored(transport, monkeypatc
 
 
 def standalone(peer, kind):
-    from ralf_agent.types import AgentSpec, WorkflowSpec, submission_request
+    from relf_agent.types import AgentSpec, WorkflowSpec, submission_request
 
     call = peer.children.pop(0)
     run_id = call["run_id"]
@@ -445,7 +445,7 @@ def test_standalone_close_cancels_original_epoch_before_native_stop(transport, k
 def test_standalone_fenced_native_with_unknown_actual_owner_retains_resources(
     transport, monkeypatch, kind
 ):
-    from ralf_agent import temporal_coding_runtime
+    from relf_agent import temporal_coding_runtime
 
     peer, runtime = transport
     run_id = standalone(peer, kind)
@@ -531,9 +531,9 @@ def test_close_reopens_only_original_failed_stop_with_drive(
     transport, monkeypatch, standalone_kind
 ):
     """A duplicate cancel receipt cannot reset the native failed-stop latch."""
-    from ralf_agent import temporal_coding_runtime
-    from ralf_agent.temporal_coding_state import accept_stop
-    from ralf_agent.temporal_workflow import TemporalRunWorkflow
+    from relf_agent import temporal_coding_runtime
+    from relf_agent.temporal_coding_state import accept_stop
+    from relf_agent.temporal_workflow import TemporalRunWorkflow
 
     peer, runtime = transport
     first = peer.children[0]["run_id"]

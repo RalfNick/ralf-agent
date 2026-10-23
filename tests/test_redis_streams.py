@@ -2,8 +2,8 @@ import asyncio
 
 import pytest
 
-from ralf_agent.errors import IdempotencyConflict, ValidationError
-from ralf_agent.types import Scope
+from relf_agent.errors import IdempotencyConflict, ValidationError
+from relf_agent.types import Scope
 
 from . import test_redis_memory_adapter as redis_test_helpers
 
@@ -11,7 +11,7 @@ redis_service = redis_test_helpers.redis_service
 
 
 def test_memory_bus_dedup_claim_binding_and_capacity():
-    from ralf_agent.messaging import InMemoryMessageBus, MessageBusError, MessageEnvelope
+    from relf_agent.messaging import InMemoryMessageBus, MessageBusError, MessageEnvelope
 
     async def check():
         bus = InMemoryMessageBus(max_entries=1)
@@ -44,8 +44,8 @@ def test_memory_bus_dedup_claim_binding_and_capacity():
 def test_real_redis_pel_claim_group_scope_and_dedup(redis_service, decode):
     from redis.asyncio import Redis
 
-    from ralf_agent.messaging import MessageBusError, MessageEnvelope
-    from ralf_agent.redis_streams import RedisStreamsBus
+    from relf_agent.messaging import MessageBusError, MessageEnvelope
+    from relf_agent.redis_streams import RedisStreamsBus
 
     async def check():
         client = Redis.from_url(redis_service, decode_responses=decode)
@@ -83,8 +83,8 @@ def test_real_redis_pel_claim_group_scope_and_dedup(redis_service, decode):
 
 
 def test_owned_close_retries_and_errors_are_safe():
-    from ralf_agent.messaging import MessageBusError
-    from ralf_agent.redis_streams import RedisStreamsBus
+    from relf_agent.messaging import MessageBusError
+    from relf_agent.redis_streams import RedisStreamsBus
 
     class Client:
         closed = 0
@@ -103,7 +103,7 @@ def test_owned_close_retries_and_errors_are_safe():
         with pytest.raises(MessageBusError, match="operation failed") as error:
             await bus.publish(
                 Scope(),
-                __import__("ralf_agent.messaging", fromlist=["MessageEnvelope"]).MessageEnvelope(
+                __import__("relf_agent.messaging", fromlist=["MessageEnvelope"]).MessageEnvelope(
                     "m", "t", {}
                 ),
             )
@@ -118,7 +118,7 @@ def test_owned_close_retries_and_errors_are_safe():
 
 
 def test_envelope_rejects_unsafe_and_oversized_json():
-    from ralf_agent.messaging import MessageEnvelope
+    from relf_agent.messaging import MessageEnvelope
 
     for payload in ({"n": float("nan")}, {"text": "\ud800"}, {"text": "x" * 262145}):
         with pytest.raises(ValidationError):
@@ -136,16 +136,16 @@ def test_real_redis_process_crash_after_engine_acceptance_replays_once(redis_ser
     import sys
     from pathlib import Path
 
-    from ralf_agent import AgentSpec, LocalEngine, ToolRegistry
-    from ralf_agent.handoff import (
+    from relf_agent import AgentSpec, LocalEngine, ToolRegistry
+    from relf_agent.handoff import (
         EngineCommandDispatcher,
         LocalCommandAdapter,
         SQLiteInbox,
         consume_delivery,
     )
-    from ralf_agent.messaging import MessageEnvelope
-    from ralf_agent.redis_streams import RedisStreamsBus
-    from ralf_agent.storage import SQLiteStore
+    from relf_agent.messaging import MessageEnvelope
+    from relf_agent.redis_streams import RedisStreamsBus
+    from relf_agent.storage import SQLiteStore
 
     from .helpers import ScriptedProvider
 
@@ -163,10 +163,10 @@ def test_real_redis_process_crash_after_engine_acceptance_replays_once(redis_ser
     asyncio.run(seed())
     script = """import asyncio,os,sys
 from pathlib import Path
-from ralf_agent import AgentSpec,LocalEngine,ToolRegistry,Scope
-from ralf_agent.handoff import SQLiteInbox,EngineCommandDispatcher,LocalCommandAdapter
-from ralf_agent.redis_streams import RedisStreamsBus
-from ralf_agent.storage import SQLiteStore
+from relf_agent import AgentSpec,LocalEngine,ToolRegistry,Scope
+from relf_agent.handoff import SQLiteInbox,EngineCommandDispatcher,LocalCommandAdapter
+from relf_agent.redis_streams import RedisStreamsBus
+from relf_agent.storage import SQLiteStore
 class Provider:
  identity={'kind':'unused','version':'1'}
  async def complete(self,messages,tools): pass
@@ -230,8 +230,8 @@ asyncio.run(main())
 
 
 def test_real_redis_concurrent_publish_and_idle_claim(redis_service):
-    from ralf_agent.messaging import MessageEnvelope
-    from ralf_agent.redis_streams import RedisStreamsBus
+    from relf_agent.messaging import MessageEnvelope
+    from relf_agent.redis_streams import RedisStreamsBus
 
     async def check():
         bus = await RedisStreamsBus.connect(redis_service, backend_id="race", prefix="race")
@@ -254,8 +254,8 @@ def test_real_connect_timeout_overrides_url_query(redis_service):
 
     from redis.asyncio import Redis
 
-    from ralf_agent.messaging import MessageBusError
-    from ralf_agent.redis_streams import RedisStreamsBus
+    from relf_agent.messaging import MessageBusError
+    from relf_agent.redis_streams import RedisStreamsBus
 
     async def check():
         client = Redis.from_url(redis_service)
@@ -281,14 +281,14 @@ def test_real_outbox_crash_after_publish_before_mark_replays_one_entry(redis_ser
     import sys
     from pathlib import Path
 
-    from ralf_agent.handoff import SQLiteOutbox
-    from ralf_agent.redis_streams import RedisStreamsBus
+    from relf_agent.handoff import SQLiteOutbox
+    from relf_agent.redis_streams import RedisStreamsBus
 
     script = """import asyncio,os,sys
-from ralf_agent import Scope
-from ralf_agent.handoff import SQLiteOutbox
-from ralf_agent.messaging import MessageEnvelope
-from ralf_agent.redis_streams import RedisStreamsBus
+from relf_agent import Scope
+from relf_agent.handoff import SQLiteOutbox
+from relf_agent.messaging import MessageEnvelope
+from relf_agent.redis_streams import RedisStreamsBus
 async def main():
  outbox=SQLiteOutbox(sys.argv[2])
  outbox.enqueue(Scope(),MessageEnvelope('outbox-stable','commands',{'kind':'submit','spec':'a','input':{}}))

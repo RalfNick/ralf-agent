@@ -8,8 +8,8 @@ from pathlib import Path
 
 import pytest
 
-from ralf_agent import AgentLimitProposal, Runtime, Scope
-from ralf_agent.temporal import TemporalEngine, replay_temporal_history
+from relf_agent import AgentLimitProposal, Runtime, Scope
+from relf_agent.temporal import TemporalEngine, replay_temporal_history
 from tests.temporal_limits_worker import runtime
 
 pytestmark = pytest.mark.skipif(
@@ -30,7 +30,7 @@ def test_accepted_limits_survive_worker_kill_without_policy_reexecution(tmp_path
     async def run():
         from temporalio.client import Client
 
-        import ralf_agent
+        import relf_agent
 
         client = await Client.connect(os.environ["RALF_TEST_TEMPORAL_ADDRESS"])
         queue = "limits-" + uuid.uuid4().hex
@@ -50,7 +50,7 @@ def test_accepted_limits_survive_worker_kill_without_policy_reexecution(tmp_path
             env = {
                 "PATH": os.environ.get("PATH", "/usr/bin:/bin"),
                 "PYTHONPATH": os.pathsep.join(
-                    [str(Path(ralf_agent.__file__).parents[1]), str(Path(__file__).parents[1])]
+                    [str(Path(relf_agent.__file__).parents[1]), str(Path(__file__).parents[1])]
                 ),
                 "RALF_TEST_TEMPORAL_ADDRESS": os.environ["RALF_TEST_TEMPORAL_ADDRESS"],
                 "RALF_TEST_TEMPORAL_QUEUE": queue,
@@ -134,7 +134,7 @@ def as_scope(scope):
 @pytest.mark.parametrize("mode", ["host-inherit", "host-disabled", "custom"])
 @pytest.mark.parametrize("managed", [False, True])
 def test_host_only_binding_and_custom_policy_reject_business_tool_dispatch(mode, managed):
-    from ralf_agent import (
+    from relf_agent import (
         AgentBindingDescriptor,
         AgentDefinition,
         AgentSpec,
@@ -147,8 +147,8 @@ def test_host_only_binding_and_custom_policy_reject_business_tool_dispatch(mode,
         ToolRegistry,
         ToolSpec,
     )
-    from ralf_agent.temporal import build_temporal_worker
-    from ralf_agent.temporal_activities import TemporalRuntime
+    from relf_agent.temporal import build_temporal_worker
+    from relf_agent.temporal_activities import TemporalRuntime
 
     async def run():
         from temporalio.client import Client

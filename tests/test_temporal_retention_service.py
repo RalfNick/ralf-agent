@@ -7,10 +7,10 @@ import uuid
 
 import pytest
 
-from ralf_agent import AgentSpec, ToolExecutionOwner, ToolRegistry, ToolSpec, WorkflowSpec
-from ralf_agent.errors import DefinitionMismatch, ValidationError
-from ralf_agent.temporal_journal import PostgresEffectJournal
-from ralf_agent.types import canonical
+from relf_agent import AgentSpec, ToolExecutionOwner, ToolRegistry, ToolSpec, WorkflowSpec
+from relf_agent.errors import DefinitionMismatch, ValidationError
+from relf_agent.temporal_journal import PostgresEffectJournal
+from relf_agent.types import canonical
 from tests.test_a2a_temporal_http_service import HTTPProvider
 from tests.test_temporal_deployment_public_service import public_system
 
@@ -137,7 +137,7 @@ def test_actual_seal_gates_compaction_and_original_sdk_cold_receipts(tmp_path, k
                     history_before = (
                         await system.client.get_workflow_handle(handle.run_id).fetch_history()
                     ).to_json()
-                    from ralf_agent import temporal_session_activities
+                    from relf_agent import temporal_session_activities
 
                     # Complete the real SQL DELETE, then observe the original
                     # actual namespace and inject an inconsistent UUID. The

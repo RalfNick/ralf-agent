@@ -4,7 +4,7 @@ from dataclasses import asdict
 
 import pytest
 
-from ralf_agent import (
+from relf_agent import (
     Document,
     InMemoryKnowledgeStore,
     KnowledgeContext,
@@ -14,8 +14,8 @@ from ralf_agent import (
     RetrievedChunk,
     Scope,
 )
-from ralf_agent.errors import DefinitionMismatch
-from ralf_agent.types import canonical
+from relf_agent.errors import DefinitionMismatch
+from relf_agent.types import canonical
 
 
 @pytest.mark.parametrize("operation", ["retrieve", "validate"])
@@ -104,7 +104,7 @@ def test_knowledge_context_keeps_sync_callable_ports_and_identity_bytes():
         identity = {"kind": "callable-source", "version": "1"}
 
         def __init__(self):
-            from ralf_agent import RetrievalResult
+            from relf_agent import RetrievalResult
 
             self.retrieve = lambda *args: RetrievalResult((), "external", 0)
             self.validate = lambda *args: None

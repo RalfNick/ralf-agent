@@ -6,10 +6,10 @@ from types import SimpleNamespace
 
 import pytest
 
-from ralf_agent import temporal_deployment_execution_state as admission_state
-from ralf_agent import temporal_deployment_release_state as release
-from ralf_agent.errors import RalfError
-from ralf_agent.types import digest
+from relf_agent import temporal_deployment_execution_state as admission_state
+from relf_agent import temporal_deployment_release_state as release
+from relf_agent.errors import RalfError
+from relf_agent.types import digest
 
 from .test_temporal_coding_state import (
     grant,
@@ -21,7 +21,7 @@ from .test_temporal_tool_execution import admission
 
 
 def coding():
-    name = "ralf_agent.temporal_deployment_coding_state"
+    name = "relf_agent.temporal_deployment_coding_state"
     assert importlib.util.find_spec(name), "Original pure Coding deployment bridge is missing"
     return importlib.import_module(name)
 
@@ -58,7 +58,7 @@ def attach(state, monkeypatch, *, version=3):
 
 def native(monkeypatch, *, cost=None):
     """Record the real original native intent after selecting deployment3."""
-    from ralf_agent import temporal_coding_state, temporal_tool_execution_state
+    from relf_agent import temporal_coding_state, temporal_tool_execution_state
 
     state, action, _ = ready()
     action.pop("delegated_execution")
@@ -529,7 +529,7 @@ def test_replacement_sdk_attempt_cannot_borrow_original_native_owner(monkeypatch
     ["native_alias", "composition_alias", "canonical_guard", "candidate", "adopter", "code"],
 )
 def test_v3_guard_registration_rejects_actual_binding_drift_before_mutation(monkeypatch, target):
-    from ralf_agent import temporal_coding_composition_state, temporal_coding_state
+    from relf_agent import temporal_coding_composition_state, temporal_coding_state
 
     module = coding()
     assert hasattr(module, "check_guard_registration"), (

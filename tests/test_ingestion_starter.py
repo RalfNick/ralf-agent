@@ -3,7 +3,7 @@ import sys
 
 import pytest
 
-from ralf_agent.starter import create_starter
+from relf_agent.starter import create_starter
 
 
 def subprocess_result(arguments, *, cwd):
@@ -11,9 +11,9 @@ def subprocess_result(arguments, *, cwd):
     import subprocess
     from pathlib import Path
 
-    import ralf_agent
+    import relf_agent
 
-    package_root = Path(ralf_agent.__file__).resolve().parent.parent
+    package_root = Path(relf_agent.__file__).resolve().parent.parent
     # Only the package under test is placed on the path. Installed verification
     # therefore uses the wheel, even when the host also has an editable SDK.
     result = subprocess.run(
@@ -70,7 +70,7 @@ def test_standalone_ingest_query_receipt_replay_and_reopen(tmp_path):
             [
                 sys.executable,
                 "-m",
-                "ralf_agent.cli",
+                "relf_agent.cli",
                 "--db",
                 ".ralf/runs.sqlite",
                 "--factory",
@@ -119,7 +119,7 @@ def test_ingest_starter_rejects_bad_user_source_without_writing(tmp_path, name, 
 
     env = {
         "PATH": os.environ.get("PATH", ""),
-        "PYTHONPATH": str(Path(__import__("ralf_agent").__file__).resolve().parent.parent),
+        "PYTHONPATH": str(Path(__import__("relf_agent").__file__).resolve().parent.parent),
     }
     result = subprocess.run(
         [

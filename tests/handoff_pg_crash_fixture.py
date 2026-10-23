@@ -5,11 +5,11 @@ import json
 import os
 import sys
 
-from ralf_agent import AgentSpec, LocalEngine, Scope, SQLiteStore, ToolRegistry
-from ralf_agent.handoff import EngineCommandDispatcher, LocalCommandAdapter
-from ralf_agent.postgres_handoff import PostgresInbox, PostgresOutbox
-from ralf_agent.redis_streams import RedisStreamsBus
-from ralf_agent.runtime_builder import EchoProvider
+from relf_agent import AgentSpec, LocalEngine, Scope, SQLiteStore, ToolRegistry
+from relf_agent.handoff import EngineCommandDispatcher, LocalCommandAdapter
+from relf_agent.postgres_handoff import PostgresInbox, PostgresOutbox
+from relf_agent.redis_streams import RedisStreamsBus
+from relf_agent.runtime_builder import EchoProvider
 
 
 async def run():
@@ -35,7 +35,7 @@ async def run():
         await store.accept(scope, delivery.message)
         result = await dispatcher.dispatch(scope, delivery.message)
     else:
-        from ralf_agent import MessageEnvelope
+        from relf_agent import MessageEnvelope
 
         message = MessageEnvelope(
             "original", "commands", {"kind": "submit", "spec": "agent", "input": "hello"}

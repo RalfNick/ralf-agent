@@ -3,8 +3,8 @@ import json
 
 import pytest
 
-from ralf_agent import AgentSpec, RuntimeBuilder, Scope, load_catalog
-from ralf_agent.errors import BudgetExceeded
+from relf_agent import AgentSpec, RuntimeBuilder, Scope, load_catalog
+from relf_agent.errors import BudgetExceeded
 
 
 @pytest.mark.parametrize("extension", ["json", "toml"])
@@ -100,7 +100,7 @@ def test_qdrant_factory_indexes_authoritative_facts_and_closes_owned_transport(
 ):
     import httpx
 
-    from ralf_agent import ComponentRegistry, RecallQuery, RuntimeProfile
+    from relf_agent import ComponentRegistry, RecallQuery, RuntimeProfile
     from tests.test_fact_index import Embedding
     from tests.test_qdrant_adapter import QdrantHTTP
 

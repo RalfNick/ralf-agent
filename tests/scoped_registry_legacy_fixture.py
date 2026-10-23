@@ -9,16 +9,16 @@ from pathlib import Path
 
 from temporalio.client import Client
 
-import ralf_agent
-from ralf_agent.temporal import build_temporal_worker
-from ralf_agent.temporal_activities import TemporalRuntime
+import relf_agent
+from relf_agent.temporal import build_temporal_worker
+from relf_agent.temporal_activities import TemporalRuntime
 
 
 class Provider:
     identity = {"kind": "legacy-scoped-drive", "version": "1"}
 
     async def complete(self, messages, tools):
-        return ralf_agent.ModelResponse(output="original answer")
+        return relf_agent.ModelResponse(output="original answer")
 
 
 async def main():
@@ -29,12 +29,12 @@ async def main():
     )
     stop = asyncio.Event()
     asyncio.get_running_loop().add_signal_handler(signal.SIGTERM, stop.set)
-    runtime = TemporalRuntime(providers={"default": Provider()}, tools=ralf_agent.ToolRegistry())
+    runtime = TemporalRuntime(providers={"default": Provider()}, tools=relf_agent.ToolRegistry())
     worker = build_temporal_worker(client, task_queue=queue, runtime=runtime)
     async with worker:
         (directory / "ready.json").write_text(
             json.dumps(
-                {"package_file": ralf_agent.__file__, "release": runtime.orchestration_release}
+                {"package_file": relf_agent.__file__, "release": runtime.orchestration_release}
             )
         )
         await stop.wait()
@@ -42,7 +42,7 @@ async def main():
         json.dumps(
             {
                 "worker_shutdown": worker.is_shutdown and not worker.is_running,
-                "package_file": ralf_agent.__file__,
+                "package_file": relf_agent.__file__,
             }
         )
     )

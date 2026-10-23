@@ -6,9 +6,9 @@ from collections import Counter
 
 import pytest
 
-from ralf_agent import temporal_deployment_execution as execution
-from ralf_agent.errors import DefinitionMismatch
-from ralf_agent.types import canonical, digest
+from relf_agent import temporal_deployment_execution as execution
+from relf_agent.errors import DefinitionMismatch
+from relf_agent.types import canonical, digest
 from tests.test_temporal_coding_observe_validation import environment
 
 ACTIVITIES = [
@@ -106,8 +106,8 @@ def test_nested_activity_rejects_drift_across_original_sdk_reads(monkeypatch, fa
             if entrypoint == "activity":
                 await execution.validate_activity(e.runtime, e.client, e.request, e.info)
             else:
-                from ralf_agent.temporal_deployment_coding_bridge import _ReadOnlyClient
-                from ralf_agent.temporal_deployment_coding_validation import CodingValidation
+                from relf_agent.temporal_deployment_coding_bridge import _ReadOnlyClient
+                from relf_agent.temporal_deployment_coding_validation import CodingValidation
 
                 validator = CodingValidation(e.runtime, e.client, e.request, e.info)
                 await validator._bootstrap_nodes(_ReadOnlyClient(e.client))
@@ -118,7 +118,7 @@ def test_nested_activity_rejects_drift_across_original_sdk_reads(monkeypatch, fa
 
 def test_missing_nested_pin_returns_no_proposal_without_writing(monkeypatch):
     async def run():
-        from ralf_agent.temporal_session_activity_reads import read_ancestry
+        from relf_agent.temporal_session_activity_reads import read_ancestry
 
         e = nested_environment(monkeypatch)
         original = await e.client.get_workflow_handle(
@@ -132,8 +132,8 @@ def test_missing_nested_pin_returns_no_proposal_without_writing(monkeypatch):
 
 
 def test_nested_coding_bootstrap_keeps_node_facts_without_repeating_session_origins(monkeypatch):
-    from ralf_agent.temporal_deployment_coding_bridge import _ReadOnlyClient
-    from ralf_agent.temporal_deployment_coding_validation import CodingValidation
+    from relf_agent.temporal_deployment_coding_bridge import _ReadOnlyClient
+    from relf_agent.temporal_deployment_coding_validation import CodingValidation
 
     async def run():
         e = nested_environment(monkeypatch)
@@ -165,7 +165,7 @@ def test_nested_coding_bootstrap_keeps_node_facts_without_repeating_session_orig
 
 
 def test_nested_reading_refuses_component_change_during_final_independent_session_read(monkeypatch):
-    from ralf_agent.temporal_session_activity_reads import read_ancestry
+    from relf_agent.temporal_session_activity_reads import read_ancestry
 
     async def run():
         e = nested_environment(monkeypatch)
@@ -193,7 +193,7 @@ def test_nested_reading_refuses_component_change_during_final_independent_sessio
 
 @pytest.mark.parametrize("failure", ["cancel", "release-drift"])
 def test_failed_reading_retry_reads_original_session_facts_again(monkeypatch, failure):
-    from ralf_agent.temporal_session_activity_reads import read_ancestry
+    from relf_agent.temporal_session_activity_reads import read_ancestry
 
     async def run():
         e = nested_environment(monkeypatch)
@@ -230,8 +230,8 @@ def test_failed_reading_retry_reads_original_session_facts_again(monkeypatch, fa
 @pytest.mark.parametrize("port", ["entry", "method", "sources", "ancestry"])
 @pytest.mark.parametrize("entrypoint", ["activity", "admit", "bootstrap"])
 def test_first_sdk_read_cannot_replace_later_ancestry_implementation(monkeypatch, port, entrypoint):
-    from ralf_agent import temporal_deployment_execution_state as admission
-    from ralf_agent import temporal_session_activity_reads as readings
+    from relf_agent import temporal_deployment_execution_state as admission
+    from relf_agent import temporal_session_activity_reads as readings
 
     async def run():
         e = nested_environment(monkeypatch)
@@ -265,8 +265,8 @@ def test_first_sdk_read_cannot_replace_later_ancestry_implementation(monkeypatch
             if entrypoint == "activity":
                 await execution.validate_activity(e.runtime, e.client, e.request, e.info)
             elif entrypoint == "bootstrap":
-                from ralf_agent.temporal_deployment_coding_bridge import _ReadOnlyClient
-                from ralf_agent.temporal_deployment_coding_validation import CodingValidation
+                from relf_agent.temporal_deployment_coding_bridge import _ReadOnlyClient
+                from relf_agent.temporal_deployment_coding_validation import CodingValidation
 
                 validator = CodingValidation(e.runtime, e.client, e.request, e.info)
                 await validator._bootstrap_nodes(_ReadOnlyClient(e.client))

@@ -5,23 +5,23 @@ from dataclasses import asdict
 
 import pytest
 
-from ralf_agent import AgentSpec, GraphNode, GraphWorkflowSpec, Scope, TeamSpec, ToolRegistry
-from ralf_agent.errors import AuthorizationDenied, DefinitionMismatch, ValidationError
-from ralf_agent.temporal_activities import TemporalRuntime
-from ralf_agent.temporal_session_state import TemporalSessionState
-from ralf_agent.types import digest, submission_request
+from relf_agent import AgentSpec, GraphNode, GraphWorkflowSpec, Scope, TeamSpec, ToolRegistry
+from relf_agent.errors import AuthorizationDenied, DefinitionMismatch, ValidationError
+from relf_agent.temporal_activities import TemporalRuntime
+from relf_agent.temporal_session_state import TemporalSessionState
+from relf_agent.types import digest, submission_request
 
 from .test_temporal_sessions import Provider, submit
 
 
 def functions():
-    from ralf_agent.temporal_session_tree import project_lineage, root_lineage, validate_lineage
+    from relf_agent.temporal_session_tree import project_lineage, root_lineage, validate_lineage
 
     return root_lineage, project_lineage, validate_lineage
 
 
 def original(spec):
-    from ralf_agent import BindingCatalog
+    from relf_agent import BindingCatalog
 
     host = TemporalRuntime(
         providers={"default": Provider()},
@@ -122,7 +122,7 @@ def test_forged_lineage_refuses_before_any_source_or_model(damage):
 
 
 def test_dynamic_paths_use_adopted_node_id_and_authorized_member():
-    from ralf_agent import DAGNode, DAGProposal, DynamicWorkflowSpec
+    from relf_agent import DAGNode, DAGProposal, DynamicWorkflowSpec
 
     leaf = AgentSpec("writer", "Write")
     state, root = original(DynamicWorkflowSpec("d", {"writer": leaf}))
@@ -155,8 +155,8 @@ def test_unknown_member_and_different_child_definition_are_refused_at_projection
 
 
 def test_sequence_members_have_distinct_leaf_paths_and_definition_identity():
-    from ralf_agent import WorkflowSpec
-    from ralf_agent.temporal_session_tree import member_projection
+    from relf_agent import WorkflowSpec
+    from relf_agent.temporal_session_tree import member_projection
 
     first, second = AgentSpec("a", "A"), AgentSpec("b", "B")
     sequence = WorkflowSpec("steps", [first, second])
@@ -175,7 +175,7 @@ def test_sequence_members_have_distinct_leaf_paths_and_definition_identity():
 
 
 def test_root_parent_cannot_be_used_as_a_private_member():
-    from ralf_agent.temporal_session_tree import member_projection
+    from relf_agent.temporal_session_tree import member_projection
 
     state, root = original(TeamSpec("t", {"writer": AgentSpec("writer", "Write")}))
     with pytest.raises(ValidationError):
@@ -184,9 +184,9 @@ def test_root_parent_cannot_be_used_as_a_private_member():
 
 @pytest.mark.parametrize("member_choice", ["inherit", "disabled"])
 def test_member_projection_preserves_original_session_selection(member_choice):
-    from ralf_agent import AgentBindingDescriptor, BindingSelection, BoundDefinition
-    from ralf_agent.temporal_bindings import normalize_request, project_child
-    from ralf_agent.temporal_session_tree import member_projection, root_lineage
+    from relf_agent import AgentBindingDescriptor, BindingSelection, BoundDefinition
+    from relf_agent.temporal_bindings import normalize_request, project_child
+    from relf_agent.temporal_session_tree import member_projection, root_lineage
 
     leaf = AgentSpec("writer", "Write")
     spec = TeamSpec("t", {"writer": leaf})

@@ -7,7 +7,7 @@ dev14 的 TeamSpec 和 DynamicWorkflowSpec 使用受管理父子 Run。各成员
 ## 从安装包开始
 
 ```shell
-ralf --format text init my-team --template team
+relf --format text init my-team --template team
 cd my-team
 python -m agent_app --input hello --command-id first
 ```
@@ -17,7 +17,7 @@ python -m agent_app --input hello --command-id first
 ```python
 import asyncio
 
-from ralf_agent import AgentSpec, RuntimeBuilder, RuntimeProfile, TeamSpec
+from relf_agent import AgentSpec, RuntimeBuilder, RuntimeProfile, TeamSpec
 
 
 profile = RuntimeProfile("team", "1", {"default": {"adapter": "offline-echo"}})
@@ -50,7 +50,7 @@ TeamStrategy 是纯同步 `select(TeamRequest) -> TeamSelection`，identity 必�
 DynamicWorkflowSpec 限定 members、planner、verifier、child_budget、max_revisions=1..32、max_steps=1..256 和 max_concurrency。默认 RulePlanner 生成成员列表，CompleteVerifier 取最后结果；本增量是有限委派计划，不是动态 DAG/任意图热改。
 
 ```python
-from ralf_agent import AgentSpec, DynamicWorkflowSpec, PlanProposal, PlanStep, Verification
+from relf_agent import AgentSpec, DynamicWorkflowSpec, PlanProposal, PlanStep, Verification
 
 
 class Planner:

@@ -5,15 +5,15 @@ import importlib.util
 
 import pytest
 
-from ralf_agent import AgentSpec, LocalEngine, ToolRegistry
-from ralf_agent.errors import ValidationError
-from ralf_agent.storage import SQLiteStore
+from relf_agent import AgentSpec, LocalEngine, ToolRegistry
+from relf_agent.errors import ValidationError
+from relf_agent.storage import SQLiteStore
 
 from .helpers import ScriptedProvider
 
 
 def test_delegated_authority_is_available():
-    assert importlib.util.find_spec("ralf_agent.local_delegated_coding") is not None
+    assert importlib.util.find_spec("relf_agent.local_delegated_coding") is not None
 
 
 def test_schema14_activation_is_atomic_and_keeps_native_history(tmp_path):
@@ -35,12 +35,12 @@ def test_schema14_activation_is_atomic_and_keeps_native_history(tmp_path):
     )
     with store.transaction():
         store.prepare_delegated_execution()
-        store.publish_native_history(__import__("ralf_agent").Scope(), "s", "m", {"x": 1})
+        store.publish_native_history(__import__("relf_agent").Scope(), "s", "m", {"x": 1})
     assert (
         store.conn.execute("SELECT value FROM metadata WHERE key='schema_version'").fetchone()[0]
         == "14"
     )
-    assert store.native_history_publications(__import__("ralf_agent").Scope(), "s") == [{"x": 1}]
+    assert store.native_history_publications(__import__("relf_agent").Scope(), "s") == [{"x": 1}]
     assert store.create_session_admission()._enabled()
     store.close()
     SQLiteStore(tmp_path / "runs.db", readonly=True).close()
@@ -90,8 +90,8 @@ class LifecycleRunner:
         self.state = None
 
     async def execute(self, envelope, authority):
-        from ralf_agent.executors import EffectObservation
-        from ralf_agent.types import digest
+        from relf_agent.executors import EffectObservation
+        from relf_agent.types import digest
 
         self.envelope, self.authority = envelope, authority
         self.calls.append("execute")
@@ -195,8 +195,8 @@ class LifecycleRunner:
 
 
 def coding_engine(tmp_path, runner, responses=None):
-    from ralf_agent import ModelResponse
-    from ralf_agent.delegated_coding import register_coding_tool
+    from relf_agent import ModelResponse
+    from relf_agent.delegated_coding import register_coding_tool
 
     from .helpers import tool_response
 
@@ -379,8 +379,8 @@ def test_native_grant_cannot_resume_after_original_owner_changes(tmp_path):
             providers={"default": provider},
             tools=runtime.tools,
         )
-        from ralf_agent.errors import AuthorizationDenied
-        from ralf_agent.local_delegated_coding import LocalCodingAuthority
+        from relf_agent.errors import AuthorizationDenied
+        from relf_agent.local_delegated_coding import LocalCodingAuthority
 
         authority = LocalCodingAuthority(rebuilt, handle.run_id, action["id"])
         saved = next(a for a in rebuilt.store.run(handle.run_id)["actions"] if a["kind"] == "tool")[
@@ -399,7 +399,7 @@ def test_native_grant_cannot_resume_after_original_owner_changes(tmp_path):
 
 def test_corrupt_native_request_cannot_release_original_journal(tmp_path):
     async def exercise():
-        from ralf_agent.errors import DefinitionMismatch
+        from relf_agent.errors import DefinitionMismatch
 
         runner = LifecycleRunner(crash=True, fail_stop=True)
         runtime, _ = coding_engine(tmp_path, runner)
@@ -429,7 +429,7 @@ def test_corrupt_native_request_cannot_release_original_journal(tmp_path):
 
 
 def test_graph_direct_coding_tool_accepted_before_business_io(tmp_path):
-    from ralf_agent import GraphNode, GraphWorkflowSpec
+    from relf_agent import GraphNode, GraphWorkflowSpec
 
     runner = LifecycleRunner()
     runtime, provider = coding_engine(tmp_path, runner)
@@ -450,7 +450,7 @@ def test_graph_direct_coding_tool_accepted_before_business_io(tmp_path):
 
 
 def test_unselected_runner_preserves_legacy_manifest_and_schema(tmp_path):
-    from ralf_agent import ModelResponse
+    from relf_agent import ModelResponse
 
     runtime, _ = coding_engine(tmp_path, LifecycleRunner(), [ModelResponse(output="done")])
     handle = runtime.submit(AgentSpec("ordinary", "x"), "x", command_id="s")
@@ -496,7 +496,7 @@ def test_queryable_unknown_case_is_independent_of_action_status(tmp_path):
 
 def test_stop_receipt_without_prepared_adoption_keeps_original_namespace(tmp_path):
     async def exercise():
-        from ralf_agent.errors import DefinitionMismatch
+        from relf_agent.errors import DefinitionMismatch
 
         runner = LifecycleRunner(crash=True, fail_stop=True)
         runtime, _ = coding_engine(tmp_path, runner)
@@ -632,7 +632,7 @@ def test_optional_reservation_facts_require_exact_typed_original_identity(tmp_pa
         runtime.approve(handle.run_id, action["id"], action["digest"], command_id="approve")
         await runtime.drive(handle.run_id)
         runtime.store.malformed = True
-        from ralf_agent.errors import AuthorizationDenied
+        from relf_agent.errors import AuthorizationDenied
 
         with pytest.raises(AuthorizationDenied, match="reservation"):
             runner.authority.check(runner.envelope, runner.identity)
@@ -734,7 +734,7 @@ def test_ordinary_output_schema_tool_defaults_are_not_declarations(tmp_path):
 
 
 def test_graph_argument_and_schema_tool_values_do_not_select_coding(tmp_path):
-    from ralf_agent import GraphNode, GraphWorkflowSpec, Literal, ToolSpec
+    from relf_agent import GraphNode, GraphWorkflowSpec, Literal, ToolSpec
 
     async def read(arguments, context):
         return arguments
@@ -766,7 +766,7 @@ def test_graph_argument_and_schema_tool_values_do_not_select_coding(tmp_path):
 
 
 def test_nested_graph_actual_coding_selection_has_original_parent_gate(tmp_path):
-    from ralf_agent import GraphNode, GraphWorkflowSpec, TeamSpec
+    from relf_agent import GraphNode, GraphWorkflowSpec, TeamSpec
 
     runtime, provider = coding_engine(tmp_path, LifecycleRunner())
     graph = GraphWorkflowSpec("graph", (GraphNode("coding", tool="coding"),))
@@ -778,7 +778,7 @@ def test_nested_graph_actual_coding_selection_has_original_parent_gate(tmp_path)
 
 @pytest.mark.parametrize("kind", ["team", "dynamic", "bound_agent"])
 def test_actual_composite_coding_selection_preserves_explicit_binding_requirement(tmp_path, kind):
-    from ralf_agent import AgentDefinition, DynamicWorkflowSpec, TeamSpec
+    from relf_agent import AgentDefinition, DynamicWorkflowSpec, TeamSpec
 
     runtime, provider = coding_engine(tmp_path, LifecycleRunner())
     agent = AgentSpec("a", "x", ("coding",))

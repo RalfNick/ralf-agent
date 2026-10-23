@@ -6,14 +6,14 @@ from dataclasses import asdict
 
 import pytest
 
-from ralf_agent import AgentSpec, Scope, ToolCall, ToolRegistry, WorkflowSpec
-from ralf_agent.errors import DefinitionMismatch, ValidationError
-from ralf_agent.model_continuation import ContinuedModelResponse, ModelContinuation
-from ralf_agent.model_history import CompleteModelHistory
-from ralf_agent.temporal_activities import TemporalRuntime
-from ralf_agent.temporal_session_state import TemporalSessionState
-from ralf_agent.temporal_state import TemporalRunState
-from ralf_agent.types import digest, submission_request
+from relf_agent import AgentSpec, Scope, ToolCall, ToolRegistry, WorkflowSpec
+from relf_agent.errors import DefinitionMismatch, ValidationError
+from relf_agent.model_continuation import ContinuedModelResponse, ModelContinuation
+from relf_agent.model_history import CompleteModelHistory
+from relf_agent.temporal_activities import TemporalRuntime
+from relf_agent.temporal_session_state import TemporalSessionState
+from relf_agent.temporal_state import TemporalRunState
+from relf_agent.types import digest, submission_request
 from tests.test_temporal_memory_bindings import grant
 
 
@@ -35,7 +35,7 @@ class SessionPolicy(CompleteModelHistory):
         )
 
     def validate_frame(self, frame, messages):
-        from ralf_agent.session_model_history import validate_model_history_frame
+        from relf_agent.session_model_history import validate_model_history_frame
 
         validate_model_history_frame(frame, messages)
 
@@ -94,7 +94,7 @@ def setup(definition=None, *, policy=True, provider=None, **options):
         **options,
     )
     definition = definition or AgentSpec("answer", "Answer", tools=("one", "two"))
-    from ralf_agent.temporal_bindings import normalize_request
+    from relf_agent.temporal_bindings import normalize_request
 
     session = TemporalSessionState(
         {
@@ -264,7 +264,7 @@ def test_sequence_freezes_each_actual_episode_before_node_reset():
 
 @pytest.mark.parametrize("managed", [False, True])
 def test_native_context_uses_current_task_and_preserves_all_past_messages(managed):
-    from ralf_agent.managed_context import ManagedContextPipeline
+    from relf_agent.managed_context import ManagedContextPipeline
 
     class Knowledge:
         identity = {"kind": "current-task-capture", "version": "1"}
@@ -298,12 +298,12 @@ def test_native_context_uses_current_task_and_preserves_all_past_messages(manage
 
 @pytest.mark.parametrize("managed", [False, True])
 def test_external_native_history_is_saved_at_isolated_original_session_address(managed):
-    from ralf_agent import InMemoryMemory
-    from ralf_agent.session_model_history import native_history_address
+    from relf_agent import InMemoryMemory
+    from relf_agent.session_model_history import native_history_address
 
     async def run():
         backend = InMemoryMemory()
-        from ralf_agent.managed_context import ManagedContextPipeline
+        from relf_agent.managed_context import ManagedContextPipeline
 
         host, session, provider = setup(
             session_store=backend,
@@ -436,8 +436,8 @@ def test_original_root_failure_never_publishes_frozen_partial_episode(root_state
 
 @pytest.mark.parametrize("kind", ["graph", "nested"])
 def test_composite_actual_agent_paths_continue_independently_over_two_turns(kind):
-    from ralf_agent import GraphNode, GraphWorkflowSpec, TeamSpec
-    from ralf_agent.temporal_parent_state import TemporalParentState
+    from relf_agent import GraphNode, GraphWorkflowSpec, TeamSpec
+    from relf_agent.temporal_parent_state import TemporalParentState
 
     async def run():
         members = [
@@ -544,7 +544,7 @@ def test_composite_actual_agent_paths_continue_independently_over_two_turns(kind
 
 @pytest.mark.parametrize("mode", ["ack-loss", "cas-conflict"])
 def test_native_original_receipt_recovery_never_resends_model_or_tool(mode):
-    from ralf_agent import InMemoryMemory
+    from relf_agent import InMemoryMemory
 
     class Faulted(InMemoryMemory):
         failed = False
@@ -650,7 +650,7 @@ def test_idle_rebind_changes_native_epoch_without_changing_old_turn_receipt():
 
 @pytest.mark.parametrize("mode", ["ref-without-host", "disabled", "ref-run"])
 def test_each_actual_agent_selects_its_original_history_policy(mode):
-    from ralf_agent import AgentBindingDescriptor, AgentDefinition, BindingCatalog, BindingSelection
+    from relf_agent import AgentBindingDescriptor, AgentDefinition, BindingCatalog, BindingSelection
 
     async def run():
         catalog = BindingCatalog(scope=Scope())
@@ -684,7 +684,7 @@ def test_each_actual_agent_selects_its_original_history_policy(mode):
 
 @pytest.mark.parametrize("managed", [False, True])
 def test_joint_eight_recreates_only_an_original_unadmitted_context_timeout(managed):
-    from ralf_agent.managed_context import ManagedContextPipeline
+    from relf_agent.managed_context import ManagedContextPipeline
 
     async def run():
         host, session, provider = setup(
@@ -740,7 +740,7 @@ def test_joint_eight_recreates_only_an_original_unadmitted_context_timeout(manag
 
 
 def test_actual_harness_cannot_discard_a_published_native_turn():
-    from ralf_agent import NativeHarness
+    from relf_agent import NativeHarness
 
     class Truncating(NativeHarness):
         identity = {"kind": "session-truncate-fixture", "version": "1"}
@@ -779,7 +779,7 @@ def test_actual_harness_cannot_discard_a_published_native_turn():
 
 
 def test_native_external_snapshot_is_in_original_frame_and_is_accepted_once():
-    from ralf_agent import InMemoryMemory
+    from relf_agent import InMemoryMemory
 
     class Observed(InMemoryMemory):
         reads = 0
@@ -809,7 +809,7 @@ def test_native_external_snapshot_is_in_original_frame_and_is_accepted_once():
 
 @pytest.mark.parametrize("snapshot_id", ["[]", '"opaque"', '{"revision":true}'])
 def test_original_history_rejects_malformed_native_snapshot_without_workflow_crash(snapshot_id):
-    from ralf_agent import InMemoryMemory
+    from relf_agent import InMemoryMemory
 
     async def run():
         host, session, provider = setup(session_store=InMemoryMemory(), session_writes=True)
@@ -869,7 +869,7 @@ def test_original_history_rejects_malformed_native_snapshot_without_workflow_cra
 
 
 def test_mixed_session_publication_is_atomic_when_legacy_pair_cannot_be_adopted():
-    from ralf_agent import AgentBindingDescriptor, BindingSelection, BoundDefinition, ModelResponse
+    from relf_agent import AgentBindingDescriptor, BindingSelection, BoundDefinition, ModelResponse
 
     class LargeFinal(SignedTools):
         async def complete(self, messages, tools):
@@ -921,8 +921,8 @@ def test_mixed_session_publication_is_atomic_when_legacy_pair_cannot_be_adopted(
 
 @pytest.mark.parametrize("allow", [False, True])
 def test_session_large_tool_projection_is_explicit_and_keeps_stored_original(allow):
-    from ralf_agent import InMemoryArtifactStore, ModelResponse, ToolSpec
-    from ralf_agent.data_context import ManagedDataContext
+    from relf_agent import InMemoryArtifactStore, ModelResponse, ToolSpec
+    from relf_agent.data_context import ManagedDataContext
 
     class Provider:
         identity = {"kind": "session-large-native-result", "version": "1"}
@@ -1011,9 +1011,9 @@ def test_session_large_tool_projection_is_explicit_and_keeps_stored_original(all
 
 def test_pure_publication_filters_failed_members_under_assumed_successful_root_evidence():
     """Predicate coverage only; current Temporal parent API always fails on a failed child."""
-    from ralf_agent import GraphNode, GraphWorkflowSpec
-    from ralf_agent.temporal_parent_state import TemporalParentState
-    from ralf_agent.temporal_session_model_history import publish
+    from relf_agent import GraphNode, GraphWorkflowSpec
+    from relf_agent.temporal_parent_state import TemporalParentState
+    from relf_agent.temporal_session_model_history import publish
 
     async def run():
         definition = GraphWorkflowSpec(
@@ -1072,7 +1072,7 @@ def test_pure_publication_filters_failed_members_under_assumed_successful_root_e
 
 
 def test_nullable_schema_keeps_accepted_null_final_across_two_native_turns():
-    from ralf_agent import ModelResponse
+    from relf_agent import ModelResponse
 
     class Nullable:
         identity = {"kind": "native-session-null", "version": "1"}
@@ -1099,9 +1099,9 @@ def test_nullable_schema_keeps_accepted_null_final_across_two_native_turns():
 
 
 def test_native_session_publication_enforces_utf8_stream_capacity_atomically(monkeypatch):
-    from ralf_agent import ModelResponse
-    from ralf_agent import temporal_session_model_history as native
-    from ralf_agent.types import canonical
+    from relf_agent import ModelResponse
+    from relf_agent import temporal_session_model_history as native
+    from relf_agent.types import canonical
 
     class UnicodeFinal:
         identity = {"kind": "native-utf8-capacity", "version": "1"}
@@ -1145,8 +1145,8 @@ def test_native_session_publication_enforces_utf8_stream_capacity_atomically(mon
 
 @pytest.mark.parametrize("external", [False, True])
 def test_full_native_stream_fails_before_model_dispatch_and_releases_session(monkeypatch, external):
-    from ralf_agent import InMemoryMemory, ModelResponse
-    from ralf_agent import temporal_session_model_history as native
+    from relf_agent import InMemoryMemory, ModelResponse
+    from relf_agent import temporal_session_model_history as native
 
     class SmallFinal:
         identity = {"kind": "bounded-native-final", "version": "1"}
@@ -1206,9 +1206,9 @@ def test_full_native_stream_fails_before_model_dispatch_and_releases_session(mon
 def test_late_native_capacity_failure_is_failed_run_with_no_partial_publication(
     monkeypatch, external
 ):
-    from ralf_agent import InMemoryMemory, ModelResponse
-    from ralf_agent import temporal_session_model_history as native
-    from ralf_agent.types import canonical
+    from relf_agent import InMemoryMemory, ModelResponse
+    from relf_agent import temporal_session_model_history as native
+    from relf_agent.types import canonical
 
     class GrowingFinal:
         identity = {"kind": "growing-native-final", "version": "1"}
@@ -1258,7 +1258,7 @@ def test_late_native_capacity_failure_is_failed_run_with_no_partial_publication(
         )
         assert not session.snapshot()["busy"] and session.native_history == before
         if external:
-            from ralf_agent.session_model_history import native_history_address
+            from relf_agent.session_model_history import native_history_address
 
             assert (
                 backend.read(Scope(**session.scope), native_history_address(next(iter(before))))[0]
@@ -1272,11 +1272,11 @@ def test_late_native_capacity_failure_is_failed_run_with_no_partial_publication(
 
 @pytest.mark.parametrize("kind", ["team", "plan"])
 def test_original_parent_rejects_combined_same_stream_episodes_atomically(monkeypatch, kind):
-    from ralf_agent import DynamicWorkflowSpec, TeamSpec
-    from ralf_agent import temporal_session_model_history as native
-    from ralf_agent.orchestration_types import ChildCall, TeamSelection
-    from ralf_agent.planning import PlanProposal
-    from ralf_agent.temporal_parent_state import TemporalParentState
+    from relf_agent import DynamicWorkflowSpec, TeamSpec
+    from relf_agent import temporal_session_model_history as native
+    from relf_agent.orchestration_types import ChildCall, TeamSelection
+    from relf_agent.planning import PlanProposal
+    from relf_agent.temporal_parent_state import TemporalParentState
 
     async def run():
         monkeypatch.setattr(native, "MAX_TURNS", 1)
@@ -1346,9 +1346,9 @@ def test_original_parent_rejects_combined_same_stream_episodes_atomically(monkey
 
 
 def test_failed_root_external_candidates_still_block_physical_stream_capacity(monkeypatch):
-    from ralf_agent import InMemoryMemory, ModelResponse
-    from ralf_agent import temporal_session_model_history as native
-    from ralf_agent.session_model_history import native_history_address
+    from relf_agent import InMemoryMemory, ModelResponse
+    from relf_agent import temporal_session_model_history as native
+    from relf_agent.session_model_history import native_history_address
 
     class Final:
         identity = {"kind": "failed-root-physical-capacity", "version": "1"}

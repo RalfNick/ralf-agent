@@ -8,7 +8,7 @@ from dataclasses import FrozenInstanceError
 
 import pytest
 
-from ralf_agent import (
+from relf_agent import (
     AgentSpec,
     GraphNode,
     GraphWorkflowSpec,
@@ -19,15 +19,15 @@ from ralf_agent import (
     ToolSpec,
     WorkflowSpec,
 )
-from ralf_agent.errors import (
+from relf_agent.errors import (
     CoordinatorBusy,
     DefinitionMismatch,
     IdempotencyConflict,
     ValidationError,
 )
-from ralf_agent.governance import LocalExecutionPolicy
-from ralf_agent.orchestration_types import DynamicWorkflowSpec, TeamSpec
-from ralf_agent.types import submission_request
+from relf_agent.governance import LocalExecutionPolicy
+from relf_agent.orchestration_types import DynamicWorkflowSpec, TeamSpec
+from relf_agent.types import submission_request
 
 from .helpers import ScriptedProvider, tool_response
 
@@ -590,10 +590,10 @@ def test_parallel_deadline_retains_both_active_branches_and_never_starts_join(tm
 
 @pytest.mark.parametrize("kind", ["graph", "parallel", "team", "dynamic"])
 def test_composite_final_adoption_rechecks_after_a_synchronous_policy(tmp_path, kind):
-    from ralf_agent.planning import CompleteVerifier
-    from ralf_agent.teams import SequentialTeam
-    from ralf_agent.workflow import StaticWorkflowInterpreter
-    from ralf_agent.workflow_scheduler import StaticWorkflowScheduler
+    from relf_agent.planning import CompleteVerifier
+    from relf_agent.teams import SequentialTeam
+    from relf_agent.workflow import StaticWorkflowInterpreter
+    from relf_agent.workflow_scheduler import StaticWorkflowScheduler
 
     class SlowFinalInterpreter(StaticWorkflowInterpreter):
         identity = {"kind": "slow-final-interpreter", "version": "1"}
@@ -751,7 +751,7 @@ def test_final_completion_rechecks_after_a_synchronous_session_append(tmp_path):
 
 @pytest.mark.parametrize("late_failure", [False, True])
 def test_harness_adoption_rechecks_deadline_after_its_synchronous_proposal(tmp_path, late_failure):
-    from ralf_agent.harness import NativeHarness
+    from relf_agent.harness import NativeHarness
 
     class SlowHarness(NativeHarness):
         identity = {"kind": "slow-deadline-harness", "version": "1"}

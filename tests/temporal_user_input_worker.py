@@ -7,7 +7,7 @@ from dataclasses import asdict
 from datetime import timedelta
 from pathlib import Path
 
-from ralf_agent import (
+from relf_agent import (
     AgentSpec,
     DynamicWorkflowSpec,
     GraphNode,
@@ -17,15 +17,15 @@ from ralf_agent import (
     ToolCall,
     ToolRegistry,
 )
-from ralf_agent.dag_planning import DAGNode, DAGProposal, PlanningConclusion
-from ralf_agent.model_continuation import ContinuedModelResponse, ModelContinuation
-from ralf_agent.model_history import CompleteModelHistory
-from ralf_agent.orchestration_types import ChildCall
-from ralf_agent.temporal import _workflow_runner
-from ralf_agent.temporal_activities import TemporalRuntime
-from ralf_agent.types import digest
-from ralf_agent.user_input import UserInputPolicy, register_user_input
-from ralf_agent.workflow import Literal, ValueRef
+from relf_agent.dag_planning import DAGNode, DAGProposal, PlanningConclusion
+from relf_agent.model_continuation import ContinuedModelResponse, ModelContinuation
+from relf_agent.model_history import CompleteModelHistory
+from relf_agent.orchestration_types import ChildCall
+from relf_agent.temporal import _workflow_runner
+from relf_agent.temporal_activities import TemporalRuntime
+from relf_agent.types import digest
+from relf_agent.user_input import UserInputPolicy, register_user_input
+from relf_agent.workflow import Literal, ValueRef
 
 FENCE_REQUESTED = "input-fence-requested"
 FENCE_ENTERED = "input-fence-entered.jsonl"
@@ -36,10 +36,10 @@ def fenced_activities(execution, client, root):
     """Hold only a real original retryable Context, before its handler runs."""
     from temporalio import activity
 
-    from ralf_agent.temporal_activities import registered_activities
-    from ralf_agent.temporal_control_activities import registered_parent_activities
-    from ralf_agent.temporal_session_activities import registered_session_activities
-    from ralf_agent.temporal_state import CONTEXT_ACTIVITY
+    from relf_agent.temporal_activities import registered_activities
+    from relf_agent.temporal_control_activities import registered_parent_activities
+    from relf_agent.temporal_session_activities import registered_session_activities
+    from relf_agent.temporal_state import CONTEXT_ACTIVITY
 
     originals = (
         registered_activities(execution, client)
@@ -194,10 +194,10 @@ async def run():
     from temporalio.client import Client
     from temporalio.worker import Worker
 
-    from ralf_agent.temporal_parent_workflow import TemporalParentWorkflow
-    from ralf_agent.temporal_session_workflow import TemporalSessionWorkflow
-    from ralf_agent.temporal_state import text
-    from ralf_agent.temporal_workflow import (
+    from relf_agent.temporal_parent_workflow import TemporalParentWorkflow
+    from relf_agent.temporal_session_workflow import TemporalSessionWorkflow
+    from relf_agent.temporal_state import text
+    from relf_agent.temporal_workflow import (
         TemporalCommandRegistryWorkflow,
         TemporalRunWorkflow,
     )

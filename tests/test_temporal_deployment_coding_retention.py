@@ -6,7 +6,7 @@ from types import SimpleNamespace
 
 import pytest
 
-from ralf_agent.types import digest
+from relf_agent.types import digest
 from tests.test_temporal_deployment_control_projection import bound_registry
 
 pytest.importorskip("temporalio")
@@ -97,10 +97,10 @@ async def scenario(
 
     wrapper, state, request, root, _ = bound_registry()
     if parent:
-        from ralf_agent import AgentSpec, GraphNode, GraphWorkflowSpec
-        from ralf_agent.temporal_activities import TemporalRuntime
-        from ralf_agent.temporal_coding_composition_protocol import publish
-        from ralf_agent.types import submission_request
+        from relf_agent import AgentSpec, GraphNode, GraphWorkflowSpec
+        from relf_agent.temporal_activities import TemporalRuntime
+        from relf_agent.temporal_coding_composition_protocol import publish
+        from relf_agent.types import submission_request
         from tests.test_temporal_deployment_coding_registry import coding_request, registry
         from tests.test_temporal_engine import Provider
         from tests.test_temporal_engine import registry as tools
@@ -232,7 +232,7 @@ async def scenario(
         if fault != "missing_reserve_signal":
             await signal(events, "reserve_command", envelope)
         if fault == "missing_acceptance_rejected_update":
-            from ralf_agent.errors import IdempotencyConflict
+            from relf_agent.errors import IdempotencyConflict
 
             conflicting = copy.deepcopy(request)
             conflicting["payload_digest"] = "f" * 64
@@ -307,7 +307,7 @@ async def scenario(
             await signal(events, "retire_deployment_root", retirement)
     targets = set() if unused else {root["run_id"]}
     if fault in {"rejected_target", "unknown_target"}:
-        from ralf_agent.temporal_deployment_admission import root_run_id
+        from relf_agent.temporal_deployment_admission import root_run_id
 
         refused = copy.deepcopy(request)
         refused["command_id"] = "capacity-refused"
@@ -575,9 +575,9 @@ def test_cleanup_deletion_gate_is_separate_from_assembly_close_and_keeps_private
     import uuid
     from pathlib import Path
 
-    from ralf_agent import Scope
-    from ralf_agent.errors import CloseIncomplete
-    from ralf_agent.governance import DeploymentAdmissionPolicy
+    from relf_agent import Scope
+    from relf_agent.errors import CloseIncomplete
+    from relf_agent.governance import DeploymentAdmissionPolicy
     from tests import temporal_deployment_coding_retention as helper
     from tests import test_temporal_deployment_coding_service as service
 
@@ -736,7 +736,7 @@ def test_fixture_exit_closes_only_dummy_fd_and_preserves_original_recovery(
 
     import psycopg
 
-    from ralf_agent.errors import CloseIncomplete
+    from relf_agent.errors import CloseIncomplete
     from tests import temporal_deployment_coding_worker_fixture as worker
     from tests import test_temporal_deployment_coding_service as service
 

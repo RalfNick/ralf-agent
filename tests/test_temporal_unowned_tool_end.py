@@ -5,9 +5,9 @@ from dataclasses import asdict
 
 import pytest
 
-from ralf_agent import AgentSpec, Scope, TemporalRuntime, ToolRegistry, ToolSpec
-from ralf_agent.temporal_state import TemporalRunState
-from ralf_agent.types import submission_request
+from relf_agent import AgentSpec, Scope, TemporalRuntime, ToolRegistry, ToolSpec
+from relf_agent.temporal_state import TemporalRunState
+from relf_agent.types import submission_request
 from tests.test_temporal_engine import Provider
 
 

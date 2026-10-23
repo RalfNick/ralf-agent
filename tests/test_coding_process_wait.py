@@ -12,8 +12,8 @@ import pytest
 
 
 def monitor_type():
-    assert importlib.util.find_spec("ralf_agent.coding_process_wait") is not None
-    from ralf_agent.coding_process_wait import ChildExitMonitor
+    assert importlib.util.find_spec("relf_agent.coding_process_wait") is not None
+    from relf_agent.coding_process_wait import ChildExitMonitor
 
     return ChildExitMonitor
 
@@ -74,7 +74,7 @@ def test_numeric_cold_pid_is_not_a_registered_direct_child():
 
 
 def test_unsupported_platform_has_no_reaping_fallback(monkeypatch):
-    from ralf_agent import coding_process_wait as module
+    from relf_agent import coding_process_wait as module
 
     monkeypatch.setattr(module.sys, "platform", "unsupported-posix")
     with pytest.raises(RuntimeError):
@@ -82,7 +82,7 @@ def test_unsupported_platform_has_no_reaping_fallback(monkeypatch):
 
 
 def test_failed_zero_byte_darwin_group_query_is_not_absence(monkeypatch):
-    from ralf_agent import coding_process_wait as module
+    from relf_agent import coding_process_wait as module
 
     def failed_query(*args):
         ctypes.set_errno(errno.EACCES)
@@ -100,7 +100,7 @@ def test_failed_zero_byte_darwin_group_query_is_not_absence(monkeypatch):
 def test_darwin_zombie_permission_exception_requires_only_original_leader(monkeypatch, members):
     from types import SimpleNamespace
 
-    from ralf_agent import coding_process_wait as module
+    from relf_agent import coding_process_wait as module
 
     process = SimpleNamespace(pid=12345, returncode=None)
     monitor = SimpleNamespace(_process=process, _closed=False, exited=lambda: True)
@@ -121,7 +121,7 @@ def test_darwin_zombie_permission_exception_requires_only_original_leader(monkey
 def test_reaped_child_cannot_signal_any_numeric_group(monkeypatch):
     from types import SimpleNamespace
 
-    from ralf_agent import coding_process_wait as module
+    from relf_agent import coding_process_wait as module
 
     process = SimpleNamespace(pid=12345, returncode=0)
     monitor = SimpleNamespace(_process=process, _closed=False)

@@ -1,6 +1,6 @@
 import asyncio
 
-from ralf_agent import (
+from relf_agent import (
     AgentBindingDescriptor,
     AgentSpec,
     BindingSelection,
@@ -106,7 +106,7 @@ def test_real_embedding_protocol_and_scoped_fact_bindings_in_graph(tmp_path, req
 def test_semantic_fact_source_changed_during_http_cannot_reach_model(tmp_path):
     import httpx
 
-    from ralf_agent import LocalEngine, OpenAIEmbeddingProvider, SQLiteStore, ToolRegistry
+    from relf_agent import LocalEngine, OpenAIEmbeddingProvider, SQLiteStore, ToolRegistry
 
     from .semantic_fixture import facts
 

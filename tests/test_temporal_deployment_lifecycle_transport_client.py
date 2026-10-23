@@ -9,16 +9,16 @@ import pytest
 
 pytest.importorskip("temporalio")
 
-from ralf_agent.errors import RalfError
-from ralf_agent.temporal_parent_state import PARENT_WORKFLOW_NAME
-from ralf_agent.temporal_parent_workflow import TemporalParentWorkflow
-from ralf_agent.temporal_state import TemporalRunState
-from ralf_agent.types import digest
+from relf_agent.errors import RalfError
+from relf_agent.temporal_parent_state import PARENT_WORKFLOW_NAME
+from relf_agent.temporal_parent_workflow import TemporalParentWorkflow
+from relf_agent.temporal_state import TemporalRunState
+from relf_agent.types import digest
 from tests.test_temporal_deployment_release_state import identity, module, original
 
 
 def api():
-    return import_module("ralf_agent.temporal_deployment_lifecycle_transport")
+    return import_module("relf_agent.temporal_deployment_lifecycle_transport")
 
 
 class Client:

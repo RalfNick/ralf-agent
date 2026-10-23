@@ -2,8 +2,8 @@
 
 import asyncio
 
-import ralf_agent as r
-from ralf_agent.agent_session import AgentSession
+import relf_agent as r
+from relf_agent.agent_session import AgentSession
 
 from .test_agent_sessions import (
     test_ordered_turns_keep_history_and_original_receipts as ordered_turns,

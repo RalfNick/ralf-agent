@@ -2,15 +2,15 @@
 
 import pytest
 
-from ralf_agent.binding_definitions import AgentDefinition
-from ralf_agent.binding_types import AgentBindingDescriptor, BindingSelection
-from ralf_agent.errors import DefinitionMismatch, ValidationError
-from ralf_agent.types import AgentSpec
+from relf_agent.binding_definitions import AgentDefinition
+from relf_agent.binding_types import AgentBindingDescriptor, BindingSelection
+from relf_agent.errors import DefinitionMismatch, ValidationError
+from relf_agent.types import AgentSpec
 from tests.test_parent_completion import AcceptGate, request
 
 
 def test_default_model_stage_disables_unmetered_auxiliary_capabilities():
-    from ralf_agent.parent_verification_stage import ModelParentVerificationStage
+    from relf_agent.parent_verification_stage import ModelParentVerificationStage
 
     stage = ModelParentVerificationStage(provider="verifier", model_credits=2)
     assert type(stage.agent) is AgentDefinition
@@ -35,7 +35,7 @@ def test_default_model_stage_disables_unmetered_auxiliary_capabilities():
 
 
 def test_model_stage_requires_exact_bounded_verdict_and_existing_ids():
-    from ralf_agent.parent_verification_stage import ModelParentVerificationStage
+    from relf_agent.parent_verification_stage import ModelParentVerificationStage
 
     stage, value = ModelParentVerificationStage(), request()
     valid = {"status": "accept", "feedback": None, "evidence_ids": [value.children[0]["id"]]}
@@ -52,7 +52,7 @@ def test_model_stage_requires_exact_bounded_verdict_and_existing_ids():
 
 
 def test_stage_prepare_freezes_full_source_and_refuses_context_overflow():
-    from ralf_agent.parent_verification_stage import ModelParentVerificationStage
+    from relf_agent.parent_verification_stage import ModelParentVerificationStage
 
     value = request()
     prepared = ModelParentVerificationStage().prepare(value)
@@ -64,11 +64,11 @@ def test_stage_prepare_freezes_full_source_and_refuses_context_overflow():
 
 
 def test_custom_stage_can_replace_prepare_and_interpret_without_tools():
-    from ralf_agent.parent_completion import (
+    from relf_agent.parent_completion import (
         PARENT_COMPLETION_VERDICT_SCHEMA,
         ParentCompletionPolicy,
     )
-    from ralf_agent.parent_completion_protocol import interpret_stage_output, prepare_stage_input
+    from relf_agent.parent_completion_protocol import interpret_stage_output, prepare_stage_input
 
     class CustomStage:
         identity = {"kind": "custom-stage", "version": "1"}
@@ -83,7 +83,7 @@ def test_custom_stage_can_replace_prepare_and_interpret_without_tools():
             return {"candidate": request.candidate, "ids": [c["id"] for c in request.children]}
 
         def interpret(self, request, output):
-            from ralf_agent.parent_completion import ParentCompletionVerdict
+            from relf_agent.parent_completion import ParentCompletionVerdict
 
             return ParentCompletionVerdict("reject", feedback="Domain policy rejects it")
 
@@ -98,8 +98,8 @@ def test_custom_stage_can_replace_prepare_and_interpret_without_tools():
 
 
 def test_policy_rejects_stage_tools_decisions_and_insufficient_credits():
-    from ralf_agent.parent_completion import ParentCompletionPolicy
-    from ralf_agent.parent_verification_stage import ModelParentVerificationStage
+    from relf_agent.parent_completion import ParentCompletionPolicy
+    from relf_agent.parent_verification_stage import ModelParentVerificationStage
 
     with pytest.raises(ValidationError):
         ParentCompletionPolicy(
@@ -123,7 +123,7 @@ def test_policy_rejects_stage_tools_decisions_and_insufficient_credits():
 
 
 def test_stage_bindings_allow_explicit_context_but_reject_auxiliary_inheritance():
-    from ralf_agent.parent_verification_stage import ModelParentVerificationStage
+    from relf_agent.parent_verification_stage import ModelParentVerificationStage
 
     binding = AgentBindingDescriptor(context=BindingSelection.ref("pure-context", "1"))
     stage = ModelParentVerificationStage(bindings=binding)
@@ -136,9 +136,9 @@ def test_stage_bindings_allow_explicit_context_but_reject_auxiliary_inheritance(
 
 
 def test_stage_helpers_reject_lazy_preparation_and_agent_drift():
-    from ralf_agent.parent_completion import ParentCompletionPolicy
-    from ralf_agent.parent_completion_protocol import prepare_stage_input
-    from ralf_agent.parent_verification_stage import ModelParentVerificationStage
+    from relf_agent.parent_completion import ParentCompletionPolicy
+    from relf_agent.parent_completion_protocol import prepare_stage_input
+    from relf_agent.parent_verification_stage import ModelParentVerificationStage
 
     class LazyStage(ModelParentVerificationStage):
         def prepare(self, request):
@@ -156,11 +156,11 @@ def test_stage_helpers_reject_lazy_preparation_and_agent_drift():
 
 
 def test_stage_helper_validates_original_schema_before_custom_interpretation():
-    from ralf_agent.parent_completion import (
+    from relf_agent.parent_completion import (
         PARENT_COMPLETION_VERDICT_SCHEMA,
         ParentCompletionPolicy,
     )
-    from ralf_agent.parent_completion_protocol import interpret_stage_output
+    from relf_agent.parent_completion_protocol import interpret_stage_output
 
     class BlindStage:
         identity = {"kind": "blind-stage", "version": "1"}
@@ -172,7 +172,7 @@ def test_stage_helper_validates_original_schema_before_custom_interpretation():
             return request.to_dict()
 
         def interpret(self, request, output):
-            from ralf_agent.parent_completion import ParentCompletionVerdict
+            from relf_agent.parent_completion import ParentCompletionVerdict
 
             return ParentCompletionVerdict("accept")
 
@@ -182,11 +182,11 @@ def test_stage_helper_validates_original_schema_before_custom_interpretation():
 
 
 def test_stage_schema_must_bound_each_evidence_id():
-    from ralf_agent.parent_completion import (
+    from relf_agent.parent_completion import (
         PARENT_COMPLETION_VERDICT_SCHEMA,
         ParentCompletionPolicy,
     )
-    from ralf_agent.parent_verification_stage import ModelParentVerificationStage
+    from relf_agent.parent_verification_stage import ModelParentVerificationStage
 
     stage = ModelParentVerificationStage()
     schema = {
@@ -204,11 +204,11 @@ def test_stage_schema_must_bound_each_evidence_id():
 
 
 def test_non_verdict_schema_enum_is_rejected_before_registration():
-    from ralf_agent.parent_completion import (
+    from relf_agent.parent_completion import (
         PARENT_COMPLETION_VERDICT_SCHEMA,
         ParentCompletionPolicy,
     )
-    from ralf_agent.parent_verification_stage import ModelParentVerificationStage
+    from relf_agent.parent_verification_stage import ModelParentVerificationStage
 
     schema = {
         **PARENT_COMPLETION_VERDICT_SCHEMA,

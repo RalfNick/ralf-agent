@@ -6,7 +6,7 @@ import json
 import httpx
 import pytest
 
-from ralf_agent import (
+from relf_agent import (
     AgentSpec,
     CompleteModelHistory,
     DeepSeekThinkingProvider,
@@ -15,7 +15,7 @@ from ralf_agent import (
     ToolRegistry,
     ToolSpec,
 )
-from ralf_agent.errors import ValidationError
+from relf_agent.errors import ValidationError
 
 
 def _sdk_tool_loop(

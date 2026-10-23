@@ -5,7 +5,7 @@ import asyncio
 import httpx
 import pytest
 
-from ralf_agent import (
+from relf_agent import (
     AgentSpec,
     ComponentRegistry,
     GraphNode,
@@ -22,13 +22,13 @@ from ralf_agent import (
     ToolRegistry,
     ToolSpec,
 )
-from ralf_agent.a2a import A2AClient
-from ralf_agent.errors import CoordinatorBusy, DefinitionMismatch
-from ralf_agent.handoff import SQLiteInbox
-from ralf_agent.service_lifecycle import LocalA2AService
-from ralf_agent.storage import SQLiteStore
-from ralf_agent.task_controls import TaskControlBridge
-from ralf_agent.user_input import register_user_input
+from relf_agent.a2a import A2AClient
+from relf_agent.errors import CoordinatorBusy, DefinitionMismatch
+from relf_agent.handoff import SQLiteInbox
+from relf_agent.service_lifecycle import LocalA2AService
+from relf_agent.storage import SQLiteStore
+from relf_agent.task_controls import TaskControlBridge
+from relf_agent.user_input import register_user_input
 
 
 class Provider:

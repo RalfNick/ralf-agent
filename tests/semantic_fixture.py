@@ -1,6 +1,6 @@
 """Hand-derived vectors for contract tests, not a semantic model benchmark."""
 
-from ralf_agent import InMemoryMemory, Scope
+from relf_agent import InMemoryMemory, Scope
 
 
 class Embedding:

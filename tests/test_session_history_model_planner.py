@@ -7,10 +7,10 @@ from collections import defaultdict
 
 import pytest
 
-import ralf_agent as r
-from ralf_agent.model_continuation import ContinuedModelResponse, ModelContinuation
-from ralf_agent.planning import ModelPlanner
-from ralf_agent.types import digest
+import relf_agent as r
+from relf_agent.model_continuation import ContinuedModelResponse, ModelContinuation
+from relf_agent.planning import ModelPlanner
+from relf_agent.types import digest
 
 PLANNER_SYSTEM = "Return the original JSON plan; use the current PlanningRequest only."
 BUSINESS_SYSTEM = "Business member: call lookup, then return the original JSON answer."

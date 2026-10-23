@@ -2,7 +2,7 @@ import asyncio
 
 import pytest
 
-from ralf_agent import (
+from relf_agent import (
     AgentSpec,
     ComponentRegistry,
     Document,
@@ -15,8 +15,8 @@ from ralf_agent import (
     RuntimeBuilder,
     recommended_profile,
 )
-from ralf_agent.errors import ValidationError
-from ralf_agent.types import canonical
+from relf_agent.errors import ValidationError
+from relf_agent.types import canonical
 
 
 def embedding():

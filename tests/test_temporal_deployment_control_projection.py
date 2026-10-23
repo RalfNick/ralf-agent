@@ -6,12 +6,12 @@ from types import SimpleNamespace
 
 import pytest
 
-from ralf_agent import AgentSpec, GraphNode, GraphWorkflowSpec
-from ralf_agent import temporal_deployment_execution_state as deployment
-from ralf_agent.errors import RalfError
-from ralf_agent.temporal_bindings import request_release_digest
-from ralf_agent.temporal_parent_state import child_run_id
-from ralf_agent.types import canonical, digest, submission_request
+from relf_agent import AgentSpec, GraphNode, GraphWorkflowSpec
+from relf_agent import temporal_deployment_execution_state as deployment
+from relf_agent.errors import RalfError
+from relf_agent.temporal_bindings import request_release_digest
+from relf_agent.temporal_parent_state import child_run_id
+from relf_agent.types import canonical, digest, submission_request
 from tests.test_temporal_deployment_coding_registry import coding_request
 from tests.test_temporal_deployment_coding_registry import registry as make_registry
 from tests.test_temporal_deployment_descendant_control_state import retire
@@ -19,7 +19,7 @@ from tests.test_temporal_deployment_public_registry import NAMESPACE, POLICY, SC
 
 
 def api():
-    name = "ralf_agent.temporal_deployment_control_projection"
+    name = "relf_agent.temporal_deployment_control_projection"
     assert importlib.util.find_spec(name), "Compact original-History projection is missing"
     return importlib.import_module(name)
 
@@ -30,7 +30,7 @@ def original(*, parent=False):
     manifest = copy.deepcopy(envelope["manifest"])
     request = copy.deepcopy(envelope["request"])
     if parent:
-        from ralf_agent.temporal_coding_composition_protocol import publish
+        from relf_agent.temporal_coding_composition_protocol import publish
 
         manifest = publish(
             manifest, SimpleNamespace(coding_execution=True, coding_composition=True)
@@ -242,7 +242,7 @@ def test_node_projection_is_compact_detached_read_only_and_matches_bootstrap():
 
 
 def test_node_projects_one_original_pinned_edge_and_not_mutable_child_snapshots():
-    from ralf_agent.temporal_coding_composition_state import physical_stop_view
+    from relf_agent.temporal_coding_composition_state import physical_stop_view
 
     state = original(parent=True)
     call = add_child(state)
@@ -521,7 +521,7 @@ def test_shared_child_identity_refuses_inconsistent_original_immutable_tuple(fau
 
 
 def granted_native_phases():
-    from ralf_agent.coding_execution_rules import adopt, grant
+    from relf_agent.coding_execution_rules import adopt, grant
     from tests.test_coding_execution_rules import intent
 
     native, runner, binding = intent()
@@ -556,7 +556,7 @@ def granted_native_phases():
 
 @pytest.mark.parametrize("phase", range(3), ids=["prepare", "thread", "turn"])
 def test_native_pending_stop_is_resource_debt_not_stop_intent_or_physical_end(phase):
-    from ralf_agent.temporal_coding_state import stopped_action
+    from relf_agent.temporal_coding_state import stopped_action
 
     state = original()
     state.state = "running"
@@ -621,7 +621,7 @@ def test_native_stop_facts_keep_strict_boolean_validation(field):
 
 
 def test_node_bootstrap_identity_rejects_changed_start_or_composition_static_binding():
-    from ralf_agent.temporal_coding_composition_state import physical_stop_view
+    from relf_agent.temporal_coding_composition_state import physical_stop_view
 
     state = original(parent=True)
     proof = deployment.view(state)

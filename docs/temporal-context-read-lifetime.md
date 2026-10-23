@@ -13,7 +13,7 @@ operation or letting a Session release its Turn. Parent child-budget settlement
 uses the same original quiescence evidence.
 
 ```python
-from ralf_agent import ContextExecutionOwner, TemporalRuntime, ToolRegistry
+from relf_agent import ContextExecutionOwner, TemporalRuntime, ToolRegistry
 
 execution = TemporalRuntime(
     providers={"default": provider},

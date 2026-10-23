@@ -6,14 +6,14 @@ from importlib import import_module
 
 import pytest
 
-from ralf_agent.errors import ValidationError
-from ralf_agent.harness import DecisionProposal
-from ralf_agent.model_evidence import snapshot_model_response
-from ralf_agent.types import ModelResponse, ToolCall, digest
+from relf_agent.errors import ValidationError
+from relf_agent.harness import DecisionProposal
+from relf_agent.model_evidence import snapshot_model_response
+from relf_agent.types import ModelResponse, ToolCall, digest
 
 
 def api():
-    return import_module("ralf_agent.model_continuation")
+    return import_module("relf_agent.model_continuation")
 
 
 def received():
@@ -192,7 +192,7 @@ def test_provider_declaration_is_optional_detached_and_strictly_synchronous():
 
 
 def test_stream_response_owns_a_plain_json_continuation_copy():
-    from ralf_agent.model_protocol import ModelStreamEvent
+    from relf_agent.model_protocol import ModelStreamEvent
 
     value = received()
     response = api().decode_received_response(value)

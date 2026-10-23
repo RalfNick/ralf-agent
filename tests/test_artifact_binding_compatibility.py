@@ -17,12 +17,24 @@ from pathlib import Path
 
 import pytest
 
-import ralf_agent as r
-from ralf_agent.temporal import TemporalEngine, replay_temporal_history
-from ralf_agent.temporal_activities import TemporalRuntime
-from ralf_agent.types import digest, submission_request
+import relf_agent as r
+from relf_agent.temporal import TemporalEngine, replay_temporal_history
+from relf_agent.temporal_activities import TemporalRuntime
+from relf_agent.types import digest, submission_request
 
-from . import artifact_binding_old_worker as probe
+# These probes qualify the shared old namespace, not a6 cross-namespace recovery.
+# Run the preserved a5 source/installed tests with its original SDK environments.
+pytestmark = pytest.mark.skip(
+    reason="Historical old83/a5 shared-namespace probes: use original a5 code; a6 cross-namespace migration is unsupported"
+)
+
+
+@pytest.fixture
+def probe():
+    from . import artifact_binding_old_worker
+
+    return artifact_binding_old_worker
+
 
 ROOT = Path(__file__).resolve().parents[1]
 ENTRY = "from tests.artifact_binding_old_worker import main; main()"
@@ -255,7 +267,7 @@ async def clean_all(*operations):
 
 @pytest.mark.parametrize("mode", ["default", "native", "binding1", "context2", "tool3", "sandbox4"])
 def test_old83_current_old_temporal_history_receipts_and_legacy_protocols(
-    tmp_path, mode, monkeypatch
+    tmp_path, mode, monkeypatch, probe
 ):
     old = old_python("sdk")
     address = os.getenv("RALF_TEST_TEMPORAL_ADDRESS")
@@ -273,7 +285,7 @@ def test_old83_current_old_temporal_history_receipts_and_legacy_protocols(
     async def run():
         from temporalio.client import Client
 
-        from ralf_agent.temporal_session_state import workflow_id
+        from relf_agent.temporal_session_state import workflow_id
 
         client = await Client.connect(address)
         execution, resources = await probe.runtime(mode)
@@ -381,7 +393,7 @@ def test_old83_current_old_temporal_history_receipts_and_legacy_protocols(
 
 
 def test_actual_old83_worker_refuses_joint_artifact_manifest_before_any_activity(
-    tmp_path, monkeypatch
+    tmp_path, monkeypatch, probe
 ):
     old = old_python("sdk")
     address = os.getenv("RALF_TEST_TEMPORAL_ADDRESS")
@@ -396,7 +408,7 @@ def test_actual_old83_worker_refuses_joint_artifact_manifest_before_any_activity
         from temporalio.api.enums.v1 import EventType
         from temporalio.client import Client
 
-        from ralf_agent.temporal_state import WORKFLOW_NAME
+        from relf_agent.temporal_state import WORKFLOW_NAME
 
         client = await Client.connect(address)
         workers = Workers(tmp_path, scope, queue, address)

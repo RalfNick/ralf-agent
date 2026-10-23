@@ -12,7 +12,7 @@ sources: [docs/installation.md, docs/getting-started.md]
 
 Relf-Agent 处于 Alpha 阶段，API 和部署组合仍在演进。各组合的实际验证范围以仓库的[实现清单](repo:docs/implementation-status.md)为准。
 
-展示名称已由 Ralf-Agent 更新为 Relf-Agent，仓库现为 `RalfNick/relf-agent`。本指南的固定a1源码和公开a2使用`ralf-agent`；a5候选发行名改为`relf-agent`，导入路径`ralf_agent`与CLI`ralf`保持。不新增`import relf_agent`或`relf`命令。旧版 `ralf --version` 显示 Ralf-Agent 属于原 SDK 输出。
+展示名称为Relf-Agent，仓库为`RalfNick/relf-agent`。从a6起，发行名、Python导入和CLI统一为`relf-agent`、`relf_agent`、`relf`／`relf-*`；a5仅改发行名，仍使用旧入口。本指南固定a1源码和公开a2的原导入`ralf_agent`及原命令`ralf`，不将历史示例改成无法在原包运行的新命令。
 
 ## 从源码安装
 
@@ -30,7 +30,7 @@ ralf --version
 
 > 当前指南固定原 a1 源码，不把它描述成公开发行包。最新 [0.1.0a2 Alpha](https://github.com/RalfNick/relf-agent/releases/tag/v0.1.0a2) 已通过 GitHub Release 公开交付，安装命令见其发布说明；PyPI 尚未发布，`pip install ralf-agent` 不是本指南的已验证入口。
 
-> 当前改名候选为`relf-agent==0.1.0a5`，本地／平台／发布状态见维护checkout的`docs/alpha5-validation-status.md`。原a4的两包和Linux／远端门禁证据保留，不授予a5资格。本指南继续固定原a1教程和公开a2入口；新旧发行不得共装，a5使用独立环境。
+> 当前候选为`relf-agent==0.1.0a6`；实际状态见维护checkout的`docs/alpha6-validation-status.md`。a5原包和记录保留，不放行a6。新旧版本使用独立环境；不自动迁移旧Run、History或函数指纹。
 
 如果已经获得本地 wheel，可以在虚拟环境中用 `python -m pip install /实际路径/包名.whl` 安装，并核对制品来源与版本。
 

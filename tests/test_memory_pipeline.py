@@ -2,7 +2,7 @@ import asyncio
 
 import pytest
 
-from ralf_agent import (
+from relf_agent import (
     AgentSpec,
     InMemoryMemory,
     LocalEngine,
@@ -10,7 +10,7 @@ from ralf_agent import (
     SQLiteStore,
     ToolRegistry,
 )
-from ralf_agent.errors import DefinitionMismatch, ValidationError
+from relf_agent.errors import DefinitionMismatch, ValidationError
 
 
 class Provider:
@@ -38,8 +38,8 @@ def engine(path, provider, memory=None):
 
 
 def test_automatic_rule_memory_and_duplicate_restart(tmp_path):
-    from ralf_agent.memory_extraction import MemoryAdmissionPolicy
-    from ralf_agent.memory_pipeline import MemoryPipeline
+    from relf_agent.memory_extraction import MemoryAdmissionPolicy
+    from relf_agent.memory_pipeline import MemoryPipeline
 
     async def run():
         provider = Provider()
@@ -66,9 +66,9 @@ def test_automatic_rule_memory_and_duplicate_restart(tmp_path):
 
 
 def test_partial_fact_write_replays_without_overwriting(tmp_path):
-    from ralf_agent.errors import MemoryBackendError
-    from ralf_agent.memory_extraction import MemoryAdmissionPolicy
-    from ralf_agent.memory_pipeline import MemoryPipeline
+    from relf_agent.errors import MemoryBackendError
+    from relf_agent.memory_extraction import MemoryAdmissionPolicy
+    from relf_agent.memory_pipeline import MemoryPipeline
 
     class Interrupted(InMemoryMemory):
         failed = False
@@ -106,8 +106,8 @@ def test_partial_fact_write_replays_without_overwriting(tmp_path):
 
 
 def test_admission_method_replacement_is_refused(tmp_path):
-    from ralf_agent.memory_extraction import MemoryAdmissionPolicy
-    from ralf_agent.memory_pipeline import MemoryPipeline
+    from relf_agent.memory_extraction import MemoryAdmissionPolicy
+    from relf_agent.memory_pipeline import MemoryPipeline
 
     async def run():
         with engine(tmp_path / "run.sqlite", Provider()) as runtime:
@@ -121,8 +121,8 @@ def test_admission_method_replacement_is_refused(tmp_path):
 
 
 def test_rule_command_identity_cannot_bind_two_source_runs(tmp_path):
-    from ralf_agent.memory_extraction import MemoryAdmissionPolicy
-    from ralf_agent.memory_pipeline import MemoryPipeline
+    from relf_agent.memory_extraction import MemoryAdmissionPolicy
+    from relf_agent.memory_pipeline import MemoryPipeline
 
     async def run():
         with engine(tmp_path / "run.sqlite", Provider()) as runtime:
@@ -142,8 +142,8 @@ def test_rule_command_identity_cannot_bind_two_source_runs(tmp_path):
 
 
 def test_managed_model_selector_is_durable_and_bounded(tmp_path):
-    from ralf_agent.memory_extraction import MemoryAdmissionPolicy, ModelMemoryExtractor
-    from ralf_agent.memory_pipeline import MemoryPipeline
+    from relf_agent.memory_extraction import MemoryAdmissionPolicy, ModelMemoryExtractor
+    from relf_agent.memory_pipeline import MemoryPipeline
 
     async def run():
         provider = Provider()
@@ -169,7 +169,7 @@ def test_managed_model_selector_is_durable_and_bounded(tmp_path):
 
 
 def test_proposals_cannot_fabricate_values_or_paths():
-    from ralf_agent.memory_extraction import FactProposal, MemoryAdmissionPolicy
+    from relf_agent.memory_extraction import FactProposal, MemoryAdmissionPolicy
 
     policy = MemoryAdmissionPolicy({"language": ("result", "language")})
     evidence = {"result": {"language": "中文"}}
@@ -183,8 +183,8 @@ def test_proposals_cannot_fabricate_values_or_paths():
 
 
 def test_source_and_backend_change_after_async_write_fail_closed(tmp_path):
-    from ralf_agent.memory_extraction import MemoryAdmissionPolicy
-    from ralf_agent.memory_pipeline import MemoryPipeline
+    from relf_agent.memory_extraction import MemoryAdmissionPolicy
+    from relf_agent.memory_pipeline import MemoryPipeline
 
     class SwappingMemory:
         backend_id = "swap-memory"
@@ -219,7 +219,7 @@ def test_source_and_backend_change_after_async_write_fail_closed(tmp_path):
 
 
 def test_unsuccessful_run_has_no_memory_writes(tmp_path):
-    from ralf_agent.memory_pipeline import MemoryPipeline
+    from relf_agent.memory_pipeline import MemoryPipeline
 
     class Empty(Provider):
         async def complete(self, messages, tools):

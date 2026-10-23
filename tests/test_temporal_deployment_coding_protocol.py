@@ -4,13 +4,13 @@ import copy
 
 import pytest
 
-from ralf_agent.errors import DefinitionMismatch
-from ralf_agent.temporal_deployment_protocol import (
+from relf_agent.errors import DefinitionMismatch
+from relf_agent.temporal_deployment_protocol import (
     PUBLIC_SOURCE_FILES,
     public_selected,
     validate_protocol,
 )
-from ralf_agent.types import digest
+from relf_agent.types import digest
 from tests.test_temporal_coding_configuration import manifest
 from tests.test_temporal_deployment_protocol import POLICY
 

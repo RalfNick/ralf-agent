@@ -5,9 +5,9 @@ from dataclasses import asdict
 
 import pytest
 
-from ralf_agent.errors import DefinitionMismatch
-from ralf_agent.executors import DispatchEnvelope
-from ralf_agent.types import InvocationContext, Scope, digest
+from relf_agent.errors import DefinitionMismatch
+from relf_agent.executors import DispatchEnvelope
+from relf_agent.types import InvocationContext, Scope, digest
 
 
 def setup():
@@ -35,7 +35,7 @@ def test_history_async_callbacks_are_fixed_and_native_request_is_detached():
 
 
 async def _history_callbacks():
-    from ralf_agent.temporal_coding_authority import TemporalCodingAuthority
+    from relf_agent.temporal_coding_authority import TemporalCodingAuthority
 
     envelope, request = setup()
     calls = []
@@ -72,7 +72,7 @@ def test_changed_dispatch_is_refused_before_history_read():
 
 
 async def _changed_dispatch():
-    from ralf_agent.temporal_coding_authority import TemporalCodingAuthority
+    from relf_agent.temporal_coding_authority import TemporalCodingAuthority
 
     envelope, request = setup()
 
@@ -90,7 +90,7 @@ async def _changed_dispatch():
 
 
 def test_resource_projection_uses_one_verified_response_and_reads_again_on_next_call():
-    from ralf_agent.temporal_coding_authority import TemporalCodingAuthority
+    from relf_agent.temporal_coding_authority import TemporalCodingAuthority
 
     async def run():
         envelope, request = setup()
@@ -137,7 +137,7 @@ def test_resource_projection_uses_one_verified_response_and_reads_again_on_next_
 
 @pytest.mark.parametrize("dispatch", ["changed", "missing"])
 def test_resource_projection_refuses_foreign_dispatch_before_any_callback(dispatch):
-    from ralf_agent.temporal_coding_authority import TemporalCodingAuthority
+    from relf_agent.temporal_coding_authority import TemporalCodingAuthority
 
     async def run():
         envelope, request = setup()
@@ -166,7 +166,7 @@ def test_resource_projection_refuses_foreign_dispatch_before_any_callback(dispat
 
 @pytest.mark.parametrize("fault", ["runner", "response", "callback"])
 def test_resource_projection_refuses_mismatched_response_or_changed_callback(fault):
-    from ralf_agent.temporal_coding_authority import TemporalCodingAuthority
+    from relf_agent.temporal_coding_authority import TemporalCodingAuthority
 
     async def run():
         envelope, request = setup()
@@ -201,7 +201,7 @@ def test_resource_projection_refuses_mismatched_response_or_changed_callback(fau
 
 @pytest.mark.parametrize("arguments", [(None,), (None, None, None)])
 def test_private_state_refuses_incomplete_dispatch_pair_before_callbacks(arguments):
-    from ralf_agent.temporal_coding_authority import TemporalCodingAuthority
+    from relf_agent.temporal_coding_authority import TemporalCodingAuthority
 
     async def run():
         _, request = setup()

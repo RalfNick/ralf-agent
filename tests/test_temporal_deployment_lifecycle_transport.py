@@ -10,10 +10,10 @@ import pytest
 
 pytest.importorskip("temporalio")
 
-from ralf_agent.errors import RalfError
-from ralf_agent.temporal_parent_workflow import TemporalParentWorkflow
-from ralf_agent.temporal_state import TemporalRunState
-from ralf_agent.temporal_workflow import TemporalRunWorkflow, workflow
+from relf_agent.errors import RalfError
+from relf_agent.temporal_parent_workflow import TemporalParentWorkflow
+from relf_agent.temporal_state import TemporalRunState
+from relf_agent.temporal_workflow import TemporalRunWorkflow, workflow
 from tests.test_temporal_deployment_release_state import identity, module, original
 
 
@@ -49,7 +49,7 @@ def fixture(monkeypatch, *, parent=False, operation="deployment_call_started"):
 
 
 def api():
-    return import_module("ralf_agent.temporal_deployment_lifecycle_transport")
+    return import_module("relf_agent.temporal_deployment_lifecycle_transport")
 
 
 @pytest.mark.parametrize("parent", [False, True])
@@ -57,7 +57,7 @@ def test_original_begin_query_loads_before_strict_sandbox_activation(monkeypatch
     from temporalio.worker.workflow_sandbox._importer import Importer
     from temporalio.worker.workflow_sandbox._restrictions import RestrictionContext
 
-    from ralf_agent.temporal import _workflow_runner
+    from relf_agent.temporal import _workflow_runner
 
     original_owner, info, envelope = fixture(monkeypatch, parent=parent)
     expected = {"deployment_lifecycle_observation": api().observe(original_owner, envelope, info)}
@@ -66,7 +66,7 @@ def test_original_begin_query_loads_before_strict_sandbox_activation(monkeypatch
     importer = Importer(_workflow_runner().restrictions, context)
     with importer.applied():
         product = import_module(
-            "ralf_agent.temporal_parent_workflow" if parent else "ralf_agent.temporal_workflow"
+            "relf_agent.temporal_parent_workflow" if parent else "relf_agent.temporal_workflow"
         )
         cls = product.TemporalParentWorkflow if parent else product.TemporalRunWorkflow
         owner = object.__new__(cls)
@@ -98,14 +98,14 @@ def test_parent_rejects_other_observations_without_late_sandbox_import(monkeypat
     from temporalio.worker.workflow_sandbox._importer import Importer
     from temporalio.worker.workflow_sandbox._restrictions import RestrictionContext
 
-    from ralf_agent.temporal import _workflow_runner
+    from relf_agent.temporal import _workflow_runner
 
     original_owner, _, _ = fixture(monkeypatch, parent=True)
     before = copy.deepcopy(vars(original_owner.state))
     context = RestrictionContext()
     importer = Importer(_workflow_runner().restrictions, context)
     with importer.applied():
-        product = import_module("ralf_agent.temporal_parent_workflow")
+        product = import_module("relf_agent.temporal_parent_workflow")
         owner = object.__new__(product.TemporalParentWorkflow)
         owner.state, owner.wake_revision = original_owner.state, 0
         context.is_runtime = context.in_activation = True

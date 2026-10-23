@@ -1,7 +1,7 @@
 import json
 import sys
 
-from ralf_agent.starter import create_starter
+from relf_agent.starter import create_starter
 
 from .test_ingestion_starter import subprocess_result
 
@@ -46,7 +46,7 @@ def test_installed_hybrid_starter_explicit_index_query_and_resume(tmp_path):
             [
                 sys.executable,
                 "-m",
-                "ralf_agent.cli",
+                "relf_agent.cli",
                 "--db",
                 ".ralf/runs.sqlite",
                 "--factory",

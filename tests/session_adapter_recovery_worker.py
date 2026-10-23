@@ -8,7 +8,7 @@ from contextlib import contextmanager
 from dataclasses import asdict
 from pathlib import Path
 
-from ralf_agent import (
+from relf_agent import (
     AgentSpec,
     ComponentRegistry,
     RunRef,
@@ -18,7 +18,7 @@ from ralf_agent import (
     SQLiteStore,
     recommended_profile,
 )
-from ralf_agent.session_adapter_contract_reference import (
+from relf_agent.session_adapter_contract_reference import (
     ReferenceSessionSource,
     register_session_reference_components,
 )

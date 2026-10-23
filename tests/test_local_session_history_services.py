@@ -5,9 +5,9 @@ from collections import defaultdict
 
 import pytest
 
-import ralf_agent as r
-from ralf_agent.binding_paths import agent_paths
-from ralf_agent.spec_codec import encode_spec
+import relf_agent as r
+from relf_agent.binding_paths import agent_paths
+from relf_agent.spec_codec import encode_spec
 from tests.test_local_session_history_compositions import MemberProvider, definition
 from tests.test_local_session_model_history import tools
 from tests.test_native_history_remote import endpoint as endpoint

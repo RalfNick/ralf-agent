@@ -5,12 +5,12 @@ from dataclasses import FrozenInstanceError
 
 import pytest
 
-from ralf_agent.errors import ValidationError
-from ralf_agent.governance import LocalExecutionPolicy, TemporalExecutionPolicy
+from relf_agent.errors import ValidationError
+from relf_agent.governance import LocalExecutionPolicy, TemporalExecutionPolicy
 
 
 def policy(**options):
-    cls = importlib.import_module("ralf_agent.governance").DeploymentAdmissionPolicy
+    cls = importlib.import_module("relf_agent.governance").DeploymentAdmissionPolicy
     return cls(**{"deployment_id": "orders", **options})
 
 
@@ -29,9 +29,9 @@ def test_admission_identity_is_immutable_detached_and_round_trips():
     assert selected.max_active_root_runs == 3
     with pytest.raises(FrozenInstanceError):
         selected.max_active_root_runs = 100
-    import ralf_agent
+    import relf_agent
 
-    assert ralf_agent.DeploymentAdmissionPolicy is type(selected)
+    assert relf_agent.DeploymentAdmissionPolicy is type(selected)
 
 
 @pytest.mark.parametrize(

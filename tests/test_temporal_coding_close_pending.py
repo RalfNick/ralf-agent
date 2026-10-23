@@ -6,9 +6,9 @@ from types import SimpleNamespace
 
 import pytest
 
-from ralf_agent import temporal_coding_composition_control as control
-from ralf_agent.errors import CloseIncomplete, DefinitionMismatch
-from ralf_agent.types import Scope, digest
+from relf_agent import temporal_coding_composition_control as control
+from relf_agent.errors import CloseIncomplete, DefinitionMismatch
+from relf_agent.types import Scope, digest
 from tests import test_temporal_coding_composition_control as fixture
 from tests.test_temporal_session_deployment_coding_configuration import coding_session_manifest
 
@@ -27,8 +27,8 @@ def environment(monkeypatch, *, publication=4):
     client, child_id = fixture.linked_client()
     # The original close fixture still owns all proof mutations and injected
     # Update faults. Expose its command port through the current transport.
-    from ralf_agent.temporal_command_transport import accept, observe
-    from ralf_agent.temporal_state import TemporalRunState
+    from relf_agent.temporal_command_transport import accept, observe
+    from relf_agent.temporal_state import TemporalRunState
 
     hosts = {}
 
@@ -119,8 +119,8 @@ def environment(monkeypatch, *, publication=4):
 
 def native_inventory(monkeypatch, runtime, client, child_id, finish):
     """Real native row/request producer and real journal inventory port."""
-    from ralf_agent import delegated_coding, temporal_bindings
-    from ralf_agent.postgres_coding_resources import receive_resource
+    from relf_agent import delegated_coding, temporal_bindings
+    from relf_agent.postgres_coding_resources import receive_resource
 
     resource = fixture.native_resource(client, child_id)
     state = {"resource": resource, "scans": 0}

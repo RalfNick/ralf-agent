@@ -4,19 +4,19 @@ from io import BytesIO
 
 import pytest
 
-from ralf_agent import IngestionCoordinator, Scope, SourceDocument, SQLiteKnowledgeStore
-from ralf_agent.errors import ValidationError
-from ralf_agent.retrieval import RetrievalQuery
+from relf_agent import IngestionCoordinator, Scope, SourceDocument, SQLiteKnowledgeStore
+from relf_agent.errors import ValidationError
+from relf_agent.retrieval import RetrievalQuery
 from tests.pdf_fixture import form_pdf, pdf
 
 pypdf = pytest.importorskip("pypdf", minversion="6.20")
 
 
 def parser():
-    import ralf_agent
+    import relf_agent
 
-    assert hasattr(ralf_agent, "PdfDocumentParser"), "Missing optional PDF parser"
-    return ralf_agent.PdfDocumentParser()
+    assert hasattr(relf_agent, "PdfDocumentParser"), "Missing optional PDF parser"
+    return relf_agent.PdfDocumentParser()
 
 
 @pytest.mark.parametrize("compressed", [False, True])
@@ -121,8 +121,8 @@ def test_pdf_does_not_modify_caller_library_configuration():
 
 
 def test_pdf_helper_change_after_registration_is_refused_before_commit(tmp_path, monkeypatch):
-    import ralf_agent.pdf_parsing as parsing
-    from ralf_agent.errors import DefinitionMismatch
+    import relf_agent.pdf_parsing as parsing
+    from relf_agent.errors import DefinitionMismatch
 
     async def run():
         with SQLiteKnowledgeStore(tmp_path / "knowledge.sqlite") as store:
@@ -143,7 +143,7 @@ def test_pdf_helper_change_after_registration_is_refused_before_commit(tmp_path,
 
 
 def test_pdf_dependency_change_during_commit_does_not_confirm_old_pipeline(tmp_path, monkeypatch):
-    from ralf_agent.errors import DefinitionMismatch
+    from relf_agent.errors import DefinitionMismatch
 
     async def run():
         with SQLiteKnowledgeStore(tmp_path / "knowledge.sqlite") as store:
@@ -185,8 +185,8 @@ def test_pdf_process_loss_preserves_atomic_knowledge_and_receipt(tmp_path, mode)
     import sys
     from pathlib import Path
 
-    import ralf_agent
-    from ralf_agent.retrieval import RetrievalQuery
+    import relf_agent
+    from relf_agent.retrieval import RetrievalQuery
 
     path = tmp_path / "knowledge.sqlite"
     result = subprocess.run(
@@ -199,7 +199,7 @@ def test_pdf_process_loss_preserves_atomic_knowledge_and_receipt(tmp_path, mode)
         cwd=tmp_path,
         env={
             "PATH": os.defpath,
-            "PYTHONPATH": str(Path(ralf_agent.__file__).resolve().parent.parent),
+            "PYTHONPATH": str(Path(relf_agent.__file__).resolve().parent.parent),
         },
         text=True,
         capture_output=True,
@@ -267,7 +267,7 @@ def test_pdf_small_form_retains_complete_text():
 def test_pdf_changed_rtl_settings_refuse_registered_pipeline_without_host_reset(tmp_path, settings):
     import pypdf._text_extraction as extraction
 
-    from ralf_agent.errors import DefinitionMismatch
+    from relf_agent.errors import DefinitionMismatch
 
     before = (
         extraction.CUSTOM_RTL_MIN,
@@ -304,7 +304,7 @@ def test_pdf_changed_rtl_settings_refuse_registered_pipeline_without_host_reset(
 def test_pdf_rtl_change_during_commit_refuses_confirmation_and_preserves_receipt(tmp_path):
     import pypdf._text_extraction as extraction
 
-    from ralf_agent.errors import DefinitionMismatch
+    from relf_agent.errors import DefinitionMismatch
 
     before = (
         extraction.CUSTOM_RTL_MIN,

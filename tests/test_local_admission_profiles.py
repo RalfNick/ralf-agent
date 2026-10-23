@@ -8,17 +8,17 @@ from dataclasses import FrozenInstanceError
 
 import pytest
 
-import ralf_agent as r
-from ralf_agent.errors import DefinitionMismatch, ValidationError
-from ralf_agent.governance import LocalExecutionPolicy, TemporalExecutionPolicy
-from ralf_agent.runtime_builder import EchoProvider
-from ralf_agent.runtime_config import RuntimeCatalog, RuntimeProfile, load_catalog
-from ralf_agent.temporal_builder import TemporalRuntimeBuilder
-from ralf_agent.types import canonical
+import relf_agent as r
+from relf_agent.errors import DefinitionMismatch, ValidationError
+from relf_agent.governance import LocalExecutionPolicy, TemporalExecutionPolicy
+from relf_agent.runtime_builder import EchoProvider
+from relf_agent.runtime_config import RuntimeCatalog, RuntimeProfile, load_catalog
+from relf_agent.temporal_builder import TemporalRuntimeBuilder
+from relf_agent.types import canonical
 
 
 def policy_type():
-    return importlib.import_module("ralf_agent.governance").DeploymentAdmissionPolicy
+    return importlib.import_module("relf_agent.governance").DeploymentAdmissionPolicy
 
 
 def profile(config=None, *, adapter="bounded", provider="offline-echo", version="1"):

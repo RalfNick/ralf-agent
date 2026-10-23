@@ -5,9 +5,9 @@ import copy
 
 import pytest
 
-from ralf_agent.errors import DefinitionMismatch
-from ralf_agent.temporal_coding_authority import TemporalCodingAuthority
-from ralf_agent.types import digest
+from relf_agent.errors import DefinitionMismatch
+from relf_agent.temporal_coding_authority import TemporalCodingAuthority
+from relf_agent.types import digest
 from tests.test_codex_deployment_business_validation_cost import METHODS, Sent, business, params
 from tests.test_codex_deployment_control_validation_cost import fixture
 from tests.test_temporal_deployment_session_registry import deployment_intent
@@ -74,7 +74,7 @@ def test_session_coding_query_drift_still_refuses_native(monkeypatch, change):
 def test_session_coding_adjacent_query_retains_fresh_original_origin_validation(
     monkeypatch, during_query
 ):
-    from ralf_agent.temporal_deployment_coding_validation import CodingValidation
+    from relf_agent.temporal_deployment_coding_validation import CodingValidation
     from tests.test_temporal_session_coding_projection import sdk_session_environment
 
     runtime, client, request, info = sdk_session_environment(monkeypatch)

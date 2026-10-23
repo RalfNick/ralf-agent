@@ -6,7 +6,7 @@ acknowledgement. It composes with Agent, sequential, Graph, Team, Dynamic and ne
 definitions through their original managed child Runs.
 
 ```python
-from ralf_agent import TemporalProfile, TemporalRuntimeBuilder
+from relf_agent import TemporalProfile, TemporalRuntimeBuilder
 
 profile = TemporalProfile(
     "app",

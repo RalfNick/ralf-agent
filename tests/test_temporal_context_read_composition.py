@@ -5,7 +5,7 @@ import copy
 
 import pytest
 
-from ralf_agent import (
+from relf_agent import (
     AgentSpec,
     DynamicWorkflowSpec,
     GraphNode,
@@ -16,11 +16,11 @@ from ralf_agent import (
     TeamSpec,
     WorkflowSpec,
 )
-from ralf_agent.temporal_control_activities import select
-from ralf_agent.temporal_parent_state import TemporalParentState
-from ralf_agent.temporal_session_state import TemporalSessionState
-from ralf_agent.temporal_session_topology import CompositeSessionTopology
-from ralf_agent.temporal_state import TemporalRunState
+from relf_agent.temporal_control_activities import select
+from relf_agent.temporal_parent_state import TemporalParentState
+from relf_agent.temporal_session_state import TemporalSessionState
+from relf_agent.temporal_session_topology import CompositeSessionTopology
+from relf_agent.temporal_state import TemporalRunState
 
 from .test_temporal_context_read_runtime import call
 from .test_temporal_memory_bindings import grant

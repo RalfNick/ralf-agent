@@ -29,7 +29,7 @@ def test_process_exit_before_reply_and_after_reply_commit_keeps_one_answer(tmp_p
 
 
 def worker(directory, mode):
-    import ralf_agent as r
+    import relf_agent as r
 
     class Provider:
         identity = {"kind": "process-input-provider", "version": "1"}

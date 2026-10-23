@@ -2,8 +2,8 @@
 
 import pytest
 
-from ralf_agent import OpenAIResponsesReasoningProvider
-from ralf_agent.errors import ValidationError
+from relf_agent import OpenAIResponsesReasoningProvider
+from relf_agent.errors import ValidationError
 
 
 @pytest.mark.parametrize("field,value", [("temperature", 0.5), ("top_p", 0.9), ("stop", ["stop"])])

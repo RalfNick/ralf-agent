@@ -5,8 +5,8 @@ import hashlib
 
 import pytest
 
-from ralf_agent import temporal_deployment_protocol as protocol
-from ralf_agent.errors import DefinitionMismatch, ValidationError
+from relf_agent import temporal_deployment_protocol as protocol
+from relf_agent.errors import DefinitionMismatch, ValidationError
 from tests.test_temporal_deployment_protocol import POLICY
 
 

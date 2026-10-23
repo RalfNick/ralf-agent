@@ -8,13 +8,13 @@ from types import SimpleNamespace
 import pytest
 
 pytest.importorskip("temporalio")
-from ralf_agent.temporal_parent_workflow import TemporalParentWorkflow, workflow
-from ralf_agent.temporal_workflow import TemporalRunWorkflow
+from relf_agent.temporal_parent_workflow import TemporalParentWorkflow, workflow
+from relf_agent.temporal_workflow import TemporalRunWorkflow
 from tests.test_temporal_deployment_parent_wake import SleepReached, identity, parent
 
 
 @pytest.mark.parametrize(
-    "workflow_module", ["ralf_agent.temporal_workflow", "ralf_agent.temporal_parent_workflow"]
+    "workflow_module", ["relf_agent.temporal_workflow", "relf_agent.temporal_parent_workflow"]
 )
 def test_sdk_runtime_importer_accepts_compact_request_without_late_projection_import(
     workflow_module,
@@ -25,8 +25,8 @@ def test_sdk_runtime_importer_accepts_compact_request_without_late_projection_im
     from temporalio.worker.workflow_sandbox._importer import Importer
     from temporalio.worker.workflow_sandbox._restrictions import RestrictionContext
 
-    from ralf_agent.temporal import _workflow_runner
-    from ralf_agent.temporal_parent_state import TemporalParentState
+    from relf_agent.temporal import _workflow_runner
+    from relf_agent.temporal_parent_state import TemporalParentState
     from tests.test_temporal_deployment_control_projection import (
         add_child,
         bound_registry,
@@ -51,8 +51,8 @@ def test_sdk_runtime_importer_accepts_compact_request_without_late_projection_im
     importer = Importer(_workflow_runner().restrictions, context)
     with importer.applied():
         importlib.import_module(workflow_module)
-        transport = importlib.import_module("ralf_agent.temporal_deployment_control_transport")
-        projection = importlib.import_module("ralf_agent.temporal_deployment_control_projection")
+        transport = importlib.import_module("relf_agent.temporal_deployment_control_transport")
+        projection = importlib.import_module("relf_agent.temporal_deployment_control_projection")
         context.is_runtime = True
         context.in_activation = True
         try:
@@ -402,8 +402,8 @@ def test_permanent_parent_absence_keeps_pending_without_timer_or_repeated_send(m
     "fault", ["first", "original", "current", "namespace", "initialization", "scope"]
 )
 def test_node_query_refuses_wrong_sdk_identity_without_calling_projector(monkeypatch, fault):
-    from ralf_agent import temporal_deployment_control_projection as projection
-    from ralf_agent.errors import AuthorizationDenied
+    from relf_agent import temporal_deployment_control_projection as projection
+    from relf_agent.errors import AuthorizationDenied
 
     value = selected_parent(monkeypatch)
     calls = []
@@ -452,7 +452,7 @@ def test_node_query_refuses_wrong_sdk_identity_without_calling_projector(monkeyp
 
 
 def test_registry_node_query_uses_constructor_sdk_epoch_and_refuses_later_drift(monkeypatch):
-    from ralf_agent.temporal_workflow import TemporalCommandRegistryWorkflow
+    from relf_agent.temporal_workflow import TemporalCommandRegistryWorkflow
     from tests.test_temporal_deployment_registry_epoch import registry, sdk_info
 
     value = registry(monkeypatch, 3)
@@ -596,9 +596,9 @@ def test_observe_failure_retries_only_bounded_reads_without_a_future_child_hint(
 def test_stopped_unsettled_child_adopts_only_fresh_selected3_observation(
     monkeypatch, version, dirty, unknown, during_observe, expected_reads
 ):
-    from ralf_agent import temporal_coding_composition_state as composition
-    from ralf_agent.temporal_bindings import request_release_digest
-    from ralf_agent.temporal_parent_state import TemporalParentState
+    from relf_agent import temporal_coding_composition_state as composition
+    from relf_agent.temporal_bindings import request_release_digest
+    from relf_agent.temporal_parent_state import TemporalParentState
     from tests.test_temporal_deployment_control_projection import add_child, original
 
     async def scenario():

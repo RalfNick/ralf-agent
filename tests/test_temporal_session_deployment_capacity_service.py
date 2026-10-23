@@ -10,17 +10,17 @@ from datetime import timedelta
 
 import pytest
 
-from ralf_agent import ComponentRegistry, Runtime, Scope, TemporalProfile, TemporalRuntimeBuilder
-from ralf_agent.errors import (
+from relf_agent import ComponentRegistry, Runtime, Scope, TemporalProfile, TemporalRuntimeBuilder
+from relf_agent.errors import (
     AuthorizationDenied,
     CapacityExceeded,
     DefinitionMismatch,
     IdempotencyConflict,
 )
-from ralf_agent.temporal import TemporalEngine
-from ralf_agent.temporal_deployment_admission import registry_id, root_run_id
-from ralf_agent.temporal_session_state import workflow_id
-from ralf_agent.types import digest
+from relf_agent.temporal import TemporalEngine
+from relf_agent.temporal_deployment_admission import registry_id, root_run_id
+from relf_agent.temporal_session_state import workflow_id
+from relf_agent.types import digest
 from tests.test_temporal_deployment_dispatch_service import BusinessProbe, _agent, _eventually
 from tests.test_temporal_deployment_public_service import PublicSystem, public_system
 

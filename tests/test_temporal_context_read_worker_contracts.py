@@ -5,7 +5,7 @@ from types import SimpleNamespace
 
 import pytest
 
-from ralf_agent.errors import DefinitionMismatch
+from relf_agent.errors import DefinitionMismatch
 
 from .test_temporal_context_read_state import admission, proof, state_for
 
@@ -27,7 +27,7 @@ class Client:
         return self.state.snapshot()
 
     async def describe(self):
-        from ralf_agent.temporal_state import WORKFLOW_NAME
+        from relf_agent.temporal_state import WORKFLOW_NAME
 
         return SimpleNamespace(
             id=self.state.run_id,
@@ -45,7 +45,7 @@ class Client:
         if name == "admit_context_dispatch":
             return self.state.admit_context_dispatch(payload)
         assert name == "context_execution_ended"
-        from ralf_agent.types import digest
+        from relf_agent.types import digest
 
         assert id == "ralf-context-read-ended:" + digest(payload)
         if self.end_response is not None:
@@ -73,7 +73,7 @@ def setup():
     ],
 )
 def test_read_worker_rejects_foreign_actual_activity_before_admission(field, value):
-    from ralf_agent.temporal_context_read_activities import callbacks
+    from relf_agent.temporal_context_read_activities import callbacks
 
     async def run():
         _, _, request, client, info = setup()
@@ -87,7 +87,7 @@ def test_read_worker_rejects_foreign_actual_activity_before_admission(field, val
 
 
 def test_end_callback_keeps_original_run_uuid_without_live_activity_context():
-    from ralf_agent.temporal_context_read_activities import callbacks
+    from relf_agent.temporal_context_read_activities import callbacks
 
     async def run():
         state, _, request, client, info = setup()
@@ -106,7 +106,7 @@ def test_end_callback_keeps_original_run_uuid_without_live_activity_context():
 
 
 def test_client_namespace_change_refuses_late_end_notification():
-    from ralf_agent.temporal_context_read_activities import callbacks
+    from relf_agent.temporal_context_read_activities import callbacks
 
     async def run():
         state, _, request, client, info = setup()
@@ -130,7 +130,7 @@ def test_client_namespace_change_refuses_late_end_notification():
     ],
 )
 def test_truthy_or_foreign_end_ack_is_not_completion(ack):
-    from ralf_agent.temporal_context_read_activities import callbacks
+    from relf_agent.temporal_context_read_activities import callbacks
 
     async def run():
         _, _, request, client, info = setup()
@@ -145,7 +145,7 @@ def test_truthy_or_foreign_end_ack_is_not_completion(ack):
 
 def test_actual_workflow_end_update_records_only_original_read_evidence():
     pytest.importorskip("temporalio")
-    from ralf_agent.temporal_workflow import TemporalRunWorkflow
+    from relf_agent.temporal_workflow import TemporalRunWorkflow
 
     async def run():
         state, _, request, _, _ = setup()
@@ -160,7 +160,7 @@ def test_actual_workflow_end_update_records_only_original_read_evidence():
 
 @pytest.mark.parametrize("phase", ["context", "plan", "read", "verify", "finalize"])
 def test_original_read_activity_is_single_attempt_only_for_explicit_protocol(phase):
-    from ralf_agent.temporal_context_read_protocol import owns_activity
+    from relf_agent.temporal_context_read_protocol import owns_activity
 
     state, action, _ = state_for(phase)
     assert owns_activity(state.manifest, action)
@@ -172,7 +172,7 @@ def test_original_read_activity_is_single_attempt_only_for_explicit_protocol(pha
 
 
 def test_read_owner_spi_is_exported_without_loading_optional_sdk():
-    import ralf_agent as r
+    import relf_agent as r
 
     assert r.ContextExecutionOwner().identity["kind"] == "context-execution-owner"
     assert r.ContextExecutionPort.execute
@@ -182,7 +182,7 @@ def test_read_owner_spi_is_exported_without_loading_optional_sdk():
 
 def test_original_read_stages_query_is_pure_and_detached():
     pytest.importorskip("temporalio")
-    from ralf_agent.temporal_workflow import TemporalRunWorkflow
+    from relf_agent.temporal_workflow import TemporalRunWorkflow
 
     state, _, request, _, _ = setup()
     state.admit_context_dispatch(admission(request))
@@ -196,7 +196,7 @@ def test_original_read_stages_query_is_pure_and_detached():
 
 
 def test_engine_read_stage_api_only_queries_original_history():
-    from ralf_agent.temporal import TemporalEngine
+    from relf_agent.temporal import TemporalEngine
 
     async def run():
         seen = []
@@ -216,11 +216,11 @@ def test_engine_read_stage_api_only_queries_original_history():
 
 def test_worker_and_replayer_preload_pure_original_read_rules():
     pytest.importorskip("temporalio")
-    from ralf_agent.temporal import _workflow_runner
+    from relf_agent.temporal import _workflow_runner
 
     modules = _workflow_runner().restrictions.passthrough_modules
     assert {
-        "ralf_agent.temporal_context",
-        "ralf_agent.temporal_context_read_protocol",
-        "ralf_agent.temporal_context_read_state",
+        "relf_agent.temporal_context",
+        "relf_agent.temporal_context_read_protocol",
+        "relf_agent.temporal_context_read_state",
     } <= modules

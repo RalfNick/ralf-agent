@@ -20,7 +20,7 @@
 ## 显式装配
 
 ```python
-from ralf_agent import (
+from relf_agent import (
     AgentBindingDescriptor,
     AgentDefinition,
     AgentSpec,
@@ -32,8 +32,8 @@ from ralf_agent import (
     SQLiteMemory,
     ToolRegistry,
 )
-from ralf_agent.temporal import TemporalEngine, build_temporal_worker
-from ralf_agent.temporal_activities import TemporalRuntime
+from relf_agent.temporal import TemporalEngine, build_temporal_worker
+from relf_agent.temporal_activities import TemporalRuntime
 
 scope = Scope("workspace", "developer")
 facts = SQLiteMemory("facts.sqlite")  # borrowed；同机共享磁盘示例

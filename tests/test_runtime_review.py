@@ -7,7 +7,7 @@ import types
 
 import pytest
 
-from ralf_agent import (
+from relf_agent import (
     AgentSpec,
     ComponentRegistry,
     LocalEngine,
@@ -23,8 +23,8 @@ from ralf_agent import (
     ToolRegistry,
     ToolSpec,
 )
-from ralf_agent.errors import AuthorizationDenied, IdempotencyConflict, ValidationError
-from ralf_agent.runtime_builder import EchoProvider
+from relf_agent.errors import AuthorizationDenied, IdempotencyConflict, ValidationError
+from relf_agent.runtime_builder import EchoProvider
 
 
 def catalog():
@@ -161,7 +161,7 @@ def test_cancel_receipt_replay_does_not_switch_a_running_new_profile(tmp_path):
 def test_optional_router_reader_diagnostics_do_not_prevent_cli_output(
     tmp_path, monkeypatch, capsys, output_format
 ):
-    from ralf_agent.cli import main
+    from relf_agent.cli import main
 
     path = tmp_path / "reader.sqlite"
 

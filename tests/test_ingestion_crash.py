@@ -7,11 +7,11 @@ from pathlib import Path
 
 import pytest
 
-from ralf_agent import Scope, SQLiteKnowledgeStore
-from ralf_agent.ingestion import IngestionCoordinator
-from ralf_agent.ingestion_types import SourceDocument
-from ralf_agent.postgres import PostgresKnowledgeStore
-from ralf_agent.retrieval import RetrievalQuery
+from relf_agent import Scope, SQLiteKnowledgeStore
+from relf_agent.ingestion import IngestionCoordinator
+from relf_agent.ingestion_types import SourceDocument
+from relf_agent.postgres import PostgresKnowledgeStore
+from relf_agent.retrieval import RetrievalQuery
 
 
 @pytest.mark.parametrize("backend", ["sqlite", "postgres"])
@@ -43,7 +43,7 @@ def test_process_loss_commits_all_knowledge_evidence_or_none(tmp_path, backend, 
     assert crashed.returncode == 79 and "crash-window-reached" in crashed.stdout, crashed.stderr
 
     async def run():
-        from ralf_agent.memory import memory_call
+        from relf_agent.memory import memory_call
 
         store = (
             SQLiteKnowledgeStore(path)

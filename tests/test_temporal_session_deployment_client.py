@@ -6,10 +6,10 @@ from types import SimpleNamespace
 
 import pytest
 
-from ralf_agent import AgentSpec, Scope
-from ralf_agent.errors import CapacityExceeded
-from ralf_agent.temporal_session_state import SESSION_WORKFLOW, TemporalSessionState
-from ralf_agent.temporal_state import COMMAND_REGISTRY_NAME
+from relf_agent import AgentSpec, Scope
+from relf_agent.errors import CapacityExceeded
+from relf_agent.temporal_session_state import SESSION_WORKFLOW, TemporalSessionState
+from relf_agent.temporal_state import COMMAND_REGISTRY_NAME
 from tests.test_temporal_deployment_session_registry import NAMESPACE, POLICY, command, state
 
 
@@ -119,7 +119,7 @@ class Backend:
 
 
 def client():
-    from ralf_agent.temporal_session_client import TemporalSessionClient
+    from relf_agent.temporal_session_client import TemporalSessionClient
 
     backend = Backend()
     binding = command()["session_submission"]["binding"]
@@ -167,7 +167,7 @@ def test_lost_zero_root_reserve_reply_recovers_without_second_session():
 
 def test_capacity_deferred_duplicate_wakes_same_original_intent_with_fresh_update_id():
     async def run():
-        from ralf_agent.session_types import SessionRef
+        from relf_agent.session_types import SessionRef
 
         api, backend = client()
         opened = await api.open(AgentSpec("ordinary", "Answer"), "chat", command_id="open")
@@ -190,7 +190,7 @@ def test_capacity_deferred_duplicate_wakes_same_original_intent_with_fresh_updat
 
 def test_changed_declared_session_address_conflicts_before_resolving_new_binding():
     async def run():
-        from ralf_agent.errors import IdempotencyConflict
+        from relf_agent.errors import IdempotencyConflict
 
         api, backend = client()
         await api.open(AgentSpec("ordinary", "Answer"), "chat", command_id="open")
@@ -203,7 +203,7 @@ def test_changed_declared_session_address_conflicts_before_resolving_new_binding
 
 def test_rebind_duplicate_keeps_first_resolved_binding_after_alias_moves():
     async def run():
-        from ralf_agent.session_types import SessionRef
+        from relf_agent.session_types import SessionRef
 
         api, backend = client()
         opened = await api.open(AgentSpec("ordinary", "Answer"), "chat", command_id="open")
@@ -224,8 +224,8 @@ def test_rebind_duplicate_keeps_first_resolved_binding_after_alias_moves():
 
 
 def test_facade_sessions_capability_requires_explicit_publication4_marker():
-    from ralf_agent.temporal_agent_runtime import TemporalClientRuntime
-    from ralf_agent.temporal_deployment_protocol import publish
+    from relf_agent.temporal_agent_runtime import TemporalClientRuntime
+    from relf_agent.temporal_deployment_protocol import publish
 
     runtime = object.__new__(TemporalClientRuntime)
     manifest = command()["session_submission"]["binding"]["manifest"]
@@ -246,8 +246,8 @@ def test_facade_sessions_capability_requires_explicit_publication4_marker():
 
 def test_host_selects_registry4_for_mixed_profiles_at_one_address():
     async def run():
-        from ralf_agent.temporal_deployment_admission import registry_id
-        from ralf_agent.temporal_profile_host import TemporalProfileHost
+        from relf_agent.temporal_deployment_admission import registry_id
+        from relf_agent.temporal_profile_host import TemporalProfileHost
 
         engines = []
 

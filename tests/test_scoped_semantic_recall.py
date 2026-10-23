@@ -5,7 +5,7 @@ from dataclasses import replace
 
 import pytest
 
-from ralf_agent import (
+from relf_agent import (
     FactsBindingResource,
     InMemoryMemory,
     RecallPage,
@@ -13,8 +13,8 @@ from ralf_agent import (
     Scope,
     SemanticMemoryStore,
 )
-from ralf_agent.errors import AuthorizationDenied, DefinitionMismatch, ValidationError
-from ralf_agent.types import canonical
+from relf_agent.errors import AuthorizationDenied, DefinitionMismatch, ValidationError
+from relf_agent.types import canonical
 
 from .semantic_fixture import Embedding, facts
 
@@ -115,7 +115,7 @@ def test_scoped_window_refuses_source_pagination():
 
 
 def test_scoped_semantic_approval_survives_authority_restart_with_original_references(tmp_path):
-    from ralf_agent import (
+    from relf_agent import (
         AgentBindingDescriptor,
         AgentDefinition,
         AgentSpec,
@@ -220,7 +220,7 @@ def test_temporal_scoped_semantic_context_survives_state_restore_without_reembed
     import copy
     from dataclasses import asdict
 
-    from ralf_agent import (
+    from relf_agent import (
         AgentBindingDescriptor,
         AgentDefinition,
         AgentSpec,
@@ -231,10 +231,10 @@ def test_temporal_scoped_semantic_context_survives_state_restore_without_reembed
         TaskRecallPlanner,
         ToolRegistry,
     )
-    from ralf_agent.temporal_activities import TemporalRuntime
-    from ralf_agent.temporal_bindings import normalize_request
-    from ralf_agent.temporal_state import TemporalRunState
-    from ralf_agent.types import submission_request
+    from relf_agent.temporal_activities import TemporalRuntime
+    from relf_agent.temporal_bindings import normalize_request
+    from relf_agent.temporal_state import TemporalRunState
+    from relf_agent.types import submission_request
     from tests.test_temporal_binding_isolation import advance
 
     class CountingEmbedding(Embedding):

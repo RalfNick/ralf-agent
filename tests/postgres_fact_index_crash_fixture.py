@@ -7,14 +7,14 @@ import sqlite3
 import sys
 from pathlib import Path
 
-from ralf_agent import (
+from relf_agent import (
     FactIndexCatalog,
     IndexedMemoryStore,
     RecallQuery,
     Scope,
     SQLiteVectorIndex,
 )
-from ralf_agent.postgres import PostgresMemory
+from relf_agent.postgres import PostgresMemory
 
 root, window, mode = Path(sys.argv[1]), sys.argv[2], sys.argv[3]
 root.mkdir(exist_ok=True)

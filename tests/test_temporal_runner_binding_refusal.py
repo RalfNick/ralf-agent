@@ -5,15 +5,15 @@ from dataclasses import asdict
 
 import pytest
 
-from ralf_agent import AgentSpec, Scope
-from ralf_agent.binding_catalog import BindingCatalog
-from ralf_agent.binding_definitions import AgentDefinition
-from ralf_agent.binding_types import AgentBindingDescriptor, BindingSelection
-from ralf_agent.errors import ValidationError
-from ralf_agent.temporal_activities import TemporalRuntime
-from ralf_agent.temporal_bindings import normalize_request, validate_descriptor
-from ralf_agent.temporal_state import TemporalRunState
-from ralf_agent.types import submission_request
+from relf_agent import AgentSpec, Scope
+from relf_agent.binding_catalog import BindingCatalog
+from relf_agent.binding_definitions import AgentDefinition
+from relf_agent.binding_types import AgentBindingDescriptor, BindingSelection
+from relf_agent.errors import ValidationError
+from relf_agent.temporal_activities import TemporalRuntime
+from relf_agent.temporal_bindings import normalize_request, validate_descriptor
+from relf_agent.temporal_state import TemporalRunState
+from relf_agent.types import submission_request
 
 from .test_temporal_delegated_coding_refusal import worker
 from .test_temporal_engine import JournalContractFixture

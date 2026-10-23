@@ -3,10 +3,10 @@
 import asyncio
 import json
 
-from ralf_agent import AgentSpec, ModelResponse, ToolRegistry, ToolSpec, WorkflowSpec
-from ralf_agent.cli import main
-from ralf_agent.cli_views import diagnostics_inspection
-from ralf_agent.types import ToolCall
+from relf_agent import AgentSpec, ModelResponse, ToolRegistry, ToolSpec, WorkflowSpec
+from relf_agent.cli import main
+from relf_agent.cli_views import diagnostics_inspection
+from relf_agent.types import ToolCall
 
 from .helpers import ScriptedProvider
 from .test_binding_assembly import declarations

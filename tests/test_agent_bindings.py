@@ -4,13 +4,13 @@ import importlib
 
 import pytest
 
-from ralf_agent import AgentSpec, ModelResponse, Scope, WorkflowSpec
-from ralf_agent.errors import AuthorizationDenied, DefinitionMismatch, ValidationError
+from relf_agent import AgentSpec, ModelResponse, Scope, WorkflowSpec
+from relf_agent.errors import AuthorizationDenied, DefinitionMismatch, ValidationError
 
 
 def api(name):
     try:
-        return importlib.import_module("ralf_agent." + name)
+        return importlib.import_module("relf_agent." + name)
     except ModuleNotFoundError as exc:
         pytest.fail(f"H1 public module is missing: {exc.name}")
 

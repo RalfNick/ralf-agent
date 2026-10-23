@@ -5,14 +5,14 @@ import importlib
 
 import pytest
 
-from ralf_agent import BindingCatalog, BindingSelection, InMemoryMemory, Scope
-from ralf_agent.errors import AuthorizationDenied, DefinitionMismatch, ValidationError
-from ralf_agent.recall import RecallQuery
+from relf_agent import BindingCatalog, BindingSelection, InMemoryMemory, Scope
+from relf_agent.errors import AuthorizationDenied, DefinitionMismatch, ValidationError
+from relf_agent.recall import RecallQuery
 
 
 def resource_type():
     try:
-        return importlib.import_module("ralf_agent.binding_sessions").SessionBindingResource
+        return importlib.import_module("relf_agent.binding_sessions").SessionBindingResource
     except ModuleNotFoundError:
         pytest.fail("Session binding resource implementation is missing")
 

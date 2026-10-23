@@ -4,12 +4,12 @@ import copy
 
 import pytest
 
-from ralf_agent.errors import ValidationError
+from relf_agent.errors import ValidationError
 from tests.test_parent_completion import child, receipt, request
 
 
 def receipt_gate(**changes):
-    from ralf_agent.parent_completion_rules import ReceiptParentCompletionGate
+    from relf_agent.parent_completion_rules import ReceiptParentCompletionGate
 
     rule = {
         "id": "lookup",
@@ -23,7 +23,7 @@ def receipt_gate(**changes):
 
 
 def test_minimal_receipt_rule_normalizes_defaults_and_identity():
-    from ralf_agent.parent_completion_rules import ReceiptParentCompletionGate
+    from relf_agent.parent_completion_rules import ReceiptParentCompletionGate
 
     gate = ReceiptParentCompletionGate(
         [{"id": "rule", "member_path": ["worker"], "tool": "lookup"}]
@@ -90,13 +90,13 @@ def test_conditional_rule_does_not_bypass_unconditional_member():
 
 
 def test_remote_schema_reference_fails_locally_and_team_replan_preflight_fails():
-    from ralf_agent.parent_completion import ParentCompletionPolicy
-    from ralf_agent.parent_completion_protocol import validate_policy
+    from relf_agent.parent_completion import ParentCompletionPolicy
+    from relf_agent.parent_completion_protocol import validate_policy
 
     gate = receipt_gate(when={"$ref": "https://example.invalid/schema"})
     with pytest.raises(ValidationError):
         gate.verify(request())
-    from ralf_agent.parent_completion_rules import ReceiptParentCompletionGate
+    from relf_agent.parent_completion_rules import ReceiptParentCompletionGate
 
     policy = ParentCompletionPolicy(
         ReceiptParentCompletionGate(
@@ -114,7 +114,7 @@ DATASET = {
 
 
 def inventory_source(*, target="wire", quantity=3, kind="dynamic"):
-    from ralf_agent.parent_completion import ParentCompletionRequest
+    from relf_agent.parent_completion import ParentCompletionRequest
 
     structured = {"dataset_id": "warehouse-a", "target": target, "quantity": quantity}
     item = DATASET["inventory"][0] if target == "wire" else None
@@ -185,7 +185,7 @@ def inventory_source(*, target="wire", quantity=3, kind="dynamic"):
 
 
 def inventory_gate():
-    from ralf_agent.parent_completion_rules import InventoryParentCompletionGate
+    from relf_agent.parent_completion_rules import InventoryParentCompletionGate
 
     return InventoryParentCompletionGate(dataset=DATASET, request_pointer="/request")
 
@@ -222,7 +222,7 @@ def test_inventory_gate_accepts_actual_completed_and_stop_evidence(target, quant
     ],
 )
 def test_inventory_gate_rejects_schema_valid_false_success_and_bad_dataflow(fault):
-    from ralf_agent.parent_completion import ParentCompletionRequest
+    from relf_agent.parent_completion import ParentCompletionRequest
 
     value = inventory_source(target=None if fault == "stop-calculator" else "wire").to_dict()
     if fault == "candidate":
@@ -274,7 +274,7 @@ def test_inventory_gate_accepts_original_team_input_and_freezes_dataset():
 
 
 def test_receipt_output_binding_can_select_the_complete_literal_result():
-    from ralf_agent.parent_completion_rules import ReceiptParentCompletionGate
+    from relf_agent.parent_completion_rules import ReceiptParentCompletionGate
 
     item = child()
     tool = receipt(item, result={"total": 20})
@@ -292,7 +292,7 @@ def test_receipt_output_binding_can_select_the_complete_literal_result():
 
 
 def test_inventory_missing_input_prohibits_any_owned_tool_execution():
-    from ralf_agent.parent_completion import ParentCompletionRequest
+    from relf_agent.parent_completion import ParentCompletionRequest
 
     value = inventory_source(target=None).to_dict()
     unexpected = child(("other",), run_id="other-run")
@@ -307,7 +307,7 @@ def test_malformed_receipt_selectors_fail_with_validation_error():
 
 
 def test_direct_graph_tool_requires_explicit_unconsumed_rule_opt_in():
-    from ralf_agent.parent_completion_rules import ReceiptParentCompletionGate
+    from relf_agent.parent_completion_rules import ReceiptParentCompletionGate
 
     owner = child(("group",))
     owner.update(
@@ -330,4 +330,4 @@ def test_direct_graph_tool_requires_explicit_unconsumed_rule_opt_in():
     )
 
 
-from ralf_agent.types import digest  # noqa: E402
+from relf_agent.types import digest  # noqa: E402

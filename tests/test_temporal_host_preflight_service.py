@@ -7,9 +7,9 @@ from datetime import timedelta
 
 import pytest
 
-from ralf_agent import AgentSpec, Scope, TemporalRuntimeBuilder
-from ralf_agent.errors import ValidationError
-from ralf_agent.temporal import replay_temporal_history
+from relf_agent import AgentSpec, Scope, TemporalRuntimeBuilder
+from relf_agent.errors import ValidationError
+from relf_agent.temporal import replay_temporal_history
 
 from .test_temporal_catalog_assembly import catalog
 

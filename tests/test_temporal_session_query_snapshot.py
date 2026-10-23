@@ -4,10 +4,10 @@ import copy
 
 import pytest
 
-from ralf_agent import temporal_session_deployment_state as deployment
-from ralf_agent.errors import RalfError
-from ralf_agent.temporal_session_state import TemporalSessionState
-from ralf_agent.temporal_session_workflow import TemporalSessionWorkflow
+from relf_agent import temporal_session_deployment_state as deployment
+from relf_agent.errors import RalfError
+from relf_agent.temporal_session_state import TemporalSessionState
+from relf_agent.temporal_session_workflow import TemporalSessionWorkflow
 from tests.test_temporal_deployment_session_registry import state as registry_state
 from tests.test_temporal_session_deployment_coding_registry import coding_intent_request
 

@@ -5,21 +5,21 @@ from pathlib import Path
 
 import pytest
 
-from ralf_agent.adapter_contract_types import AdapterContractCleanupPending
-from ralf_agent.errors import ValidationError
-from ralf_agent.types import Scope, canonical
+from relf_agent.adapter_contract_types import AdapterContractCleanupPending
+from relf_agent.errors import ValidationError
+from relf_agent.types import Scope, canonical
 
 
 def api():
     try:
-        return importlib.import_module("ralf_agent.facts_adapter_contract")
+        return importlib.import_module("relf_agent.facts_adapter_contract")
     except ModuleNotFoundError:
         pytest.fail("The fixed Facts contract cases are missing")
 
 
 def fixture():
     try:
-        reference = importlib.import_module("ralf_agent.facts_adapter_contract_reference")
+        reference = importlib.import_module("relf_agent.facts_adapter_contract_reference")
     except ModuleNotFoundError:
         pytest.fail("The independent Facts fixture is missing")
     return reference.offline_facts_fixture()
@@ -409,8 +409,8 @@ def test_cancelled_managed_setup_retains_and_cancels_already_admitted_original_r
 
 
 def test_suite_transfers_failed_original_owner_workspace_and_retries_cleanup(tmp_path):
-    from ralf_agent.adapter_contracts import AdapterContractSuite
-    from ralf_agent.errors import CloseIncomplete
+    from relf_agent.adapter_contracts import AdapterContractSuite
+    from relf_agent.errors import CloseIncomplete
 
     allowed = False
 
@@ -594,8 +594,8 @@ def test_repeated_cancellation_during_final_audit_keeps_failed_cleanup_owner(tmp
 def test_cancelled_pipeline_drains_original_engine_backing_thread_before_owned_close(tmp_path):
     import threading
 
-    from ralf_agent.facts_adapter_contract_reference import ReferenceSQLiteManagedFactsStore
-    from ralf_agent.memory import ThreadedMemoryAdapter
+    from relf_agent.facts_adapter_contract_reference import ReferenceSQLiteManagedFactsStore
+    from relf_agent.memory import ThreadedMemoryAdapter
 
     async def run():
         entered, allowed, finished = threading.Event(), threading.Event(), threading.Event()
@@ -691,7 +691,7 @@ def test_failed_cancel_cleanup_reset_preserves_original_case_owner_until_retry(t
 @pytest.mark.parametrize("kind", ["memory", "sqlite"])
 @pytest.mark.parametrize("case_id", ["F01", "F02", "F03", "F04", "F05", "F06", "F10", "F11"])
 def test_native_default_data_contracts_remain_compatible(kind, case_id, tmp_path):
-    from ralf_agent import InMemoryMemory, SQLiteMemory
+    from relf_agent import InMemoryMemory, SQLiteMemory
 
     class Native:
         def prepare(self, case_id, workspace):
@@ -713,7 +713,7 @@ def test_native_default_data_contracts_remain_compatible(kind, case_id, tmp_path
 
 
 def test_core_case_uses_a_store_without_managed_ports_or_database_attributes(tmp_path):
-    from ralf_agent.facts_adapter_contract_reference import ReferenceSQLiteFactsStore
+    from relf_agent.facts_adapter_contract_reference import ReferenceSQLiteFactsStore
 
     def change(session):
         core = ReferenceSQLiteFactsStore(session.resources[0].resource)
@@ -787,7 +787,7 @@ def test_valid_maximum_namespace_runs_original_consumers_and_pipeline_command(ca
 
 @pytest.mark.parametrize("case_id", ["F02", "F09", "F15", "F16"])
 def test_borrowed_reopened_dataset_uses_actual_case_close_delta(case_id, tmp_path):
-    from ralf_agent.facts_adapter_contract_reference import ReferenceFactsSource
+    from relf_agent.facts_adapter_contract_reference import ReferenceFactsSource
 
     class Borrowed:
         def prepare(self, case_id, workspace):
@@ -912,7 +912,7 @@ def test_borrowed_close_count_absence_does_not_invent_lifecycle_proof(tmp_path):
 
 
 def test_reset_actual_lifecycle_counter_leaves_borrowed_evidence_unverified(tmp_path):
-    from ralf_agent.facts_adapter_contract_reference import ReferenceFactsSource
+    from relf_agent.facts_adapter_contract_reference import ReferenceFactsSource
 
     class Borrowed:
         def prepare(self, case_id, workspace):

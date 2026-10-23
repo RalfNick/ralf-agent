@@ -5,8 +5,8 @@ from dataclasses import replace
 
 import pytest
 
-import ralf_agent as r
-from ralf_agent.errors import AuthorizationDenied, DefinitionMismatch, ValidationError
+import relf_agent as r
+from relf_agent.errors import AuthorizationDenied, DefinitionMismatch, ValidationError
 
 from .helpers import ScriptedProvider
 from .test_agent_runtime import engine
@@ -184,7 +184,7 @@ def test_composite_sessions_refuse_without_advertised_admission_extension(kind, 
 
 def test_external_session_without_receipt_protocol_refuses_before_activation(tmp_path):
     async def scenario():
-        from ralf_agent import InMemoryMemory
+        from relf_agent import InMemoryMemory
 
         class UnverifiedMemory(InMemoryMemory):
             session_receipt_version = None
@@ -236,7 +236,7 @@ def test_raw_submit_cannot_bypass_idle_or_busy_registered_session(tmp_path):
 
 def test_namespace_address_alias_does_not_register_another_session(tmp_path):
     async def scenario():
-        from ralf_agent.binding_sessions import session_storage_key
+        from relf_agent.binding_sessions import session_storage_key
 
         raw = engine(tmp_path / "alias.sqlite", ScriptedProvider([]))
         catalog = r.BindingCatalog(scope=raw.scope)

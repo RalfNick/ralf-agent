@@ -10,7 +10,7 @@ from datetime import timedelta
 
 import pytest
 
-from ralf_agent import (
+from relf_agent import (
     AgentSpec,
     ComponentRegistry,
     DeploymentAdmissionPolicy,
@@ -19,11 +19,11 @@ from ralf_agent import (
     TemporalProfile,
     TemporalRuntimeBuilder,
 )
-from ralf_agent.errors import CloseIncomplete, SessionBusy
-from ralf_agent.temporal_deployment_admission import registry_id, root_run_id
-from ralf_agent.temporal_deployment_release import check_owner
-from ralf_agent.temporal_session_state import workflow_id
-from ralf_agent.types import digest
+from relf_agent.errors import CloseIncomplete, SessionBusy
+from relf_agent.temporal_deployment_admission import registry_id, root_run_id
+from relf_agent.temporal_deployment_release import check_owner
+from relf_agent.temporal_session_state import workflow_id
+from relf_agent.types import digest
 from tests.test_temporal_deployment_admission_service import _clients
 from tests.test_temporal_deployment_dispatch_service import _eventually
 from tests.test_temporal_deployment_public_service import (

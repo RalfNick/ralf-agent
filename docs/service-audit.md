@@ -7,7 +7,7 @@
 ## 默认使用与替换
 
 ```python
-from ralf_agent import A2AApplication, ServiceAudit
+from relf_agent import A2AApplication, ServiceAudit
 
 audit = ServiceAudit()  # 默认最多1000条内存观察，不访问网络或磁盘
 app = A2AApplication(

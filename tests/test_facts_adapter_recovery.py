@@ -9,7 +9,7 @@ from pathlib import Path
 
 import pytest
 
-from ralf_agent import SQLiteStore
+from relf_agent import SQLiteStore
 from tests.test_facts_adapter_starter import application
 
 

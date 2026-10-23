@@ -6,8 +6,8 @@ from concurrent.futures import ThreadPoolExecutor
 
 import pytest
 
-import ralf_agent as r
-from ralf_agent.errors import AuthorizationDenied, DefinitionMismatch, RalfError
+import relf_agent as r
+from relf_agent.errors import AuthorizationDenied, DefinitionMismatch, RalfError
 
 IMAGE = "sha256:" + "a" * 64
 
@@ -113,7 +113,7 @@ def test_restricted_create_profile_does_not_inherit_host_or_image_permissions():
 
 def test_plain_native_log_multiplex_preserves_streams():
     api()
-    from ralf_agent.docker_sandbox_transport import decode_logs
+    from relf_agent.docker_sandbox_transport import decode_logs
 
     def frame(stream, data):
         return bytes([stream, 0, 0, 0]) + len(data).to_bytes(4, "big") + data
@@ -135,7 +135,7 @@ def test_plain_native_log_multiplex_preserves_streams():
 )
 def test_malformed_native_log_frames_fail_before_adoption(data):
     api()
-    from ralf_agent.docker_sandbox_transport import decode_logs
+    from relf_agent.docker_sandbox_transport import decode_logs
 
     with pytest.raises(RalfError):
         decode_logs(data, max_bytes=100)
@@ -184,7 +184,7 @@ def test_conflicting_native_request_is_refused_without_killing_existing_work(mon
     monkeypatch.setattr(value, "_check", lambda **kwargs: None)
     value._control = Control()
     value._pin = {"daemon_id": "original", "engine_version": "29.0.1"}
-    from ralf_agent.docker_sandbox_transport import lease_root
+    from relf_agent.docker_sandbox_transport import lease_root
 
     value._pin["leases"] = lease_root(str(tmp_path / "leases"))
     with pytest.raises(r.SandboxIsolationViolation):
@@ -264,7 +264,7 @@ def test_same_socket_proxy_replacement_cannot_adopt_other_daemon_evidence(monkey
 def test_open_refuses_missing_or_nondefault_seccomp_before_publishing_identity(
     monkeypatch, security
 ):
-    from ralf_agent import docker_sandbox as native
+    from relf_agent import docker_sandbox as native
 
     class Control:
         def __init__(self, *args):
@@ -320,7 +320,7 @@ def test_provider_implementation_is_part_of_fixed_profile_identity():
 
 
 def test_concurrent_explicit_open_owns_only_one_control_client(monkeypatch):
-    from ralf_agent import docker_sandbox as native
+    from relf_agent import docker_sandbox as native
 
     entered, release, clients = threading.Event(), threading.Event(), []
 

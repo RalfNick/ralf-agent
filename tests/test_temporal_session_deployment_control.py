@@ -6,9 +6,9 @@ from types import SimpleNamespace
 
 import pytest
 
-from ralf_agent.errors import DefinitionMismatch
-from ralf_agent.temporal_session_state import SESSION_ACTIVITY, SESSION_WORKFLOW
-from ralf_agent.types import digest
+from relf_agent.errors import DefinitionMismatch
+from relf_agent.temporal_session_state import SESSION_ACTIVITY, SESSION_WORKFLOW
+from relf_agent.types import digest
 
 
 def fixture():
@@ -39,7 +39,7 @@ def fixture():
 class Runtime:
     def __init__(self, manifest):
         self.manifest = manifest
-        from ralf_agent.temporal_context_execution import ContextExecutionOwner
+        from relf_agent.temporal_context_execution import ContextExecutionOwner
 
         self._deployment_execution_owner = ContextExecutionOwner()
         self._deployment_execution_owner_pin = self._deployment_execution_owner
@@ -96,7 +96,7 @@ class Handle:
         c = self.client
         c.event(value["kind"])
         if value["kind"] in {"deployment_session_command", "deployment_session_lifecycle"}:
-            from ralf_agent.temporal_session_deployment_state import START_SELECTOR_FIELDS
+            from relf_agent.temporal_session_deployment_state import START_SELECTOR_FIELDS
 
             assert set(value) == START_SELECTOR_FIELDS | {"kind"}
         if value["kind"] == "deployment_session_intent":
@@ -212,7 +212,7 @@ class Client:
 
 
 def validation():
-    from ralf_agent.temporal_session_deployment_control import SessionControlValidation
+    from relf_agent.temporal_session_deployment_control import SessionControlValidation
 
     deployment, value, info = fixture()
     client = Client(value)
@@ -267,7 +267,7 @@ def test_forged_durable_intent_refuses_even_with_valid_digest():
 
 
 def test_owned_body_ends_before_ack_and_ack_covers_full_response():
-    from ralf_agent.temporal_session_deployment_control import owned_control_body
+    from relf_agent.temporal_session_deployment_control import owned_control_body
 
     proof, client = validation()
 
@@ -289,7 +289,7 @@ def test_owned_body_ends_before_ack_and_ack_covers_full_response():
 
 
 def test_owned_body_failed_identity_never_begins_call_or_body():
-    from ralf_agent.temporal_session_deployment_control import owned_control_body
+    from relf_agent.temporal_session_deployment_control import owned_control_body
 
     proof, client = validation()
     client.original_epoch = "reset"
@@ -307,7 +307,7 @@ def test_owned_body_failed_identity_never_begins_call_or_body():
 def test_factory_registration_rejects_copied_function_marker_and_resource():
     from functools import wraps
 
-    from ralf_agent.temporal_session_deployment_control import (
+    from relf_agent.temporal_session_deployment_control import (
         is_registered_activity,
         registered_session_deployment_activities,
     )
@@ -329,8 +329,8 @@ def test_factory_registration_rejects_copied_function_marker_and_resource():
 
 
 def registry_fixture():
-    from ralf_agent.temporal_deployment_admission import registry_id
-    from ralf_agent.temporal_deployment_protocol import publish
+    from relf_agent.temporal_deployment_admission import registry_id
+    from relf_agent.temporal_deployment_protocol import publish
     from tests.test_temporal_deployment_session_registry import POLICY
 
     deployment, value, info = fixture()
@@ -404,7 +404,7 @@ def registry_fixture():
 
 
 def test_registry_root_verification_reads_original_coordinator_not_attestation():
-    from ralf_agent.temporal_session_deployment_control import verify_registry_request
+    from relf_agent.temporal_session_deployment_control import verify_registry_request
 
     runtime, client, info, request = registry_fixture()
     result = asyncio.run(verify_registry_request(runtime, client, request, info=info))
@@ -416,7 +416,7 @@ def test_registry_root_verification_reads_original_coordinator_not_attestation()
 
 
 def test_registry_root_verification_rejects_forged_activity_before_reads():
-    from ralf_agent.temporal_session_deployment_control import verify_registry_request
+    from relf_agent.temporal_session_deployment_control import verify_registry_request
 
     runtime, client, info, request = registry_fixture()
     info.workflow_id = "forged"
@@ -427,7 +427,7 @@ def test_registry_root_verification_rejects_forged_activity_before_reads():
 
 class RegistryHandle(Handle):
     async def describe(self):
-        from ralf_agent.temporal_state import COMMAND_REGISTRY_NAME
+        from relf_agent.temporal_state import COMMAND_REGISTRY_NAME
 
         c = self.client
         c.event("registry_describe")
@@ -451,7 +451,7 @@ class RegistryHandle(Handle):
             )
             from temporalio.api.taskqueue.v1 import TaskQueue
 
-            from ralf_agent.temporal_state import COMMAND_REGISTRY_NAME
+            from relf_agent.temporal_state import COMMAND_REGISTRY_NAME
 
             c = self.client
             payload = await c.data_converter.encode(
@@ -524,7 +524,7 @@ class RegistryHandle(Handle):
 
 
 def test_register_recovers_original_claim_without_second_reserve():
-    from ralf_agent.temporal_session_deployment_control import SessionControlValidation, _register
+    from relf_agent.temporal_session_deployment_control import SessionControlValidation, _register
     from tests.test_temporal_deployment_session_registry import state
 
     runtime, client, info, request = registry_fixture()
@@ -571,7 +571,7 @@ def test_register_recovers_original_claim_without_second_reserve():
 
 
 def session_validation():
-    from ralf_agent.temporal_session_deployment_control import SessionControlValidation
+    from relf_agent.temporal_session_deployment_control import SessionControlValidation
     from tests.test_temporal_deployment_session_registry import intent_request, state
 
     runtime, client, info, request = registry_fixture()
@@ -609,7 +609,7 @@ def session_validation():
 
 
 def test_register_reserve_reply_loss_recovers_first_claim_and_envelope():
-    from ralf_agent.temporal_session_deployment_control import _register
+    from relf_agent.temporal_session_deployment_control import _register
 
     proof, client = session_validation()
     client.lose_reserve_reply = True
@@ -621,7 +621,7 @@ def test_register_reserve_reply_loss_recovers_first_claim_and_envelope():
 
 
 def test_register_capacity_is_deferred_without_new_turn_or_business_start():
-    from ralf_agent.temporal_session_deployment_control import _register
+    from relf_agent.temporal_session_deployment_control import _register
     from tests.test_temporal_deployment_session_registry import intent_request, verified
 
     proof, client = session_validation()
@@ -634,7 +634,7 @@ def test_register_capacity_is_deferred_without_new_turn_or_business_start():
 
 
 def test_start_issued_pending_claim_stays_uncertain_without_second_reserve():
-    from ralf_agent.temporal_session_deployment_control import _register
+    from relf_agent.temporal_session_deployment_control import _register
     from tests.test_temporal_deployment_session_registry import intent_request, verified
 
     proof, client = session_validation()
@@ -647,7 +647,7 @@ def test_start_issued_pending_claim_stays_uncertain_without_second_reserve():
 
 
 def observing_validation():
-    from ralf_agent.temporal_session_deployment_control import SessionControlValidation
+    from relf_agent.temporal_session_deployment_control import SessionControlValidation
     from tests.test_temporal_deployment_session_registry import intent_request, verified
     from tests.test_temporal_session_deployment_dto import start
 
@@ -667,7 +667,7 @@ def observing_validation():
 
 
 def test_quiet_but_not_retired_observation_cannot_advance():
-    from ralf_agent.temporal_session_deployment_control import _observe
+    from relf_agent.temporal_session_deployment_control import _observe
 
     proof, client = observing_validation()
     result = asyncio.run(_observe(proof))
@@ -681,7 +681,7 @@ def test_quiet_but_not_retired_observation_cannot_advance():
 
 
 def test_actual_business_parent_mismatch_refuses_before_observe():
-    from ralf_agent.temporal_session_deployment_control import _observe
+    from relf_agent.temporal_session_deployment_control import _observe
 
     proof, client = observing_validation()
     client.business_parent_epoch = "forged-coordinator-epoch"
@@ -692,12 +692,12 @@ def test_actual_business_parent_mismatch_refuses_before_observe():
 
 class BusinessHandle(Handle):
     async def describe(self):
-        from ralf_agent.temporal_state import WORKFLOW_NAME
+        from relf_agent.temporal_state import WORKFLOW_NAME
 
         c, i = self.client, self.client.intent
         c.event("business_describe")
         if not hasattr(c, "business_epoch"):
-            from ralf_agent.errors import NotFound
+            from relf_agent.errors import NotFound
 
             raise NotFound("original child not visible")
         return SimpleNamespace(
@@ -720,7 +720,7 @@ class BusinessHandle(Handle):
             )
             from temporalio.api.taskqueue.v1 import TaskQueue
 
-            from ralf_agent.temporal_state import WORKFLOW_NAME
+            from relf_agent.temporal_state import WORKFLOW_NAME
 
             c, i = self.client, self.client.intent
             payload = await c.data_converter.encode(
@@ -827,7 +827,7 @@ def receipt_request(*, rejected=False):
 
 
 def test_original_applied_open_receipt_is_indexed_only_after_actual_sdk_reads():
-    from ralf_agent.temporal_session_deployment_control import verify_registry_request
+    from relf_agent.temporal_session_deployment_control import verify_registry_request
 
     runtime, client, info, request = receipt_request()
     result = asyncio.run(verify_registry_request(runtime, client, request, info=info))
@@ -836,7 +836,7 @@ def test_original_applied_open_receipt_is_indexed_only_after_actual_sdk_reads():
 
 
 def test_rejected_rebind_receipt_keeps_original_ref_without_adopting_requested_binding():
-    from ralf_agent.temporal_session_deployment_control import verify_registry_request
+    from relf_agent.temporal_session_deployment_control import verify_registry_request
 
     runtime, client, info, request = receipt_request(rejected=True)
     result = asyncio.run(verify_registry_request(runtime, client, request, info=info))
@@ -847,7 +847,7 @@ def test_rejected_rebind_receipt_keeps_original_ref_without_adopting_requested_b
 
 
 def test_lost_end_ack_keeps_owned_debt_and_retries_same_original_ack():
-    from ralf_agent.temporal_session_deployment_control import owned_control_body
+    from relf_agent.temporal_session_deployment_control import owned_control_body
 
     async def scenario():
         proof, client = validation()
@@ -876,7 +876,7 @@ def test_lost_end_ack_keeps_owned_debt_and_retries_same_original_ack():
 
 
 def test_never_claimed_requires_positive_original_durable_barrier():
-    from ralf_agent.temporal_session_deployment_control import verify_registry_request
+    from relf_agent.temporal_session_deployment_control import verify_registry_request
     from tests.test_temporal_deployment_session_registry import refusal_request
 
     runtime, client, info, request = registry_fixture()
@@ -895,7 +895,7 @@ def test_never_claimed_requires_positive_original_durable_barrier():
 
 
 def test_factory_registration_pins_verifier_source_ports(monkeypatch):
-    from ralf_agent.temporal_session_deployment_control import (
+    from relf_agent.temporal_session_deployment_control import (
         SessionControlValidation,
         is_registered_activity,
         registered_session_deployment_activities,
@@ -937,7 +937,7 @@ def positive_observation():
 
 
 def test_positive_original_retirement_returns_advance_without_new_reserve():
-    from ralf_agent.temporal_session_deployment_control import _observe
+    from relf_agent.temporal_session_deployment_control import _observe
 
     proof, client = positive_observation()
     result = asyncio.run(_observe(proof))
@@ -948,7 +948,7 @@ def test_positive_original_retirement_returns_advance_without_new_reserve():
 
 
 def test_sealed_run_without_original_registry_retirement_stays_pending():
-    from ralf_agent.temporal_session_deployment_control import _observe
+    from relf_agent.temporal_session_deployment_control import _observe
 
     proof, client = positive_observation()
     client.business_retirement = None
@@ -958,7 +958,7 @@ def test_sealed_run_without_original_registry_retirement_stays_pending():
 
 
 def test_run_origin_read_verifier_needs_no_fabricated_activity_identity():
-    from ralf_agent.temporal_session_deployment_verification import validate_session_origin
+    from relf_agent.temporal_session_deployment_verification import validate_session_origin
 
     runtime, client, _, request = registry_fixture()
     prepared = request["prepared"]
@@ -969,12 +969,12 @@ def test_run_origin_read_verifier_needs_no_fabricated_activity_identity():
 
 
 def test_register_records_original_child_receipt_after_worker_bound_before_facade_ack():
-    from ralf_agent.temporal_session_deployment_control import _register
+    from relf_agent.temporal_session_deployment_control import _register
 
     proof, client = observing_validation()
     proof.value["mode"] = "register"
     # Preserve the invocation request pin by constructing a new register context.
-    from ralf_agent.temporal_session_deployment_control import SessionControlValidation
+    from relf_agent.temporal_session_deployment_control import SessionControlValidation
 
     proof = SessionControlValidation(
         proof.runtime, client, proof.value, proof.info, deployment_id=proof.deployment_id
@@ -996,7 +996,7 @@ def test_register_records_original_child_receipt_after_worker_bound_before_facad
 def test_unacknowledged_call_start_preserves_failure_without_unobserved_ack_future(outcome):
     import gc
 
-    from ralf_agent.temporal_session_deployment_control import owned_control_body
+    from relf_agent.temporal_session_deployment_control import owned_control_body
 
     async def scenario():
         proof, client = validation()
@@ -1049,7 +1049,7 @@ def test_unacknowledged_call_start_preserves_failure_without_unobserved_ack_futu
 
 
 def test_capacity_retry_uses_new_sdk_update_after_completed_capacity_failure(monkeypatch):
-    from ralf_agent.temporal_session_deployment_control import _register
+    from relf_agent.temporal_session_deployment_control import _register
 
     original_update = RegistryHandle.execute_update
     outcomes = {}
@@ -1084,7 +1084,7 @@ def test_capacity_retry_uses_new_sdk_update_after_completed_capacity_failure(mon
 
 
 def test_lost_applied_call_start_reply_recovers_original_owner_and_ends_without_body(monkeypatch):
-    from ralf_agent.temporal_session_deployment_control import owned_control_body
+    from relf_agent.temporal_session_deployment_control import owned_control_body
 
     original_update = Handle.execute_update
     starts = {}

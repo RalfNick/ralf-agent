@@ -8,11 +8,11 @@ from pathlib import Path
 
 import pytest
 
-from ralf_agent import AgentSpec, LocalEngine, MessageEnvelope, Scope, SQLiteStore, ToolRegistry
-from ralf_agent.handoff import EngineCommandDispatcher, LocalCommandAdapter, consume_delivery
-from ralf_agent.postgres_handoff import PostgresInbox, PostgresOutbox
-from ralf_agent.redis_streams import RedisStreamsBus
-from ralf_agent.runtime_builder import EchoProvider
+from relf_agent import AgentSpec, LocalEngine, MessageEnvelope, Scope, SQLiteStore, ToolRegistry
+from relf_agent.handoff import EngineCommandDispatcher, LocalCommandAdapter, consume_delivery
+from relf_agent.postgres_handoff import PostgresInbox, PostgresOutbox
+from relf_agent.redis_streams import RedisStreamsBus
+from relf_agent.runtime_builder import EchoProvider
 
 from .test_postgres_adapter import postgres_dsn as _postgres_dsn
 from .test_redis_streams import redis_service as _redis_service

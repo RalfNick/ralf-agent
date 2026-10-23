@@ -5,10 +5,10 @@ import os
 
 import pytest
 
-from ralf_agent.codex_coding_profile import CodexCodingProfile
-from ralf_agent.codex_environment import DockerCodingEnvironment
-from ralf_agent.codex_model_connection import CodexModelConnection
-from ralf_agent.errors import DefinitionMismatch, ValidationError
+from relf_agent.codex_coding_profile import CodexCodingProfile
+from relf_agent.codex_environment import DockerCodingEnvironment
+from relf_agent.codex_model_connection import CodexModelConnection
+from relf_agent.errors import DefinitionMismatch, ValidationError
 from tests import test_codex_environment as retained
 
 load = retained.load
@@ -31,7 +31,7 @@ def connection(**kwargs):
 
 
 def environment(resource, selected=None, **kwargs):
-    module = importlib.import_module("ralf_agent.codex_connected_environment")
+    module = importlib.import_module("relf_agent.codex_connected_environment")
     return module.ConnectedDockerCodingEnvironment(
         resource[0],
         "test-connected",
@@ -166,14 +166,14 @@ def test_cold_connection_change_cannot_adopt_the_original_namespace(resource, fi
 
 @pytest.mark.parametrize("name", ["__init__", "_check_root"])
 def test_authored_connected_environment_methods_are_executable_fingerprintable(name):
-    from ralf_agent.component_fingerprint import executable_digest
+    from relf_agent.component_fingerprint import executable_digest
 
-    module = importlib.import_module("ralf_agent.codex_connected_environment")
+    module = importlib.import_module("relf_agent.codex_connected_environment")
     assert len(executable_digest(vars(module.ConnectedDockerCodingEnvironment)[name])) == 64
 
 
 def test_connected_profile_state_helper_is_executable_fingerprintable():
-    from ralf_agent.component_fingerprint import executable_digest
+    from relf_agent.component_fingerprint import executable_digest
 
-    module = importlib.import_module("ralf_agent.codex_connected_environment")
+    module = importlib.import_module("relf_agent.codex_connected_environment")
     assert len(executable_digest(module._profile_state)) == 64

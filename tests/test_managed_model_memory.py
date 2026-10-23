@@ -2,14 +2,14 @@ import importlib
 
 import pytest
 
-from ralf_agent import AgentSpec, InMemoryMemory, MemoryAdmissionPolicy, ModelResponse
-from ralf_agent.errors import DefinitionMismatch, ValidationError
-from ralf_agent.model_evidence import snapshot_model_response
+from relf_agent import AgentSpec, InMemoryMemory, MemoryAdmissionPolicy, ModelResponse
+from relf_agent.errors import DefinitionMismatch, ValidationError
+from relf_agent.model_evidence import snapshot_model_response
 from tests.test_managed_memory_stage import engine
 
 
 def policy(memory=None, **kwargs):
-    cls = importlib.import_module("ralf_agent.managed_model_memory").ManagedModelMemoryPolicy
+    cls = importlib.import_module("relf_agent.managed_model_memory").ManagedModelMemoryPolicy
     return cls(memory or InMemoryMemory(backend_id="model-facts"), **kwargs)
 
 
@@ -81,9 +81,9 @@ def test_selector_input_limit_is_bounded_integer(limit):
 
 
 def test_unsupported_composite_model_store_refuses_before_activation(tmp_path, monkeypatch):
-    from ralf_agent import GraphNode, GraphWorkflowSpec
+    from relf_agent import GraphNode, GraphWorkflowSpec
 
-    monkeypatch.setattr("ralf_agent.storage.SQLiteStore.composite_memory_stage_version", None)
+    monkeypatch.setattr("relf_agent.storage.SQLiteStore.composite_memory_stage_version", None)
     with engine(tmp_path / "run.sqlite", stage_policy=policy()) as local:
         with pytest.raises(ValidationError):
             local.submit(

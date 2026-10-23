@@ -7,12 +7,12 @@ from dataclasses import FrozenInstanceError
 
 import pytest
 
-from ralf_agent.errors import ValidationError
+from relf_agent.errors import ValidationError
 
 
 def api():
-    assert importlib.util.find_spec("ralf_agent.adapter_contract_types") is not None
-    return importlib.import_module("ralf_agent.adapter_contract_types")
+    assert importlib.util.find_spec("relf_agent.adapter_contract_types") is not None
+    return importlib.import_module("relf_agent.adapter_contract_types")
 
 
 def cases(*, status="passed", code="verified", **kwargs):

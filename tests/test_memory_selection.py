@@ -2,7 +2,7 @@ import asyncio
 
 import pytest
 
-from ralf_agent import AgentSpec, InMemoryMemory, MemoryAdmissionPolicy, ModelResponse
+from relf_agent import AgentSpec, InMemoryMemory, MemoryAdmissionPolicy, ModelResponse
 from tests.test_managed_memory_stage import engine
 from tests.test_managed_model_memory import policy
 
@@ -93,7 +93,7 @@ class PowerLoss(BaseException):
 
 
 def checkpoint(monkeypatch, event, *, before=False):
-    from ralf_agent import managed_memory_stage, memory_selection
+    from relf_agent import managed_memory_stage, memory_selection
 
     if event == "memory_selection_dispatched":
         original = memory_selection._dispatch
@@ -163,7 +163,7 @@ def test_restart_reuses_selection_and_cas_evidence(
     "mutation", ["state", "reservation", "receipt", "keys", "journal", "marker", "intent"]
 )
 def test_contradictory_selection_evidence_refuses_before_retry(tmp_path, monkeypatch, mutation):
-    from ralf_agent.errors import DefinitionMismatch
+    from relf_agent.errors import DefinitionMismatch
 
     local, _ = setup(tmp_path / "run.sqlite")
     p = local.providers["default"]
@@ -265,7 +265,7 @@ def test_cancel_in_validator_prevents_selector_dispatch(tmp_path):
 
 
 def test_custom_selection_cannot_add_other_grounded_fields(tmp_path):
-    from ralf_agent import FactProposal
+    from relf_agent import FactProposal
 
     class Other(type(policy())):
         def select(self, source, response):
@@ -289,7 +289,7 @@ def test_custom_selection_cannot_add_other_grounded_fields(tmp_path):
 
 
 def test_cancelled_waiter_retains_actual_selector_ownership(tmp_path):
-    from ralf_agent.errors import ValidationError
+    from relf_agent.errors import ValidationError
 
     async def exercise():
         entered, release = asyncio.Event(), asyncio.Event()

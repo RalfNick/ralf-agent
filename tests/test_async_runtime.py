@@ -8,7 +8,7 @@ from types import SimpleNamespace
 import httpx
 import pytest
 
-from ralf_agent import (
+from relf_agent import (
     AgentSpec,
     ComponentRegistry,
     ModelResponse,
@@ -20,8 +20,8 @@ from ralf_agent import (
     ToolRegistry,
     ToolSpec,
 )
-from ralf_agent.errors import CoordinatorBusy, ValidationError
-from ralf_agent.runtime_builder import EchoProvider
+from relf_agent.errors import CoordinatorBusy, ValidationError
+from relf_agent.runtime_builder import EchoProvider
 
 
 def profile(adapter="offline-echo"):
@@ -322,7 +322,7 @@ def test_rejected_partial_engine_still_releases_its_real_authority(tmp_path, mal
             return EchoProvider("managed")
 
         def invalid_engine(store, **options):
-            from ralf_agent import LocalEngine
+            from relf_agent import LocalEngine
 
             actual = LocalEngine(store, **options)
             engines.append(actual)
@@ -414,7 +414,7 @@ def test_resource_reentering_shutdown_after_outer_cancel_is_rejected(tmp_path, e
 
 def test_incomplete_thread_drain_cannot_release_execution_ownership(tmp_path):
     async def scenario():
-        from ralf_agent import LocalEngine
+        from relf_agent import LocalEngine
 
         class Proxy:
             def __init__(self, engine):

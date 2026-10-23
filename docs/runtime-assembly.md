@@ -5,10 +5,10 @@
 ## 1. 无需修改 Python 的离线开始路径
 
 ```sh
-ralf init my-config-agent --template config
+relf init my-config-agent --template config
 cd my-config-agent
 python -m agent_app --input hello
-ralf --config runtime.toml run --spec agent.toml --input question --command-id question-001
+relf --config runtime.toml run --spec agent.toml --input question --command-id question-001
 ```
 
 模板生成运行配置、Agent 声明与可编辑工厂。默认 Provider 是明确标记的 offline-echo，返回输入与版本标签；它验证装配和恢复，没有模型推理、网络或收费调用。
@@ -25,7 +25,7 @@ python -m agent_app --input '另一项任务' --command-id task-002
 
 ```sh
 python -m agent_app --input pending --command-id pending-001 --submit-only
-ralf --config runtime.toml resume RUN_ID
+relf --config runtime.toml resume RUN_ID
 ```
 
 将 RUN_ID 替换为实际提交结果。跨工作目录时使用同一绝对数据库和配置路径。配置中的相对资源路径以配置文件目录解析；数据库路径在 router 构造时固定。SDK 注入自定义 builder 时，由 builder 的 base_dir 决定相对资源路径。
@@ -73,7 +73,7 @@ JSON 使用同样的 schema_version/default/profiles 结构。本节 schema_vers
 未声明的原生组件使用既有默认实现。in-memory 是临时数据，不能当成重启后可恢复的记忆；默认随机后端身份会在重建时拒绝旧 Run，不建议用于版本切换。知识声明创建存储和检索器，不自动导入文档；摄入与向量配置见 [RAG 教程](recall-and-rag.md)。
 
 ```python
-from ralf_agent import ComponentRegistry, RuntimeBuilder
+from relf_agent import ComponentRegistry, RuntimeBuilder
 
 registry = ComponentRegistry()
 

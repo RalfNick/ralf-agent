@@ -14,7 +14,7 @@
 import asyncio
 import os
 
-from ralf_agent import (
+from relf_agent import (
     AgentSpec,
     CompleteModelHistory,
     LocalEngine,
@@ -143,11 +143,11 @@ SSE 的 added reasoning 密文可能还不完整；只有最终完整 snapshot �
 ## 真实模型验收入口
 
 ```sh
-ralf-check-model --adapter openai-responses-reasoning --model "$RALF_GENERATION_MODEL" \
+relf-check-model --adapter openai-responses-reasoning --model "$RALF_GENERATION_MODEL" \
   --reasoning-effort high --reasoning-context all_turns \
   --max-calls 6 --max-output-tokens 2048 --timeout 60
 
-ralf-evaluate-orchestration --provider openai-responses-reasoning --kind team \
+relf-evaluate-orchestration --provider openai-responses-reasoning --kind team \
   --model-env RALF_GENERATION_MODEL --key-env OPENAI_API_KEY \
   --reasoning-effort high --repeats 3 --max-calls 64 --max-output-tokens 2048
 ```

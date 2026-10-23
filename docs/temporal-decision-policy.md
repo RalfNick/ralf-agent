@@ -4,14 +4,14 @@ DecisionPolicy 复用公共纯 `Harness` 的 `prepare/propose`，与组合入口
 默认 `NativeHarness` 透明传递请求／响应；未配置额外策略时原发布与 History 身份保持。
 
 ```python
-from ralf_agent import (
+from relf_agent import (
     AgentBindingDescriptor,
     AgentDefinition,
     BindingSelection,
     ModelRequest,
     NativeHarness,
 )
-from ralf_agent.temporal_activities import TemporalRuntime
+from relf_agent.temporal_activities import TemporalRuntime
 
 
 class EvidencePolicy(NativeHarness):

@@ -6,9 +6,9 @@ import sys
 
 import pytest
 
-from ralf_agent.errors import DefinitionMismatch
-from ralf_agent.temporal_session_deployment_verification import SessionControlValidation
-from ralf_agent.types import canonical, digest
+from relf_agent.errors import DefinitionMismatch
+from relf_agent.temporal_session_deployment_verification import SessionControlValidation
+from relf_agent.types import canonical, digest
 from tests.test_temporal_session_deployment_control import Client, Runtime, fixture
 from tests.test_temporal_session_deployment_dto import seal
 

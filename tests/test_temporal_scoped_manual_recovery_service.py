@@ -10,10 +10,10 @@ from pathlib import Path
 
 import pytest
 
-from ralf_agent import AgentSpec, GraphNode, GraphWorkflowSpec, Scope
-from ralf_agent.errors import NotFound, RalfError, ValidationError
-from ralf_agent.temporal import TemporalEngine, replay_temporal_history
-from ralf_agent.types import digest
+from relf_agent import AgentSpec, GraphNode, GraphWorkflowSpec, Scope
+from relf_agent.errors import NotFound, RalfError, ValidationError
+from relf_agent.temporal import TemporalEngine, replay_temporal_history
+from relf_agent.types import digest
 from tests.test_temporal_deployment_admission_service import _clients
 from tests.test_temporal_deployment_dispatch_service import _eventually
 from tests.test_temporal_scoped_capacity_service import discover_owned_descendants
@@ -158,7 +158,7 @@ def _exercise(tmp_path, *, pressure_updates, legacy_worker=False):
             else:
                 # Directly exercise the existing strong-admission helper against
                 # its genuine old CONTROL verifier; no full-capacity claim here.
-                from ralf_agent.temporal_scoped_manual_recovery import reserve_manual
+                from relf_agent.temporal_scoped_manual_recovery import reserve_manual
 
                 payload = {
                     "kind": "reconcile",

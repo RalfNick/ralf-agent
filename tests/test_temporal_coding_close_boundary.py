@@ -4,13 +4,13 @@ import asyncio
 
 import pytest
 
-from ralf_agent import Scope, TemporalProfile
-from ralf_agent.errors import CloseIncomplete, ValidationError
-from ralf_agent.runtime_lifecycle import BuildContext
-from ralf_agent.temporal_activities import TemporalRuntime
-from ralf_agent.temporal_assembly_lifecycle import TemporalRuntimeAssembly
-from ralf_agent.temporal_coding_factories import build
-from ralf_agent.temporal_journal import PostgresEffectJournal
+from relf_agent import Scope, TemporalProfile
+from relf_agent.errors import CloseIncomplete, ValidationError
+from relf_agent.runtime_lifecycle import BuildContext
+from relf_agent.temporal_activities import TemporalRuntime
+from relf_agent.temporal_assembly_lifecycle import TemporalRuntimeAssembly
+from relf_agent.temporal_coding_factories import build
+from relf_agent.temporal_journal import PostgresEffectJournal
 from tests.test_temporal_coding_factories import Connection, entry, publish_initialization
 from tests.test_temporal_engine import Provider
 
@@ -64,7 +64,7 @@ async def boundary_pending(self, scope):
 def test_pending_query_fault_retains_exact_ledger_and_retry_closes_same_resources(
     tmp_path, monkeypatch
 ):
-    from ralf_agent.postgres_runner_journal import PostgresRunnerJournal
+    from relf_agent.postgres_runner_journal import PostgresRunnerJournal
 
     events = []
     publish_initialization(monkeypatch, events)
@@ -94,7 +94,7 @@ def test_pending_query_fault_retains_exact_ledger_and_retry_closes_same_resource
 def test_persistent_pending_without_original_client_retains_ledger_until_pending_clears(
     tmp_path, monkeypatch
 ):
-    from ralf_agent.postgres_runner_journal import PostgresRunnerJournal
+    from relf_agent.postgres_runner_journal import PostgresRunnerJournal
 
     events = []
     publish_initialization(monkeypatch, events)
@@ -126,7 +126,7 @@ def test_persistent_pending_without_original_client_retains_ledger_until_pending
 
 
 def test_caller_cancellation_during_pending_query_retains_same_loop_retry(tmp_path, monkeypatch):
-    from ralf_agent.postgres_runner_journal import PostgresRunnerJournal
+    from relf_agent.postgres_runner_journal import PostgresRunnerJournal
 
     events = []
     publish_initialization(monkeypatch, events)
@@ -152,7 +152,7 @@ def test_caller_cancellation_during_pending_query_retains_same_loop_retry(tmp_pa
 
 
 def test_pending_query_timeout_retains_the_exact_stop_task_for_retry(tmp_path, monkeypatch):
-    from ralf_agent.postgres_runner_journal import PostgresRunnerJournal
+    from relf_agent.postgres_runner_journal import PostgresRunnerJournal
 
     events = []
     publish_initialization(monkeypatch, events)

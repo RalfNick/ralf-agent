@@ -2,7 +2,7 @@ import asyncio
 
 import pytest
 
-from ralf_agent import (
+from relf_agent import (
     AgentSpec,
     DynamicWorkflowSpec,
     GraphNode,
@@ -16,7 +16,7 @@ from ralf_agent import (
     TeamSpec,
     WorkflowSpec,
 )
-from ralf_agent.errors import DefinitionMismatch, MemoryBackendError, ValidationError
+from relf_agent.errors import DefinitionMismatch, MemoryBackendError, ValidationError
 from tests.test_managed_memory_stage import engine, schema
 
 
@@ -205,7 +205,7 @@ def test_cancel_during_parallel_fact_write_preserves_receipt_and_stops_new_write
 
 @pytest.mark.parametrize("kind", ["parallel", "team", "dynamic-dag", "nested"])
 def test_members_choose_distinct_host_authorized_write_targets(tmp_path, kind):
-    from ralf_agent import AgentBindingDescriptor, BindingCatalog, BindingSelection, BoundDefinition
+    from relf_agent import AgentBindingDescriptor, BindingCatalog, BindingSelection, BoundDefinition
 
     catalog = BindingCatalog(scope=Scope())
     first, second = InMemoryMemory(backend_id="first"), InMemoryMemory(backend_id="second")
@@ -237,7 +237,7 @@ def test_members_choose_distinct_host_authorized_write_targets(tmp_path, kind):
 
 
 def test_composite_memory_activation_rolls_back_with_failed_admission(tmp_path):
-    from ralf_agent import LocalEngine, SQLiteStore, ToolRegistry
+    from relf_agent import LocalEngine, SQLiteStore, ToolRegistry
 
     class Store(SQLiteStore):
         def prepare_composite_memory_stages(self):
@@ -285,7 +285,7 @@ def test_parallel_write_target_drift_after_await_requires_original_target_restor
 def test_facade_explicit_root_resume_recovers_closed_child_memory_without_dispatch(
     tmp_path, nested
 ):
-    from ralf_agent import Runtime
+    from relf_agent import Runtime
     from tests.test_remote_session_recovery import settled
 
     class LostAck(InMemoryMemory):
@@ -376,13 +376,13 @@ def test_real_process_memory_recovery_never_repeats_received_selector_or_cas(
     import sys
     from pathlib import Path
 
-    import ralf_agent
+    import relf_agent
 
     fixture = Path(__file__).with_name("composite_memory_crash_fixture.py")
     env = {
         "PATH": os.environ.get("PATH", "/usr/bin:/bin"),
         "PYTHONPATH": os.pathsep.join(
-            [str(Path(ralf_agent.__file__).parents[1]), str(Path(__file__).parents[1])]
+            [str(Path(relf_agent.__file__).parents[1]), str(Path(__file__).parents[1])]
         ),
     }
     args = [sys.executable, str(fixture), str(tmp_path), kind, window]

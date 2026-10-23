@@ -5,14 +5,14 @@ import copy
 
 import pytest
 
-from ralf_agent import DeploymentAdmissionPolicy, Scope, TemporalProfile
-from ralf_agent.errors import DefinitionMismatch, ValidationError
-from ralf_agent.temporal_activities import TemporalRuntime
+from relf_agent import DeploymentAdmissionPolicy, Scope, TemporalProfile
+from relf_agent.errors import DefinitionMismatch, ValidationError
+from relf_agent.temporal_activities import TemporalRuntime
 
 
 def coding_session_manifest(*, composition=False):
     """Pure complete publication fixture; physical fingerprints are not SDK proof."""
-    from ralf_agent.temporal_deployment_protocol import SESSION_SOURCE_FILES
+    from relf_agent.temporal_deployment_protocol import SESSION_SOURCE_FILES
     from tests.test_temporal_coding_composition_configuration import composition_manifest
     from tests.test_temporal_deployment_coding_registry import coding_request
 
@@ -31,7 +31,7 @@ def coding_session_manifest(*, composition=False):
 
 @pytest.mark.parametrize("composition", [False, True])
 def test_coding_session_four_validates_original_native_and_composition_publications(composition):
-    from ralf_agent.temporal_deployment_protocol import SESSION_SOURCE_FILES, validate_protocol
+    from relf_agent.temporal_deployment_protocol import SESSION_SOURCE_FILES, validate_protocol
 
     value = coding_session_manifest(composition=composition)
     validate_protocol(value)
@@ -46,7 +46,7 @@ def test_coding_session_four_validates_original_native_and_composition_publicati
 
 @pytest.mark.parametrize("mutation", ["binding", "inventory", "native", "composition"])
 def test_coding_session_four_rejects_incomplete_or_unsupported_publication(mutation):
-    from ralf_agent.temporal_deployment_protocol import validate_protocol
+    from relf_agent.temporal_deployment_protocol import validate_protocol
 
     value = coding_session_manifest(composition=True)
     if mutation == "binding":
@@ -87,10 +87,10 @@ def test_profile_accepts_explicit_coding_session_selection_and_keeps_omitted_fla
 def test_complete_coding_resources_publish_session_four_with_original_inventory(
     tmp_path, monkeypatch, composition
 ):
-    from ralf_agent.runtime_lifecycle import BuildContext
-    from ralf_agent.temporal_coding_factories import build
-    from ralf_agent.temporal_deployment_protocol import SESSION_SOURCE_FILES
-    from ralf_agent.temporal_journal import PostgresEffectJournal
+    from relf_agent.runtime_lifecycle import BuildContext
+    from relf_agent.temporal_coding_factories import build
+    from relf_agent.temporal_deployment_protocol import SESSION_SOURCE_FILES
+    from relf_agent.temporal_journal import PostgresEffectJournal
     from tests.test_temporal_coding_factories import Connection, entry, publish_initialization
     from tests.test_temporal_deployment_public_registry import Provider
 
@@ -131,8 +131,8 @@ def test_complete_coding_resources_publish_session_four_with_original_inventory(
 
 
 def test_coding_session_four_rechecks_original_guard_aliases(monkeypatch):
-    from ralf_agent import temporal_deployment_coding_state as guards
-    from ralf_agent.temporal_deployment_protocol import validate_protocol
+    from relf_agent import temporal_deployment_coding_state as guards
+    from relf_agent.temporal_deployment_protocol import validate_protocol
 
     value = coding_session_manifest()
     monkeypatch.setattr(guards, "closure_reasons", lambda state: [])

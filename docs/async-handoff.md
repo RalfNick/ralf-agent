@@ -1,5 +1,6 @@
 # Async execution handoff — dev16
 
+Current executable examples require a6 (`relf_agent` / `relf`) in a separate environment. The dev16 label records the original delivery; it does not qualify a6. See [version boundaries](project-naming.md).
 Use the same A2A polling application with local synchronous controls or a native
 async execution authority. The default local service runs without Redis, PostgreSQL
 or a model credential; shared deployments explicitly supply those services.
@@ -8,11 +9,11 @@ See [the transport contract](remote-handoff.md) and [Temporal's supported subset
 ## Default installed service
 
 Install your preview wheel with the `server` extra, then generate an independent
-application. For a wheel installation, use `python -m pip install "./ralf_agent-0.1.0.dev16-py3-none-any.whl[server]"` with your local wheel path. Source installation and application generation:
+application. For a wheel installation, use `python -m pip install "./relf_agent-0.1.0a6-py3-none-any.whl[server]"` with your local wheel path. Source installation and application generation:
 
 ```shell
 python -m pip install -e '.[server]'
-ralf --format text init my-service --template a2a
+relf --format text init my-service --template a2a
 cd my-service
 python -m agent_app serve --port 8000
 ```
@@ -25,7 +26,7 @@ It does not generate or print credentials. From another terminal in that directo
 python -m agent_app client --input hello --command-id first
 python -m agent_app client --input hello --command-id first
 python -m agent_app client --task TASK_ID
-ralf --db .ralf/runs.sqlite --format text inspect TASK_ID
+relf --db .ralf/runs.sqlite --format text inspect TASK_ID
 ```
 
 The editable `agent_app/runtime.py` provides the offline Provider, trusted Scope
@@ -72,7 +73,7 @@ Call `initialize()` explicitly. Connected clients are owned; directly supplied a
 autocommit connections are borrowed unless `owns_connection=True`.
 
 ```python
-from ralf_agent import PostgresInbox, PostgresOutbox
+from relf_agent import PostgresInbox, PostgresOutbox
 
 
 async def create_handoff(dsn):
@@ -114,7 +115,7 @@ Run registered Temporal workers on the same retained queue/release as described 
 facade and PostgreSQL Inbox connected to the shared database. A minimal gateway factory:
 
 ```python
-from ralf_agent import A2AApplication, AgentSpec, PostgresInbox
+from relf_agent import A2AApplication, AgentSpec, PostgresInbox
 
 
 async def create_gateway(engine, dsn, authenticate, url):

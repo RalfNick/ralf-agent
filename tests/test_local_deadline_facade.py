@@ -6,14 +6,14 @@ from contextlib import contextmanager
 
 import pytest
 
-import ralf_agent as r
-from ralf_agent.errors import (
+import relf_agent as r
+from relf_agent.errors import (
     CoordinatorBusy,
     DefinitionMismatch,
     ExecutionHostFailed,
     ValidationError,
 )
-from ralf_agent.governance import LocalExecutionPolicy
+from relf_agent.governance import LocalExecutionPolicy
 
 
 async def eventually(predicate):

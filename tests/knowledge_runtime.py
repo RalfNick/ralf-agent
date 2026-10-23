@@ -6,8 +6,8 @@ import json
 import sqlite3
 from dataclasses import asdict
 
-from ralf_agent import AgentSpec, LocalEngine, ModelResponse, Scope, ToolRegistry
-from ralf_agent.retrieval import (
+from relf_agent import AgentSpec, LocalEngine, ModelResponse, Scope, ToolRegistry
+from relf_agent.retrieval import (
     Document,
     KnowledgeContext,
     KnowledgeVersionConflict,

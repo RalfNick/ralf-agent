@@ -7,8 +7,8 @@ from types import SimpleNamespace
 
 import pytest
 
-from ralf_agent.errors import CloseIncomplete, DefinitionMismatch
-from ralf_agent.types import Scope, digest
+from relf_agent.errors import CloseIncomplete, DefinitionMismatch
+from relf_agent.types import Scope, digest
 
 SCOPE = {"workspace": "composition", "principal": "original"}
 MANIFEST = {
@@ -81,7 +81,7 @@ def test_close_adopts_sealed_child_without_sending_new_cancel(monkeypatch):
 
 
 def module():
-    name = "ralf_agent.temporal_coding_composition_control"
+    name = "relf_agent.temporal_coding_composition_control"
     assert importlib.util.find_spec(name), "Missing original composition control"
     return importlib.import_module(name)
 
@@ -222,7 +222,7 @@ def runtime():
 
 @pytest.fixture
 def namespace(monkeypatch):
-    from ralf_agent import temporal_session_activities
+    from relf_agent import temporal_session_activities
 
     async def identity(client):
         return "11111111-1111-1111-1111-111111111111"
@@ -322,7 +322,7 @@ def test_validation_refuses_reset_original_leaf_before_business(namespace):
 
 
 def test_tree_validator_checks_composition_without_session_lineage(namespace):
-    from ralf_agent.temporal_session_activities import validate_tree_activity
+    from relf_agent.temporal_session_activities import validate_tree_activity
 
     client = Client()
     child = proof()
@@ -340,8 +340,8 @@ def test_tree_validator_checks_composition_without_session_lineage(namespace):
 
 
 def test_selected_assembly_drain_uses_composition_close_not_native_only(monkeypatch):
-    from ralf_agent import temporal_coding_runtime
-    from ralf_agent.temporal_assembly_lifecycle import TemporalRuntimeAssembly, WorkerExecutionOwner
+    from relf_agent import temporal_coding_runtime
+    from relf_agent.temporal_assembly_lifecycle import TemporalRuntimeAssembly, WorkerExecutionOwner
 
     calls = []
 
@@ -382,7 +382,7 @@ def test_selected_assembly_drain_uses_composition_close_not_native_only(monkeypa
 def test_registered_admission_activity_uses_actual_sdk_identity(namespace, monkeypatch):
     from temporalio import activity
 
-    from ralf_agent.temporal_control_activities import registered_parent_activities
+    from relf_agent.temporal_control_activities import registered_parent_activities
 
     client, worker_runtime = Client(), runtime()
     worker_runtime.parent_completion_policies = {}
@@ -417,7 +417,7 @@ def test_registered_admission_activity_uses_actual_sdk_identity(namespace, monke
 
 
 def test_assembly_drain_retains_resources_before_inflight_submit_response(monkeypatch):
-    from ralf_agent.temporal_assembly_lifecycle import TemporalRuntimeAssembly
+    from relf_agent.temporal_assembly_lifecycle import TemporalRuntimeAssembly
 
     calls = []
 
@@ -460,7 +460,7 @@ def test_root_close_uses_saved_epoch_without_discovering_latest(namespace):
 
 
 def linked_client():
-    from ralf_agent.temporal_parent_state import child_run_id
+    from relf_agent.temporal_parent_state import child_run_id
 
     client = Client()
     run_id = child_run_id(SCOPE, "child-command")
@@ -582,8 +582,8 @@ def test_activity_refuses_foreign_saved_child_epoch_before_native_business(names
 
 
 def test_fenced_resource_survives_failed_ancestor_adoption_on_close_retry(namespace, monkeypatch):
-    from ralf_agent import delegated_coding, temporal_bindings
-    from ralf_agent.postgres_coding_resources import receive_resource
+    from relf_agent import delegated_coding, temporal_bindings
+    from relf_agent.postgres_coding_resources import receive_resource
 
     client, run_id = linked_client()
     client.fault = True
@@ -643,12 +643,12 @@ def test_fenced_resource_survives_failed_ancestor_adoption_on_close_retry(namesp
 
 def native_resource(client, run_id, *, fenced=False):
     """Complete legal PG row based on the actual History native-intent producer."""
-    from ralf_agent.postgres_coding_resources import (
+    from relf_agent.postgres_coding_resources import (
         new_resource,
         receive_resource,
         validate_resource,
     )
-    from ralf_agent.types import canonical
+    from relf_agent.types import canonical
     from tests.test_temporal_coding_state import RUNNER, ready
 
     _, _, request = ready()
@@ -703,7 +703,7 @@ def test_registry_absence_with_fenced_native_rows_retains_original_obligation(
 ):
     from temporalio.service import RPCError, RPCStatusCode
 
-    from ralf_agent import delegated_coding
+    from relf_agent import delegated_coding
 
     client = Client()
     resource = native_resource(client, "root", fenced=True)
@@ -746,10 +746,10 @@ def test_original_parent_context_uses_actual_sdk_epoch_when_legacy_payload_omits
 
 
 def test_root_admission_consumes_actual_engine_guard_metadata(namespace):
-    from ralf_agent import AgentSpec, GraphNode, GraphWorkflowSpec
-    from ralf_agent.temporal import TemporalEngine
-    from ralf_agent.temporal_state import TemporalCommandRegistryState
-    from ralf_agent.types import submission_request
+    from relf_agent import AgentSpec, GraphNode, GraphWorkflowSpec
+    from relf_agent.temporal import TemporalEngine
+    from relf_agent.temporal_state import TemporalCommandRegistryState
+    from relf_agent.types import submission_request
 
     request = submission_request(
         GraphWorkflowSpec("original", [GraphNode("a", agent=AgentSpec("a", "Answer"))]),

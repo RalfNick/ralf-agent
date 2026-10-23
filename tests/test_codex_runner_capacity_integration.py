@@ -4,10 +4,10 @@ import asyncio
 
 import pytest
 
-from ralf_agent.codex_runner import CodexCodingRunner
-from ralf_agent.errors import DefinitionMismatch
-from ralf_agent.executors import DispatchEnvelope
-from ralf_agent.types import InvocationContext, Scope
+from relf_agent.codex_runner import CodexCodingRunner
+from relf_agent.errors import DefinitionMismatch
+from relf_agent.executors import DispatchEnvelope
+from relf_agent.types import InvocationContext, Scope
 from tests import test_codex_runner as fixture
 
 runner_parts = fixture.runner_parts
@@ -132,7 +132,7 @@ def test_native_intent_cannot_release_on_task_completion_without_physical_proof(
 
 @pytest.mark.parametrize("name", ["_LOCK", "_RECORD", "_LIMIT", "_hex"])
 def test_base_local_runner_pins_transitive_capacity_helpers(runner_parts, monkeypatch, name):
-    from ralf_agent import codex_runner_capacity as capacity
+    from relf_agent import codex_runner_capacity as capacity
 
     resource = runner(runner_parts)
     original = getattr(capacity, name)
@@ -174,7 +174,7 @@ def test_instance_capacity_port_cannot_skip_original_release(runner_parts, monke
 
 @pytest.mark.parametrize("name", ["_submit_create", "_recover_create", "_cli", "_read_metadata"])
 def test_base_local_runner_pins_original_create_and_cold_control(runner_parts, monkeypatch, name):
-    from ralf_agent.codex_environment import DockerCodingEnvironment
+    from relf_agent.codex_environment import DockerCodingEnvironment
 
     resource = runner(runner_parts)
     monkeypatch.setattr(DockerCodingEnvironment, name, lambda *args, **kwargs: None)

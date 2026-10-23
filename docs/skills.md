@@ -7,7 +7,7 @@ dev78 提供同步 `SkillCatalogPort`、不可变 Memory／固定版本的 File 
 ## 最小内存目录
 
 ```python
-from ralf_agent import InMemorySkillCatalog, Scope, SkillSpec
+from relf_agent import InMemorySkillCatalog, Scope, SkillSpec
 
 catalog = InMemorySkillCatalog(
     [SkillSpec("triage", "工单排查", "先查证据，再使用已经授权的工具。")], version="app-1"
@@ -37,7 +37,7 @@ File 默认读取明确的 `skills.json` 元数据和 Markdown 文件，不递�
 import json
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from ralf_agent import FileSystemSkillCatalog, Scope
+from relf_agent import FileSystemSkillCatalog, Scope
 
 with TemporaryDirectory() as directory:
     root = Path(directory)
@@ -77,7 +77,7 @@ JSON 默认保留原行为；可选标准 YAML frontmatter 使用新的
 
 ```python
 import asyncio
-from ralf_agent import (
+from relf_agent import (
     InMemorySkillCatalog,
     Scope,
     SkillSpec,
@@ -86,7 +86,7 @@ from ralf_agent import (
     ToolRegistry,
     register_tool_source,
 )
-from ralf_agent.types import InvocationContext
+from relf_agent.types import InvocationContext
 
 
 async def load_reference():

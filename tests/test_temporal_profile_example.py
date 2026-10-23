@@ -1,12 +1,12 @@
 import subprocess
 import sys
 
-from ralf_agent import TemporalProfileCatalog
+from relf_agent import TemporalProfileCatalog
 
 
 def test_installed_module_writes_offline_configuration_without_sdk_or_service(tmp_path):
     result = subprocess.run(
-        [sys.executable, "-m", "ralf_agent.temporal_profile_example", "--data-dir", str(tmp_path)],
+        [sys.executable, "-m", "relf_agent.temporal_profile_example", "--data-dir", str(tmp_path)],
         capture_output=True,
         text=True,
         check=False,

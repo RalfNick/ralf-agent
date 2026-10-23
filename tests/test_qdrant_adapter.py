@@ -11,14 +11,14 @@ import uuid
 import httpx
 import pytest
 
-from ralf_agent.errors import MemoryBackendError, ValidationError
-from ralf_agent.retrieval import Document, InMemoryKnowledgeStore, RetrievalQuery
-from ralf_agent.types import Scope
-from ralf_agent.vector import VectorEntry, VectorHit, VectorRetriever
+from relf_agent.errors import MemoryBackendError, ValidationError
+from relf_agent.retrieval import Document, InMemoryKnowledgeStore, RetrievalQuery
+from relf_agent.types import Scope
+from relf_agent.vector import VectorEntry, VectorHit, VectorRetriever
 
 
 def adapter():
-    name = "ralf_agent.qdrant"
+    name = "relf_agent.qdrant"
     assert importlib.util.find_spec(name) is not None, "Missing QdrantVectorIndex adapter"
     return importlib.import_module(name).QdrantVectorIndex
 
@@ -138,8 +138,8 @@ def test_configuration_rejected_before_network_or_client_creation(config, monkey
     def unexpected_client(*args, **kwargs):
         raise AssertionError("Invalid configuration allocated a client")
 
-    if importlib.util.find_spec("ralf_agent.qdrant") and "client" not in config:
-        module = importlib.import_module("ralf_agent.qdrant")
+    if importlib.util.find_spec("relf_agent.qdrant") and "client" not in config:
+        module = importlib.import_module("relf_agent.qdrant")
         monkeypatch.setattr(module.httpx, "AsyncClient", unexpected_client)
     with pytest.raises(ValidationError):
         construct(**config)
@@ -345,7 +345,7 @@ def test_explicit_initialization_and_open_lifetime_are_required():
 def test_owned_client_closes_with_index(monkeypatch):
     async def scenario():
         client = httpx.AsyncClient(transport=httpx.MockTransport(QdrantHTTP()))
-        module = importlib.import_module("ralf_agent.qdrant")
+        module = importlib.import_module("relf_agent.qdrant")
         monkeypatch.setattr(module.httpx, "AsyncClient", lambda **kwargs: client)
         index = construct()
         await index.initialize()
@@ -374,7 +374,7 @@ def test_owned_close_failure_is_retryable_but_keeps_operation_gate_closed(monkey
             await close_client()
 
         client.aclose = flaky_close
-        module = importlib.import_module("ralf_agent.qdrant")
+        module = importlib.import_module("relf_agent.qdrant")
         monkeypatch.setattr(module.httpx, "AsyncClient", lambda **kwargs: client)
         index = construct()
         try:
@@ -674,7 +674,7 @@ async def hydration_scenario(index, monkeypatch):
         assert {item.text for item in result.items} == {"apple", "banana"}
         store.put(Scope(), "n", Document("stale", "banana"), expected_version=1)
         store.delete(Scope(), "n", "deleted", expected_version=1)
-        monkeypatch.setattr("ralf_agent.retrieval.time.time", lambda: now + 120)
+        monkeypatch.setattr("relf_agent.retrieval.time.time", lambda: now + 120)
         assert (await retriever.retrieve(Scope(), "n", RetrievalQuery("query"))).items == ()
 
 

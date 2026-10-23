@@ -2,10 +2,10 @@
 
 import pytest
 
-from ralf_agent import DeploymentAdmissionPolicy, Scope, TemporalRuntime, ToolRegistry
-from ralf_agent.binding_catalog import BindingCatalog
-from ralf_agent.errors import DefinitionMismatch
-from ralf_agent.temporal_deployment_execution import _policy
+from relf_agent import DeploymentAdmissionPolicy, Scope, TemporalRuntime, ToolRegistry
+from relf_agent.binding_catalog import BindingCatalog
+from relf_agent.errors import DefinitionMismatch
+from relf_agent.temporal_deployment_execution import _policy
 from tests.test_temporal_deployment_public_registry import Provider
 
 

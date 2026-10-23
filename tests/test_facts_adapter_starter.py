@@ -13,7 +13,7 @@ import pytest
 
 def application(tmp_path):
     try:
-        module = importlib.import_module("ralf_agent.facts_adapter_contract_starter")
+        module = importlib.import_module("relf_agent.facts_adapter_contract_starter")
     except ModuleNotFoundError:
         pytest.fail("The editable Facts application is missing")
     project = tmp_path / "application"

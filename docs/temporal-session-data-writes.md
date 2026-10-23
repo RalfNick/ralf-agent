@@ -11,10 +11,10 @@ Worker 注册 `session_store` 或 BindingCatalog 的 session 资源；每 Agent 
 高级 Graph／Team／Dynamic／嵌套选中外置来源时继续在接受前拒绝。
 
 ```python
-from ralf_agent import AgentSpec, Runtime, Scope, SQLiteMemory, ToolRegistry
-from ralf_agent.runtime_builder import EchoProvider
-from ralf_agent.temporal import TemporalEngine, build_temporal_worker
-from ralf_agent.temporal_activities import TemporalRuntime
+from relf_agent import AgentSpec, Runtime, Scope, SQLiteMemory, ToolRegistry
+from relf_agent.runtime_builder import EchoProvider
+from relf_agent.temporal import TemporalEngine, build_temporal_worker
+from relf_agent.temporal_activities import TemporalRuntime
 
 
 async def example(client):

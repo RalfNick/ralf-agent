@@ -6,10 +6,10 @@ import os
 import signal
 from pathlib import Path
 
-from ralf_agent import ContextExecutionOwner, ManagedContextPipeline, Scope, ToolRegistry
-from ralf_agent.temporal import build_temporal_worker
-from ralf_agent.temporal_activities import TemporalRuntime
-from ralf_agent.temporal_session_topology import CompositeSessionTopology
+from relf_agent import ContextExecutionOwner, ManagedContextPipeline, Scope, ToolRegistry
+from relf_agent.temporal import build_temporal_worker
+from relf_agent.temporal_activities import TemporalRuntime
+from relf_agent.temporal_session_topology import CompositeSessionTopology
 
 from .temporal_session_tree_worker import AuditedSession, Provider
 

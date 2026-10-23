@@ -4,7 +4,7 @@ import asyncio
 import os
 import sys
 
-from ralf_agent import (
+from relf_agent import (
     HtmlDocumentParser,
     IngestionCoordinator,
     Scope,

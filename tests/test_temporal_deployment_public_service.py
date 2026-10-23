@@ -19,7 +19,7 @@ from datetime import timedelta
 
 import pytest
 
-from ralf_agent import (
+from relf_agent import (
     AgentSpec,
     ComponentRegistry,
     ModelResponse,
@@ -31,13 +31,13 @@ from ralf_agent import (
     ToolRegistry,
     ToolSpec,
 )
-from ralf_agent.errors import CapacityExceeded, IdempotencyConflict
-from ralf_agent.executors import EffectObservation
-from ralf_agent.governance import DeploymentAdmissionPolicy
-from ralf_agent.temporal import TemporalEngine, build_temporal_worker, replay_temporal_history
-from ralf_agent.temporal_activities import TemporalRuntime
-from ralf_agent.temporal_deployment_admission import registry_id, root_run_id
-from ralf_agent.types import canonical, digest, submission_request
+from relf_agent.errors import CapacityExceeded, IdempotencyConflict
+from relf_agent.executors import EffectObservation
+from relf_agent.governance import DeploymentAdmissionPolicy
+from relf_agent.temporal import TemporalEngine, build_temporal_worker, replay_temporal_history
+from relf_agent.temporal_activities import TemporalRuntime
+from relf_agent.temporal_deployment_admission import registry_id, root_run_id
+from relf_agent.types import canonical, digest, submission_request
 
 from .test_temporal_deployment_admission_service import _clients, _start, _worker
 from .test_temporal_deployment_dispatch_service import BusinessProbe, _agent, _case, _eventually
@@ -353,7 +353,7 @@ class PublicSystem:
                 yield worker
             finally:
                 self.unblock()
-                from ralf_agent.temporal_deployment_release import check_owner
+                from relf_agent.temporal_deployment_release import check_owner
 
                 assert await check_owner(self.runtime).wait(wait_timeout=15)
 
@@ -381,7 +381,7 @@ class PublicSystem:
         )
 
     async def submission(self, spec, value, command_id="first"):
-        from ralf_agent.temporal_bindings import normalize_request
+        from relf_agent.temporal_bindings import normalize_request
 
         request = normalize_request(submission_request(spec, value, budget=64), None)
         return await self.client.get_workflow_handle(registry_id(self.policy.deployment_id)).query(
@@ -464,7 +464,7 @@ class PublicSystem:
             await engine.aclose()
         if self.assembly is not None:
             await self.assembly.aclose(wait_timeout=15)
-        from ralf_agent.temporal_deployment_release import close_owner
+        from relf_agent.temporal_deployment_release import close_owner
 
         await close_owner(self.runtime, wait_timeout=15)
         assert all(worker.is_shutdown and not worker.is_running for worker in self.workers)
@@ -674,7 +674,7 @@ def test_actual_lost_first_acceptance_reply_recovers_original_queue_release_and_
             assert len(system.probe.reads) == 1
             assert await system.submit(spec, value, engine=retry) == recovered
             await system.evidence(recovered.run_id)
-            from ralf_agent.temporal_deployment_release import close_owner
+            from relf_agent.temporal_deployment_release import close_owner
 
             await close_owner(changed, wait_timeout=5)
 
@@ -1006,7 +1006,7 @@ def test_actual_zero_cost_commit_manual_evidence_and_ack_do_not_replace_real_end
                     await system.count(1)
                     assert (await system.closure(original.run_id))["seal"] is None
                     fault.block_end = False
-                    from ralf_agent.temporal_deployment_release import check_owner
+                    from relf_agent.temporal_deployment_release import check_owner
 
                     assert await check_owner(system.runtime).wait(wait_timeout=15)
                 await system.count(0)
@@ -1105,7 +1105,7 @@ def test_actual_public_policy_refuses_existing_v1_registry_without_adopting_it(t
                 scope=Scope("v1-public-refusal", queue),
             )
             try:
-                from ralf_agent.errors import DefinitionMismatch, ValidationError
+                from relf_agent.errors import DefinitionMismatch, ValidationError
 
                 with pytest.raises((DefinitionMismatch, ValidationError)):
                     await engine.submit(_agent("refused"), {}, command_id="first")
@@ -1127,7 +1127,7 @@ def test_actual_public_policy_refuses_existing_v1_registry_without_adopting_it(t
             finally:
                 await engine.aclose()
                 await registry.terminate(reason="owned v1 public refusal test cleanup")
-                from ralf_agent.temporal_deployment_release import close_owner
+                from relf_agent.temporal_deployment_release import close_owner
 
                 await close_owner(runtime, wait_timeout=5)
         assert worker.is_shutdown

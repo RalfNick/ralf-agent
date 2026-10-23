@@ -8,12 +8,12 @@ from types import SimpleNamespace
 
 import pytest
 
-from ralf_agent import AgentSpec, Scope
-from ralf_agent.errors import DefinitionMismatch, IdempotencyConflict, ValidationError
-from ralf_agent.governance import DeploymentAdmissionPolicy
-from ralf_agent.temporal_deployment_admission import DeploymentAdmissionState
-from ralf_agent.temporal_state import COMMAND_REGISTRY_NAME
-from ralf_agent.types import digest, submission_request
+from relf_agent import AgentSpec, Scope
+from relf_agent.errors import DefinitionMismatch, IdempotencyConflict, ValidationError
+from relf_agent.governance import DeploymentAdmissionPolicy
+from relf_agent.temporal_deployment_admission import DeploymentAdmissionState
+from relf_agent.temporal_state import COMMAND_REGISTRY_NAME
+from relf_agent.types import digest, submission_request
 
 
 @pytest.fixture(autouse=True, scope="module")
@@ -27,7 +27,7 @@ NAMESPACE = {"name": "original", "id": "11111111-1111-1111-1111-111111111111"}
 
 
 def module():
-    name = "ralf_agent.temporal_deployment_submissions"
+    name = "relf_agent.temporal_deployment_submissions"
     assert importlib.util.find_spec(name), "Missing original first-acceptance transport"
     return importlib.import_module(name)
 
@@ -42,10 +42,10 @@ class Registry:
     """Only the SDK is simulated; original public Registry state stays real."""
 
     def __init__(self, version=2):
-        from ralf_agent.temporal_deployment_registry import PublicDeploymentAdmissionState
+        from relf_agent.temporal_deployment_registry import PublicDeploymentAdmissionState
 
         if version == 3:
-            from ralf_agent.temporal_deployment_coding_registry import (
+            from relf_agent.temporal_deployment_coding_registry import (
                 CodingDeploymentAdmissionState,
             )
 
@@ -127,7 +127,7 @@ class Handle:
         assert name == "view"
         if self.id == self.client.registry_id:
             if value["kind"] == "deployment_reserve_receipt":
-                from ralf_agent.temporal_reservation_transport import observe
+                from relf_agent.temporal_reservation_transport import observe
 
                 try:
                     return observe(self.client.registry.transport_owner, value)
@@ -182,7 +182,7 @@ class Handle:
         return sealed(proof)
 
     async def signal(self, name, value):
-        from ralf_agent.temporal_reservation_transport import accept
+        from relf_agent.temporal_reservation_transport import accept
 
         assert self.id == self.client.registry_id and name == "reserve_command"
         self.client.signals.append(name)
@@ -270,7 +270,7 @@ class Engine:
         self.scope, self.namespace = SCOPE, NAMESPACE["name"]
         self.task_queue, self.activity_timeout, self._closed = "first-queue", 17, False
         self._registry = None
-        from ralf_agent.temporal_deployment_protocol import PUBLIC_SOURCE_FILES
+        from relf_agent.temporal_deployment_protocol import PUBLIC_SOURCE_FILES
 
         self.release = {
             "kernel": "temporal-1",
@@ -347,8 +347,8 @@ def test_mixed_host_can_start_registry_three_from_ordinary_two_first():
 
 @pytest.mark.parametrize("lost", ["reserve", "start"])
 def test_bound_coding_first_acceptance_recovers_original_runner_after_alias_move(lost):
-    from ralf_agent.binding_definitions import AgentDefinition
-    from ralf_agent.binding_types import AgentBindingDescriptor, BindingSelection
+    from relf_agent.binding_definitions import AgentDefinition
+    from relf_agent.binding_types import AgentBindingDescriptor, BindingSelection
 
     from .test_temporal_deployment_coding_registry import coding_request
 
@@ -568,8 +568,8 @@ def test_public_fresh_submission_records_actual_sdk_receipt_and_original_envelop
 def test_public_request_matches_original_registry_after_default_sdk_json_roundtrip(with_tools):
     from temporalio.converter import DataConverter
 
-    from ralf_agent.temporal_bindings import normalize_request
-    from ralf_agent.tools import ToolRegistry, ToolSpec
+    from relf_agent.temporal_bindings import normalize_request
+    from relf_agent.tools import ToolRegistry, ToolSpec
 
     async def wire(value):
         payloads = await DataConverter.default.encode([value])
@@ -774,9 +774,9 @@ def test_public_facade_reaches_original_lookup_before_current_composite_capabili
     async def run():
         from types import MethodType
 
-        from ralf_agent import TeamSpec
-        from ralf_agent.temporal import TemporalEngine
-        from ralf_agent.temporal_agent_runtime import TemporalClientRuntime
+        from relf_agent import TeamSpec
+        from relf_agent.temporal import TemporalEngine
+        from relf_agent.temporal_agent_runtime import TemporalClientRuntime
 
         fixture = Engine()
         engine = object.__new__(TemporalEngine)
@@ -802,7 +802,7 @@ def test_public_facade_reaches_original_lookup_before_current_composite_capabili
 
 def test_hosted_deployment_registry_uses_original_known_queue_not_current_alias():
     async def run():
-        from ralf_agent.temporal_host_runtime import HostedHandle
+        from relf_agent.temporal_host_runtime import HostedHandle
 
         host = SimpleNamespace(
             _route=("fixture:7233", NAMESPACE["name"]),
@@ -833,8 +833,8 @@ def test_hosted_deployment_registry_uses_original_known_queue_not_current_alias(
 
 def test_public_facade_refuses_sdk_session_coordinator_before_service_io():
     async def run():
-        from ralf_agent.temporal import TemporalEngine
-        from ralf_agent.temporal_agent_runtime import TemporalClientRuntime
+        from relf_agent.temporal import TemporalEngine
+        from relf_agent.temporal_agent_runtime import TemporalClientRuntime
 
         fixture = Engine()
         engine = object.__new__(TemporalEngine)
@@ -851,8 +851,8 @@ def test_public_facade_refuses_sdk_session_coordinator_before_service_io():
 
 def test_host_start_checks_each_selected_registry_and_allows_shared_original_queue(monkeypatch):
     async def run():
-        from ralf_agent.temporal_deployment_admission import registry_id
-        from ralf_agent.temporal_profile_host import TemporalProfileHost
+        from relf_agent.temporal_deployment_admission import registry_id
+        from relf_agent.temporal_profile_host import TemporalProfileHost
 
         client = Client()
         descriptions, checked = {}, []
@@ -870,7 +870,7 @@ def test_host_start_checks_each_selected_registry_and_allows_shared_original_que
         async def namespace(_):
             return NAMESPACE["id"]
 
-        monkeypatch.setattr("ralf_agent.temporal_session_activities.namespace_id", namespace)
+        monkeypatch.setattr("relf_agent.temporal_session_activities.namespace_id", namespace)
 
         class Assembly:
             def __init__(self, index, deployment):

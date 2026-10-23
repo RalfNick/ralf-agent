@@ -5,13 +5,13 @@ import copy
 
 import pytest
 
-import ralf_agent as r
-from ralf_agent.errors import IdempotencyConflict
+import relf_agent as r
+from relf_agent.errors import IdempotencyConflict
 from tests.helpers import ScriptedProvider
 
 
 def input_tools(policy=None):
-    from ralf_agent.user_input import register_user_input
+    from relf_agent.user_input import register_user_input
 
     tools = r.ToolRegistry()
     register_user_input(tools, policy=policy)
@@ -173,8 +173,8 @@ def test_compositions_keep_question_on_original_owner(tmp_path, kind):
 
 @pytest.mark.parametrize("dag", [False, True])
 def test_selected_planner_clarification_preserves_task_and_revision(dag, tmp_path):
-    from ralf_agent.dag_planning import DAGNode, DAGProposal, PlanningConclusion
-    from ralf_agent.planning import PlanProposal, PlanStep
+    from relf_agent.dag_planning import DAGNode, DAGProposal, PlanningConclusion
+    from relf_agent.planning import PlanProposal, PlanStep
 
     calls = []
 
@@ -193,7 +193,7 @@ def test_selected_planner_clarification_preserves_task_and_revision(dag, tmp_pat
                 else PlanProposal([PlanStep("work", "a", "wire")])
             )
 
-    from ralf_agent.user_input import UserInputPolicy
+    from relf_agent.user_input import UserInputPolicy
 
     with make(
         tmp_path / "runs.sqlite",
@@ -264,7 +264,7 @@ def test_answer_cannot_reset_original_decision_allowance(tmp_path):
 
 
 def test_planner_exhaustion_fails_before_impossible_human_wait(tmp_path):
-    from ralf_agent.dag_planning import PlanningConclusion
+    from relf_agent.dag_planning import PlanningConclusion
 
     class Planner:
         identity = {"kind": "exhausted-planner", "version": "1"}
@@ -272,7 +272,7 @@ def test_planner_exhaustion_fails_before_impossible_human_wait(tmp_path):
         async def plan(self, request, caller):
             return PlanningConclusion("needs_input", "Which target?")
 
-    from ralf_agent.user_input import UserInputPolicy
+    from relf_agent.user_input import UserInputPolicy
 
     with make(
         tmp_path / "runs.sqlite",
@@ -328,8 +328,8 @@ def test_parent_completion_sees_reply_lineage_without_control_effect(tmp_path):
 def test_signed_session_history_publishes_question_reply_only_after_original_success(
     tmp_path, parallel
 ):
-    from ralf_agent.model_continuation import ContinuedModelResponse, ModelContinuation
-    from ralf_agent.types import digest
+    from relf_agent.model_continuation import ContinuedModelResponse, ModelContinuation
+    from relf_agent.types import digest
 
     class SignedProvider:
         identity = {"kind": "input-signed-fixture", "version": "1"}
@@ -402,7 +402,7 @@ def test_signed_session_history_publishes_question_reply_only_after_original_suc
 
 
 def test_session_stays_busy_while_question_survives_close(tmp_path):
-    from ralf_agent.errors import SessionBusy
+    from relf_agent.errors import SessionBusy
 
     async def scenario():
         path = tmp_path / "runs.sqlite"
@@ -487,9 +487,9 @@ def test_parallel_mixed_pause_keeps_all_owners_and_unknown_reservation(tmp_path)
 
 
 def test_plan_reply_retains_completed_revision_and_finished_child(tmp_path):
-    from ralf_agent.dag_planning import PlanningConclusion
-    from ralf_agent.planning import PlanProposal, PlanStep, Verification
-    from ralf_agent.user_input import UserInputPolicy
+    from relf_agent.dag_planning import PlanningConclusion
+    from relf_agent.planning import PlanProposal, PlanStep, Verification
+    from relf_agent.user_input import UserInputPolicy
 
     class Planner:
         identity = {"kind": "retained-input-planner", "version": "1"}
@@ -557,9 +557,9 @@ def test_authorization_cancellation_prevents_intrinsic_question_adoption(tmp_pat
 
 @pytest.mark.parametrize("dag", [False, True])
 def test_managed_planner_reply_uses_new_child_identity(dag, tmp_path):
-    from ralf_agent.dag_planning import DAGNode, DAGProposal, ModelDAGPlanner
-    from ralf_agent.planning import ModelPlanner
-    from ralf_agent.user_input import UserInputPolicy
+    from relf_agent.dag_planning import DAGNode, DAGProposal, ModelDAGPlanner
+    from relf_agent.planning import ModelPlanner
+    from relf_agent.user_input import UserInputPolicy
 
     planned = (
         DAGProposal([DAGNode("work", "a", input=r.Literal("wire"))]).to_dict()
@@ -620,7 +620,7 @@ def test_original_tool_control_receipt_cannot_satisfy_business_completion(tmp_pa
 
 
 def test_reply_adopts_detached_command_payload_before_store_callback(tmp_path):
-    from ralf_agent.user_input import UserInputPolicy
+    from relf_agent.user_input import UserInputPolicy
 
     value = {"target": "wire"}
 

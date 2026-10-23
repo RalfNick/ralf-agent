@@ -12,8 +12,8 @@ from pathlib import Path
 
 import pytest
 
-from ralf_agent import RunRef, Runtime, Scope
-from ralf_agent.temporal import TemporalEngine, replay_temporal_history
+from relf_agent import RunRef, Runtime, Scope
+from relf_agent.temporal import TemporalEngine, replay_temporal_history
 from tests.temporal_deepseek_thinking_worker import FINAL_MESSAGE, NATIVE_MESSAGE, runtime
 
 pytestmark = pytest.mark.skipif(
@@ -32,7 +32,7 @@ def test_deepseek_native_receipt_and_final_reasoning_survive_worker_loss_and_his
 async def recover(root, kind, window):
     from temporalio.client import Client
 
-    import ralf_agent
+    import relf_agent
 
     address = os.environ["RALF_TEST_TEMPORAL_ADDRESS"]
     client = await Client.connect(address)
@@ -57,7 +57,7 @@ async def recover(root, kind, window):
         env = {
             "PATH": os.environ.get("PATH", "/usr/bin:/bin"),
             "PYTHONPATH": os.pathsep.join(
-                [str(Path(ralf_agent.__file__).parents[1]), str(Path(__file__).parents[1])]
+                [str(Path(relf_agent.__file__).parents[1]), str(Path(__file__).parents[1])]
             ),
             "RALF_TEST_TEMPORAL_ADDRESS": address,
             "RALF_TEST_TEMPORAL_QUEUE": queue,

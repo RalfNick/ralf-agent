@@ -9,19 +9,19 @@ from dataclasses import asdict
 
 import pytest
 
-from ralf_agent import Scope
-from ralf_agent.errors import DefinitionMismatch, IdempotencyConflict, ValidationError
+from relf_agent import Scope
+from relf_agent.errors import DefinitionMismatch, IdempotencyConflict, ValidationError
 
 
 def reference():
     try:
-        return importlib.import_module("ralf_agent.session_adapter_contract_reference")
+        return importlib.import_module("relf_agent.session_adapter_contract_reference")
     except ModuleNotFoundError:
         pytest.fail("The independent Session adapter reference is missing")
 
 
 def test_fixture_independently_isolates_both_scope_fields_across_eight_real_addresses(tmp_path):
-    from ralf_agent.memory import memory_call
+    from relf_agent.memory import memory_call
 
     async def scenario():
         session = reference().offline_session_fixture().prepare("S03", tmp_path)
@@ -209,7 +209,7 @@ def test_receipt_lost_ack_persists_exact_data_before_raising(tmp_path, asynchron
     message = {"content": "accepted"}
 
     async def scenario():
-        from ralf_agent.memory import memory_call
+        from relf_agent.memory import memory_call
 
         with pytest.raises(Exception, match="Memory backend operation failed"):
             await memory_call(

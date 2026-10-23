@@ -10,8 +10,8 @@ from types import FunctionType, SimpleNamespace
 
 import pytest
 
-from ralf_agent import temporal_session_deployment_dto as dto
-from ralf_agent.errors import ValidationError
+from relf_agent import temporal_session_deployment_dto as dto
+from relf_agent.errors import ValidationError
 from tests.temporal_deployment_coding_cpu_fixture import coding_cpu_profile
 
 pytestmark = pytest.mark.skipif(not hasattr(sys, "monitoring"), reason="Python 3.12 monitoring")

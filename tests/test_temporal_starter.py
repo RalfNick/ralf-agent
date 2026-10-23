@@ -3,7 +3,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-from ralf_agent.starter import create_starter
+from relf_agent.starter import create_starter
 
 
 def test_default_temporal_starter_is_packaged_and_requires_explicit_service(tmp_path):

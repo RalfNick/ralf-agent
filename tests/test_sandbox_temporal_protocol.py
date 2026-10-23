@@ -6,11 +6,11 @@ from dataclasses import asdict
 
 import pytest
 
-import ralf_agent as r
-from ralf_agent.errors import RalfError
-from ralf_agent.temporal_activities import TemporalRuntime
-from ralf_agent.temporal_bindings import effective_step
-from ralf_agent.temporal_state import validate_manifest
+import relf_agent as r
+from relf_agent.errors import RalfError
+from relf_agent.temporal_activities import TemporalRuntime
+from relf_agent.temporal_bindings import effective_step
+from relf_agent.temporal_state import validate_manifest
 
 from .test_sandbox_binding_execution import Reader
 from .test_sandbox_bindings import registered as registered

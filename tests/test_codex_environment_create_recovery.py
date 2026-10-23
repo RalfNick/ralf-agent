@@ -6,8 +6,8 @@ import os
 
 import pytest
 
-from ralf_agent.codex_environment import DockerCodingEnvironment
-from ralf_agent.errors import DefinitionMismatch, ExecutionHostFailed, ValidationError
+from relf_agent.codex_environment import DockerCodingEnvironment
+from relf_agent.errors import DefinitionMismatch, ExecutionHostFailed, ValidationError
 from tests.test_codex_environment import load
 from tests.test_codex_environment import resource as resource
 

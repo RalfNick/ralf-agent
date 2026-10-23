@@ -3,7 +3,7 @@ import json
 
 import pytest
 
-from ralf_agent import (
+from relf_agent import (
     AgentSpec,
     ComponentRegistry,
     ModelResponse,
@@ -11,13 +11,13 @@ from ralf_agent import (
     RuntimeBuilder,
     recommended_profile,
 )
-from ralf_agent.errors import ValidationError
-from ralf_agent.types import submission_request
+from relf_agent.errors import ValidationError
+from relf_agent.types import submission_request
 
 
 @pytest.mark.parametrize("kind,count", [("plan-and-execute", 2), ("team", 3)])
 def test_default_orchestration_is_immutable_and_reconnectable(tmp_path, kind, count):
-    from ralf_agent import recommended_harness
+    from relf_agent import recommended_harness
 
     harness = recommended_harness(kind)
     definition = harness.definition
@@ -47,7 +47,7 @@ def test_default_orchestration_is_immutable_and_reconnectable(tmp_path, kind, co
 
 
 def test_custom_orchestration_keeps_original_specs_and_binding_paths():
-    from ralf_agent import (
+    from relf_agent import (
         AgentBindingDescriptor,
         BindingSelection,
         BoundDefinition,
@@ -71,7 +71,7 @@ def test_custom_orchestration_keeps_original_specs_and_binding_paths():
 
 
 def test_dynamic_dag_and_explicit_model_planner_are_original_declarations():
-    from ralf_agent import recommended_harness
+    from relf_agent import recommended_harness
 
     definition = recommended_harness("plan-and-execute", plan_mode="dag").definition
     assert definition.planner == "dag-rule" and definition.plan_mode == "dag"
@@ -88,7 +88,7 @@ def test_dynamic_dag_and_explicit_model_planner_are_original_declarations():
     ],
 )
 def test_invalid_orchestration_does_not_silently_change_defaults(kind, options):
-    from ralf_agent import recommended_harness
+    from relf_agent import recommended_harness
 
     with pytest.raises(ValidationError):
         recommended_harness(kind, **options)
@@ -109,7 +109,7 @@ def test_invalid_orchestration_does_not_silently_change_defaults(kind, options):
 def test_versioned_plan_consumes_evidence_and_reconnects_without_new_calls(
     tmp_path, replace_members, version, options, linked
 ):
-    from ralf_agent import recommended_harness
+    from relf_agent import recommended_harness
 
     task = {"question": "Calculate the inventory value from the ledger"}
     evidence = {"units": 7, "unit_price": 6, "source": "inventory-ledger"}

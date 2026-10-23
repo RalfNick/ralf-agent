@@ -6,7 +6,7 @@ import sys
 
 from docx_fixture import MIME, docx, xml
 
-from ralf_agent import (
+from relf_agent import (
     DocxDocumentParser,
     IngestionCoordinator,
     Scope,

@@ -8,10 +8,10 @@ import pytest
 
 pytest.importorskip("temporalio")
 
-from ralf_agent import AgentSpec, TemporalRuntime, ToolRegistry
-from ralf_agent.temporal_state import TemporalRunState
-from ralf_agent.temporal_workflow import TemporalRunWorkflow
-from ralf_agent.types import submission_request
+from relf_agent import AgentSpec, TemporalRuntime, ToolRegistry
+from relf_agent.temporal_state import TemporalRunState
+from relf_agent.temporal_workflow import TemporalRunWorkflow
+from relf_agent.types import submission_request
 
 
 class Provider:
@@ -49,7 +49,7 @@ def sdk_commands(client, original_node):
             return getattr(self.handle, name)
 
         async def signal(self, name, envelope):
-            from ralf_agent.temporal_command_transport import accept
+            from relf_agent.temporal_command_transport import accept
 
             assert name == "control_command"
             await accept(original_node, envelope, self.info())
@@ -65,7 +65,7 @@ def sdk_commands(client, original_node):
 
         async def query(self, name, request):
             if name == "view" and "command_observation" in request:
-                from ralf_agent.temporal_command_transport import observe
+                from relf_agent.temporal_command_transport import observe
 
                 return {
                     "command_observation": observe(
@@ -96,7 +96,7 @@ def sdk_commands(client, original_node):
 
 
 def test_public_original_edge_recovers_twice_with_one_business_command(monkeypatch):
-    from ralf_agent import temporal_deployment_execution as execution
+    from relf_agent import temporal_deployment_execution as execution
     from tests.test_temporal_deployment_control_release import environment
 
     async def run():
@@ -133,7 +133,7 @@ def test_public_original_edge_recovers_twice_with_one_business_command(monkeypat
 def test_public_coding_edge_keeps_one_identity_across_child_revisions(
     publication, changing_revision
 ):
-    from ralf_agent import temporal_coding_composition_control as composition
+    from relf_agent import temporal_coding_composition_control as composition
     from tests.test_temporal_coding_composition_control import proof
     from tests.test_temporal_deployment_execution import Client
 

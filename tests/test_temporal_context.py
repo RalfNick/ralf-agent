@@ -3,7 +3,7 @@ from dataclasses import asdict
 
 import pytest
 
-from ralf_agent import (
+from relf_agent import (
     AgentSpec,
     Document,
     InMemoryKnowledgeStore,
@@ -11,10 +11,10 @@ from ralf_agent import (
     LexicalRetriever,
     Scope,
 )
-from ralf_agent.temporal_activities import TemporalRuntime
-from ralf_agent.temporal_state import TemporalRunState
-from ralf_agent.tools import ToolRegistry
-from ralf_agent.types import ModelResponse, submission_request
+from relf_agent.temporal_activities import TemporalRuntime
+from relf_agent.temporal_state import TemporalRunState
+from relf_agent.tools import ToolRegistry
+from relf_agent.types import ModelResponse, submission_request
 
 
 class Provider:
@@ -76,7 +76,7 @@ def test_changed_document_refuses_model_dispatch_using_fixed_snapshot():
 
 
 def test_context_manifest_and_components_drift_are_refused():
-    from ralf_agent.errors import DefinitionMismatch
+    from relf_agent.errors import DefinitionMismatch
 
     _, _, runtime, _, _ = setup()
     expected = runtime.manifest
@@ -86,7 +86,7 @@ def test_context_manifest_and_components_drift_are_refused():
 
 
 def test_same_identity_knowledge_replacement_is_refused():
-    from ralf_agent.errors import DefinitionMismatch
+    from relf_agent.errors import DefinitionMismatch
 
     store, _, runtime, _, _ = setup()
     expected = runtime.manifest

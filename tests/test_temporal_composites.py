@@ -3,19 +3,19 @@ from dataclasses import asdict
 
 import pytest
 
-from ralf_agent import AgentSpec, DAGNode, DAGProposal, DynamicWorkflowSpec, TeamSpec, ValueRef
-from ralf_agent.errors import IdempotencyConflict, ValidationError
-from ralf_agent.types import Scope, submission_request
+from relf_agent import AgentSpec, DAGNode, DAGProposal, DynamicWorkflowSpec, TeamSpec, ValueRef
+from relf_agent.errors import IdempotencyConflict, ValidationError
+from relf_agent.types import Scope, submission_request
 
 from .test_temporal_engine import Provider, registry
 
 
 def state(spec=None, budget=16):
-    assert importlib.util.find_spec("ralf_agent.temporal_parent_state"), (
+    assert importlib.util.find_spec("relf_agent.temporal_parent_state"), (
         "Missing distributed parent authority"
     )
-    from ralf_agent.temporal_activities import TemporalRuntime
-    from ralf_agent.temporal_parent_state import TemporalParentState
+    from relf_agent.temporal_activities import TemporalRuntime
+    from relf_agent.temporal_parent_state import TemporalParentState
 
     runtime = TemporalRuntime(providers={"default": Provider()}, tools=registry())
     spec = spec or TeamSpec("team", {"a": AgentSpec("a", "Answer")}, child_budget=8)
@@ -31,7 +31,7 @@ def state(spec=None, budget=16):
 def observation(
     parent, call, *, revision=1, state="succeeded", result="answer", spent=1, quiet=True
 ):
-    from ralf_agent.types import digest
+    from relf_agent.types import digest
 
     return {
         "scope": dict(parent.scope),
@@ -250,8 +250,8 @@ def test_same_child_call_identity_rejects_changed_input():
 
 
 def test_policy_validates_finite_limits_and_detaches_tool_allowlist():
-    assert importlib.util.find_spec("ralf_agent.governance"), "Missing execution policy"
-    from ralf_agent.governance import TemporalExecutionPolicy
+    assert importlib.util.find_spec("relf_agent.governance"), "Missing execution policy"
+    from relf_agent.governance import TemporalExecutionPolicy
 
     tools = ["read"]
     policy = TemporalExecutionPolicy(allowed_tools=tools)

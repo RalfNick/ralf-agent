@@ -5,14 +5,14 @@ import hashlib
 
 import pytest
 
-from ralf_agent import AdapterContractCaseResult, AdapterContractReport, AdapterContractSuite
-from ralf_agent.errors import ValidationError
-from ralf_agent.types import canonical
+from relf_agent import AdapterContractCaseResult, AdapterContractReport, AdapterContractSuite
+from relf_agent.errors import ValidationError
+from relf_agent.types import canonical
 
 
 @pytest.mark.parametrize(("profile", "count"), [("core", 10), ("tools", 16)])
 def test_unconfigured_model_role_does_no_testing_io(profile, count, monkeypatch, tmp_path):
-    import ralf_agent.adapter_contracts as module
+    import relf_agent.adapter_contracts as module
 
     def forbidden(*args, **kwargs):
         raise AssertionError("no fixture must not allocate or invoke a case")
@@ -95,8 +95,8 @@ def test_model_observations_have_no_payload_or_unbounded_counts():
 
 
 def test_public_model_fixture_construction_is_lazy(monkeypatch):
-    import ralf_agent as sdk
-    from ralf_agent.model_adapter_contract_reference import ReferenceModelSource
+    import relf_agent as sdk
+    from relf_agent.model_adapter_contract_reference import ReferenceModelSource
 
     def forbidden(*args, **kwargs):
         raise AssertionError("constructing a fixture must not open the source")

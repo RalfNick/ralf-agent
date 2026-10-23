@@ -5,7 +5,7 @@ from contextlib import aclosing
 import httpx
 import pytest
 
-from ralf_agent.errors import ProviderError
+from relf_agent.errors import ProviderError
 
 from .test_responses_provider import frames
 from .test_responses_reasoning import call, completed, message, provider, reasoning

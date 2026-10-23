@@ -5,8 +5,8 @@ import json
 
 import pytest
 
-from ralf_agent.errors import ValidationError
-from ralf_agent.orchestration_evaluation_cli import arguments, main, run
+from relf_agent.errors import ValidationError
+from relf_agent.orchestration_evaluation_cli import arguments, main, run
 
 
 def test_cli_selects_member_verification_without_changing_legacy_default():
@@ -18,7 +18,7 @@ def test_cli_selects_member_verification_without_changing_legacy_default():
 
 @pytest.mark.parametrize("value", [None, 1, "true", [], {}])
 def test_invalid_member_selection_refuses_before_provider_or_evidence(value, monkeypatch, tmp_path):
-    import ralf_agent.orchestration_evaluation_cli as cli
+    import relf_agent.orchestration_evaluation_cli as cli
 
     args = arguments(["--provider", "openai", "--completion-gate"])
     args.member_verification = value
@@ -34,7 +34,7 @@ def test_invalid_member_selection_refuses_before_provider_or_evidence(value, mon
 
 
 def test_member_verification_requires_parent_gate_before_provider_construction(monkeypatch):
-    import ralf_agent.orchestration_evaluation_cli as cli
+    import relf_agent.orchestration_evaluation_cli as cli
 
     args = arguments(["--provider", "openai", "--member-verification"])
 

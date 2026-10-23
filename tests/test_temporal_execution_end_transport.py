@@ -8,11 +8,11 @@ import pytest
 
 pytest.importorskip("temporalio")
 
-from ralf_agent.errors import RalfError
-from ralf_agent.temporal_parent_workflow import TemporalParentWorkflow
-from ralf_agent.temporal_state import TemporalRunState
-from ralf_agent.temporal_workflow import TemporalRunWorkflow, workflow
-from ralf_agent.types import digest
+from relf_agent.errors import RalfError
+from relf_agent.temporal_parent_workflow import TemporalParentWorkflow
+from relf_agent.temporal_state import TemporalRunState
+from relf_agent.temporal_workflow import TemporalRunWorkflow, workflow
+from relf_agent.types import digest
 
 OPERATIONS = (
     "tool_execution_ended",
@@ -89,7 +89,7 @@ def fixture(monkeypatch, operation):
 
 @pytest.mark.parametrize("operation", OPERATIONS)
 def test_whole_original_handler_and_typed_ack_are_separate_from_business(monkeypatch, operation):
-    from ralf_agent.temporal_execution_end_transport import accept, observe
+    from relf_agent.temporal_execution_end_transport import accept, observe
 
     async def run():
         node, info, e = fixture(monkeypatch, operation)
@@ -115,7 +115,7 @@ def test_whole_original_handler_and_typed_ack_are_separate_from_business(monkeyp
 
 @pytest.mark.parametrize("operation", OPERATIONS)
 def test_wrong_original_proof_cannot_end_another_execution(monkeypatch, operation):
-    from ralf_agent.temporal_execution_end_transport import accept, observe
+    from relf_agent.temporal_execution_end_transport import accept, observe
 
     async def run():
         node, info, e = fixture(monkeypatch, operation)
@@ -150,7 +150,7 @@ def test_original_workflow_signal_and_status_probe_share_end_observation(monkeyp
     "fault", ["scope", "namespace", "epoch", "reset", "version", "operation", "nonce"]
 )
 def test_invalid_end_envelope_never_invokes_original_handler(monkeypatch, fault):
-    from ralf_agent.temporal_execution_end_transport import accept, observe
+    from relf_agent.temporal_execution_end_transport import accept, observe
 
     async def run():
         node, info, e = fixture(monkeypatch, "tool_execution_ended")
@@ -179,7 +179,7 @@ def test_invalid_end_envelope_never_invokes_original_handler(monkeypatch, fault)
 
 
 def test_cache_eviction_does_not_remove_original_end_proof(monkeypatch):
-    from ralf_agent.temporal_execution_end_transport import accept, observe
+    from relf_agent.temporal_execution_end_transport import accept, observe
 
     async def run():
         node, info, e = fixture(monkeypatch, "tool_execution_ended")

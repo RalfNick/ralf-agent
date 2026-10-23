@@ -7,9 +7,9 @@ from types import SimpleNamespace
 
 import pytest
 
-from ralf_agent.codex_coding_profile import CodexCodingProfile
-from ralf_agent.errors import DefinitionMismatch
-from ralf_agent.types import digest
+from relf_agent.codex_coding_profile import CodexCodingProfile
+from relf_agent.errors import DefinitionMismatch
+from relf_agent.types import digest
 from tests.test_codex_coding_profile import native_results
 from tests.test_codex_deployment_control_validation_cost import fixture
 

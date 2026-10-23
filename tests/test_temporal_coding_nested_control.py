@@ -6,9 +6,9 @@ from types import SimpleNamespace
 
 import pytest
 
-from ralf_agent.errors import CloseIncomplete, DefinitionMismatch
-from ralf_agent.temporal_parent_state import child_run_id
-from ralf_agent.types import digest
+from relf_agent.errors import CloseIncomplete, DefinitionMismatch
+from relf_agent.temporal_parent_state import child_run_id
+from relf_agent.types import digest
 from tests import test_temporal_coding_composition_control as fixture
 
 
@@ -129,7 +129,7 @@ def tree(monkeypatch, namespace):
 
 @pytest.fixture
 def namespace(monkeypatch):
-    from ralf_agent import temporal_session_activities
+    from relf_agent import temporal_session_activities
 
     async def identity(client):
         return fixture.NAMESPACE["id"]
@@ -291,7 +291,7 @@ def test_resource_ancestry_cannot_use_foreign_root_epoch(tree):
 
 @pytest.mark.parametrize("closed_by", ["registry", "ancestor"])
 def test_registration_cannot_start_business_under_closed_ancestor(tree, monkeypatch, closed_by):
-    from ralf_agent import temporal, temporal_state
+    from relf_agent import temporal, temporal_state
 
     submitted = []
 
@@ -353,8 +353,8 @@ def test_parent_cancel_failure_still_attempts_other_known_descendants(tree, monk
 
 
 def test_deep_pg_resource_retained_after_ancestor_adoption_failure_and_retry(tree, monkeypatch):
-    from ralf_agent import delegated_coding, temporal_bindings
-    from ralf_agent.postgres_coding_resources import receive_resource
+    from relf_agent import delegated_coding, temporal_bindings
+    from relf_agent.postgres_coding_resources import receive_resource
 
     resource = fixture.native_resource(tree, tree.leaf_id)
     original_update = TreeHandle.execute_update

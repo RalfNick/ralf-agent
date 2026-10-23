@@ -13,14 +13,14 @@ from pathlib import Path
 
 from temporalio.client import Client
 
-import ralf_agent as r
-from ralf_agent.temporal import build_temporal_worker
-from ralf_agent.temporal_activities import TemporalRuntime
+import relf_agent as r
+from relf_agent.temporal import build_temporal_worker
+from relf_agent.temporal_activities import TemporalRuntime
 
 
 async def public_read_run(engine, client, directory):
     """Seed and verify exactly this old-public Worker using its matching SDK."""
-    from ralf_agent.temporal import replay_temporal_history
+    from relf_agent.temporal import replay_temporal_history
 
     try:
         receipt = await engine.submit(
@@ -82,7 +82,7 @@ def runtime(directory, queue=None):
     public = os.environ.get("RALF_TEST_END_PUBLIC") == "1"
     options = {"tool_execution": r.ToolExecutionOwner(version="end-compat-1")} if owned else {}
     if public:
-        from ralf_agent.governance import DeploymentAdmissionPolicy
+        from relf_agent.governance import DeploymentAdmissionPolicy
 
         assert owned and queue
         options["admission_policy"] = DeploymentAdmissionPolicy(queue)
@@ -138,11 +138,11 @@ async def main():
         public_engine = public_task = None
         if owned:
             ready["end_transport_available"] = (
-                importlib.util.find_spec("ralf_agent.temporal_execution_end_transport") is not None
+                importlib.util.find_spec("relf_agent.temporal_execution_end_transport") is not None
             )
         if public:
-            from ralf_agent.temporal import TemporalEngine
-            from ralf_agent.temporal_deployment_admission import root_run_id
+            from relf_agent.temporal import TemporalEngine
+            from relf_agent.temporal_deployment_admission import root_run_id
 
             scope = r.Scope("execution-end-legacy", queue)
             public_engine = TemporalEngine(
@@ -157,7 +157,7 @@ async def main():
                 registry_id=public_engine.command_registry_id,
             )
             ready["lifecycle_transport_available"] = (
-                importlib.util.find_spec("ralf_agent.temporal_deployment_lifecycle_transport")
+                importlib.util.find_spec("relf_agent.temporal_deployment_lifecycle_transport")
                 is not None
             )
             public_task = asyncio.create_task(public_read_run(public_engine, client, directory))
@@ -175,7 +175,7 @@ async def main():
                 await execution.tool_execution.aclose(wait_timeout=5)
             except BaseException as exc:
                 errors.append(exc)
-            from ralf_agent.temporal_deployment_release import check_owner
+            from relf_agent.temporal_deployment_release import check_owner
 
             try:
                 assert await check_owner(execution).wait(wait_timeout=5)

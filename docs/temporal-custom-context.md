@@ -8,9 +8,9 @@ custom builders add `context_registration` with configuration and implementation
 digests. Deploy matching registrations on every Worker for the task queue.
 
 ```python
-from ralf_agent import BudgetedContextAssembler, UTF8TokenEstimator, ToolRegistry
-from ralf_agent.temporal_activities import TemporalRuntime
-from ralf_agent.temporal import TemporalEngine, build_temporal_worker
+from relf_agent import BudgetedContextAssembler, UTF8TokenEstimator, ToolRegistry
+from relf_agent.temporal_activities import TemporalRuntime
+from relf_agent.temporal import TemporalEngine, build_temporal_worker
 
 runtime = TemporalRuntime(
     providers={"default": provider},

@@ -5,7 +5,7 @@
 旧 Manifest 和恢复行为保持兼容。
 
 ```python
-from ralf_agent import FixedAgentLimits, LocalEngine
+from relf_agent import FixedAgentLimits, LocalEngine
 
 # 传入现有 store/providers/tools；这是宿主强制上限。
 engine = LocalEngine(
@@ -35,7 +35,7 @@ model_credits／工具成本／父子预算保持原契约，策略不能改变�
 ## 选择与扩展
 
 ```python
-from ralf_agent import AgentBindingDescriptor, AgentDefinition, BindingSelection
+from relf_agent import AgentBindingDescriptor, AgentDefinition, BindingSelection
 
 catalog.register("limits", "business", "1", FixedAgentLimits(max_tool_actions=1))
 definition = AgentDefinition(
@@ -53,7 +53,7 @@ Temporal dev61 支持宿主及每 Agent limits 策略，范围、History 采纳�
 [Temporal 限制指南](temporal-agent-limits.md)。下文 Manifest、配置和父级固定投影说明为 Local 契约。
 
 ```python
-from ralf_agent import AgentLimitProposal
+from relf_agent import AgentLimitProposal
 
 
 class MyLimits:

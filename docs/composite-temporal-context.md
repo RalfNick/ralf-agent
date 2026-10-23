@@ -21,7 +21,7 @@
 ## Local 使用与恢复
 
 ```python
-from ralf_agent import (
+from relf_agent import (
     ManagedDataContext,
     SQLiteArtifactStore,
     GraphNode,
@@ -52,9 +52,9 @@ Team／动态／嵌套使用原实际子 Run，按子 Run 查询证据和固定�
 ## Temporal 显式装配
 
 ```python
-from ralf_agent import ManagedDataContext, SQLiteArtifactStore, Scope, ToolRegistry
-from ralf_agent.temporal import TemporalEngine, build_temporal_worker
-from ralf_agent.temporal_activities import TemporalRuntime
+from relf_agent import ManagedDataContext, SQLiteArtifactStore, Scope, ToolRegistry
+from relf_agent.temporal import TemporalEngine, build_temporal_worker
+from relf_agent.temporal_activities import TemporalRuntime
 
 scope = Scope("workspace", "developer")
 artifacts = SQLiteArtifactStore("worker-results.sqlite")

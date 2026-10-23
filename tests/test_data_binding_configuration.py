@@ -5,10 +5,10 @@ import json
 
 import pytest
 
-from ralf_agent import InMemoryMemory, RuntimeBuilder, RuntimeProfile, Scope
-from ralf_agent.errors import ValidationError
-from ralf_agent.runtime_builder import ComponentRegistry
-from ralf_agent.runtime_config import load_catalog
+from relf_agent import InMemoryMemory, RuntimeBuilder, RuntimeProfile, Scope
+from relf_agent.errors import ValidationError
+from relf_agent.runtime_builder import ComponentRegistry
+from relf_agent.runtime_config import load_catalog
 
 from .test_data_binding_execution import definitions
 from .test_data_binding_resources import resources
@@ -120,10 +120,10 @@ def test_invalid_wrapper_namespace_fails_before_database_creation(tmp_path, role
 
 def test_prepared_fact_wrapper_freezes_mutable_default_and_public_exports():
     api = resources()
-    import ralf_agent
+    import relf_agent
 
-    assert ralf_agent.FactsBindingResource is api.FactsBindingResource
-    assert ralf_agent.KnowledgeBindingResource is api.KnowledgeBindingResource
+    assert relf_agent.FactsBindingResource is api.FactsBindingResource
+    assert relf_agent.KnowledgeBindingResource is api.KnowledgeBindingResource
     declaration = declarations()[0]["component"]
     declaration["config"]["backend"] = {"adapter": "in-memory"}
     factory, config = ComponentRegistry().prepare("memory_store", declaration)

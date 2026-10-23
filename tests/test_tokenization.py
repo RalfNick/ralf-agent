@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 
-from ralf_agent import (
+from relf_agent import (
     Document,
     IngestionCoordinator,
     InMemoryKnowledgeStore,
@@ -17,11 +17,11 @@ from ralf_agent import (
     SourceDocument,
     SQLiteKnowledgeStore,
 )
-from ralf_agent.errors import DefinitionMismatch, ValidationError
+from relf_agent.errors import DefinitionMismatch, ValidationError
 
 
 def api():
-    module = importlib.import_module("ralf_agent")
+    module = importlib.import_module("relf_agent")
     assert hasattr(module, "TokenChunker"), "Missing replaceable token chunking"
     return module
 
@@ -81,7 +81,7 @@ def test_canonical_message_counter_reserves_output_in_same_units():
 
 
 def test_output_reserve_prevents_dispatch_and_managed_factory_supports_it():
-    from ralf_agent.context_factories import budgeted_context, managed_context
+    from relf_agent.context_factories import budgeted_context, managed_context
 
     history = [{"role": "system", "content": "a"}, {"role": "user", "content": "b"}]
     assembler = budgeted_context({"counter": "utf8-bytes", "output_reserve": 20, "max_units": 75})
@@ -357,7 +357,7 @@ def test_temporal_output_reserve_refuses_model_before_dispatch():
 
 
 def test_local_tokenizer_approval_reopen_preserves_snapshot_and_one_write(tmp_path):
-    from ralf_agent import (
+    from relf_agent import (
         AgentSpec,
         LocalEngine,
         ModelResponse,

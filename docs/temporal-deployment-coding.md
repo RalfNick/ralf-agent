@@ -19,7 +19,7 @@ Scope 由可信宿主提供，不是配置文件自报的权限。部署总量�
 下例使用已经存在的 `postgres`、`codex-coding-postgres` 与 `bounded` 适配器。`APP_PG_DSN` 是环境变量名称，值由宿主管理，不写入 Profile。`offline-echo` 仅演示装配，不会请求 Coding 工具；它不证明原生认证、远端模型协议兼容或真实任务质量。需要显式模型连接时使用[连接指南](codex-model-connection.md)中已有的 connected-postgres 工厂，不从本例推断任何 endpoint／model 兼容。
 
 ```python
-from ralf_agent import (
+from relf_agent import (
     AgentSpec, Scope, TemporalProfile, TemporalRuntimeBuilder,
 )
 
@@ -79,7 +79,7 @@ print(status.state, admission["counts"]["held_root_runs_for_scope"])
 JSON／TOML 使用相同的 `components.admission_policy` 和两个 `execution` 布尔字段，通过 `TemporalProfileCatalog.from_file` 加载。保持原 Catalog/Profile identity 恢复，不能因默认别名移动改写已接受任务。要让原 Profile 保持未添加准入组件的 identity，可以省略上例的该组件，改用：
 
 ```python
-from ralf_agent import DeploymentAdmissionPolicy
+from relf_agent import DeploymentAdmissionPolicy
 
 policy = DeploymentAdmissionPolicy("coding-deployment-v1", max_active_root_runs=4)
 assembly = await TemporalRuntimeBuilder().abuild(
@@ -114,7 +114,7 @@ Registry 首次接受固定原请求、Manifest、队列和 Activity timeout；�
 关闭会立即使 Assembly 创建的业务 Engine 不再接受调用，包括诊断；关闭期间需由独立的 borrowed Facade 查询相同原发布：
 
 ```python
-from ralf_agent import TemporalEngine
+from relf_agent import TemporalEngine
 
 observer = TemporalEngine(
     client, task_queue=queue, release=assembly.release, scope=scope,

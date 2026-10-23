@@ -6,7 +6,7 @@ from dataclasses import asdict
 
 import pytest
 
-from ralf_agent import (
+from relf_agent import (
     AgentSpec,
     GraphNode,
     GraphWorkflowSpec,
@@ -15,12 +15,12 @@ from ralf_agent import (
     SessionBindingResource,
     ToolRegistry,
 )
-from ralf_agent.temporal_activities import TemporalRuntime
-from ralf_agent.temporal_parent_state import TemporalParentState
-from ralf_agent.temporal_session_state import TemporalSessionState
-from ralf_agent.temporal_session_topology import CompositeSessionTopology
-from ralf_agent.temporal_state import TemporalRunState
-from ralf_agent.types import submission_request
+from relf_agent.temporal_activities import TemporalRuntime
+from relf_agent.temporal_parent_state import TemporalParentState
+from relf_agent.temporal_session_state import TemporalSessionState
+from relf_agent.temporal_session_topology import CompositeSessionTopology
+from relf_agent.temporal_state import TemporalRunState
+from relf_agent.types import submission_request
 from tests.test_temporal_memory_bindings import grant
 from tests.test_temporal_sessions import Provider
 
@@ -144,7 +144,7 @@ class SuffixTopology(CompositeSessionTopology):
         return {"kind": "test-suffix-topology", "version": "1"}
 
     def member_address(self, session, path, definition_digest, *, namespace=None):
-        from ralf_agent.temporal_session_data_state import session_storage_key
+        from relf_agent.temporal_session_data_state import session_storage_key
 
         logical = super().member_address(session, path, definition_digest)
         return session_storage_key(namespace, logical + ":routing")
@@ -268,7 +268,7 @@ def test_custom_root_proposal_cannot_rewrite_original_root_before_data_io():
 
 @pytest.mark.parametrize("enabled,writes", [(False, True), (True, False)])
 def test_topology_requires_original_session_admission_and_write_protocol(enabled, writes):
-    from ralf_agent.errors import ValidationError
+    from relf_agent.errors import ValidationError
 
     with pytest.raises(ValidationError):
         TemporalRuntime(
@@ -282,7 +282,7 @@ def test_topology_requires_original_session_admission_and_write_protocol(enabled
 
 
 def test_runtime_topology_replacement_refuses_before_publishing_or_io():
-    from ralf_agent.errors import DefinitionMismatch
+    from relf_agent.errors import DefinitionMismatch
 
     host = TemporalRuntime(
         providers={"default": Provider()},
@@ -300,7 +300,7 @@ def test_runtime_topology_replacement_refuses_before_publishing_or_io():
 
 def test_duplicate_admitted_root_read_cannot_disown_original_reader():
     async def run():
-        from ralf_agent.temporal_bindings import normalize_request
+        from relf_agent.temporal_bindings import normalize_request
 
         started, finish = asyncio.Event(), asyncio.Event()
 

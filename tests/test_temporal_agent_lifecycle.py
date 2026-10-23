@@ -5,8 +5,8 @@ from dataclasses import replace
 
 import pytest
 
-import ralf_agent as r
-from ralf_agent.errors import CloseIncomplete, DefinitionMismatch, RuntimeClosed, ValidationError
+import relf_agent as r
+from relf_agent.errors import CloseIncomplete, DefinitionMismatch, RuntimeClosed, ValidationError
 
 from .temporal_agent_fixture import StateClient, engine
 

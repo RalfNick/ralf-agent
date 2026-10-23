@@ -5,7 +5,7 @@ import threading
 
 import pytest
 
-from ralf_agent import (
+from relf_agent import (
     AgentSpec,
     LocalEngine,
     ModelResponse,
@@ -16,8 +16,8 @@ from ralf_agent import (
     ToolRegistry,
     ToolSpec,
 )
-from ralf_agent.errors import CloseIncomplete, CoordinatorBusy
-from ralf_agent.user_input import register_user_input
+from relf_agent.errors import CloseIncomplete, CoordinatorBusy
+from relf_agent.user_input import register_user_input
 
 
 def test_default_wait_surfaces_child_question_while_real_sibling_is_active(tmp_path):

@@ -4,10 +4,10 @@ import copy
 
 import pytest
 
-import ralf_agent as r
-from ralf_agent.data_context import ManagedDataContext
-from ralf_agent.errors import DefinitionMismatch, RalfError
-from ralf_agent.managed_context import ManagedContextPipeline
+import relf_agent as r
+from relf_agent.data_context import ManagedDataContext
+from relf_agent.errors import DefinitionMismatch, RalfError
+from relf_agent.managed_context import ManagedContextPipeline
 
 from .test_managed_data_context import history
 

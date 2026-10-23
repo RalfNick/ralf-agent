@@ -12,15 +12,15 @@ from contextlib import asynccontextmanager
 
 import pytest
 
-from ralf_agent import (
+from relf_agent import (
     Scope,
     native_history_address,
     native_history_envelope,
     read_native_history,
 )
-from ralf_agent.binding_sessions import SessionBindingResource
-from ralf_agent.errors import IdempotencyConflict, ValidationError
-from ralf_agent.types import canonical, digest
+from relf_agent.binding_sessions import SessionBindingResource
+from relf_agent.errors import IdempotencyConflict, ValidationError
+from relf_agent.types import canonical, digest
 
 
 @pytest.fixture(params=["redis", "postgres"])
@@ -42,12 +42,12 @@ async def remote(endpoint):
     unique = uuid.uuid4().hex
     scope = Scope("dev89-native-" + unique, "native-test-owner")
     if kind == "redis":
-        from ralf_agent.redis_memory import RedisMemory
+        from relf_agent.redis_memory import RedisMemory
 
         prefix = "dev89-native-" + unique
         backend = await RedisMemory.connect(url, prefix=prefix, backend_id="dev89-native-redis")
     else:
-        from ralf_agent.postgres import PostgresMemory
+        from relf_agent.postgres import PostgresMemory
 
         backend = await PostgresMemory.connect(url, backend_id="dev89-native-postgres")
         await backend.initialize()

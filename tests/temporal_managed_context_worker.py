@@ -5,9 +5,9 @@ import os
 import sqlite3
 from pathlib import Path
 
-from ralf_agent import FileArtifactStore, Scope, SQLiteArtifactStore
-from ralf_agent.temporal import build_temporal_worker
-from ralf_agent.temporal_activities import TemporalRuntime
+from relf_agent import FileArtifactStore, Scope, SQLiteArtifactStore
+from relf_agent.temporal import build_temporal_worker
+from relf_agent.temporal_activities import TemporalRuntime
 from tests.test_composite_data_context import Provider, registry
 from tests.test_managed_data_context import context
 

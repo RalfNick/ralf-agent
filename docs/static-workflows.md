@@ -5,7 +5,7 @@
 ## 1. 安装后直接运行
 
 ```sh
-ralf init my-graph --template graph
+relf init my-graph --template graph
 cd my-graph
 python -m agent_app --input urgent --command-id urgent-task
 python -m agent_app --input hello --command-id routine-task
@@ -15,8 +15,8 @@ python -m agent_app --input hello --command-id routine-task
 
 ```sh
 python -m agent_app --input urgent --command-id queued-task --submit-only
-ralf --config runtime.toml resume RUN_ID
-ralf --config runtime.toml --format text inspect RUN_ID
+relf --config runtime.toml resume RUN_ID
+relf --config runtime.toml --format text inspect RUN_ID
 ```
 
 替换 `RUN_ID` 为提交返回的 ID。`inspect` 显示计划和每个节点的状态；从其他目录运行时使用相同的绝对 `--db` 与 `--config` 路径。只读 SQLite 检查不会启动工厂或取得执行租约。
@@ -25,7 +25,7 @@ ralf --config runtime.toml --format text inspect RUN_ID
 
 ```python
 import asyncio
-from ralf_agent import (
+from relf_agent import (
     AgentSpec,
     GraphNode,
     GraphWorkflowSpec,
@@ -67,7 +67,7 @@ with RuntimeBuilder().build(profile, ".ralf/graph.sqlite") as engine:
 `ValueRef()` 引用原始输入；`ValueRef("read", ("items", 0))` 引用已完成节点的对象字段／数组元素。引用其他节点时，它必须是当前节点的依赖祖先。缺失、错误容器类型或被跳过的节点默认报错；`required=False, default=...` 显式选择回退。**null 是实际值，不能被缺失回退覆盖。** 字符串路径访问对象，非负整数路径访问数组；不支持任意表达式或 Python eval。
 
 ```python
-from ralf_agent import BranchCondition, GraphNode, InputMap, ValueRef
+from relf_agent import BranchCondition, GraphNode, InputMap, ValueRef
 
 branches = [
     GraphNode("left", transform="identity", when=BranchCondition(ValueRef(), "left")),
@@ -98,7 +98,7 @@ branches = [
 `NodeTransform` 是纯同步的 JSON 数据计算。默认 `IdentityTransform` 复制输入，只接受空配置。自定义示例：
 
 ```python
-from ralf_agent import GraphNode, GraphWorkflowSpec, LocalEngine, SQLiteStore, ToolRegistry
+from relf_agent import GraphNode, GraphWorkflowSpec, LocalEngine, SQLiteStore, ToolRegistry
 
 
 class SumValues:
@@ -138,7 +138,7 @@ engine = LocalEngine(
 默认旧 Agent／顺序 Workflow 保留已有记录和 Manifest。工作流扩展端口目前作用于 Graph 入口；旧入口使用兼容执行路径。需要主动使用新计划路径时：
 
 ```python
-from ralf_agent import GraphWorkflowSpec, StaticWorkflowCompiler
+from relf_agent import GraphWorkflowSpec, StaticWorkflowCompiler
 
 # sequence is an existing WorkflowSpec.
 # graph = GraphWorkflowSpec.from_plan(StaticWorkflowCompiler().compile(sequence))

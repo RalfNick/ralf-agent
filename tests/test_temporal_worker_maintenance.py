@@ -6,9 +6,9 @@ from types import SimpleNamespace
 
 import pytest
 
-from ralf_agent import Scope
-from ralf_agent.errors import DefinitionMismatch, ValidationError
-from ralf_agent.temporal_assembly_lifecycle import WorkerExecutionOwner
+from relf_agent import Scope
+from relf_agent.errors import DefinitionMismatch, ValidationError
+from relf_agent.temporal_assembly_lifecycle import WorkerExecutionOwner
 
 
 @pytest.fixture(autouse=True)
@@ -19,7 +19,7 @@ def sdk():
 def setup(monkeypatch):
     from temporalio import activity
 
-    from ralf_agent import temporal_deployment_release as release
+    from relf_agent import temporal_deployment_release as release
 
     manifest = {"deployment_admission_protocol": {"version": 3}}
     runtime = SimpleNamespace(orchestration_release=manifest)
@@ -160,7 +160,7 @@ def test_same_name_and_copied_marker_do_not_select_maintenance(monkeypatch):
 
 @pytest.mark.parametrize("change", ["function-code", "sdk-epoch"])
 def test_pins_rechecked_after_maintenance_await(monkeypatch, change):
-    from ralf_agent import temporal_deployment_release as release
+    from relf_agent import temporal_deployment_release as release
 
     async def run():
         owner, wrapped, original, _, _, info, request, calls = setup(monkeypatch)
@@ -189,7 +189,7 @@ def test_pins_rechecked_after_maintenance_await(monkeypatch, change):
 def test_original_cold_stop_verifier_remains_owned_during_close(monkeypatch):
     from temporalio import activity
 
-    from ralf_agent import temporal_deployment_coding_bridge as bridge
+    from relf_agent import temporal_deployment_coding_bridge as bridge
 
     async def run():
         owner, _, _, runtime, client, info, _, calls = setup(monkeypatch)
@@ -224,11 +224,11 @@ def test_closing_original_control_keeps_universal_proof_and_end_ack(monkeypatch,
     import temporalio.worker
     from temporalio import activity
 
-    from ralf_agent import temporal_activities as activities
-    from ralf_agent import temporal_control_activities as controls
-    from ralf_agent import temporal_deployment_execution as execution
-    from ralf_agent import temporal_session_activities as sessions
-    from ralf_agent.temporal import build_temporal_worker
+    from relf_agent import temporal_activities as activities
+    from relf_agent import temporal_control_activities as controls
+    from relf_agent import temporal_deployment_execution as execution
+    from relf_agent import temporal_session_activities as sessions
+    from relf_agent.temporal import build_temporal_worker
     from tests.test_temporal_deployment_coding_release import environment
 
     async def run():
@@ -308,13 +308,13 @@ def test_closing_original_native_stop_keeps_sdk_guard_stop_and_end_ack(monkeypat
     import temporalio.worker
     from temporalio import activity
 
-    from ralf_agent import temporal_activities as activities
-    from ralf_agent import temporal_bindings as bindings
-    from ralf_agent import temporal_coding_runtime as coding
-    from ralf_agent import temporal_deployment_execution as execution
-    from ralf_agent import temporal_session_activities as sessions
-    from ralf_agent.temporal import build_temporal_worker
-    from ralf_agent.temporal_coding_state import CODING_STOP_ACTIVITY
+    from relf_agent import temporal_activities as activities
+    from relf_agent import temporal_bindings as bindings
+    from relf_agent import temporal_coding_runtime as coding
+    from relf_agent import temporal_deployment_execution as execution
+    from relf_agent import temporal_session_activities as sessions
+    from relf_agent.temporal import build_temporal_worker
+    from relf_agent.temporal_coding_state import CODING_STOP_ACTIVITY
     from tests.test_temporal_deployment_coding_release import environment
 
     async def run():
@@ -383,7 +383,7 @@ def test_closing_original_native_stop_keeps_sdk_guard_stop_and_end_ack(monkeypat
         )
         registered.append(wrapped.__wrapped__.__wrapped__)
         if change == "business":
-            from ralf_agent.temporal_state import TOOL_ACTIVITY
+            from relf_agent.temporal_state import TOOL_ACTIVITY
 
             info.activity_type = TOOL_ACTIVITY
             wrapped = next(
@@ -446,7 +446,7 @@ def test_explicit_same_name_native_stop_maintenance_is_not_factory_registration(
 ):
     from temporalio import activity
 
-    from ralf_agent.temporal_coding_state import CODING_STOP_ACTIVITY
+    from relf_agent.temporal_coding_state import CODING_STOP_ACTIVITY
 
     owner, _, _, runtime, client, _, _, calls = setup(monkeypatch)
     runtime.orchestration_release["deployment_admission_protocol"]["version"] = publication
@@ -466,8 +466,8 @@ def test_explicit_same_name_native_stop_maintenance_is_not_factory_registration(
 def test_original_native_stop_without_universal_admission_wrapper_is_refused(monkeypatch):
     from temporalio import activity
 
-    from ralf_agent.temporal_activities import registered_activities
-    from ralf_agent.temporal_coding_state import CODING_STOP_ACTIVITY
+    from relf_agent.temporal_activities import registered_activities
+    from relf_agent.temporal_coding_state import CODING_STOP_ACTIVITY
 
     owner, _, _, runtime, client, _, _, calls = setup(monkeypatch)
     runtime.model_continuation, runtime.coding_execution = False, True

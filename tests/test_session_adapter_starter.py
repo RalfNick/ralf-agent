@@ -13,7 +13,7 @@ import pytest
 
 def application(tmp_path):
     try:
-        module = importlib.import_module("ralf_agent.session_adapter_contract_starter")
+        module = importlib.import_module("relf_agent.session_adapter_contract_starter")
     except ModuleNotFoundError:
         pytest.fail("The editable Session adapter starter is missing")
     files = module.session_contract_files()
@@ -47,8 +47,8 @@ def test_starter_copies_full_independent_implementation_without_importing_refere
     assert "class ReferenceSQLiteReceiptSessionStore" in copied
     assert "sqlite3.connect(" in copied
     assert "SQLiteMemory" not in copied
-    assert "ralf_agent.session_adapter_contract_reference" not in copied
-    assert "from ralf_agent.session_adapter_contract import" in copied
+    assert "relf_agent.session_adapter_contract_reference" not in copied
+    assert "from relf_agent.session_adapter_contract import" in copied
 
 
 @pytest.mark.parametrize("format", ["json", "toml"])

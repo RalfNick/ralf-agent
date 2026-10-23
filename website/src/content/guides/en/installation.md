@@ -12,7 +12,7 @@ Use **Python 3.11 or newer** in a virtual environment. The local introduction us
 
 Relf-Agent is in Alpha. APIs and deployment combinations continue to evolve. See the repository's [implementation status (Chinese)](repo:docs/implementation-status.md) for the actual verification scope of each combination.
 
-The project was renamed from Ralf-Agent to Relf-Agent, and the repository is now `RalfNick/relf-agent`. This pinned a1 tutorial and the public a2 package use `ralf-agent`. The a5 candidate distribution is `relf-agent`; `ralf_agent` imports and the `ralf` CLI stay unchanged. No `relf_agent` import or `relf` command is added. Original SDK output is retained for historical versions.
+The project is Relf-Agent at `RalfNick/relf-agent`. Starting with a6, the distribution, import and commands are `relf-agent`, `relf_agent`, and `relf` / `relf-*`. a5 changed only the distribution name. This guide deliberately retains the actual `ralf_agent` imports and `ralf` commands for its pinned a1 source and public a2 archive; new commands do not run against those old packages.
 
 ## Install from source
 
@@ -30,7 +30,7 @@ This documentation baseline is SDK **0.1.0a1**, commit `0b9b6c9682c40285d91994cd
 
 > This guide pins the original a1 source, not a public a1 package. The latest [0.1.0a2 Alpha](https://github.com/RalfNick/relf-agent/releases/tag/v0.1.0a2) is publicly available through GitHub Release; its release notes provide the verified installation command. PyPI remains unpublished, so `pip install ralf-agent` is not this guide's verified entry point.
 
-> The renamed candidate is `relf-agent==0.1.0a5`. See `docs/alpha5-validation-status.md` in the maintenance checkout for actual local, platform and publication evidence. Original a4 archives and Linux/native-CI results remain separate and do not qualify a5. This guide keeps its pinned a1 tutorial and verified public a2 installation. Use a separate environment for a5; do not co-install the two distributions.
+> The current candidate is `relf-agent==0.1.0a6`; actual evidence is in `docs/alpha6-validation-status.md` in the maintenance checkout. a5 archives and records remain intact and do not qualify a6. Use separate versioned environments; old Runs, History and fingerprints are not automatically migrated.
 
 If you have a local wheel, install it in a virtual environment with `python -m pip install /actual/path/package.whl`. Verify its source and version.
 

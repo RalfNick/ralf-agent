@@ -3,8 +3,8 @@ from contextlib import asynccontextmanager, contextmanager
 
 import pytest
 
-from ralf_agent import AgentSpec, LocalEngine, ModelResponse, SQLiteStore
-from ralf_agent.errors import AuthorizationDenied
+from relf_agent import AgentSpec, LocalEngine, ModelResponse, SQLiteStore
+from relf_agent.errors import AuthorizationDenied
 
 from .helpers import ScriptedProvider, tool_response
 from .test_review_engine_boundaries import write_registry

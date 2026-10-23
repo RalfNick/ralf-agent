@@ -6,9 +6,9 @@ import json
 
 import pytest
 
-from ralf_agent import AdapterContractCaseResult, AdapterContractReport, AdapterContractSuite
-from ralf_agent.errors import ValidationError
-from ralf_agent.types import canonical
+from relf_agent import AdapterContractCaseResult, AdapterContractReport, AdapterContractSuite
+from relf_agent.errors import ValidationError
+from relf_agent.types import canonical
 
 
 def facts_cases(count, status="passed", code="verified"):
@@ -43,7 +43,7 @@ def test_partial_mixed_or_extended_facts_reports_cannot_pass(profile, count):
 
 @pytest.mark.parametrize("profile", ["core", "managed"])
 def test_unconfigured_facts_suite_does_no_testing_io(profile, monkeypatch, tmp_path):
-    import ralf_agent.adapter_contracts as module
+    import relf_agent.adapter_contracts as module
 
     def forbidden(*args, **kwargs):
         raise AssertionError("unconfigured checks must not prepare a workspace or case")
@@ -117,8 +117,8 @@ def test_facts_suites_keep_literal_session_v1_catalog(profile, expected):
 
 
 def test_facts_fixture_api_is_exported_and_construction_is_lazy(monkeypatch):
-    import ralf_agent as sdk
-    from ralf_agent.facts_adapter_contract_reference import ReferenceFactsSource
+    import relf_agent as sdk
+    from relf_agent.facts_adapter_contract_reference import ReferenceFactsSource
 
     def forbidden(*args, **kwargs):
         raise AssertionError("fixture construction cannot open a source")

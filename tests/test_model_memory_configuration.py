@@ -3,8 +3,8 @@ import json
 
 import pytest
 
-import ralf_agent as r
-from ralf_agent.errors import ValidationError
+import relf_agent as r
+from relf_agent.errors import ValidationError
 from tests.test_memory_selection import Provider
 
 

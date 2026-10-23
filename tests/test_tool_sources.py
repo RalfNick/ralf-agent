@@ -2,9 +2,9 @@ import asyncio
 
 import pytest
 
-import ralf_agent as api
-from ralf_agent import InvocationContext, Scope, ToolRegistry, ToolSpec
-from ralf_agent.errors import DefinitionMismatch, ValidationError
+import relf_agent as api
+from relf_agent import InvocationContext, Scope, ToolRegistry, ToolSpec
+from relf_agent.errors import DefinitionMismatch, ValidationError
 
 
 def public():

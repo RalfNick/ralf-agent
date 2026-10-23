@@ -6,7 +6,7 @@ import sys
 
 from pdf_fixture import pdf
 
-from ralf_agent import (
+from relf_agent import (
     IngestionCoordinator,
     PdfDocumentParser,
     Scope,

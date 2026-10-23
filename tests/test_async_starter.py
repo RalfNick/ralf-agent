@@ -1,8 +1,8 @@
 import json
 import sys
 
-from ralf_agent.cli import main
-from ralf_agent.starter import create_starter
+from relf_agent.cli import main
+from relf_agent.starter import create_starter
 
 from .test_starter import installed_wheel as _installed_wheel
 from .test_starter import subprocess_result

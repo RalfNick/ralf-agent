@@ -8,9 +8,9 @@ from concurrent.futures import ThreadPoolExecutor
 
 import pytest
 
-import ralf_agent as r
-from ralf_agent.errors import CoordinatorBusy, NotFound, RalfError
-from ralf_agent.types import canonical, digest
+import relf_agent as r
+from relf_agent.errors import CoordinatorBusy, NotFound, RalfError
+from relf_agent.types import canonical, digest
 
 from .test_artifact_binding_execution import Reader, definition
 from .test_review_shutdown import cancel_all_tasks

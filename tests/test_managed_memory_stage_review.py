@@ -3,7 +3,7 @@ import importlib
 
 import pytest
 
-from ralf_agent import (
+from relf_agent import (
     AgentSpec,
     InMemoryMemory,
     LocalEngine,
@@ -12,7 +12,7 @@ from ralf_agent import (
     SQLiteStore,
     ToolRegistry,
 )
-from ralf_agent.errors import DefinitionMismatch, MemoryBackendError
+from relf_agent.errors import DefinitionMismatch, MemoryBackendError
 from tests.helpers import ScriptedProvider
 from tests.test_managed_memory_stage import engine, policy
 
@@ -123,7 +123,7 @@ def test_inconsistent_unknown_stage_evidence_is_refused(tmp_path, mutation):
 
 
 def test_missing_prepared_reservation_refuses_before_new_cas(tmp_path, monkeypatch):
-    module = importlib.import_module("ralf_agent.managed_memory_stage")
+    module = importlib.import_module("relf_agent.managed_memory_stage")
     original = module._execute
 
     async def crash(*args, **kwargs):
@@ -147,10 +147,10 @@ def test_missing_prepared_reservation_refuses_before_new_cas(tmp_path, monkeypat
 
 @pytest.mark.parametrize("after", ["expired", "revised", "offline"])
 def test_recorded_receipt_settles_without_live_fact_dependency(tmp_path, monkeypatch, after):
-    from ralf_agent import MemoryAdmissionPolicy
+    from relf_agent import MemoryAdmissionPolicy
 
     clock = [1]
-    monkeypatch.setattr("ralf_agent.managed_memory_stage.time.time", lambda: clock[0])
+    monkeypatch.setattr("relf_agent.managed_memory_stage.time.time", lambda: clock[0])
 
     class CrashStore(SQLiteStore):
         def settle(self, reservation_id, actual, usage):
@@ -196,7 +196,7 @@ def test_recorded_receipt_settles_without_live_fact_dependency(tmp_path, monkeyp
 
 
 def test_thread_bridge_cannot_swap_same_named_underlying_target():
-    from ralf_agent import ThreadedMemoryAdapter
+    from relf_agent import ThreadedMemoryAdapter
 
     bridge = ThreadedMemoryAdapter(InMemoryMemory(backend_id="same-name"))
     stage = ManagedMemoryPolicy(bridge)

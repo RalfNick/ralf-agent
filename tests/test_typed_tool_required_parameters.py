@@ -7,8 +7,8 @@ from dataclasses import asdict
 
 import pytest
 
-from ralf_agent import AgentSpec, LocalEngine, ModelResponse, SQLiteStore, ToolCall, ToolRegistry
-from ralf_agent.errors import ValidationError
+from relf_agent import AgentSpec, LocalEngine, ModelResponse, SQLiteStore, ToolCall, ToolRegistry
+from relf_agent.errors import ValidationError
 
 
 @pytest.mark.parametrize("required", [None, [], ["limit"]])
@@ -95,7 +95,7 @@ def test_local_refuses_missing_callable_argument_before_approval(
 def test_temporal_model_activity_refuses_missing_callable_argument(
     mutate_defaults, mutate_signature
 ):
-    from ralf_agent.temporal_activities import TemporalRuntime
+    from relf_agent.temporal_activities import TemporalRuntime
 
     runtime = TemporalRuntime(
         providers={"default": MissingArgumentProvider()},
@@ -167,8 +167,8 @@ def test_registered_defaults_do_not_depend_on_live_signature_metadata(signature)
 
 @pytest.mark.parametrize("composite", [False, True])
 def test_complete_schema_keeps_original_registration_identity(composite):
-    from ralf_agent.tool_functions import TypedFunctionHandler
-    from ralf_agent.tools import ToolSpec
+    from relf_agent.tool_functions import TypedFunctionHandler
+    from relf_agent.tools import ToolSpec
 
     def lookup(record_id: str, limit: int = 5):
         return record_id, limit
@@ -230,8 +230,8 @@ def test_bound_method_and_composite_schema_keep_defaults_and_constraints():
 
 
 def test_original_valid_tool_approval_recovers_with_unchanged_identity(tmp_path):
-    from ralf_agent.tool_functions import TypedFunctionHandler
-    from ralf_agent.tools import ToolSpec
+    from relf_agent.tool_functions import TypedFunctionHandler
+    from relf_agent.tools import ToolSpec
 
     writes = []
 

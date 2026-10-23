@@ -8,8 +8,8 @@ import uuid
 
 import pytest
 
-import ralf_agent as r
-from ralf_agent.temporal import replay_temporal_history
+import relf_agent as r
+from relf_agent.temporal import replay_temporal_history
 
 from .test_skill_retrieval_execution import DiscoveryReader, definition
 
@@ -175,8 +175,8 @@ def test_actual_directory_discovery_original_tool_approval_restart_history(tmp_p
 
 @pytest.mark.parametrize("kind", ["native", "graph"])
 def test_actual_directory_cancel_retains_file_read_and_worker_until_real_exit(tmp_path, kind):
-    from ralf_agent.errors import CloseIncomplete
-    from ralf_agent.retrieval import KnowledgeContext
+    from relf_agent.errors import CloseIncomplete
+    from relf_agent.retrieval import KnowledgeContext
 
     from .test_temporal_context_read_composition import definition as read_definition
 

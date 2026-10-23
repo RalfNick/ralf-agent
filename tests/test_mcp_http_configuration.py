@@ -6,7 +6,7 @@ import sqlite3
 
 import pytest
 
-from ralf_agent import (
+from relf_agent import (
     ComponentRegistry,
     GraphNode,
     GraphWorkflowSpec,
@@ -14,7 +14,7 @@ from ralf_agent import (
     RuntimeProfile,
     ValueRef,
 )
-from ralf_agent.errors import ValidationError
+from relf_agent.errors import ValidationError
 
 from .mcp_http_fixture import peer
 from .test_mcp_http import business_calls
@@ -158,8 +158,8 @@ def test_committed_mcp_write_lost_response_keeps_original_effect_key_and_recover
 
 
 def test_partial_mcp_discovery_failure_closes_every_owned_transport(tmp_path, monkeypatch):
-    import ralf_agent.mcp_http_factories as factories
-    from ralf_agent import ToolSourceError
+    import relf_agent.mcp_http_factories as factories
+    from relf_agent import ToolSourceError
 
     wires = []
     original = factories.MCPHTTPTransport

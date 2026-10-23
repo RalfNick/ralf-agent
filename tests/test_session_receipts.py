@@ -4,14 +4,14 @@ from dataclasses import asdict
 
 import pytest
 
-from ralf_agent import Scope, SessionBindingResource
-from ralf_agent.errors import ValidationError
+from relf_agent import Scope, SessionBindingResource
+from relf_agent.errors import ValidationError
 
 from .remote_session_fixture import RemoteMemory
 
 
 def api():
-    return importlib.import_module("ralf_agent.session_receipts")
+    return importlib.import_module("relf_agent.session_receipts")
 
 
 def test_remote_session_view_inspects_exact_message_without_full_history(tmp_path):

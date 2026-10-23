@@ -15,23 +15,23 @@ from contextlib import asynccontextmanager
 
 import pytest
 
-from ralf_agent.errors import (
+from relf_agent.errors import (
     DefinitionMismatch,
     IdempotencyConflict,
     MemoryBackendError,
     RuntimeClosed,
     ValidationError,
 )
-from ralf_agent.executors import DispatchEnvelope
-from ralf_agent.temporal_journal import PostgresEffectJournal
-from ralf_agent.types import InvocationContext, Scope
+from relf_agent.executors import DispatchEnvelope
+from relf_agent.temporal_journal import PostgresEffectJournal
+from relf_agent.types import InvocationContext, Scope
 
 DEPENDENCIES = {"adapter": "codex-test", "environment": {"generation": "original"}}
 SCOPE = Scope("runner-pg", "principal")
 
 
 def adapter():
-    name = "ralf_agent.postgres_runner_journal"
+    name = "relf_agent.postgres_runner_journal"
     assert importlib.util.find_spec(name) is not None, "Missing shared PostgreSQL Runner journal"
     return importlib.import_module(name).PostgresRunnerJournal
 
@@ -331,7 +331,7 @@ def test_real_pg_blank_original_attempt_or_epoch_cannot_start(postgres_dsn, fiel
     "effect", ["read_only", "idempotent_write", "queryable_write", "unqueryable_write"]
 )
 def test_original_tool_effect_categories_can_bind_without_dispatch_coercion(effect):
-    from ralf_agent.postgres_runner_journal import _envelope
+    from relf_agent.postgres_runner_journal import _envelope
 
     value = envelope()
     original = binding(value)
@@ -442,7 +442,7 @@ def test_metadata_bytes_are_bounded_before_json_decoding():
 
 @pytest.mark.parametrize("effect", [[], {}])
 def test_malformed_effect_category_is_rejected_with_typed_validation(effect):
-    from ralf_agent.postgres_runner_journal import _envelope
+    from relf_agent.postgres_runner_journal import _envelope
 
     original = binding(envelope())
     original["dispatch"]["tool_manifest"]["effect"] = effect
@@ -483,7 +483,7 @@ def test_real_pg_failed_initialization_cannot_redirect_original_effect_owner(
             view = adapter()(owner, identity=DEPENDENCIES)
             with monkeypatch.context() as patch:
                 if failure == "cancel":
-                    from ralf_agent.postgres import _PostgresAdapter
+                    from relf_agent.postgres import _PostgresAdapter
 
                     original_execute = _PostgresAdapter._execute
 

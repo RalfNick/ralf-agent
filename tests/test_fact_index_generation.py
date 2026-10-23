@@ -13,7 +13,7 @@ from dataclasses import asdict
 
 import pytest
 
-from ralf_agent import (
+from relf_agent import (
     FactIndexCatalog,
     InMemoryMemory,
     InMemoryVectorIndex,
@@ -22,16 +22,16 @@ from ralf_agent import (
     SQLiteMemory,
     SQLiteVectorIndex,
 )
-from ralf_agent.embeddings import HashEmbeddingProvider
-from ralf_agent.errors import AuthorizationDenied, DefinitionMismatch, ValidationError
-from ralf_agent.tool_execution import ToolExecutionOwner
-from ralf_agent.types import digest
+from relf_agent.embeddings import HashEmbeddingProvider
+from relf_agent.errors import AuthorizationDenied, DefinitionMismatch, ValidationError
+from relf_agent.tool_execution import ToolExecutionOwner
+from relf_agent.types import digest
 
 SCOPE, NAMESPACE = Scope("generation-tests", "author"), "facts"
 
 
 def api():
-    name = "ralf_agent.fact_index_generation"
+    name = "relf_agent.fact_index_generation"
     assert importlib.util.find_spec(name) is not None, "Missing generation-bound Facts indexing"
     return importlib.import_module(name)
 
@@ -607,7 +607,7 @@ def test_original_catalog_refuses_equal_foreign_native_receiver_before_sql(
 def test_native_source_read_race_completes_exact_source_changed_and_blocks_graph_reader(
     tmp_path, boundary
 ):
-    from ralf_agent import (
+    from relf_agent import (
         GraphNode,
         GraphWorkflowSpec,
         Literal,
@@ -619,7 +619,7 @@ def test_native_source_read_race_completes_exact_source_changed_and_blocks_graph
         ValueRef,
         register_tool_source,
     )
-    from ralf_agent.fact_index_maintenance_tools import (
+    from relf_agent.fact_index_maintenance_tools import (
         NAME,
         READY_ONLY_SCHEMA,
         FactIndexMaintenanceToolSource,
@@ -799,9 +799,9 @@ def test_generation_source_boundary_equal_receiver_drift_refuses_before_sql(tmp_
     "failure", ["scan-page", "scan-error", "validation-error", "inspect-error"]
 )
 def test_unchanged_source_read_schema_or_validation_refusal_keeps_effect_pending(failure):
-    from ralf_agent.fact_index_maintenance_tools import FactIndexMaintenanceToolSource
-    from ralf_agent.fact_scan import FactScanPage
-    from ralf_agent.types import InvocationContext
+    from relf_agent.fact_index_maintenance_tools import FactIndexMaintenanceToolSource
+    from relf_agent.fact_scan import FactScanPage
+    from relf_agent.types import InvocationContext
 
     class InvalidSource(InMemoryMemory):
         def scan_facts(self, scope, namespace, query):

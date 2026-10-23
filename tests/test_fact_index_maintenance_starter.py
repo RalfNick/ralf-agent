@@ -22,7 +22,7 @@ def isolated_generated_application_modules():
 
 
 def generate(root):
-    from ralf_agent import fact_index_maintenance_starter as module
+    from relf_agent import fact_index_maintenance_starter as module
 
     files = module.fact_index_maintenance_files()
     for name, value in files.items():
@@ -150,7 +150,7 @@ def test_original_session_resume_resolves_recorded_profile_after_default_alias_c
     # Missing original profile is refused before any source, stage or tool effects.
     catalog["profiles"] = [changed]
     (tmp_path / "runtime.json").write_text(json.dumps(catalog))
-    from ralf_agent.errors import DefinitionMismatch
+    from relf_agent.errors import DefinitionMismatch
 
     with pytest.raises(DefinitionMismatch):
         asyncio.run(app.resume(run["id"], format="json", borrowed=borrowed))
@@ -306,7 +306,7 @@ def test_format_changes_preserve_one_original_session_with_same_ownership(
 
 
 def test_default_session_cannot_silently_switch_ownership_binding(tmp_path, monkeypatch):
-    from ralf_agent.errors import SessionBindingMismatch
+    from relf_agent.errors import SessionBindingMismatch
 
     app, _ = application(tmp_path, monkeypatch)
     first = asyncio.run(app.run_turns(format="toml", command_prefix="fixed-owned"))

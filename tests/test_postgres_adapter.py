@@ -15,20 +15,20 @@ from dataclasses import replace
 
 import pytest
 
-from ralf_agent.errors import IdempotencyConflict, MemoryBackendError, ValidationError
-from ralf_agent.recall import RecallQuery
-from ralf_agent.retrieval import (
+from relf_agent.errors import IdempotencyConflict, MemoryBackendError, ValidationError
+from relf_agent.recall import RecallQuery
+from relf_agent.retrieval import (
     Document,
     KnowledgeContext,
     KnowledgeVersionConflict,
     LexicalRetriever,
     RetrievalQuery,
 )
-from ralf_agent.types import Scope
+from relf_agent.types import Scope
 
 
 def adapter(name="PostgresMemory"):
-    module = "ralf_agent.postgres"
+    module = "relf_agent.postgres"
     assert importlib.util.find_spec(module) is not None, "Missing PostgreSQL adapter"
     return getattr(importlib.import_module(module), name)
 

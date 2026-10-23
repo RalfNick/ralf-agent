@@ -6,9 +6,9 @@ from types import SimpleNamespace
 
 import pytest
 
-from ralf_agent.errors import IdempotencyConflict, RalfError
-from ralf_agent.temporal_state import TemporalCommandRegistryState
-from ralf_agent.types import digest
+from relf_agent.errors import IdempotencyConflict, RalfError
+from relf_agent.temporal_state import TemporalCommandRegistryState
+from relf_agent.types import digest
 
 SCOPE = {"workspace": "manual-scoped", "principal": "owner"}
 NAMESPACE = {"name": "default", "id": "11111111-1111-1111-1111-111111111111"}
@@ -16,7 +16,7 @@ TARGET = "ralf-temporal-" + digest([SCOPE, "original"])
 
 
 def api():
-    return import_module("ralf_agent.temporal_scoped_manual_recovery")
+    return import_module("relf_agent.temporal_scoped_manual_recovery")
 
 
 def original_state(*, capacity=1):
@@ -274,7 +274,7 @@ def test_commit_refuses_changed_or_malformed_original_proof_without_mutation(fau
 
 @pytest.mark.parametrize("capacity", [1, 4])
 def test_unverified_recovery_metadata_cannot_bypass_normal_reserve_or_signal(capacity):
-    from ralf_agent.temporal_scoped_reservation import accept
+    from relf_agent.temporal_scoped_reservation import accept
 
     state, _ = original_state(capacity=capacity)
     request = manual_request()

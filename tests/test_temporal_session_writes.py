@@ -4,11 +4,11 @@ from dataclasses import asdict
 
 import pytest
 
-from ralf_agent import AgentSpec, InMemoryMemory, Scope, ToolRegistry
-from ralf_agent.errors import DefinitionMismatch, ValidationError
-from ralf_agent.temporal_activities import TemporalRuntime
-from ralf_agent.temporal_state import TemporalRunState
-from ralf_agent.types import submission_request
+from relf_agent import AgentSpec, InMemoryMemory, Scope, ToolRegistry
+from relf_agent.errors import DefinitionMismatch, ValidationError
+from relf_agent.temporal_activities import TemporalRuntime
+from relf_agent.temporal_state import TemporalRunState
+from relf_agent.types import submission_request
 
 from .test_temporal_binding_isolation import advance
 from .test_temporal_facts import Provider
@@ -87,7 +87,7 @@ def test_write_protocol_is_explicit_and_default_read_only_stays_unchanged():
 
 @pytest.mark.parametrize("invalid", ["invalid_hash", "missing_resource", "extra_resource"])
 def test_save_protocol_requires_exact_original_dataset_catalog(invalid):
-    from ralf_agent.temporal_state import validate_manifest
+    from relf_agent.temporal_state import validate_manifest
 
     runtime, _, _, _ = setup()
     manifest = runtime.manifest
@@ -290,7 +290,7 @@ def test_missing_record_can_retry_same_intent_only_after_actual_handler_ended():
 
 
 def test_late_end_from_previous_node_does_not_clear_new_model_uncertainty():
-    from ralf_agent import WorkflowSpec
+    from relf_agent import WorkflowSpec
 
     async def run():
         runtime, _, _, _ = setup()
@@ -342,7 +342,7 @@ def test_distinct_original_execution_epochs_do_not_share_data_effect_ids():
 
 
 def test_actual_execution_owner_replacement_refused_before_dispatch():
-    from ralf_agent.temporal_session_execution import SessionExecutionOwner
+    from relf_agent.temporal_session_execution import SessionExecutionOwner
 
     runtime, _, _, _ = setup()
     runtime.session_execution = SessionExecutionOwner()
@@ -452,7 +452,7 @@ def test_late_end_of_previous_attempt_is_acknowledged_without_stopping_current_w
 def test_oversized_received_inspection_is_rejected_before_activity_result():
     from dataclasses import asdict
 
-    from ralf_agent.types import canonical
+    from relf_agent.types import canonical
 
     class Oversized(InMemoryMemory):
         def inspect_message(self, scope, address, message_id):

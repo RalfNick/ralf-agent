@@ -14,13 +14,13 @@ from pathlib import Path
 
 import pytest
 
-from ralf_agent import AgentSpec, GraphNode, GraphWorkflowSpec, Scope, TemporalProfile
-from ralf_agent.codex_create_journal import process_ended
-from ralf_agent.codex_create_supervisor import CreateSupervisor
-from ralf_agent.codex_model_connection import CodexModelConnection
-from ralf_agent.errors import ExecutionHostFailed
-from ralf_agent.temporal import replay_temporal_history
-from ralf_agent.types import canonical
+from relf_agent import AgentSpec, GraphNode, GraphWorkflowSpec, Scope, TemporalProfile
+from relf_agent.codex_create_journal import process_ended
+from relf_agent.codex_create_supervisor import CreateSupervisor
+from relf_agent.codex_model_connection import CodexModelConnection
+from relf_agent.errors import ExecutionHostFailed
+from relf_agent.temporal import replay_temporal_history
+from relf_agent.types import canonical
 from tests.connected_coding_fixture import connected_native_fixture
 from tests.test_temporal_coding_owned_service import completed_updates
 from tests.test_temporal_coding_service import wait_until
@@ -196,7 +196,7 @@ def test_actual_no_submit_original_receipt_survives_cold_worker(tmp_path, monkey
             log = tmp_path / ("no-submit-worker-" + str(len(processes)) + ".log")
             test_root = Path(__file__).parents[1]
             paths = [str(test_root)]
-            if (test_root / "src" / "ralf_agent" / "__init__.py").is_file():
+            if (test_root / "src" / "relf_agent" / "__init__.py").is_file():
                 paths.append(str(test_root / "src"))
             environment = {
                 "PATH": os.environ["PATH"],

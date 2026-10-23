@@ -5,7 +5,7 @@ from dataclasses import asdict
 
 import pytest
 
-from ralf_agent import (
+from relf_agent import (
     AgentBindingDescriptor,
     AgentDefinition,
     AgentSpec,
@@ -14,11 +14,11 @@ from ralf_agent import (
     Scope,
     SkillBindingResource,
 )
-from ralf_agent.errors import AuthorizationDenied, DefinitionMismatch, ValidationError
-from ralf_agent.temporal_activities import TemporalRuntime
-from ralf_agent.temporal_bindings import effective_step, normalize_request, validate_bindings
-from ralf_agent.temporal_state import TemporalRunState, validate_manifest
-from ralf_agent.types import submission_request
+from relf_agent.errors import AuthorizationDenied, DefinitionMismatch, ValidationError
+from relf_agent.temporal_activities import TemporalRuntime
+from relf_agent.temporal_bindings import effective_step, normalize_request, validate_bindings
+from relf_agent.temporal_state import TemporalRunState, validate_manifest
+from relf_agent.types import submission_request
 
 from .test_skill_bindings import registered as registered
 from .test_skill_execution import Reader

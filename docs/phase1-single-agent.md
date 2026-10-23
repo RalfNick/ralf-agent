@@ -1,5 +1,7 @@
 # Phase 1 SingleAgent evidence — dev98
 
+> Historical dev98 evidence and executable trial retain their original `ralf_agent` / `ralf` names. Current a6 usage is separate: [getting started](getting-started.md) and [name boundaries](project-naming.md). This record does not qualify a6.
+
 The installed `0.1.0.dev98` SingleAgent lifecycle subset passed 14 scenarios, and
 the fixed DeepSeek business sample passed **24/24** across eight tasks repeated
 three times. The [sanitized report](../evals/results/deepseek-phase1-dev98.json)

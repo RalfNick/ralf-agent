@@ -1,10 +1,10 @@
 # Relf-Agent 文档
 
-[官网](https://relfagent.com/) 已上线，源码默认分支为`main`。当前准备[relf-agent 0.1.0a5改名候选](releases/0.1.0a5.md)，实际本地／平台／发布状态见[a5清单](alpha5-validation-status.md)。原a4的同包Linux验收与原制品保持，原a2仍是公开安装入口。
+[官网](https://relfagent.com/) 已上线，源码默认分支为`main`。当前准备[relf-agent 0.1.0a6入口统一候选](releases/0.1.0a6.md)，Python导入`relf_agent`、CLI`relf`，实际本地／平台／发布状态见[a6清单](alpha6-validation-status.md)。原a4的同包Linux验收与原制品保持，原a2仍是公开安装入口。
 
 [项目首页](../README.md) · [示例目录](../examples/README.md) · [贡献指南](../CONTRIBUTING.md)
 
-可靠、可扩展的智能体全生命周期框架。展示名称由 Ralf-Agent 更新为 Relf-Agent；包名、导入路径与 CLI 保持，见[名称与兼容边界](project-naming.md)。
+可靠、可扩展的智能体全生命周期框架。a6统一使用发行名`relf-agent`、导入`relf_agent`与CLI`relf`；原版本及其入口保留当时身份，见[名称与兼容边界](project-naming.md)。
 
 第一次使用按“安装 → 首用教程 → 核心概念 → 选择功能指南”阅读。这里按使用任务组织现有文档；出现某项功能的链接表示有对应指南，支持范围仍以[实现清单](implementation-status.md)及各指南为准。
 
@@ -12,7 +12,9 @@
 
 | 文档 | 解决的问题 |
 | --- | --- |
-| [0.1.0a5改名候选](releases/0.1.0a5.md) | 发行名、导入与CLI兼容及独立制品 |
+| [0.1.0a6入口统一](releases/0.1.0a6.md) | 新导入、CLI与独立制品 |
+| [Alpha 6验收清单](alpha6-validation-status.md) | 本地结果和外部待办 |
+| [0.1.0a5历史改名候选](releases/0.1.0a5.md) | 发行名、导入与CLI兼容及独立制品 |
 | [Alpha 5验收清单](alpha5-validation-status.md) | 本地结果和外部待办 |
 | [0.1.0a4历史候选](releases/0.1.0a4.md) | 近期修复、独立原包与有限首版范围 |
 | [Alpha 4 验收清单](alpha4-validation-status.md) | 实际本地／Linux结果和未完成发布步骤 |

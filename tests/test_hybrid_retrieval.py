@@ -5,15 +5,15 @@ from dataclasses import replace
 
 import pytest
 
-from ralf_agent import Document, InMemoryKnowledgeStore, KnowledgeContext, Scope
-from ralf_agent.errors import DefinitionMismatch, MemoryBackendError, ValidationError
-from ralf_agent.retrieval import RetrievalQuery, _bounded_result, _retrieved
+from relf_agent import Document, InMemoryKnowledgeStore, KnowledgeContext, Scope
+from relf_agent.errors import DefinitionMismatch, MemoryBackendError, ValidationError
+from relf_agent.retrieval import RetrievalQuery, _bounded_result, _retrieved
 
 
 def api():
-    assert importlib.util.find_spec("ralf_agent.retrieval_pipeline"), "Missing composable retrieval"
-    return importlib.import_module("ralf_agent.retrieval_pipeline"), importlib.import_module(
-        "ralf_agent.retrieval_ranking"
+    assert importlib.util.find_spec("relf_agent.retrieval_pipeline"), "Missing composable retrieval"
+    return importlib.import_module("relf_agent.retrieval_pipeline"), importlib.import_module(
+        "relf_agent.retrieval_ranking"
     )
 
 

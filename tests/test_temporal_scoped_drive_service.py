@@ -9,7 +9,7 @@ from datetime import timedelta
 
 import pytest
 
-from ralf_agent import (
+from relf_agent import (
     AgentSpec,
     GraphNode,
     GraphWorkflowSpec,
@@ -20,11 +20,11 @@ from ralf_agent import (
     SQLiteMemory,
     ToolRegistry,
 )
-from ralf_agent.temporal import TemporalEngine, build_temporal_worker, replay_temporal_history
-from ralf_agent.temporal_activities import TemporalRuntime
-from ralf_agent.temporal_session_state import workflow_id
-from ralf_agent.temporal_session_topology import CompositeSessionTopology
-from ralf_agent.temporal_state import COMMAND_REGISTRY_CAPACITY
+from relf_agent.temporal import TemporalEngine, build_temporal_worker, replay_temporal_history
+from relf_agent.temporal_activities import TemporalRuntime
+from relf_agent.temporal_session_state import workflow_id
+from relf_agent.temporal_session_topology import CompositeSessionTopology
+from relf_agent.temporal_state import COMMAND_REGISTRY_CAPACITY
 from tests.test_temporal_deployment_admission_service import _clients
 from tests.test_temporal_deployment_dispatch_service import _eventually
 from tests.test_temporal_scoped_capacity_service import discover_owned_descendants
@@ -265,7 +265,7 @@ def test_actual_empty_scope_drive_returns_not_found_without_creating_registry(tm
     async def run():
         from temporalio.service import RPCError, RPCStatusCode
 
-        from ralf_agent.errors import NotFound
+        from relf_agent.errors import NotFound
 
         clients, _ = await _clients()
         client, queue = clients[0], "missing-scope-" + uuid.uuid4().hex

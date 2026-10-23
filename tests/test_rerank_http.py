@@ -6,9 +6,9 @@ from dataclasses import replace
 import httpx
 import pytest
 
-from ralf_agent import Document, InMemoryKnowledgeStore, Scope
-from ralf_agent.errors import DefinitionMismatch, ProviderError, ValidationError
-from ralf_agent.retrieval import _retrieved
+from relf_agent import Document, InMemoryKnowledgeStore, Scope
+from relf_agent.errors import DefinitionMismatch, ProviderError, ValidationError
+from relf_agent.retrieval import _retrieved
 
 
 def candidates():
@@ -24,7 +24,7 @@ def candidates():
 
 
 def api(**kwargs):
-    from ralf_agent import HTTPReranker
+    from relf_agent import HTTPReranker
 
     return HTTPReranker("fixture", base_url="http://rank.test/v2", **kwargs)
 

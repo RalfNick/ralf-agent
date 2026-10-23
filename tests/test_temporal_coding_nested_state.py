@@ -6,7 +6,7 @@ from types import SimpleNamespace
 
 import pytest
 
-from ralf_agent import (
+from relf_agent import (
     AgentBindingDescriptor,
     AgentSpec,
     BindingSelection,
@@ -18,13 +18,13 @@ from ralf_agent import (
     TeamSpec,
     WorkflowSpec,
 )
-from ralf_agent.errors import RalfError, ValidationError
-from ralf_agent.governance import TemporalExecutionPolicy
-from ralf_agent.orchestration_types import ChildCall
-from ralf_agent.temporal_activities import TemporalRuntime
-from ralf_agent.temporal_bindings import normalize_request, request_release_digest
-from ralf_agent.temporal_coding_composition_protocol import publish, validate_topology
-from ralf_agent.temporal_coding_composition_state import (
+from relf_agent.errors import RalfError, ValidationError
+from relf_agent.governance import TemporalExecutionPolicy
+from relf_agent.orchestration_types import ChildCall
+from relf_agent.temporal_activities import TemporalRuntime
+from relf_agent.temporal_bindings import normalize_request, request_release_digest
+from relf_agent.temporal_coding_composition_protocol import publish, validate_topology
+from relf_agent.temporal_coding_composition_state import (
     adopt_child_stop,
     coding_runner_keys,
     initialize,
@@ -33,9 +33,9 @@ from ralf_agent.temporal_coding_composition_state import (
     request_parent_stop,
     validate_child_link,
 )
-from ralf_agent.temporal_parent_state import TemporalParentState
-from ralf_agent.temporal_state import TemporalRunState
-from ralf_agent.types import submission_request
+from relf_agent.temporal_parent_state import TemporalParentState
+from relf_agent.temporal_state import TemporalRunState
+from relf_agent.types import submission_request
 from tests.test_temporal_coding_composition_state import bind_namespace
 from tests.test_temporal_coding_orchestration_configuration import manifest as leaf_manifest
 from tests.test_temporal_engine import Provider, registry

@@ -6,7 +6,7 @@ from types import ModuleType
 
 import pytest
 
-from ralf_agent.adapter_contract_cli import main
+from relf_agent.adapter_contract_cli import main
 
 
 @pytest.mark.parametrize(("profile", "count"), [("core", 10), ("tools", 16)])
@@ -49,11 +49,11 @@ def test_invalid_model_cli_profile_has_no_testing_io(profile, tmp_path, capsys):
 
 @pytest.mark.parametrize("profile", ["core", "tools"])
 def test_explicit_model_offline_dispatches_only_model_fixture(profile, monkeypatch, capsys):
-    import ralf_agent.adapter_contract_cli as module
-    from ralf_agent import AdapterContractCaseResult, AdapterContractReport
+    import relf_agent.adapter_contract_cli as module
+    from relf_agent import AdapterContractCaseResult, AdapterContractReport
 
     chosen, calls = object(), []
-    reference = ModuleType("ralf_agent.model_adapter_contract_reference")
+    reference = ModuleType("relf_agent.model_adapter_contract_reference")
 
     def offline():
         calls.append("model-fixture")

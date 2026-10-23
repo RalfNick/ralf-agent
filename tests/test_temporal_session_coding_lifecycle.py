@@ -6,11 +6,11 @@ from types import SimpleNamespace
 
 import pytest
 
-from ralf_agent import Scope, TemporalProfile
-from ralf_agent.errors import DefinitionMismatch
-from ralf_agent.runtime_lifecycle import BuildContext
-from ralf_agent.temporal_assembly_lifecycle import TemporalRuntimeAssembly
-from ralf_agent.temporal_deployment_coding_state import check_guard_registration, selected
+from relf_agent import Scope, TemporalProfile
+from relf_agent.errors import DefinitionMismatch
+from relf_agent.runtime_lifecycle import BuildContext
+from relf_agent.temporal_assembly_lifecycle import TemporalRuntimeAssembly
+from relf_agent.temporal_deployment_coding_state import check_guard_registration, selected
 
 
 @pytest.mark.parametrize(
@@ -24,7 +24,7 @@ def test_only_coding_publication4_uses_native_closure(publication, coding, expec
 
 
 def test_session_coding_guard_still_checks_original_native_alias(monkeypatch):
-    from ralf_agent import temporal_coding_state as native
+    from relf_agent import temporal_coding_state as native
 
     manifest = {
         "deployment_admission_protocol": {"version": 4},
@@ -37,8 +37,8 @@ def test_session_coding_guard_still_checks_original_native_alias(monkeypatch):
 
 
 def test_session_coding_cold_fence_keeps_zero_charge_unknown(monkeypatch):
-    from ralf_agent import temporal_deployment_coding_state as coding
-    from ralf_agent.temporal_deployment_release_state import closure
+    from relf_agent import temporal_deployment_coding_state as coding
+    from relf_agent.temporal_deployment_release_state import closure
     from tests import test_temporal_deployment_coding_state as original
 
     attach = original.attach
@@ -61,10 +61,10 @@ def test_session_coding_cold_fence_keeps_zero_charge_unknown(monkeypatch):
 def test_owned_session_coding_physical_close_precedes_session_drain_and_worker_stop(
     tmp_path, monkeypatch
 ):
-    from ralf_agent import temporal
-    from ralf_agent import temporal_deployment_coding_bridge as coding
-    from ralf_agent import temporal_deployment_release as release
-    from ralf_agent import temporal_session_deployment_close as sessions
+    from relf_agent import temporal
+    from relf_agent import temporal_deployment_coding_bridge as coding
+    from relf_agent import temporal_deployment_release as release
+    from relf_agent import temporal_session_deployment_close as sessions
 
     async def run():
         events = []
@@ -150,18 +150,18 @@ def test_session_coding_worker_preserves_original_stop_maintenance(
     import temporalio.worker
     from temporalio import activity
 
-    from ralf_agent import DeploymentAdmissionPolicy
-    from ralf_agent.errors import ValidationError
-    from ralf_agent.temporal import build_temporal_worker
-    from ralf_agent.temporal_activities import TemporalRuntime
-    from ralf_agent.temporal_assembly_lifecycle import (
+    from relf_agent import DeploymentAdmissionPolicy
+    from relf_agent.errors import ValidationError
+    from relf_agent.temporal import build_temporal_worker
+    from relf_agent.temporal_activities import TemporalRuntime
+    from relf_agent.temporal_assembly_lifecycle import (
         WorkerExecutionOwner,
         _native_stop_registration,
     )
-    from ralf_agent.temporal_coding_factories import build
-    from ralf_agent.temporal_coding_state import CODING_STOP_ACTIVITY
-    from ralf_agent.temporal_deployment_coding_bridge import STOP_ACTIVITY
-    from ralf_agent.temporal_journal import PostgresEffectJournal
+    from relf_agent.temporal_coding_factories import build
+    from relf_agent.temporal_coding_state import CODING_STOP_ACTIVITY
+    from relf_agent.temporal_deployment_coding_bridge import STOP_ACTIVITY
+    from relf_agent.temporal_journal import PostgresEffectJournal
     from tests.test_temporal_coding_factories import Connection, entry, publish_initialization
     from tests.test_temporal_deployment_public_registry import Provider
 

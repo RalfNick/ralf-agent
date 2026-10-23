@@ -2,8 +2,8 @@ import copy
 
 import pytest
 
-from ralf_agent import InMemoryArtifactStore, OverlapReferenceSelector, RelevantDataContext
-from ralf_agent.types import canonical
+from relf_agent import InMemoryArtifactStore, OverlapReferenceSelector, RelevantDataContext
+from relf_agent.types import canonical
 
 
 def history():

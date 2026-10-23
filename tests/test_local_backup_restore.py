@@ -12,7 +12,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-from ralf_agent.starter import create_starter
+from relf_agent.starter import create_starter
 
 PRELUDE = """
 import asyncio, json
@@ -113,7 +113,7 @@ with create_engine(db) as engine:
     failed = app(
         project,
         f"""
-from ralf_agent.errors import DefinitionMismatch
+from relf_agent.errors import DefinitionMismatch
 from agent_app.runtime import OfflineProvider
 class WrongVersion(OfflineProvider):
     identity = {{'kind':'starter-offline','version':'incompatible-upgrade'}}

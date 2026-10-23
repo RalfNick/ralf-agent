@@ -5,9 +5,9 @@ from dataclasses import asdict
 import httpx
 import pytest
 
-from ralf_agent import AgentSpec, ServiceAudit
-from ralf_agent.a2a import A2AApplication
-from ralf_agent.errors import ValidationError
+from relf_agent import AgentSpec, ServiceAudit
+from relf_agent.a2a import A2AApplication
+from relf_agent.errors import ValidationError
 
 from .test_a2a import make_app
 

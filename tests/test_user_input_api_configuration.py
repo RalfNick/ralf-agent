@@ -5,13 +5,13 @@ from types import SimpleNamespace
 import pytest
 from jsonschema import Draft202012Validator
 
-from ralf_agent import AgentSpec, LocalEngine
-from ralf_agent.errors import DefinitionMismatch, ValidationError
-from ralf_agent.runtime_builder import ComponentRegistry, RuntimeBuilder
-from ralf_agent.runtime_config import RuntimeProfile
-from ralf_agent.tools import ToolRegistry, ToolSpec
-from ralf_agent.user_input import input_tool_policy
-from ralf_agent.user_input_factories import configured_user_input
+from relf_agent import AgentSpec, LocalEngine
+from relf_agent.errors import DefinitionMismatch, ValidationError
+from relf_agent.runtime_builder import ComponentRegistry, RuntimeBuilder
+from relf_agent.runtime_config import RuntimeProfile
+from relf_agent.tools import ToolRegistry, ToolSpec
+from relf_agent.user_input import input_tool_policy
+from relf_agent.user_input_factories import configured_user_input
 
 
 def test_configured_markers_keep_custom_python_tools_and_selected_schema():
@@ -146,9 +146,9 @@ def test_selected_builder_requires_optional_control_without_requiring_legacy_def
 ):
     import asyncio
 
-    from ralf_agent.runtime_builder import EchoProvider
-    from ralf_agent.storage import SQLiteStore
-    from ralf_agent.user_input import register_user_input
+    from relf_agent.runtime_builder import EchoProvider
+    from relf_agent.storage import SQLiteStore
+    from relf_agent.user_input import register_user_input
 
     closed = []
 

@@ -7,7 +7,7 @@ import tempfile
 import time
 from pathlib import Path
 
-from ralf_agent.demo import create_demo_engine, demo_spec
+from relf_agent.demo import create_demo_engine, demo_spec
 
 
 async def evaluate(path, ticket):

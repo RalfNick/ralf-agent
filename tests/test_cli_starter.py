@@ -8,8 +8,8 @@ import sys
 
 import pytest
 
-from ralf_agent import SQLiteRunReader
-from ralf_agent.starter import create_starter
+from relf_agent import SQLiteRunReader
+from relf_agent.starter import create_starter
 
 
 def test_cli_starter_approval_restart_duplicate_controls_and_one_business_write(tmp_path):
@@ -62,7 +62,7 @@ def test_cli_starter_approval_restart_duplicate_controls_and_one_business_write(
 
 @pytest.mark.parametrize("directory", ["data#1", "data?1", "data%23"])
 def test_generated_business_read_escapes_uri_path_without_opening_another_file(tmp_path, directory):
-    from ralf_agent.cli_starter import CLI_FILES
+    from relf_agent.cli_starter import CLI_FILES
 
     root = tmp_path / directory
     root.mkdir()

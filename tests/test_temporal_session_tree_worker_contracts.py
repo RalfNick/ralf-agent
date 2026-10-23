@@ -5,9 +5,9 @@ from types import SimpleNamespace
 
 import pytest
 
-from ralf_agent.errors import DefinitionMismatch
-from ralf_agent.temporal_parent_state import TemporalParentState
-from ralf_agent.temporal_session_state import TemporalSessionState
+from relf_agent.errors import DefinitionMismatch
+from relf_agent.temporal_parent_state import TemporalParentState
+from relf_agent.temporal_session_state import TemporalSessionState
 from tests.test_temporal_session_tree_admission import candidate, turn
 from tests.test_temporal_session_tree_sources import setup
 
@@ -38,7 +38,7 @@ def test_sdk_checks_direct_parent_for_tree_members():
     pytest.importorskip("temporalio")
     from temporalio.exceptions import ApplicationError
 
-    from ralf_agent.temporal_workflow import TemporalRunWorkflow
+    from relf_agent.temporal_workflow import TemporalRunWorkflow
 
     state = original()
     # Root read is not needed for the relationship check: use a minimal original link.
@@ -56,7 +56,7 @@ def test_sdk_checks_direct_parent_for_tree_members():
 
 
 def test_actual_namespace_guard_rejects_before_root_data_dispatch():
-    from ralf_agent.temporal_session_activities import validate_tree_activity
+    from relf_agent.temporal_session_activities import validate_tree_activity
 
     state = original()
     _, request = state.next_session_operation()

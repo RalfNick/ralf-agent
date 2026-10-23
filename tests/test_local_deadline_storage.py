@@ -4,9 +4,9 @@ import importlib
 
 import pytest
 
-from ralf_agent import Scope, SessionKey, SQLiteStore
-from ralf_agent.errors import ValidationError
-from ralf_agent.types import digest
+from relf_agent import Scope, SessionKey, SQLiteStore
+from relf_agent.errors import ValidationError
+from relf_agent.types import digest
 
 
 def schema(store):
@@ -14,7 +14,7 @@ def schema(store):
 
 
 def test_local_deadline_capability_is_optional_and_default_schema_is_unchanged(tmp_path):
-    ports = importlib.import_module("ralf_agent.ports")
+    ports = importlib.import_module("relf_agent.ports")
     capability = getattr(ports, "LocalDeadlineExecutionStore", None)
     assert capability is not None
     assert "prepare_local_deadlines" not in vars(ports.ExecutionStore)

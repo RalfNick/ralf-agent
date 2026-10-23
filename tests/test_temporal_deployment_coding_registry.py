@@ -5,12 +5,12 @@ from dataclasses import asdict
 
 import pytest
 
-from ralf_agent import ToolSpec
-from ralf_agent.errors import CapacityExceeded, DefinitionMismatch, ValidationError
-from ralf_agent.temporal_deployment_admission import root_run_id
-from ralf_agent.temporal_state import TemporalCommandRegistryState
-from ralf_agent.temporal_tool_execution import notification_identity
-from ralf_agent.types import digest
+from relf_agent import ToolSpec
+from relf_agent.errors import CapacityExceeded, DefinitionMismatch, ValidationError
+from relf_agent.temporal_deployment_admission import root_run_id
+from relf_agent.temporal_state import TemporalCommandRegistryState
+from relf_agent.temporal_tool_execution import notification_identity
+from relf_agent.types import digest
 from tests.test_temporal_deployment_public_registry import NAMESPACE, POLICY, setup
 
 
@@ -21,7 +21,7 @@ def registry():
 
 
 def coding_request():
-    from ralf_agent.temporal_deployment_protocol import CODING_SOURCE_FILES
+    from relf_agent.temporal_deployment_protocol import CODING_SOURCE_FILES
     from tests.test_temporal_coding_configuration import manifest
 
     _, request = setup()

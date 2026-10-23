@@ -10,11 +10,11 @@ from pathlib import Path
 
 import pytest
 
-from ralf_agent.types import ModelResponse, ToolCall
+from relf_agent.types import ModelResponse, ToolCall
 
 
 def run(**options):
-    from ralf_agent.parent_completion_starter import run_reference
+    from relf_agent.parent_completion_starter import run_reference
 
     return asyncio.run(run_reference(**options))
 
@@ -83,7 +83,7 @@ class FaultBusinessProvider:
         self.fault = fault
 
     async def complete(self, messages, tools):
-        from ralf_agent.parent_completion_starter import OfflineInventoryProvider
+        from relf_agent.parent_completion_starter import OfflineInventoryProvider
 
         proposed = await OfflineInventoryProvider().complete(messages, tools)
         writer = any(tool["function"]["name"] == "calculator" for tool in tools)
@@ -174,7 +174,7 @@ def test_cli_returns_machine_readable_json_in_checkout_external_directory(tmp_pa
         [
             sys.executable,
             "-m",
-            "ralf_agent.parent_completion_starter",
+            "relf_agent.parent_completion_starter",
             "--kind",
             "team",
             "--model-verification",
@@ -190,7 +190,7 @@ def test_cli_returns_machine_readable_json_in_checkout_external_directory(tmp_pa
 
 
 def test_reference_rejects_unknown_kind_before_running():
-    from ralf_agent.errors import ValidationError
+    from relf_agent.errors import ValidationError
 
     with pytest.raises(ValidationError):
         run(kind="workflow")
@@ -261,7 +261,7 @@ def reference_wheel(tmp_path_factory):
         cwd=work,
     )
     imported = Path(
-        command([python, "-c", "import ralf_agent; print(ralf_agent.__file__)"], cwd=work).strip()
+        command([python, "-c", "import relf_agent; print(relf_agent.__file__)"], cwd=work).strip()
     )
     assert imported.is_relative_to(purelib)
     return python
@@ -275,7 +275,7 @@ def test_wheel_cli_runs_outside_checkout_without_import_path_or_credentials(
         [
             str(reference_wheel),
             "-m",
-            "ralf_agent.parent_completion_starter",
+            "relf_agent.parent_completion_starter",
             "--kind",
             kind,
             "--model-verification",

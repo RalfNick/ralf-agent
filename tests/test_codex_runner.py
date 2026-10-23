@@ -8,11 +8,11 @@ from pathlib import Path
 
 import pytest
 
-from ralf_agent.codex_runner import CodexCodingRunner
-from ralf_agent.errors import AuthorizationDenied, ValidationError
-from ralf_agent.executors import DispatchEnvelope
-from ralf_agent.runner_journal import RunnerJournal
-from ralf_agent.types import InvocationContext, Scope
+from relf_agent.codex_runner import CodexCodingRunner
+from relf_agent.errors import AuthorizationDenied, ValidationError
+from relf_agent.executors import DispatchEnvelope
+from relf_agent.runner_journal import RunnerJournal
+from relf_agent.types import InvocationContext, Scope
 
 pytestmark = pytest.mark.skipif(os.name != "posix", reason="POSIX Coding resource required")
 
@@ -84,7 +84,7 @@ def test_envelope_or_ordinary_callable_cannot_supply_engine_authority(runner_par
 
 
 def test_workspace_artifacts_use_fenced_owned_namespace_and_exclude_hidden_metadata(tmp_path):
-    from ralf_agent.codex_environment import DockerCodingEnvironment
+    from relf_agent.codex_environment import DockerCodingEnvironment
     from tests.test_codex_environment import FAKE_DOCKER
 
     root = tmp_path / "artifact-resource"
@@ -223,9 +223,9 @@ def native_fixture(tmp_path, mode="completed", *, startup_delay=0):
 
 
 def original_engine(tmp_path, *, mode="completed", timeout=3, startup_delay=0):
-    from ralf_agent import AgentSpec, LocalEngine, ModelResponse, ToolCall, ToolRegistry
-    from ralf_agent.delegated_coding import register_coding_tool
-    from ralf_agent.storage import SQLiteStore
+    from relf_agent import AgentSpec, LocalEngine, ModelResponse, ToolCall, ToolRegistry
+    from relf_agent.delegated_coding import register_coding_tool
+    from relf_agent.storage import SQLiteStore
     from tests.helpers import ScriptedProvider
 
     root = tmp_path / "coding"
@@ -443,8 +443,8 @@ def test_queued_native_peer_survives_close_with_unscheduled_event_consumer(tmp_p
 
 @pytest.mark.parametrize("missing", ["metadata", "root", "locator"])
 def test_known_original_cold_namespace_loss_retains_owner_without_fake_fence(tmp_path, missing):
-    from ralf_agent.errors import CloseIncomplete
-    from ralf_agent.local_delegated_coding import LocalCodingAuthority, _envelope
+    from relf_agent.errors import CloseIncomplete
+    from relf_agent.local_delegated_coding import LocalCodingAuthority, _envelope
 
     engine, run_id, resource, journal = original_engine(tmp_path)
     removed = None

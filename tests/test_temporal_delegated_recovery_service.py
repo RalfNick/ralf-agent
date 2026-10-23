@@ -8,10 +8,10 @@ from datetime import timedelta
 
 import pytest
 
-from ralf_agent.errors import ValidationError
-from ralf_agent.temporal_deployment_admission import registry_id
-from ralf_agent.temporal_state import COMMAND_REGISTRY_CAPACITY
-from ralf_agent.types import digest
+from relf_agent.errors import ValidationError
+from relf_agent.temporal_deployment_admission import registry_id
+from relf_agent.temporal_state import COMMAND_REGISTRY_CAPACITY
+from relf_agent.types import digest
 from tests.test_temporal_deployment_dispatch_service import _case
 from tests.test_temporal_deployment_public_service import public_system
 
@@ -43,7 +43,7 @@ def _full_registry_cancel(tmp_path, *, transport):
 
             async def reserve(request):
                 if transport == "signal":
-                    from ralf_agent.temporal_deployment_submissions import _update
+                    from relf_agent.temporal_deployment_submissions import _update
 
                     return await _update(registry, "reserve", request)
                 return await registry.execute_update(

@@ -5,7 +5,7 @@ import sys
 import time
 from pathlib import Path
 
-from ralf_agent import FileSystemWritableWorkspace, Scope
+from relf_agent import FileSystemWritableWorkspace, Scope
 
 root, mode = Path(sys.argv[1]), sys.argv[2]
 port = FileSystemWritableWorkspace(root, version="1")

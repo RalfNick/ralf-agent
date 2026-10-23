@@ -5,9 +5,9 @@ from concurrent.futures import ThreadPoolExecutor
 
 import pytest
 
-from ralf_agent import Scope, SQLiteStore
-from ralf_agent.errors import AuthorizationDenied, CapacityExceeded, ValidationError
-from ralf_agent.types import digest
+from relf_agent import Scope, SQLiteStore
+from relf_agent.errors import AuthorizationDenied, CapacityExceeded, ValidationError
+from relf_agent.types import digest
 
 
 def identity(*, maximum=2, per_scope=None):
@@ -63,7 +63,7 @@ def install(store, policy=None):
 
 
 def test_optional_admission_port_preserves_default_schema_and_mandatory_port(tmp_path):
-    ports = importlib.import_module("ralf_agent.ports")
+    ports = importlib.import_module("relf_agent.ports")
     assert getattr(ports, "LocalAdmissionExecutionStore", None) is not None
     assert "local_capacity_acquire" not in vars(ports.ExecutionStore)
     with SQLiteStore(tmp_path / "default.sqlite") as store:
@@ -347,14 +347,14 @@ def test_incomplete_original_child_links_cannot_release_a_root(tmp_path):
     ],
 )
 def test_malformed_auxiliary_evidence_cannot_grant_release(data):
-    from ralf_agent.capacity_rules import capacity_obligations
+    from relf_agent.capacity_rules import capacity_obligations
 
     assert capacity_obligations(data) is True
 
 
 @pytest.mark.parametrize("state", ["failed", "cancelled"])
 def test_original_undispatched_business_action_can_retire_after_terminal(state):
-    from ralf_agent.capacity_rules import capacity_obligations
+    from relf_agent.capacity_rules import capacity_obligations
 
     assert (
         capacity_obligations(

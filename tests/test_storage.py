@@ -2,9 +2,9 @@ from concurrent.futures import ThreadPoolExecutor
 
 import pytest
 
-from ralf_agent.errors import BudgetExceeded, IdempotencyConflict, NotFound, ValidationError
-from ralf_agent.storage import SQLiteStore
-from ralf_agent.types import Scope
+from relf_agent.errors import BudgetExceeded, IdempotencyConflict, NotFound, ValidationError
+from relf_agent.storage import SQLiteStore
+from relf_agent.types import Scope
 
 
 def test_reservation_replay_does_not_charge_twice(tmp_path):

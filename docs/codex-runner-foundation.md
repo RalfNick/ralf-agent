@@ -15,10 +15,10 @@ dev100 提供 `CodexProtocol`、`CodexRPCTransport` 和 `RunnerJournal`。这批
 
 | 显式模块接口 | 已实现 | 不由它决定 |
 | --- | --- | --- |
-| `ralf_agent.codex_protocol.CodexProtocol` | 固定 0.144.4 生成 Schema 子集，有界参数／响应验证 | 对端二进制认证、授权、有效环境和隔离 |
-| `ralf_agent.codex_rpc.CodexRPCTransport` | POSIX stdio，有界请求／通知／事件、乱序关联、迟到响应隔离、进程组清理 | 业务重试、审批、握手顺序、Run 状态、逃逸后继或远端任务停止 |
-| `ralf_agent.runner_journal.RunnerJournal` | 独占 SQLite 证据，阶段／句柄固定，一次提交许可，独立取消意图 | Release 有效性、调度、原生恢复和终态采纳 |
-| `ralf_agent.postgres_runner_journal.PostgresRunnerJournal`（dev102） | 借用原 EffectJournal，共享事务原 dispatch／启动意图、有限阶段推进、固定句柄；失败初始化路由 P1 已复验修复 | History 准入、旧 grant 失效、原生停止与结果采纳 |
+| `relf_agent.codex_protocol.CodexProtocol` | 固定 0.144.4 生成 Schema 子集，有界参数／响应验证 | 对端二进制认证、授权、有效环境和隔离 |
+| `relf_agent.codex_rpc.CodexRPCTransport` | POSIX stdio，有界请求／通知／事件、乱序关联、迟到响应隔离、进程组清理 | 业务重试、审批、握手顺序、Run 状态、逃逸后继或远端任务停止 |
+| `relf_agent.runner_journal.RunnerJournal` | 独占 SQLite 证据，阶段／句柄固定，一次提交许可，独立取消意图 | Release 有效性、调度、原生恢复和终态采纳 |
+| `relf_agent.postgres_runner_journal.PostgresRunnerJournal`（dev102） | 借用原 EffectJournal，共享事务原 dispatch／启动意图、有限阶段推进、固定句柄；失败初始化路由 P1 已复验修复 | History 准入、旧 grant 失效、原生停止与结果采纳 |
 
 Local Coordinator 和 Temporal History 保持各自 Run／Action 权威。dev100 不修改已有引擎、
 执行数据库 schema、Activity 或取消行为。构造不自动下载或调用模型，transport 显式

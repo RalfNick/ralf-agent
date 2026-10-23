@@ -10,8 +10,8 @@ from contextvars import ContextVar
 from dataclasses import replace
 from pathlib import Path
 
-from ralf_agent import FileArtifactStore, LocalEngine, SQLiteArtifactStore, SQLiteStore
-from ralf_agent.errors import NotFound
+from relf_agent import FileArtifactStore, LocalEngine, SQLiteArtifactStore, SQLiteStore
+from relf_agent.errors import NotFound
 from tests.test_composite_data_context import Provider, definition, registry
 from tests.test_managed_data_context import context
 
@@ -157,7 +157,7 @@ with closing(
         replace(registered.spec, effect="idempotent_write"), lookup, reconciler=reconcile
     )
     if relevant:
-        from ralf_agent import RelevantDataContext
+        from relf_agent import RelevantDataContext
 
         builder = RelevantDataContext(
             artifacts, tool_result_chars=1024, preview_chars=64, mode="model", summary_max_chars=256

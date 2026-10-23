@@ -8,9 +8,9 @@ import zlib
 
 import pytest
 
-from ralf_agent import temporal_session_deployment_dto as dto
-from ralf_agent.errors import RalfError
-from ralf_agent.types import canonical, digest
+from relf_agent import temporal_session_deployment_dto as dto
+from relf_agent.errors import RalfError
+from relf_agent.types import canonical, digest
 from tests.test_temporal_deployment_session_registry import deployment_intent
 from tests.test_temporal_session_deployment_coding_configuration import coding_session_manifest
 

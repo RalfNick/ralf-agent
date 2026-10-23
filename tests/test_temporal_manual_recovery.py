@@ -4,20 +4,20 @@ import copy
 
 import pytest
 
-import ralf_agent as r
-from ralf_agent.errors import RalfError
-from ralf_agent.temporal_activities import TemporalRuntime
-from ralf_agent.temporal_state import TOOL_ACTIVITY, TemporalRunState
-from ralf_agent.types import digest, submission_request
+import relf_agent as r
+from relf_agent.errors import RalfError
+from relf_agent.temporal_activities import TemporalRuntime
+from relf_agent.temporal_state import TOOL_ACTIVITY, TemporalRunState
+from relf_agent.types import digest, submission_request
 from tests.test_temporal_deployment_public_registry import NAMESPACE, POLICY, SCOPE, Provider
 from tests.test_temporal_recovery_capacity import control, full_registry
 from tests.test_temporal_tool_execution import admission
 
 
 def original_action(*, owned=True):
-    from ralf_agent import temporal_deployment_execution_state as deployment
-    from ralf_agent import temporal_deployment_release_state as calls
-    from ralf_agent.temporal_deployment_admission import root_run_id
+    from relf_agent import temporal_deployment_execution_state as deployment
+    from relf_agent import temporal_deployment_release_state as calls
+    from relf_agent.temporal_deployment_admission import root_run_id
     from tests.test_temporal_deployment_execution_state import metadata, response
     from tests.test_temporal_engine import JournalContractFixture
 
@@ -99,7 +99,7 @@ def original_action(*, owned=True):
 
 @pytest.mark.parametrize("owned", [False, True])
 def test_original_zero_cost_unknown_action_proof_is_pure_and_does_not_imply_stop(owned):
-    from ralf_agent.temporal_manual_recovery import action_proof
+    from relf_agent.temporal_manual_recovery import action_proof
 
     state, action, payload = original_action(owned=owned)
     before = copy.deepcopy(vars(state))
@@ -127,7 +127,7 @@ def test_original_zero_cost_unknown_action_proof_is_pure_and_does_not_imply_stop
     ],
 )
 def test_manual_proof_rejects_unproven_or_settled_action_without_mutation(fault):
-    from ralf_agent.temporal_manual_recovery import action_proof
+    from relf_agent.temporal_manual_recovery import action_proof
 
     state, action, payload = original_action()
     owner = state.tool_executions[action["id"]]
@@ -241,8 +241,8 @@ def test_registry_rechecks_held_root_after_verification_await():
 def test_public_two_manual_query_checks_original_sdk_epoch(monkeypatch, reset):
     from types import SimpleNamespace
 
-    from ralf_agent.temporal_manual_recovery import action_proof
-    from ralf_agent.temporal_workflow import TemporalRunWorkflow, workflow
+    from relf_agent.temporal_manual_recovery import action_proof
+    from relf_agent.temporal_workflow import TemporalRunWorkflow, workflow
 
     state, _, payload = original_action()
     node = TemporalRunWorkflow.__new__(TemporalRunWorkflow)
@@ -267,7 +267,7 @@ def test_sdk_manual_fallback_preserves_normal_admission_and_duplicate_before_tar
     import asyncio
     from dataclasses import asdict
 
-    from ralf_agent import temporal_deployment_submissions as transport
+    from relf_agent import temporal_deployment_submissions as transport
     from tests.test_temporal_deployment_control_transport import Handle, environment
 
     async def run():
@@ -366,8 +366,8 @@ def test_sdk_uncertain_or_identity_refusal_never_retries_with_manual_allowance(m
     import asyncio
     from dataclasses import asdict
 
-    from ralf_agent import temporal_deployment_submissions as transport
-    from ralf_agent.errors import AuthorizationDenied, DefinitionMismatch, IdempotencyConflict
+    from relf_agent import temporal_deployment_submissions as transport
+    from relf_agent.errors import AuthorizationDenied, DefinitionMismatch, IdempotencyConflict
     from tests.test_temporal_deployment_control_transport import environment
 
     async def run():
@@ -406,7 +406,7 @@ def test_sdk_uncertain_or_identity_refusal_never_retries_with_manual_allowance(m
 
 
 def test_real_receipt_between_proof_and_manual_adoption_is_not_overwritten():
-    from ralf_agent.temporal_manual_recovery import action_proof
+    from relf_agent.temporal_manual_recovery import action_proof
 
     state, action, payload = original_action()
     action_proof(state, payload)

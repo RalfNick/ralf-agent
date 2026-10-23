@@ -6,13 +6,13 @@ from dataclasses import asdict
 
 import pytest
 
-from ralf_agent import AgentSpec, LocalEngine
-from ralf_agent.errors import DefinitionMismatch, ValidationError
-from ralf_agent.types import digest
+from relf_agent import AgentSpec, LocalEngine
+from relf_agent.errors import DefinitionMismatch, ValidationError
+from relf_agent.types import digest
 
 
 def api():
-    return importlib.import_module("ralf_agent.agent_limits")
+    return importlib.import_module("relf_agent.agent_limits")
 
 
 class Host:

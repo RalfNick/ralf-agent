@@ -12,8 +12,8 @@ from pathlib import Path
 
 import pytest
 
-from ralf_agent.codex_coding_profile import CodexCodingProfile
-from ralf_agent.codex_environment import DockerCodingEnvironment
+from relf_agent.codex_coding_profile import CodexCodingProfile
+from relf_agent.codex_environment import DockerCodingEnvironment
 
 pytestmark = pytest.mark.skipif(
     os.environ.get("RALF_CODEX_CREATE_RECOVERY_INTEGRATION") != "1",
@@ -23,8 +23,8 @@ pytestmark = pytest.mark.skipif(
 CHILD = r"""
 import asyncio,json,os,sys
 from pathlib import Path
-from ralf_agent.codex_environment import DockerCodingEnvironment
-from ralf_agent.errors import ExecutionHostFailed
+from relf_agent.codex_environment import DockerCodingEnvironment
+from relf_agent.errors import ExecutionHostFailed
 case=Path(sys.argv[1]); mode=sys.argv[2]
 config=json.loads((case/'configuration.json').read_text())
 environment=DockerCodingEnvironment(**config)
@@ -51,7 +51,7 @@ os.fsync=fsync
 async def run():
  try:await environment.prepare()
  except (ExecutionHostFailed,OSError) as exc:
-  save('original-exit.json',{'pid':os.getpid(),'mode':mode,'controlled_failure':type(exc).__name__,'source':__import__('ralf_agent').__file__,'metadata':json.loads((Path(config['root'])/'environment.json').read_text())})
+  save('original-exit.json',{'pid':os.getpid(),'mode':mode,'controlled_failure':type(exc).__name__,'source':__import__('relf_agent').__file__,'metadata':json.loads((Path(config['root'])/'environment.json').read_text())})
  else:raise AssertionError('Required create failure was not injected')
 asyncio.run(run())
 # Deliberate process crash: release the actual OS lease without product cleanup.
@@ -247,7 +247,7 @@ def test_actual_original_create_survives_worker_exit_and_cold_control_retires_sa
                 "actual_original_worker_exited": child.returncode == 0,
                 "worker_pid": child.pid,
                 "worker_source": exited["source"],
-                "parent_source": __import__("ralf_agent").__file__,
+                "parent_source": __import__("relf_agent").__file__,
                 "original_container_id": cid,
                 "actual_created_never_started": before["State"],
                 "original_create_count": 1,

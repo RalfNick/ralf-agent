@@ -7,7 +7,7 @@ import uuid
 
 import pytest
 
-from ralf_agent import (
+from relf_agent import (
     ComponentRegistry,
     InMemoryMemory,
     Runtime,
@@ -16,7 +16,7 @@ from ralf_agent import (
     TemporalRuntimeBuilder,
     ThreadedMemoryAdapter,
 )
-from ralf_agent.errors import CloseIncomplete
+from relf_agent.errors import CloseIncomplete
 
 from .test_composite_data_context import Provider, agent, registry
 

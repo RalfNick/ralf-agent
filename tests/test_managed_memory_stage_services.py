@@ -4,7 +4,7 @@ import uuid
 
 import pytest
 
-from ralf_agent import (
+from relf_agent import (
     AgentSpec,
     LocalEngine,
     ManagedMemoryPolicy,
@@ -12,7 +12,7 @@ from ralf_agent import (
     SQLiteStore,
     ToolRegistry,
 )
-from ralf_agent.errors import MemoryBackendError
+from relf_agent.errors import MemoryBackendError
 from tests.helpers import ScriptedProvider
 from tests.test_redis_memory_adapter import redis_service as redis_service
 
@@ -70,7 +70,7 @@ async def exercise(memory, path):
 
 def test_actual_redis_managed_stage_lost_ack_restart(tmp_path, redis_service):
     async def run():
-        from ralf_agent.redis_memory import RedisMemory
+        from relf_agent.redis_memory import RedisMemory
 
         memory = await RedisMemory.connect(redis_service, backend_id="managed-stage-redis")
         try:
@@ -84,7 +84,7 @@ def test_actual_redis_managed_stage_lost_ack_restart(tmp_path, redis_service):
 @pytest.mark.skipif(not os.getenv("RALF_TEST_POSTGRES_DSN"), reason="requires actual PostgreSQL")
 def test_actual_postgres_managed_stage_lost_ack_restart(tmp_path):
     async def run():
-        from ralf_agent.postgres import PostgresMemory
+        from relf_agent.postgres import PostgresMemory
 
         memory = await PostgresMemory.connect(
             os.environ["RALF_TEST_POSTGRES_DSN"], backend_id="managed-stage-pg"

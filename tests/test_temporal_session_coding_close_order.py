@@ -5,18 +5,18 @@ from types import SimpleNamespace
 
 import pytest
 
-from ralf_agent import Scope, TemporalProfile
-from ralf_agent.errors import CloseIncomplete
-from ralf_agent.runtime_lifecycle import BuildContext
-from ralf_agent.temporal_assembly_lifecycle import TemporalRuntimeAssembly
+from relf_agent import Scope, TemporalProfile
+from relf_agent.errors import CloseIncomplete
+from relf_agent.runtime_lifecycle import BuildContext
+from relf_agent.temporal_assembly_lifecycle import TemporalRuntimeAssembly
 
 
 @pytest.mark.parametrize("cancel_caller", [False, True])
 def test_pending_coding_stop_does_not_leave_session_acceptance_open(
     tmp_path, monkeypatch, cancel_caller
 ):
-    from ralf_agent import temporal_deployment_coding_bridge as coding
-    from ralf_agent import temporal_session_deployment_close as sessions
+    from relf_agent import temporal_deployment_coding_bridge as coding
+    from relf_agent import temporal_session_deployment_close as sessions
 
     async def run():
         events = []

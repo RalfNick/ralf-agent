@@ -4,7 +4,7 @@ import uuid
 
 import pytest
 
-from ralf_agent import AgentSpec, ModelResponse, Scope, ToolCall, ToolRegistry
+from relf_agent import AgentSpec, ModelResponse, Scope, ToolCall, ToolRegistry
 
 pytestmark = pytest.mark.skipif(
     not os.getenv("RALF_TEST_TEMPORAL_ADDRESS"), reason="requires actual Temporal Service"
@@ -15,7 +15,7 @@ def test_actual_temporal_middleware_approval_restart_and_resumed_events():
     async def run():
         from temporalio.client import Client, WorkflowHistory
 
-        from ralf_agent import (
+        from relf_agent import (
             MiddlewareProvider,
             MiddlewareToolExecutor,
             NoopMiddleware,

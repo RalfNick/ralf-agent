@@ -30,7 +30,7 @@ gain new required ports when the extension is disabled, which is the default.
 ## Read and resume
 
 ```python
-from ralf_agent import A2AClient
+from relf_agent import A2AClient
 
 client = A2AClient(url, headers=host_authorization_headers)
 try:

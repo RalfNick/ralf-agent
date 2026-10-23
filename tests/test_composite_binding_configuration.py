@@ -4,7 +4,7 @@ import json
 
 import pytest
 
-from ralf_agent import (
+from relf_agent import (
     AgentBindingDescriptor,
     AgentSpec,
     BoundDefinition,
@@ -13,7 +13,7 @@ from ralf_agent import (
     GraphWorkflowSpec,
     TeamSpec,
 )
-from ralf_agent.cli import main
+from relf_agent.cli import main
 
 from .test_binding_assembly import declarations
 from .test_binding_execution import choice

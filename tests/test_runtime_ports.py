@@ -6,7 +6,7 @@ import types
 
 import pytest
 
-from ralf_agent import (
+from relf_agent import (
     AgentSpec,
     LocalEngine,
     MemoryRecallPolicy,
@@ -16,8 +16,8 @@ from ralf_agent import (
     SQLiteStore,
     ToolRegistry,
 )
-from ralf_agent.errors import DefinitionMismatch, ValidationError
-from ralf_agent.memory import InMemoryMemory
+from relf_agent.errors import DefinitionMismatch, ValidationError
+from relf_agent.memory import InMemoryMemory
 
 
 class Provider:
@@ -183,7 +183,7 @@ class EngineProxy:
 def test_cli_factory_accepts_a_public_engine_without_local_inheritance_or_store(
     tmp_path, monkeypatch, capsys, output_format
 ):
-    from ralf_agent.cli import main
+    from relf_agent.cli import main
 
     runtime = engine(tmp_path / "proxy.sqlite")
     handle = runtime.submit(AgentSpec("a", "Answer"), "question", command_id="s")
@@ -213,7 +213,7 @@ def test_cli_factory_accepts_a_public_engine_without_local_inheritance_or_store(
 
 
 def test_public_execution_port_and_detached_diagnostics_are_available(tmp_path):
-    ports = importlib.import_module("ralf_agent.ports")
+    ports = importlib.import_module("relf_agent.ports")
     with engine(tmp_path / "diagnostics.sqlite") as runtime:
         assert isinstance(runtime, ports.ExecutionEngine)
         run = runtime.submit(AgentSpec("a", "Answer"), "question", command_id="s")
@@ -237,7 +237,7 @@ def test_runtime_profile_identity_is_saved_only_when_explicitly_enabled(tmp_path
 def test_cli_rejects_async_callable_factory_without_creating_an_unawaited_coroutine(
     tmp_path, monkeypatch
 ):
-    from ralf_agent.cli import load_engine
+    from relf_agent.cli import load_engine
 
     class AsyncFactory:
         async def __call__(self, path):
@@ -251,7 +251,7 @@ def test_cli_rejects_async_callable_factory_without_creating_an_unawaited_corout
 
 
 def test_cli_invalid_engine_cleanup_does_not_leak_an_owned_coordinator(tmp_path, monkeypatch):
-    from ralf_agent.cli import load_engine
+    from relf_agent.cli import load_engine
 
     runtime = engine(tmp_path / "invalid-engine.sqlite")
 

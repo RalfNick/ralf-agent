@@ -15,7 +15,7 @@ dev76 的每 Agent `workspace` 只读绑定复用原工具授权；写入、Skil
 ```python
 import asyncio
 from pathlib import Path
-from ralf_agent import (
+from relf_agent import (
     GraphNode,
     GraphWorkflowSpec,
     RuntimeBuilder,
@@ -73,7 +73,7 @@ JSON/TOML 中 `tools/workspace-read` config 只接受：`root`、`version`，以
 ## SDK 替换与注入
 
 ```python
-from ralf_agent import InMemoryWorkspace, Scope
+from relf_agent import InMemoryWorkspace, Scope
 
 port = InMemoryWorkspace(
     {"docs/note.txt": "业务说明"},
@@ -143,7 +143,7 @@ Runner 仍在[剩余能力清单](remaining-work.md)中，不以此子集标为�
 
 ```python
 import asyncio
-from ralf_agent import (
+from relf_agent import (
     AgentBindingDescriptor,
     AgentDefinition,
     AgentSpec,

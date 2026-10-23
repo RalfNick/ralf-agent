@@ -46,7 +46,7 @@ runtime = TemporalRuntime(
 
 ```python
 import asyncio
-from ralf_agent import (
+from relf_agent import (
     AgentSpec, DeploymentAdmissionPolicy, LocalEngine, ModelResponse,
     SQLiteStore, ToolRegistry,
 )
@@ -130,7 +130,7 @@ max_active_root_runs_per_scope = 2
 ```
 
 ```python
-from ralf_agent import RuntimeBuilder, load_catalog
+from relf_agent import RuntimeBuilder, load_catalog
 
 catalog = load_catalog("runtime.toml")
 instance = RuntimeBuilder(base_dir=catalog.base_dir).build(catalog.default, "runs.sqlite")
@@ -141,7 +141,7 @@ instance = RuntimeBuilder(base_dir=catalog.base_dir).build(catalog.default, "run
 注册自定义工厂时使用 `ComponentRegistry.register("admission_policy", ...)` 或 `register_async`：
 
 ```python
-from ralf_agent import ComponentRegistry, DeploymentAdmissionPolicy
+from relf_agent import ComponentRegistry, DeploymentAdmissionPolicy
 
 registry = ComponentRegistry()
 
@@ -161,7 +161,7 @@ registry.register("admission_policy", "business-capacity", factory, validator=va
 不要为了给旧 Run 增加部署治理而改写它的 Profile。Builder 提供宿主参数，允许原无准入组件的 Profile 保持完整 identity：
 
 ```python
-from ralf_agent import DeploymentAdmissionPolicy, RuntimeBuilder, load_catalog
+from relf_agent import DeploymentAdmissionPolicy, RuntimeBuilder, load_catalog
 
 catalog = load_catalog("original-runtime.toml")
 policy = DeploymentAdmissionPolicy("personal-assistant", max_active_root_runs=4)
@@ -179,7 +179,7 @@ instance = RuntimeBuilder(base_dir=catalog.base_dir).build(
 
 ## 替换执行存储
 
-mandatory `ExecutionStore` v1 不变。选择 Local 准入的适配器另外实现 `ralf_agent.ports.LocalAdmissionExecutionStore`：
+mandatory `ExecutionStore` v1 不变。选择 Local 准入的适配器另外实现 `relf_agent.ports.LocalAdmissionExecutionStore`：
 
 | 可选能力 | 完成返回契约 |
 | --- | --- |

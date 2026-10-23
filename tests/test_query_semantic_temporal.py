@@ -3,7 +3,7 @@ from dataclasses import asdict
 
 import pytest
 
-from ralf_agent import (
+from relf_agent import (
     AgentSpec,
     AliasQueryTransform,
     Document,
@@ -16,9 +16,9 @@ from ralf_agent import (
     Scope,
     ToolRegistry,
 )
-from ralf_agent.temporal_activities import TemporalRuntime
-from ralf_agent.temporal_state import TemporalRunState
-from ralf_agent.types import submission_request
+from relf_agent.temporal_activities import TemporalRuntime
+from relf_agent.temporal_state import TemporalRunState
+from relf_agent.types import submission_request
 
 
 @pytest.mark.parametrize("kind", ["aliases", "model"])

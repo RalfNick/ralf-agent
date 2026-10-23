@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 
-from ralf_agent.codex_rpc import CodexRPCClosed, CodexRPCProtocolError, CodexRPCTransport
+from relf_agent.codex_rpc import CodexRPCClosed, CodexRPCProtocolError, CodexRPCTransport
 
 pytestmark = pytest.mark.skipif(os.name != "posix", reason="POSIX process groups required")
 

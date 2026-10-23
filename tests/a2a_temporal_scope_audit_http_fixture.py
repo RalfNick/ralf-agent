@@ -11,12 +11,12 @@ from pathlib import Path
 import uvicorn
 from temporalio.client import Client
 
-from ralf_agent import AgentSpec, Scope
-from ralf_agent.a2a import A2AApplication
-from ralf_agent.errors import AuthorizationDenied
-from ralf_agent.handoff import SQLiteInbox
-from ralf_agent.service_audit import ServiceAudit
-from ralf_agent.temporal import TemporalEngine
+from relf_agent import AgentSpec, Scope
+from relf_agent.a2a import A2AApplication
+from relf_agent.errors import AuthorizationDenied
+from relf_agent.handoff import SQLiteInbox
+from relf_agent.service_audit import ServiceAudit
+from relf_agent.temporal import TemporalEngine
 
 
 async def main():

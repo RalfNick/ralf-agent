@@ -4,7 +4,7 @@ import copy
 
 import pytest
 
-from ralf_agent import (
+from relf_agent import (
     AgentBindingDescriptor,
     AgentSpec,
     BindingSelection,
@@ -15,11 +15,11 @@ from ralf_agent import (
     Scope,
     TeamSpec,
 )
-from ralf_agent.binding_catalog import BindingCatalog
-from ralf_agent.binding_manifests import all_step_manifests, step_manifest
-from ralf_agent.binding_runtime import unwrap_definition
-from ralf_agent.errors import AuthorizationDenied, DefinitionMismatch, ValidationError
-from ralf_agent.types import submission_request
+from relf_agent.binding_catalog import BindingCatalog
+from relf_agent.binding_manifests import all_step_manifests, step_manifest
+from relf_agent.binding_runtime import unwrap_definition
+from relf_agent.errors import AuthorizationDenied, DefinitionMismatch, ValidationError
+from relf_agent.types import submission_request
 
 from .test_binding_execution import engine
 from .test_runner_bindings import BorrowedRunner, registry

@@ -6,13 +6,13 @@ from dataclasses import asdict
 
 import pytest
 
-from ralf_agent import InMemoryMemory, Scope, SQLiteMemory
-from ralf_agent.errors import ValidationError
-from ralf_agent.types import canonical
+from relf_agent import InMemoryMemory, Scope, SQLiteMemory
+from relf_agent.errors import ValidationError
+from relf_agent.types import canonical
 
 
 def query(**kwargs):
-    module = importlib.import_module("ralf_agent")
+    module = importlib.import_module("relf_agent")
     assert hasattr(module, "FactScanQuery"), "Missing authoritative bounded Fact scan port"
     return module.FactScanQuery(**kwargs)
 
@@ -110,7 +110,7 @@ def test_scan_empty_page_is_explicit_and_detached(backend):
 def test_sqlite_does_not_decode_oversize_payload_before_budget_refusal(tmp_path, monkeypatch):
     import json
 
-    from ralf_agent.errors import BudgetExceeded
+    from relf_agent.errors import BudgetExceeded
 
     with_store = SQLiteMemory(tmp_path / "facts.sqlite")
     try:
@@ -147,7 +147,7 @@ def test_scan_covers_more_than_original_semantic_candidate_window(backend):
 
 
 def test_threaded_scanner_preserves_snapshot_and_original_owner():
-    from ralf_agent import ThreadedMemoryAdapter
+    from relf_agent import ThreadedMemoryAdapter
 
     source = InMemoryMemory()
     source.put_fact(Scope(), "facts", "one", 1, expected_version=0)
@@ -166,7 +166,7 @@ def test_threaded_scanner_preserves_snapshot_and_original_owner():
 
 
 def test_threaded_scan_never_falls_back_to_unbounded_legacy_facts():
-    from ralf_agent import ThreadedMemoryAdapter
+    from relf_agent import ThreadedMemoryAdapter
 
     class Legacy:
         backend_id = "legacy"
@@ -187,7 +187,7 @@ def test_threaded_scan_never_falls_back_to_unbounded_legacy_facts():
 
 
 def test_threaded_bridge_rejects_async_scan_configuration_before_call():
-    from ralf_agent import ThreadedMemoryAdapter
+    from relf_agent import ThreadedMemoryAdapter
 
     class AsyncScan(InMemoryMemory):
         async def scan_facts(self, *args):
@@ -210,7 +210,7 @@ def test_snapshot_header_does_not_load_large_or_expired_fact_values(backend):
 def test_sqlite_scan_never_projects_full_oversized_key(tmp_path):
     import sqlite3
 
-    from ralf_agent.errors import BudgetExceeded
+    from relf_agent.errors import BudgetExceeded
 
     source = SQLiteMemory(tmp_path / "facts.sqlite")
     try:

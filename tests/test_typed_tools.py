@@ -4,12 +4,12 @@ from typing import Annotated, Literal
 
 import pytest
 
-from ralf_agent import AgentSpec, LocalEngine, ModelResponse, SQLiteStore, ToolCall, ToolRegistry
-from ralf_agent.errors import DefinitionMismatch, ValidationError
+from relf_agent import AgentSpec, LocalEngine, ModelResponse, SQLiteStore, ToolCall, ToolRegistry
+from relf_agent.errors import DefinitionMismatch, ValidationError
 
 
 def infer(function, **kwargs):
-    api = importlib.import_module("ralf_agent")
+    api = importlib.import_module("relf_agent")
     assert hasattr(api, "infer_tool_schema"), "Typed Schema inference is missing"
     return api.infer_tool_schema(function, **kwargs)
 

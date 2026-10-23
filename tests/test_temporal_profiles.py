@@ -10,9 +10,9 @@ from pathlib import Path
 
 import pytest
 
-from ralf_agent.errors import DefinitionMismatch, ValidationError
-from ralf_agent.runtime_config import RuntimeProfile, load_catalog
-from ralf_agent.temporal_profile import TemporalProfile, TemporalProfileCatalog
+from relf_agent.errors import DefinitionMismatch, ValidationError
+from relf_agent.runtime_config import RuntimeProfile, load_catalog
+from relf_agent.temporal_profile import TemporalProfile, TemporalProfileCatalog
 
 
 def profile(version="1", **options):
@@ -270,7 +270,7 @@ class RefuseSDK(importlib.abc.MetaPathFinder):
   if fullname == "temporalio" or fullname.startswith("temporalio."):
    raise AssertionError("pure configuration imported optional SDK")
 sys.meta_path.insert(0,RefuseSDK())
-from ralf_agent.temporal_profile import TemporalProfile
+from relf_agent.temporal_profile import TemporalProfile
 value=TemporalProfile("a","1",{"default":{"adapter":"offline-echo"}})
 assert value.execution["context_reads"] is False
 """
@@ -290,10 +290,10 @@ assert value.execution["context_reads"] is False
 
 
 def test_public_profile_objects_are_available_without_optional_runtime():
-    import ralf_agent
+    import relf_agent
 
-    assert ralf_agent.TemporalProfile is TemporalProfile
-    assert ralf_agent.TemporalProfileCatalog is TemporalProfileCatalog
+    assert relf_agent.TemporalProfile is TemporalProfile
+    assert relf_agent.TemporalProfileCatalog is TemporalProfileCatalog
 
 
 @pytest.mark.parametrize("name,version", [(None, "1"), ([], "1"), ("assistant", {}), ("", "1")])

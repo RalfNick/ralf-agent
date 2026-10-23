@@ -2,11 +2,11 @@
 
 import pytest
 
-from ralf_agent.binding_catalog import BindingCatalog
-from ralf_agent.errors import DefinitionMismatch
-from ralf_agent.temporal_activities import TemporalRuntime
-from ralf_agent.tools import ToolRegistry
-from ralf_agent.types import Scope
+from relf_agent.binding_catalog import BindingCatalog
+from relf_agent.errors import DefinitionMismatch
+from relf_agent.temporal_activities import TemporalRuntime
+from relf_agent.tools import ToolRegistry
+from relf_agent.types import Scope
 
 
 class OfflineProvider:

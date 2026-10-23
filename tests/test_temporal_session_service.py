@@ -4,9 +4,9 @@ import uuid
 
 import pytest
 
-from ralf_agent import AgentSpec, ModelResponse, Runtime, Scope, ToolRegistry
-from ralf_agent.temporal import TemporalEngine, build_temporal_worker, replay_temporal_history
-from ralf_agent.temporal_activities import TemporalRuntime
+from relf_agent import AgentSpec, ModelResponse, Runtime, Scope, ToolRegistry
+from relf_agent.temporal import TemporalEngine, build_temporal_worker, replay_temporal_history
+from relf_agent.temporal_activities import TemporalRuntime
 
 pytestmark = pytest.mark.skipif(
     not os.getenv("RALF_TEST_TEMPORAL_ADDRESS"), reason="requires actual Temporal Service"
@@ -56,7 +56,7 @@ def test_session_conversation_and_turn_replay_on_actual_service():
                 assert second.turn.turn_seq == 2
                 assert (await second.wait(wait_timeout=20)).snapshot.state == "succeeded"
                 assert [t.turn_seq for t in await session.turns()] == [1, 2]
-                from ralf_agent.temporal_session_state import workflow_id
+                from relf_agent.temporal_session_state import workflow_id
 
                 await replay_temporal_history(
                     await client.get_workflow_handle(workflow_id(session.ref.key)).fetch_history()
@@ -73,8 +73,8 @@ def test_approval_busy_receipt_alias_reconnect_and_idle_rebind(graph):
     async def run():
         from temporalio.client import Client
 
-        from ralf_agent import GraphNode, GraphWorkflowSpec, ToolCall, ToolSpec
-        from ralf_agent.errors import SessionBindingMismatch, SessionBusy
+        from relf_agent import GraphNode, GraphWorkflowSpec, ToolCall, ToolSpec
+        from relf_agent.errors import SessionBindingMismatch, SessionBusy
 
         class ApprovalProvider:
             identity = {"kind": "session-approval", "version": "1"}

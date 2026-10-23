@@ -9,7 +9,7 @@ observations from an already adopted final result. This extends the existing
 [rule stage](managed-memory-stages.md); default behavior is unchanged and disabled.
 
 ```python
-from ralf_agent import ManagedModelMemoryPolicy, MemoryAdmissionPolicy
+from relf_agent import ManagedModelMemoryPolicy, MemoryAdmissionPolicy
 
 stage = ManagedModelMemoryPolicy(
     writable_memory,

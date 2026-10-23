@@ -5,9 +5,9 @@ import threading
 
 import pytest
 
-import ralf_agent as r
-from ralf_agent.errors import AuthorizationDenied, DefinitionMismatch, RalfError
-from ralf_agent.tools import ThreadExecutionTracker, current_thread_group, current_thread_tracker
+import relf_agent as r
+from relf_agent.errors import AuthorizationDenied, DefinitionMismatch, RalfError
+from relf_agent.tools import ThreadExecutionTracker, current_thread_group, current_thread_tracker
 
 
 def resource(backend=None, **kwargs):

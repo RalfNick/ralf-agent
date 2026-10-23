@@ -6,8 +6,8 @@ from types import SimpleNamespace as NS
 
 import pytest
 
-from ralf_agent.errors import RalfError
-from ralf_agent.temporal_workflow import TemporalRunWorkflow
+from relf_agent.errors import RalfError
+from relf_agent.temporal_workflow import TemporalRunWorkflow
 from tests.test_temporal_unowned_tool_end import two_tools
 
 
@@ -35,7 +35,7 @@ def fixture():
 
 
 def test_observation_is_pure_and_duplicate_drive_executes_complete_handler_each_attempt():
-    from ralf_agent.temporal_command_transport import accept, observe
+    from relf_agent.temporal_command_transport import accept, observe
 
     async def run():
         host, info, e = fixture()
@@ -60,7 +60,7 @@ def test_observation_is_pure_and_duplicate_drive_executes_complete_handler_each_
 
 
 def test_eviction_drops_only_observation_and_keeps_original_business_receipts():
-    from ralf_agent.temporal_command_transport import accept, observe
+    from relf_agent.temporal_command_transport import accept, observe
 
     async def run():
         host, info, e = fixture()
@@ -78,7 +78,7 @@ def test_eviction_drops_only_observation_and_keeps_original_business_receipts():
     "fault", ["scope", "namespace", "epoch", "reset", "kind", "version", "payload"]
 )
 def test_invalid_signal_creates_no_observation_or_business_fact(fault):
-    from ralf_agent.temporal_command_transport import accept, observe
+    from relf_agent.temporal_command_transport import accept, observe
 
     async def run():
         host, info, e = fixture()
@@ -109,11 +109,11 @@ def test_invalid_signal_creates_no_observation_or_business_fact(fault):
 
 @pytest.mark.parametrize("patched", [False, True])
 def test_parent_observation_preserves_complete_repeat_wake_and_seal(monkeypatch, patched):
-    from ralf_agent import AgentSpec, GraphNode, GraphWorkflowSpec, TemporalRuntime
-    from ralf_agent.temporal_command_transport import accept, observe
-    from ralf_agent.temporal_parent_state import TemporalParentState
-    from ralf_agent.temporal_parent_workflow import TemporalParentWorkflow, workflow
-    from ralf_agent.types import submission_request
+    from relf_agent import AgentSpec, GraphNode, GraphWorkflowSpec, TemporalRuntime
+    from relf_agent.temporal_command_transport import accept, observe
+    from relf_agent.temporal_parent_state import TemporalParentState
+    from relf_agent.temporal_parent_workflow import TemporalParentWorkflow, workflow
+    from relf_agent.types import submission_request
     from tests.test_temporal_engine import Provider, registry
 
     async def run():
@@ -155,7 +155,7 @@ def test_parent_observation_preserves_complete_repeat_wake_and_seal(monkeypatch,
 
 
 def test_observation_identity_cannot_be_reused_for_a_different_command():
-    from ralf_agent.temporal_command_transport import accept, observe
+    from relf_agent.temporal_command_transport import accept, observe
 
     async def run():
         host, info, e = fixture()

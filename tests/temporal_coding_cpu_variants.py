@@ -19,11 +19,11 @@ _BIN_NS = 10_000_000_000
 
 
 def _extra_targets():
-    from ralf_agent import codex_runner, runner_journal_state
-    from ralf_agent import temporal_coding_composition_protocol as composition
-    from ralf_agent import temporal_coding_protocol as coding
-    from ralf_agent import temporal_session_deployment_dto as dto
-    from ralf_agent.postgres_runner_journal import PostgresRunnerJournal
+    from relf_agent import codex_runner, runner_journal_state
+    from relf_agent import temporal_coding_composition_protocol as composition
+    from relf_agent import temporal_coding_protocol as coding
+    from relf_agent import temporal_session_deployment_dto as dto
+    from relf_agent.postgres_runner_journal import PostgresRunnerJournal
 
     return (
         ("dto._intent", dto._intent),

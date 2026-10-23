@@ -4,7 +4,7 @@ from dataclasses import asdict
 
 import pytest
 
-from ralf_agent import (
+from relf_agent import (
     InMemoryMemory,
     Scope,
     SessionBindingResource,
@@ -12,9 +12,9 @@ from ralf_agent import (
     SQLiteStore,
     ThreadedMemoryAdapter,
 )
-from ralf_agent.errors import ValidationError
-from ralf_agent.session_receipts import supports_remote_session, validate_inspection
-from ralf_agent.types import canonical
+from relf_agent.errors import ValidationError
+from relf_agent.session_receipts import supports_remote_session, validate_inspection
+from relf_agent.types import canonical
 
 
 @pytest.fixture(params=["memory", "sqlite"])
@@ -182,7 +182,7 @@ def test_threaded_default_session_receipts_use_the_same_async_port():
 def test_threaded_receipt_refuses_same_identity_backend_replacement_during_read():
     import threading
 
-    from ralf_agent.errors import DefinitionMismatch
+    from relf_agent.errors import DefinitionMismatch
 
     async def run():
         started, finish = threading.Event(), threading.Event()

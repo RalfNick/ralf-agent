@@ -5,7 +5,7 @@ from types import SimpleNamespace
 
 import pytest
 
-from ralf_agent.errors import CloseIncomplete
+from relf_agent.errors import CloseIncomplete
 from tests import test_temporal_deployment_coding_service as fixture
 
 

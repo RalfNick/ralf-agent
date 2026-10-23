@@ -6,7 +6,7 @@ from types import SimpleNamespace
 import pytest
 
 pytest.importorskip("temporalio")
-from ralf_agent.temporal_workflow import workflow  # noqa: E402
+from relf_agent.temporal_workflow import workflow  # noqa: E402
 from tests.test_temporal_deployment_child_wake import selected_parent  # noqa: E402
 
 

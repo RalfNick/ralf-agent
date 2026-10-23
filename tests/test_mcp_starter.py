@@ -3,7 +3,7 @@ import os
 import subprocess
 import sys
 
-from ralf_agent.starter import create_starter
+from relf_agent.starter import create_starter
 
 
 def test_mcp_starter_approval_restart_and_one_business_effect(tmp_path):
@@ -24,7 +24,7 @@ def test_mcp_starter_approval_restart_and_one_business_effect(tmp_path):
     approved = call(
         [
             "-m",
-            "ralf_agent",
+            "relf_agent",
             "--db",
             ".ralf/runs.sqlite",
             "--factory",
@@ -41,7 +41,7 @@ def test_mcp_starter_approval_restart_and_one_business_effect(tmp_path):
     done = call(
         [
             "-m",
-            "ralf_agent",
+            "relf_agent",
             "--db",
             ".ralf/runs.sqlite",
             "--factory",

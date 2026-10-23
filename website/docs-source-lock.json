@@ -13,14 +13,14 @@
         "en": "dff61222f375301b4bcf64a7aa21e3dc9e3375330fd4c199225edd5a7e3c63fe"
       },
       "sources": {
-        "docs/agent-api.md": "49dba4cb2c7f8f2aa2b357ce65b3ce415e42acfe302530f481076f360fff226c",
-        "docs/api-reference.md": "d364c4c495b1a4213d7f2ec744f147530505bac62f10067cc7202544b1b2f96c",
-        "docs/getting-started.md": "6ba53e236c261722e9a92d8a2f58a6c0d6cf119ec9d7330ca2ccb5a2185788a7",
-        "docs/recovery-guide.md": "2e5ce75c935469eb4840452493fb42ba0ce39fd72f546a76dea1161948f8a0ab",
-        "docs/runtime-assembly.md": "9897a4d51584c178ad056dab159ee3e260c9fa73c38f969cb79ee624914e1533",
-        "docs/sdk-model-tools.md": "df32aa8980b54089b72911cce585f7fb99d4a0dbdd24c68fe309684355601ef8",
-        "docs/session-api.md": "5fe8fc8eb2f427537267354a141ef7dc4864ee5333547be93ad712ab14fad378",
-        "docs/user-input.md": "33ee02c812afc42d76e39df5a294926b097dd3436bd9b3fa99135a9eba3c45ee"
+        "docs/agent-api.md": "2c06e453655715184bf3adc09ead2d3deb37ed313f6710b9149d5e4be981eee1",
+        "docs/api-reference.md": "4b58a291e767efc77b3362d6ddae7d908b5f6bc0be7e069c312d8f43318fb462",
+        "docs/getting-started.md": "e4220d7f0271be1b8ab72d489c26095178b0dddbab6e70499e2c26de13fb3480",
+        "docs/recovery-guide.md": "bda5652b2ba4ce5406ace3165cbd78f7e110cd5e3f77476c46fa616b31e6b76a",
+        "docs/runtime-assembly.md": "8b0bab96aa5256e6fd9581c79b3e1e15f03ee17ef7300707de751d41b9beed7b",
+        "docs/sdk-model-tools.md": "0a50f0ce22e30527657626367de512fb43a36ffdce7d128850328b1c014b8f0f",
+        "docs/session-api.md": "e9c5995bd6ad9150391b1e7310d541f96f748081d8cba2df72c80dc0bd2f7e45",
+        "docs/user-input.md": "42cea73dcc429db441a2aedfd6d72f59b3317fa4375bcbdf2893a83a0834790c"
       }
     },
     "app-tutorial": {
@@ -29,13 +29,13 @@
         "en": "0ca6096ef3d0e1818987834d7ec5e304a2ef06147631ea80404353e9e1b41523"
       },
       "sources": {
-        "docs/agent-api.md": "49dba4cb2c7f8f2aa2b357ce65b3ce415e42acfe302530f481076f360fff226c",
-        "docs/installation.md": "32c720c603778580c037584dc9f16ffda24fca5a51a3b46b4f677969f0da6f0f",
-        "docs/managed-memory.md": "dae3d0380f5db955c8e83e4d40c13fc0421e422bddaee18efab5f054b6ed81ce",
-        "docs/orchestration.md": "24fad0ac4ce11a3dbbcca0b84f4d57b8111d02c28262abdba74ae9208667881f",
-        "docs/recall-and-rag.md": "7862d157f3161523595f88782cbbd4b04389c309614da2ee3196180697491947",
-        "docs/recovery-guide.md": "2e5ce75c935469eb4840452493fb42ba0ce39fd72f546a76dea1161948f8a0ab",
-        "docs/session-api.md": "5fe8fc8eb2f427537267354a141ef7dc4864ee5333547be93ad712ab14fad378",
+        "docs/agent-api.md": "2c06e453655715184bf3adc09ead2d3deb37ed313f6710b9149d5e4be981eee1",
+        "docs/installation.md": "f61dc33d7c10fd8777442ad46443ad2e37cca1d3453e3da49f97c491d6031d88",
+        "docs/managed-memory.md": "c0d80a31c782104c2ab01ba811b156a221137dbb05bf79b49d5e1465332999b9",
+        "docs/orchestration.md": "58aacef85c1dac185992e0ef1aa92389313896a3be150d414909bb0bbbd719c8",
+        "docs/recall-and-rag.md": "3b5069ce3e488164a86bf5b52485aa58bd5e77b7628ffff027db2d0d31e429a6",
+        "docs/recovery-guide.md": "bda5652b2ba4ce5406ace3165cbd78f7e110cd5e3f77476c46fa616b31e6b76a",
+        "docs/session-api.md": "e9c5995bd6ad9150391b1e7310d541f96f748081d8cba2df72c80dc0bd2f7e45",
         "docs/support-journey.md": "3475d7a2d3e919e020c4850f01b3641289a79655bfaa7f95a22a3cd6840c1814"
       }
     },
@@ -45,20 +45,20 @@
         "en": "58ac7bf334653e43c2e7a3b6e9a3c8ad9c502e0eb1f38c639619c647b13e07e6"
       },
       "sources": {
-        "docs/agent-api.md": "49dba4cb2c7f8f2aa2b357ce65b3ce415e42acfe302530f481076f360fff226c",
-        "docs/completion-verification.md": "1aa50f064c1ea212d78e2fa5dceaa4f7e9a81889daad309aca38e73d096b4735",
+        "docs/agent-api.md": "2c06e453655715184bf3adc09ead2d3deb37ed313f6710b9149d5e4be981eee1",
+        "docs/completion-verification.md": "22c10c5277f9968d9070c425814f678d9e39c1e84babd2558c8c81fcd6e947f8",
         "docs/concepts.md": "ad1881ff612c4e4b15de63cf840dcbe3f93740b47de0164fd38e852e19802d48",
-        "docs/recovery-guide.md": "2e5ce75c935469eb4840452493fb42ba0ce39fd72f546a76dea1161948f8a0ab"
+        "docs/recovery-guide.md": "bda5652b2ba4ce5406ace3165cbd78f7e110cd5e3f77476c46fa616b31e6b76a"
       }
     },
     "installation": {
       "translations": {
-        "zh": "a289b68a6f29802a16c82649601c7d99893f33ccc2e9cf2914e8a7cacd9166c4",
-        "en": "46471f1b340e3cca77941b5cf3b445db54fedfc1ce7fe8d3834e07366c538cf2"
+        "zh": "f7e9aa1246ef01f302a1489f68e6a7b6938f8d59e18c002ea35d777d243eb68d",
+        "en": "8837de3d72fa40ec6b77366e5d3112a3b92b3259ea15fd5aae5e1e4a494b09b0"
       },
       "sources": {
-        "docs/getting-started.md": "6ba53e236c261722e9a92d8a2f58a6c0d6cf119ec9d7330ca2ccb5a2185788a7",
-        "docs/installation.md": "32c720c603778580c037584dc9f16ffda24fca5a51a3b46b4f677969f0da6f0f"
+        "docs/getting-started.md": "e4220d7f0271be1b8ab72d489c26095178b0dddbab6e70499e2c26de13fb3480",
+        "docs/installation.md": "f61dc33d7c10fd8777442ad46443ad2e37cca1d3453e3da49f97c491d6031d88"
       }
     },
     "integrations": {
@@ -67,16 +67,16 @@
         "en": "7d1677417d84e20910b1349ff71b3cb24bbd6e7799cb8594ab2a93d800a392f4"
       },
       "sources": {
-        "docs/cli-tools.md": "dc4df43ea52f81c80d9c3008e0ee3f9cc2fe280011776aa95648ffc0690f9ada",
-        "docs/extending.md": "b183171c76d8f9c894d7237cbc77478b5ce79492430fede549aeae7c4ee07707",
-        "docs/http-tools.md": "0fc1366a4d5cc87c728125449e339e5846c18afddb53600d3c8368ace330776d",
-        "docs/managed-tools.md": "917e98d522e73c07c081f342e258e68c91f9d91af16f144b35452e8274e2190a",
-        "docs/mcp-http.md": "3ceeed54db40b592d8f9f1e488f995a3b3d945abc1eda1730429b58ec36c13ee",
-        "docs/model-adapters.md": "ec3a80838dd548aa7c55fb78e150047d5f38f866877dee8df884dc90b4e500f7",
-        "docs/sandbox.md": "31bcb81be389f7eff587d36611b73cf5c6fad88d66c987c56c008eb2369d2f28",
-        "docs/skills.md": "1378e6eb1a0777a5abdea67b7d9de76fea9e73b2263768665285004acc22ea95",
-        "docs/workspace-writes.md": "fcb468285ef72f05e7d992829858cd6e1bb64fc059998803f06e223e62bb0618",
-        "docs/workspace.md": "7dc24117787cec12bfa52aaf160bd9828a0c93f12fec92ed843025d82060f95a"
+        "docs/cli-tools.md": "8d2dfe00cde83832d85b6d45772c2230b238d255c574af93b663b293dd6003e5",
+        "docs/extending.md": "a49fde06090e7c43b312d263dfd43ef92e5c8f9125cfbe37903ddd09b28810bb",
+        "docs/http-tools.md": "65f67d3f2eed29bb7a91fa49c74a2f7eff916bb265795fa58a745992ad33e1db",
+        "docs/managed-tools.md": "30765f9782b2a58277c7f10362be3d9345d87ce0d8caec7673d2aa8edc30c21c",
+        "docs/mcp-http.md": "cb5527eed888ed15fad8518810970147d8070ba861db989ff4fc32484694562e",
+        "docs/model-adapters.md": "fe2172291438c7d2420ba13b81134367920f0558b00fe2728c8a282956727d82",
+        "docs/sandbox.md": "a252ec9fa13138b86ba70a8996eff11ca6910a144f28baf7d4f4d5fb80895b8b",
+        "docs/skills.md": "232a83f6679401373658349d7021c4e2e63d64d25820bd132d70bf2bf63f7c25",
+        "docs/workspace-writes.md": "7c3c936c55338ece7160ecee6a829ba76e4bceae681622fc8b315eabd72fccd7",
+        "docs/workspace.md": "826a6b16454ebc34b1af23a18848f62ec88903d867ce74c95cc40a0fe2ae6fb8"
       }
     },
     "models-tools": {
@@ -85,11 +85,11 @@
         "en": "b06dd0829b58b574ce8549b784dfa8d0e5d764815669e3df490ef16e0fddc09e"
       },
       "sources": {
-        "README.md": "334786ce730e12caf7eaf1e2f1b9253ae1b8d4920506257d3e94f4f1885be7a7",
-        "docs/completion-verification.md": "1aa50f064c1ea212d78e2fa5dceaa4f7e9a81889daad309aca38e73d096b4735",
-        "docs/getting-started.md": "6ba53e236c261722e9a92d8a2f58a6c0d6cf119ec9d7330ca2ccb5a2185788a7",
-        "docs/model-adapters.md": "ec3a80838dd548aa7c55fb78e150047d5f38f866877dee8df884dc90b4e500f7",
-        "docs/sdk-model-tools.md": "df32aa8980b54089b72911cce585f7fb99d4a0dbdd24c68fe309684355601ef8"
+        "README.md": "67ab2822cb3a0bda206321889bb1bdc2fd261060c8bc9f7e2b18ccdb253e5fe0",
+        "docs/completion-verification.md": "22c10c5277f9968d9070c425814f678d9e39c1e84babd2558c8c81fcd6e947f8",
+        "docs/getting-started.md": "e4220d7f0271be1b8ab72d489c26095178b0dddbab6e70499e2c26de13fb3480",
+        "docs/model-adapters.md": "fe2172291438c7d2420ba13b81134367920f0558b00fe2728c8a282956727d82",
+        "docs/sdk-model-tools.md": "0a50f0ce22e30527657626367de512fb43a36ffdce7d128850328b1c014b8f0f"
       }
     },
     "operations": {
@@ -98,18 +98,18 @@
         "en": "6d15103dc24c8a6007f54a923211d51792ad1f0a77d703b947613f31c0bb87e5"
       },
       "sources": {
-        "docs/agent-api.md": "49dba4cb2c7f8f2aa2b357ce65b3ce415e42acfe302530f481076f360fff226c",
-        "docs/agent-limits.md": "e9908939b4c648d6358886e7a7d948c7eac25779e1c915c9400c52d3ca7d3edd",
-        "docs/recovery-guide.md": "2e5ce75c935469eb4840452493fb42ba0ce39fd72f546a76dea1161948f8a0ab",
+        "docs/agent-api.md": "2c06e453655715184bf3adc09ead2d3deb37ed313f6710b9149d5e4be981eee1",
+        "docs/agent-limits.md": "456dbc1dde6357cf1a2dd318b298a9e6b68bdaa3dec1ad8d9ccefa10cc597472",
+        "docs/recovery-guide.md": "bda5652b2ba4ce5406ace3165cbd78f7e110cd5e3f77476c46fa616b31e6b76a",
         "docs/releases/0.1.0a1.md": "b946c8320fcaee338f2d0f31c62b9573fcaa7bc2234f6b63c8a0b8de1330c8e2",
-        "docs/runtime-assembly.md": "9897a4d51584c178ad056dab159ee3e260c9fa73c38f969cb79ee624914e1533",
-        "docs/temporal-execution.md": "c5256eec8a22d8213b6c932c2c84aad5d367b6f8b9e2f164e790a90af286fffe"
+        "docs/runtime-assembly.md": "8b0bab96aa5256e6fd9581c79b3e1e15f03ee17ef7300707de751d41b9beed7b",
+        "docs/temporal-execution.md": "bfc3451fb27b5601aee91ac98db49e764b0501d1ffa471ed2a71d69ea4a0c90c"
       }
     },
     "overview": {
       "translations": {
-        "zh": "aeb9158acab83c46b91cb1a01fcd0652633151ac23faec85025cd3cae76d8594",
-        "en": "a8133bace96271c14937c8c2886a7e255e05648ca441ceb82bfcb2c1190808a9"
+        "zh": "00d9e339c09cc61918a0a2912fd81605e00e88cb2df15aa6ee7ce331270f1646",
+        "en": "721cf04ede95ae3c94dc798b8054a75faf173fa253342fd8a87a882dc6c4bf6c"
       },
       "sources": {
         "docs/basic-capabilities.md": "f13b05d797599ccbcdf0158244faa3e0ea29006155468be0830e5207e732b3bf",
@@ -124,9 +124,9 @@
         "en": "f8aaf0fad2f11585323e8852ab832abc7d8f559af8e09730da7531564af61a93"
       },
       "sources": {
-        "docs/getting-started.md": "6ba53e236c261722e9a92d8a2f58a6c0d6cf119ec9d7330ca2ccb5a2185788a7",
-        "docs/installation.md": "32c720c603778580c037584dc9f16ffda24fca5a51a3b46b4f677969f0da6f0f",
-        "docs/recovery-guide.md": "2e5ce75c935469eb4840452493fb42ba0ce39fd72f546a76dea1161948f8a0ab"
+        "docs/getting-started.md": "e4220d7f0271be1b8ab72d489c26095178b0dddbab6e70499e2c26de13fb3480",
+        "docs/installation.md": "f61dc33d7c10fd8777442ad46443ad2e37cca1d3453e3da49f97c491d6031d88",
+        "docs/recovery-guide.md": "bda5652b2ba4ce5406ace3165cbd78f7e110cd5e3f77476c46fa616b31e6b76a"
       }
     },
     "recovery": {
@@ -136,8 +136,8 @@
       },
       "sources": {
         "docs/concepts.md": "ad1881ff612c4e4b15de63cf840dcbe3f93740b47de0164fd38e852e19802d48",
-        "docs/getting-started.md": "6ba53e236c261722e9a92d8a2f58a6c0d6cf119ec9d7330ca2ccb5a2185788a7",
-        "docs/recovery-guide.md": "2e5ce75c935469eb4840452493fb42ba0ce39fd72f546a76dea1161948f8a0ab"
+        "docs/getting-started.md": "e4220d7f0271be1b8ab72d489c26095178b0dddbab6e70499e2c26de13fb3480",
+        "docs/recovery-guide.md": "bda5652b2ba4ce5406ace3165cbd78f7e110cd5e3f77476c46fa616b31e6b76a"
       }
     },
     "sessions-memory": {
@@ -146,15 +146,15 @@
         "en": "f49e440a707a050c93ca4b954d61c520f54c3f3108761f236410afac80816da1"
       },
       "sources": {
-        "docs/context-artifacts.md": "5e3f3b346fb2a96147529066436f15d57266b920cbd9bb0abe19df55f5cd50a1",
-        "docs/document-ingestion.md": "e59a42218475b9c5ae53ef9b6a2b2316af13f241a477764c26575b86c0bc2224",
-        "docs/docx-ingestion.md": "9d4be0a2726dc7eba64fb9af575bd9e77cb3eea0fad513bf7b9496544d448587",
-        "docs/html-ingestion.md": "66c1f46a263af3cd396e75a2c67f75ec713aeebf6eec3f9b9bee9c410754e99e",
-        "docs/hybrid-retrieval.md": "d4b06f8810a7e524c0282fda8ecc61abdec77a4b5454260360c3aa6aa945ef19",
-        "docs/managed-memory.md": "dae3d0380f5db955c8e83e4d40c13fc0421e422bddaee18efab5f054b6ed81ce",
-        "docs/pdf-ingestion.md": "9a842e97d79340a81df686bfbfffa886420361e3b1a80973735a973dbdb062bd",
-        "docs/recall-and-rag.md": "7862d157f3161523595f88782cbbd4b04389c309614da2ee3196180697491947",
-        "docs/session-api.md": "5fe8fc8eb2f427537267354a141ef7dc4864ee5333547be93ad712ab14fad378",
+        "docs/context-artifacts.md": "9b5824232b7de2091a7d4f205735a7f16228dce24e08e39f83a5dfaa4b753dd8",
+        "docs/document-ingestion.md": "17c9db761165d2de4dabb26605c1165dbab100e04d80731c450ec61535ea95e6",
+        "docs/docx-ingestion.md": "72f1470de40412255b98ffe07a31ecd56285681d0005b18b908dd299beb47b19",
+        "docs/html-ingestion.md": "dd1cce79bc93b49d210680a57925624a0d0e331240f1a57612a2f16be7a66d08",
+        "docs/hybrid-retrieval.md": "a905310792f99387a7ed20fbae4e8cb2e011d69ebd78a78f53d8333ea9360746",
+        "docs/managed-memory.md": "c0d80a31c782104c2ab01ba811b156a221137dbb05bf79b49d5e1465332999b9",
+        "docs/pdf-ingestion.md": "4ca0a2012adf799be79b7ab98372d7f55b4f975eee1479138a9dcbf2213355ba",
+        "docs/recall-and-rag.md": "3b5069ce3e488164a86bf5b52485aa58bd5e77b7628ffff027db2d0d31e429a6",
+        "docs/session-api.md": "e9c5995bd6ad9150391b1e7310d541f96f748081d8cba2df72c80dc0bd2f7e45",
         "docs/support-journey.md": "3475d7a2d3e919e020c4850f01b3641289a79655bfaa7f95a22a3cd6840c1814"
       }
     },
@@ -164,12 +164,12 @@
         "en": "a519f4375fb8e94d2293aed3abd930d94d849a4ace4abdc1af6ec8e670a783f7"
       },
       "sources": {
-        "docs/agent-api.md": "49dba4cb2c7f8f2aa2b357ce65b3ce415e42acfe302530f481076f360fff226c",
-        "docs/business-evaluation.md": "6e75312f0ffec7ec938ab02ac67c862805dc5fde3b1709362fa96f8713a54602",
-        "docs/completion-verification.md": "1aa50f064c1ea212d78e2fa5dceaa4f7e9a81889daad309aca38e73d096b4735",
-        "docs/planning-evaluation.md": "0550f22acd8103ec78a586948cece1353c1cbb740a9554407e7d6055ae306581",
-        "docs/sdk-model-tools.md": "df32aa8980b54089b72911cce585f7fb99d4a0dbdd24c68fe309684355601ef8",
-        "docs/task-evaluation.md": "12917ed6a0097a573fda91d6bb92649244dc5f4af71dabb77deb4d893e8f5650"
+        "docs/agent-api.md": "2c06e453655715184bf3adc09ead2d3deb37ed313f6710b9149d5e4be981eee1",
+        "docs/business-evaluation.md": "70ef1b5aa5642e606968f99cd5124a346979afae2d3ec4e4382c5b89f651833a",
+        "docs/completion-verification.md": "22c10c5277f9968d9070c425814f678d9e39c1e84babd2558c8c81fcd6e947f8",
+        "docs/planning-evaluation.md": "d0b2be62bccbc354b99e0f8127c28d729dd9394725132f15981f4708f63831b6",
+        "docs/sdk-model-tools.md": "0a50f0ce22e30527657626367de512fb43a36ffdce7d128850328b1c014b8f0f",
+        "docs/task-evaluation.md": "d000af5e53259303a3b54d7021f1f633a8849a0550e65ee890224e53beb6b4f7"
       }
     },
     "user-input": {
@@ -178,10 +178,10 @@
         "en": "740a99a7696a2eea24cdc196987bf41b0e81d1ac06ba8aa103a6900ae02b97f7"
       },
       "sources": {
-        "docs/agent-api.md": "49dba4cb2c7f8f2aa2b357ce65b3ce415e42acfe302530f481076f360fff226c",
-        "docs/recovery-guide.md": "2e5ce75c935469eb4840452493fb42ba0ce39fd72f546a76dea1161948f8a0ab",
-        "docs/session-api.md": "5fe8fc8eb2f427537267354a141ef7dc4864ee5333547be93ad712ab14fad378",
-        "docs/user-input.md": "33ee02c812afc42d76e39df5a294926b097dd3436bd9b3fa99135a9eba3c45ee"
+        "docs/agent-api.md": "2c06e453655715184bf3adc09ead2d3deb37ed313f6710b9149d5e4be981eee1",
+        "docs/recovery-guide.md": "bda5652b2ba4ce5406ace3165cbd78f7e110cd5e3f77476c46fa616b31e6b76a",
+        "docs/session-api.md": "e9c5995bd6ad9150391b1e7310d541f96f748081d8cba2df72c80dc0bd2f7e45",
+        "docs/user-input.md": "42cea73dcc429db441a2aedfd6d72f59b3317fa4375bcbdf2893a83a0834790c"
       }
     },
     "workflows": {
@@ -191,11 +191,11 @@
       },
       "sources": {
         "docs/concepts.md": "ad1881ff612c4e4b15de63cf840dcbe3f93740b47de0164fd38e852e19802d48",
-        "docs/dynamic-dag.md": "80fd52e189240ecef90ff7bce8a6512d58fd5a4e6d0d7e0aca059cfcd47a1d6a",
-        "docs/orchestration.md": "24fad0ac4ce11a3dbbcca0b84f4d57b8111d02c28262abdba74ae9208667881f",
-        "docs/parallel-workflows.md": "98e2a11ce62fb4ba15737f896b136ba89745145e89d62d3cf511f6ba7f68e042",
-        "docs/static-workflows.md": "aaeefebc5f906bb9de896690cd5c9e0d51710de8ccd18bc07a0dd7292b13ec5e",
-        "docs/user-input.md": "33ee02c812afc42d76e39df5a294926b097dd3436bd9b3fa99135a9eba3c45ee"
+        "docs/dynamic-dag.md": "4afd83e76908d506fd6eb24fd45959f647d349dcbbbce27405e8eb116e063060",
+        "docs/orchestration.md": "58aacef85c1dac185992e0ef1aa92389313896a3be150d414909bb0bbbd719c8",
+        "docs/parallel-workflows.md": "4c0e8887ecde436b55b45151373d4e874a9a3f61d8ba90ea634006ceb1562217",
+        "docs/static-workflows.md": "4a7b2586b66bfaae5a4b7708b23c20a650c925c9cbd0d48ab9efe725f7614848",
+        "docs/user-input.md": "42cea73dcc429db441a2aedfd6d72f59b3317fa4375bcbdf2893a83a0834790c"
       }
     }
   }

@@ -6,7 +6,7 @@ import uuid
 
 import pytest
 
-from ralf_agent import (
+from relf_agent import (
     ComponentRegistry,
     FileSystemWorkspace,
     Scope,
@@ -17,7 +17,7 @@ from ralf_agent import (
     WorkspaceToolSource,
     register_tool_source,
 )
-from ralf_agent.temporal import replay_temporal_history
+from relf_agent.temporal import replay_temporal_history
 
 from .test_workspace_binding_execution import Reader, definition
 
@@ -64,7 +64,7 @@ def test_actual_fixed_workspace_member_roots_approval_restart_and_history(tmp_pa
                         )
                     },
                 )
-            from ralf_agent import ToolSpec
+            from relf_agent import ToolSpec
 
             registry.register(
                 ToolSpec("business", "Business", {"type": "object"}), lambda a, c: "ok"

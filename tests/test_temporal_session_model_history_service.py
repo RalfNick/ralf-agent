@@ -8,7 +8,7 @@ from dataclasses import asdict
 
 import pytest
 
-from ralf_agent import (
+from relf_agent import (
     AgentSpec,
     DynamicWorkflowSpec,
     GraphNode,
@@ -20,12 +20,12 @@ from ralf_agent import (
     ToolRegistry,
     WorkflowSpec,
 )
-from ralf_agent.managed_context import ManagedContextPipeline
-from ralf_agent.model_history import CompleteModelHistory
-from ralf_agent.temporal import TemporalEngine, build_temporal_worker, replay_temporal_history
-from ralf_agent.temporal_activities import TemporalRuntime
-from ralf_agent.temporal_session_state import workflow_id
-from ralf_agent.temporal_session_topology import CompositeSessionTopology
+from relf_agent.managed_context import ManagedContextPipeline
+from relf_agent.model_history import CompleteModelHistory
+from relf_agent.temporal import TemporalEngine, build_temporal_worker, replay_temporal_history
+from relf_agent.temporal_activities import TemporalRuntime
+from relf_agent.temporal_session_state import workflow_id
+from relf_agent.temporal_session_topology import CompositeSessionTopology
 from tests.test_temporal_session_model_history import SignedTools, one, two
 
 pytestmark = pytest.mark.skipif(
@@ -56,7 +56,7 @@ def test_actual_session_two_turns_preserve_native_tool_signature_and_replay(
                 pytest.skip("requires the task-owned actual Redis service")
             from redis.asyncio import Redis
 
-            from ralf_agent import RedisMemory
+            from relf_agent import RedisMemory
 
             remote_client = Redis.from_url(url, socket_timeout=3)
             backend = RedisMemory(remote_client, prefix=queue, backend_id="native:" + queue)
@@ -68,7 +68,7 @@ def test_actual_session_two_turns_preserve_native_tool_signature_and_replay(
             import psycopg
             from psycopg import sql
 
-            from ralf_agent import PostgresMemory
+            from relf_agent import PostgresMemory
 
             remote_client = await psycopg.AsyncConnection.connect(dsn, autocommit=True)
             remote_schema = "native_" + uuid.uuid4().hex
@@ -209,7 +209,7 @@ def test_actual_worker_loss_after_native_final_receipt_restores_original_episode
 
         from temporalio.client import Client
 
-        import ralf_agent
+        import relf_agent
         from tests.temporal_session_model_history_worker import runtime
 
         client = await Client.connect(os.environ["RALF_TEST_TEMPORAL_ADDRESS"])
@@ -229,7 +229,7 @@ def test_actual_worker_loss_after_native_final_receipt_restores_original_episode
             environment = {
                 "PATH": os.environ.get("PATH", "/usr/bin:/bin"),
                 "PYTHONPATH": os.pathsep.join(
-                    [str(Path(ralf_agent.__file__).parents[1]), str(Path(__file__).parents[1])]
+                    [str(Path(relf_agent.__file__).parents[1]), str(Path(__file__).parents[1])]
                 ),
                 "RALF_TEST_TEMPORAL_ADDRESS": os.environ["RALF_TEST_TEMPORAL_ADDRESS"],
                 "RALF_TEST_TEMPORAL_QUEUE": queue,
@@ -348,8 +348,8 @@ def test_actual_failed_parent_excludes_saved_leaf_candidates_over_two_turns(tmp_
     async def run():
         from temporalio.client import Client
 
-        from ralf_agent import ModelResponse
-        from ralf_agent.session_model_history import native_history_address
+        from relf_agent import ModelResponse
+        from relf_agent.session_model_history import native_history_address
 
         class FailSecond(SignedTools):
             async def complete(self, messages, tools):
@@ -440,7 +440,7 @@ def test_actual_nullable_output_keeps_null_native_final_over_two_turns():
     async def run():
         from temporalio.client import Client
 
-        from ralf_agent import ModelResponse
+        from relf_agent import ModelResponse
 
         class Nullable:
             identity = {"kind": "actual-native-null", "version": "1"}
@@ -506,9 +506,9 @@ def test_actual_model_planner_has_separate_complete_native_history(tmp_path, man
 
         from temporalio.client import Client
 
-        from ralf_agent.model_continuation import ContinuedModelResponse, ModelContinuation
-        from ralf_agent.planning import ModelPlanner
-        from ralf_agent.types import digest
+        from relf_agent.model_continuation import ContinuedModelResponse, ModelContinuation
+        from relf_agent.planning import ModelPlanner
+        from relf_agent.types import digest
 
         class PlannerProvider:
             identity = {"kind": "actual-native-model-planner", "version": "1"}
@@ -636,7 +636,7 @@ def test_actual_full_native_stream_rejects_129th_model_and_releases_session(tmp_
     async def run():
         from temporalio.client import Client
 
-        from ralf_agent import ModelResponse
+        from relf_agent import ModelResponse
 
         class SmallFinal:
             identity = {"kind": "actual-native-capacity", "version": "1"}
@@ -712,13 +712,13 @@ def test_actual_parent_capacity_failure_releases_without_partial_publication(mon
         from temporalio.worker import Replayer
         from temporalio.worker.workflow_sandbox import SandboxedWorkflowRunner
 
-        from ralf_agent import temporal_session_model_history as native
-        from ralf_agent.orchestration_types import ChildCall, TeamSelection
-        from ralf_agent.planning import PlanProposal
-        from ralf_agent.temporal import _workflow_runner
-        from ralf_agent.temporal_parent_workflow import TemporalParentWorkflow
-        from ralf_agent.temporal_session_workflow import TemporalSessionWorkflow
-        from ralf_agent.temporal_workflow import (
+        from relf_agent import temporal_session_model_history as native
+        from relf_agent.orchestration_types import ChildCall, TeamSelection
+        from relf_agent.planning import PlanProposal
+        from relf_agent.temporal import _workflow_runner
+        from relf_agent.temporal_parent_workflow import TemporalParentWorkflow
+        from relf_agent.temporal_session_workflow import TemporalSessionWorkflow
+        from relf_agent.temporal_workflow import (
             TemporalCommandRegistryWorkflow,
             TemporalRunWorkflow,
         )
@@ -749,7 +749,7 @@ def test_actual_parent_capacity_failure_releases_without_partial_publication(mon
         monkeypatch.setattr(native, "MAX_TURNS", 1)
         runner = SandboxedWorkflowRunner(
             restrictions=_workflow_runner().restrictions.with_passthrough_modules(
-                "ralf_agent.temporal_session_model_history"
+                "relf_agent.temporal_session_model_history"
             )
         )
         client = await Client.connect(os.environ["RALF_TEST_TEMPORAL_ADDRESS"])

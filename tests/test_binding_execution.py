@@ -6,7 +6,7 @@ import json
 
 import pytest
 
-from ralf_agent import (
+from relf_agent import (
     AgentSpec,
     InMemoryMemory,
     LocalEngine,
@@ -17,25 +17,25 @@ from ralf_agent import (
     ToolSpec,
     WorkflowSpec,
 )
-from ralf_agent.context import ContextAssembler
-from ralf_agent.errors import DefinitionMismatch, IdempotencyConflict, ValidationError
-from ralf_agent.harness import NativeHarness
-from ralf_agent.retrieval import (
+from relf_agent.context import ContextAssembler
+from relf_agent.errors import DefinitionMismatch, IdempotencyConflict, ValidationError
+from relf_agent.harness import NativeHarness
+from relf_agent.retrieval import (
     Document,
     InMemoryKnowledgeStore,
     KnowledgeContext,
     LexicalRetriever,
 )
-from ralf_agent.types import ToolCall, canonical
+from relf_agent.types import ToolCall, canonical
 
 from .helpers import ScriptedProvider
 
 
 def api():
     return (
-        importlib.import_module("ralf_agent.binding_types"),
-        importlib.import_module("ralf_agent.binding_definitions"),
-        importlib.import_module("ralf_agent.binding_catalog"),
+        importlib.import_module("relf_agent.binding_types"),
+        importlib.import_module("relf_agent.binding_definitions"),
+        importlib.import_module("relf_agent.binding_catalog"),
     )
 
 
@@ -187,7 +187,7 @@ def test_policy_and_stateless_disable_do_not_use_host_session_or_facts(tmp_path)
         identity = {"kind": "bound-policy", "version": "1"}
 
         def propose(self, spec, response):
-            from ralf_agent.harness import DecisionProposal
+            from relf_agent.harness import DecisionProposal
 
             return DecisionProposal("policy-output")
 
@@ -313,7 +313,7 @@ def test_unregistered_environment_reference_fails_before_any_run_or_model(tmp_pa
 
 
 def test_bound_json_declaration_loads_and_executes(tmp_path):
-    from ralf_agent.runtime_config import load_spec
+    from relf_agent.runtime_config import load_spec
 
     path = tmp_path / "agent.json"
     path.write_text(json.dumps(definition().to_dict()))
@@ -337,7 +337,7 @@ def test_legacy_manifest_remains_unbound(tmp_path):
 
 
 def test_host_authorization_still_applies_to_bound_policy_and_provider(tmp_path):
-    from ralf_agent.errors import AuthorizationDenied
+    from relf_agent.errors import AuthorizationDenied
 
     catalog = bound_catalog()
     catalog.register(
@@ -367,7 +367,7 @@ def test_host_authorization_still_applies_to_bound_policy_and_provider(tmp_path)
 
 
 def test_stateless_and_disabled_facts_work_with_host_paged_recall(tmp_path):
-    from ralf_agent.recall import MemoryRecallPolicy
+    from relf_agent.recall import MemoryRecallPolicy
 
     t, _, _ = api()
     with engine(
@@ -400,7 +400,7 @@ def test_catalog_removal_during_model_io_does_not_erase_response(tmp_path):
 
 
 def test_temporal_rejects_wrappers_before_network_access():
-    from ralf_agent import TemporalEngine, TemporalRuntime
+    from relf_agent import TemporalEngine, TemporalRuntime
 
     runtime = TemporalRuntime(
         providers={"default": RecordingProvider("fixture")}, tools=ToolRegistry()

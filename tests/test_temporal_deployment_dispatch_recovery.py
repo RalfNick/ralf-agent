@@ -6,14 +6,14 @@ from types import SimpleNamespace
 
 import pytest
 
-from ralf_agent import AgentSpec, DeploymentAdmissionPolicy, Scope
-from ralf_agent.types import submission_request
+from relf_agent import AgentSpec, DeploymentAdmissionPolicy, Scope
+from relf_agent.types import submission_request
 from tests.test_temporal_deployment_dispatch_integration import runtime
 
 
 def test_selected_legacy_model_payload_gets_scope_and_actual_sdk_identity(monkeypatch):
     pytest.importorskip("temporalio")
-    from ralf_agent.temporal_workflow import TemporalRunWorkflow, workflow
+    from relf_agent.temporal_workflow import TemporalRunWorkflow, workflow
 
     selected = runtime(_deployment_admission_policy=DeploymentAdmissionPolicy("worker-only"))
     instance = object.__new__(TemporalRunWorkflow)
@@ -40,7 +40,7 @@ def test_invalid_selected_metadata_fails_in_sdk_owned_run_instead_of_initializer
     pytest.importorskip("temporalio")
     from temporalio.exceptions import ApplicationError
 
-    from ralf_agent.temporal_workflow import TemporalRunWorkflow, workflow
+    from relf_agent.temporal_workflow import TemporalRunWorkflow, workflow
 
     selected = runtime(_deployment_admission_policy=DeploymentAdmissionPolicy("worker-only"))
     monkeypatch.setattr(

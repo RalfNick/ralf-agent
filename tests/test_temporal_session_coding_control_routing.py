@@ -21,9 +21,9 @@ from tests.test_temporal_session_deployment_coding_configuration import coding_s
 def test_original_parent_control_route_preserves_selected_coding_and_ordinary(
     monkeypatch, selection, expected
 ):
-    from ralf_agent import temporal_control_activities as activities
-    from ralf_agent import temporal_deployment_coding_bridge as coding
-    from ralf_agent import temporal_deployment_execution as ordinary
+    from relf_agent import temporal_control_activities as activities
+    from relf_agent import temporal_deployment_coding_bridge as coding
+    from relf_agent import temporal_deployment_execution as ordinary
 
     if selection in {"native4", "composition4"}:
         manifest = coding_session_manifest(composition=selection == "composition4")

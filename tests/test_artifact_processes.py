@@ -7,20 +7,20 @@ from pathlib import Path
 
 import pytest
 
-from ralf_agent.errors import ValidationError
-from ralf_agent.types import Scope
+from relf_agent.errors import ValidationError
+from relf_agent.types import Scope
 
 
 def api():
-    return importlib.import_module("ralf_agent.artifacts")
+    return importlib.import_module("relf_agent.artifacts")
 
 
 def package_env():
-    import ralf_agent
+    import relf_agent
 
     return {
         "PATH": os.environ.get("PATH", ""),
-        "PYTHONPATH": str(Path(ralf_agent.__file__).resolve().parent.parent),
+        "PYTHONPATH": str(Path(relf_agent.__file__).resolve().parent.parent),
     }
 
 
@@ -29,8 +29,8 @@ def test_real_process_loss_artifact_commit_is_all_or_nothing(tmp_path, phase):
     path = tmp_path / "artifacts.sqlite"
     code = """
 import os,sys
-from ralf_agent import Scope
-from ralf_agent.artifacts import SQLiteArtifactStore
+from relf_agent import Scope
+from relf_agent.artifacts import SQLiteArtifactStore
 s=SQLiteArtifactStore(sys.argv[1])
 conn=s.conn
 class Crash:
@@ -66,9 +66,9 @@ def test_concurrent_processes_use_atomic_capacity_and_duplicate_commit(tmp_path)
         pass
     code = """
 import json,sys
-from ralf_agent import Scope
-from ralf_agent.artifacts import SQLiteArtifactStore
-from ralf_agent.errors import BudgetExceeded
+from relf_agent import Scope
+from relf_agent.artifacts import SQLiteArtifactStore
+from relf_agent.errors import BudgetExceeded
 with SQLiteArtifactStore(sys.argv[1],capacity=1) as s:
  try:
   ref=s.put(Scope(),'results',{'value':sys.argv[2]})

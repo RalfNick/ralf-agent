@@ -6,9 +6,9 @@ import zlib
 
 import pytest
 
-from ralf_agent.errors import DefinitionMismatch, ValidationError
-from ralf_agent.temporal_session_deployment_state import TemporalSessionDeploymentState
-from ralf_agent.types import canonical, digest
+from relf_agent.errors import DefinitionMismatch, ValidationError
+from relf_agent.temporal_session_deployment_state import TemporalSessionDeploymentState
+from relf_agent.types import canonical, digest
 from tests.test_temporal_deployment_session_registry import POLICY
 from tests.test_temporal_deployment_session_registry import state as registry_state
 from tests.test_temporal_session_deployment_coding_registry import coding_intent_request
@@ -96,7 +96,7 @@ def test_large_original_body_end_ack_survives_duplicate_and_cold_recovery():
 
 
 def test_workflow_response_decodes_body_before_original_ack_and_observation_validation():
-    from ralf_agent.temporal_session_workflow import TemporalSessionWorkflow
+    from relf_agent.temporal_session_workflow import TemporalSessionWorkflow
 
     entry, identity, body = original()
     ack = entry.end_call(end_payload(identity, body, body))
@@ -107,7 +107,7 @@ def test_workflow_response_decodes_body_before_original_ack_and_observation_vali
 
 
 def test_workflow_original_small_error_body_keeps_its_code_unencoded():
-    from ralf_agent.temporal_session_workflow import TemporalSessionWorkflow
+    from relf_agent.temporal_session_workflow import TemporalSessionWorkflow
 
     entry, identity, _ = original()
     body = {"ok": False, "code": "definition_mismatch"}
@@ -137,10 +137,10 @@ def test_owned_activity_packs_end_update_and_return_wire_with_original_digest_an
     import asyncio
     from types import SimpleNamespace
 
-    from ralf_agent.temporal_session_deployment_control import owned_control_body
-    from ralf_agent.temporal_session_deployment_dto import decode_control_body
-    from ralf_agent.temporal_session_deployment_verification import SessionControlValidation
-    from ralf_agent.temporal_session_state import SESSION_ACTIVITY
+    from relf_agent.temporal_session_deployment_control import owned_control_body
+    from relf_agent.temporal_session_deployment_dto import decode_control_body
+    from relf_agent.temporal_session_deployment_verification import SessionControlValidation
+    from relf_agent.temporal_session_state import SESSION_ACTIVITY
     from tests.test_temporal_session_deployment_control import Client, Handle, Runtime
 
     entry, _, body = original(begin=False)
@@ -206,17 +206,17 @@ def test_large_encoded_body_recovery_uses_original_sandbox_activation_restrictio
     from temporalio.worker.workflow_sandbox._importer import Importer
     from temporalio.worker.workflow_sandbox._restrictions import RestrictionContext
 
-    from ralf_agent.temporal import _workflow_runner
+    from relf_agent.temporal import _workflow_runner
 
     entry, identity, body = original()
     wire = packed(body)
     registered = registration(entry, "started")
-    importlib.import_module("ralf_agent.temporal_session_workflow")
+    importlib.import_module("relf_agent.temporal_session_workflow")
     context = RestrictionContext()
     importer = Importer(_workflow_runner().restrictions, context)
     with importer.applied():
-        workflow_product = importlib.import_module("ralf_agent.temporal_session_workflow")
-        state_product = importlib.import_module("ralf_agent.temporal_session_deployment_state")
+        workflow_product = importlib.import_module("relf_agent.temporal_session_workflow")
+        state_product = importlib.import_module("relf_agent.temporal_session_deployment_state")
         context.is_runtime = context.in_activation = True
         try:
             with warnings.catch_warnings():

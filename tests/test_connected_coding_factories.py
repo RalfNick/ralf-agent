@@ -5,9 +5,9 @@ import copy
 
 import pytest
 
-from ralf_agent.errors import ValidationError
-from ralf_agent.runtime_builder import RuntimeBuilder
-from ralf_agent.runtime_config import RuntimeProfile
+from relf_agent.errors import ValidationError
+from relf_agent.runtime_builder import RuntimeBuilder
+from relf_agent.runtime_config import RuntimeProfile
 from tests.test_coding_assembly import options
 
 

@@ -4,7 +4,7 @@ import asyncio
 
 import pytest
 
-from ralf_agent import (
+from relf_agent import (
     AgentBindingDescriptor,
     AgentSpec,
     BindingSelection,
@@ -18,16 +18,16 @@ from ralf_agent import (
     ToolRegistry,
     ToolSpec,
 )
-from ralf_agent.cli_views import diagnostics_inspection
-from ralf_agent.errors import DefinitionMismatch, ValidationError
-from ralf_agent.retrieval import (
+from relf_agent.cli_views import diagnostics_inspection
+from relf_agent.errors import DefinitionMismatch, ValidationError
+from relf_agent.retrieval import (
     Document,
     InMemoryKnowledgeStore,
     KnowledgeContext,
     LexicalRetriever,
 )
-from ralf_agent.types import ToolCall
-from ralf_agent.workflow import ExecutionPlan, StaticWorkflowCompiler
+from relf_agent.types import ToolCall
+from relf_agent.workflow import ExecutionPlan, StaticWorkflowCompiler
 
 from .helpers import ScriptedProvider
 from .test_binding_execution import RecordingProvider, TaggedContext, bound_catalog, choice, engine

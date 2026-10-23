@@ -9,7 +9,7 @@ from pathlib import Path
 
 import httpx
 
-from ralf_agent import (
+from relf_agent import (
     AgentSpec,
     CompleteModelHistory,
     GraphNode,
@@ -17,8 +17,8 @@ from ralf_agent import (
     SQLiteMemory,
     ToolRegistry,
 )
-from ralf_agent.temporal import build_temporal_worker
-from ralf_agent.temporal_activities import TemporalRuntime
+from relf_agent.temporal import build_temporal_worker
+from relf_agent.temporal_activities import TemporalRuntime
 from tests.test_responses_reasoning_runtime import audit_row, native_output, provider, wire_response
 
 MODEL = "temporal-fixture"

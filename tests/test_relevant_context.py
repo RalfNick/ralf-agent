@@ -4,13 +4,13 @@ from dataclasses import asdict
 
 import pytest
 
-from ralf_agent import InMemoryArtifactStore
-from ralf_agent.errors import DefinitionMismatch, ValidationError
-from ralf_agent.types import canonical
+from relf_agent import InMemoryArtifactStore
+from relf_agent.errors import DefinitionMismatch, ValidationError
+from relf_agent.types import canonical
 
 
 def api():
-    from ralf_agent import OverlapReferenceSelector, RelevantDataContext
+    from relf_agent import OverlapReferenceSelector, RelevantDataContext
 
     return OverlapReferenceSelector, RelevantDataContext
 
@@ -123,7 +123,7 @@ def test_summary_consumption_uses_saved_selection_without_reselecting():
     plan = builder.prepare(messages, refs(), 1200)
     assert plan is not None and selector.calls == 1
     summary = builder.excerpt(plan)
-    from ralf_agent import ContextSummary
+    from relf_agent import ContextSummary
 
     restored = copy.deepcopy(plan)
     actual, manifest = builder.finish(restored, ContextSummary(**asdict(summary)))
@@ -138,7 +138,7 @@ def test_summary_consumption_uses_saved_selection_without_reselecting():
 
 @pytest.mark.parametrize("assembly", ["sync", "async"])
 def test_relevant_data_factory_uses_owned_storage_and_cleanup(tmp_path, assembly):
-    from ralf_agent import RuntimeBuilder, RuntimeProfile
+    from relf_agent import RuntimeBuilder, RuntimeProfile
 
     api()
     profile = RuntimeProfile(
@@ -170,7 +170,7 @@ def test_relevant_data_factory_uses_owned_storage_and_cleanup(tmp_path, assembly
 
 @pytest.mark.parametrize("asynchronous", [False, True])
 def test_failed_selector_construction_closes_owned_artifacts(tmp_path, asynchronous):
-    from ralf_agent import ComponentRegistry, RuntimeBuilder, RuntimeProfile
+    from relf_agent import ComponentRegistry, RuntimeBuilder, RuntimeProfile
 
     resources = []
 

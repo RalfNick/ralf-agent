@@ -46,7 +46,7 @@ CLI 的 `--factory`／底层 ExecutionEngine 可按公共端口替换；高层 L
 
 同步返回 `None` 表示检查已经执行并完成授权。上下文管理器、awaitable、generator、True／False、字典等不能表示授权；框架不进入它们，也不调用它们的任意生命周期方法。对已识别的 coroutine／generator 仅做关闭清理，然后报配置错误。人工审批的 `approved` 则必须是布尔值：`False` 拒绝，`True` 批准；字符串、数字或 `None` 在 Local 命令接受前拒绝，不做真值转换。
 
-Local、Temporal、Binding 和运行装配共用 `ralf_agent.ports.validate_component_identity` 的组件身份与方法形状检查：identity 必须是非空有限 JSON 对象，采纳的是独立副本；检查不调用组件方法。异步端口接受 `async def` 方法或具有 `async def __call__` 的 callable 对象，同步返回 coroutine 的普通函数不满足异步端口。同步纯策略拒绝 coroutine／generator／async-generator 方法；身份或方法读取失败报告配置错误。组件被实际调用后，其返回值与恢复身份仍由各执行边界分别校验。
+Local、Temporal、Binding 和运行装配共用 `relf_agent.ports.validate_component_identity` 的组件身份与方法形状检查：identity 必须是非空有限 JSON 对象，采纳的是独立副本；检查不调用组件方法。异步端口接受 `async def` 方法或具有 `async def __call__` 的 callable 对象，同步返回 coroutine 的普通函数不满足异步端口。同步纯策略拒绝 coroutine／generator／async-generator 方法；身份或方法读取失败报告配置错误。组件被实际调用后，其返回值与恢复身份仍由各执行边界分别校验。
 
 dev123 将同一异步判断用于已有 ToolSource／MCPTransport、MemoryPipeline.extractor、ManagedDataContext Artifact、基础 ExecutionEngine 的 drive／wait_for_threads，以及 Facts 索引维护的生成／CAS 操作。替换组件仍需满足原身份、参数、已完成返回值、来源和关闭契约；支持 callable 不授予执行权限，也不表示可以替换所有 Facade 或 vendor 客户端。流式生成器、线程桥和具体数据库客户端保留各自声明的模式。
 
@@ -71,7 +71,7 @@ Harness／ToolExecutor 不需要首次使用者额外配置。自定义组件只
 对于已存在且线程安全的同步客户端，可显式桥接：
 
 ```python
-from ralf_agent import ThreadedMemoryAdapter
+from relf_agent import ThreadedMemoryAdapter
 
 # 使用者自己的后端，先通过范围/CAS/去重/TTL 契约测试。
 # redis_sessions = MyRedisSessions(...)
@@ -129,7 +129,7 @@ acquire 抛异常时，适配器负责清理本次获取产生的临时资源，
 
 追踪只覆盖框架托管的同步调用。自定义 async 适配器内部直接使用 asyncio.to_thread、创建自己的后台线程或交出外部调用后，必须自行保证取消、真实完成与资源归属契约；不能把仅取消等待当作实际工作已结束。
 
-自建 Agent 的跨进程控制使用 `--factory module:callable`。同步工厂接收 db_path，返回符合 ExecutionEngine 的对象；工厂应放在可导入包中，或在仓库目录使用 `PYTHONPATH=.`。内置适配器可直接用 `--config runtime.toml` 和 `run --spec agent.toml`，两种入口互斥。完整可运行示例见 [custom_runtime.py](../examples/custom_runtime.py)；独立配置模板用 `ralf init my-agent --template config`。
+自建 Agent 的跨进程控制使用 `--factory module:callable`。同步工厂接收 db_path，返回符合 ExecutionEngine 的对象；工厂应放在可导入包中，或在仓库目录使用 `PYTHONPATH=.`。内置适配器可直接用 `--config runtime.toml` 和 `run --spec agent.toml`，两种入口互斥。完整可运行示例见 [custom_runtime.py](../examples/custom_runtime.py)；独立配置模板用 `relf init my-agent --template config`。
 
 SDK 入口程序应导入同一个配置模块，工具实现保留稳定的包／模块名。示例入口已经这样装配；在 `__main__` 重新定义工具后，再从其他模块加载同名函数，属于不同的发布身份。
 

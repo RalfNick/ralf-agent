@@ -4,9 +4,9 @@ import types
 
 import pytest
 
-from ralf_agent import component_fingerprint as module
-from ralf_agent.errors import ValidationError
-from ralf_agent.types import digest
+from relf_agent import component_fingerprint as module
+from relf_agent.errors import ValidationError
+from relf_agent.types import digest
 
 
 def original(method):

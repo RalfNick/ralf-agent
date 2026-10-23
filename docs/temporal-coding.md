@@ -76,7 +76,7 @@ DSN 通过指定环境变量读取，不写入 Profile、release 或日志。
 import asyncio
 
 from temporalio.client import Client
-from ralf_agent import (
+from relf_agent import (
     AgentBindingDescriptor, AgentDefinition, AgentSpec, BindingSelection,
     BoundDefinition, TemporalProfile, TemporalRuntimeBuilder, WorkflowSpec,
 )
@@ -261,7 +261,7 @@ SDK Client borrowed。关闭先隔离新业务，在原 Worker／Client／PG 尚
 `CloseIncomplete` 或停止失败，保留同一个 Assembly，在修复原依赖后于同一事件循环
 再次 `aclose`。不能先关闭借用的 Client，或换新 Runner／新 Run 代替原清理。
 
-构造失败的 `ralf_agent.runtime_builder.RuntimeBuildError.cleanup` 同样保留清理 handle；
+构造失败的 `relf_agent.runtime_builder.RuntimeBuildError.cleanup` 同样保留清理 handle；
 修复原资源后调用 `await failure.cleanup.aclose(wait_timeout=30)`。Profile Host 的 owned
 清理遵循同一停止次序；自定义 SDK 工厂借用的资源仍由其实际调用方负责关闭。
 

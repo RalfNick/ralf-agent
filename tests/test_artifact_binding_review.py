@@ -9,9 +9,9 @@ from types import SimpleNamespace
 
 import pytest
 
-import ralf_agent as r
-from ralf_agent.binding_runtime import AgentBindingResolver
-from ralf_agent.errors import DefinitionMismatch, RalfError
+import relf_agent as r
+from relf_agent.binding_runtime import AgentBindingResolver
+from relf_agent.errors import DefinitionMismatch, RalfError
 
 from .test_artifact_binding_execution import definition, engine, host
 from .test_artifact_binding_lifetime import NativeAsyncArtifacts
@@ -141,7 +141,7 @@ def test_custom_equal_prediction_cannot_ignore_explicit_local_selection(tmp_path
 
 
 def test_custom_prediction_cannot_rewrite_its_selected_target_argument(tmp_path):
-    from ralf_agent.artifact_binding_context import predict, realize
+    from relf_agent.artifact_binding_context import predict, realize
 
     class Redirect(r.ManagedDataContext):
         def artifact_binding_identity(self, metadata):

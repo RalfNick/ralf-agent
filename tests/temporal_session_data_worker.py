@@ -6,11 +6,11 @@ import os
 import sqlite3
 from pathlib import Path
 
-import ralf_agent as r
-from ralf_agent.temporal import build_temporal_worker
-from ralf_agent.temporal_activities import TemporalRuntime
-from ralf_agent.temporal_session_data import private_address
-from ralf_agent.types import digest
+import relf_agent as r
+from relf_agent.temporal import build_temporal_worker
+from relf_agent.temporal_activities import TemporalRuntime
+from relf_agent.temporal_session_data import private_address
+from relf_agent.types import digest
 
 
 class AuditedSession(r.SQLiteMemory):

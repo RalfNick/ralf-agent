@@ -6,9 +6,9 @@ import pytest
 
 pytest.importorskip("temporalio")
 
-from ralf_agent import temporal_deployment_coding_bridge as bridge
-from ralf_agent.errors import DefinitionMismatch
-from ralf_agent.temporal_deployment_coding_validation import CodingValidation
+from relf_agent import temporal_deployment_coding_bridge as bridge
+from relf_agent.errors import DefinitionMismatch
+from relf_agent.temporal_deployment_coding_validation import CodingValidation
 from tests.test_temporal_coding_aggregate_readset import environment
 
 

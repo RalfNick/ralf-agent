@@ -4,21 +4,21 @@ import time
 
 import pytest
 
-from ralf_agent.errors import ValidationError
-from ralf_agent.storage import SQLiteStore
-from ralf_agent.types import Scope, canonical
+from relf_agent.errors import ValidationError
+from relf_agent.storage import SQLiteStore
+from relf_agent.types import Scope, canonical
 
 
 @pytest.mark.parametrize("configuration", [{"limit": 10**100}, {"max_chars": 1}])
 def test_query_rejects_unrepresentable_limits_before_backend_access(configuration):
-    from ralf_agent.retrieval import RetrievalQuery
+    from relf_agent.retrieval import RetrievalQuery
 
     with pytest.raises(ValidationError):
         RetrievalQuery("cache", **configuration)
 
 
 def api():
-    return importlib.import_module("ralf_agent.retrieval")
+    return importlib.import_module("relf_agent.retrieval")
 
 
 @pytest.fixture(params=["memory", "sqlite"])
@@ -240,7 +240,7 @@ def test_async_authority_port_is_supported_without_threading(knowledge):
 
 def test_actual_authority_change_cannot_hide_behind_replacement(knowledge):
     module = api()
-    from ralf_agent.errors import DefinitionMismatch
+    from relf_agent.errors import DefinitionMismatch
 
     knowledge.put(Scope(), "n", module.Document("a", "checkout"), expected_version=0)
 
@@ -265,7 +265,7 @@ def test_actual_authority_change_cannot_hide_behind_replacement(knowledge):
 
 def test_actual_retriever_change_cannot_hide_behind_facade_replacement(knowledge):
     module = api()
-    from ralf_agent.errors import DefinitionMismatch
+    from relf_agent.errors import DefinitionMismatch
 
     knowledge.put(Scope(), "n", module.Document("a", "checkout"), expected_version=0)
 

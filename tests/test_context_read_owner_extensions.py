@@ -2,10 +2,10 @@
 
 import pytest
 
-from ralf_agent import ContextExecutionOwner
-from ralf_agent.component_fingerprint import executable_digest
-from ralf_agent.errors import ValidationError
-from ralf_agent.temporal_context_read_protocol import ContextExecutionRegistration
+from relf_agent import ContextExecutionOwner
+from relf_agent.component_fingerprint import executable_digest
+from relf_agent.errors import ValidationError
+from relf_agent.temporal_context_read_protocol import ContextExecutionRegistration
 
 
 class ForwardOwner(ContextExecutionOwner):

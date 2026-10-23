@@ -9,7 +9,7 @@ group, original system instruction and task are protected. Session/Facts/RAG ref
 are selected normally and are **not** sent to the summary model in this increment.
 
 ```python
-from ralf_agent import ManagedContextPipeline
+from relf_agent import ManagedContextPipeline
 
 # Pass as LocalEngine(context_assembler=context), or register the existing
 # BindingCatalog "context" role and select it per Agent.

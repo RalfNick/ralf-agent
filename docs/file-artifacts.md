@@ -5,7 +5,7 @@ dev55 提供可替换 FileArtifactStore，复用已有 ArtifactStore、ArtifactR
 默认仍是 SQLiteArtifactStore；不把网络文件系统或跨主机共享盘的存在当成分布式一致性保证。
 
 ```python
-from ralf_agent import FileArtifactStore, Scope
+from relf_agent import FileArtifactStore, Scope
 
 with FileArtifactStore(".ralf/artifacts", capacity=1024) as artifacts:
     reference = artifacts.put(Scope(), "results", {"evidence": "中文🙂"})

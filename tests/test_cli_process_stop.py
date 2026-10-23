@@ -10,7 +10,7 @@ from types import SimpleNamespace
 
 import pytest
 
-from ralf_agent import cli_process
+from relf_agent import cli_process
 
 
 def stopped_process():

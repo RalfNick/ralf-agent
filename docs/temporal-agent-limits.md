@@ -4,8 +4,8 @@
 策略是同步纯函数；可按 AgentSpec 给出不同限制，不限于固定数值适配器。
 
 ```python
-from ralf_agent import AgentBindingDescriptor, AgentDefinition, BindingSelection, FixedAgentLimits
-from ralf_agent.temporal_activities import TemporalRuntime
+from relf_agent import AgentBindingDescriptor, AgentDefinition, BindingSelection, FixedAgentLimits
+from relf_agent.temporal_activities import TemporalRuntime
 
 catalog.register("limits", "review", "1", FixedAgentLimits(max_decisions=2, max_tool_actions=1))
 execution = TemporalRuntime(

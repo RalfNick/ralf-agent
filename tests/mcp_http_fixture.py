@@ -8,7 +8,7 @@ import uuid
 from contextlib import contextmanager
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
-from ralf_agent import ToolDescriptor
+from relf_agent import ToolDescriptor
 
 
 def descriptor(write=False):

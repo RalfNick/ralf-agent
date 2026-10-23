@@ -13,7 +13,7 @@ from types import SimpleNamespace
 
 import pytest
 
-from ralf_agent.errors import CloseIncomplete
+from relf_agent.errors import CloseIncomplete
 from tests import temporal_deployment_coding_worker_fixture as worker
 from tests import test_temporal_deployment_coding_service as service
 
@@ -584,7 +584,7 @@ def test_sdk_query_timing_records_only_allowlisted_response_shape(
 def test_describe_timings_preserve_ports_results_options_and_privacy(tmp_path, monkeypatch):
     from temporalio.worker import Plugin
 
-    from ralf_agent.task_controls import _binding
+    from relf_agent.task_controls import _binding
 
     monkeypatch.delenv("RALF_TEST_DEPLOYMENT_CODING_TIMING", raising=False)
     secret = "postgresql://private:user-password@127.0.0.1/private sk-fixture-secret"
@@ -829,7 +829,7 @@ def test_sdk_client_setup_failure_closes_or_retains_original_assembly(
 
 @pytest.mark.parametrize("ack_fails", [False, True])
 def test_owned_worker_handoff_waits_for_original_end_ack_before_exit(capsys, ack_fails):
-    from ralf_agent.temporal_context_execution import ContextExecutionOwner
+    from relf_agent.temporal_context_execution import ContextExecutionOwner
 
     async def scenario():
         events = []

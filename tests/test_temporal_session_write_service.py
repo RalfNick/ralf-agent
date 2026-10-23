@@ -9,9 +9,9 @@ from pathlib import Path
 
 import pytest
 
-from ralf_agent import Runtime, SessionRef
-from ralf_agent.temporal import TemporalEngine, replay_temporal_history
-from ralf_agent.temporal_session_state import workflow_id
+from relf_agent import Runtime, SessionRef
+from relf_agent.temporal import TemporalEngine, replay_temporal_history
+from relf_agent.temporal_session_state import workflow_id
 
 from .temporal_session_write_worker import runtime
 
@@ -27,7 +27,7 @@ def test_persistent_turn_save_survives_worker_kill(tmp_path, kind, managed, wind
     async def run():
         from temporalio.client import Client
 
-        import ralf_agent
+        import relf_agent
 
         client = await Client.connect(os.environ["RALF_TEST_TEMPORAL_ADDRESS"])
         queue = "session-save-" + uuid.uuid4().hex
@@ -49,7 +49,7 @@ def test_persistent_turn_save_survives_worker_kill(tmp_path, kind, managed, wind
                 "PATH": os.environ.get("PATH", "/usr/bin:/bin"),
                 "PYTHONPATH": os.pathsep.join(
                     [
-                        str(Path(ralf_agent.__file__).parents[1]),
+                        str(Path(relf_agent.__file__).parents[1]),
                         str(Path(__file__).parents[1]),
                     ]
                 ),
@@ -163,7 +163,7 @@ def test_cancelled_turn_retains_busy_until_actual_sync_handler_ends():
 
         from temporalio.client import Client
 
-        from ralf_agent import (
+        from relf_agent import (
             AgentSpec,
             InMemoryMemory,
             ModelResponse,
@@ -171,9 +171,9 @@ def test_cancelled_turn_retains_busy_until_actual_sync_handler_ends():
             ThreadedMemoryAdapter,
             ToolRegistry,
         )
-        from ralf_agent.errors import CloseIncomplete, SessionBusy
-        from ralf_agent.temporal import build_temporal_worker
-        from ralf_agent.temporal_activities import TemporalRuntime
+        from relf_agent.errors import CloseIncomplete, SessionBusy
+        from relf_agent.temporal import build_temporal_worker
+        from relf_agent.temporal_activities import TemporalRuntime
 
         committed, finish = threading.Event(), threading.Event()
 

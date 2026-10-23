@@ -10,16 +10,16 @@ import pytest
 @pytest.mark.parametrize(
     "workflow_module",
     [
-        "ralf_agent.temporal_workflow",
-        "ralf_agent.temporal_parent_workflow",
-        "ralf_agent.temporal_session_workflow",
+        "relf_agent.temporal_workflow",
+        "relf_agent.temporal_parent_workflow",
+        "relf_agent.temporal_session_workflow",
     ],
 )
 def test_original_session_lifecycle_has_no_late_sandbox_import(workflow_module):
     from temporalio.worker.workflow_sandbox._importer import Importer
     from temporalio.worker.workflow_sandbox._restrictions import RestrictionContext
 
-    from ralf_agent.temporal import _workflow_runner
+    from relf_agent.temporal import _workflow_runner
     from tests.test_temporal_session_deployment_state import (
         advance,
         ended_observation,
@@ -55,7 +55,7 @@ def test_original_session_lifecycle_has_no_late_sandbox_import(workflow_module):
     importer = Importer(_workflow_runner().restrictions, context)
     with importer.applied():
         importlib.import_module(workflow_module)
-        state_api = importlib.import_module("ralf_agent.temporal_session_state")
+        state_api = importlib.import_module("relf_agent.temporal_session_state")
         context.is_runtime = True
         context.in_activation = True
         try:
@@ -92,7 +92,7 @@ def test_coding_session_activation_has_no_late_pure_validation_import(monkeypatc
     from temporalio.worker.workflow_sandbox._importer import Importer
     from temporalio.worker.workflow_sandbox._restrictions import RestrictionContext
 
-    from ralf_agent.temporal import _workflow_runner
+    from relf_agent.temporal import _workflow_runner
     from tests.test_temporal_deployment_session_registry import state as registry_state
     from tests.test_temporal_session_deployment_coding_registry import coding_intent_request
 
@@ -117,7 +117,7 @@ def test_coding_session_activation_has_no_late_pure_validation_import(monkeypatc
         task_queue=binding["task_queue"],
     )
     monkeypatch.setattr(workflow, "info", lambda: actual)
-    module_name = "ralf_agent.temporal_session_workflow"
+    module_name = "relf_agent.temporal_session_workflow"
     importlib.import_module(module_name)
     context = RestrictionContext()
     importer = Importer(_workflow_runner().restrictions, context)

@@ -6,9 +6,9 @@ from types import SimpleNamespace
 
 import pytest
 
-from ralf_agent.errors import DefinitionMismatch, ValidationError
-from ralf_agent.governance import TemporalExecutionPolicy
-from ralf_agent.types import digest
+from relf_agent.errors import DefinitionMismatch, ValidationError
+from relf_agent.governance import TemporalExecutionPolicy
+from relf_agent.types import digest
 from tests.test_temporal_deployment_protocol import POLICY, manifest
 
 SCOPE = {"workspace": "workspace", "principal": "principal"}
@@ -17,7 +17,7 @@ NAMESPACE = {"name": "execution-state", "id": "12345678-1234-5678-1234-567812345
 
 @pytest.fixture
 def api():
-    name = "ralf_agent.temporal_deployment_execution_state"
+    name = "relf_agent.temporal_deployment_execution_state"
     assert importlib.util.find_spec(name) is not None, "Original execution admission is missing"
     return importlib.import_module(name)
 
@@ -98,7 +98,7 @@ def test_default_metadata_is_harmless_but_unselected_presence_is_refused(api):
 
 def test_root_initialization_detaches_metadata_and_never_changes_request(api):
     assert getattr(api, "ACTIVITY", None) == "ralf.temporal.deployment-admission.v1"
-    transport = importlib.import_module("ralf_agent.temporal_deployment_execution")
+    transport = importlib.import_module("relf_agent.temporal_deployment_execution")
     assert api.ACTIVITY == transport.ACTIVITY
     current = state()
     value = metadata(current)

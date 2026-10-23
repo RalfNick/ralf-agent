@@ -15,7 +15,7 @@ name in the Agent's tool allowlist. Its request arguments are exactly
 decision. No Python handler or Activity waits for the user.
 
 ```python
-from ralf_agent import (
+from relf_agent import (
     AgentSpec,
     LocalEngine,
     Runtime,
@@ -72,7 +72,7 @@ For a Team, graph or nested child, `root.pending()` includes the original owner
 RunRef. Attach that owner before replying:
 
 ```python
-from ralf_agent import RunRef
+from relf_agent import RunRef
 
 question = next(item for item in await root.pending() if item["kind"] == "input")
 owner = await runtime.aattach(RunRef.from_dict(question["ref"]))
@@ -214,14 +214,14 @@ the Run.
 
 ## CLI, starter and A2A
 
-Create an installed offline example with `ralf init input-app --template user-input`.
+Create an installed offline example with `relf init input-app --template user-input`.
 Its README walks through independent processes that submit, reply and resume.
 It uses an actual intrinsic wait, with no model key or network service.
 
 ```sh
-ralf --db runs.sqlite --factory my_app:create_engine --format text inspect RUN_ID
-ralf --db runs.sqlite --factory my_app:create_engine send-input RUN_ID PENDING_ID --digest TARGET_DIGEST --value-json '"production"' --command-id answer-1
-ralf --db runs.sqlite --factory my_app:create_engine resume RUN_ID
+relf --db runs.sqlite --factory my_app:create_engine --format text inspect RUN_ID
+relf --db runs.sqlite --factory my_app:create_engine send-input RUN_ID PENDING_ID --digest TARGET_DIGEST --value-json '"production"' --command-id answer-1
+relf --db runs.sqlite --factory my_app:create_engine resume RUN_ID
 ```
 
 `inspect` displays the question/Schema and a shell-quoted reply hint. Replace its

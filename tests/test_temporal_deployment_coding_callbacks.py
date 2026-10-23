@@ -5,10 +5,10 @@ from types import SimpleNamespace
 
 import pytest
 
-from ralf_agent import temporal_coding_runtime as native
-from ralf_agent import temporal_deployment_coding_bridge as bridge
-from ralf_agent.errors import DefinitionMismatch
-from ralf_agent.temporal_coding_state import CODING_GRANT, CODING_STOP
+from relf_agent import temporal_coding_runtime as native
+from relf_agent import temporal_deployment_coding_bridge as bridge
+from relf_agent.errors import DefinitionMismatch
+from relf_agent.temporal_coding_state import CODING_GRANT, CODING_STOP
 from tests.test_temporal_coding_authority import setup
 
 
@@ -27,7 +27,7 @@ class Validator:
 
 
 def test_closed_deployment_grant_cancels_original_run_but_still_allows_stop(monkeypatch):
-    from ralf_agent import temporal_coding_recovery_transport, temporal_deployment_coding_validation
+    from relf_agent import temporal_coding_recovery_transport, temporal_deployment_coding_validation
 
     monkeypatch.setattr(temporal_deployment_coding_validation, "CodingValidation", Validator)
     _, request = setup()
@@ -75,7 +75,7 @@ def test_closed_deployment_grant_cancels_original_run_but_still_allows_stop(monk
 
 
 def test_each_original_invocation_has_separate_validation_and_pinned_methods(monkeypatch):
-    from ralf_agent import temporal_deployment_coding_validation
+    from relf_agent import temporal_deployment_coding_validation
 
     created = []
 
@@ -120,7 +120,7 @@ def test_each_original_invocation_has_separate_validation_and_pinned_methods(mon
 def test_permission_validator_is_bound_to_this_original_grant(monkeypatch, foreign):
     import copy
 
-    from ralf_agent import temporal_deployment_coding_validation
+    from relf_agent import temporal_deployment_coding_validation
 
     calls = []
 
@@ -152,7 +152,7 @@ def test_permission_validator_is_bound_to_this_original_grant(monkeypatch, forei
 
 
 def test_closed_grant_cancel_is_not_retried_and_rechecks_namespace_after_await(monkeypatch):
-    from ralf_agent import temporal_deployment_coding_validation
+    from relf_agent import temporal_deployment_coding_validation
 
     monkeypatch.setattr(temporal_deployment_coding_validation, "CodingValidation", Validator)
     _, request = setup()

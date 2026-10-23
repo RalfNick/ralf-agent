@@ -5,11 +5,11 @@ import threading
 
 import pytest
 
-from ralf_agent import InMemoryMemory, ManagedContextPipeline, ThreadedMemoryAdapter
-from ralf_agent.errors import CloseIncomplete, DefinitionMismatch, ValidationError
-from ralf_agent.temporal_context_execution import ContextExecutionOwner
-from ralf_agent.temporal_session_state import TemporalSessionState
-from ralf_agent.temporal_state import TemporalRunState
+from relf_agent import InMemoryMemory, ManagedContextPipeline, ThreadedMemoryAdapter
+from relf_agent.errors import CloseIncomplete, DefinitionMismatch, ValidationError
+from relf_agent.temporal_context_execution import ContextExecutionOwner
+from relf_agent.temporal_session_state import TemporalSessionState
+from relf_agent.temporal_state import TemporalRunState
 
 from .test_temporal_context_read_state import admission
 from .test_temporal_persistent_session_data import accepted, runtime
@@ -411,7 +411,7 @@ def test_rag_reference_io_is_owned_on_the_original_async_loop():
 @pytest.mark.parametrize("phase", ["read", "verify"])
 def test_actual_artifact_read_phase_is_owned_until_async_get_finishes(phase):
     async def run():
-        from ralf_agent import InMemoryArtifactStore, Scope
+        from relf_agent import InMemoryArtifactStore, Scope
 
         from .test_managed_data_context import context, history
 

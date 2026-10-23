@@ -7,7 +7,7 @@ dev54 在现有 MessageCounter／Chunker 上增加纯文本 tokenizer 组合。
 ## 无额外依赖的组合
 
 ```python
-from ralf_agent import BudgetedContextAssembler, TokenChunker, TokenizerMessageCounter
+from relf_agent import BudgetedContextAssembler, TokenChunker, TokenizerMessageCounter
 
 counter = TokenizerMessageCounter(output_reserve=256)
 context = BudgetedContextAssembler(counter=counter, max_units=8192)
@@ -35,7 +35,7 @@ JSON/TOML 的 `budgeted` 和 `managed` context 工厂支持 `counter="utf8-bytes
 | identity / unit | 非空 JSON / 有界单位名 | 固定算法、词表、模型版本；不可运行中切换 |
 
 ```python
-from ralf_agent import TextTokenizer, TokenizerMessageCounter, TokenChunker
+from relf_agent import TextTokenizer, TokenizerMessageCounter, TokenChunker
 
 
 def assemble_token_components(tokenizer: TextTokenizer):
@@ -52,7 +52,7 @@ def assemble_token_components(tokenizer: TextTokenizer):
 可选安装 `pip install 'relf-agent[tokenizer]'` 使用 TiktokenTokenizer：
 
 ```python
-from ralf_agent import TiktokenTokenizer
+from relf_agent import TiktokenTokenizer
 
 # 离线示例只证明 BPE 接入，不对应线上模型。
 ranks = {bytes([i]): i for i in range(256)}

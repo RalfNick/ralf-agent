@@ -5,15 +5,15 @@ import copy
 
 import pytest
 
-from ralf_agent import temporal_coding_composition_control as composition
-from ralf_agent import temporal_coding_composition_state as composition_state
-from ralf_agent import temporal_deployment_coding_bridge as bridge
-from ralf_agent import temporal_deployment_control_transport as transport
-from ralf_agent import temporal_deployment_execution as execution
-from ralf_agent import temporal_deployment_execution_state as deployment
-from ralf_agent.errors import DefinitionMismatch
-from ralf_agent.temporal_bindings import request_release_digest
-from ralf_agent.types import digest
+from relf_agent import temporal_coding_composition_control as composition
+from relf_agent import temporal_coding_composition_state as composition_state
+from relf_agent import temporal_deployment_coding_bridge as bridge
+from relf_agent import temporal_deployment_control_transport as transport
+from relf_agent import temporal_deployment_execution as execution
+from relf_agent import temporal_deployment_execution_state as deployment
+from relf_agent.errors import DefinitionMismatch
+from relf_agent.temporal_bindings import request_release_digest
+from relf_agent.types import digest
 from tests.test_temporal_coding_observe_readset import environment as observe_environment
 from tests.test_temporal_deployment_control_transport_projection import setup
 

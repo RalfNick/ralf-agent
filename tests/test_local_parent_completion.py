@@ -6,7 +6,7 @@ import inspect
 
 import pytest
 
-from ralf_agent import (
+from relf_agent import (
     AgentSpec,
     DynamicWorkflowSpec,
     LocalEngine,
@@ -17,15 +17,15 @@ from ralf_agent import (
     ToolRegistry,
     ToolSpec,
 )
-from ralf_agent.errors import ValidationError
-from ralf_agent.types import digest
+from relf_agent.errors import ValidationError
+from relf_agent.types import digest
 
 
 def api():
     assert "parent_completion_policies" in inspect.signature(LocalEngine).parameters, (
         "LocalEngine must accept explicit parent completion policy registrations"
     )
-    module = importlib.import_module("ralf_agent.parent_completion")
+    module = importlib.import_module("relf_agent.parent_completion")
     return module
 
 
@@ -55,7 +55,7 @@ class Provider:
 
 def policy(*, model=False, missing="reject"):
     public = api()
-    rules = importlib.import_module("ralf_agent.parent_completion_rules")
+    rules = importlib.import_module("relf_agent.parent_completion_rules")
     gate = rules.ReceiptParentCompletionGate(
         [
             {
@@ -70,7 +70,7 @@ def policy(*, model=False, missing="reject"):
     stage = None
     if model:
         stage = importlib.import_module(
-            "ralf_agent.parent_verification_stage"
+            "relf_agent.parent_verification_stage"
         ).ModelParentVerificationStage(instructions="judge")
     return public.ParentCompletionPolicy(gate, model_stage=stage)
 
@@ -160,7 +160,7 @@ def test_false_but_schema_valid_success_is_rejected_without_model_stage(tmp_path
 
 
 def test_plan_model_replan_preserves_effects_and_supplies_feedback_to_actual_planner(tmp_path):
-    from ralf_agent import PlanProposal, PlanStep
+    from relf_agent import PlanProposal, PlanStep
 
     requests = []
 
@@ -205,7 +205,7 @@ def test_team_replan_policy_is_refused_before_business_calls(tmp_path):
 
 @pytest.mark.parametrize("container", ["team", "sequence", "graph"])
 def test_nested_owned_container_exposes_original_final_consumption(tmp_path, container):
-    from ralf_agent import GraphNode, GraphWorkflowSpec, WorkflowSpec
+    from relf_agent import GraphNode, GraphWorkflowSpec, WorkflowSpec
 
     public = api()
     captured = []
@@ -336,7 +336,7 @@ def test_model_verifier_cancel_waits_for_real_call_and_retains_late_evidence(tmp
 
 @pytest.mark.parametrize("status", ["needs_input", "refused"])
 def test_planning_conclusion_is_gated_with_no_stale_business_source(tmp_path, status):
-    from ralf_agent.dag_planning import PlanningConclusion
+    from relf_agent.dag_planning import PlanningConclusion
 
     public = api()
     captured = []
@@ -375,7 +375,7 @@ def test_planning_conclusion_is_gated_with_no_stale_business_source(tmp_path, st
     "mutation", ["unknown_field", "bad_status", "adopted_foreign_id", "false_child_link"]
 )
 def test_original_journal_rejects_malformed_saved_authority(tmp_path, mutation):
-    from ralf_agent.errors import DefinitionMismatch
+    from relf_agent.errors import DefinitionMismatch
 
     with LocalEngine(
         SQLiteStore(tmp_path / "journal.sqlite"),
@@ -415,11 +415,11 @@ def test_policy_registry_requires_named_mapping_before_any_dispatch(tmp_path):
 
 @pytest.mark.parametrize("context_kind", ["custom", "budget-reader", "managed-reader"])
 def test_verifier_inherited_context_requires_proven_auxiliary_isolation(tmp_path, context_kind):
-    from ralf_agent import InMemoryArtifactStore
-    from ralf_agent.context import ContextAssembler
-    from ralf_agent.context_budget import ContextMeasure
-    from ralf_agent.context_pipeline import BudgetedContextAssembler
-    from ralf_agent.data_context import ManagedDataContext
+    from relf_agent import InMemoryArtifactStore
+    from relf_agent.context import ContextAssembler
+    from relf_agent.context_budget import ContextMeasure
+    from relf_agent.context_pipeline import BudgetedContextAssembler
+    from relf_agent.data_context import ManagedDataContext
 
     calls = []
 
@@ -461,11 +461,11 @@ def test_native_history_consumption_uses_current_turn_not_same_old_call_id(
 ):
     import copy
 
-    from ralf_agent import CompleteModelHistory
-    from ralf_agent.harness import ModelRequest, NativeHarness
-    from ralf_agent.model_continuation import ContinuedModelResponse, ModelContinuation
-    from ralf_agent.parent_completion_rules import ReceiptParentCompletionGate
-    from ralf_agent.types import canonical
+    from relf_agent import CompleteModelHistory
+    from relf_agent.harness import ModelRequest, NativeHarness
+    from relf_agent.model_continuation import ContinuedModelResponse, ModelContinuation
+    from relf_agent.parent_completion_rules import ReceiptParentCompletionGate
+    from relf_agent.types import canonical
 
     class NativeProvider:
         identity = {"kind": "current-turn-receipt-fixture", "version": "1"}
@@ -548,7 +548,7 @@ def test_native_history_consumption_uses_current_turn_not_same_old_call_id(
 
 @pytest.mark.parametrize("kind", ["flat", "dag"])
 def test_previous_revision_good_receipt_cannot_prove_current_candidate(tmp_path, kind):
-    from ralf_agent import Verification
+    from relf_agent import Verification
 
     class OldVerifier:
         identity = {"kind": "revision-candidate", "version": "1"}
@@ -587,7 +587,7 @@ def test_previous_revision_good_receipt_cannot_prove_current_candidate(tmp_path,
 
 
 def test_nested_plan_internal_revision_keeps_root_source_revision(tmp_path):
-    from ralf_agent import Verification
+    from relf_agent import Verification
 
     class OldVerifier:
         identity = {"kind": "nested-revision", "version": "1"}
@@ -679,15 +679,15 @@ def test_dynamic_verification_consumes_original_step_allowance(tmp_path):
 
 
 def test_bound_parent_stage_uses_independent_provider_and_pure_context(tmp_path):
-    from ralf_agent import (
+    from relf_agent import (
         AgentBindingDescriptor,
         BindingCatalog,
         BindingSelection,
         BoundDefinition,
         Scope,
     )
-    from ralf_agent.context import ContextAssembler
-    from ralf_agent.parent_verification_stage import ModelParentVerificationStage
+    from relf_agent.context import ContextAssembler
+    from relf_agent.parent_verification_stage import ModelParentVerificationStage
 
     worker, judge, effects = Provider(), Provider(), []
     catalog = BindingCatalog(scope=Scope())
@@ -727,7 +727,7 @@ def test_bound_parent_stage_uses_independent_provider_and_pure_context(tmp_path)
 
 
 def test_changed_business_source_is_rejected_before_verifier_io(tmp_path):
-    from ralf_agent.parent_verification_stage import ModelParentVerificationStage
+    from relf_agent.parent_verification_stage import ModelParentVerificationStage
 
     class MutatingGate:
         identity = {"kind": "source-corruption-fixture", "version": "1"}
@@ -759,9 +759,9 @@ def test_changed_business_source_is_rejected_before_verifier_io(tmp_path):
 def test_graph_direct_tool_receipt_requires_explicit_no_consumption_policy(
     tmp_path, require_consumed
 ):
-    from ralf_agent import GraphNode, GraphWorkflowSpec, Literal, ValueRef
-    from ralf_agent.parent_completion_rules import ReceiptParentCompletionGate
-    from ralf_agent.parent_verification_stage import ModelParentVerificationStage
+    from relf_agent import GraphNode, GraphWorkflowSpec, Literal, ValueRef
+    from relf_agent.parent_completion_rules import ReceiptParentCompletionGate
+    from relf_agent.parent_verification_stage import ModelParentVerificationStage
 
     rule = {
         "id": "direct-measurement",
@@ -830,7 +830,7 @@ class CustomVerificationStage:
 
 
 def custom_verification_stage(*, context=None, provider="default", history=False):
-    from ralf_agent import AgentBindingDescriptor, AgentDefinition, BindingSelection
+    from relf_agent import AgentBindingDescriptor, AgentDefinition, BindingSelection
 
     disabled = {
         name: BindingSelection.disabled()
@@ -870,10 +870,10 @@ def custom_verification_stage(*, context=None, provider="default", history=False
 def test_custom_stage_actual_context_is_proven_independently_of_artifact_binding(
     tmp_path, selected, context_kind
 ):
-    from ralf_agent import BindingCatalog, BindingSelection, Scope
-    from ralf_agent.context import ContextAssembler
-    from ralf_agent.context_budget import ContextMeasure
-    from ralf_agent.context_pipeline import BudgetedContextAssembler
+    from relf_agent import BindingCatalog, BindingSelection, Scope
+    from relf_agent.context import ContextAssembler
+    from relf_agent.context_budget import ContextMeasure
+    from relf_agent.context_pipeline import BudgetedContextAssembler
 
     class OpaqueContext(ContextAssembler):
         identity = {"kind": "opaque-external-stage-context", "version": "1"}
@@ -919,8 +919,8 @@ def test_custom_stage_actual_context_is_proven_independently_of_artifact_binding
 
 @pytest.mark.parametrize("kind", ["flat", "dag"])
 def test_mixed_completion_and_original_verifier_replans_consume_feedback_once(tmp_path, kind):
-    from ralf_agent import Literal, PlanProposal, PlanStep, Verification
-    from ralf_agent.dag_planning import DAGNode, DAGProposal
+    from relf_agent import Literal, PlanProposal, PlanStep, Verification
+    from relf_agent.dag_planning import DAGNode, DAGProposal
 
     class Planner:
         identity = {"kind": "mixed-replans-planner", "version": "1"}
@@ -992,10 +992,10 @@ def test_mixed_completion_and_original_verifier_replans_consume_feedback_once(tm
 def test_custom_stage_keeps_pure_context_provider_and_optional_session_history(
     tmp_path, native_history, context_kind
 ):
-    from ralf_agent import BindingCatalog, BindingSelection, CompleteModelHistory, Scope
-    from ralf_agent.context import ContextAssembler
-    from ralf_agent.context_pipeline import BudgetedContextAssembler
-    from ralf_agent.model_continuation import ContinuedModelResponse, ModelContinuation
+    from relf_agent import BindingCatalog, BindingSelection, CompleteModelHistory, Scope
+    from relf_agent.context import ContextAssembler
+    from relf_agent.context_pipeline import BudgetedContextAssembler
+    from relf_agent.model_continuation import ContinuedModelResponse, ModelContinuation
 
     class NativeProvider(Provider):
         continuation_identity = {"protocol": "custom-verifier-fixture-v1", "owner_digest": "a" * 64}
@@ -1058,7 +1058,7 @@ def test_custom_stage_keeps_pure_context_provider_and_optional_session_history(
 
 
 def test_custom_agent_spec_stage_checks_actual_context_before_auxiliary_admission(tmp_path):
-    from ralf_agent.context import ContextAssembler
+    from relf_agent.context import ContextAssembler
 
     class OpaqueContext(ContextAssembler):
         identity = {"kind": "raw-verifier-opaque-context", "version": "1"}

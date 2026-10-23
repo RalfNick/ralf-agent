@@ -5,10 +5,10 @@ import json
 
 import pytest
 
-import ralf_agent as r
-from ralf_agent.errors import AuthorizationDenied, RalfError, ValidationError
-from ralf_agent.skills import validate_skill_get, validate_skill_list
-from ralf_agent.types import InvocationContext
+import relf_agent as r
+from relf_agent.errors import AuthorizationDenied, RalfError, ValidationError
+from relf_agent.skills import validate_skill_get, validate_skill_list
+from relf_agent.types import InvocationContext
 
 
 def catalog():
@@ -205,7 +205,7 @@ def test_explicit_scope_declaration_builds_or_denies_original_scope(tmp_path, ki
 
 
 def test_file_loading_stops_at_aggregate_bound_and_closes(monkeypatch):
-    import ralf_agent.filesystem_skills as module
+    import relf_agent.filesystem_skills as module
 
     reads, closed = [], []
     body = "x" * 1048576

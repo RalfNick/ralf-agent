@@ -6,10 +6,10 @@ from dataclasses import asdict
 
 import pytest
 
-from ralf_agent import AgentSpec, BindingSelection, Scope
-from ralf_agent.binding_types import AgentBindingDescriptor
-from ralf_agent.temporal_bindings import effective_manifest, validate_bindings, validate_descriptor
-from ralf_agent.types import canonical, submission_request
+from relf_agent import AgentSpec, BindingSelection, Scope
+from relf_agent.binding_types import AgentBindingDescriptor
+from relf_agent.temporal_bindings import effective_manifest, validate_bindings, validate_descriptor
+from relf_agent.types import canonical, submission_request
 from tests.test_temporal_session_deployment_coding_configuration import coding_session_manifest
 
 
@@ -68,8 +68,8 @@ def scoped_context_inputs():
 def test_foreign_scope_is_rejected_before_even_a_replaced_public_projection(
     monkeypatch, replace_public_projection
 ):
-    from ralf_agent import temporal_bindings as bindings
-    from ralf_agent.errors import AuthorizationDenied
+    from relf_agent import temporal_bindings as bindings
+    from relf_agent.errors import AuthorizationDenied
 
     request, manifest, _ = scoped_context_inputs()
     called = []
@@ -86,7 +86,7 @@ def test_foreign_scope_is_rejected_before_even_a_replaced_public_projection(
 
 @pytest.mark.parametrize("composition", [False, True])
 def test_legacy_coding_three_keeps_both_validation_passes(composition):
-    from ralf_agent.temporal_deployment_protocol import CODING_SOURCE_FILES, validate_protocol
+    from relf_agent.temporal_deployment_protocol import CODING_SOURCE_FILES, validate_protocol
 
     request, manifest, scope = binding_inputs(composition=composition)
     manifest.pop("session_deployment_protocol")
@@ -138,7 +138,7 @@ def test_custom_dict_inputs_keep_the_original_observable_validation_path(where):
 
 @pytest.mark.parametrize("fault", ["native_version", "source_inventory"])
 def test_public_projection_still_rejects_invalid_full_coding_declarations(fault):
-    from ralf_agent.errors import DefinitionMismatch
+    from relf_agent.errors import DefinitionMismatch
 
     request, manifest, scope = binding_inputs()
     if fault == "native_version":
@@ -167,7 +167,7 @@ def test_public_scoped_projection_matches_original_projection_and_stays_detached
 
 @pytest.mark.parametrize("fault", ["cycle", "alias", "nonfinite", "bound"])
 def test_bounded_json_eligibility_falls_back_without_accepting_unusual_shapes(fault):
-    from ralf_agent.temporal_bindings import _plain_binding_inputs
+    from relf_agent.temporal_bindings import _plain_binding_inputs
 
     value = {}
     if fault == "cycle":
@@ -200,7 +200,7 @@ def test_custom_scope_keeps_the_original_observable_validation_path():
 
 
 def test_absent_bindings_do_not_scan_the_coding_manifest_for_fast_path_eligibility():
-    from ralf_agent.temporal_bindings import _plain_binding_inputs
+    from relf_agent.temporal_bindings import _plain_binding_inputs
 
     request, manifest, scope = binding_inputs()
     request["agent_bindings"].clear()

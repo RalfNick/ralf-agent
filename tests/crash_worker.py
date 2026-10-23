@@ -5,7 +5,7 @@ import json
 import os
 import sys
 
-from ralf_agent.demo import DemoService, create_demo_engine, demo_spec
+from relf_agent.demo import DemoService, create_demo_engine, demo_spec
 
 original_apply = DemoService.apply
 

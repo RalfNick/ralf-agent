@@ -5,15 +5,15 @@ import threading
 
 import pytest
 
-from ralf_agent import Document, InMemoryKnowledgeStore, Scope, SQLiteKnowledgeStore
-from ralf_agent.errors import IdempotencyConflict, MemoryBackendError, ValidationError
-from ralf_agent.retrieval import KnowledgeVersionConflict
+from relf_agent import Document, InMemoryKnowledgeStore, Scope, SQLiteKnowledgeStore
+from relf_agent.errors import IdempotencyConflict, MemoryBackendError, ValidationError
+from relf_agent.retrieval import KnowledgeVersionConflict
 
 
 def api():
-    assert importlib.util.find_spec("ralf_agent.ingestion"), "Missing atomic ingestion coordinator"
-    return importlib.import_module("ralf_agent.ingestion"), importlib.import_module(
-        "ralf_agent.ingestion_types"
+    assert importlib.util.find_spec("relf_agent.ingestion"), "Missing atomic ingestion coordinator"
+    return importlib.import_module("relf_agent.ingestion"), importlib.import_module(
+        "relf_agent.ingestion_types"
     )
 
 
@@ -48,7 +48,7 @@ def test_atomic_ingestion_replays_original_after_source_update_delete_and_pipeli
     assert original.document_version == 1 and original.status == "knowledge_committed"
     store.put(Scope(), "docs", Document("a", "new content"), expected_version=1)
     store.delete(Scope(), "docs", "a", expected_version=2)
-    from ralf_agent.chunking import ParagraphChunker
+    from relf_agent.chunking import ParagraphChunker
 
     assert ingest(store, source, chunker=ParagraphChunker(size=6)) == original
     assert store.get(Scope(), "docs", "a") is None
@@ -92,7 +92,7 @@ def test_invalid_custom_completion_does_not_consume_version(store, kind):
     core, dto = api()
     from contextlib import contextmanager
 
-    from ralf_agent.document_parsing import TextDocumentParser
+    from relf_agent.document_parsing import TextDocumentParser
 
     class Parser(TextDocumentParser):
         identity = {"kind": "custom-parser", "version": "1"}
@@ -245,7 +245,7 @@ def test_backend_drift_after_await_is_not_confirmed_as_success():
     core, dto = api()
 
     async def run():
-        from ralf_agent.errors import DefinitionMismatch
+        from relf_agent.errors import DefinitionMismatch
 
         class Store(InMemoryKnowledgeStore):
             async def ingest(self, *args, **kwargs):
@@ -278,8 +278,8 @@ def test_default_coordinator_uses_existing_store_chunk_configuration():
 
 def test_store_refuses_executable_prepared_subclass_before_transaction(store):
     _, dto = api()
-    from ralf_agent.chunking import CharacterChunker
-    from ralf_agent.document_parsing import TextDocumentParser
+    from relf_agent.chunking import CharacterChunker
+    from relf_agent.document_parsing import TextDocumentParser
 
     class Executable(dto.PreparedIngestion):
         def chunks(self, record):
@@ -296,8 +296,8 @@ def test_store_refuses_executable_prepared_subclass_before_transaction(store):
 
 
 def test_parser_method_disappearing_after_parse_is_typed_registration_error(store):
-    from ralf_agent.document_parsing import TextDocumentParser
-    from ralf_agent.errors import DefinitionMismatch
+    from relf_agent.document_parsing import TextDocumentParser
+    from relf_agent.errors import DefinitionMismatch
 
     class Drift(TextDocumentParser):
         def parse(self, source):

@@ -12,9 +12,9 @@ from pathlib import Path
 
 import pytest
 
-from ralf_agent import Runtime, Scope
-from ralf_agent.temporal import TemporalEngine, replay_temporal_history
-from ralf_agent.types import digest
+from relf_agent import Runtime, Scope
+from relf_agent.temporal import TemporalEngine, replay_temporal_history
+from relf_agent.types import digest
 from tests.temporal_model_history_worker import (
     FEEDBACK,
     FIRST_PARTS,
@@ -41,7 +41,7 @@ def test_complete_final_history_survives_worker_loss_without_model_or_assistant_
 async def recover(root, kind, managed, window):
     from temporalio.client import Client
 
-    import ralf_agent
+    import relf_agent
 
     address = os.environ["RALF_TEST_TEMPORAL_ADDRESS"]
     client = await Client.connect(address)
@@ -62,7 +62,7 @@ async def recover(root, kind, managed, window):
         environment = {
             "PATH": os.environ.get("PATH", "/usr/bin:/bin"),
             "PYTHONPATH": os.pathsep.join(
-                [str(Path(ralf_agent.__file__).parents[1]), str(Path(__file__).parents[1])]
+                [str(Path(relf_agent.__file__).parents[1]), str(Path(__file__).parents[1])]
             ),
             "RALF_TEST_TEMPORAL_ADDRESS": address,
             "RALF_TEST_TEMPORAL_QUEUE": queue,

@@ -6,8 +6,8 @@ import sys
 
 import pytest
 
-from ralf_agent.errors import ValidationError
-from ralf_agent.storage import SQLiteStore
+from relf_agent.errors import ValidationError
+from relf_agent.storage import SQLiteStore
 
 from .test_cli import subprocess_env
 
@@ -21,8 +21,8 @@ def coordinator_probe(path):
             """
 import json
 import sys
-from ralf_agent.errors import RalfError
-from ralf_agent.storage import SQLiteStore
+from relf_agent.errors import RalfError
+from relf_agent.storage import SQLiteStore
 
 try:
     with SQLiteStore(sys.argv[1]) as store:

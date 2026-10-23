@@ -2,7 +2,7 @@ import asyncio
 
 import pytest
 
-from ralf_agent import (
+from relf_agent import (
     AgentSpec,
     ArtifactReference,
     BudgetedContextAssembler,
@@ -13,8 +13,8 @@ from ralf_agent import (
     SQLiteStore,
     ToolRegistry,
 )
-from ralf_agent.errors import BudgetExceeded
-from ralf_agent.types import Scope, canonical
+from relf_agent.errors import BudgetExceeded
+from relf_agent.types import Scope, canonical
 
 
 def test_pure_request_validator_cannot_mutate_dispatched_snapshot(tmp_path):

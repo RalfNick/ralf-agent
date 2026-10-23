@@ -12,7 +12,7 @@ from pathlib import Path
 
 import pytest
 
-from ralf_agent.codex_rpc import (
+from relf_agent.codex_rpc import (
     CodexRPCClosed,
     CodexRPCCloseIncomplete,
     CodexRPCError,
@@ -533,7 +533,7 @@ def test_cancelled_start_during_real_pipe_setup_and_shutdown_retains_pid(tmp_pat
     harness.write_text(
         textwrap.dedent(f"""
         import asyncio, json, os, pathlib, signal, sys, threading, time
-        from ralf_agent.codex_rpc import CodexRPCTransport
+        from relf_agent.codex_rpc import CodexRPCTransport
         identity = pathlib.Path({str(identity)!r})
         heartbeat = pathlib.Path({str(heartbeat)!r})
         done = threading.Event()
@@ -623,7 +623,7 @@ def test_signal_permission_failure_is_incomplete_and_keeps_pid_for_retry(tmp_pat
         pid = rpc.pid
         try:
             with monkeypatch.context() as patch:
-                patch.setattr("ralf_agent.codex_rpc.os.killpg", denied)
+                patch.setattr("relf_agent.codex_rpc.os.killpg", denied)
                 with pytest.raises(CodexRPCCloseIncomplete):
                     await rpc.aclose()
             assert rpc.pid == pid

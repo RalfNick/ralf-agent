@@ -4,9 +4,9 @@ import asyncio
 
 import pytest
 
-import ralf_agent as r
-from ralf_agent.errors import DefinitionMismatch, RalfError
-from ralf_agent.types import InvocationContext
+import relf_agent as r
+from relf_agent.errors import DefinitionMismatch, RalfError
+from relf_agent.types import InvocationContext
 
 
 class Provider:
@@ -284,7 +284,7 @@ def test_custom_port_unfinished_or_mismatched_result_is_rejected_and_keeps_stop_
 def test_actual_custom_native_thread_survives_global_cancel_until_original_stop_and_drain():
     import threading
 
-    from ralf_agent.tools import current_thread_group, current_thread_tracker
+    from relf_agent.tools import current_thread_group, current_thread_tracker
 
     class ThreadProvider(Provider):
         def __init__(self):

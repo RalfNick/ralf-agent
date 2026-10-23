@@ -2,7 +2,7 @@ import asyncio
 
 import pytest
 
-from ralf_agent import (
+from relf_agent import (
     Document,
     InMemoryKnowledgeStore,
     LexicalRetriever,
@@ -12,7 +12,7 @@ from ralf_agent import (
     Scope,
     ToolCall,
 )
-from ralf_agent.errors import DefinitionMismatch, ProviderError, ValidationError
+from relf_agent.errors import DefinitionMismatch, ProviderError, ValidationError
 
 
 class QueryModel:
@@ -39,7 +39,7 @@ class QueryModel:
 
 
 def test_model_query_retrieves_original_synonym_bodies_without_tools_or_closing_provider():
-    from ralf_agent import ModelQueryTransform
+    from relf_agent import ModelQueryTransform
 
     async def run():
         store = InMemoryKnowledgeStore()
@@ -82,7 +82,7 @@ def test_model_query_retrieves_original_synonym_bodies_without_tools_or_closing_
     ],
 )
 def test_invalid_model_query_never_silently_falls_back(output):
-    from ralf_agent import ModelQueryTransform
+    from relf_agent import ModelQueryTransform
 
     async def run():
         provider = QueryModel(ModelResponse(output=output))
@@ -94,7 +94,7 @@ def test_invalid_model_query_never_silently_falls_back(output):
 
 
 def test_model_tool_proposal_is_rejected_without_execution():
-    from ralf_agent import ModelQueryTransform
+    from relf_agent import ModelQueryTransform
 
     async def run():
         response = ModelResponse(
@@ -107,7 +107,7 @@ def test_model_tool_proposal_is_rejected_without_execution():
 
 
 def test_json_model_queries_preserve_original_once_and_explicit_rewrite_only_policy():
-    from ralf_agent import ModelQueryTransform
+    from relf_agent import ModelQueryTransform
 
     async def run():
         provider = QueryModel(ModelResponse(output='{"queries":["car","automobile"]}'))
@@ -134,7 +134,7 @@ def test_json_model_queries_preserve_original_once_and_explicit_rewrite_only_pol
     ],
 )
 def test_invalid_model_query_options_reject_before_provider_call(options):
-    from ralf_agent import ModelQueryTransform
+    from relf_agent import ModelQueryTransform
 
     provider = QueryModel()
     with pytest.raises(ValidationError):
@@ -144,7 +144,7 @@ def test_invalid_model_query_options_reject_before_provider_call(options):
 
 @pytest.mark.parametrize("change", ["provider", "method", "identity", "messages", "tools"])
 def test_provider_or_argument_drift_during_model_await_is_rejected(change):
-    from ralf_agent import ModelQueryTransform
+    from relf_agent import ModelQueryTransform
 
     async def run():
         transform = None
@@ -172,7 +172,7 @@ def test_provider_or_argument_drift_during_model_await_is_rejected(change):
 
 
 def test_cancelled_model_query_finishes_awaited_provider_and_cannot_dispatch_retrieval():
-    from ralf_agent import ModelQueryTransform
+    from relf_agent import ModelQueryTransform
 
     async def run():
         started, finished = asyncio.Event(), asyncio.Event()
@@ -196,7 +196,7 @@ def test_cancelled_model_query_finishes_awaited_provider_and_cannot_dispatch_ret
 
 
 def test_model_query_requires_async_provider_and_preserves_typed_failure():
-    from ralf_agent import ModelQueryTransform
+    from relf_agent import ModelQueryTransform
 
     class Sync:
         identity = {"kind": "sync"}

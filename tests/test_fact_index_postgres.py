@@ -4,7 +4,7 @@ import asyncio
 
 import pytest
 
-from ralf_agent import (
+from relf_agent import (
     FactIndexCatalog,
     FactScanQuery,
     IndexedMemoryStore,
@@ -12,7 +12,7 @@ from ralf_agent import (
     Scope,
     SQLiteVectorIndex,
 )
-from ralf_agent.errors import BudgetExceeded, ValidationError
+from relf_agent.errors import BudgetExceeded, ValidationError
 from tests.test_fact_index import Embedding
 from tests.test_postgres_adapter import postgres_dsn as postgres_dsn
 from tests.test_postgres_adapter import stores
@@ -85,7 +85,7 @@ def test_postgres_scan_bounds_actual_key_and_payload_before_decode(postgres_dsn,
 
 
 def test_postgres_byte_continuation_preserves_all_records(postgres_dsn):
-    from ralf_agent.types import canonical
+    from relf_agent.types import canonical
 
     async def run():
         async with stores(postgres_dsn) as (source, _, scope):
@@ -111,7 +111,7 @@ def test_postgres_byte_continuation_preserves_all_records(postgres_dsn):
 def test_postgres_complete_corpus_index_survives_connection_and_vector_reopen(
     postgres_dsn, tmp_path
 ):
-    from ralf_agent.postgres import PostgresMemory
+    from relf_agent.postgres import PostgresMemory
 
     async def run():
         async with stores(postgres_dsn) as (source, _, scope):
@@ -169,12 +169,12 @@ def test_postgres_real_process_recovers_original_accepted_index(postgres_dsn, tm
     import sys
     from pathlib import Path
 
-    import ralf_agent
+    import relf_agent
 
     env = {
         "PATH": os.defpath,
         "PYTHONPATH": os.pathsep.join(
-            [str(Path(ralf_agent.__file__).parents[1]), str(Path(__file__).parents[1])]
+            [str(Path(relf_agent.__file__).parents[1]), str(Path(__file__).parents[1])]
         ),
         "RALF_TEST_POSTGRES_DSN": postgres_dsn,
     }
@@ -207,7 +207,7 @@ def test_postgres_configured_index_and_agent_recover_with_owned_clients(
 ):
     import uuid
 
-    from ralf_agent import AgentSpec, RuntimeBuilder, RuntimeProfile
+    from relf_agent import AgentSpec, RuntimeBuilder, RuntimeProfile
 
     monkeypatch.setenv("RALF_TEST_FACT_SOURCE_DSN", postgres_dsn)
     profile = RuntimeProfile(

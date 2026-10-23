@@ -5,12 +5,12 @@
 ## 1. 安装后直接运行
 
 ```sh
-ralf init my-mcp-agent --template mcp
+relf init my-mcp-agent --template mcp
 cd my-mcp-agent
 python -m agent_app --value 3 --command-id first-change
-ralf --db .ralf/runs.sqlite --format text inspect RUN_ID
+relf --db .ralf/runs.sqlite --format text inspect RUN_ID
 # 核对参数后，复制 inspect 输出的批准命令
-ralf --db .ralf/runs.sqlite --factory agent_app.runtime:create_engine resume RUN_ID
+relf --db .ralf/runs.sqlite --factory agent_app.runtime:create_engine resume RUN_ID
 ```
 
 将 RUN_ID 换成提交返回的 ID。模板包含一个真实的离线 MCP 子进程和独立 SQLite 业务回执库。它按框架注入的 effect_key 去重，写操作需要审批；重新提交相同命令返回原 Run。它验证工具链路，不验证模型任务质量或所有外部 MCP 服务。
@@ -19,7 +19,7 @@ ralf --db .ralf/runs.sqlite --factory agent_app.runtime:create_engine resume RUN
 
 ```python
 import asyncio
-from ralf_agent import (
+from relf_agent import (
     GraphNode,
     GraphWorkflowSpec,
     LocalEngine,
@@ -66,7 +66,7 @@ Tool 节点的外部效果不可藏在纯 Transform 中。未知写效果继续�
 ## 3. 选择性接入 MCP 工具
 
 ```python
-from ralf_agent import (
+from relf_agent import (
     MCPStdioTransport,
     MCPToolSource,
     ToolPolicy,
@@ -122,7 +122,7 @@ policy = ToolPolicy(
 ToolSource 的 identity 是非空 JSON，list_tools 与 call_tool 是 async：
 
 ```python
-from ralf_agent import ToolDescriptor
+from relf_agent import ToolDescriptor
 
 
 class OrdersSource:

@@ -5,14 +5,14 @@ from types import SimpleNamespace
 
 import pytest
 
-from ralf_agent.errors import DefinitionMismatch
-from ralf_agent.types import digest
+from relf_agent.errors import DefinitionMismatch
+from relf_agent.types import digest
 from tests import test_temporal_coding_composition_control as fixture
 
 
 @pytest.fixture
 def namespace(monkeypatch):
-    from ralf_agent import temporal_session_activities
+    from relf_agent import temporal_session_activities
 
     async def identity(client):
         return fixture.NAMESPACE["id"]

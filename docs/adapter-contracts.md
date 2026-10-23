@@ -11,7 +11,7 @@ The separately selected `session-store` core/receipts profiles are described in
 optional production capabilities are independent of this Knowledge contract.
 
 ```python
-from ralf_agent import AdapterContractSuite, offline_knowledge_fixture
+from relf_agent import AdapterContractSuite, offline_knowledge_fixture
 
 suite = AdapterContractSuite(role="knowledge-retriever", contract_version="1")
 try:
@@ -30,9 +30,9 @@ discover credentials or access a service. An evidence directory must be fresh;
 without one, the runner removes its temporary evidence after operations finish.
 
 ```shell
-ralf-check-adapter
-ralf-check-adapter --offline
-ralf init my-adapter --template adapter-contracts
+relf-check-adapter
+relf-check-adapter --offline
+relf init my-adapter --template adapter-contracts
 cd my-adapter
 python -m agent_app check
 ```
@@ -99,7 +99,7 @@ values, including metadata. The validator must re-read the current original
 source, compare its provenance/content/version/expiry and complete with None.
 
 ```python
-from ralf_agent import ComponentRegistry, KnowledgeContext, RuntimeBuilder
+from relf_agent import ComponentRegistry, KnowledgeContext, RuntimeBuilder
 
 registry = ComponentRegistry()
 

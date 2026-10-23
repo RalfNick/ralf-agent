@@ -8,20 +8,20 @@ from dataclasses import asdict, replace
 
 import pytest
 
-from ralf_agent import AgentSpec, ComponentRegistry, RuntimeBuilder, Scope, recommended_profile
-from ralf_agent.errors import (
+from relf_agent import AgentSpec, ComponentRegistry, RuntimeBuilder, Scope, recommended_profile
+from relf_agent.errors import (
     AuthorizationDenied,
     DefinitionMismatch,
     MemoryBackendError,
     ValidationError,
 )
-from ralf_agent.memory import memory_call
-from ralf_agent.recall import RecallQuery
+from relf_agent.memory import memory_call
+from relf_agent.recall import RecallQuery
 
 
 def reference():
     try:
-        return importlib.import_module("ralf_agent.facts_adapter_contract_reference")
+        return importlib.import_module("relf_agent.facts_adapter_contract_reference")
     except ModuleNotFoundError:
         pytest.fail("The independent Facts source is missing")
 

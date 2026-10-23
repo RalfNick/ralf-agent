@@ -6,9 +6,9 @@ import json
 
 import pytest
 
-import ralf_agent as r
-from ralf_agent.model_continuation import ContinuedModelResponse, ModelContinuation
-from ralf_agent.types import canonical, digest
+import relf_agent as r
+from relf_agent.model_continuation import ContinuedModelResponse, ModelContinuation
+from relf_agent.types import canonical, digest
 
 FIRST_FINAL = ' { "answer" : "first-original" } '
 SECOND_FINAL = ' { "answer" : "second-original" } '

@@ -9,10 +9,10 @@ from datetime import timedelta
 
 import pytest
 
-from ralf_agent import GraphNode, GraphWorkflowSpec, Scope
-from ralf_agent.errors import NotFound
-from ralf_agent.temporal import TemporalEngine, build_temporal_worker, replay_temporal_history
-from ralf_agent.temporal_activities import TemporalRuntime
+from relf_agent import GraphNode, GraphWorkflowSpec, Scope
+from relf_agent.errors import NotFound
+from relf_agent.temporal import TemporalEngine, build_temporal_worker, replay_temporal_history
+from relf_agent.temporal_activities import TemporalRuntime
 from tests.test_temporal_deployment_admission_service import _clients
 from tests.test_temporal_deployment_dispatch_service import BusinessProbe, _agent, _eventually
 from tests.test_temporal_scoped_capacity_service import discover_owned_descendants

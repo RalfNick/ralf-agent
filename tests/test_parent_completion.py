@@ -4,8 +4,8 @@ import types
 
 import pytest
 
-from ralf_agent.errors import DefinitionMismatch, ValidationError
-from ralf_agent.types import Scope, digest
+from relf_agent.errors import DefinitionMismatch, ValidationError
+from relf_agent.types import Scope, digest
 
 
 def child(path=("worker",), *, run_id="worker-run", result=None, input=None, revision=0):
@@ -77,7 +77,7 @@ def source(**changes):
 
 
 def request(**changes):
-    from ralf_agent.parent_completion import ParentCompletionRequest
+    from relf_agent.parent_completion import ParentCompletionRequest
 
     return ParentCompletionRequest(**source(**changes))
 
@@ -86,13 +86,13 @@ class AcceptGate:
     identity = {"kind": "test-gate", "version": "1"}
 
     def verify(self, request):
-        from ralf_agent.parent_completion import ParentCompletionVerdict
+        from relf_agent.parent_completion import ParentCompletionVerdict
 
         return ParentCompletionVerdict("accept")
 
 
 def test_request_freezes_exact_finite_source_and_restores_it():
-    from ralf_agent.parent_completion import ParentCompletionRequest
+    from relf_agent.parent_completion import ParentCompletionRequest
 
     original = source(scope=Scope("tests", "owner"))
     value = ParentCompletionRequest(**original)
@@ -127,7 +127,7 @@ def test_request_rejects_incomplete_or_inconsistent_child(fault):
         item["planning_revision"] = 1
     else:
         item["final_snapshot_digest"] = None
-    from ralf_agent.parent_completion import ParentCompletionRequest
+    from relf_agent.parent_completion import ParentCompletionRequest
 
     with pytest.raises(ValidationError):
         ParentCompletionRequest(**value)
@@ -150,7 +150,7 @@ def test_request_rejects_foreign_or_fabricated_receipt(fault):
         tool["consumed_by"] = ["model:" + "f" * 64]
     else:
         tool["snapshot"] = []
-    from ralf_agent.parent_completion import ParentCompletionRequest
+    from relf_agent.parent_completion import ParentCompletionRequest
 
     with pytest.raises(ValidationError):
         ParentCompletionRequest(**value)
@@ -188,15 +188,15 @@ def test_request_rejects_invalid_parent_source(changes):
     ],
 )
 def test_verdict_has_bounded_semantics(status, feedback):
-    from ralf_agent.parent_completion import ParentCompletionVerdict
+    from relf_agent.parent_completion import ParentCompletionVerdict
 
     with pytest.raises(ValidationError):
         ParentCompletionVerdict(status, feedback=feedback)
 
 
 def test_verdict_evidence_ids_must_exist_and_cannot_request_team_replan():
-    from ralf_agent.parent_completion import ParentCompletionVerdict
-    from ralf_agent.parent_completion_protocol import validate_verdict
+    from relf_agent.parent_completion import ParentCompletionVerdict
+    from relf_agent.parent_completion_protocol import validate_verdict
 
     value = request()
     assert (
@@ -224,8 +224,8 @@ def test_verdict_evidence_ids_must_exist_and_cannot_request_team_replan():
 
 
 def test_policy_source_and_evidence_limits_are_enforced_before_gate():
-    from ralf_agent.parent_completion import ParentCompletionPolicy
-    from ralf_agent.parent_completion_protocol import gate_verdict, validate_request_bounds
+    from relf_agent.parent_completion import ParentCompletionPolicy
+    from relf_agent.parent_completion_protocol import gate_verdict, validate_request_bounds
 
     with pytest.raises(ValidationError):
         ParentCompletionPolicy(AcceptGate(), max_source_bytes=1_048_577)
@@ -238,8 +238,8 @@ def test_policy_source_and_evidence_limits_are_enforced_before_gate():
 
 
 def test_registration_is_detached_and_pins_identity_and_original_method():
-    from ralf_agent.parent_completion import ParentCompletionPolicy
-    from ralf_agent.parent_completion_protocol import (
+    from relf_agent.parent_completion import ParentCompletionPolicy
+    from relf_agent.parent_completion_protocol import (
         gate_verdict,
         policy_registration,
         validate_policy,
@@ -262,14 +262,14 @@ def test_registration_is_detached_and_pins_identity_and_original_method():
 
 
 def test_gate_drift_during_execution_is_rejected():
-    from ralf_agent.parent_completion import ParentCompletionPolicy
-    from ralf_agent.parent_completion_protocol import gate_verdict
+    from relf_agent.parent_completion import ParentCompletionPolicy
+    from relf_agent.parent_completion_protocol import gate_verdict
 
     class DriftGate:
         identity = {"kind": "drifting-gate", "version": "1"}
 
         def verify(self, request):
-            from ralf_agent.parent_completion import ParentCompletionVerdict
+            from relf_agent.parent_completion import ParentCompletionVerdict
 
             self.identity = {"kind": "drifting-gate", "version": "2"}
             return ParentCompletionVerdict("accept")
@@ -279,8 +279,8 @@ def test_gate_drift_during_execution_is_rejected():
 
 
 def test_lazy_gate_return_and_async_implementation_are_rejected():
-    from ralf_agent.parent_completion import ParentCompletionPolicy
-    from ralf_agent.parent_completion_protocol import gate_verdict
+    from relf_agent.parent_completion import ParentCompletionPolicy
+    from relf_agent.parent_completion_protocol import gate_verdict
 
     class LazyGate(AcceptGate):
         def verify(self, request):
@@ -297,7 +297,7 @@ def test_lazy_gate_return_and_async_implementation_are_rejected():
 
 
 def test_container_receipts_use_real_run_and_corresponding_leaf_final_model():
-    from ralf_agent.parent_completion import ParentCompletionRequest
+    from relf_agent.parent_completion import ParentCompletionRequest
 
     owner = child(("group",))
     owner.update(input_consumed=None, final_action_id=None, final_snapshot_digest=None)
@@ -320,8 +320,8 @@ def test_container_model_slot_must_be_a_step_or_node_descendant():
 
 
 def test_policy_changed_to_invalid_gate_fails_as_definition_mismatch():
-    from ralf_agent.parent_completion import ParentCompletionPolicy
-    from ralf_agent.parent_completion_protocol import gate_verdict
+    from relf_agent.parent_completion import ParentCompletionPolicy
+    from relf_agent.parent_completion_protocol import gate_verdict
 
     policy = ParentCompletionPolicy(AcceptGate())
     policy.gate = None
@@ -330,7 +330,7 @@ def test_policy_changed_to_invalid_gate_fails_as_definition_mismatch():
 
 
 def test_request_restore_rejects_unknown_fields_and_version():
-    from ralf_agent.parent_completion import ParentCompletionRequest
+    from relf_agent.parent_completion import ParentCompletionRequest
 
     for changes in ({"source_digest": "a" * 64}, {"schema_version": True}, {"schema_version": 2}):
         with pytest.raises(ValidationError):

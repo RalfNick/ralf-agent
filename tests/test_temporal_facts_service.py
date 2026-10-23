@@ -8,8 +8,8 @@ from pathlib import Path
 
 import pytest
 
-from ralf_agent import Scope
-from ralf_agent.temporal import TemporalEngine, replay_temporal_history
+from relf_agent import Scope
+from relf_agent.temporal import TemporalEngine, replay_temporal_history
 from tests.temporal_facts_worker import runtime
 
 pytestmark = pytest.mark.skipif(
@@ -23,7 +23,7 @@ def test_facts_routes_and_accepted_member_survive_actual_worker_kill(tmp_path, k
     async def run():
         from temporalio.client import Client
 
-        import ralf_agent
+        import relf_agent
 
         client = await Client.connect(os.environ["RALF_TEST_TEMPORAL_ADDRESS"])
         queue = "facts-" + uuid.uuid4().hex
@@ -43,7 +43,7 @@ def test_facts_routes_and_accepted_member_survive_actual_worker_kill(tmp_path, k
             env = {
                 "PATH": os.environ.get("PATH", "/usr/bin:/bin"),
                 "PYTHONPATH": os.pathsep.join(
-                    [str(Path(ralf_agent.__file__).parents[1]), str(Path(__file__).parents[1])]
+                    [str(Path(relf_agent.__file__).parents[1]), str(Path(__file__).parents[1])]
                 ),
                 "RALF_TEST_TEMPORAL_ADDRESS": os.environ["RALF_TEST_TEMPORAL_ADDRESS"],
                 "RALF_TEST_TEMPORAL_QUEUE": queue,

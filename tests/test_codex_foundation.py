@@ -6,10 +6,10 @@ import sys
 
 import pytest
 
-from ralf_agent.codex_protocol import CodexProtocol
-from ralf_agent.codex_rpc import CodexRPCTransport
-from ralf_agent.runner_journal import RunnerJournal
-from ralf_agent.types import Scope
+from relf_agent.codex_protocol import CodexProtocol
+from relf_agent.codex_rpc import CodexRPCTransport
+from relf_agent.runner_journal import RunnerJournal
+from relf_agent.types import Scope
 
 pytestmark = pytest.mark.skipif(os.name != "posix", reason="POSIX native ownership required")
 

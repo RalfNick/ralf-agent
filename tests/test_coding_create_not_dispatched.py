@@ -7,11 +7,11 @@ import inspect
 
 import pytest
 
-from ralf_agent import AgentSpec
-from ralf_agent import coding_execution_rules as rules
-from ralf_agent import postgres_coding_resources as resources
-from ralf_agent.errors import RalfError
-from ralf_agent.types import canonical, digest
+from relf_agent import AgentSpec
+from relf_agent import coding_execution_rules as rules
+from relf_agent import postgres_coding_resources as resources
+from relf_agent.errors import RalfError
+from relf_agent.types import canonical, digest
 from tests.test_coding_execution_rules import intent as native_intent
 from tests.test_dev106_native_resources import intent as resource_intent
 from tests.test_dev106_native_resources import receipt

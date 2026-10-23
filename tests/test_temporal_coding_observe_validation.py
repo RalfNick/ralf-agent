@@ -8,15 +8,15 @@ from types import SimpleNamespace
 import pytest
 from temporalio.client import WorkflowExecutionStatus
 
-from ralf_agent import temporal_coding_composition_control as composition_control
-from ralf_agent import temporal_coding_composition_state as composition
-from ralf_agent import temporal_deployment_coding_validation as validation
-from ralf_agent import temporal_deployment_control_projection as projection
-from ralf_agent import temporal_deployment_control_transport as transport
-from ralf_agent.errors import DefinitionMismatch
-from ralf_agent.temporal_parent_state import CONTROL_ACTIVITY
-from ralf_agent.temporal_state import COMMAND_REGISTRY_NAME
-from ralf_agent.types import digest
+from relf_agent import temporal_coding_composition_control as composition_control
+from relf_agent import temporal_coding_composition_state as composition
+from relf_agent import temporal_deployment_coding_validation as validation
+from relf_agent import temporal_deployment_control_projection as projection
+from relf_agent import temporal_deployment_control_transport as transport
+from relf_agent.errors import DefinitionMismatch
+from relf_agent.temporal_parent_state import CONTROL_ACTIVITY
+from relf_agent.temporal_state import COMMAND_REGISTRY_NAME
+from relf_agent.types import digest
 from tests.test_temporal_deployment_session_registry import root_lookup, state, verified
 from tests.test_temporal_session_deployment_dto import origin
 from tests.test_temporal_session_tree_reading import tree_environment
@@ -440,7 +440,7 @@ def test_cancelled_readonly_collection_clears_bootstrap_without_permission(monke
 
 
 def test_bootstrap_cannot_turn_an_unexpected_sdk_update_into_observation(monkeypatch):
-    from ralf_agent import temporal_deployment_execution as execution
+    from relf_agent import temporal_deployment_execution as execution
 
     async def run():
         e = environment(monkeypatch)

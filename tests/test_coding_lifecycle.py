@@ -4,9 +4,9 @@ import asyncio
 
 import pytest
 
-from ralf_agent import AgentSpec
-from ralf_agent.errors import ValidationError
-from ralf_agent.runtime_lifecycle import BuildContext, RuntimeInstance
+from relf_agent import AgentSpec
+from relf_agent.errors import ValidationError
+from relf_agent.runtime_lifecycle import BuildContext, RuntimeInstance
 
 from .test_local_delegated_coding import LifecycleRunner, coding_engine
 
@@ -195,7 +195,7 @@ def test_borrowed_coding_resource_is_never_closed_by_runtime(tmp_path):
 
 
 def test_preclose_adopts_each_original_runner_before_any_resource_close(tmp_path):
-    from ralf_agent.delegated_coding import register_coding_tool
+    from relf_agent.delegated_coding import register_coding_tool
 
     from .helpers import tool_response
 
@@ -242,9 +242,9 @@ def test_preclose_adopts_each_original_runner_before_any_resource_close(tmp_path
 
 
 def test_original_engine_rejects_business_while_owned_coding_cleanup_is_awaiting(tmp_path):
-    from ralf_agent.agent_runtime import Runtime as AgentRuntime
-    from ralf_agent.errors import AuthorizationDenied, CoordinatorBusy
-    from ralf_agent.storage import SQLiteStore
+    from relf_agent.agent_runtime import Runtime as AgentRuntime
+    from relf_agent.errors import AuthorizationDenied, CoordinatorBusy
+    from relf_agent.storage import SQLiteStore
 
     async def exercise():
         runtime, engine, runner, _ = await managed_pending(tmp_path, fail_stop=False)

@@ -4,7 +4,7 @@ import json
 
 import pytest
 
-from ralf_agent.errors import ValidationError
+from relf_agent.errors import ValidationError
 
 
 def connection(**overrides):
@@ -17,7 +17,7 @@ def connection(**overrides):
         reasoning_effort="low",
     )
     values.update(overrides)
-    return importlib.import_module("ralf_agent.codex_model_connection").CodexModelConnection(
+    return importlib.import_module("relf_agent.codex_model_connection").CodexModelConnection(
         **values
     )
 
@@ -121,7 +121,7 @@ def test_alternate_https_connection_changes_identity_and_never_resolves_credenti
 
 
 def test_connection_declarations_roundtrip_with_optional_reasoning_default():
-    module = importlib.import_module("ralf_agent.codex_model_connection")
+    module = importlib.import_module("relf_agent.codex_model_connection")
     declared = connection().to_dict()
     assert set(declared) == {
         "base_url",
@@ -138,7 +138,7 @@ def test_connection_declarations_roundtrip_with_optional_reasoning_default():
 
 @pytest.mark.parametrize("mutation", ["missing", "extra", "identity", "not_dict"])
 def test_connection_declarations_reject_unknown_fields_and_identity_projection(mutation):
-    module = importlib.import_module("ralf_agent.codex_model_connection")
+    module = importlib.import_module("relf_agent.codex_model_connection")
     declared = connection().to_dict()
     if mutation == "missing":
         declared.pop("credential_id")

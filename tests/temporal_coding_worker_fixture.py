@@ -4,14 +4,14 @@ import asyncio
 import os
 from pathlib import Path
 
-from ralf_agent.codex_runner import CodexCodingRunner
-from ralf_agent.delegated_coding import register_coding_tool
-from ralf_agent.postgres_runner_journal import PostgresRunnerJournal
-from ralf_agent.temporal import build_temporal_worker
-from ralf_agent.temporal_activities import TemporalRuntime
-from ralf_agent.temporal_journal import PostgresEffectJournal
-from ralf_agent.tools import ToolRegistry
-from ralf_agent.types import ModelResponse, Scope, ToolCall
+from relf_agent.codex_runner import CodexCodingRunner
+from relf_agent.delegated_coding import register_coding_tool
+from relf_agent.postgres_runner_journal import PostgresRunnerJournal
+from relf_agent.temporal import build_temporal_worker
+from relf_agent.temporal_activities import TemporalRuntime
+from relf_agent.temporal_journal import PostgresEffectJournal
+from relf_agent.tools import ToolRegistry
+from relf_agent.types import ModelResponse, Scope, ToolCall
 
 
 class Provider:
@@ -90,7 +90,7 @@ async def runtime(*, request_timeout=5):
     )
     tools = ToolRegistry()
     register_coding_tool(tools, native)
-    from ralf_agent.binding_catalog import BindingCatalog
+    from relf_agent.binding_catalog import BindingCatalog
 
     catalog = BindingCatalog(scope=Scope("coding-service", os.environ["RALF_CODING_QUEUE"]))
     catalog.register("runner", "original", "1", native)

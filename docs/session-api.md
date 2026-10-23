@@ -12,7 +12,7 @@ uncompleted acceptance gates remain in the [support matrix](phase3-support-matri
 ## Open and continue
 
 ```python
-from ralf_agent import Agent
+from relf_agent import Agent
 
 # model is an explicitly configured Provider. No model call occurs when opening.
 async with Agent(model=model, db_path=".ralf/runs.sqlite") as agent:
@@ -55,7 +55,7 @@ resume/approve/cancel/reconcile; human control is not a new Turn.
 ## Busy, binding and rebind
 
 ```python
-from ralf_agent import SessionBusy
+from relf_agent import SessionBusy
 
 try:
     run = await session.submit("Next request", command_id="next-1")
@@ -94,7 +94,7 @@ Idle native↔composite rebind is supported on the same actual conversation addr
 ## Composite conversations
 
 ```python
-from ralf_agent import AgentSpec, GraphNode, GraphWorkflowSpec, Runtime
+from relf_agent import AgentSpec, GraphNode, GraphWorkflowSpec, Runtime
 
 # engine is a configured LocalEngine with its colocated SQLiteMemory default.
 async with Runtime(engine, owned=True) as runtime:
@@ -125,7 +125,7 @@ history semantics.
 ### Authorized root namespaces
 
 ```python
-from ralf_agent import LocalEngine, Runtime, SessionBindingResource, SQLiteMemory, SQLiteStore
+from relf_agent import LocalEngine, Runtime, SessionBindingResource, SQLiteMemory, SQLiteStore
 
 store = SQLiteStore(".ralf/runs.sqlite")
 memory = SQLiteMemory(store)
@@ -154,7 +154,7 @@ or backend declaration. Validation precedes Store creation; building alone leave
 schema1, while a valid configured composite open enables4.
 
 ```python
-from ralf_agent import Runtime, load_catalog
+from relf_agent import Runtime, load_catalog
 
 catalog = load_catalog("runtime.toml")
 async with Runtime.from_profile(catalog.default, ".ralf/runs.sqlite") as runtime:
@@ -167,7 +167,7 @@ accepts explicit sync/async factories for this kind; their resources obey the
 existing owned/borrowed lifecycle and actual colocated validation. New declarations
 are rejected by old SDKs; absent-component Profile1/2 identities stay unchanged.
 
-`ralf init my-sessions --template sessions` creates an offline installed example.
+`relf init my-sessions --template sessions` creates an offline installed example.
 Its run command returns an immutable reference containing the original Turn and
 Profile identity. Resume resolves that original Profile, validates the persisted
 Turn and reconnects without another submission. Pure status uses the scoped
@@ -246,7 +246,7 @@ backend identity, raw-route protection, legacy query and save evidence. This doe
 not make arbitrary database adapters or independent Redis/PG coordinators compatible.
 Composite support additionally advertises exact integer `session_admission_version=2`
 or3 on the ExecutionStore and implements the optional
-`ralf_agent.session_ports.CompositeSessionAdmissionStore.prepare_composites()->None`.
+`relf_agent.session_ports.CompositeSessionAdmissionStore.prepare_composites()->None`.
 It must complete in the owning transaction and preserve monotonic activation and
 rollback. The original port remains compatible; lazy or foreign-owner extensions
 refuse before acceptance. Atomic SQLiteMemory append returns a positive completed
@@ -268,7 +268,7 @@ RedisMemory／PostgresMemory。它们保存会话数据；Local SQLite Coordinat
 装配，或按既有 owned/borrowed 生命周期创建：
 
 ```python
-from ralf_agent import (
+from relf_agent import (
     AgentBindingDescriptor,
     AgentDefinition,
     AgentSpec,
@@ -333,7 +333,7 @@ Local Graph（串行／并行／直接转换）、Team、动态 Plan／DAG 和�
 复合定义名称。默认 SQLite 的原子保存保持原行为。
 
 ```python
-from ralf_agent import Runtime, SessionBindingResource
+from relf_agent import Runtime, SessionBindingResource
 
 # backend is an initialized receipt-v1 Session port. Caller owns this borrowed client.
 engine.conversation_resource = SessionBindingResource(

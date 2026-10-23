@@ -3,15 +3,15 @@ import copy
 
 import pytest
 
-from ralf_agent import (
+from relf_agent import (
     BudgetedContextAssembler,
     LocalEngine,
     ModelResponse,
     SQLiteStore,
     ToolRegistry,
 )
-from ralf_agent.errors import ValidationError
-from ralf_agent.types import digest
+from relf_agent.errors import ValidationError
+from relf_agent.types import digest
 
 GROUPS = [[{"role": "assistant", "content": "User selected zh-CN; ticket remains unresolved."}]]
 
@@ -30,7 +30,7 @@ class SummaryProvider:
 
 
 def test_managed_summary_restart_and_host_assigned_coverage(tmp_path):
-    from ralf_agent.model_context import FrozenContextSummarizer, ManagedModelSummarizer
+    from relf_agent.model_context import FrozenContextSummarizer, ManagedModelSummarizer
 
     async def run():
         provider = SummaryProvider()
@@ -65,7 +65,7 @@ def test_managed_summary_restart_and_host_assigned_coverage(tmp_path):
     [{"text": ""}, {"text": "  "}, {"text": "x" * 129}, {"text": "ok", "group_digests": []}],
 )
 def test_model_summary_invalid_completion_not_adopted(tmp_path, output):
-    from ralf_agent.model_context import ManagedModelSummarizer
+    from relf_agent.model_context import ManagedModelSummarizer
 
     async def run():
         with LocalEngine(
@@ -82,7 +82,7 @@ def test_model_summary_invalid_completion_not_adopted(tmp_path, output):
 
 
 def test_frozen_summary_is_used_by_pure_budgeted_builder(tmp_path):
-    from ralf_agent.model_context import FrozenContextSummarizer, ManagedModelSummarizer
+    from relf_agent.model_context import FrozenContextSummarizer, ManagedModelSummarizer
 
     async def run():
         provider = SummaryProvider()

@@ -5,11 +5,11 @@ from dataclasses import asdict
 
 import pytest
 
-from ralf_agent import AgentSpec, ManagedContextPipeline, Scope, ToolRegistry, WorkflowSpec
-from ralf_agent.errors import AuthorizationDenied, DefinitionMismatch, IdempotencyConflict
-from ralf_agent.temporal_activities import TemporalRuntime
-from ralf_agent.temporal_state import TemporalRunState
-from ralf_agent.types import digest, submission_request
+from relf_agent import AgentSpec, ManagedContextPipeline, Scope, ToolRegistry, WorkflowSpec
+from relf_agent.errors import AuthorizationDenied, DefinitionMismatch, IdempotencyConflict
+from relf_agent.temporal_activities import TemporalRuntime
+from relf_agent.temporal_state import TemporalRunState
+from relf_agent.types import digest, submission_request
 
 from .test_temporal_binding_isolation import LabelContext
 from .test_temporal_context_read_protocol import candidate
@@ -216,14 +216,14 @@ def test_success_after_cancellation_only_records_late_evidence():
 
 @pytest.mark.parametrize("epoch", [True, {}, " ", "x" * 1025])
 def test_new_read_protocol_rejects_invalid_execution_epoch_before_dispatch(epoch):
-    from ralf_agent.errors import ValidationError
+    from relf_agent.errors import ValidationError
 
     with pytest.raises(ValidationError):
         state_for(epoch=epoch)
 
 
 def test_read_protocol_keeps_original_parent_non_read_admission_validation():
-    from ralf_agent.temporal_parent_state import TemporalParentState
+    from relf_agent.temporal_parent_state import TemporalParentState
 
     from .test_temporal_composites import state as legacy_parent
 
@@ -252,7 +252,7 @@ def test_read_protocol_keeps_original_parent_non_read_admission_validation():
 
 
 def test_original_session_coordinator_holds_turn_after_cancel_until_read_end():
-    from ralf_agent.temporal_session_state import TemporalSessionState
+    from relf_agent.temporal_session_state import TemporalSessionState
 
     from .test_temporal_sessions import session, submit
 
@@ -300,7 +300,7 @@ def test_original_session_coordinator_holds_turn_after_cancel_until_read_end():
 
 
 def test_original_parent_holds_child_escrow_until_native_read_end():
-    from ralf_agent.temporal_parent_state import TemporalParentState
+    from relf_agent.temporal_parent_state import TemporalParentState
 
     from .test_temporal_composites import state as legacy_parent
 

@@ -7,8 +7,8 @@ from unittest.mock import patch
 
 import pytest
 
-from ralf_agent.temporal_session_state import TemporalSessionState
-from ralf_agent.types import canonical, digest
+from relf_agent.temporal_session_state import TemporalSessionState
+from relf_agent.types import canonical, digest
 from tests.test_temporal_deployment_coding_retention import description, started, update
 from tests.test_temporal_deployment_session_registry import (
     NAMESPACE,
@@ -32,7 +32,7 @@ async def scenario(*, fault=None, encoded=False):
 
     registry = state()
     if encoded:
-        from ralf_agent.temporal_deployment_protocol import validate_protocol
+        from relf_agent.temporal_deployment_protocol import validate_protocol
         from tests import test_temporal_session_deployment_coding_registry as fixture
 
         original_manifest = fixture.coding_session_manifest
@@ -131,7 +131,7 @@ async def scenario(*, fault=None, encoded=False):
             "body_result": body,
         }
         if encoded:
-            from ralf_agent.temporal_session_deployment_dto import encode_control_body
+            from relf_agent.temporal_session_deployment_dto import encode_control_body
 
             end["body_result"] = encode_control_body(body, binding["manifest"])
             assert "_ralf_session_control_body" in end["body_result"]

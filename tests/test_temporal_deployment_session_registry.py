@@ -4,19 +4,19 @@ import copy
 
 import pytest
 
-from ralf_agent import AgentSpec, DeploymentAdmissionPolicy, ToolRegistry
-from ralf_agent.errors import (
+from relf_agent import AgentSpec, DeploymentAdmissionPolicy, ToolRegistry
+from relf_agent.errors import (
     AuthorizationDenied,
     CapacityExceeded,
     DefinitionMismatch,
     IdempotencyConflict,
     ValidationError,
 )
-from ralf_agent.runtime_builder import EchoProvider
-from ralf_agent.session_types import SessionKey
-from ralf_agent.temporal_activities import TemporalRuntime
-from ralf_agent.temporal_session_state import resource_id, workflow_id
-from ralf_agent.types import digest, submission_request
+from relf_agent.runtime_builder import EchoProvider
+from relf_agent.session_types import SessionKey
+from relf_agent.temporal_activities import TemporalRuntime
+from relf_agent.temporal_session_state import resource_id, workflow_id
+from relf_agent.types import digest, submission_request
 
 SCOPE = {"workspace": "workspace", "principal": "owner"}
 NAMESPACE = {"name": "original", "id": "11111111-1111-4111-8111-111111111111"}
@@ -24,7 +24,7 @@ POLICY = DeploymentAdmissionPolicy("original-deployment", max_active_root_runs=1
 
 
 def state(capacity=16):
-    from ralf_agent.temporal_deployment_session_registry import SessionDeploymentAdmissionState
+    from relf_agent.temporal_deployment_session_registry import SessionDeploymentAdmissionState
 
     return SessionDeploymentAdmissionState(
         POLICY.identity, NAMESPACE, capacity=capacity, registry_execution_epoch="registry-original"
@@ -42,7 +42,7 @@ def command(command_id="open"):
         "task_queue": "original-queue",
         "activity_timeout": 30,
     }
-    from ralf_agent.temporal_deployment_protocol import publish
+    from relf_agent.temporal_deployment_protocol import publish
 
     binding["manifest"] = publish(
         binding["manifest"], POLICY.identity, public=True, session_deployment=True
@@ -157,7 +157,7 @@ def test_command_allowance_is_independent_of_business_capacity():
 
 
 def deployment_intent():
-    from ralf_agent.temporal_deployment_protocol import publish
+    from relf_agent.temporal_deployment_protocol import publish
     from tests.test_temporal_session_deployment_dto import intent, seal
 
     value = intent()
@@ -182,7 +182,7 @@ def intent_request(registry, *, command_id="session-submit-1"):
         value["session_command_id"] = command_id
         value["turn_id"] = "ralf-turn-" + digest([key, command_id])
         value["run_command_id"] = "ralf-session-run:" + digest([key, command_id])
-        from ralf_agent.temporal_deployment_admission import root_run_id
+        from relf_agent.temporal_deployment_admission import root_run_id
 
         value["run_id"] = root_run_id(POLICY.deployment_id, SCOPE, value["run_command_id"])
         value["submission"]["request"]["session_turn"]["turn_id"] = value["turn_id"]
@@ -423,7 +423,7 @@ def test_session_receipt_index_requires_exact_original_and_is_immutable():
 
 
 def ordinary_request(command_id="ordinary"):
-    from ralf_agent.temporal_deployment_admission import root_run_id
+    from relf_agent.temporal_deployment_admission import root_run_id
 
     manifest = TemporalRuntime(
         providers={"default": EchoProvider("ordinary-fixture")},

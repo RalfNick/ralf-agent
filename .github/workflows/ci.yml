@@ -23,7 +23,7 @@ jobs:
       - run: python -m ruff check .
       - run: python -m ruff format --check .
       - run: python -m pytest -q
-      - run: python -m ralf_agent.business_evaluation_cli --offline --max-calls 16
+      - run: python -m relf_agent.business_evaluation_cli --offline --max-calls 16
       - run: python examples/evaluate.py
       - run: python examples/evaluate_planning.py --fixture evals/planning-fixtures.json
       - run: python -m build
@@ -39,9 +39,9 @@ jobs:
         run: |
           cp -R "$GITHUB_WORKSPACE/evals" "$RUNNER_TEMP/session-contracts/evals"
           python -m pytest -q -W error -p no:cacheprovider -c /dev/null "$RUNNER_TEMP/session-contracts/tests/test_rag_evaluation.py" "$RUNNER_TEMP/session-contracts/tests/test_rag_evaluation_cases.py" "$RUNNER_TEMP/session-contracts/tests/test_orchestration_evaluation.py" "$RUNNER_TEMP/session-contracts/tests/test_task_evaluation_cli.py"
-          ralf-evaluate-rag --offline
-          ralf-evaluate-orchestration --offline --kind plan-and-execute
-          ralf-evaluate-orchestration --offline --kind team
+          relf-evaluate-rag --offline
+          relf-evaluate-orchestration --offline --kind plan-and-execute
+          relf-evaluate-orchestration --offline --kind team
       - name: Installed model continuation and native Gemini tool loops
         working-directory: ${{ runner.temp }}
         run: |
@@ -50,24 +50,24 @@ jobs:
         working-directory: ${{ runner.temp }}
         run: |
           python -m pytest -q -W error -p no:cacheprovider -c /dev/null "$RUNNER_TEMP/session-contracts/tests/test_parent_completion.py" "$RUNNER_TEMP/session-contracts/tests/test_parent_completion_rules.py" "$RUNNER_TEMP/session-contracts/tests/test_parent_verification_stage.py" "$RUNNER_TEMP/session-contracts/tests/test_parent_completion_shared.py" "$RUNNER_TEMP/session-contracts/tests/test_parent_completion_assembly.py" "$RUNNER_TEMP/session-contracts/tests/test_local_parent_completion.py" "$RUNNER_TEMP/session-contracts/tests/test_parent_completion_process_recovery.py" "$RUNNER_TEMP/session-contracts/tests/test_parent_completion_evaluation.py"
-          python -m ralf_agent.parent_completion_starter --kind plan
-          python -m ralf_agent.parent_completion_starter --kind team --model-verification
-          ralf-evaluate-orchestration --offline --completion-gate --kind plan-and-execute
-          ralf-evaluate-orchestration --offline --completion-gate --kind team
+          python -m relf_agent.parent_completion_starter --kind plan
+          python -m relf_agent.parent_completion_starter --kind team --model-verification
+          relf-evaluate-orchestration --offline --completion-gate --kind plan-and-execute
+          relf-evaluate-orchestration --offline --completion-gate --kind team
       - name: Installed durable user input outside checkout
         working-directory: ${{ runner.temp }}
         run: |
           python -m pytest -q -W error -p no:cacheprovider -c /dev/null "$RUNNER_TEMP/session-contracts/tests/test_user_input.py" "$RUNNER_TEMP/session-contracts/tests/test_user_input_values.py" "$RUNNER_TEMP/session-contracts/tests/test_user_input_planning_scope.py" "$RUNNER_TEMP/session-contracts/tests/test_local_user_input.py" "$RUNNER_TEMP/session-contracts/tests/test_local_user_input_process.py" "$RUNNER_TEMP/session-contracts/tests/test_user_input_api.py" "$RUNNER_TEMP/session-contracts/tests/test_user_input_api_configuration.py" "$RUNNER_TEMP/session-contracts/tests/test_user_input_api_a2a.py" "$RUNNER_TEMP/session-contracts/tests/test_user_input_api_service.py" "$RUNNER_TEMP/session-contracts/tests/test_user_input_api_starter.py" "$RUNNER_TEMP/session-contracts/tests/test_user_input_api_wait.py"
-          ralf init wheel-input --template user-input
+          relf init wheel-input --template user-input
           cd wheel-input
           python -m agent_app run --command-id installed-question
       - name: Installed external knowledge adapter contracts outside checkout
         working-directory: ${{ runner.temp }}
         run: |
           python -m pytest -q -W error -p no:cacheprovider -c /dev/null "$RUNNER_TEMP/session-contracts/tests/test_adapter_contract_types.py" "$RUNNER_TEMP/session-contracts/tests/test_adapter_contract_runner.py" "$RUNNER_TEMP/session-contracts/tests/test_knowledge_adapter_contract.py" "$RUNNER_TEMP/session-contracts/tests/test_adapter_contract_reference.py" "$RUNNER_TEMP/session-contracts/tests/test_adapter_contract_reference_integration.py" "$RUNNER_TEMP/session-contracts/tests/test_adapter_contract_reference_process.py" "$RUNNER_TEMP/session-contracts/tests/test_adapter_contract_cli.py" "$RUNNER_TEMP/session-contracts/tests/test_knowledge_context_method_pinning.py"
-          ralf-check-adapter
-          ralf-check-adapter --offline --evidence-dir "$RUNNER_TEMP/knowledge-contract-evidence"
-          ralf init wheel-adapter --template adapter-contracts
+          relf-check-adapter
+          relf-check-adapter --offline --evidence-dir "$RUNNER_TEMP/knowledge-contract-evidence"
+          relf init wheel-adapter --template adapter-contracts
           cd wheel-adapter
           python -m agent_app check
           python -m agent_app seed
@@ -79,9 +79,9 @@ jobs:
         working-directory: ${{ runner.temp }}
         run: |
           python -m pytest -q -W error -p no:cacheprovider -c /dev/null "$RUNNER_TEMP/session-contracts/tests/test_adapter_contract_catalog.py" "$RUNNER_TEMP/session-contracts/tests/test_adapter_contract_roles.py" "$RUNNER_TEMP/session-contracts/tests/test_session_adapter_contract.py" "$RUNNER_TEMP/session-contracts/tests/test_session_store_values.py" "$RUNNER_TEMP/session-contracts/tests/test_session_adapter_reference.py" "$RUNNER_TEMP/session-contracts/tests/test_session_adapter_starter.py" "$RUNNER_TEMP/session-contracts/tests/test_session_adapter_recovery.py" "$RUNNER_TEMP/session-contracts/tests/test_session_adapter_cli.py"
-          ralf-check-adapter --role session-store --profile receipts
-          ralf-check-adapter --role session-store --profile receipts --offline --evidence-dir "$RUNNER_TEMP/session-adapter-evidence"
-          ralf init wheel-session-adapter --template session-contracts
+          relf-check-adapter --role session-store --profile receipts
+          relf-check-adapter --role session-store --profile receipts --offline --evidence-dir "$RUNNER_TEMP/session-adapter-evidence"
+          relf init wheel-session-adapter --template session-contracts
           cd wheel-session-adapter
           python -m agent_app check
           python -m agent_app check --profile receipts
@@ -92,9 +92,9 @@ jobs:
         working-directory: ${{ runner.temp }}
         run: |
           python -m pytest -q -W error -p no:cacheprovider -c /dev/null "$RUNNER_TEMP/session-contracts/tests/test_facts_adapter_catalog.py" "$RUNNER_TEMP/session-contracts/tests/test_facts_adapter_roles.py" "$RUNNER_TEMP/session-contracts/tests/test_facts_adapter_cli.py" "$RUNNER_TEMP/session-contracts/tests/test_facts_adapter_contract.py" "$RUNNER_TEMP/session-contracts/tests/test_facts_store_values.py" "$RUNNER_TEMP/session-contracts/tests/test_facts_adapter_reference.py" "$RUNNER_TEMP/session-contracts/tests/test_facts_adapter_starter.py" "$RUNNER_TEMP/session-contracts/tests/test_facts_adapter_recovery.py"
-          ralf-check-adapter --role facts-store --profile core
-          ralf-check-adapter --role facts-store --profile managed --offline --evidence-dir "$RUNNER_TEMP/facts-adapter-evidence"
-          ralf init wheel-facts-adapter --template facts-contracts
+          relf-check-adapter --role facts-store --profile core
+          relf-check-adapter --role facts-store --profile managed --offline --evidence-dir "$RUNNER_TEMP/facts-adapter-evidence"
+          relf init wheel-facts-adapter --template facts-contracts
           cd wheel-facts-adapter
           python -m agent_app check
           python -m agent_app check --profile managed
@@ -110,10 +110,10 @@ jobs:
         working-directory: ${{ runner.temp }}
         run: |
           python -m pytest -q -W error -p no:cacheprovider -c /dev/null "$RUNNER_TEMP/session-contracts/tests/test_model_adapter_catalog.py" "$RUNNER_TEMP/session-contracts/tests/test_model_adapter_roles.py" "$RUNNER_TEMP/session-contracts/tests/test_model_adapter_cli.py" "$RUNNER_TEMP/session-contracts/tests/test_model_adapter_contract.py" "$RUNNER_TEMP/session-contracts/tests/test_model_adapter_reference.py" "$RUNNER_TEMP/session-contracts/tests/test_model_adapter_starter.py" "$RUNNER_TEMP/session-contracts/tests/test_model_adapter_recovery.py" "$RUNNER_TEMP/session-contracts/tests/test_model_evidence.py" "$RUNNER_TEMP/session-contracts/tests/test_model_compatibility.py"
-          ralf-check-adapter --role model-provider --profile core
-          ralf-check-adapter --role model-provider --profile tools --offline --evidence-dir "$RUNNER_TEMP/model-adapter-evidence"
-          ralf-check-model
-          ralf init wheel-model-adapter --template model-contracts
+          relf-check-adapter --role model-provider --profile core
+          relf-check-adapter --role model-provider --profile tools --offline --evidence-dir "$RUNNER_TEMP/model-adapter-evidence"
+          relf-check-model
+          relf init wheel-model-adapter --template model-contracts
           cd wheel-model-adapter
           python -m agent_app check
           python -m agent_app check --profile tools
@@ -148,17 +148,17 @@ jobs:
       - name: Installed wheel smoke test outside checkout
         working-directory: ${{ runner.temp }}
         run: |
-          ralf --db wheel-demo.sqlite demo --ticket CI-001
-          ralf --format text init wheel-starter
+          relf --db wheel-demo.sqlite demo --ticket CI-001
+          relf --format text init wheel-starter
           cd wheel-starter
           python -m agent_app --ticket CI-STARTER
       - name: Installed Temporal declarations without an implicit connection
         working-directory: ${{ runner.temp }}
         run: |
           python -m pytest -q -W error -p no:cacheprovider -c /dev/null "$RUNNER_TEMP/session-contracts/tests/test_temporal_profiles.py" "$RUNNER_TEMP/session-contracts/tests/test_temporal_runtime_profile.py" "$RUNNER_TEMP/session-contracts/tests/test_temporal_assembly.py" "$RUNNER_TEMP/session-contracts/tests/test_temporal_assembly_cleanup.py" "$RUNNER_TEMP/session-contracts/tests/test_temporal_assembly_review.py" "$RUNNER_TEMP/session-contracts/tests/test_temporal_assembly_lifetime.py" "$RUNNER_TEMP/session-contracts/tests/test_temporal_worker_wrapping.py" "$RUNNER_TEMP/session-contracts/tests/test_temporal_profile_example.py" "$RUNNER_TEMP/session-contracts/tests/test_skills.py" "$RUNNER_TEMP/session-contracts/tests/test_filesystem_skills.py" "$RUNNER_TEMP/session-contracts/tests/test_skill_tools.py" "$RUNNER_TEMP/session-contracts/tests/test_skill_configuration.py" "$RUNNER_TEMP/session-contracts/tests/test_skill_execution.py" "$RUNNER_TEMP/session-contracts/tests/test_skill_review.py"
-          python -m ralf_agent.temporal_profile_example --data-dir "$RUNNER_TEMP/temporal-profile-config"
+          python -m relf_agent.temporal_profile_example --data-dir "$RUNNER_TEMP/temporal-profile-config"
           python -m pytest -q -W error -p no:cacheprovider -c /dev/null "$RUNNER_TEMP/session-contracts/tests/test_temporal_catalog_assembly.py" "$RUNNER_TEMP/session-contracts/tests/test_temporal_catalog_lifetime.py" "$RUNNER_TEMP/session-contracts/tests/test_temporal_profile_host.py" "$RUNNER_TEMP/session-contracts/tests/test_temporal_host_lifetime.py" "$RUNNER_TEMP/session-contracts/tests/test_temporal_host_routing.py" "$RUNNER_TEMP/session-contracts/tests/test_temporal_host_sessions.py" "$RUNNER_TEMP/session-contracts/tests/test_temporal_journal_configuration.py" "$RUNNER_TEMP/session-contracts/tests/test_temporal_catalog_example.py" "$RUNNER_TEMP/session-contracts/tests/test_temporal_host_review.py" "$RUNNER_TEMP/session-contracts/tests/test_temporal_startup_options.py" "$RUNNER_TEMP/session-contracts/tests/test_temporal_host_preflight.py" "$RUNNER_TEMP/session-contracts/tests/test_skills.py" "$RUNNER_TEMP/session-contracts/tests/test_filesystem_skills.py" "$RUNNER_TEMP/session-contracts/tests/test_skill_tools.py" "$RUNNER_TEMP/session-contracts/tests/test_skill_configuration.py" "$RUNNER_TEMP/session-contracts/tests/test_skill_execution.py" "$RUNNER_TEMP/session-contracts/tests/test_skill_review.py"
-          python -m ralf_agent.temporal_catalog_example --data-dir "$RUNNER_TEMP/temporal-catalog-config"
+          python -m relf_agent.temporal_catalog_example --data-dir "$RUNNER_TEMP/temporal-catalog-config"
       - name: Installed complete model history contracts outside checkout
         working-directory: ${{ runner.temp }}
         run: |
@@ -170,14 +170,14 @@ jobs:
       - name: Installed graph starter outside checkout
         working-directory: ${{ runner.temp }}
         run: |
-          ralf init wheel-graph --template graph
+          relf init wheel-graph --template graph
           cd wheel-graph
           python -m agent_app --input urgent --command-id CI-GRAPH
 
       - name: Installed document ingestion starter outside checkout
         working-directory: ${{ runner.temp }}
         run: |
-          ralf init wheel-ingest --template ingest
+          relf init wheel-ingest --template ingest
           cd wheel-ingest
           echo 'Pool timeout: inspect the connection pool.' > runbook.md
           python -m agent_app ingest runbook.md --document-id pool --command-id CI-INGEST --expected-version 0
@@ -186,7 +186,7 @@ jobs:
       - name: Installed hybrid retrieval starter outside checkout
         working-directory: ${{ runner.temp }}
         run: |
-          ralf init wheel-hybrid --template hybrid
+          relf init wheel-hybrid --template hybrid
           cd wheel-hybrid
           echo 'Pool timeout: inspect the connection pool.' > runbook.md
           python -m agent_app ingest runbook.md --document-id pool --command-id CI-HYBRID-INGEST --expected-version 0
@@ -196,14 +196,14 @@ jobs:
       - name: Installed context and artifact starter outside checkout
         working-directory: ${{ runner.temp }}
         run: |
-          ralf init wheel-context --template context
+          relf init wheel-context --template context
           cd wheel-context
           python -m agent_app --input 'pool timeout' --command-id CI-CONTEXT
 
       - name: Installed automatic memory starter outside checkout
         working-directory: ${{ runner.temp }}
         run: |
-          ralf init wheel-memory --template memory
+          relf init wheel-memory --template memory
           cd wheel-memory
           python -m agent_app
           python -m agent_app
@@ -211,15 +211,15 @@ jobs:
       - name: Installed model compatibility starter outside checkout
         working-directory: ${{ runner.temp }}
         run: |
-          ralf-check-model
-          ralf init wheel-model-check --template model-check
+          relf-check-model
+          relf init wheel-model-check --template model-check
           cd wheel-model-check
           python -m agent_app
 
       - name: Installed observable starter outside checkout
         working-directory: ${{ runner.temp }}
         run: |
-          ralf init wheel-observable --template observable
+          relf init wheel-observable --template observable
           cd wheel-observable
           python -m agent_app
           python -m agent_app

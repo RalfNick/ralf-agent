@@ -1,0 +1,262 @@
+"""Local-owner CLI. Approvals always require an explicit command."""
+
+import argparse
+import asyncio
+import importlib
+import inspect
+import json
+import sys
+from contextlib import closing
+from dataclasses import asdict
+from pathlib import Path
+
+from . import __version__
+from .cli_views import diagnostics_inspection, inspection, render_inspection, render_result
+from .demo import create_demo_engine, demo_spec
+from .errors import AuthorizationDenied, DefinitionMismatch, RalfError, ValidationError
+from .ports import close_engine, is_sync_callable, validate_engine
+from .storage import SQLiteStore
+from .types import RunSnapshot, Scope
+
+
+def load_engine(db, factory_path=None, config_path=None):
+    """Load only explicitly configured, trusted local Python runtime code."""
+    if factory_path is not None and config_path is not None:
+        raise ValidationError("Configure a runtime catalog or factory, not both")
+    if config_path is not None:
+        from .runtime_config import load_catalog
+        from .runtime_router import ProfiledEngine
+
+        return ProfiledEngine(load_catalog(config_path), db)
+    if factory_path is None:
+        return create_demo_engine(db)
+    module, separator, name = factory_path.partition(":")
+    if not separator or not module or not name or ":" in name:
+        raise ValidationError("Engine factory must use the form module:callable")
+    # An explicitly selected factory is trusted local code. Console entry points
+    # otherwise search venv/bin rather than the user's project directory.
+    project_path = str(Path.cwd())
+    if project_path not in sys.path:
+        sys.path.insert(0, project_path)
+    try:
+        factory = getattr(importlib.import_module(module), name)
+    except Exception as exc:
+        raise ValidationError("Cannot import configured engine factory") from exc
+    if not is_sync_callable(factory):
+        raise ValidationError("Engine factory must be a synchronous callable accepting db_path")
+    try:
+        engine = factory(db)
+    except RalfError:
+        raise
+    except Exception as exc:
+        raise ValidationError("Configured engine factory failed to construct its runtime") from exc
+    try:
+        return validate_engine(engine)
+    except ValidationError:
+        if inspect.iscoroutine(engine) or inspect.isgenerator(engine):
+            engine.close()
+        elif is_sync_callable(getattr(engine, "close", None)):
+            try:
+                close_engine(engine)
+            except Exception as exc:
+                from .runtime_builder import RuntimeBuildError
+
+                raise RuntimeBuildError(engine) from exc
+        raise
+
+
+def main(argv=None):
+    parser = argparse.ArgumentParser(prog="relf", description="Relf-Agent local runtime preview")
+    parser.add_argument("--db", default=".ralf/runs.sqlite", help="Local execution database")
+    parser.add_argument("--version", action="version", version=f"Relf-Agent {__version__}")
+    parser.add_argument("--format", choices=("json", "text"), default="json", help="Output format")
+    configuration = parser.add_mutually_exclusive_group()
+    configuration.add_argument(
+        "--factory",
+        help="Trusted local module:callable accepting db_path and returning ExecutionEngine",
+    )
+    configuration.add_argument("--config", help="Versioned JSON/TOML runtime catalog")
+    commands = parser.add_subparsers(dest="command", required=True)
+    demo = commands.add_parser("demo", help="Run the offline Oncall fixture until approval")
+    demo.add_argument("--ticket", default="INC-001")
+    demo.add_argument("--command-id")
+    init = commands.add_parser("init", help="Create a standalone, offline Agent starter")
+    init.add_argument("directory")
+    init.add_argument(
+        "--template",
+        default="oncall",
+        help="Starter template: oncall, rag, config, model, graph, mcp, cli, parallel, async, plan, team, dag, nested, a2a, temporal, ingest, hybrid, context, memory, model-check, observable, sessions, user-input, adapter-contracts, session-contracts, facts-contracts, model-contracts or memory-index",
+    )
+    run = commands.add_parser(
+        "run", help="Submit an Agent/Workflow declaration using a runtime config or factory"
+    )
+    run.add_argument(
+        "--spec", required=True, help="JSON/TOML Agent, sequence, graph, team or dynamic spec"
+    )
+    inputs = run.add_mutually_exclusive_group(required=True)
+    inputs.add_argument("--input", help="Text task input")
+    inputs.add_argument("--input-json", help="Structured JSON task input")
+    run.add_argument("--command-id", required=True)
+    run.add_argument("--budget", type=int, default=32)
+    run.add_argument("--session-id")
+    run.add_argument("--submit-only", action="store_true")
+    for command in ("status", "inspect", "events", "resume", "cancel"):
+        subparser = commands.add_parser(command)
+        subparser.add_argument("run_id")
+        if command == "events":
+            subparser.add_argument("--after", type=int, default=0)
+            subparser.add_argument("--limit", type=int, default=1000)
+        if command == "cancel":
+            subparser.add_argument("--command-id", required=True)
+    approve = commands.add_parser("approve")
+    approve.add_argument("run_id")
+    approve.add_argument("action_id")
+    approve.add_argument("--digest", required=True)
+    approve.add_argument("--command-id", required=True)
+    approve.add_argument("--reject", action="store_true")
+    send_input = commands.add_parser("send-input", help="Answer an original pending input request")
+    send_input.add_argument("run_id")
+    send_input.add_argument("pending_id")
+    send_input.add_argument("--digest", required=True)
+    send_input.add_argument("--value-json", required=True, help="Schema-valid JSON reply value")
+    send_input.add_argument("--command-id", required=True)
+    send_input.add_argument("--expected-state-revision", type=int)
+    args = parser.parse_args(argv)
+    try:
+        if args.command == "init":
+            from .starter import create_starter
+
+            result = asdict(create_starter(args.directory, template=args.template))
+        elif args.command in {"status", "inspect", "events"}:
+            with SQLiteStore(args.db, readonly=True) as store:
+                # A read transaction keeps the summary and credit totals in one
+                # SQLite snapshot while another process advances the Run.
+                store.conn.execute("BEGIN")
+                run = store.run(args.run_id)
+                if run["scope"] != asdict(Scope()):
+                    raise AuthorizationDenied("CLI local owner cannot access this Run")
+                if args.command == "inspect" or (
+                    args.command == "status" and args.format == "text"
+                ):
+                    result = inspection(
+                        run, store.budget(args.run_id), args.db, args.factory, config=args.config
+                    )
+                elif args.command == "status":
+                    result = asdict(RunSnapshot.from_record(run))
+                else:
+                    result = [
+                        asdict(event) for event in store.events(args.run_id, args.after, args.limit)
+                    ]
+        else:
+            if args.command == "demo" and (args.factory or args.config):
+                raise ValidationError(
+                    "demo uses its offline profile; omit --factory/--config for this command"
+                )
+            if args.command == "run" and args.factory is None and args.config is None:
+                raise ValidationError("run requires an explicit --config or --factory")
+            with closing(load_engine(args.db, args.factory, args.config)) as engine:
+                if args.command == "demo":
+                    handle = engine.submit(
+                        demo_spec(),
+                        {"ticket": args.ticket},
+                        command_id=args.command_id or f"demo:{args.ticket}",
+                    )
+                    result = asdict(asyncio.run(engine.drive(handle.run_id)))
+                elif args.command == "run":
+                    from .runtime_config import load_spec
+
+                    try:
+                        task_input = (
+                            json.loads(args.input_json)
+                            if args.input_json is not None
+                            else args.input
+                        )
+                    except (ValueError, RecursionError) as exc:
+                        raise ValidationError("Task input must be valid JSON") from exc
+                    handle = engine.submit(
+                        load_spec(args.spec),
+                        task_input,
+                        command_id=args.command_id,
+                        budget=args.budget,
+                        session_id=args.session_id,
+                    )
+                    result = (
+                        asdict(handle)
+                        if args.submit_only
+                        else asdict(asyncio.run(engine.drive(handle.run_id)))
+                    )
+                elif args.command == "resume":
+                    try:
+                        result = asdict(asyncio.run(engine.drive(args.run_id)))
+                    except DefinitionMismatch as exc:
+                        if args.factory is None and args.config is None:
+                            raise DefinitionMismatch(
+                                "Run differs from the offline demo profile; configure "
+                                "--factory module:callable with its original runtime configuration"
+                            ) from exc
+                        raise
+                elif args.command == "approve":
+                    result = asdict(
+                        engine.approve(
+                            args.run_id,
+                            args.action_id,
+                            args.digest,
+                            command_id=args.command_id,
+                            approved=not args.reject,
+                        )
+                    )
+                elif args.command == "send-input":
+                    try:
+                        value = json.loads(args.value_json)
+                    except (ValueError, RecursionError) as exc:
+                        raise ValidationError("Input reply must be valid JSON") from exc
+                    from .user_input import input_reply_payload
+
+                    input_reply_payload(
+                        args.run_id,
+                        args.pending_id,
+                        args.digest,
+                        value,
+                        expected_state_revision=args.expected_state_revision,
+                    )
+                    operation = getattr(engine, "send_input", None)
+                    if not is_sync_callable(operation):
+                        raise ValidationError("Original authority does not support user input")
+                    result = asdict(
+                        operation(
+                            args.run_id,
+                            args.pending_id,
+                            args.digest,
+                            value,
+                            command_id=args.command_id,
+                            expected_state_revision=args.expected_state_revision,
+                        )
+                    )
+                else:
+                    result = asdict(engine.cancel(args.run_id, command_id=args.command_id))
+                if args.format == "text" and (
+                    args.command in {"demo", "resume"}
+                    or (args.command == "run" and not args.submit_only)
+                ):
+                    diagnostics = getattr(engine, "diagnostics", None)
+                    if callable(diagnostics):
+                        result = diagnostics_inspection(
+                            diagnostics(result["run_id"]), args.db, args.factory, config=args.config
+                        )
+        if args.format == "text":
+            print(render_inspection(result) if "release" in result else render_result(result))
+        else:
+            print(json.dumps(result, ensure_ascii=False, allow_nan=False))
+        return 0
+    except RalfError as exc:
+        message = (
+            f"{exc.code}: {exc}"
+            if args.format == "text"
+            else json.dumps({"code": exc.code, "message": str(exc)}, ensure_ascii=False)
+        )
+        print(message, file=sys.stderr)
+        return 2
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

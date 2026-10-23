@@ -42,7 +42,7 @@ def prepare(wheel, sdist, source, spec, output):
         project = tomllib.loads((source / "pyproject.toml").read_text())["project"]
         if project["name"] != distribution or project["version"] != spec["version"]:
             raise gate.GateError("source_version_mismatch")
-        package = source / "src/ralf_agent"
+        package = source / "src" / gate.python_module(spec)
         products = {
             p.relative_to(package).as_posix(): gate.file_digest(p)
             for p in package.rglob("*")

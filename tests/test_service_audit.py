@@ -3,8 +3,8 @@ from dataclasses import FrozenInstanceError, asdict
 
 import pytest
 
-from ralf_agent import InMemoryAuditSink, Scope, ServiceAudit
-from ralf_agent.errors import ValidationError
+from relf_agent import InMemoryAuditSink, Scope, ServiceAudit
+from relf_agent.errors import ValidationError
 
 
 def test_fixed_redacted_schema_and_stable_keyed_references():

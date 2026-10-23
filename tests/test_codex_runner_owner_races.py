@@ -5,9 +5,9 @@ from types import SimpleNamespace
 
 import pytest
 
-from ralf_agent.errors import CoordinatorBusy
-from ralf_agent.executors import DispatchEnvelope
-from ralf_agent.types import InvocationContext, Scope
+from relf_agent.errors import CoordinatorBusy
+from relf_agent.executors import DispatchEnvelope
+from relf_agent.types import InvocationContext, Scope
 from tests import test_codex_runner as fixture
 
 runner_parts = fixture.runner_parts

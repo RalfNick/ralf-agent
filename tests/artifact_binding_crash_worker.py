@@ -7,9 +7,9 @@ import signal
 import sqlite3
 from pathlib import Path
 
-import ralf_agent as r
-from ralf_agent.temporal import build_temporal_worker
-from ralf_agent.temporal_activities import TemporalRuntime
+import relf_agent as r
+from relf_agent.temporal import build_temporal_worker
+from relf_agent.temporal_activities import TemporalRuntime
 
 from .test_artifact_binding_execution import Reader
 

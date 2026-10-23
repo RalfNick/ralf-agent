@@ -2,10 +2,10 @@ import asyncio
 
 import httpx
 
-from ralf_agent import AgentSpec, LocalEngine, Scope, SQLiteStore, ToolRegistry
-from ralf_agent.a2a import A2AApplication, A2AClient
-from ralf_agent.handoff import SQLiteInbox
-from ralf_agent.runtime_builder import EchoProvider
+from relf_agent import AgentSpec, LocalEngine, Scope, SQLiteStore, ToolRegistry
+from relf_agent.a2a import A2AApplication, A2AClient
+from relf_agent.handoff import SQLiteInbox
+from relf_agent.runtime_builder import EchoProvider
 
 
 def test_a2a_accepts_composed_async_authority_with_real_local_receipts(tmp_path):

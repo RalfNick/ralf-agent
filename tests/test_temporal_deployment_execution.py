@@ -7,10 +7,10 @@ from types import SimpleNamespace
 
 import pytest
 
-from ralf_agent.errors import DefinitionMismatch
-from ralf_agent.governance import DeploymentAdmissionPolicy
-from ralf_agent.temporal_deployment_admission import DeploymentAdmissionState, root_run_id
-from ralf_agent.types import digest
+from relf_agent.errors import DefinitionMismatch
+from relf_agent.governance import DeploymentAdmissionPolicy
+from relf_agent.temporal_deployment_admission import DeploymentAdmissionState, root_run_id
+from relf_agent.types import digest
 
 
 @pytest.fixture(autouse=True, scope="module")
@@ -24,7 +24,7 @@ POLICY = DeploymentAdmissionPolicy("sdk-gate", max_active_root_runs=1)
 
 
 def module():
-    name = "ralf_agent.temporal_deployment_execution"
+    name = "relf_agent.temporal_deployment_execution"
     assert importlib.util.find_spec(name), "Missing actual SDK deployment admission transport"
     return importlib.import_module(name)
 
@@ -614,12 +614,12 @@ def test_carrier_preserves_actual_registered_limits_request_digest(monkeypatch):
     async def run():
         from temporalio import activity
 
-        from ralf_agent import AgentSpec, FixedAgentLimits, ModelResponse, ToolRegistry
-        from ralf_agent.temporal_activities import TemporalRuntime, registered_activities
-        from ralf_agent.temporal_bindings import normalize_request
-        from ralf_agent.temporal_deployment_execution_state import adopt, initialize, view
-        from ralf_agent.temporal_state import TemporalRunState
-        from ralf_agent.types import submission_request
+        from relf_agent import AgentSpec, FixedAgentLimits, ModelResponse, ToolRegistry
+        from relf_agent.temporal_activities import TemporalRuntime, registered_activities
+        from relf_agent.temporal_bindings import normalize_request
+        from relf_agent.temporal_deployment_execution_state import adopt, initialize, view
+        from relf_agent.temporal_state import TemporalRunState
+        from relf_agent.types import submission_request
 
         class Provider:
             identity = {"kind": "carrier-limits", "version": "1"}
@@ -687,7 +687,7 @@ def test_carrier_preserves_actual_registered_limits_request_digest(monkeypatch):
         action, original = state.next_operation()
         assert action["kind"] == "agent_limits"
         frozen_digest = digest(original)
-        from ralf_agent.temporal_limits_state import ACTIVITY as LIMITS_ACTIVITY
+        from relf_agent.temporal_limits_state import ACTIVITY as LIMITS_ACTIVITY
 
         limits_activity = next(
             fn

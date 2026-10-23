@@ -6,8 +6,8 @@ import uuid
 
 import pytest
 
-import ralf_agent as r
-from ralf_agent.temporal import replay_temporal_history
+import relf_agent as r
+from relf_agent.temporal import replay_temporal_history
 
 pytestmark = pytest.mark.skipif(
     not os.getenv("RALF_TEST_TEMPORAL_ADDRESS") or not os.getenv("RALF_TEST_DOCKER_IMAGE"),

@@ -7,9 +7,9 @@ from dataclasses import replace
 
 import pytest
 
-import ralf_agent as r
-from ralf_agent.errors import RalfError
-from ralf_agent.retrieval import KnowledgeContext, RetrievalQuery
+import relf_agent as r
+from relf_agent.errors import RalfError
+from relf_agent.retrieval import KnowledgeContext, RetrievalQuery
 
 
 def api():
@@ -176,7 +176,7 @@ def test_custom_selector_identity_structure_is_bounded_before_detachment():
 
 
 def test_sync_directory_reads_use_original_actual_thread_tracker():
-    from ralf_agent.tools import ThreadExecutionTracker, current_thread_tracker
+    from relf_agent.tools import ThreadExecutionTracker, current_thread_tracker
 
     main = threading.get_ident()
 
@@ -205,9 +205,9 @@ def test_sync_directory_reads_use_original_actual_thread_tracker():
 
 
 def test_real_file_directory_keeps_fd_and_actual_read_after_observer_cancel(tmp_path, monkeypatch):
-    from ralf_agent.errors import CloseIncomplete
-    from ralf_agent.temporal_context_execution import ContextExecutionOwner
-    from ralf_agent.types import digest
+    from relf_agent.errors import CloseIncomplete
+    from relf_agent.temporal_context_execution import ContextExecutionOwner
+    from relf_agent.types import digest
 
     (tmp_path / "help.md").write_text("private skill body")
     (tmp_path / "skills.json").write_text(

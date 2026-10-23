@@ -6,7 +6,7 @@ from types import SimpleNamespace
 
 import pytest
 
-from ralf_agent import (
+from relf_agent import (
     ComponentRegistry,
     InMemoryMemory,
     RecallQuery,
@@ -15,8 +15,8 @@ from ralf_agent import (
     TemporalRuntimeBuilder,
     ThreadedMemoryAdapter,
 )
-from ralf_agent.errors import CloseIncomplete, ValidationError
-from ralf_agent.runtime_builder import EchoProvider, RuntimeBuildError
+from relf_agent.errors import CloseIncomplete, ValidationError
+from relf_agent.runtime_builder import EchoProvider, RuntimeBuildError
 
 
 def profile(components=None, adapter="test"):
@@ -152,7 +152,7 @@ def test_actual_sdk_fatal_error_surfaces_after_owned_cleanup(tmp_path, monkeypat
                 events.append("sdk-shutdown")
 
         worker = ActualSDKContext()
-        monkeypatch.setattr("ralf_agent.temporal.build_temporal_worker", lambda *a, **kw: worker)
+        monkeypatch.setattr("relf_agent.temporal.build_temporal_worker", lambda *a, **kw: worker)
         registry = ComponentRegistry()
         registry.register_async("provider", "test", factory)
         assembled = await TemporalRuntimeBuilder(registry, base_dir=tmp_path).abuild(profile())

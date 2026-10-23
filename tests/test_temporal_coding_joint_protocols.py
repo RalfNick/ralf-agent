@@ -13,8 +13,8 @@ def candidate(kind):
 
         return candidate()
     if kind == "tool":
-        from ralf_agent import ToolExecutionOwner, ToolRegistry
-        from ralf_agent.temporal_activities import TemporalRuntime
+        from relf_agent import ToolExecutionOwner, ToolRegistry
+        from relf_agent.temporal_activities import TemporalRuntime
         from tests.test_temporal_engine import Provider
 
         return TemporalRuntime(
@@ -44,7 +44,7 @@ def candidate(kind):
     "kind", ["context", "tool", "artifacts", "continuation", "history", "parent", "input"]
 )
 def test_coding_joint_version_keeps_original_optional_capability_validation(kind):
-    from ralf_agent import (
+    from relf_agent import (
         temporal_artifact_bindings,
         temporal_context_read_protocol,
         temporal_decision_state,
@@ -69,7 +69,7 @@ def test_coding_joint_version_keeps_original_optional_capability_validation(kind
 
 
 def test_coding_joint_version_keeps_original_sandbox_gate(registered):
-    from ralf_agent.binding_sandbox import validate_sandbox_protocol
+    from relf_agent.binding_sandbox import validate_sandbox_protocol
     from tests.test_sandbox_temporal_protocol import runtime_for
 
     release = copy.deepcopy(runtime_for(registered[0]).manifest)

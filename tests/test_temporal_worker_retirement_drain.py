@@ -6,11 +6,11 @@ from types import SimpleNamespace
 
 import pytest
 
-from ralf_agent import Scope, TemporalProfile
-from ralf_agent.errors import CloseIncomplete, DefinitionMismatch
-from ralf_agent.runtime_lifecycle import BuildContext
-from ralf_agent.temporal_assembly_lifecycle import TemporalRuntimeAssembly
-from ralf_agent.types import digest
+from relf_agent import Scope, TemporalProfile
+from relf_agent.errors import CloseIncomplete, DefinitionMismatch
+from relf_agent.runtime_lifecycle import BuildContext
+from relf_agent.temporal_assembly_lifecycle import TemporalRuntimeAssembly
+from relf_agent.types import digest
 
 
 @pytest.fixture(autouse=True)
@@ -19,8 +19,8 @@ def sdk():
 
 
 def test_actual_owners_drain_before_retirement_and_poller_stops_last(tmp_path, monkeypatch):
-    from ralf_agent import temporal_deployment_coding_bridge as bridge
-    from ralf_agent import temporal_deployment_release as release
+    from relf_agent import temporal_deployment_coding_bridge as bridge
+    from relf_agent import temporal_deployment_release as release
 
     async def run():
         events = []
@@ -93,10 +93,10 @@ def test_actual_owners_drain_before_retirement_and_poller_stops_last(tmp_path, m
 
 
 def environment(monkeypatch, *, ready=True):
-    from ralf_agent import temporal_deployment_coding_bridge as bridge
-    from ralf_agent import temporal_deployment_execution as execution
-    from ralf_agent import temporal_deployment_release as release
-    from ralf_agent.temporal_bindings import request_release_digest
+    from relf_agent import temporal_deployment_coding_bridge as bridge
+    from relf_agent import temporal_deployment_execution as execution
+    from relf_agent import temporal_deployment_release as release
+    from relf_agent.temporal_bindings import request_release_digest
     from tests.test_temporal_deployment_coding_bridge import MANIFEST, NAMESPACE, SCOPE
 
     proof = {
@@ -214,7 +214,7 @@ def environment(monkeypatch, *, ready=True):
 
 
 def test_queued_release_and_verify_must_finish_before_drain_returns(monkeypatch):
-    from ralf_agent import temporal_deployment_coding_bridge as bridge
+    from relf_agent import temporal_deployment_coding_bridge as bridge
 
     async def run():
         runtime, client, scope, closure, certificate, records, events = environment(monkeypatch)
@@ -242,7 +242,7 @@ def test_queued_release_and_verify_must_finish_before_drain_returns(monkeypatch)
 
 
 def test_unknown_effect_remains_held_without_manufacturing_retirement(monkeypatch):
-    from ralf_agent import temporal_deployment_coding_bridge as bridge
+    from relf_agent import temporal_deployment_coding_bridge as bridge
 
     async def run():
         runtime, client, scope, _, _, _, events = environment(monkeypatch, ready=False)
@@ -253,7 +253,7 @@ def test_unknown_effect_remains_held_without_manufacturing_retirement(monkeypatc
 
 
 def test_not_ready_without_unknown_waits_for_original_sdk_adoption(monkeypatch):
-    from ralf_agent import temporal_deployment_coding_bridge as bridge
+    from relf_agent import temporal_deployment_coding_bridge as bridge
 
     async def run():
         runtime, client, scope, closure, certificate, records, _ = environment(
@@ -288,8 +288,8 @@ def test_not_ready_without_unknown_waits_for_original_sdk_adoption(monkeypatch):
 
 
 def test_recursive_root_waits_for_queued_child_completion_with_empty_tracker(monkeypatch):
-    from ralf_agent import temporal_deployment_coding_bridge as bridge
-    from ralf_agent import temporal_deployment_execution as execution
+    from relf_agent import temporal_deployment_coding_bridge as bridge
+    from relf_agent import temporal_deployment_execution as execution
 
     async def run():
         runtime, client, scope, root, certificate, records, events = environment(
@@ -360,7 +360,7 @@ def test_recursive_root_waits_for_queued_child_completion_with_empty_tracker(mon
 
 @pytest.mark.parametrize("fault", ["timeout", "wrong-retirement"])
 def test_ready_original_root_needs_positive_exact_retirement(monkeypatch, fault):
-    from ralf_agent import temporal_deployment_coding_bridge as bridge
+    from relf_agent import temporal_deployment_coding_bridge as bridge
 
     async def run():
         runtime, client, scope, closure, certificate, records, _ = environment(monkeypatch)
@@ -375,8 +375,8 @@ def test_ready_original_root_needs_positive_exact_retirement(monkeypatch, fault)
 
 @pytest.mark.parametrize("root_unknown", [False, True])
 def test_unknown_never_hides_sibling_queued_cleanup(monkeypatch, root_unknown):
-    from ralf_agent import temporal_deployment_coding_bridge as bridge
-    from ralf_agent import temporal_deployment_execution as execution
+    from relf_agent import temporal_deployment_coding_bridge as bridge
+    from relf_agent import temporal_deployment_execution as execution
 
     async def run():
         runtime, client, scope, root, _, _, events = environment(monkeypatch, ready=False)

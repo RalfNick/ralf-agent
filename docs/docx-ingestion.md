@@ -4,7 +4,7 @@
 无需新增依赖，不读取文件或访问 URL。原 `TextDocumentParser` 和 `HtmlDocumentParser` 策略保持。
 
 ```python
-from ralf_agent import (
+from relf_agent import (
     DocxDocumentParser,
     IngestionCoordinator,
     Scope,
@@ -56,7 +56,7 @@ source = SourceDocument(
 ## 模板使用
 
 ```sh
-ralf init my-docs --template ingest
+relf init my-docs --template ingest
 cd my-docs
 python -m agent_app ingest /absolute/path/runbook.docx --document-id runbook --command-id ingest-first --expected-version 0
 python -m agent_app query --query 'pool timeout' --command-id answer-first

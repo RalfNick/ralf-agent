@@ -4,7 +4,7 @@ import asyncio
 
 import pytest
 
-from ralf_agent import (
+from relf_agent import (
     ComponentRegistry,
     DeploymentAdmissionPolicy,
     TemporalProfile,
@@ -12,7 +12,7 @@ from ralf_agent import (
     TemporalRuntimeBuilder,
     ToolRegistry,
 )
-from ralf_agent.errors import ValidationError
+from relf_agent.errors import ValidationError
 from tests.test_temporal_deployment_public_registry import Provider
 
 
@@ -46,7 +46,7 @@ def test_public_builder_can_construct_coding_components_before_resource_validati
 
 
 @pytest.mark.parametrize(
-    "workflow_module", ["ralf_agent.temporal_workflow", "ralf_agent.temporal_parent_workflow"]
+    "workflow_module", ["relf_agent.temporal_workflow", "relf_agent.temporal_parent_workflow"]
 )
 def test_registered_sdk_sandbox_accepts_the_original_coding_root_with_fixed_guards(workflow_module):
     import copy
@@ -55,7 +55,7 @@ def test_registered_sdk_sandbox_accepts_the_original_coding_root_with_fixed_guar
     from temporalio.worker.workflow_sandbox._importer import Importer
     from temporalio.worker.workflow_sandbox._restrictions import RestrictionContext
 
-    from ralf_agent.temporal import _workflow_runner
+    from relf_agent.temporal import _workflow_runner
     from tests.test_temporal_deployment_coding_registry import coding_request
     from tests.test_temporal_deployment_public_registry import NAMESPACE, POLICY
 
@@ -65,7 +65,7 @@ def test_registered_sdk_sandbox_accepts_the_original_coding_root_with_fixed_guar
     importer = Importer(_workflow_runner().restrictions, context)
     with importer.applied():
         importlib.import_module(workflow_module)
-        module = importlib.import_module("ralf_agent.temporal_state")
+        module = importlib.import_module("relf_agent.temporal_state")
         context.is_runtime = True
         try:
             state = module.TemporalCommandRegistryState(
@@ -87,11 +87,11 @@ def test_public_sdk_reaches_native_resource_check_and_private_sdk_stays_refused(
 
 
 def test_complete_public_coding_assembly_publishes_both_original_inventories(tmp_path, monkeypatch):
-    from ralf_agent import Scope
-    from ralf_agent.runtime_lifecycle import BuildContext
-    from ralf_agent.temporal_coding_factories import build
-    from ralf_agent.temporal_deployment_protocol import CODING_SOURCE_FILES, PUBLIC_SOURCE_FILES
-    from ralf_agent.temporal_journal import PostgresEffectJournal
+    from relf_agent import Scope
+    from relf_agent.runtime_lifecycle import BuildContext
+    from relf_agent.temporal_coding_factories import build
+    from relf_agent.temporal_deployment_protocol import CODING_SOURCE_FILES, PUBLIC_SOURCE_FILES
+    from relf_agent.temporal_journal import PostgresEffectJournal
     from tests.test_temporal_coding_factories import Connection, entry, publish_initialization
 
     async def run():
@@ -129,11 +129,11 @@ def test_complete_public_coding_assembly_publishes_both_original_inventories(tmp
 def test_never_attached_public_native_assembly_closes_its_owned_components(
     tmp_path, monkeypatch, existing_resources
 ):
-    from ralf_agent import Scope
-    from ralf_agent.runtime_lifecycle import BuildContext
-    from ralf_agent.temporal_assembly_lifecycle import TemporalRuntimeAssembly
-    from ralf_agent.temporal_coding_factories import build
-    from ralf_agent.temporal_journal import PostgresEffectJournal
+    from relf_agent import Scope
+    from relf_agent.runtime_lifecycle import BuildContext
+    from relf_agent.temporal_assembly_lifecycle import TemporalRuntimeAssembly
+    from relf_agent.temporal_coding_factories import build
+    from relf_agent.temporal_journal import PostgresEffectJournal
     from tests.test_temporal_coding_factories import Connection, entry, publish_initialization
 
     async def run():
@@ -170,7 +170,7 @@ def test_never_attached_public_native_assembly_closes_its_owned_components(
         assert len(context._resources) == 3
         try:
             if existing_resources:
-                from ralf_agent.errors import CloseIncomplete
+                from relf_agent.errors import CloseIncomplete
 
                 originals = tuple(context._resources)
                 with pytest.raises(CloseIncomplete):

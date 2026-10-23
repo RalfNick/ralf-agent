@@ -11,7 +11,7 @@ import pytest
 
 def application(tmp_path):
     try:
-        module = importlib.import_module("ralf_agent.adapter_contract_starter")
+        module = importlib.import_module("relf_agent.adapter_contract_starter")
     except ModuleNotFoundError:
         pytest.fail("The independent external adapter application is missing")
     files = module.adapter_contract_files()
@@ -57,7 +57,7 @@ def test_editable_external_adapter_uses_final_references_for_all_consumers(tmp_p
     assert "class ReferenceSQLiteRetriever:" in copied
     assert "class ReferenceKnowledgeSource:" in copied
     assert "LexicalRetriever(" not in copied and "SQLiteKnowledgeStore(" not in copied
-    assert "from ralf_agent.adapter_contract_reference" not in copied
+    assert "from relf_agent.adapter_contract_reference" not in copied
 
 
 def test_external_application_source_seed_is_explicit_and_never_restores_deleted_source(tmp_path):
@@ -190,7 +190,7 @@ def test_external_profiled_factory_closes_the_actual_source_after_business_activ
 import asyncio
 import json
 import sqlite3
-from ralf_agent import AgentSpec
+from relf_agent import AgentSpec
 from agent_app.runtime import create_engine, source_path
 with sqlite3.connect(source_path()) as connection:
     before = dict(connection.execute("SELECT kind,count FROM audit"))
@@ -229,7 +229,7 @@ import os
 import sys
 import agent_app.runtime as runtime
 from agent_app.adapter import ReferenceKnowledgeSource
-from ralf_agent.errors import ValidationError
+from relf_agent.errors import ValidationError
 created = []
 original_init = ReferenceKnowledgeSource.__init__
 def initialize(source, path):

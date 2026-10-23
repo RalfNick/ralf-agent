@@ -4,7 +4,7 @@ import json
 
 import pytest
 
-from ralf_agent import (
+from relf_agent import (
     AgentSpec,
     BindingSelection,
     DynamicWorkflowSpec,
@@ -12,12 +12,12 @@ from ralf_agent import (
     GraphWorkflowSpec,
     TeamSpec,
 )
-from ralf_agent.binding_paths import agent_paths
-from ralf_agent.binding_types import AgentBindingDescriptor
-from ralf_agent.errors import AuthorizationDenied, DefinitionMismatch, ValidationError
-from ralf_agent.temporal_coding_composition_protocol import validate_topology
-from ralf_agent.temporal_state import validate_request
-from ralf_agent.types import canonical, submission_request
+from relf_agent.binding_paths import agent_paths
+from relf_agent.binding_types import AgentBindingDescriptor
+from relf_agent.errors import AuthorizationDenied, DefinitionMismatch, ValidationError
+from relf_agent.temporal_coding_composition_protocol import validate_topology
+from relf_agent.temporal_state import validate_request
+from relf_agent.types import canonical, submission_request
 from tests.test_temporal_binding_validation_pass import descriptor_calls
 from tests.test_temporal_session_deployment_coding_configuration import coding_session_manifest
 
@@ -92,7 +92,7 @@ def test_custom_python_inputs_preserve_the_original_validation_sequence(custom):
 
 
 def test_legacy_coding_three_keeps_the_original_three_groups():
-    from ralf_agent.temporal_deployment_protocol import CODING_SOURCE_FILES
+    from relf_agent.temporal_deployment_protocol import CODING_SOURCE_FILES
 
     request, manifest = inputs()
     manifest.pop("session_deployment_protocol")
@@ -138,7 +138,7 @@ def test_reused_topology_still_refuses_invalid_original_grants_and_bounds(fault)
 
 
 def test_private_structure_helper_is_part_of_the_original_source_inventory(monkeypatch):
-    from ralf_agent import temporal_coding_composition_protocol as protocol
+    from relf_agent import temporal_coding_composition_protocol as protocol
 
     request, manifest = inputs()
     monkeypatch.setattr(protocol, "_topology_definitions", lambda *args: [])
@@ -161,7 +161,7 @@ def test_reused_dynamic_topology_still_refuses_hidden_coding_planner():
 def test_final_independent_binding_check_rejects_a_change_after_topology():
     import sys
 
-    from ralf_agent import temporal_coding_composition_protocol as protocol
+    from relf_agent import temporal_coding_composition_protocol as protocol
 
     request, manifest = inputs()
     code = protocol._topology_definitions.__code__

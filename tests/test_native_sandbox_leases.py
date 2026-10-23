@@ -6,16 +6,16 @@ import sys
 
 import pytest
 
-from ralf_agent.docker_sandbox_transport import NativeSandboxLease, lease_root
-from ralf_agent.errors import RalfError
+from relf_agent.docker_sandbox_transport import NativeSandboxLease, lease_root
+from relf_agent.errors import RalfError
 
 
 def test_second_real_process_refuses_held_native_invocation_and_can_acquire_after_exit(tmp_path):
     root = lease_root(str(tmp_path / "leases"))
     lease = NativeSandboxLease(root, "invocation")
     script = """import json,sys
-from ralf_agent.docker_sandbox_transport import NativeSandboxLease
-from ralf_agent.sandbox import SandboxUnavailable
+from relf_agent.docker_sandbox_transport import NativeSandboxLease
+from relf_agent.sandbox import SandboxUnavailable
 try:
  value=NativeSandboxLease(json.loads(sys.argv[1]),'invocation')
 except SandboxUnavailable:

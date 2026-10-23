@@ -93,7 +93,7 @@ def test_independent_verifiers_share_one_original_coordinator_query_slot(
 
 @pytest.mark.parametrize("fault", [None, "reader", "cancel"])
 def test_queued_original_reader_drains_and_releases_transport_slot(fault):
-    from ralf_agent import temporal_session_deployment_verification as verification
+    from relf_agent import temporal_session_deployment_verification as verification
 
     async def run():
         _, first, validate_first = environment(composition=True)
@@ -164,7 +164,7 @@ def test_queued_original_reader_drains_and_releases_transport_slot(fault):
 def test_different_original_epochs_keep_independent_query_slots():
     import copy
 
-    from ralf_agent.temporal_session_deployment_verification import validate_session_origin
+    from relf_agent.temporal_session_deployment_verification import validate_session_origin
     from tests.test_temporal_session_deployment_dto import origin, seal
 
     async def run():
@@ -218,8 +218,8 @@ def test_different_original_epochs_keep_independent_query_slots():
 
 @pytest.mark.parametrize("changed", ["selector", "_check", "checker-code"])
 def test_queued_reader_rechecks_original_pins_before_foreign_callbacks(changed, monkeypatch):
-    from ralf_agent import temporal_session_deployment_verification as verification
-    from ralf_agent.errors import DefinitionMismatch
+    from relf_agent import temporal_session_deployment_verification as verification
+    from relf_agent.errors import DefinitionMismatch
 
     async def run():
         _, first, validate_first = environment(composition=True)

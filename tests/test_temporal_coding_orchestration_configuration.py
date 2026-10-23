@@ -6,14 +6,14 @@ from types import SimpleNamespace
 
 import pytest
 
-from ralf_agent import AgentSpec, BindingSelection, DynamicWorkflowSpec, Scope, TeamSpec
-from ralf_agent.binding_definitions import BoundDefinition
-from ralf_agent.binding_types import AgentBindingDescriptor
-from ralf_agent.errors import DefinitionMismatch, ValidationError
-from ralf_agent.temporal import TemporalEngine
-from ralf_agent.temporal_coding_composition_protocol import _worker_sources, validate_topology
-from ralf_agent.temporal_coding_protocol import validate_protocol
-from ralf_agent.types import submission_request
+from relf_agent import AgentSpec, BindingSelection, DynamicWorkflowSpec, Scope, TeamSpec
+from relf_agent.binding_definitions import BoundDefinition
+from relf_agent.binding_types import AgentBindingDescriptor
+from relf_agent.errors import DefinitionMismatch, ValidationError
+from relf_agent.temporal import TemporalEngine
+from relf_agent.temporal_coding_composition_protocol import _worker_sources, validate_topology
+from relf_agent.temporal_coding_protocol import validate_protocol
+from relf_agent.types import submission_request
 from tests.test_temporal_coding_configuration import manifest as leaf_manifest
 
 
@@ -109,7 +109,7 @@ def test_worker_inventory_pins_selection_and_recorded_managed_planner():
 
 @pytest.mark.parametrize("spec", [TeamSpec, DynamicWorkflowSpec])
 def test_direct_member_excluded_tool_grants_do_not_reserve_native_resource(spec):
-    from ralf_agent.temporal_bindings import normalize_request
+    from relf_agent.temporal_bindings import normalize_request
 
     source = spec("finite", {"worker": AgentSpec("a", "Task", tools=("coding", "other"))})
     choice = AgentBindingDescriptor(
@@ -176,8 +176,8 @@ def test_hidden_members_refuse_non_fixed_agent_definitions(member):
 def test_current_worker_rechecks_actual_managed_selection_helpers(monkeypatch, helper):
     from types import SimpleNamespace
 
-    from ralf_agent import temporal_coding_composition_control, temporal_control_activities
-    from ralf_agent.temporal_coding_composition_protocol import check, publish
+    from relf_agent import temporal_coding_composition_control, temporal_control_activities
+    from relf_agent.temporal_coding_composition_protocol import check, publish
 
     runtime = SimpleNamespace(coding_execution=True, coding_composition=True)
     release = publish(manifest(), runtime)
@@ -212,12 +212,12 @@ def test_current_worker_rechecks_actual_managed_selection_helpers(monkeypatch, h
 def test_history_rechecks_new_fixed_orchestration_helpers(monkeypatch, module, helper):
     from importlib import import_module
 
-    from ralf_agent.temporal_coding_composition_protocol import validate_protocol
+    from relf_agent.temporal_coding_composition_protocol import validate_protocol
     from tests.test_temporal_coding_composition_configuration import composition_manifest
 
     value = composition_manifest()
     validate_protocol(value)
-    target = import_module("ralf_agent." + module)
+    target = import_module("relf_agent." + module)
     if "." in helper:
         owner, helper = helper.split(".")
         target = getattr(target, owner)
@@ -251,8 +251,8 @@ def test_history_rechecks_new_fixed_orchestration_helpers(monkeypatch, module, h
     ],
 )
 def test_history_rechecks_all_parent_completion_execution_helpers(monkeypatch, helper):
-    from ralf_agent import temporal_parent_completion_state
-    from ralf_agent.temporal_coding_composition_protocol import validate_protocol
+    from relf_agent import temporal_parent_completion_state
+    from relf_agent.temporal_coding_composition_protocol import validate_protocol
     from tests.test_temporal_coding_composition_configuration import composition_manifest
 
     value = composition_manifest()
@@ -269,7 +269,7 @@ def test_history_rechecks_all_parent_completion_execution_helpers(monkeypatch, h
 def test_parent_completion_history_inventory_never_discovers_worker_io(monkeypatch):
     from importlib import import_module
 
-    from ralf_agent.temporal_coding_composition_protocol import implementation, validate_protocol
+    from relf_agent.temporal_coding_composition_protocol import implementation, validate_protocol
     from tests.test_temporal_coding_composition_configuration import composition_manifest
 
     value = composition_manifest()

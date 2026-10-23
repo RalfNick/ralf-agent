@@ -6,7 +6,7 @@ keeps its original flat mode; opt into `plan_mode="dag"` for dependency plans.
 tool-free native child Run through the same budget/step limits and Provider.
 
 ```python
-from ralf_agent import AgentSpec, DynamicWorkflowSpec, DAGNode, DAGProposal, ValueRef
+from relf_agent import AgentSpec, DynamicWorkflowSpec, DAGNode, DAGProposal, ValueRef
 
 
 class ResearchPlanner:
@@ -82,10 +82,10 @@ of eight, with `max_depth` available to tighten it. Definitions also have separa
 limits of eight structural levels, 256 components and 1 MiB finite JSON.
 
 ```shell
-ralf init my-dag --template dag
+relf init my-dag --template dag
 cd my-dag
 python -m agent_app --input hello --command-id first
-ralf --db .ralf/runs.sqlite --format text inspect RUN_ID
+relf --db .ralf/runs.sqlite --format text inspect RUN_ID
 ```
 
 `--template nested` creates a DAG delegating to a team. Both packaged starters use

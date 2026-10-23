@@ -5,8 +5,8 @@ import json
 
 import pytest
 
-import ralf_agent as r
-from ralf_agent.binding_definitions import decode_definition
+import relf_agent as r
+from relf_agent.binding_definitions import decode_definition
 
 from .test_workspace_binding_execution import definition as original_definition
 from .test_workspace_binding_execution import finish
@@ -147,7 +147,7 @@ def test_unsupported_selector_and_no_original_match_reject_before_model(
     tmp_path, host, selector, grants
 ):
     registry, bindings, observed = host
-    from ralf_agent.errors import RalfError
+    from relf_agent.errors import RalfError
 
     calls = []
 
@@ -240,7 +240,7 @@ def test_skills_workspace_tool_set_intersect_independently(tmp_path, host):
 def test_skill_catalog_scope_cannot_be_selected_by_foreign_host(tmp_path, host):
     from contextlib import closing
 
-    from ralf_agent.errors import ValidationError
+    from relf_agent.errors import ValidationError
 
     registry, bindings, observed = host
     with closing(r.SQLiteStore(tmp_path / "runs.sqlite")) as store:

@@ -5,8 +5,8 @@ from types import SimpleNamespace
 
 import pytest
 
-from ralf_agent import temporal_coding_composition_state as composition
-from ralf_agent.errors import DefinitionMismatch
+from relf_agent import temporal_coding_composition_state as composition
+from relf_agent.errors import DefinitionMismatch
 from tests.test_temporal_coding_composition_state import parent as legacy_parent
 from tests.test_temporal_deployment_session_registry import state as registry_state
 from tests.test_temporal_session_deployment_coding_registry import coding_intent_request
@@ -108,7 +108,7 @@ def test_session_metadata_is_validated_before_composition_sdk_parent_check(
 ):
     from types import SimpleNamespace
 
-    from ralf_agent import temporal_parent_workflow, temporal_workflow
+    from relf_agent import temporal_parent_workflow, temporal_workflow
 
     intent, metadata, state = coding_original()
     info = SimpleNamespace(
@@ -152,8 +152,8 @@ def test_session_metadata_is_validated_before_composition_sdk_parent_check(
 def test_session_composition_uses_original_deployment_registry_and_seal_routes(monkeypatch):
     import asyncio
 
-    from ralf_agent import temporal_coding_composition_control as control
-    from ralf_agent import temporal_deployment_coding_bridge as bridge
+    from relf_agent import temporal_coding_composition_control as control
+    from relf_agent import temporal_deployment_coding_bridge as bridge
 
     intent, _, state = coding_original()
     marker = object()

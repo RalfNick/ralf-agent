@@ -5,7 +5,7 @@ import json
 
 import pytest
 
-from ralf_agent import (
+from relf_agent import (
     AgentSpec,
     DynamicWorkflowSpec,
     LocalEngine,
@@ -18,8 +18,8 @@ from ralf_agent import (
     UserInputPolicy,
     register_user_input,
 )
-from ralf_agent.dag_planning import DAGNode, DAGProposal, PlanningConclusion
-from ralf_agent.workflow import Literal, ValueRef
+from relf_agent.dag_planning import DAGNode, DAGProposal, PlanningConclusion
+from relf_agent.workflow import Literal, ValueRef
 
 
 class ChildQuestionProvider:

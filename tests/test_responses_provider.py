@@ -6,7 +6,7 @@ from contextlib import aclosing
 import httpx
 import pytest
 
-from ralf_agent import (
+from relf_agent import (
     AgentSpec,
     LocalEngine,
     RuntimeBuilder,
@@ -15,13 +15,13 @@ from ralf_agent import (
     ToolRegistry,
     ToolSpec,
 )
-from ralf_agent.errors import ProviderError, ValidationError
+from relf_agent.errors import ProviderError, ValidationError
 
 from .test_model_chat import Frames
 
 
 def provider_type():
-    api = importlib.import_module("ralf_agent")
+    api = importlib.import_module("relf_agent")
     assert hasattr(api, "OpenAIResponsesProvider"), "Native Responses Provider is missing"
     return api.OpenAIResponsesProvider
 

@@ -4,18 +4,18 @@ import copy
 
 import pytest
 
-from ralf_agent.errors import DefinitionMismatch, ValidationError
-from ralf_agent.temporal_state import validate_manifest
+from relf_agent.errors import DefinitionMismatch, ValidationError
+from relf_agent.temporal_state import validate_manifest
 
 from .test_temporal_session_tree_sources import setup
 
 
 def proposal(manifest):
-    from ralf_agent.temporal_session_topology import (
+    from relf_agent.temporal_session_topology import (
         CompositeSessionTopology,
         SessionTopologyRegistration,
     )
-    from ralf_agent.temporal_session_tree_protocol import propose_manifest
+    from relf_agent.temporal_session_tree_protocol import propose_manifest
 
     return propose_manifest(manifest, SessionTopologyRegistration(CompositeSessionTopology()))
 

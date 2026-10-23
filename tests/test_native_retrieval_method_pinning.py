@@ -2,7 +2,7 @@ import asyncio
 
 import pytest
 
-from ralf_agent import (
+from relf_agent import (
     Document,
     HashEmbeddingProvider,
     HybridRetriever,
@@ -18,7 +18,7 @@ from ralf_agent import (
     ToolRegistry,
     VectorRetriever,
 )
-from ralf_agent.errors import DefinitionMismatch, ValidationError
+from relf_agent.errors import DefinitionMismatch, ValidationError
 
 
 def setup_retriever(kind, store):
@@ -106,7 +106,7 @@ def test_vector_registered_port_drift_refuses_before_dispatch(component, method)
 
 
 def test_engine_refuses_changed_source_port_before_disclosing_old_evidence(tmp_path):
-    from ralf_agent import AgentSpec
+    from relf_agent import AgentSpec
 
     async def run():
         source = InMemoryKnowledgeStore()

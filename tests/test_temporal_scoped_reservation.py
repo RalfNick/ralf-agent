@@ -6,9 +6,9 @@ from types import SimpleNamespace
 
 import pytest
 
-from ralf_agent.errors import RalfError, ValidationError
-from ralf_agent.temporal_state import TemporalCommandRegistryState
-from ralf_agent.types import digest
+from relf_agent.errors import RalfError, ValidationError
+from relf_agent.temporal_state import TemporalCommandRegistryState
+from relf_agent.types import digest
 
 SCOPE = {"workspace": "scoped", "principal": "owner"}
 
@@ -78,7 +78,7 @@ def envelope(value=None):
 
 
 def test_signal_delivery_is_not_acceptance_and_observations_never_evict_commands():
-    from ralf_agent.temporal_scoped_reservation import accept, observe
+    from relf_agent.temporal_scoped_reservation import accept, observe
 
     host, info = owner()
     value = envelope()
@@ -101,7 +101,7 @@ def test_signal_delivery_is_not_acceptance_and_observations_never_evict_commands
     "fault", ["scope", "namespace", "epoch", "reset", "payload", "unbound-signal"]
 )
 def test_invalid_observations_and_signals_do_not_mutate_identity_or_cache(fault):
-    from ralf_agent.temporal_scoped_reservation import accept, observe
+    from relf_agent.temporal_scoped_reservation import accept, observe
 
     host, info = owner()
     value = envelope()
@@ -126,7 +126,7 @@ def test_invalid_observations_and_signals_do_not_mutate_identity_or_cache(fault)
 
 
 def test_client_confirms_old_worker_before_update_and_never_falls_back_after_signal():
-    from ralf_agent.temporal_scoped_reservation import reserve
+    from relf_agent.temporal_scoped_reservation import reserve
 
     class Handle:
         def __init__(self, legacy=False):
@@ -174,7 +174,7 @@ def test_client_confirms_old_worker_before_update_and_never_falls_back_after_sig
 
 @pytest.mark.parametrize("fault", ["bool-capacity", "extra", "scope", "unknown"])
 def test_client_does_not_guess_legacy_capability_from_invalid_response(fault):
-    from ralf_agent.temporal_scoped_reservation import reserve
+    from relf_agent.temporal_scoped_reservation import reserve
 
     class Handle:
         writes = 0
@@ -207,7 +207,7 @@ def test_client_does_not_guess_legacy_capability_from_invalid_response(fault):
 
 
 def test_current_transport_waiter_cancellation_does_not_undo_actual_reservation():
-    from ralf_agent.temporal_scoped_reservation import accept, observe, reserve
+    from relf_agent.temporal_scoped_reservation import accept, observe, reserve
 
     host, info = owner()
     sent = asyncio.Event()
@@ -255,8 +255,8 @@ def test_protection_is_bounded_by_original_submit_targets_and_global_identity_fi
 
 @pytest.mark.parametrize("kind", ["session_open", "session_submit", "session_rebind"])
 def test_existing_session_guard_preserves_update_transport(kind):
-    from ralf_agent import Scope
-    from ralf_agent.temporal import TemporalEngine
+    from relf_agent import Scope
+    from relf_agent.temporal import TemporalEngine
 
     state = TemporalCommandRegistryState(SCOPE)
 

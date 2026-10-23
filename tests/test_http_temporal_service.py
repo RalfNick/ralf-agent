@@ -7,7 +7,7 @@ import uuid
 
 import pytest
 
-from ralf_agent import (
+from relf_agent import (
     AgentSpec,
     ComponentRegistry,
     ModelResponse,
@@ -16,7 +16,7 @@ from ralf_agent import (
     TemporalRuntimeBuilder,
     ToolCall,
 )
-from ralf_agent.temporal import replay_temporal_history
+from relf_agent.temporal import replay_temporal_history
 
 from .http_tool_fixture import endpoint
 from .test_http_tool_configuration import config, write_config

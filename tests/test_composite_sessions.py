@@ -3,8 +3,8 @@ import sqlite3
 
 import pytest
 
-import ralf_agent as r
-from ralf_agent.errors import ValidationError
+import relf_agent as r
+from relf_agent.errors import ValidationError
 
 from .composite_session_fixture import Provider, definitions, engine, root_messages
 

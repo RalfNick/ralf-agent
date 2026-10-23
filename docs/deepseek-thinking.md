@@ -11,7 +11,7 @@
 import asyncio
 import os
 
-from ralf_agent import (
+from relf_agent import (
     AgentSpec,
     CompleteModelHistory,
     DeepSeekThinkingProvider,
@@ -128,10 +128,10 @@ Temporal Profile 用同一 provider declaration，将续接设置放在
 ## 验证实际模型
 
 ```sh
-ralf-check-model --adapter deepseek-thinking --model "$RALF_GENERATION_MODEL" \
+relf-check-model --adapter deepseek-thinking --model "$RALF_GENERATION_MODEL" \
   --reasoning-effort high --max-calls 6 --max-output-tokens 2048 --timeout 60
 
-ralf-evaluate-orchestration --provider deepseek-thinking --kind team \
+relf-evaluate-orchestration --provider deepseek-thinking --kind team \
   --model-env RALF_GENERATION_MODEL --key-env DEEPSEEK_API_KEY \
   --reasoning-effort high --repeats 3 --max-calls 64 --max-output-tokens 2048
 ```

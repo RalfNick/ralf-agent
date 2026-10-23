@@ -5,12 +5,12 @@ from dataclasses import asdict
 
 import pytest
 
-from ralf_agent import AgentSpec, ModelResponse, Scope, ToolRegistry
-from ralf_agent.delegated_coding import register_coding_tool
-from ralf_agent.errors import DefinitionMismatch
-from ralf_agent.temporal_activities import TemporalRuntime
-from ralf_agent.temporal_state import TemporalRunState
-from ralf_agent.types import submission_request
+from relf_agent import AgentSpec, ModelResponse, Scope, ToolRegistry
+from relf_agent.delegated_coding import register_coding_tool
+from relf_agent.errors import DefinitionMismatch
+from relf_agent.temporal_activities import TemporalRuntime
+from relf_agent.temporal_state import TemporalRunState
+from relf_agent.types import submission_request
 
 from .helpers import ScriptedProvider
 from .test_local_delegated_coding import LifecycleRunner

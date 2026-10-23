@@ -7,22 +7,22 @@ import sqlite3
 
 import pytest
 
-from ralf_agent.completion import CompletionRequest
-from ralf_agent.errors import ValidationError
-from ralf_agent.orchestration_evaluation import (
+from relf_agent.completion import CompletionRequest
+from relf_agent.errors import ValidationError
+from relf_agent.orchestration_evaluation import (
     OfflineOrchestrationProvider,
     _assembly,
     _OrchestrationProvider,
     evaluate_orchestration,
     load_orchestration_cases,
 )
-from ralf_agent.parent_completion_starter import (
+from relf_agent.parent_completion_starter import (
     OfflineInventoryProvider,
     _definition,
     run_reference,
 )
-from ralf_agent.planning_evaluation import EvaluationLimits
-from ralf_agent.types import ModelResponse, digest
+from relf_agent.planning_evaluation import EvaluationLimits
+from relf_agent.types import ModelResponse, digest
 
 REQUEST = {"dataset_id": "warehouse-a", "target": "wire", "quantity": 3}
 LOOKUP = {
@@ -35,7 +35,7 @@ LOOKUP = {
 
 def verifier(member, **options):
     try:
-        module = importlib.import_module("ralf_agent.inventory_member_completion")
+        module = importlib.import_module("relf_agent.inventory_member_completion")
     except ModuleNotFoundError:
         pytest.fail("Inventory member completion policy is missing")
     return module.InventoryMemberCompletionVerifier(member, **options)
@@ -427,7 +427,7 @@ def test_policy_constructor_restricts_declared_reference_member_and_input_shape(
 
 
 def test_reference_cli_selects_member_policy_with_separate_original_reviewer(tmp_path, capsys):
-    from ralf_agent.parent_completion_starter import main
+    from relf_agent.parent_completion_starter import main
 
     main(
         [

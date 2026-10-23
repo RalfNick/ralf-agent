@@ -5,8 +5,8 @@ from types import CodeType
 
 import pytest
 
-from ralf_agent import temporal_coding_composition_state as composition
-from ralf_agent.temporal_parent_workflow import TemporalParentWorkflow, workflow
+from relf_agent import temporal_coding_composition_state as composition
+from relf_agent.temporal_parent_workflow import TemporalParentWorkflow, workflow
 from tests.test_temporal_coding_observe_validation import environment
 
 
@@ -189,7 +189,7 @@ def test_nested_business_fields_with_bookkeeping_names_still_notify(monkeypatch,
 
 
 def test_inlined_comparison_body_is_covered_by_registered_worker_inventory(monkeypatch):
-    from ralf_agent.temporal_coding_composition_protocol import implementation
+    from relf_agent.temporal_coding_composition_protocol import implementation
 
     function = TemporalParentWorkflow._observe_composition
     before = implementation()["parent_workflow"]["TemporalParentWorkflow._observe_composition"]

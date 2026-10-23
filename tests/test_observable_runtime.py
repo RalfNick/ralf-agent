@@ -9,7 +9,7 @@ from pathlib import Path
 
 import pytest
 
-from ralf_agent import (
+from relf_agent import (
     AgentSpec,
     ComponentRegistry,
     LocalEngine,
@@ -18,8 +18,8 @@ from ralf_agent import (
     SQLiteStore,
     ToolRegistry,
 )
-from ralf_agent.errors import ValidationError
-from ralf_agent.runtime_builder import EchoProvider
+from relf_agent.errors import ValidationError
+from relf_agent.runtime_builder import EchoProvider
 
 
 def declaration(provider=None, **config):
@@ -94,7 +94,7 @@ def test_nested_async_factory_is_refused_before_store_creation(tmp_path):
 
 
 def test_observable_starter_runs_and_reuses_receipts_independently(tmp_path):
-    from ralf_agent.starter import create_starter
+    from relf_agent.starter import create_starter
 
     result = create_starter(tmp_path / "app", template="observable")
     assert result.factory == "agent_app.runtime:create_engine"
@@ -120,7 +120,7 @@ def test_observable_starter_runs_and_reuses_receipts_independently(tmp_path):
 
 
 def test_event_watch_cli_json_sse_cursor_and_scope_refusal(tmp_path):
-    module_name = "ralf_agent.event_watch"
+    module_name = "relf_agent.event_watch"
     assert importlib.util.find_spec(module_name), "Missing event watch CLI"
     main = importlib.import_module(module_name).main
     path = tmp_path / "run.sqlite"
@@ -166,13 +166,13 @@ def test_event_watch_cli_json_sse_cursor_and_scope_refusal(tmp_path):
 
 
 def test_event_watch_cli_does_not_create_a_missing_database(tmp_path):
-    assert importlib.util.find_spec("ralf_agent.event_watch"), "Missing event watch CLI"
+    assert importlib.util.find_spec("relf_agent.event_watch"), "Missing event watch CLI"
     env = {"PATH": os.environ.get("PATH", ""), "PYTHONPATH": str(Path(__file__).parents[1] / "src")}
     p = subprocess.run(
         [
             sys.executable,
             "-m",
-            "ralf_agent.event_watch",
+            "relf_agent.event_watch",
             "--db",
             str(tmp_path / "absent.sqlite"),
             "--run-id",
@@ -187,7 +187,7 @@ def test_event_watch_cli_does_not_create_a_missing_database(tmp_path):
 
 
 def test_observable_starter_reports_a_paused_drive_without_hanging(tmp_path):
-    from ralf_agent.starter import create_starter
+    from relf_agent.starter import create_starter
 
     result = create_starter(tmp_path / "paused-app", template="observable")
     source = Path(result.directory) / "agent_app/runtime.py"

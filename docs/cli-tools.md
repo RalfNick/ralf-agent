@@ -8,7 +8,7 @@ Workspace 权限与外部 Coding Agent 属于后续能力。
 ## 开箱即用
 
 ```sh
-ralf init cli-app --template cli
+relf init cli-app --template cli
 cd cli-app
 python -m agent_app run --value 3 --command-id first-change
 python -m agent_app approve RUN_ID ACTION_ID --digest DIGEST --command-id approve-change
@@ -18,13 +18,13 @@ python -m agent_app resume RUN_ID
 Run、Action 与 digest 来自首次返回的 pending 条目。新模板使用版本2的读取→确定性规划→批准写入流程。读取和规划证据先持久化，
 等待审批／重启时不会重复读取；写入命令在批准前不启动，
 使用下游 SQLite 幂等键去重，重复控制和提交保留原回执。模板使用自己的异步
-run／approve／resume 管理装配与清理，主 `ralf --factory` 的同步契约保持。
+run／approve／resume 管理装配与清理，主 `relf --factory` 的同步契约保持。
 源码 checkout、模型、Redis、PostgreSQL 和 Temporal 均不是本地示例的依赖。
 
 ## 独立注入
 
 ```python
-from ralf_agent import CLIToolSource, ToolDescriptor, ToolPolicy, register_tool_source
+from relf_agent import CLIToolSource, ToolDescriptor, ToolPolicy, register_tool_source
 
 source = CLIToolSource(
     ToolDescriptor("lookup", "Lookup", {"type": "object"}),

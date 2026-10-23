@@ -6,10 +6,10 @@ import warnings
 
 import pytest
 
-from ralf_agent.errors import DefinitionMismatch, ValidationError
-from ralf_agent.temporal_deployment_release_state import seal, view
-from ralf_agent.temporal_session_deployment_state import TemporalSessionDeploymentState
-from ralf_agent.types import digest
+from relf_agent.errors import DefinitionMismatch, ValidationError
+from relf_agent.temporal_deployment_release_state import seal, view
+from relf_agent.temporal_session_deployment_state import TemporalSessionDeploymentState
+from relf_agent.types import digest
 from tests.test_temporal_deployment_session_registry import POLICY
 from tests.test_temporal_deployment_session_registry import state as registry_state
 from tests.test_temporal_session_coding_retirement import environment
@@ -117,15 +117,15 @@ def test_coding_advance_uses_only_preloaded_pure_modules_in_activation(compositi
     from temporalio.worker.workflow_sandbox._importer import Importer
     from temporalio.worker.workflow_sandbox._restrictions import RestrictionContext
 
-    from ralf_agent.temporal import _workflow_runner
+    from relf_agent.temporal import _workflow_runner
 
     entry, value, _, registered = fixture(composition=composition)
-    importlib.import_module("ralf_agent.temporal_session_workflow")
+    importlib.import_module("relf_agent.temporal_session_workflow")
     context = RestrictionContext()
     importer = Importer(_workflow_runner().restrictions, context)
     with importer.applied():
-        importlib.import_module("ralf_agent.temporal_session_workflow")
-        product = importlib.import_module("ralf_agent.temporal_session_deployment_state")
+        importlib.import_module("relf_agent.temporal_session_workflow")
+        product = importlib.import_module("relf_agent.temporal_session_deployment_state")
         context.is_runtime = context.in_activation = True
         try:
             with warnings.catch_warnings():

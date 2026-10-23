@@ -15,10 +15,10 @@ Temporal Coding 继续在业务 I/O 前拒绝，完整 R13 和 Coding G1–G8 �
 拥有，注册只借用 Runner，不关闭 Runner 或其启动日志。
 
 ```python
-from ralf_agent.codex_runner import CodexCodingRunner
-from ralf_agent.delegated_coding import register_coding_tool
-from ralf_agent.runner_journal import RunnerJournal
-from ralf_agent.tools import ToolRegistry
+from relf_agent.codex_runner import CodexCodingRunner
+from relf_agent.delegated_coding import register_coding_tool
+from relf_agent.runner_journal import RunnerJournal
+from relf_agent.tools import ToolRegistry
 
 # 两个私有绝对路径由调用方管理；runner_root 属当前用户且权限为 0700。
 # fixed_dependencies 是调用方固定的有限 JSON 身份，不能包含凭据。

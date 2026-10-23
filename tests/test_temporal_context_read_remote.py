@@ -7,7 +7,7 @@ from contextlib import asynccontextmanager
 
 import pytest
 
-from ralf_agent import PostgresMemory, Scope
+from relf_agent import PostgresMemory, Scope
 
 from .test_postgres_adapter import postgres_dsn as postgres_dsn
 from .test_redis_memory_adapter import memory_at

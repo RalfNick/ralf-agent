@@ -1,7 +1,7 @@
 import json
 import sys
 
-from ralf_agent.starter import create_starter
+from relf_agent.starter import create_starter
 from tests.test_ingestion_starter import subprocess_result
 
 

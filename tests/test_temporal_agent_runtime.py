@@ -3,8 +3,8 @@ from dataclasses import replace
 
 import pytest
 
-import ralf_agent as r
-from ralf_agent.errors import (
+import relf_agent as r
+from relf_agent.errors import (
     AuthorizationDenied,
     DefinitionMismatch,
     RuntimeClosed,

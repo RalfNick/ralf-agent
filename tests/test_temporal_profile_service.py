@@ -11,9 +11,9 @@ from pathlib import Path
 
 import pytest
 
-from ralf_agent import AgentSpec, Runtime, TemporalProfile
-from ralf_agent.temporal import replay_temporal_history
-from ralf_agent.types import digest
+from relf_agent import AgentSpec, Runtime, TemporalProfile
+from relf_agent.temporal import replay_temporal_history
+from relf_agent.types import digest
 
 from .temporal_profile_worker import assembly
 from .test_temporal_context_read_composition import definition

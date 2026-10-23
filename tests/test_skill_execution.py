@@ -5,8 +5,8 @@ import json
 
 import pytest
 
-import ralf_agent as r
-from ralf_agent.binding_definitions import decode_definition
+import relf_agent as r
+from relf_agent.binding_definitions import decode_definition
 
 from .test_workspace_binding_execution import definition as original_definition
 from .test_workspace_binding_execution import finish

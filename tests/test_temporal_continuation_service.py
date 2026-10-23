@@ -12,8 +12,8 @@ from pathlib import Path
 
 import pytest
 
-from ralf_agent import RunRef, Runtime, Scope
-from ralf_agent.temporal import TemporalEngine, replay_temporal_history
+from relf_agent import RunRef, Runtime, Scope
+from relf_agent.temporal import TemporalEngine, replay_temporal_history
 from tests.temporal_continuation_worker import PARTS, runtime
 
 pytestmark = pytest.mark.skipif(
@@ -33,7 +33,7 @@ def test_signed_native_group_survives_worker_loss_and_duplicate_approval(
 async def recover(root, kind, managed, window):
     from temporalio.client import Client
 
-    import ralf_agent
+    import relf_agent
 
     address = os.environ["RALF_TEST_TEMPORAL_ADDRESS"]
     client = await Client.connect(address)
@@ -55,7 +55,7 @@ async def recover(root, kind, managed, window):
             "PATH": os.environ.get("PATH", "/usr/bin:/bin"),
             "PYTHONPATH": os.pathsep.join(
                 [
-                    str(Path(ralf_agent.__file__).parents[1]),
+                    str(Path(relf_agent.__file__).parents[1]),
                     str(Path(__file__).parents[1]),
                 ]
             ),

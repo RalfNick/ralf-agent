@@ -7,8 +7,8 @@ from types import SimpleNamespace
 
 import pytest
 
-from ralf_agent.errors import AuthorizationDenied, DefinitionMismatch, IdempotencyConflict
-from ralf_agent.types import digest
+from relf_agent.errors import AuthorizationDenied, DefinitionMismatch, IdempotencyConflict
+from relf_agent.types import digest
 from tests.test_temporal_deployment_submissions import (
     NAMESPACE,
     POLICY,
@@ -88,10 +88,10 @@ class Client(OriginalClient):
 
 
 async def environment(publication=2):
-    from ralf_agent import AgentSpec
-    from ralf_agent import temporal_deployment_submissions as transport
-    from ralf_agent.binding_definitions import AgentDefinition
-    from ralf_agent.binding_types import AgentBindingDescriptor, BindingSelection
+    from relf_agent import AgentSpec
+    from relf_agent import temporal_deployment_submissions as transport
+    from relf_agent.binding_definitions import AgentDefinition
+    from relf_agent.binding_types import AgentBindingDescriptor, BindingSelection
     from tests.test_temporal_deployment_coding_registry import coding_request
 
     client, selected = Client(), spec()
@@ -150,7 +150,7 @@ async def environment(publication=2):
 @pytest.mark.parametrize("publication", [2, 3])
 @pytest.mark.parametrize("kind", ["approve", "cancel", "drive", "reconcile", "send_input", "patch"])
 def test_descendant_guard_records_scoped_command_without_another_root(publication, kind):
-    from ralf_agent import temporal_deployment_submissions as transport
+    from relf_agent import temporal_deployment_submissions as transport
 
     async def run():
         engine, child, root = await environment(publication)
@@ -188,7 +188,7 @@ def test_descendant_guard_records_scoped_command_without_another_root(publicatio
 
 
 def test_original_descendant_control_lookup_survives_alias_move_retirement_and_missing_current_target():
-    from ralf_agent import temporal_deployment_submissions as transport
+    from relf_agent import temporal_deployment_submissions as transport
 
     async def run():
         engine, child, _ = await environment()
@@ -212,7 +212,7 @@ def test_original_descendant_control_lookup_survives_alias_move_retirement_and_m
 
 
 def test_root_control_retains_legacy_none_result_and_four_field_receipt():
-    from ralf_agent import temporal_deployment_submissions as transport
+    from relf_agent import temporal_deployment_submissions as transport
 
     async def run():
         engine, _, root = await environment()
@@ -241,7 +241,7 @@ def test_root_control_retains_legacy_none_result_and_four_field_receipt():
     "fault", ["target-first", "scope", "namespace", "reply-root", "lookup-namespace"]
 )
 def test_transport_refuses_changed_sdk_hints_or_original_binding(fault):
-    from ralf_agent import temporal_deployment_submissions as transport
+    from relf_agent import temporal_deployment_submissions as transport
 
     async def run():
         engine, child, _ = await environment()
@@ -268,7 +268,7 @@ def test_transport_refuses_changed_sdk_hints_or_original_binding(fault):
 
 @pytest.mark.parametrize("fault", ["version", "scope", "epoch", "extra"])
 def test_duplicate_lookup_requires_exact_original_binding_schema_without_target_io(fault):
-    from ralf_agent import temporal_deployment_submissions as transport
+    from relf_agent import temporal_deployment_submissions as transport
 
     async def run():
         engine, child, _ = await environment()
@@ -296,7 +296,7 @@ def test_duplicate_lookup_requires_exact_original_binding_schema_without_target_
 
 
 def test_guard_detaches_business_payload_before_first_sdk_await():
-    from ralf_agent import temporal_deployment_submissions as transport
+    from relf_agent import temporal_deployment_submissions as transport
 
     async def run():
         engine, child, _ = await environment()

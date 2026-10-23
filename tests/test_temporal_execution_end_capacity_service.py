@@ -10,12 +10,12 @@ from datetime import timedelta
 
 import pytest
 
-from ralf_agent import AgentSpec, Scope, ToolExecutionOwner
-from ralf_agent.errors import CloseIncomplete
-from ralf_agent.governance import DeploymentAdmissionPolicy
-from ralf_agent.temporal import TemporalEngine, build_temporal_worker, replay_temporal_history
-from ralf_agent.temporal_activities import TemporalRuntime
-from ralf_agent.types import digest
+from relf_agent import AgentSpec, Scope, ToolExecutionOwner
+from relf_agent.errors import CloseIncomplete
+from relf_agent.governance import DeploymentAdmissionPolicy
+from relf_agent.temporal import TemporalEngine, build_temporal_worker, replay_temporal_history
+from relf_agent.temporal_activities import TemporalRuntime
+from relf_agent.types import digest
 from tests.test_temporal_deployment_admission_service import _clients, _request
 from tests.test_temporal_deployment_dispatch_service import _eventually
 from tests.test_temporal_deployment_public_service import (
@@ -183,7 +183,7 @@ def test_actual_original_tool_end_ack_after_2000_updates(tmp_path, public, regis
                 assert await asyncio.to_thread(write.ended.wait, 10)
                 drained = await runtime.wait_context_executions(wait_timeout=5)
                 if public:
-                    from ralf_agent.temporal_deployment_release import check_owner
+                    from relf_agent.temporal_deployment_release import check_owner
 
                     drained = drained and await check_owner(runtime).wait(wait_timeout=5)
                 observed = await engine.diagnostics(original.run_id)
@@ -275,7 +275,7 @@ def test_actual_original_tool_end_ack_after_2000_updates(tmp_path, public, regis
                 graceful_shutdown_timeout=timedelta(seconds=1),
             )
             async with restarted:
-                from ralf_agent.temporal_execution_end_transport import execute
+                from relf_agent.temporal_execution_end_transport import execute
 
                 diagnostic = await engine.diagnostics(original.run_id)
                 ended_proof = diagnostic.workflow["tool_executions"][0]["end_proof"]

@@ -1,12 +1,13 @@
 # 可组合的 Embedding、混合召回与重排
 
+当前可执行示例使用a6的`relf_agent`／`relf`入口和独立环境；下文dev版本号标记能力最初引入批次，不把原批次验收授予a6。原包入口见[名称边界](project-naming.md)。
 `0.1.0.dev19` 增加显式 HTTP Embedding、可替换排名融合／重排，以及一个来源权威下的并行混合检索。默认仍可完全离线运行。D1 的原子摄取和向量索引分开；D2 不启动后台索引、付费模型、自动摘要或记忆提炼。
 
 ## 安装后使用自己的文档
 
 ```sh
-pip install /path/to/ralf_agent-0.1.0.dev19-py3-none-any.whl
-ralf init my-hybrid-agent --template hybrid
+pip install /path/to/relf_agent-0.1.0a6-py3-none-any.whl
+relf init my-hybrid-agent --template hybrid
 cd my-hybrid-agent
 python -m agent_app ingest /absolute/path/runbook.md --document-id runbook --command-id ingest-first --expected-version 0
 python -m agent_app index --document-id runbook
@@ -20,7 +21,7 @@ python -m agent_app query --query 'pool timeout' --command-id answer-first
 查询可加 `--submit-only`，再通过原工厂恢复：
 
 ```sh
-ralf --db .ralf/runs.sqlite --factory agent_app.runtime:create_engine resume RUN_ID
+relf --db .ralf/runs.sqlite --factory agent_app.runtime:create_engine resume RUN_ID
 ```
 
 保留原代码、Profile、模型配置和数据库用于恢复；更换 Embedding 模型／配置应选择新索引与新 Profile 版本，再显式重建。
@@ -28,7 +29,7 @@ ralf --db .ralf/runs.sqlite --factory agent_app.runtime:create_engine resume RUN
 ## SDK：逐层组合
 
 ```python
-from ralf_agent import (
+from relf_agent import (
     HashEmbeddingProvider,
     HybridRetriever,
     LexicalRetriever,
@@ -69,7 +70,7 @@ RRF 采用一基排名的倒数融合，避免直接相加不同后端未经标�
 ## 显式 HTTP Embedding
 
 ```python
-from ralf_agent import OpenAIEmbeddingProvider
+from relf_agent import OpenAIEmbeddingProvider
 
 async with OpenAIEmbeddingProvider(
     model="YOUR_EMBEDDING_MODEL",
@@ -96,7 +97,7 @@ async with OpenAIEmbeddingProvider(
 新增三个名字，原声明保持：`sqlite-hybrid` 为同步离线默认，`sqlite-hybrid-http` 为显式异步 HTTP，`postgres-qdrant-hybrid` 为异步远程默认／HTTP。示例：
 
 ```python
-from ralf_agent import RuntimeBuilder, RuntimeProfile
+from relf_agent import RuntimeBuilder, RuntimeProfile
 
 profile = RuntimeProfile(
     "my-hybrid",

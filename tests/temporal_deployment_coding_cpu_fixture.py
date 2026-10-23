@@ -27,14 +27,14 @@ def coding_cpu_profile(directory):
                 os.getenv("RALF_TEST_DEPLOYMENT_CODING_CPU_VARIANTS") == "1"
                 or (Path(directory) / "capture-coding-cpu-variants").exists()
             )
-            from ralf_agent.temporal_activities import TemporalRuntime
-            from ralf_agent.temporal_deployment_coding_validation import (
+            from relf_agent.temporal_activities import TemporalRuntime
+            from relf_agent.temporal_deployment_coding_validation import (
                 CodingValidation,
                 _ObservationValidation,
             )
-            from ralf_agent.temporal_deployment_control_projection import node, registry
-            from ralf_agent.temporal_session_deployment_dto import validate_intent
-            from ralf_agent.temporal_session_deployment_verification import SessionControlValidation
+            from relf_agent.temporal_deployment_control_projection import node, registry
+            from relf_agent.temporal_session_deployment_dto import validate_intent
+            from relf_agent.temporal_session_deployment_verification import SessionControlValidation
 
             targets = {
                 id(function.__code__): (function.__code__, label)

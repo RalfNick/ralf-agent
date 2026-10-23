@@ -7,21 +7,21 @@ import json
 import httpx
 import pytest
 
-from ralf_agent.model_check_cli import OfflineCompatibilityProvider
-from ralf_agent.model_compatibility import evaluate_model_compatibility
-from ralf_agent.orchestration_evaluation import (
+from relf_agent.model_check_cli import OfflineCompatibilityProvider
+from relf_agent.model_compatibility import evaluate_model_compatibility
+from relf_agent.orchestration_evaluation import (
     OfflineOrchestrationProvider,
     evaluate_orchestration,
     load_orchestration_cases,
 )
-from ralf_agent.rag_evaluation import OfflineRAGProvider, evaluate_rag, load_rag_cases
-from ralf_agent.types import canonical
+from relf_agent.rag_evaluation import OfflineRAGProvider, evaluate_rag, load_rag_cases
+from relf_agent.types import canonical
 
 _REASONING = "opaque-fixture-protocol-evidence"
 
 
 def _provider_type():
-    provider = getattr(importlib.import_module("ralf_agent"), "DeepSeekThinkingProvider", None)
+    provider = getattr(importlib.import_module("relf_agent"), "DeepSeekThinkingProvider", None)
     assert provider is not None, "Dedicated thinking adapter must be a public SDK component"
     return provider
 

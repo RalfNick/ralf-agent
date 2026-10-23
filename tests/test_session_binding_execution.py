@@ -4,7 +4,7 @@ import asyncio
 
 import pytest
 
-from ralf_agent import (
+from relf_agent import (
     AgentBindingDescriptor,
     AgentDefinition,
     AgentSpec,
@@ -22,7 +22,7 @@ from ralf_agent import (
     ToolSpec,
     WorkflowSpec,
 )
-from ralf_agent.errors import DefinitionMismatch, ValidationError
+from relf_agent.errors import DefinitionMismatch, ValidationError
 
 from .helpers import ScriptedProvider
 from .test_binding_execution import RecordingProvider, bound_catalog, engine
@@ -271,7 +271,7 @@ def test_binding_drift_preserves_received_response_before_adoption(tmp_path):
 
 @pytest.mark.parametrize("threaded_first", [False, True])
 def test_threaded_bridge_and_raw_backend_share_session_ownership(tmp_path, threaded_first):
-    from ralf_agent import ThreadedMemoryAdapter
+    from relf_agent import ThreadedMemoryAdapter
 
     catalog = bound_catalog()
     backend = InMemoryMemory(backend_id="physical")
@@ -287,7 +287,7 @@ def test_threaded_bridge_and_raw_backend_share_session_ownership(tmp_path, threa
 def test_selected_view_is_refused_as_host_default_before_run_acceptance(tmp_path):
     from contextlib import closing
 
-    from ralf_agent import LocalEngine, SQLiteStore
+    from relf_agent import LocalEngine, SQLiteStore
 
     resource = resource_type()(
         InMemoryMemory(backend_id="physical"), namespaces=("red",), default_namespace="red"

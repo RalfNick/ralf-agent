@@ -6,7 +6,7 @@ from dataclasses import asdict
 
 import pytest
 
-from ralf_agent import (
+from relf_agent import (
     AgentBindingDescriptor,
     AgentDefinition,
     AgentSpec,
@@ -24,18 +24,18 @@ from ralf_agent import (
     ToolRegistry,
     WorkflowSpec,
 )
-from ralf_agent.errors import AuthorizationDenied, ValidationError
-from ralf_agent.temporal_activities import TemporalRuntime
-from ralf_agent.temporal_bindings import normalize_request
-from ralf_agent.temporal_state import TemporalRunState, validate_request
-from ralf_agent.types import submission_request
+from relf_agent.errors import AuthorizationDenied, ValidationError
+from relf_agent.temporal_activities import TemporalRuntime
+from relf_agent.temporal_bindings import normalize_request
+from relf_agent.temporal_state import TemporalRunState, validate_request
+from relf_agent.types import submission_request
 from tests.test_temporal_binding_isolation import advance
 
 
 @pytest.mark.parametrize("scoped", [False, True])
 def test_http_query_provider_pins_client_instance_instead_of_context_manager(scoped):
-    from ralf_agent import ModelQueryTransform, OpenAIChatProvider, QueryTransformRetriever
-    from ralf_agent.errors import DefinitionMismatch
+    from relf_agent import ModelQueryTransform, OpenAIChatProvider, QueryTransformRetriever
+    from relf_agent.errors import DefinitionMismatch
 
     query = OpenAIChatProvider("fixture", api_key="test-only", base_url="http://query.test")
     context = KnowledgeContext(
@@ -59,8 +59,8 @@ def test_http_query_provider_pins_client_instance_instead_of_context_manager(sco
 
 
 def test_scoped_sqlite_publication_fixes_physical_database(tmp_path):
-    from ralf_agent import SQLiteKnowledgeStore
-    from ralf_agent.errors import DefinitionMismatch
+    from relf_agent import SQLiteKnowledgeStore
+    from relf_agent.errors import DefinitionMismatch
 
     stores = [
         SQLiteKnowledgeStore(tmp_path / name, backend_id="shared") for name in ("a.db", "b.db")
@@ -90,7 +90,7 @@ def test_scoped_sqlite_publication_fixes_physical_database(tmp_path):
 
 @pytest.mark.parametrize("managed", [False, True])
 def test_scoped_facts_and_knowledge_keep_independent_sources_after_restore(managed):
-    from ralf_agent import FactsBindingResource, InMemoryMemory
+    from relf_agent import FactsBindingResource, InMemoryMemory
 
     async def run():
         original, state, _, provider, scope = setup(managed)
@@ -359,8 +359,8 @@ def test_native_dependency_change_during_io_is_rejected(change):
 
 
 def test_scoped_knowledge_protocol_cannot_be_omitted_or_changed():
-    from ralf_agent.errors import DefinitionMismatch
-    from ralf_agent.temporal_state import validate_manifest
+    from relf_agent.errors import DefinitionMismatch
+    from relf_agent.temporal_state import validate_manifest
 
     runtime, _, _, _, _ = setup()
     for version in (None, 2, True):

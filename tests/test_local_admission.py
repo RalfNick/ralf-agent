@@ -6,9 +6,9 @@ import threading
 
 import pytest
 
-import ralf_agent.errors as errors
-import ralf_agent.governance as governance
-from ralf_agent import (
+import relf_agent.errors as errors
+import relf_agent.governance as governance
+from relf_agent import (
     AgentSpec,
     GraphNode,
     GraphWorkflowSpec,
@@ -20,9 +20,9 @@ from ralf_agent import (
     ToolSpec,
     WorkflowSpec,
 )
-from ralf_agent.orchestration_types import DynamicWorkflowSpec, TeamSpec
-from ralf_agent.runtime_builder import EchoProvider
-from ralf_agent.types import submission_request
+from relf_agent.orchestration_types import DynamicWorkflowSpec, TeamSpec
+from relf_agent.runtime_builder import EchoProvider
+from relf_agent.types import submission_request
 
 from .helpers import ScriptedProvider, tool_response
 

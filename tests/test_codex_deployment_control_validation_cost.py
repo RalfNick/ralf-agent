@@ -5,11 +5,11 @@ import copy
 
 import pytest
 
-from ralf_agent.codex_protocol import CodexCodingProtocol, CodexControlProtocol
-from ralf_agent.codex_runner import CodexCodingRunner, RunnerOutcomeUnknown
-from ralf_agent.errors import DefinitionMismatch, ValidationError
-from ralf_agent.temporal_coding_authority import TemporalCodingAuthority
-from ralf_agent.types import digest
+from relf_agent.codex_protocol import CodexCodingProtocol, CodexControlProtocol
+from relf_agent.codex_runner import CodexCodingRunner, RunnerOutcomeUnknown
+from relf_agent.errors import DefinitionMismatch, ValidationError
+from relf_agent.temporal_coding_authority import TemporalCodingAuthority
+from relf_agent.types import digest
 from tests.test_temporal_coding_authority import setup
 
 

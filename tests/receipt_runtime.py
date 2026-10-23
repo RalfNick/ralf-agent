@@ -8,7 +8,7 @@ import sqlite3
 from contextlib import contextmanager
 from dataclasses import asdict
 
-from ralf_agent import (
+from relf_agent import (
     AgentSpec,
     LocalEngine,
     ModelResponse,

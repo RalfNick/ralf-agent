@@ -5,12 +5,12 @@ import sys
 
 import pytest
 
-from ralf_agent import TemporalProfileCatalog
+from relf_agent import TemporalProfileCatalog
 
 
 def test_catalog_example_is_offline_without_explicit_service(tmp_path):
     result = subprocess.run(
-        [sys.executable, "-m", "ralf_agent.temporal_catalog_example", "--data-dir", str(tmp_path)],
+        [sys.executable, "-m", "relf_agent.temporal_catalog_example", "--data-dir", str(tmp_path)],
         capture_output=True,
         text=True,
         check=False,
@@ -29,7 +29,7 @@ def test_catalog_example_keeps_original_receipt_after_default_switch_and_restart
     command = [
         sys.executable,
         "-m",
-        "ralf_agent.temporal_catalog_example",
+        "relf_agent.temporal_catalog_example",
         "--data-dir",
         str(tmp_path),
         "--address",

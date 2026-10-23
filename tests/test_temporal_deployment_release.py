@@ -7,9 +7,9 @@ from types import SimpleNamespace
 
 import pytest
 
-from ralf_agent.errors import CloseIncomplete, DefinitionMismatch
-from ralf_agent.temporal_context_execution import ContextExecutionOwner
-from ralf_agent.types import digest
+from relf_agent.errors import CloseIncomplete, DefinitionMismatch
+from relf_agent.temporal_context_execution import ContextExecutionOwner
+from relf_agent.types import digest
 
 
 @pytest.fixture(autouse=True, scope="module")
@@ -18,14 +18,14 @@ def _optional_temporal_sdk():
 
 
 def module():
-    name = "ralf_agent.temporal_deployment_release"
+    name = "relf_agent.temporal_deployment_release"
     assert importlib.util.find_spec(name), "Original SDK release transport is missing"
     return importlib.import_module(name)
 
 
 def environment(monkeypatch):
-    from ralf_agent import temporal_deployment_execution_state as admission
-    from ralf_agent import temporal_deployment_release_state as release
+    from relf_agent import temporal_deployment_execution_state as admission
+    from relf_agent import temporal_deployment_release_state as release
     from tests.test_temporal_deployment_execution import (
         POLICY,
         SCOPE,
@@ -107,7 +107,7 @@ def environment(monkeypatch):
         workflow_type="ralf.temporal.commands.v1",
     )
 
-    from ralf_agent.temporal_state import COMMAND_REGISTRY_NAME
+    from relf_agent.temporal_state import COMMAND_REGISTRY_NAME
 
     client.descriptions[registry_id].workflow_type = COMMAND_REGISTRY_NAME
 
@@ -115,8 +115,8 @@ def environment(monkeypatch):
         async def describe(self):
             value = await super().describe()
             if self.id in client.states:
-                from ralf_agent.temporal_parent_state import PARENT_WORKFLOW_NAME
-                from ralf_agent.temporal_state import WORKFLOW_NAME
+                from relf_agent.temporal_parent_state import PARENT_WORKFLOW_NAME
+                from relf_agent.temporal_state import WORKFLOW_NAME
 
                 original = client.states[self.id]
                 if not hasattr(value, "raw_info"):
@@ -307,8 +307,8 @@ def test_failed_durable_end_ack_stays_owned_until_original_retry(monkeypatch):
 def test_handler_return_does_not_end_actual_tracked_sync_reader(monkeypatch):
     from temporalio import activity
 
-    from ralf_agent import Scope
-    from ralf_agent.recall import RecallQuery
+    from relf_agent import Scope
+    from relf_agent.recall import RecallQuery
     from tests.test_temporal_context_execution import blocked_reader, wait_started
 
     async def run():
@@ -370,7 +370,7 @@ def test_release_reads_original_closure_and_seals_before_registry_retirement(mon
 
 
 def test_registry_verification_rejects_forged_certificate_and_foreign_sdk_origin(monkeypatch):
-    from ralf_agent.temporal_deployment_release_state import seal
+    from relf_agent.temporal_deployment_release_state import seal
 
     async def run():
         runtime, client, state, proof, info = environment(monkeypatch)
@@ -455,8 +455,8 @@ def test_lost_begin_response_is_resolved_without_running_business(monkeypatch):
 
 
 async def child_environment(monkeypatch):
-    from ralf_agent import temporal_deployment_execution as admission
-    from ralf_agent import temporal_deployment_release_state as release
+    from relf_agent import temporal_deployment_execution as admission
+    from relf_agent import temporal_deployment_release_state as release
     from tests.test_temporal_deployment_execution import child_setup, sealed
 
     runtime, client, parent, proof, info = environment(monkeypatch)
@@ -536,8 +536,8 @@ def test_wrong_actual_child_parent_prevents_every_tree_seal_and_retirement(monke
 def test_whole_loop_cancellation_keeps_actual_thread_and_original_end_obligation(monkeypatch):
     from temporalio import activity
 
-    from ralf_agent import Scope
-    from ralf_agent.recall import RecallQuery
+    from relf_agent import Scope
+    from relf_agent.recall import RecallQuery
     from tests.test_temporal_context_execution import blocked_reader, wait_started
 
     runtime, client, state, proof, info = environment(monkeypatch)
@@ -584,7 +584,7 @@ def test_whole_loop_cancellation_keeps_actual_thread_and_original_end_obligation
 
 def test_release_retry_reobserves_same_certificate_after_original_verification_failure(monkeypatch):
     """A failed observation cannot poison a fresh proof of the original certificate."""
-    from ralf_agent.errors import RalfError
+    from relf_agent.errors import RalfError
 
     async def run():
         runtime, client, state, _, info = environment(monkeypatch)

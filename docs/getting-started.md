@@ -2,11 +2,11 @@
 
 [文档目录](README.md) · [安装与可选依赖](installation.md) · [核心概念](concepts.md)
 
-本文面向 **0.1.0a2 Alpha 本地候选**，需要 Python 3.11+。本教程使用本地 SQLite；先用离线项目完成提交、审批和恢复，再接入自己的模型与工具，不需要 Redis、PostgreSQL、Temporal 或 Docker。[基础能力入口](basic-capabilities.md)列出默认组合与定制路径；知识问答可从 [RAG 模板教程](recall-and-rag.md) 开始；无需改 Python 的版本配置从 [运行装配模板](runtime-assembly.md) 开始。其他平台与部署组合的验证范围见[实现清单](implementation-status.md)。
+本文面向 **0.1.0a6 Alpha 新入口候选**，需要 Python 3.11+。本教程使用本地 SQLite；先用离线项目完成提交、审批和恢复，再接入自己的模型与工具，不需要 Redis、PostgreSQL、Temporal 或 Docker。[基础能力入口](basic-capabilities.md)列出默认组合与定制路径；知识问答可从 [RAG 模板教程](recall-and-rag.md) 开始；无需改 Python 的版本配置从 [运行装配模板](runtime-assembly.md) 开始。其他平台与部署组合的验证范围见[实现清单](implementation-status.md)。
 
-真实模型可用 `ralf init my-model-agent --template model` 生成独立项目，先替换 model/协议/凭据环境变量；配置限制与验证等级见 [模型接入](model-adapters.md)。生成模板不执行收费请求，也不表示账户与型号已验证。
+真实模型可用 `relf init my-model-agent --template model` 生成独立项目，先替换 model/协议/凭据环境变量；配置限制与验证等级见 [模型接入](model-adapters.md)。生成模板不执行收费请求，也不表示账户与型号已验证。
 
-当前已验证源码和原 wheel 的安装路径；公开 a2 原包及仓库改名后的下载入口见[安装指南](installation.md#从公开-alpha-安装)。PyPI 尚未发布，不要把 `pip install relf-agent` 当作已验证的安装方式。
+本教程要求包含a6的源码或本地原wheel；旧公开a2使用旧导入／命令，不与以下步骤混用，历史入口见[安装指南](installation.md#从公开-alpha-安装)。PyPI 尚未发布，不要把 `pip install relf-agent` 当作已验证的安装方式。
 
 ## 1. 安装：wheel 使用者与源码开发者
 
@@ -17,11 +17,11 @@
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
-python -m pip install "/path/to/ralf_agent-0.1.0a2-py3-none-any.whl"
-ralf --version
+python -m pip install "/path/to/relf_agent-0.1.0a6-py3-none-any.whl"
+relf --version
 ```
 
-**从源码开始：**
+**从源码开始：** 必须选择包含a6的源码；当前本地准备未推送时，远端默认分支尚不包含这次入口迁移。
 
 ```bash
 git clone https://github.com/RalfNick/relf-agent.git
@@ -29,17 +29,17 @@ cd relf-agent
 python3 -m venv .venv
 source .venv/bin/activate
 python -m pip install -e .
-ralf --version
+relf --version
 ```
 
 如果要修改框架并运行测试，安装 `python -m pip install -e '.[dev]'`，然后按 [贡献指南](../CONTRIBUTING.md) 验证。本文步骤不需要仓库的 `examples` 目录，wheel 使用者也能执行。
 
 ## 2. 生成自己的离线项目
 
-选择一个不存在的目录，从其父目录执行 init；源码使用者可在仓库外创建项目。已有空目录也可以作为目标，但不能在目标目录内执行 `ralf init .`，避免替换当前工作目录。
+选择一个不存在的目录，从其父目录执行 init；源码使用者可在仓库外创建项目。已有空目录也可以作为目标，但不能在目标目录内执行 `relf init .`，避免替换当前工作目录。
 
 ```bash
-ralf --format text init ../my-agent
+relf --format text init ../my-agent
 cd ../my-agent
 python -m agent_app --db .ralf/runs.sqlite --ticket INC-001
 ```
@@ -49,7 +49,7 @@ python -m agent_app --db .ralf/runs.sqlite --ticket INC-001
 首次运行提交后会停在 `waiting_approval`，输出 JSON 中包含 `run_id`、`pending` 和提交回执。下面的 `RUN_ID` 要替换为实际值：
 
 ```bash
-ralf --db .ralf/runs.sqlite --factory agent_app.runtime:create_engine --format text inspect RUN_ID
+relf --db .ralf/runs.sqlite --factory agent_app.runtime:create_engine --format text inspect RUN_ID
 ```
 
 `inspect` 显示状态、待批操作及可复制的批准／恢复命令。它只读取默认 Scope 的 SQLite，不加载工厂、不取得执行租约。提供 `--factory` 是为了诊断中的恢复命令指向原项目配置。
@@ -59,9 +59,9 @@ ralf --db .ralf/runs.sqlite --factory agent_app.runtime:create_engine --format t
 检查待批工具、参数和操作摘要，再执行 `inspect` 给出的命令。也可以手工填写：
 
 ```bash
-ralf --db .ralf/runs.sqlite --factory agent_app.runtime:create_engine approve RUN_ID ACTION_ID --digest OPERATION_DIGEST --command-id approve-001
-ralf --db .ralf/runs.sqlite --factory agent_app.runtime:create_engine --format text resume RUN_ID
-ralf --db .ralf/runs.sqlite --format text inspect RUN_ID
+relf --db .ralf/runs.sqlite --factory agent_app.runtime:create_engine approve RUN_ID ACTION_ID --digest OPERATION_DIGEST --command-id approve-001
+relf --db .ralf/runs.sqlite --factory agent_app.runtime:create_engine --format text resume RUN_ID
+relf --db .ralf/runs.sqlite --format text inspect RUN_ID
 ```
 
 批准回执的 `applied` 表示决定已保存；`resume` 推进工具执行和结果保存。完成后应看到 `succeeded`。审批和恢复是不同进程，执行数据库保留原 Run、Action 和业务效果证据。
@@ -90,8 +90,8 @@ ralf --db .ralf/runs.sqlite --format text inspect RUN_ID
 `--db`、`--factory` 和 `--format` 属于全局参数，放在子命令前。默认输出 JSON；`--format text` 面向阅读。保留命令 ID 和 Run ID，便于在进程重启后找回原回执。
 
 ```bash
-ralf --db .ralf/runs.sqlite events RUN_ID --after 0 --limit 100
-ralf --db .ralf/runs.sqlite --factory agent_app.runtime:create_engine cancel RUN_ID --command-id cancel-001
+relf --db .ralf/runs.sqlite events RUN_ID --after 0 --limit 100
+relf --db .ralf/runs.sqlite --factory agent_app.runtime:create_engine cancel RUN_ID --command-id cancel-001
 ```
 
 事件下一页的 `--after` 使用上一页最后一个 `seq`。取消停止后续调度，不撤销已发出的业务操作。不要通过删除数据库或换一个 Run 来解决未知写效果。

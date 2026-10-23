@@ -5,7 +5,7 @@ import sqlite3
 import subprocess
 import sys
 
-from ralf_agent import (
+from relf_agent import (
     AgentSpec,
     LocalEngine,
     ModelResponse,
@@ -14,16 +14,16 @@ from ralf_agent import (
     ToolRegistry,
     ToolSpec,
 )
-from ralf_agent.demo import create_demo_engine, demo_spec
+from relf_agent.demo import create_demo_engine, demo_spec
 
 from .test_cli import cli, subprocess_env
 
 
 def execute_hint(command):
     arguments = shlex.split(command)
-    assert arguments.pop(0) == "ralf"
+    assert arguments.pop(0) == "relf"
     completed = subprocess.run(
-        [sys.executable, "-m", "ralf_agent", *arguments],
+        [sys.executable, "-m", "relf_agent", *arguments],
         env=subprocess_env(),
         capture_output=True,
         text=True,
@@ -75,7 +75,7 @@ def test_text_output_exposes_reviewable_parameters_and_executable_approval_hint(
     assert "waiting_approval" in output and "apply_change" in output
     assert "INC-002" in output and "restart test cache" in output
     commands = [
-        line.removeprefix("  ") for line in output.splitlines() if line.startswith("  ralf ")
+        line.removeprefix("  ") for line in output.splitlines() if line.startswith("  relf ")
     ]
     approve = next(command for command in commands if "approve" in shlex.split(command))
     resume = next(command for command in commands if "resume" in shlex.split(command))

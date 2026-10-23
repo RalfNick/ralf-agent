@@ -4,8 +4,8 @@ import copy
 
 import pytest
 
-from ralf_agent import temporal_coding_protocol as native
-from ralf_agent.errors import DefinitionMismatch
+from relf_agent import temporal_coding_protocol as native
+from relf_agent.errors import DefinitionMismatch
 from tests.test_sandbox_bindings import registered as registered
 from tests.test_temporal_coding_configuration import manifest
 
@@ -94,7 +94,7 @@ def test_current_composition_refuses_foreign_version(version):
     "kind", ["context", "tool", "artifacts", "continuation", "history", "parent", "input"]
 )
 def test_current_joint_publication_retains_optional_capability_gates(binding, kind):
-    from ralf_agent import (
+    from relf_agent import (
         temporal_artifact_bindings,
         temporal_context_read_protocol,
         temporal_decision_state,
@@ -120,7 +120,7 @@ def test_current_joint_publication_retains_optional_capability_gates(binding, ki
 
 @pytest.mark.parametrize("binding", [22, 23])
 def test_current_joint_publication_keeps_sandbox_gate(registered, binding):
-    from ralf_agent.binding_sandbox import validate_sandbox_protocol
+    from relf_agent.binding_sandbox import validate_sandbox_protocol
     from tests.test_sandbox_temporal_protocol import runtime_for
 
     value = copy.deepcopy(runtime_for(registered[0]).manifest)
@@ -139,7 +139,7 @@ def test_current_composition_keeps_shared_runner_capacity_until_physical_stop():
 
 
 def test_current_composition_state_requires_explicit_version_seven():
-    from ralf_agent.temporal_coding_composition_state import enabled
+    from relf_agent.temporal_coding_composition_state import enabled
 
     assert enabled(current_composition())
     value = current_composition()
@@ -148,7 +148,7 @@ def test_current_composition_state_requires_explicit_version_seven():
 
 
 def test_current_api_capabilities_admit_team_dynamic_and_recursive_nesting():
-    from ralf_agent.temporal import TemporalEngine
+    from relf_agent.temporal import TemporalEngine
 
     engine = object.__new__(TemporalEngine)
     engine._release = {**current_composition(), "orchestration": {"version": "1"}}
@@ -166,7 +166,7 @@ def test_current_api_capabilities_admit_team_dynamic_and_recursive_nesting():
 
 
 def test_current_api_capabilities_refuse_missing_composition_publication():
-    from ralf_agent.temporal_bindings import capabilities
+    from relf_agent.temporal_bindings import capabilities
 
     value = current_composition()
     value.pop("coding_composition_protocol")
@@ -175,7 +175,7 @@ def test_current_api_capabilities_refuse_missing_composition_publication():
 
 
 def test_current_sdk_control_requires_explicit_version_seven():
-    from ralf_agent.temporal_coding_composition_control import selected
+    from relf_agent.temporal_coding_composition_control import selected
 
     assert selected(current_composition())
     value = current_composition()
@@ -189,7 +189,7 @@ def test_current_parent_records_an_explicit_version_seven_history_marker(monkeyp
 
     from temporalio.exceptions import ApplicationError
 
-    from ralf_agent import temporal_parent_workflow
+    from relf_agent import temporal_parent_workflow
 
     markers = []
 
@@ -211,7 +211,7 @@ def test_joint_sdk_context_timeout_keeps_original_read_unknown(monkeypatch, bind
 
     from temporalio.exceptions import ActivityError, TimeoutError, TimeoutType
 
-    from ralf_agent import temporal_workflow
+    from relf_agent import temporal_workflow
 
     class LoopFinished(BaseException):
         pass
@@ -278,13 +278,13 @@ def test_actual_shared_postgres_publication_refuses_changed_connection_implement
 ):
     import asyncio
 
-    from ralf_agent.codex_connected_runner import ConnectedCodexCodingRunner
-    from ralf_agent.codex_runner import CodexCodingRunner
-    from ralf_agent.delegated_coding import register_coding_tool
-    from ralf_agent.postgres_runner_journal import PostgresRunnerJournal
-    from ralf_agent.temporal_activities import TemporalRuntime
-    from ralf_agent.temporal_journal import PostgresEffectJournal
-    from ralf_agent.tools import ToolRegistry
+    from relf_agent.codex_connected_runner import ConnectedCodexCodingRunner
+    from relf_agent.codex_runner import CodexCodingRunner
+    from relf_agent.delegated_coding import register_coding_tool
+    from relf_agent.postgres_runner_journal import PostgresRunnerJournal
+    from relf_agent.temporal_activities import TemporalRuntime
+    from relf_agent.temporal_journal import PostgresEffectJournal
+    from relf_agent.tools import ToolRegistry
     from tests.test_codex_connected_runner import connection
     from tests.test_temporal_coding_factories import Connection, entry, publish_initialization
     from tests.test_temporal_engine import Provider
@@ -334,7 +334,7 @@ def test_actual_shared_postgres_publication_refuses_changed_connection_implement
             if mutation == "hook":
                 monkeypatch.setattr(cls, "_make_transport", changed)
             elif mutation == "model_fields":
-                from ralf_agent import codex_model_connection
+                from relf_agent import codex_model_connection
 
                 # to_dict already includes reasoning_effort independently, so
                 # this changes constructor/source fields without changing the
@@ -345,7 +345,7 @@ def test_actual_shared_postgres_publication_refuses_changed_connection_implement
                     codex_model_connection._FIELDS | {"reasoning_effort"},
                 )
             else:
-                from ralf_agent import codex_connected_runner
+                from relf_agent import codex_connected_runner
 
                 original_inventory = copy.deepcopy(runner.identity["connection_implementation"])
 
@@ -374,12 +374,12 @@ def test_current_publication_refuses_foreign_runner_or_postgres_owner(
     import asyncio
     from types import SimpleNamespace
 
-    from ralf_agent.codex_runner import CodexCodingRunner
-    from ralf_agent.delegated_coding import register_coding_tool
-    from ralf_agent.errors import ValidationError
-    from ralf_agent.postgres_runner_journal import PostgresRunnerJournal
-    from ralf_agent.temporal_journal import PostgresEffectJournal
-    from ralf_agent.tools import ToolRegistry
+    from relf_agent.codex_runner import CodexCodingRunner
+    from relf_agent.delegated_coding import register_coding_tool
+    from relf_agent.errors import ValidationError
+    from relf_agent.postgres_runner_journal import PostgresRunnerJournal
+    from relf_agent.temporal_journal import PostgresEffectJournal
+    from relf_agent.tools import ToolRegistry
     from tests.test_temporal_coding_factories import Connection, entry, publish_initialization
 
     class ForeignRunner(CodexCodingRunner):

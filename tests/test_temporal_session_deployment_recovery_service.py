@@ -12,7 +12,7 @@ from urllib.parse import urlsplit
 
 import pytest
 
-from ralf_agent import (
+from relf_agent import (
     AgentSpec,
     DeploymentAdmissionPolicy,
     ModelResponse,
@@ -20,12 +20,12 @@ from ralf_agent import (
     Scope,
     ToolRegistry,
 )
-from ralf_agent.temporal import TemporalEngine, build_temporal_worker
-from ralf_agent.temporal_activities import TemporalRuntime
-from ralf_agent.temporal_deployment_admission import registry_id, root_run_id
-from ralf_agent.temporal_deployment_release import _binding
-from ralf_agent.temporal_session_state import workflow_id
-from ralf_agent.types import digest
+from relf_agent.temporal import TemporalEngine, build_temporal_worker
+from relf_agent.temporal_activities import TemporalRuntime
+from relf_agent.temporal_deployment_admission import registry_id, root_run_id
+from relf_agent.temporal_deployment_release import _binding
+from relf_agent.temporal_session_state import workflow_id
+from relf_agent.types import digest
 from tests.test_temporal_deployment_admission_service import _clients
 from tests.test_temporal_deployment_dispatch_service import _eventually
 from tests.test_temporal_deployment_public_service import SDKFaultClient

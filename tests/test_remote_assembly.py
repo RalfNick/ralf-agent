@@ -4,7 +4,7 @@ import uuid
 
 import pytest
 
-from ralf_agent import AgentSpec, Document, RetrievalQuery, RuntimeBuilder, RuntimeProfile
+from relf_agent import AgentSpec, Document, RetrievalQuery, RuntimeBuilder, RuntimeProfile
 
 from .test_redis_memory_adapter import redis_service as _redis_service
 

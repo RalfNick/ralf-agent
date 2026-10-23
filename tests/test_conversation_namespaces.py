@@ -2,8 +2,8 @@ import asyncio
 
 import pytest
 
-import ralf_agent as r
-from ralf_agent.errors import AuthorizationDenied, ValidationError
+import relf_agent as r
+from relf_agent.errors import AuthorizationDenied, ValidationError
 
 from .composite_session_fixture import definitions, root_messages
 from .conversation_namespace_fixture import engine

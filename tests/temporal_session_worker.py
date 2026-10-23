@@ -4,7 +4,7 @@ import asyncio
 import os
 from pathlib import Path
 
-from ralf_agent.temporal import build_temporal_worker
+from relf_agent.temporal import build_temporal_worker
 from tests.temporal_knowledge_worker import runtime
 
 

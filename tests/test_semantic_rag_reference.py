@@ -9,17 +9,17 @@ from concurrent.futures import ThreadPoolExecutor
 
 import pytest
 
-from ralf_agent.embeddings import HashEmbeddingProvider
-from ralf_agent.planning_evaluation import EvaluationLimits
-from ralf_agent.rag_evaluation import OfflineRAGProvider
-from ralf_agent.rag_evaluation_cases import load_rag_cases
+from relf_agent.embeddings import HashEmbeddingProvider
+from relf_agent.planning_evaluation import EvaluationLimits
+from relf_agent.rag_evaluation import OfflineRAGProvider
+from relf_agent.rag_evaluation_cases import load_rag_cases
 
 
 def module():
-    assert importlib.util.find_spec("ralf_agent.semantic_rag_reference"), (
+    assert importlib.util.find_spec("relf_agent.semantic_rag_reference"), (
         "Missing complete semantic reference application"
     )
-    return importlib.import_module("ralf_agent.semantic_rag_reference")
+    return importlib.import_module("relf_agent.semantic_rag_reference")
 
 
 def test_default_module_cli_not_run_without_model_assets_or_credentials(
@@ -86,7 +86,7 @@ def test_invalid_embedding_cap_rejects_before_generation_construction(
     tmp_path, capsys, monkeypatch
 ):
     app = module()
-    import ralf_agent.planning_evaluation_cli as shared
+    import relf_agent.planning_evaluation_cli as shared
 
     def forbidden(*args, **kwargs):
         raise AssertionError("Invalid cap must reject before constructing a generation client")
@@ -100,7 +100,7 @@ def test_owned_incomplete_close_retains_original_resource_for_same_loop_retry(
     tmp_path, monkeypatch
 ):
     app = module()
-    from ralf_agent.errors import CloseIncomplete
+    from relf_agent.errors import CloseIncomplete
 
     originals = []
 
@@ -146,7 +146,7 @@ def controlled_cpu_owner():
     This tests resource ownership, not neural quality or model asset loading.
     """
     app = module()
-    from ralf_agent.binding_artifacts import _method_binding
+    from relf_agent.binding_artifacts import _method_binding
 
     class Values:
         def tolist(self):
@@ -211,8 +211,8 @@ async def wait_for_cpu(predicate):
 
 def test_second_cleanup_cancel_retains_original_cpu_owner(controlled_cpu_owner, monkeypatch):
     app = module()
-    import ralf_agent.rag_evaluation as original_rag
-    from ralf_agent.errors import CloseIncomplete
+    import relf_agent.rag_evaluation as original_rag
+    from relf_agent.errors import CloseIncomplete
 
     controlled, originals = controlled_cpu_owner
 
@@ -251,7 +251,7 @@ def test_second_cleanup_cancel_retains_original_cpu_owner(controlled_cpu_owner, 
 
 
 def test_inference_drift_refuses_admission_but_drains_original_owner(controlled_cpu_owner):
-    from ralf_agent.errors import CloseIncomplete, DefinitionMismatch
+    from relf_agent.errors import CloseIncomplete, DefinitionMismatch
 
     controlled, originals = controlled_cpu_owner
 

@@ -6,17 +6,17 @@ import importlib
 
 import pytest
 
-import ralf_agent as r
-from ralf_agent.errors import DefinitionMismatch
-from ralf_agent.local_session_model_history import freeze_native_history, prepare_native_history
-from ralf_agent.types import digest
+import relf_agent as r
+from relf_agent.errors import DefinitionMismatch
+from relf_agent.local_session_model_history import freeze_native_history, prepare_native_history
+from relf_agent.types import digest
 
 from .helpers import ScriptedProvider
 
 
 def api():
     try:
-        return importlib.import_module("ralf_agent.local_native_history_save")
+        return importlib.import_module("relf_agent.local_native_history_save")
     except ModuleNotFoundError:
         pytest.fail("Original Run native remote save helper is missing")
 

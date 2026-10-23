@@ -6,18 +6,18 @@ from dataclasses import asdict
 
 import pytest
 
-from ralf_agent.embedding_response import EmbeddingResponse
-from ralf_agent.embeddings import HashEmbeddingProvider
-from ralf_agent.errors import ProviderError, ValidationError
-from ralf_agent.planning_evaluation import EvaluationLimits
-from ralf_agent.rag_evaluation_cases import load_rag_cases
-from ralf_agent.storage import SQLiteStore
-from ralf_agent.types import ModelResponse, Scope, canonical, digest
+from relf_agent.embedding_response import EmbeddingResponse
+from relf_agent.embeddings import HashEmbeddingProvider
+from relf_agent.errors import ProviderError, ValidationError
+from relf_agent.planning_evaluation import EvaluationLimits
+from relf_agent.rag_evaluation_cases import load_rag_cases
+from relf_agent.storage import SQLiteStore
+from relf_agent.types import ModelResponse, Scope, canonical, digest
 
 
 def api():
-    assert importlib.util.find_spec("ralf_agent.rag_evaluation"), "Missing actual RAG evaluation"
-    from ralf_agent.rag_evaluation import OfflineRAGProvider, evaluate_rag
+    assert importlib.util.find_spec("relf_agent.rag_evaluation"), "Missing actual RAG evaluation"
+    from relf_agent.rag_evaluation import OfflineRAGProvider, evaluate_rag
 
     return evaluate_rag, OfflineRAGProvider
 
@@ -215,7 +215,7 @@ def action(refs, displayed):
 
 def test_offered_evidence_excludes_candidates_and_compression_metadata():
     api()
-    from ralf_agent.rag_evaluation import _offered_references
+    from relf_agent.rag_evaluation import _offered_references
 
     ref, scope = source("visible text")
     assert _offered_references(action([ref], []), scope) == []
@@ -230,7 +230,7 @@ def test_offered_evidence_excludes_candidates_and_compression_metadata():
 )
 def test_clipping_recovers_only_whole_displayed_text_characters(text):
     api()
-    from ralf_agent.rag_evaluation import _offered_references
+    from relf_agent.rag_evaluation import _offered_references
 
     ref, scope = source(text, {"a": "support only in metadata"})
     value = canonical(ref["value"])
@@ -301,7 +301,7 @@ def test_untrusted_exception_code_is_sanitized(tmp_path):
         evaluate(fixture(), embedding=Broken(), cases=load_rag_cases()[:1], evidence_dir=tmp_path)
     )
     assert report["cases"][0]["error"] == "memory_backend_error"
-    from ralf_agent.rag_evaluation import _public_error
+    from relf_agent.rag_evaluation import _public_error
 
     assert _public_error(["private adapter code"]) == "evaluation_failure"
     assert "private" not in canonical(report)
@@ -341,7 +341,7 @@ def test_embedding_identity_mutation_fails_without_accepting_index(tmp_path):
 
 def test_cancelled_preparation_closes_owned_stores_but_keeps_client_borrowed(tmp_path, monkeypatch):
     evaluate, fixture = api()
-    import ralf_agent.rag_evaluation as module
+    import relf_agent.rag_evaluation as module
 
     opened, entered = [], asyncio.Event()
     original = module.SQLiteKnowledgeStore
@@ -390,8 +390,8 @@ def test_actual_process_loss_reopens_sources_and_observes_without_calls(tmp_path
 
     code = """
 import asyncio, os, sys
-from ralf_agent.rag_evaluation import evaluate_rag, OfflineRAGProvider
-from ralf_agent.rag_evaluation_cases import load_rag_cases
+from relf_agent.rag_evaluation import evaluate_rag, OfflineRAGProvider
+from relf_agent.rag_evaluation_cases import load_rag_cases
 class Crash(OfflineRAGProvider):
     async def complete(self, messages, tools):
         os._exit(73)
@@ -399,19 +399,19 @@ asyncio.run(evaluate_rag(Crash(), cases=load_rag_cases()[:1], evidence_dir=sys.a
 """
     from pathlib import Path
 
-    import ralf_agent
+    import relf_agent
 
     environment = os.environ.copy()
     # Reuse the package actually under test: source without editable install,
     # or the isolated wheel site-packages when testing outside the checkout.
-    environment["PYTHONPATH"] = str(Path(ralf_agent.__file__).resolve().parent.parent)
+    environment["PYTHONPATH"] = str(Path(relf_agent.__file__).resolve().parent.parent)
     completed = subprocess.run(
         [sys.executable, "-c", code, str(tmp_path)], env=environment, timeout=20
     )
     assert completed.returncode == 73
-    from ralf_agent.agent_runtime import Runtime
-    from ralf_agent.planning_evaluation import _AuditedProvider
-    from ralf_agent.rag_evaluation import OfflineRAGProvider, _assembly, _AuditedEmbedding
+    from relf_agent.agent_runtime import Runtime
+    from relf_agent.planning_evaluation import _AuditedProvider
+    from relf_agent.rag_evaluation import OfflineRAGProvider, _assembly, _AuditedEmbedding
 
     case = load_rag_cases()[0]
     path = tmp_path / f"{case['id']}-0.sqlite"
@@ -454,7 +454,7 @@ def test_borrowed_model_method_change_is_not_accepted(tmp_path):
 
 def test_original_task_cannot_impersonate_inserted_reference_message():
     api()
-    from ralf_agent.rag_evaluation import _offered_references
+    from relf_agent.rag_evaluation import _offered_references
 
     ref, scope = source("visible text")
     original = {

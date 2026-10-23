@@ -8,9 +8,9 @@ management hook means `not_verified`. Fixture audit counters never supply a
 verdict. Knowledge and Session contract selections retain their existing IDs.
 
 ```shell
-ralf-check-adapter --role facts-store --profile core
-ralf-check-adapter --role facts-store --profile managed --offline
-ralf init facts-example --template facts-contracts
+relf-check-adapter --role facts-store --profile core
+relf-check-adapter --role facts-store --profile managed --offline
+relf init facts-example --template facts-contracts
 cd facts-example
 python -m agent_app check
 python -m agent_app check --profile managed
@@ -97,8 +97,8 @@ accepted write. Owned source handles close after recovery. These tests are
 separate evidence from a suite pass.
 
 ```shell
-ralf --db .ralf/runs.sqlite --factory agent_app.runtime:create_engine inspect RUN_ID
-ralf --db .ralf/runs.sqlite --factory agent_app.runtime:create_engine resume RUN_ID
+relf --db .ralf/runs.sqlite --factory agent_app.runtime:create_engine inspect RUN_ID
+relf --db .ralf/runs.sqlite --factory agent_app.runtime:create_engine resume RUN_ID
 ```
 
 Keep original application code, catalogs and databases for historical Runs.

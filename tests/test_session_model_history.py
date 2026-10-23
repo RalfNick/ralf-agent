@@ -6,19 +6,19 @@ import inspect
 
 import pytest
 
-from ralf_agent.context import ContextAssembler
-from ralf_agent.context_budget import ContextMeasure, UTF8TokenEstimator
-from ralf_agent.context_pipeline import BudgetedContextAssembler
-from ralf_agent.errors import ValidationError
-from ralf_agent.model_history import CompleteModelHistory, model_history_registration
-from ralf_agent.types import canonical, digest
+from relf_agent.context import ContextAssembler
+from relf_agent.context_budget import ContextMeasure, UTF8TokenEstimator
+from relf_agent.context_pipeline import BudgetedContextAssembler
+from relf_agent.errors import ValidationError
+from relf_agent.model_history import CompleteModelHistory, model_history_registration
+from relf_agent.types import canonical, digest
 
 STREAM = "a" * 64
 
 
 def api():
     try:
-        return importlib.import_module("ralf_agent.session_model_history")
+        return importlib.import_module("relf_agent.session_model_history")
     except ModuleNotFoundError:
         pytest.fail("Session frame and native envelope guards are missing")
 

@@ -21,7 +21,7 @@ attach its Registry's declaration to a separate list. Omitted tools or an empty
 list/tuple create an empty Registry. The Agent never infers that a function is read-only.
 
 ```python
-from ralf_agent import Agent, ToolRegistry
+from relf_agent import Agent, ToolRegistry
 
 tools = ToolRegistry()
 
@@ -45,7 +45,7 @@ are successful observations, not successful business outcomes.
 ## Shared Runtime and existing definitions
 
 ```python
-from ralf_agent import AgentHarness, AgentSpec, Runtime
+from relf_agent import AgentHarness, AgentSpec, Runtime
 
 async with Runtime(local_engine, owned=False) as runtime:
     agent = runtime.create_agent(AgentHarness(AgentSpec("research", "Research the task")))
@@ -92,8 +92,8 @@ version gates. Capability discovery does not replace admission-time validation.
 - approve/cancel/reconcile require stable command_id and return original receipts.
 
 ```python
-from ralf_agent import RunRef
-from ralf_agent.types import digest
+from relf_agent import RunRef
+from relf_agent.types import digest
 
 # Apply only decisions that the caller has explicitly reviewed and approved.
 for item in await handle.pending():

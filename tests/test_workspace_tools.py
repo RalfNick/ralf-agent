@@ -8,10 +8,10 @@ from concurrent.futures import ThreadPoolExecutor
 
 import pytest
 
-from ralf_agent import InMemoryWorkspace, Scope, ToolPolicy, ToolRegistry, register_tool_source
-from ralf_agent.errors import AuthorizationDenied, DefinitionMismatch, ValidationError
-from ralf_agent.tools import ThreadExecutionTracker, current_thread_group, current_thread_tracker
-from ralf_agent.types import InvocationContext
+from relf_agent import InMemoryWorkspace, Scope, ToolPolicy, ToolRegistry, register_tool_source
+from relf_agent.errors import AuthorizationDenied, DefinitionMismatch, ValidationError
+from relf_agent.tools import ThreadExecutionTracker, current_thread_group, current_thread_tracker
+from relf_agent.types import InvocationContext
 
 from .test_thread_execution import wait_until_started
 from .test_workspace import api

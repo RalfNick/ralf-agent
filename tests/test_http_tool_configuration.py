@@ -7,7 +7,7 @@ import sqlite3
 
 import pytest
 
-from ralf_agent import (
+from relf_agent import (
     ComponentRegistry,
     GraphNode,
     GraphWorkflowSpec,
@@ -15,7 +15,7 @@ from ralf_agent import (
     RuntimeProfile,
     ValueRef,
 )
-from ralf_agent.errors import ValidationError
+from relf_agent.errors import ValidationError
 
 from .http_tool_fixture import endpoint
 from .test_cli_tools import descriptor
@@ -177,7 +177,7 @@ def test_committed_write_with_lost_response_retains_original_effect_protocol(tmp
 
 
 def test_partial_http_factory_failure_drains_every_owned_source(tmp_path, monkeypatch):
-    from ralf_agent import RuntimeBuildError, ToolSourceError, http_tool_factories
+    from relf_agent import RuntimeBuildError, ToolSourceError, http_tool_factories
 
     sources = []
     original = http_tool_factories.register_tool_source

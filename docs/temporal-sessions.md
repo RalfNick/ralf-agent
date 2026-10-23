@@ -12,9 +12,9 @@ Session 协调 Workflow 保存绑定、串行 Turn、启动意图和 Conversatio
 原 temporal-1/2/3 default/raw releases 与 raw `session_id` 保持其旧行为。
 
 ```python
-from ralf_agent import AgentSpec, Runtime, Scope, ToolRegistry
-from ralf_agent.temporal import TemporalEngine, build_temporal_worker
-from ralf_agent.temporal_activities import TemporalRuntime
+from relf_agent import AgentSpec, Runtime, Scope, ToolRegistry
+from relf_agent.temporal import TemporalEngine, build_temporal_worker
+from relf_agent.temporal_activities import TemporalRuntime
 
 # client 和 provider 由宿主创建；实例保持 borrowed 所有权。
 execution = TemporalRuntime(
@@ -64,7 +64,7 @@ Worker 更新需保留原队列与注册发布；命令 Registry 也必须有其
 客户端连接相同 Namespace UUID，不能代替部署版本及队列迁移管理。
 
 ```python
-from ralf_agent import Runtime, SessionRef, RunRef
+from relf_agent import Runtime, SessionRef, RunRef
 
 async with Runtime.from_temporal(reconnected_engine) as runtime:
     session = await runtime.aattach_session(SessionRef.from_dict(saved_session_ref))

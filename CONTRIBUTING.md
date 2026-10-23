@@ -22,7 +22,7 @@ source .venv/bin/activate
 python -m pip install -e '.[dev,pdf,tokenizer,skills,temporal]'
 ```
 
-产品代码在 `src/ralf_agent/`，回归测试在 `tests/`，源码示例在 `examples/`，功能文档在 `docs/`。涉及执行保证前，阅读[总体设计](architecture/design.md)、[Run 命令契约](architecture/specs/run-command-contract.md)、[Action 恢复契约](architecture/specs/action-recovery-contract.md)、[Runner 契约](architecture/specs/runner-capability-contract.md)与[当前支持状态](docs/implementation-status.md)。
+产品代码在 `src/relf_agent/`，回归测试在 `tests/`，源码示例在 `examples/`，功能文档在 `docs/`。涉及执行保证前，阅读[总体设计](architecture/design.md)、[Run 命令契约](architecture/specs/run-command-contract.md)、[Action 恢复契约](architecture/specs/action-recovery-contract.md)、[Runner 契约](architecture/specs/runner-capability-contract.md)与[当前支持状态](docs/implementation-status.md)。
 
 ## 修改与验证
 

@@ -3,16 +3,16 @@ import asyncio
 import httpx
 import pytest
 
-from ralf_agent import AgentSpec, LocalEngine, ModelResponse, Scope, ToolRegistry
-from ralf_agent.errors import AuthorizationDenied
-from ralf_agent.storage import SQLiteStore
+from relf_agent import AgentSpec, LocalEngine, ModelResponse, Scope, ToolRegistry
+from relf_agent.errors import AuthorizationDenied
+from relf_agent.storage import SQLiteStore
 
 from .helpers import ScriptedProvider
 
 
 def make_app(tmp_path, responses=(), *, wakeup=None, inbox_factory=None, max_response_bytes=262144):
-    from ralf_agent.a2a import A2AApplication
-    from ralf_agent.handoff import SQLiteInbox
+    from relf_agent.a2a import A2AApplication
+    from relf_agent.handoff import SQLiteInbox
 
     runtime = LocalEngine(
         SQLiteStore(tmp_path / "runs.db"),
@@ -108,7 +108,7 @@ def test_oversized_result_keeps_small_rpc_id_in_bounded_error(tmp_path):
 
 
 def test_native_run_send_get_cancel_and_authenticated_scope(tmp_path):
-    from ralf_agent.a2a import A2AClient, A2ARemoteError
+    from relf_agent.a2a import A2AClient, A2ARemoteError
 
     async def check():
         app, runtime, inbox = make_app(tmp_path, [ModelResponse(output={"answer": 42})])
@@ -218,7 +218,7 @@ def test_native_run_send_get_cancel_and_authenticated_scope(tmp_path):
     ],
 )
 def test_malformed_remote_responses_are_safe(response):
-    from ralf_agent.a2a import A2AClient, A2AError
+    from relf_agent.a2a import A2AClient, A2AError
 
     async def check():
         async def handle(request):
@@ -236,7 +236,7 @@ def test_malformed_remote_responses_are_safe(response):
 
 
 def test_submit_timeout_is_not_retried_and_response_is_bounded():
-    from ralf_agent.a2a import A2AClient, A2AError
+    from relf_agent.a2a import A2AClient, A2AError
 
     async def check():
         calls = []
@@ -263,8 +263,8 @@ def test_submit_timeout_is_not_retried_and_response_is_bounded():
 
 
 def test_tool_source_approval_unknown_then_read_only_reconcile(tmp_path):
-    from ralf_agent.a2a import A2AClient, A2AToolSource
-    from ralf_agent.tool_sources import ToolPolicy, register_tool_source
+    from relf_agent.a2a import A2AClient, A2AToolSource
+    from relf_agent.tool_sources import ToolPolicy, register_tool_source
 
     from .helpers import tool_response
 
@@ -339,8 +339,8 @@ def test_tool_source_approval_unknown_then_read_only_reconcile(tmp_path):
 
 
 def test_owned_http_close_retries_and_invalid_timeout():
-    from ralf_agent.a2a import A2AClient, A2AError
-    from ralf_agent.errors import ValidationError
+    from relf_agent.a2a import A2AClient, A2AError
+    from relf_agent.errors import ValidationError
 
     class Client:
         closed = 0
@@ -374,7 +374,7 @@ def test_owned_http_close_retries_and_invalid_timeout():
 
 
 def test_discovery_rejects_invalid_capabilities_and_task_identity_mismatch():
-    from ralf_agent.a2a import A2AClient, A2AError
+    from relf_agent.a2a import A2AClient, A2AError
 
     async def check():
         async def bad_card(request):
@@ -422,7 +422,7 @@ def test_discovery_rejects_invalid_capabilities_and_task_identity_mismatch():
 
 
 def test_tool_source_identity_tracks_changed_remote_client():
-    from ralf_agent.a2a import A2AClient, A2AToolSource
+    from relf_agent.a2a import A2AClient, A2AToolSource
 
     one = A2AClient("http://one/rpc")
     two = A2AClient("http://two/rpc")
@@ -436,7 +436,7 @@ def test_tool_source_identity_tracks_changed_remote_client():
 
 @pytest.mark.parametrize("asynchronous", [False, True])
 def test_application_borrows_structural_durable_inbox(tmp_path, asynchronous):
-    from ralf_agent.a2a import A2AClient
+    from relf_agent.a2a import A2AClient
 
     from .test_handoff import ComposedAsyncInbox, ComposedInbox
 
@@ -501,8 +501,8 @@ class ComposedA2AClient:
 
 
 def test_tool_source_accepts_composed_client_and_preserves_borrowed_lifecycle(tmp_path):
-    from ralf_agent.a2a import A2AClient, A2AClientPort, A2AToolSource
-    from ralf_agent.types import InvocationContext
+    from relf_agent.a2a import A2AClient, A2AClientPort, A2AToolSource
+    from relf_agent.types import InvocationContext
 
     async def check():
         async def wakeup(scope, run_id):
@@ -538,7 +538,7 @@ def test_tool_source_accepts_composed_client_and_preserves_borrowed_lifecycle(tm
 
 
 def test_owned_structural_a2a_client_close_is_retriable():
-    from ralf_agent.a2a import A2AClient, A2AError, A2AToolSource
+    from relf_agent.a2a import A2AClient, A2AError, A2AToolSource
 
     class FailingClose(ComposedA2AClient):
         async def aclose(self):
@@ -561,8 +561,8 @@ def test_owned_structural_a2a_client_close_is_retriable():
 
 
 def test_structural_a2a_client_validates_fixed_identity_and_rejects_lazy_discovery():
-    from ralf_agent.a2a import A2AClient, A2AToolSource
-    from ralf_agent.errors import ValidationError
+    from relf_agent.a2a import A2AClient, A2AToolSource
+    from relf_agent.errors import ValidationError
 
     async def check():
         client = ComposedA2AClient(A2AClient("http://test/rpc"))
@@ -586,8 +586,8 @@ def test_structural_a2a_client_validates_fixed_identity_and_rejects_lazy_discove
 
 
 def test_structural_client_bad_protocol_identity_rejected_before_io():
-    from ralf_agent.a2a import A2AToolSource
-    from ralf_agent.errors import ValidationError
+    from relf_agent.a2a import A2AToolSource
+    from relf_agent.errors import ValidationError
 
     class InvalidClient:
         url = "http://test/rpc"
@@ -616,7 +616,7 @@ def test_structural_client_bad_protocol_identity_rejected_before_io():
 
 
 def test_owned_structural_client_lazy_close_is_not_completed():
-    from ralf_agent.a2a import A2AClient, A2AError, A2AToolSource
+    from relf_agent.a2a import A2AClient, A2AError, A2AToolSource
 
     entered = []
 
@@ -646,8 +646,8 @@ def test_owned_structural_client_lazy_close_is_not_completed():
 
 @pytest.mark.parametrize("endpoint", ["http://test", "http://test/", "http://127.0.0.1:8000"])
 def test_origin_endpoint_discover_send_get_over_asgi_http(tmp_path, endpoint):
-    from ralf_agent.a2a import A2AApplication, A2AClient
-    from ralf_agent.handoff import SQLiteInbox
+    from relf_agent.a2a import A2AApplication, A2AClient
+    from relf_agent.handoff import SQLiteInbox
 
     async def check():
         runtime = LocalEngine(

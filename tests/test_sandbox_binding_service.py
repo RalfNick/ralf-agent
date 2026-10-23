@@ -5,7 +5,7 @@ import os
 
 import pytest
 
-import ralf_agent as r
+import relf_agent as r
 
 from .test_sandbox_binding_execution import Reader, definition
 from .test_workspace_binding_execution import finish
@@ -102,7 +102,7 @@ def test_actual_selected_native_members_restart_approval_and_completed_result(tm
 
 
 def test_actual_local_cancel_keeps_coordinator_until_native_stop(tmp_path):
-    from ralf_agent.errors import CoordinatorBusy, ValidationError
+    from relf_agent.errors import CoordinatorBusy, ValidationError
 
     async def run():
         port = r.DockerSandbox(

@@ -8,16 +8,16 @@ from types import SimpleNamespace
 
 import pytest
 
-from ralf_agent import AgentSpec, Scope, TeamSpec, ToolRegistry
-from ralf_agent.errors import DefinitionMismatch
-from ralf_agent.governance import DeploymentAdmissionPolicy
-from ralf_agent.orchestration_types import ChildCall
-from ralf_agent.temporal_activities import TemporalRuntime, registered_activities
-from ralf_agent.temporal_deployment_admission import root_run_id
-from ralf_agent.temporal_deployment_execution_state import adopt, initialize, view
-from ralf_agent.temporal_parent_state import TemporalParentState
-from ralf_agent.temporal_state import TemporalCommandRegistryState, TemporalRunState
-from ralf_agent.types import digest, submission_request
+from relf_agent import AgentSpec, Scope, TeamSpec, ToolRegistry
+from relf_agent.errors import DefinitionMismatch
+from relf_agent.governance import DeploymentAdmissionPolicy
+from relf_agent.orchestration_types import ChildCall
+from relf_agent.temporal_activities import TemporalRuntime, registered_activities
+from relf_agent.temporal_deployment_admission import root_run_id
+from relf_agent.temporal_deployment_execution_state import adopt, initialize, view
+from relf_agent.temporal_parent_state import TemporalParentState
+from relf_agent.temporal_state import TemporalCommandRegistryState, TemporalRunState
+from relf_agent.types import digest, submission_request
 
 
 @pytest.fixture(autouse=True, scope="module")
@@ -120,7 +120,7 @@ def test_selected_parent_records_original_intent_before_projecting_child(monkeyp
 def test_selected_parent_projection_refusal_leaves_original_intent_and_budget_unchanged(
     monkeypatch,
 ):
-    import ralf_agent.temporal_deployment_execution_state as deployment
+    import relf_agent.temporal_deployment_execution_state as deployment
 
     _, state = parent(monkeypatch)
     before = copy.deepcopy((state.children, state.budget, state.revision))
@@ -137,9 +137,9 @@ def test_selected_parent_projection_refusal_leaves_original_intent_and_budget_un
 def boundary(monkeypatch, runtime, state):
     from temporalio import activity, workflow
 
-    import ralf_agent.temporal_deployment_execution as transport
-    from ralf_agent.temporal_control_activities import registered_parent_activities
-    from ralf_agent.temporal_workflow import TemporalRunWorkflow
+    import relf_agent.temporal_deployment_execution as transport
+    from relf_agent.temporal_control_activities import registered_parent_activities
+    from relf_agent.temporal_workflow import TemporalRunWorkflow
 
     class Handle:
         async def execute_update(self, name, payload, **options):
@@ -191,11 +191,11 @@ def boundary(monkeypatch, runtime, state):
 
 
 async def step(runner, state):
-    from ralf_agent.temporal_completion_state import ACTIVITY as COMPLETION
-    from ralf_agent.temporal_limits_state import ACTIVITY as LIMITS
-    from ralf_agent.temporal_managed_context import ACTIVITY as CONTEXT
-    from ralf_agent.temporal_session_save_state import ACTIVITY as SESSION
-    from ralf_agent.temporal_state import CONTEXT_ACTIVITY, MODEL_ACTIVITY, TOOL_ACTIVITY
+    from relf_agent.temporal_completion_state import ACTIVITY as COMPLETION
+    from relf_agent.temporal_limits_state import ACTIVITY as LIMITS
+    from relf_agent.temporal_managed_context import ACTIVITY as CONTEXT
+    from relf_agent.temporal_session_save_state import ACTIVITY as SESSION
+    from relf_agent.temporal_state import CONTEXT_ACTIVITY, MODEL_ACTIVITY, TOOL_ACTIVITY
 
     action, request = state.next_operation()
     name, accept = {
@@ -288,8 +288,8 @@ def test_selected_session_write_grants_original_dispatch_digest_and_saves_once(m
 def test_selected_parent_activity_carrier_preserves_original_selection_payload(monkeypatch):
     from datetime import timedelta
 
-    from ralf_agent.temporal_parent_state import SELECTION_ACTIVITY
-    from ralf_agent.temporal_parent_workflow import TemporalParentWorkflow
+    from relf_agent.temporal_parent_state import SELECTION_ACTIVITY
+    from relf_agent.temporal_parent_workflow import TemporalParentWorkflow
 
     async def run():
         runtime, state = parent(monkeypatch)

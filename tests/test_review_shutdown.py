@@ -4,8 +4,8 @@ from concurrent.futures import ThreadPoolExecutor
 
 import pytest
 
-from ralf_agent import AgentSpec, LocalEngine, ModelResponse, SQLiteStore, ToolRegistry, ToolSpec
-from ralf_agent.errors import CoordinatorBusy, ValidationError
+from relf_agent import AgentSpec, LocalEngine, ModelResponse, SQLiteStore, ToolRegistry, ToolSpec
+from relf_agent.errors import CoordinatorBusy, ValidationError
 
 from .helpers import ScriptedProvider, tool_response
 

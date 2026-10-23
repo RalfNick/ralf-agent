@@ -9,15 +9,15 @@ import pytest
 from temporalio.api.history.v1 import HistoryEvent
 from temporalio.converter import DataConverter
 
-from ralf_agent import AgentSpec, Scope, TemporalRuntime, ToolExecutionOwner
-from ralf_agent.errors import RalfError
-from ralf_agent.temporal_state import (
+from relf_agent import AgentSpec, Scope, TemporalRuntime, ToolExecutionOwner
+from relf_agent.errors import RalfError
+from relf_agent.temporal_state import (
     COMMAND_REGISTRY_NAME,
     TOOL_ACTIVITY,
     WORKFLOW_NAME,
     TemporalRunState,
 )
-from ralf_agent.types import digest, submission_request
+from relf_agent.types import digest, submission_request
 from tests.test_temporal_engine import Provider, registry
 from tests.test_temporal_tool_execution import admission
 
@@ -190,7 +190,7 @@ async def fixture(*, owned=False, started=False, depth=None):
 def test_scoped_proof_uses_original_schedule_and_allows_distinct_target_queue(
     monkeypatch, owned, started, depth
 ):
-    from ralf_agent.temporal_scoped_manual_recovery import verify
+    from relf_agent.temporal_scoped_manual_recovery import verify
 
     async def run():
         runtime, client, value, info, state, _ = await fixture(
@@ -200,7 +200,7 @@ def test_scoped_proof_uses_original_schedule_and_allows_distinct_target_queue(
         async def namespace_id(client):
             return NS_ID["id"]
 
-        monkeypatch.setattr("ralf_agent.temporal_session_activities.namespace_id", namespace_id)
+        monkeypatch.setattr("relf_agent.temporal_session_activities.namespace_id", namespace_id)
         before = copy.deepcopy(vars(state))
         proof = await verify(runtime, client, value, info)
         assert proof["target"] == state.run_id and proof["execution_epoch"] == state.epoch
@@ -237,7 +237,7 @@ def test_scoped_proof_uses_original_schedule_and_allows_distinct_target_queue(
     ],
 )
 def test_scoped_proof_rejects_changed_originals_without_writes(monkeypatch, fault):
-    from ralf_agent.temporal_scoped_manual_recovery import verify
+    from relf_agent.temporal_scoped_manual_recovery import verify
 
     async def run():
         runtime, client, value, info, state, handles = await fixture(owned=fault == "owner-grant")
@@ -299,7 +299,7 @@ def test_scoped_proof_rejects_changed_originals_without_writes(monkeypatch, faul
                 else NS_ID["id"]
             )
 
-        monkeypatch.setattr("ralf_agent.temporal_session_activities.namespace_id", namespace_id)
+        monkeypatch.setattr("relf_agent.temporal_session_activities.namespace_id", namespace_id)
         before = copy.deepcopy(vars(state))
         with pytest.raises(RalfError):
             await verify(runtime, client, value, info)

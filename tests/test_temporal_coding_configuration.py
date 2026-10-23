@@ -5,12 +5,12 @@ from dataclasses import asdict
 
 import pytest
 
-from ralf_agent import AgentSpec, BindingSelection, Scope, TemporalProfile, TemporalRuntimeBuilder
-from ralf_agent.binding_definitions import AgentDefinition
-from ralf_agent.binding_types import AgentBindingDescriptor
-from ralf_agent.errors import AuthorizationDenied, DefinitionMismatch, ValidationError
-from ralf_agent.temporal_bindings import effective_step, key, normalize_request, validate_descriptor
-from ralf_agent.types import submission_request
+from relf_agent import AgentSpec, BindingSelection, Scope, TemporalProfile, TemporalRuntimeBuilder
+from relf_agent.binding_definitions import AgentDefinition
+from relf_agent.binding_types import AgentBindingDescriptor
+from relf_agent.errors import AuthorizationDenied, DefinitionMismatch, ValidationError
+from relf_agent.temporal_bindings import effective_step, key, normalize_request, validate_descriptor
+from relf_agent.types import submission_request
 
 
 def profile(**kwargs):
@@ -18,7 +18,7 @@ def profile(**kwargs):
 
 
 def manifest():
-    from ralf_agent.temporal_coding_protocol import JOURNAL_METHODS, RUNNER_METHODS, implementation
+    from relf_agent.temporal_coding_protocol import JOURNAL_METHODS, RUNNER_METHODS, implementation
 
     runner = {"kind": "codex-coding-runner", "version": "1", "resource": "original"}
     choice = BindingSelection.ref("native", "1")
@@ -147,8 +147,8 @@ def test_postgres_coding_requires_optin_before_resource_construction(tmp_path):
 def test_coding_builder_acquires_exact_effect_owner_before_tools_and_closes_once(
     tmp_path, monkeypatch
 ):
-    import ralf_agent.temporal_builder as builder_module
-    from ralf_agent.runtime_builder import ComponentRegistry
+    import relf_agent.temporal_builder as builder_module
+    from relf_agent.runtime_builder import ComponentRegistry
 
     events = []
 
@@ -167,7 +167,7 @@ def test_coding_builder_acquires_exact_effect_owner_before_tools_and_closes_once
         assert context.effect_journal is original
         assert context.coding_execution is True
         events.append("tools")
-        from ralf_agent.tools import ToolRegistry
+        from relf_agent.tools import ToolRegistry
 
         return ToolRegistry()
 
@@ -200,8 +200,8 @@ def test_coding_builder_acquires_exact_effect_owner_before_tools_and_closes_once
 
 
 def test_local_builder_refuses_temporal_postgres_adapter_before_store(tmp_path):
-    from ralf_agent import RuntimeProfile
-    from ralf_agent.runtime_builder import RuntimeBuilder
+    from relf_agent import RuntimeProfile
+    from relf_agent.runtime_builder import RuntimeBuilder
     from tests.test_temporal_coding_factories import entry
 
     selected = RuntimeProfile(

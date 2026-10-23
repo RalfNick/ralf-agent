@@ -5,12 +5,12 @@ from importlib import import_module
 
 import pytest
 
-from ralf_agent import AgentSpec, ModelResponse, ToolCall, ToolRegistry, ToolSpec
-from ralf_agent.errors import ValidationError
+from relf_agent import AgentSpec, ModelResponse, ToolCall, ToolRegistry, ToolSpec
+from relf_agent.errors import ValidationError
 
 
 def harness_api():
-    return import_module("ralf_agent.harness")
+    return import_module("relf_agent.harness")
 
 
 def test_native_prepare_preserves_request_without_aliasing_messages_or_tools():

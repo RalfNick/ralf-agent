@@ -16,7 +16,7 @@ from pathlib import Path
 
 import pytest
 
-from ralf_agent import (
+from relf_agent import (
     AgentBindingDescriptor,
     AgentSpec,
     BindingSelection,
@@ -35,10 +35,10 @@ from ralf_agent import (
     TemporalRuntimeBuilder,
     WorkflowSpec,
 )
-from ralf_agent.codex_model_connection import CodexModelConnection
-from ralf_agent.errors import DefinitionMismatch
-from ralf_agent.temporal import TemporalEngine, replay_temporal_history
-from ralf_agent.types import digest, submission_request
+from relf_agent.codex_model_connection import CodexModelConnection
+from relf_agent.errors import DefinitionMismatch
+from relf_agent.temporal import TemporalEngine, replay_temporal_history
+from relf_agent.types import digest, submission_request
 from tests.connected_coding_fixture import connected_native_fixture
 from tests.temporal_coding_worker_fixture import Provider
 from tests.test_temporal_coding_owned_service import completed_updates
@@ -124,7 +124,7 @@ RECURSIVE_KINDS = {"team-sequence", "nested-team-dynamic-sequence"}
 
 
 def _recursive_definition(parent_kind, coding_agent):
-    from ralf_agent.binding_paths import agent_paths
+    from relf_agent.binding_paths import agent_paths
 
     sequence = WorkflowSpec(
         "connected-sequence",
@@ -157,8 +157,8 @@ def _recursive_definition(parent_kind, coding_agent):
 
 async def _recursive_evidence(client, scope, root_id, *, stopped):
     """Read and validate every original immediate edge, without issuing controls."""
-    from ralf_agent.binding_paths import agent_paths
-    from ralf_agent.temporal_bindings import request_release_digest
+    from relf_agent.binding_paths import agent_paths
+    from relf_agent.temporal_bindings import request_release_digest
 
     proofs, edges = {}, []
 
@@ -478,8 +478,8 @@ async def _failure_evidence(directory, client, scope, root_id, admin, schema, ca
 def test_current_worker_refuses_actual_previous_selected_metadata_before_resources(tmp_path):
     from copy import deepcopy
 
-    from ralf_agent.temporal import TemporalEngine
-    from ralf_agent.temporal_coding_protocol import check
+    from relf_agent.temporal import TemporalEngine
+    from relf_agent.temporal_coding_protocol import check
 
     path = os.getenv("RALF_TEST_PREVIOUS_CODING_MANIFEST")
     if not path:
@@ -516,8 +516,8 @@ def test_current_worker_refuses_actual_previous_selected_metadata_before_resourc
 def test_current_worker_refuses_actual_dev109_and_relabelled_selection_before_resources(tmp_path):
     from copy import deepcopy
 
-    from ralf_agent.temporal import TemporalEngine
-    from ralf_agent.temporal_coding_protocol import check
+    from relf_agent.temporal import TemporalEngine
+    from relf_agent.temporal_coding_protocol import check
 
     path = os.getenv("RALF_TEST_PREVIOUS109_CODING_MANIFEST")
     if not path:
@@ -692,7 +692,7 @@ def test_connected_original_action_approval_recovery_and_cancel(
                 log = tmp_path / f"worker-{len(processes)}.log"
                 test_root = Path(__file__).parents[1]
                 paths = [str(test_root)]
-                if (test_root / "src" / "ralf_agent" / "__init__.py").is_file():
+                if (test_root / "src" / "relf_agent" / "__init__.py").is_file():
                     paths.append(str(test_root / "src"))
                 env = {
                     "PATH": os.environ["PATH"],

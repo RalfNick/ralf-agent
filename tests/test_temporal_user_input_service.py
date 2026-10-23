@@ -11,9 +11,9 @@ from pathlib import Path
 
 import pytest
 
-from ralf_agent import RunRef, Runtime, Scope
-from ralf_agent.temporal import TemporalEngine, replay_temporal_history
-from ralf_agent.types import digest
+from relf_agent import RunRef, Runtime, Scope
+from relf_agent.temporal import TemporalEngine, replay_temporal_history
+from relf_agent.types import digest
 from tests.temporal_user_input_worker import (
     FENCE_ENTERED,
     FENCE_RELEASED,
@@ -35,7 +35,7 @@ def test_actual_input_survives_process_restart_and_lost_ack(tmp_path, kind, wind
 async def recover(root, kind, window):
     from temporalio.client import Client
 
-    import ralf_agent
+    import relf_agent
 
     address, queue = os.environ["RALF_TEST_TEMPORAL_ADDRESS"], "input-" + uuid.uuid4().hex
     client = await Client.connect(address)
@@ -63,7 +63,7 @@ async def recover(root, kind, window):
         environment = {
             "PATH": os.environ.get("PATH", "/usr/bin:/bin"),
             "PYTHONPATH": os.pathsep.join(
-                [str(Path(ralf_agent.__file__).parents[1]), str(Path(__file__).parents[1])]
+                [str(Path(relf_agent.__file__).parents[1]), str(Path(__file__).parents[1])]
             ),
             "RALF_TEST_TEMPORAL_ADDRESS": address,
             "RALF_TEST_TEMPORAL_QUEUE": queue,

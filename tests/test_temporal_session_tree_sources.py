@@ -2,7 +2,7 @@
 
 import pytest
 
-from ralf_agent import (
+from relf_agent import (
     AgentBindingDescriptor,
     AgentSpec,
     BindingCatalog,
@@ -14,10 +14,10 @@ from ralf_agent import (
     TeamSpec,
     ToolRegistry,
 )
-from ralf_agent.errors import DefinitionMismatch
-from ralf_agent.temporal_activities import TemporalRuntime
-from ralf_agent.temporal_bindings import effective_manifest, normalize_request
-from ralf_agent.types import digest, submission_request
+from relf_agent.errors import DefinitionMismatch
+from relf_agent.temporal_activities import TemporalRuntime
+from relf_agent.temporal_bindings import effective_manifest, normalize_request
+from relf_agent.types import digest, submission_request
 
 from .test_temporal_sessions import Provider
 
@@ -81,7 +81,7 @@ def setup(*, root=True):
 
 
 def root_source(manifest):
-    from ralf_agent.temporal_session_tree import root_source
+    from relf_agent.temporal_session_tree import root_source
 
     return root_source(manifest)
 
@@ -130,8 +130,8 @@ def test_missing_or_escaped_original_root_resource_is_refused(damage):
 
 
 def test_tree_source_helper_does_not_open_unsupported_advanced_execution():
-    from ralf_agent.errors import ValidationError
-    from ralf_agent.temporal_state import validate_request
+    from relf_agent.errors import ValidationError
+    from relf_agent.temporal_state import validate_request
 
     host, request, _ = setup()
     assert root_source(host.orchestration_release) is not None

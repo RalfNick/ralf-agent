@@ -2,10 +2,10 @@
 
 import asyncio
 
-import ralf_agent as r
-from ralf_agent.governance import DeploymentAdmissionPolicy
-from ralf_agent.managed_memory import ManagedMemoryPolicy
-from ralf_agent.types import canonical
+import relf_agent as r
+from relf_agent.governance import DeploymentAdmissionPolicy
+from relf_agent.managed_memory import ManagedMemoryPolicy
+from relf_agent.types import canonical
 
 from .helpers import ScriptedProvider
 from .test_composite_data_context import Provider as ContextProvider

@@ -11,7 +11,7 @@ from pathlib import Path
 
 import pytest
 
-from ralf_agent.errors import RalfError
+from relf_agent.errors import RalfError
 
 PROCESS_FUNCTIONS = ("_default_child_policy", "_darwin_group_members", "signal_unreaped_group")
 PROCESS_METHODS = ("__init__", "register", "_events", "exited", "close")
@@ -27,7 +27,7 @@ NO_CREATE_RULES = (
 
 
 def module():
-    return importlib.import_module("ralf_agent.coding_create_inventory")
+    return importlib.import_module("relf_agent.coding_create_inventory")
 
 
 def changed(*args, **kwargs):
@@ -61,7 +61,7 @@ def test_explicit_inventory_is_complete_and_detached():
 
 @pytest.mark.parametrize("name", ["_cacheable_constant", "_cacheable_code"])
 def test_code_cache_purity_gate_is_in_live_inventory(monkeypatch, name):
-    from ralf_agent import component_fingerprint
+    from relf_agent import component_fingerprint
 
     inventory = module()
     before = inventory.inventory()
@@ -72,7 +72,7 @@ def test_code_cache_purity_gate_is_in_live_inventory(monkeypatch, name):
 
 @pytest.mark.parametrize("name", PROCESS_FUNCTIONS)
 def test_each_process_function_mutation_changes_inventory(monkeypatch, name):
-    from ralf_agent import coding_process_wait
+    from relf_agent import coding_process_wait
 
     inventory = module()
     before = inventory.inventory()
@@ -87,7 +87,7 @@ def test_each_process_function_mutation_changes_inventory(monkeypatch, name):
 
 @pytest.mark.parametrize("name", PROCESS_METHODS)
 def test_each_monitor_method_mutation_changes_inventory(monkeypatch, name):
-    from ralf_agent.coding_process_wait import ChildExitMonitor
+    from relf_agent.coding_process_wait import ChildExitMonitor
 
     inventory = module()
     before = inventory.inventory()
@@ -98,7 +98,7 @@ def test_each_monitor_method_mutation_changes_inventory(monkeypatch, name):
 
 @pytest.mark.parametrize("name", NO_CREATE_RULES)
 def test_each_new_no_create_rule_mutation_changes_inventory(monkeypatch, name):
-    from ralf_agent import coding_execution_rules
+    from relf_agent import coding_execution_rules
 
     inventory = module()
     before = inventory.inventory()
@@ -109,7 +109,7 @@ def test_each_new_no_create_rule_mutation_changes_inventory(monkeypatch, name):
 
 @pytest.mark.parametrize("name", ["_GROUP_LIMIT", "_PGRP_ONLY"])
 def test_policy_type_change_is_pinned(monkeypatch, name):
-    from ralf_agent import coding_process_wait
+    from relf_agent import coding_process_wait
 
     inventory = module()
     before = inventory.inventory()
@@ -119,7 +119,7 @@ def test_policy_type_change_is_pinned(monkeypatch, name):
 
 
 def test_policy_executable_subclass_is_refused(monkeypatch):
-    from ralf_agent import coding_process_wait
+    from relf_agent import coding_process_wait
 
     class ExecutableInteger(int):
         pass
@@ -321,7 +321,7 @@ def test_complete_broker_gate_journal_inventory_and_each_mutation(
     monkeypatch, group, module_name, owner, names
 ):
     inventory = module()
-    source = importlib.import_module("ralf_agent." + module_name)
+    source = importlib.import_module("relf_agent." + module_name)
     target = source if owner is None else getattr(source, owner)
     assert inventory.inventory_fields()[group] == names
     for name in names:
@@ -337,7 +337,7 @@ def test_complete_broker_gate_journal_inventory_and_each_mutation(
 
 
 def test_broker_property_and_each_policy_constant_are_pinned(monkeypatch):
-    from ralf_agent import codex_create_journal, codex_create_supervisor
+    from relf_agent import codex_create_journal, codex_create_supervisor
 
     inventory = module()
     before = inventory.inventory()
@@ -481,7 +481,7 @@ def test_reviewed_source_definitions_have_no_unlisted_helper_or_policy(
 )
 def test_each_actual_imported_role_rebind_is_refused(monkeypatch, module_name, names):
     inventory = module()
-    target = importlib.import_module("ralf_agent." + module_name)
+    target = importlib.import_module("relf_agent." + module_name)
     for name in names:
         with monkeypatch.context() as patch:
             patch.setattr(target, name, changed)

@@ -8,7 +8,7 @@ from types import SimpleNamespace
 
 import pytest
 
-from ralf_agent import (
+from relf_agent import (
     AgentSpec,
     GraphNode,
     GraphWorkflowSpec,
@@ -24,8 +24,8 @@ from ralf_agent import (
     SQLiteStore,
     ToolRegistry,
 )
-from ralf_agent.errors import CoordinatorBusy, ValidationError
-from ralf_agent.runtime_builder import EchoProvider
+from relf_agent.errors import CoordinatorBusy, ValidationError
+from relf_agent.runtime_builder import EchoProvider
 
 
 def deferred_operation(operation, form):
@@ -363,7 +363,7 @@ def test_profiled_and_readonly_diagnostics_retain_detached_workflow_details(tmp_
 @pytest.mark.parametrize("limit", [1, 2])
 @pytest.mark.parametrize("command", ["run", "resume"])
 def test_configured_cli_run_and_resume_report_completed_nodes(tmp_path, capsys, limit, command):
-    from ralf_agent.cli import main
+    from relf_agent.cli import main
 
     path = tmp_path / "cli.sqlite"
     config = tmp_path / "runtime.json"

@@ -9,7 +9,7 @@ from contextlib import contextmanager
 from dataclasses import asdict
 from pathlib import Path
 
-from ralf_agent import (
+from relf_agent import (
     AgentSpec,
     DAGNode,
     DAGProposal,

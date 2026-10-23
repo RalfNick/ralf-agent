@@ -3,12 +3,12 @@ from contextlib import contextmanager
 
 import pytest
 
-from ralf_agent.errors import DefinitionMismatch, ValidationError
-from ralf_agent.types import canonical, digest
+from relf_agent.errors import DefinitionMismatch, ValidationError
+from relf_agent.types import canonical, digest
 
 
 def api():
-    return importlib.import_module("ralf_agent.context_pipeline")
+    return importlib.import_module("relf_agent.context_pipeline")
 
 
 def history():

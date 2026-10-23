@@ -4,7 +4,7 @@ import asyncio
 
 import pytest
 
-from ralf_agent import (
+from relf_agent import (
     ComponentRegistry,
     GraphNode,
     GraphWorkflowSpec,
@@ -13,7 +13,7 @@ from ralf_agent import (
     Scope,
     ValueRef,
 )
-from ralf_agent.errors import AuthorizationDenied, ValidationError
+from relf_agent.errors import AuthorizationDenied, ValidationError
 
 
 def config(root, **options):
@@ -113,7 +113,7 @@ def test_declared_workspace_approval_restart_adopts_read_once(tmp_path):
 
 
 def test_declared_workspace_host_scope_refuses_before_file_allocation(tmp_path, monkeypatch):
-    import ralf_agent.workspace_factories as factories
+    import relf_agent.workspace_factories as factories
 
     declared = profile(tmp_path, scopes=[{"workspace": "allowed", "principal": "owner"}])
     allocations = []
@@ -150,8 +150,8 @@ def test_workspace_factory_rejects_symlink_root_without_normalizing_away_policy(
 
 
 def test_workspace_factory_partial_failure_closes_original_owned_resources(tmp_path, monkeypatch):
-    import ralf_agent.workspace_factories as factories
-    from ralf_agent import FileSystemWorkspace, WorkspaceError
+    import relf_agent.workspace_factories as factories
+    from relf_agent import FileSystemWorkspace, WorkspaceError
 
     owned = []
 
@@ -178,7 +178,7 @@ def test_workspace_factory_partial_failure_closes_original_owned_resources(tmp_p
 
 
 def test_workspace_native_agent_recovery_preserves_accepted_text(tmp_path):
-    from ralf_agent import AgentSpec
+    from relf_agent import AgentSpec
 
     from .test_workspace_temporal_service import Reader
 

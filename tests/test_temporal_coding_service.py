@@ -12,8 +12,8 @@ from pathlib import Path
 
 import pytest
 
-from ralf_agent import AgentSpec, Scope
-from ralf_agent.temporal import TemporalEngine, replay_temporal_history
+from relf_agent import AgentSpec, Scope
+from relf_agent.temporal import TemporalEngine, replay_temporal_history
 from tests import temporal_coding_worker_fixture as fixture
 from tests.test_codex_runner import native_fixture
 
@@ -133,9 +133,9 @@ def test_actual_history_pg_native_attempt_survives_worker_replacement(tmp_path, 
             spec = AgentSpec("code", "Perform approved Coding", tools=("coding",))
             definition = spec
             if mode == "bound_sequence":
-                from ralf_agent import BindingSelection, WorkflowSpec
-                from ralf_agent.binding_definitions import BoundDefinition
-                from ralf_agent.binding_types import AgentBindingDescriptor
+                from relf_agent import BindingSelection, WorkflowSpec
+                from relf_agent.binding_definitions import BoundDefinition
+                from relf_agent.binding_types import AgentBindingDescriptor
 
                 definition = BoundDefinition(
                     WorkflowSpec(
@@ -214,8 +214,8 @@ def test_actual_history_pg_native_attempt_survives_worker_replacement(tmp_path, 
                 assert (
                     native_state["pending_stop"] is False and "result_candidate" not in native_state
                 )
-                from ralf_agent.codex_coding_profile import CodexCodingProfile
-                from ralf_agent.codex_environment import _pin
+                from relf_agent.codex_coding_profile import CodexCodingProfile
+                from relf_agent.codex_environment import _pin
 
                 metadata = next(root.glob("*/environment.json"))
                 saved = json.loads(metadata.read_text())

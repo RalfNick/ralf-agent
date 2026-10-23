@@ -21,7 +21,7 @@ from pathlib import Path
 
 import pytest
 
-from ralf_agent import (
+from relf_agent import (
     AgentSpec,
     BindingSelection,
     DynamicWorkflowSpec,
@@ -32,14 +32,14 @@ from ralf_agent import (
     TemporalProfile,
     WorkflowSpec,
 )
-from ralf_agent.binding_definitions import AgentDefinition, BoundDefinition
-from ralf_agent.binding_paths import agent_paths
-from ralf_agent.binding_types import AgentBindingDescriptor
-from ralf_agent.errors import CapacityExceeded, CloseIncomplete, DefinitionMismatch
-from ralf_agent.governance import DeploymentAdmissionPolicy
-from ralf_agent.temporal import TemporalEngine, build_temporal_worker, replay_temporal_history
-from ralf_agent.temporal_deployment_admission import registry_id, root_run_id
-from ralf_agent.types import canonical, digest, submission_request
+from relf_agent.binding_definitions import AgentDefinition, BoundDefinition
+from relf_agent.binding_paths import agent_paths
+from relf_agent.binding_types import AgentBindingDescriptor
+from relf_agent.errors import CapacityExceeded, CloseIncomplete, DefinitionMismatch
+from relf_agent.governance import DeploymentAdmissionPolicy
+from relf_agent.temporal import TemporalEngine, build_temporal_worker, replay_temporal_history
+from relf_agent.temporal_deployment_admission import registry_id, root_run_id
+from relf_agent.types import canonical, digest, submission_request
 from tests import temporal_deployment_coding_worker_fixture as fixture
 from tests.test_temporal_deployment_admission_service import _clients
 from tests.test_temporal_deployment_dispatch_service import _eventually
@@ -147,7 +147,7 @@ def definition(kind):
 
 async def _close_while_serving(assembly, directory, *, wait_timeout):
     """Caller retries incomplete close while retaining its borrowed receiver."""
-    from ralf_agent.errors import CloseIncomplete
+    from relf_agent.errors import CloseIncomplete
 
     loop = asyncio.get_running_loop()
     deadline = loop.time() + wait_timeout
@@ -351,7 +351,7 @@ class CodingSystem:
         log = self.directory / f"worker-{len(self.processes)}.log"
         root = Path(__file__).parents[1]
         paths = [str(root)]
-        if (root / "src" / "ralf_agent").is_dir():
+        if (root / "src" / "relf_agent").is_dir():
             paths.append(str(root / "src"))
         env = {
             "PATH": os.environ["PATH"],
@@ -684,7 +684,7 @@ async def coding_system(
     import psycopg
     from psycopg import sql
 
-    from ralf_agent.codex_create_supervisor import CreateSupervisor
+    from relf_agent.codex_create_supervisor import CreateSupervisor
 
     original_create_start = CreateSupervisor.start_once
 
@@ -1123,7 +1123,7 @@ def test_actual_never_used_owned_assembly_records_only_original_scoped_close(tmp
         from temporalio.api.enums.v1 import EventType
         from temporalio.service import RPCError, RPCStatusCode
 
-        from ralf_agent.errors import NotFound, ValidationError
+        from relf_agent.errors import NotFound, ValidationError
 
         async with coding_system(tmp_path, monkeypatch) as system:
             await system.assembly.start_worker(system.client, task_queue=system.queue)
@@ -1513,10 +1513,10 @@ def test_actual_ordinary2_and_coding3_share_registry3_capacity_without_coding_in
     tmp_path, monkeypatch
 ):
     async def scenario():
-        from ralf_agent import ToolRegistry
-        from ralf_agent.temporal_activities import TemporalRuntime
-        from ralf_agent.temporal_deployment_release import close_owner
-        from ralf_agent.types import ModelResponse
+        from relf_agent import ToolRegistry
+        from relf_agent.temporal_activities import TemporalRuntime
+        from relf_agent.temporal_deployment_release import close_owner
+        from relf_agent.types import ModelResponse
 
         class HeldProvider:
             identity = {"kind": "deployment-coding-ordinary-peer", "version": "1"}
@@ -2025,7 +2025,7 @@ def test_actual_hidden_planner_without_pg_rows_keeps_root_until_actual_handler_e
 
 def test_actual_dynamic_patch_retains_live_original_revision_and_child_seals(tmp_path, monkeypatch):
     async def scenario():
-        from ralf_agent import DAGNode, DAGProposal
+        from relf_agent import DAGNode, DAGProposal
 
         async with (
             coding_system(tmp_path, monkeypatch, kind="dynamic-dag", hold=True) as system,
@@ -2384,7 +2384,7 @@ def _native_ack_case(tmp_path, monkeypatch, boundary, *, pressure):
             if boundary == "tool-end":
                 assert await system.runtime.wait_context_executions(wait_timeout=60) is True
             elif boundary == "deployment-end":
-                from ralf_agent.temporal_deployment_release import check_owner
+                from relf_agent.temporal_deployment_release import check_owner
 
                 owner = check_owner(system.runtime)
                 assert owner is not None
@@ -2464,7 +2464,7 @@ def _native_ack_case(tmp_path, monkeypatch, boundary, *, pressure):
                 )
                 system.workers.append(restarted)
                 async with restarted:
-                    from ralf_agent.temporal_coding_recovery_transport import execute
+                    from relf_agent.temporal_coding_recovery_transport import execute
 
                     stops = []
                     for event in history.events:

@@ -5,12 +5,12 @@
 ## 开箱即用
 
 ```sh
-ralf init my-parallel --template parallel
+relf init my-parallel --template parallel
 cd my-parallel
 python -m agent_app --input task --command-id first
 python -m agent_app --input queued --command-id second --submit-only
-ralf --config runtime.toml resume RUN_ID
-ralf --config runtime.toml --format text inspect RUN_ID
+relf --config runtime.toml resume RUN_ID
+relf --config runtime.toml --format text inspect RUN_ID
 ```
 
 用提交返回的 ID 替换 `RUN_ID`。模板有两个独立 Agent 和一个显式合并节点，离线 Provider 立即回显。它验证执行链路；真实异步模型、HTTP/MCP 工具或同步工具线程可以重叠等待外部调用。模板不证明模型任务质量，也不是性能 benchmark。
@@ -19,7 +19,7 @@ ralf --config runtime.toml --format text inspect RUN_ID
 
 ```python
 import asyncio
-from ralf_agent import (
+from relf_agent import (
     AgentSpec,
     GraphNode,
     GraphWorkflowSpec,
@@ -71,7 +71,7 @@ with RuntimeBuilder().build(profile, ".ralf/parallel.sqlite") as engine:
 `WorkflowScheduler` 是纯同步端口，带非空 JSON `identity`，实现 `select(plan, input, states, limit) -> WorkflowBatch`。默认 `StaticWorkflowScheduler` 按声明顺序选择就绪节点。状态为脱离存储的 JSON 副本，不含内部帧；limit 是当前剩余槽位。自定义策略可选择就绪节点的顺序及非空子集，不能改输入绑定、跳过集合、依赖或完成语义，也不能超过槽位。
 
 ```python
-from ralf_agent import StaticWorkflowScheduler, WorkflowBatch
+from relf_agent import StaticWorkflowScheduler, WorkflowBatch
 
 
 class ReverseReady(StaticWorkflowScheduler):

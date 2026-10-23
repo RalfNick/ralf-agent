@@ -6,13 +6,13 @@ from dataclasses import asdict
 
 import pytest
 
-import ralf_agent as r
-from ralf_agent.errors import DefinitionMismatch, ValidationError
-from ralf_agent.temporal_activities import TemporalRuntime
-from ralf_agent.temporal_bindings import normalize_request
-from ralf_agent.temporal_state import TemporalRunState, validate_manifest
-from ralf_agent.types import submission_request
-from ralf_agent.workspace import WorkspaceError
+import relf_agent as r
+from relf_agent.errors import DefinitionMismatch, ValidationError
+from relf_agent.temporal_activities import TemporalRuntime
+from relf_agent.temporal_bindings import normalize_request
+from relf_agent.temporal_state import TemporalRunState, validate_manifest
+from relf_agent.types import submission_request
+from relf_agent.workspace import WorkspaceError
 
 from .test_temporal_engine import JournalContractFixture
 from .test_workspace_binding_execution import definition as read_definition
@@ -37,7 +37,7 @@ def definition(kind):
             else item
         )
 
-    from ralf_agent.binding_definitions import decode_definition
+    from relf_agent.binding_definitions import decode_definition
 
     return decode_definition(names(value))
 

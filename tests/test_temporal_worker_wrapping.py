@@ -7,9 +7,9 @@ from types import SimpleNamespace
 
 import pytest
 
-from ralf_agent import Scope
-from ralf_agent.errors import DefinitionMismatch
-from ralf_agent.temporal_assembly_lifecycle import WorkerExecutionOwner
+from relf_agent import Scope
+from relf_agent.errors import DefinitionMismatch
+from relf_agent.temporal_assembly_lifecycle import WorkerExecutionOwner
 
 
 def test_sdk_activity_definition_and_context_survive_observer_cancel(monkeypatch):
@@ -106,12 +106,12 @@ def test_build_worker_installs_owner_on_every_original_activity(monkeypatch):
     pytest.importorskip("temporalio.worker")
     import temporalio.worker
 
-    from ralf_agent import ToolRegistry
-    from ralf_agent.runtime_builder import EchoProvider
-    from ralf_agent.temporal import build_temporal_worker
-    from ralf_agent.temporal_activities import TemporalRuntime, registered_activities
-    from ralf_agent.temporal_control_activities import registered_parent_activities
-    from ralf_agent.temporal_session_activities import registered_session_activities
+    from relf_agent import ToolRegistry
+    from relf_agent.runtime_builder import EchoProvider
+    from relf_agent.temporal import build_temporal_worker
+    from relf_agent.temporal_activities import TemporalRuntime, registered_activities
+    from relf_agent.temporal_control_activities import registered_parent_activities
+    from relf_agent.temporal_session_activities import registered_session_activities
 
     runtime = TemporalRuntime(providers={"default": EchoProvider("offline")}, tools=ToolRegistry())
     client = SimpleNamespace(namespace="original")

@@ -6,8 +6,8 @@ from dataclasses import FrozenInstanceError
 
 import pytest
 
-from ralf_agent.adapter_contract_catalog import STATUS_CODES, catalog_for, catalog_for_case
-from ralf_agent.adapter_contract_types import (
+from relf_agent.adapter_contract_catalog import STATUS_CODES, catalog_for, catalog_for_case
+from relf_agent.adapter_contract_types import (
     CASE_IDS,
     CASE_LABELS,
     OBSERVATION_KEYS,
@@ -15,9 +15,9 @@ from ralf_agent.adapter_contract_types import (
     AdapterContractCaseResult,
     AdapterContractReport,
 )
-from ralf_agent.adapter_contracts import AdapterContractSuite
-from ralf_agent.errors import ValidationError
-from ralf_agent.types import canonical
+from relf_agent.adapter_contracts import AdapterContractSuite
+from relf_agent.errors import ValidationError
+from relf_agent.types import canonical
 
 FACTS_CASES = (
     ("F01", "identity-and-port"),

@@ -4,10 +4,10 @@ import asyncio
 
 import pytest
 
-from ralf_agent.errors import DefinitionMismatch
-from ralf_agent.temporal_coding_authority import TemporalCodingAuthority
-from ralf_agent.temporal_deployment_coding_validation import CodingValidation
-from ralf_agent.types import digest
+from relf_agent.errors import DefinitionMismatch
+from relf_agent.temporal_coding_authority import TemporalCodingAuthority
+from relf_agent.temporal_deployment_coding_validation import CodingValidation
+from relf_agent.types import digest
 from tests.test_temporal_session_coding_projection import sdk_session_environment
 
 
@@ -92,7 +92,7 @@ def test_actual_history_query_and_update_keep_fresh_validation_on_both_sides(mon
 
 
 def test_publication_three_without_session_keeps_original_compact_reads(monkeypatch):
-    from ralf_agent import temporal_session_deployment_verification as verification
+    from relf_agent import temporal_session_deployment_verification as verification
     from tests.test_temporal_deployment_coding_validation import environment
 
     runtime, client, request, info, bootstrap_reads = environment(monkeypatch, depth=1)

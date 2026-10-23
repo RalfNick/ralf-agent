@@ -3,7 +3,7 @@ import asyncio
 import httpx
 import pytest
 
-from ralf_agent.errors import ProviderError, ValidationError
+from relf_agent.errors import ProviderError, ValidationError
 
 
 def response():
@@ -16,7 +16,7 @@ def response():
 
 
 def test_owned_embedding_real_transport_close_failure_can_retry(monkeypatch):
-    from ralf_agent.semantic_embedding import ManagedEmbeddingProvider
+    from relf_agent.semantic_embedding import ManagedEmbeddingProvider
 
     class Transport(httpx.MockTransport):
         attempts = 0
@@ -47,7 +47,7 @@ def test_owned_embedding_real_transport_close_failure_can_retry(monkeypatch):
 
 
 def test_embedding_stream_all_task_cancel_retains_release_for_retry(monkeypatch):
-    from ralf_agent.semantic_embedding import ManagedEmbeddingProvider
+    from relf_agent.semantic_embedding import ManagedEmbeddingProvider
 
     async def run():
         reading, closing, release = asyncio.Event(), asyncio.Event(), asyncio.Event()

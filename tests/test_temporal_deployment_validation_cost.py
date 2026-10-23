@@ -5,10 +5,10 @@ import copy
 
 import pytest
 
-from ralf_agent.errors import DefinitionMismatch
-from ralf_agent.temporal_deployment_admission import registry_id
-from ralf_agent.temporal_deployment_coding_validation import CodingValidation
-from ralf_agent.temporal_deployment_execution import _policy
+from relf_agent.errors import DefinitionMismatch
+from relf_agent.temporal_deployment_admission import registry_id
+from relf_agent.temporal_deployment_coding_validation import CodingValidation
+from relf_agent.temporal_deployment_execution import _policy
 from tests.test_temporal_deployment_coding_validation import (
     POLICY,
     Client,
@@ -40,7 +40,7 @@ def test_policy_checks_expected_release_after_capturing_policy_declaration():
 
 
 def test_policy_still_refuses_release_change_during_policy_inspection(monkeypatch):
-    from ralf_agent.governance import DeploymentAdmissionPolicy
+    from relf_agent.governance import DeploymentAdmissionPolicy
 
     runtime = Runtime({"fixed": "original"})
     original = DeploymentAdmissionPolicy.identity.fget
@@ -101,7 +101,7 @@ def test_ready_identity_bootstrap_bounds_release_work_and_refreshes_permissions(
 def test_steady_configuration_drift_finishes_only_original_scope_reads_then_refuses(
     monkeypatch, method, boundary, change
 ):
-    from ralf_agent.governance import DeploymentAdmissionPolicy
+    from relf_agent.governance import DeploymentAdmissionPolicy
 
     original = Client.describe_namespace
     armed = False

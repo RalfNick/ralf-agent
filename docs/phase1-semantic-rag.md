@@ -1,12 +1,12 @@
 # 语义 RAG 参考应用
 
-`python -m ralf_agent.semantic_rag_reference` 是随 SDK 安装的完整参考应用：原文摄取、显式索引、权威来源回读、原 Agent Run、答案与引用评分、终态重新连接。它复用 `evaluate_rag`，不增加执行权威或调度器。没有 Provider 时显示 `not_run`，不读取凭据、不载入或下载模型。
+`python -m relf_agent.semantic_rag_reference` 是随 SDK 安装的完整参考应用：原文摄取、显式索引、权威来源回读、原 Agent Run、答案与引用评分、终态重新连接。它复用 `evaluate_rag`，不增加执行权威或调度器。没有 Provider 时显示 `not_run`，不读取凭据、不载入或下载模型。
 
 ```sh
-python -m ralf_agent.semantic_rag_reference
+python -m relf_agent.semantic_rag_reference
 ```
 
-本应用的 `typed_answers=True` 使用通用问题类型指令：数量为 JSON number，多字段答案为 JSON object，时间等文本保持字符串。它不读取或披露 oracle，不把 `"30"` 自动改成 `30`。旧 `evaluate_rag`／`ralf-evaluate-rag` 默认仍为 False，原提示、Agent version 1 与报告字段保持；显式启用时使用 Agent version 2，并在报告写入 `typed_answers=true`。旧 Run 继续使用原定义，改变配置后新建提交。
+本应用的 `typed_answers=True` 使用通用问题类型指令：数量为 JSON number，多字段答案为 JSON object，时间等文本保持字符串。它不读取或披露 oracle，不把 `"30"` 自动改成 `30`。旧 `evaluate_rag`／`relf-evaluate-rag` 默认仍为 False，原提示、Agent version 1 与报告字段保持；显式启用时使用 Agent version 2，并在报告写入 `typed_answers=true`。旧 Run 继续使用原定义，改变配置后新建提交。
 
 ## 安装与显式模型下载
 
@@ -14,7 +14,7 @@ python -m ralf_agent.semantic_rag_reference
 
 ```sh
 python3 -m venv .venv
-.venv/bin/python -m pip install /absolute/path/to/ralf_agent-preview.whl
+.venv/bin/python -m pip install /absolute/path/to/relf_agent-preview.whl
 .venv/bin/python -m pip install 'sentence-transformers==5.7.0' 'transformers==5.19.0' 'torch==2.14.1' 'huggingface-hub==1.33.0'
 .venv/bin/python -m pip freeze > semantic-dependencies.txt
 ```
@@ -36,7 +36,7 @@ HF_HUB_DISABLE_IMPLICIT_TOKEN=1 .venv/bin/hf download \
 先验证完整本地链路，生成使用明确的离线 fixture，Embedding 使用实际神经模型：
 
 ```sh
-HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1 .venv/bin/python -m ralf_agent.semantic_rag_reference \
+HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1 .venv/bin/python -m relf_agent.semantic_rag_reference \
   --offline --model-directory ./models/paraphrase-multilingual-MiniLM-L12-v2 \
   --repeats 3 --max-cases 8 --max-calls 24 --max-embedding-calls 128 \
   --evidence-dir ./private-semantic-offline-evidence --report ./semantic-offline-report.json
@@ -49,7 +49,7 @@ HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1 .venv/bin/python -m ralf_agent.semantic_
 生成与本地 Embedding 独立选择。用户先设置明确的 `RALF_GENERATION_MODEL`、`RALF_GENERATION_URL`、`RALF_GENERATION_KEY`；不要把密钥写入 JSON、TOML、命令行参数或报告。下面 CLI 明确选择已有 DeepSeek thinking 适配器并固定 low effort；SDK 示例固定 non-thinking DeepSeekChatProvider。二者是不同的生成配置，应分别记录与重复评测；实际调用可能收费。
 
 ```sh
-HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1 .venv/bin/python -m ralf_agent.semantic_rag_reference \
+HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1 .venv/bin/python -m relf_agent.semantic_rag_reference \
   --provider deepseek-thinking --reasoning-effort low \
   --model-env RALF_GENERATION_MODEL --base-url-env RALF_GENERATION_URL \
   --key-env RALF_GENERATION_KEY \
@@ -69,9 +69,9 @@ HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1 .venv/bin/python -m ralf_agent.semantic_
 import asyncio
 import os
 import httpx
-from ralf_agent.providers import DeepSeekChatProvider
-from ralf_agent.planning_evaluation import EvaluationLimits
-from ralf_agent.semantic_rag_reference import evaluate_semantic_rag
+from relf_agent.providers import DeepSeekChatProvider
+from relf_agent.planning_evaluation import EvaluationLimits
+from relf_agent.semantic_rag_reference import evaluate_semantic_rag
 
 async def main():
     async with httpx.AsyncClient(follow_redirects=False) as client:

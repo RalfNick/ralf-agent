@@ -3,12 +3,12 @@ from dataclasses import asdict
 
 import pytest
 
-from ralf_agent import AgentSpec, Scope, ToolRegistry
-from ralf_agent.errors import DefinitionMismatch
-from ralf_agent.temporal_activities import TemporalRuntime
-from ralf_agent.temporal_session_data import private_address
-from ralf_agent.temporal_state import TemporalRunState
-from ralf_agent.types import submission_request
+from relf_agent import AgentSpec, Scope, ToolRegistry
+from relf_agent.errors import DefinitionMismatch
+from relf_agent.temporal_activities import TemporalRuntime
+from relf_agent.temporal_session_data import private_address
+from relf_agent.temporal_state import TemporalRunState
+from relf_agent.types import submission_request
 
 from .test_postgres_adapter import postgres_dsn as postgres_dsn
 from .test_postgres_adapter import stores
@@ -74,7 +74,7 @@ def test_actual_postgres_session_schema_routing_is_fixed(postgres_dsn):
     import psycopg
     from psycopg import sql
 
-    from ralf_agent import PostgresMemory
+    from relf_agent import PostgresMemory
 
     async def run():
         schemas = ["read_a_" + uuid.uuid4().hex, "read_b_" + uuid.uuid4().hex]

@@ -6,7 +6,7 @@ import uuid
 
 import pytest
 
-from ralf_agent import (
+from relf_agent import (
     AgentBindingDescriptor,
     BindingSelection,
     BoundDefinition,
@@ -15,7 +15,7 @@ from ralf_agent import (
     TemporalProfile,
     TemporalRuntimeBuilder,
 )
-from ralf_agent.temporal import replay_temporal_history
+from relf_agent.temporal import replay_temporal_history
 
 from .test_temporal_context_read_composition import definition
 

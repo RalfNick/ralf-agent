@@ -4,11 +4,11 @@ import asyncio
 from dataclasses import asdict
 from types import SimpleNamespace
 
-from ralf_agent import ModelResponse, ToolCall, ToolRegistry, ToolSpec
-from ralf_agent.errors import AuthorizationDenied, IdempotencyConflict
-from ralf_agent.temporal import TemporalEngine
-from ralf_agent.temporal_activities import TemporalRuntime
-from ralf_agent.temporal_state import (
+from relf_agent import ModelResponse, ToolCall, ToolRegistry, ToolSpec
+from relf_agent.errors import AuthorizationDenied, IdempotencyConflict
+from relf_agent.temporal import TemporalEngine
+from relf_agent.temporal_activities import TemporalRuntime
+from relf_agent.temporal_state import (
     COMMAND_REGISTRY_NAME,
     TemporalCommandRegistryState,
     TemporalRunState,
@@ -141,8 +141,8 @@ class StateHandle:
         raise AssertionError("The Update-only fixture Worker must not receive Signals")
 
     async def describe(self):
-        from ralf_agent.temporal_parent_state import PARENT_WORKFLOW_NAME, TemporalParentState
-        from ralf_agent.temporal_state import WORKFLOW_NAME
+        from relf_agent.temporal_parent_state import PARENT_WORKFLOW_NAME, TemporalParentState
+        from relf_agent.temporal_state import WORKFLOW_NAME
 
         if self.run_id not in self.client.states:
             raise RPCError()
@@ -202,7 +202,7 @@ class StateHandle:
 
 
 def engine(monkeypatch, *, client=None, release=None):
-    monkeypatch.setattr("ralf_agent.temporal._sdk", sdk)
+    monkeypatch.setattr("relf_agent.temporal._sdk", sdk)
     return TemporalEngine(
         client or StateClient(), task_queue="agents", release=release or worker_runtime().manifest
     )

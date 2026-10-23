@@ -5,7 +5,7 @@
 原生 ModelQueryTransform 配合 SemanticMemoryStore 时，先完成提案及固定组件校验再读取 Facts；空候选也会调用改写模型，不调用 Embedding。旧确定性／自定义路径维持候选优先行为。模型改写不改变原始正文、namespace、版本、TTL 或授权范围。
 
 ```python
-from ralf_agent import ModelQueryTransform, QueryTransformRetriever, KnowledgeContext
+from relf_agent import ModelQueryTransform, QueryTransformRetriever, KnowledgeContext
 
 transform = ModelQueryTransform(query_provider, max_queries=2, include_original=True)
 retriever = QueryTransformRetriever(my_retriever, transform)

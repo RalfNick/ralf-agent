@@ -5,10 +5,10 @@ import json
 
 import pytest
 
-import ralf_agent as r
-from ralf_agent.errors import ValidationError
-from ralf_agent.runtime_config import load_catalog
-from ralf_agent.types import InvocationContext
+import relf_agent as r
+from relf_agent.errors import ValidationError
+from relf_agent.runtime_config import load_catalog
+from relf_agent.types import InvocationContext
 
 
 def bundle(tmp_path):
@@ -140,7 +140,7 @@ def test_invalid_declarations_refuse_before_resource_allocation(tmp_path, extra)
 def test_partial_bad_workspace_binding_closes_only_original_owned_skill_catalog(
     tmp_path, monkeypatch
 ):
-    import ralf_agent.skill_factories as module
+    import relf_agent.skill_factories as module
 
     root = bundle(tmp_path)
     allocated, original = [], module.FileSystemSkillCatalog

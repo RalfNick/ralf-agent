@@ -2,8 +2,8 @@ import asyncio
 
 import pytest
 
-from ralf_agent import AgentSpec, Document, RuntimeBuilder, RuntimeProfile
-from ralf_agent.errors import ValidationError
+from relf_agent import AgentSpec, Document, RuntimeBuilder, RuntimeProfile
+from relf_agent.errors import ValidationError
 
 
 def profile(adapter="sqlite-hybrid", **config):

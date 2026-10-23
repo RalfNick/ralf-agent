@@ -7,11 +7,11 @@ from collections import Counter
 import pytest
 from temporalio import activity
 
-from ralf_agent import temporal_coding_composition_control as composition
-from ralf_agent import temporal_deployment_execution as execution
-from ralf_agent import temporal_deployment_release as release
-from ralf_agent.errors import DefinitionMismatch
-from ralf_agent.types import canonical, digest
+from relf_agent import temporal_coding_composition_control as composition
+from relf_agent import temporal_deployment_execution as execution
+from relf_agent import temporal_deployment_release as release
+from relf_agent.errors import DefinitionMismatch
+from relf_agent.types import canonical, digest
 from tests.test_temporal_session_activity_reads import CONTEXT, MODEL, TOOL, activity_environment
 
 
@@ -225,7 +225,7 @@ def test_fresh_closed_root_admission_keeps_original_cancel_path(monkeypatch):
 
 @pytest.mark.parametrize("release_kind", ["legacy-three", "ordinary-four"])
 def test_other_complete_public_releases_provide_no_private_route_hint(monkeypatch, release_kind):
-    from ralf_agent.temporal_coding_composition_state import physical_stop_view
+    from relf_agent.temporal_coding_composition_state import physical_stop_view
     from tests.test_temporal_deployment_coding_registry import coding_request
     from tests.test_temporal_deployment_session_registry import deployment_intent
 

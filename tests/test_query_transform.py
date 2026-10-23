@@ -1,10 +1,10 @@
 import pytest
 
-from ralf_agent.errors import ValidationError
+from relf_agent.errors import ValidationError
 
 
 def test_identity_preserves_input_and_aliases_expand_without_chaining():
-    from ralf_agent import AliasQueryTransform, IdentityQueryTransform
+    from relf_agent import AliasQueryTransform, IdentityQueryTransform
 
     assert IdentityQueryTransform().transform("  car  ") == ("  car  ",)
     aliases = {"car": "automobile", "automobile": "vehicle"}
@@ -21,7 +21,7 @@ def test_identity_preserves_input_and_aliases_expand_without_chaining():
 
 @pytest.mark.parametrize("value", [None, True, "", "   ", "\ud800", "x" * 4097])
 def test_invalid_query_fails_before_transform(value):
-    from ralf_agent import IdentityQueryTransform
+    from relf_agent import IdentityQueryTransform
 
     with pytest.raises(ValidationError):
         IdentityQueryTransform().transform(value)
@@ -41,7 +41,7 @@ def test_invalid_query_fails_before_transform(value):
     ],
 )
 def test_invalid_alias_configuration_is_explicit(aliases, options):
-    from ralf_agent import AliasQueryTransform
+    from relf_agent import AliasQueryTransform
 
     with pytest.raises(ValidationError):
         AliasQueryTransform(aliases, **options)

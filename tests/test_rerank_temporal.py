@@ -5,7 +5,7 @@ from dataclasses import asdict
 
 import httpx
 
-from ralf_agent import (
+from relf_agent import (
     AgentSpec,
     Document,
     HTTPReranker,
@@ -15,9 +15,9 @@ from ralf_agent import (
     Scope,
     ToolRegistry,
 )
-from ralf_agent.temporal_activities import TemporalRuntime
-from ralf_agent.temporal_state import TemporalRunState
-from ralf_agent.types import submission_request
+from relf_agent.temporal_activities import TemporalRuntime
+from relf_agent.temporal_state import TemporalRunState
+from relf_agent.types import submission_request
 from tests.test_hybrid_retrieval import Branch, docs
 
 

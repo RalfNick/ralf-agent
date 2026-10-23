@@ -5,9 +5,9 @@ import inspect
 
 import pytest
 
-from ralf_agent import AgentSpec, LocalEngine, ModelResponse, SQLiteStore
-from ralf_agent.model_evidence import snapshot_model_response
-from ralf_agent.tools import ToolRegistry
+from relf_agent import AgentSpec, LocalEngine, ModelResponse, SQLiteStore
+from relf_agent.model_evidence import snapshot_model_response
+from relf_agent.tools import ToolRegistry
 
 
 class CompletedProvider:
@@ -234,7 +234,7 @@ def test_returned_response_container_depth_policy_and_original_run_boundary_swee
                     }
                 )
                 await engine.wait_for_threads()
-        from ralf_agent.types import canonical
+        from relf_agent.types import canonical
 
         (tmp_path / "depth-sweep.json").write_text(canonical(observations))
         for item in observations:
@@ -249,9 +249,9 @@ def test_returned_response_container_depth_policy_and_original_run_boundary_swee
 
 @pytest.mark.parametrize("field", ["tool_calls", "usage", "continuation"])
 def test_depth_bound_on_every_new_response_field_keeps_original_completed_evidence(tmp_path, field):
-    from ralf_agent import ToolCall, ToolSpec
-    from ralf_agent.model_continuation import ContinuedModelResponse, ModelContinuation
-    from ralf_agent.types import digest
+    from relf_agent import ToolCall, ToolSpec
+    from relf_agent.model_continuation import ContinuedModelResponse, ModelContinuation
+    from relf_agent.types import digest
 
     deep = "completed"
     for _ in range(129):

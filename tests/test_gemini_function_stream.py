@@ -5,8 +5,8 @@ import json
 import httpx
 import pytest
 
-from ralf_agent import AgentSpec, LocalEngine, SQLiteStore, ToolRegistry, ToolSpec
-from ralf_agent.errors import ProviderError
+from relf_agent import AgentSpec, LocalEngine, SQLiteStore, ToolRegistry, ToolSpec
+from relf_agent.errors import ProviderError
 
 from .test_gemini_functions import SIGNED_PARTS, TOOL, assistant, candidate, provider
 from .test_model_chat import Frames

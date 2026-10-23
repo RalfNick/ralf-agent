@@ -10,9 +10,9 @@ from pathlib import Path
 
 import pytest
 
-from ralf_agent import FileSystemWritableWorkspace, Scope
-from ralf_agent.errors import CoordinatorBusy
-from ralf_agent.workspace import WorkspaceError
+from relf_agent import FileSystemWritableWorkspace, Scope
+from relf_agent.errors import CoordinatorBusy
+from relf_agent.workspace import WorkspaceError
 
 SCOPE = Scope()
 FIXTURE = Path(__file__).with_name("workspace_write_crash_fixture.py")

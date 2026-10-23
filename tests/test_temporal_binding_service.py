@@ -8,8 +8,8 @@ from pathlib import Path
 
 import pytest
 
-from ralf_agent import Scope
-from ralf_agent.temporal import TemporalEngine, replay_temporal_history
+from relf_agent import Scope
+from relf_agent.temporal import TemporalEngine, replay_temporal_history
 from tests.temporal_binding_worker import runtime
 
 pytestmark = pytest.mark.skipif(
@@ -24,7 +24,7 @@ def test_member_context_and_artifact_evidence_survive_actual_worker_restart(tmp_
     async def run():
         from temporalio.client import Client
 
-        import ralf_agent
+        import relf_agent
 
         client = await Client.connect(os.environ["RALF_TEST_TEMPORAL_ADDRESS"])
         queue = "binding-" + uuid.uuid4().hex
@@ -44,7 +44,7 @@ def test_member_context_and_artifact_evidence_survive_actual_worker_restart(tmp_
             env = {
                 "PATH": os.environ.get("PATH", "/usr/bin:/bin"),
                 "PYTHONPATH": os.pathsep.join(
-                    [str(Path(ralf_agent.__file__).parents[1]), str(Path(__file__).parents[1])]
+                    [str(Path(relf_agent.__file__).parents[1]), str(Path(__file__).parents[1])]
                 ),
                 "RALF_TEST_TEMPORAL_ADDRESS": os.environ["RALF_TEST_TEMPORAL_ADDRESS"],
                 "RALF_TEST_TEMPORAL_QUEUE": queue,

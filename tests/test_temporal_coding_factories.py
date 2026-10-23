@@ -7,14 +7,14 @@ from types import SimpleNamespace
 
 import pytest
 
-from ralf_agent import BindingSelection, Scope, TemporalProfile, TemporalProfileCatalog
-from ralf_agent.coding_factories import binding
-from ralf_agent.errors import ValidationError
-from ralf_agent.runtime_builder import ComponentRegistry
-from ralf_agent.runtime_lifecycle import BuildContext
-from ralf_agent.temporal_coding_factories import build, entries, preflight_coding_references
-from ralf_agent.temporal_journal import PostgresEffectJournal
-from ralf_agent.types import canonical
+from relf_agent import BindingSelection, Scope, TemporalProfile, TemporalProfileCatalog
+from relf_agent.coding_factories import binding
+from relf_agent.errors import ValidationError
+from relf_agent.runtime_builder import ComponentRegistry
+from relf_agent.runtime_lifecycle import BuildContext
+from relf_agent.temporal_coding_factories import build, entries, preflight_coding_references
+from relf_agent.temporal_journal import PostgresEffectJournal
+from relf_agent.types import canonical
 from tests.test_coding_assembly import options
 
 
@@ -41,7 +41,7 @@ class Connection:
 
 
 def publish_initialization(monkeypatch, events):
-    from ralf_agent.postgres_runner_journal import PostgresRunnerJournal
+    from relf_agent.postgres_runner_journal import PostgresRunnerJournal
 
     async def initialize(self):
         events.append("initialize-view")
@@ -66,9 +66,9 @@ def publish_initialization(monkeypatch, events):
 
 
 def test_factory_uses_one_shared_original_view_and_borrowed_runner_bindings(tmp_path, monkeypatch):
-    from ralf_agent.binding_catalog import BindingCatalog
-    from ralf_agent.codex_runner import CodexCodingRunner
-    from ralf_agent.postgres_runner_journal import PostgresRunnerJournal
+    from relf_agent.binding_catalog import BindingCatalog
+    from relf_agent.codex_runner import CodexCodingRunner
+    from relf_agent.postgres_runner_journal import PostgresRunnerJournal
 
     events = []
     publish_initialization(monkeypatch, events)
@@ -238,12 +238,12 @@ def test_builtin_profile_publishes_original_journal_and_two_selected_agent_resou
 ):
     from dataclasses import asdict
 
-    from ralf_agent import AgentSpec, TemporalRuntimeBuilder, WorkflowSpec
-    from ralf_agent.binding_definitions import BoundDefinition
-    from ralf_agent.binding_types import AgentBindingDescriptor
-    from ralf_agent.temporal_bindings import normalize_request, validate_bindings
-    from ralf_agent.temporal_state import TemporalRunState
-    from ralf_agent.types import submission_request
+    from relf_agent import AgentSpec, TemporalRuntimeBuilder, WorkflowSpec
+    from relf_agent.binding_definitions import BoundDefinition
+    from relf_agent.binding_types import AgentBindingDescriptor
+    from relf_agent.temporal_bindings import normalize_request, validate_bindings
+    from relf_agent.temporal_state import TemporalRunState
+    from relf_agent.types import submission_request
 
     events = []
     publish_initialization(monkeypatch, events)

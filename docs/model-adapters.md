@@ -24,7 +24,7 @@ DeepSeek 当前 [Chat API](https://api-docs.deepseek.com/api/create-chat-complet
 ## 配置与首次使用
 
 ```sh
-ralf init my-model-agent --template model
+relf init my-model-agent --template model
 cd my-model-agent
 ```
 
@@ -54,7 +54,7 @@ stream = true
 
 ```sh
 python -m agent_app --input '解释这段业务输入' --command-id task-001
-ralf --config runtime.toml resume RUN_ID
+relf --config runtime.toml resume RUN_ID
 ```
 
 温度、top_p、stop、seed 为可选参数；省略时不发送。温度 Chat/Gemini 为 0–2，Anthropic 为 0–1；top_p 为 0–1，DeepSeek 要求 >0。stop 为 1–4 个非空字符串；seed 仅 Chat/Gemini，必须为有符号 64 位整数。参数进入实际非秘密 identity，变更后旧 Run 不能默默使用新配置。具体型号可能拒绝或忽略某些参数；没有参数自动路由或降级。
@@ -67,7 +67,7 @@ ModelCapabilities(text/tools/streaming) 描述适配器实现的能力，应用�
 
 ```python
 from contextlib import aclosing
-from ralf_agent import OpenAIChatProvider, ModelCapabilities
+from relf_agent import OpenAIChatProvider, ModelCapabilities
 
 # 凭据由应用环境提供；示例应在自己的 async 生命周期内使用。
 provider = OpenAIChatProvider("YOUR_ACTUAL_MODEL", capabilities=ModelCapabilities(tools=False))

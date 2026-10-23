@@ -3,7 +3,7 @@ import copy
 
 import pytest
 
-from ralf_agent.errors import ValidationError
+from relf_agent.errors import ValidationError
 
 from .temporal_composite_agent_fixture import CompositeClient, definitions
 

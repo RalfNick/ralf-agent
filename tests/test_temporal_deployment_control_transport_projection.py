@@ -7,12 +7,12 @@ from types import SimpleNamespace
 
 import pytest
 
-from ralf_agent.errors import DefinitionMismatch
-from ralf_agent.types import canonical, digest
+from relf_agent.errors import DefinitionMismatch
+from relf_agent.types import canonical, digest
 
 
 def transport():
-    name = "ralf_agent.temporal_deployment_control_transport"
+    name = "relf_agent.temporal_deployment_control_transport"
     assert importlib.util.find_spec(name), "Missing selected3 compact control transport"
     return importlib.import_module(name)
 
@@ -167,10 +167,10 @@ def test_malformed_snapshot_returns_typed_refusal_instead_of_workflow_task_failu
 def test_control_rechecks_original_ownership_after_await_without_repeating_command(
     monkeypatch, fault
 ):
-    from ralf_agent import temporal_deployment_coding_bridge as bridge
-    from ralf_agent import temporal_deployment_coding_validation as validation
-    from ralf_agent import temporal_deployment_execution as execution
-    from ralf_agent import temporal_deployment_execution_state as deployment
+    from relf_agent import temporal_deployment_coding_bridge as bridge
+    from relf_agent import temporal_deployment_coding_validation as validation
+    from relf_agent import temporal_deployment_execution as execution
+    from relf_agent import temporal_deployment_execution_state as deployment
 
     state, call, value = setup()
     mode = "register" if fault == "registry-close" else "observe"

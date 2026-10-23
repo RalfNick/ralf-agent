@@ -5,7 +5,7 @@ from dataclasses import asdict
 
 import pytest
 
-from ralf_agent import (
+from relf_agent import (
     AgentSpec,
     InMemoryMemory,
     ManagedMemoryPolicy,
@@ -16,10 +16,10 @@ from ralf_agent import (
     ToolRegistry,
     WorkflowSpec,
 )
-from ralf_agent.errors import MemoryBackendError
-from ralf_agent.temporal_activities import TemporalRuntime
-from ralf_agent.temporal_state import TemporalRunState
-from ralf_agent.types import canonical, submission_request
+from relf_agent.errors import MemoryBackendError
+from relf_agent.temporal_activities import TemporalRuntime
+from relf_agent.temporal_state import TemporalRunState
+from relf_agent.types import canonical, submission_request
 from tests.test_temporal_memory_bindings import grant
 
 
@@ -306,7 +306,7 @@ def test_unknown_fact_terminal_drive_only_reads_original_target():
         state.retry_blocked()
         assert state.next_operation()[0]["phase"] == "verify"
         action = state.actions[-1]
-        from ralf_agent.temporal_memory_state import _request
+        from relf_agent.temporal_memory_state import _request
 
         request = _request(state, state.memory_stages["0"], action)
         state.accept_memory(action["id"], await runtime.manage_memory(request))
@@ -347,8 +347,8 @@ def test_cancel_after_cas_grant_keeps_late_receipt_and_original_budget():
 def test_per_agent_disabled_memory_does_not_inherit_host_write_target():
     async def run():
         runtime, _, provider, memory = setup("model")
-        from ralf_agent import AgentBindingDescriptor, AgentDefinition, BindingSelection
-        from ralf_agent.temporal_bindings import normalize_request
+        from relf_agent import AgentBindingDescriptor, AgentDefinition, BindingSelection
+        from relf_agent.temporal_bindings import normalize_request
 
         request = normalize_request(
             submission_request(
@@ -371,7 +371,7 @@ def test_per_agent_disabled_memory_does_not_inherit_host_write_target():
 def test_legacy_recall_without_exact_inspection_is_refused_at_registration():
     memory = InMemoryMemory()
     memory.fact_inspection_version = None
-    from ralf_agent.errors import ValidationError
+    from relf_agent.errors import ValidationError
 
     with pytest.raises(ValidationError):
         setup(memory=memory)
@@ -386,13 +386,13 @@ def test_terminal_sequence_recovers_earlier_member_target_after_next_member_fini
             raise MemoryBackendError("not visible")
 
     async def run():
-        from ralf_agent import (
+        from relf_agent import (
             AgentBindingDescriptor,
             BindingCatalog,
             BindingSelection,
             BoundDefinition,
         )
-        from ralf_agent.temporal_bindings import normalize_request
+        from relf_agent.temporal_bindings import normalize_request
 
         first, second = LostWrite(backend_id="first"), InMemoryMemory(backend_id="second")
         admission = MemoryAdmissionPolicy({"name": ("result", "name")})

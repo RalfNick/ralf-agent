@@ -3,7 +3,7 @@
 import json
 import sqlite3
 
-from ralf_agent import (
+from relf_agent import (
     ComponentRegistry,
     ModelResponse,
     ProfiledEngine,

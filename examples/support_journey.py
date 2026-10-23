@@ -9,7 +9,7 @@ import asyncio
 import json
 from pathlib import Path
 
-from ralf_agent import (
+from relf_agent import (
     AgentSpec,
     DeepSeekChatProvider,
     LocalEngine,
@@ -23,9 +23,9 @@ from ralf_agent import (
     ToolRegistry,
     WorkflowSpec,
 )
-from ralf_agent.errors import RalfError, ValidationError
-from ralf_agent.memory import MemoryRecallPolicy
-from ralf_agent.retrieval import (
+from relf_agent.errors import RalfError, ValidationError
+from relf_agent.memory import MemoryRecallPolicy
+from relf_agent.retrieval import (
     Document,
     KnowledgeContext,
     KnowledgeVersionConflict,

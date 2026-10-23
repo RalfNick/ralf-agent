@@ -8,9 +8,9 @@ from concurrent.futures import ThreadPoolExecutor
 import httpx
 import pytest
 
-import ralf_agent as api
-from ralf_agent.errors import DefinitionMismatch, ValidationError
-from ralf_agent.tools import ThreadExecutionTracker, current_thread_tracker
+import relf_agent as api
+from relf_agent.errors import DefinitionMismatch, ValidationError
+from relf_agent.tools import ThreadExecutionTracker, current_thread_tracker
 
 from .mcp_http_fixture import descriptor, peer
 from .test_cli_tools import context

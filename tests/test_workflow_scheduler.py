@@ -1,7 +1,7 @@
 import pytest
 
-import ralf_agent as r
-from ralf_agent.errors import ValidationError
+import relf_agent as r
+from relf_agent.errors import ValidationError
 
 
 def plan(**options):
@@ -46,7 +46,7 @@ def test_scheduler_respects_capacity_and_waits_for_running_dependencies():
 
 @pytest.mark.parametrize("attack", ["duplicate", "capacity", "input", "skip", "done", "empty"])
 def test_common_batch_boundary_rejects_hostile_scheduler(attack):
-    from ralf_agent.workflow_scheduler import validate_batch
+    from relf_agent.workflow_scheduler import validate_batch
 
     value = plan(max_concurrency=2)
     states = {"a": {"state": "pending"}, "b": {"state": "pending"}}

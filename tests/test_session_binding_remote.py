@@ -4,7 +4,7 @@ import asyncio
 
 import pytest
 
-from ralf_agent import (
+from relf_agent import (
     BindingCatalog,
     BindingSelection,
     LocalEngine,
@@ -12,7 +12,7 @@ from ralf_agent import (
     SQLiteStore,
     ToolRegistry,
 )
-from ralf_agent.errors import ValidationError
+from relf_agent.errors import ValidationError
 
 from .test_binding_execution import RecordingProvider
 from .test_postgres_adapter import postgres_dsn as postgres_dsn

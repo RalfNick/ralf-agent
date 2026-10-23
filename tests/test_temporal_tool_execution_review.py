@@ -5,9 +5,9 @@ import inspect
 
 import pytest
 
-import ralf_agent as r
-from ralf_agent.errors import CloseIncomplete
-from ralf_agent.temporal_activities import TemporalRuntime
+import relf_agent as r
+from relf_agent.errors import CloseIncomplete
+from relf_agent.temporal_activities import TemporalRuntime
 
 from .test_temporal_tool_execution import admission, proof
 from .test_temporal_tool_execution import state_for as claimed_state_for
@@ -132,7 +132,7 @@ def test_custom_owner_lazy_execute_is_rejected_and_disposed_before_return():
 
 
 def test_foreign_claim_cannot_confirm_actual_stop_of_admitted_owner():
-    from ralf_agent.errors import RalfError
+    from relf_agent.errors import RalfError
 
     _, state, action, request = state_for()
     first = state.admit_tool_dispatch(admission(request, "a" * 32))
@@ -146,7 +146,7 @@ def test_foreign_claim_cannot_confirm_actual_stop_of_admitted_owner():
 
 
 def test_custom_wait_lazy_value_is_disposed_and_close_refuses():
-    from ralf_agent.errors import RalfError
+    from relf_agent.errors import RalfError
 
     original, *_ = state_for()
     calls = []

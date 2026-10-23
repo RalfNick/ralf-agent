@@ -6,13 +6,13 @@ from types import SimpleNamespace
 
 import pytest
 
-from ralf_agent import AgentSpec, GraphNode, GraphWorkflowSpec, Scope, TemporalRuntime
-from ralf_agent.errors import IdempotencyConflict, RalfError
-from ralf_agent.temporal import TemporalEngine
-from ralf_agent.temporal_parent_state import TemporalParentState
-from ralf_agent.temporal_parent_workflow import TemporalParentWorkflow, workflow
-from ralf_agent.temporal_state import TemporalCommandRegistryState
-from ralf_agent.types import digest, submission_request
+from relf_agent import AgentSpec, GraphNode, GraphWorkflowSpec, Scope, TemporalRuntime
+from relf_agent.errors import IdempotencyConflict, RalfError
+from relf_agent.temporal import TemporalEngine
+from relf_agent.temporal_parent_state import TemporalParentState
+from relf_agent.temporal_parent_workflow import TemporalParentWorkflow, workflow
+from relf_agent.temporal_state import TemporalCommandRegistryState
+from relf_agent.types import digest, submission_request
 from tests.test_temporal_engine import Provider, registry
 from tests.test_temporal_scoped_reservation import SCOPE, request
 
@@ -140,7 +140,7 @@ def test_sdk_uses_authority_selected_drive_identity_or_preserves_legacy_behavior
 
 @pytest.mark.parametrize("fault", ["extra", "scope", "target", "id", "version", "unknown"])
 def test_bad_drive_suggestion_never_becomes_a_command(fault):
-    from ralf_agent.temporal_scoped_reservation import drive_command
+    from relf_agent.temporal_scoped_reservation import drive_command
 
     class Handle:
         async def query(self, *args):
@@ -256,7 +256,7 @@ def test_failed_success_wait_still_discovers_actual_abandoned_child_tree():
 def test_empty_scope_drive_preserves_not_found_and_other_sdk_errors(missing):
     from temporalio.service import RPCError, RPCStatusCode
 
-    from ralf_agent.errors import NotFound
+    from relf_agent.errors import NotFound
 
     original = RPCError(
         "original SDK failure",

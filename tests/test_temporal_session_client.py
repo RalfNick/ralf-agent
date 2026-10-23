@@ -3,11 +3,11 @@ from types import SimpleNamespace
 
 import pytest
 
-from ralf_agent import AgentSpec, Scope
-from ralf_agent.errors import IdempotencyConflict
-from ralf_agent.temporal_session_client import TemporalSessionClient
-from ralf_agent.temporal_session_state import TemporalSessionState, workflow_id
-from ralf_agent.types import digest
+from relf_agent import AgentSpec, Scope
+from relf_agent.errors import IdempotencyConflict
+from relf_agent.temporal_session_client import TemporalSessionClient
+from relf_agent.temporal_session_state import TemporalSessionState, workflow_id
+from relf_agent.types import digest
 from tests.test_temporal_sessions import session
 
 
@@ -77,8 +77,8 @@ def test_conflicting_open_does_not_create_or_pin_session():
 
 @pytest.mark.parametrize("invalid", ["definition", "command"])
 def test_invalid_open_is_refused_before_registry_and_workflow_creation(invalid):
-    from ralf_agent import GraphNode, GraphWorkflowSpec
-    from ralf_agent.errors import ValidationError
+    from relf_agent import GraphNode, GraphWorkflowSpec
+    from relf_agent.errors import ValidationError
 
     async def run():
         _, runtime = session()
@@ -117,10 +117,10 @@ def test_existing_open_replays_original_receipt_after_old_provider_is_unavailabl
 
 
 def test_cancelled_submit_keeps_frozen_intent_owned_until_runtime_detach(monkeypatch):
-    from ralf_agent import Runtime
-    from ralf_agent.temporal import TemporalEngine
-    from ralf_agent.temporal_state import TemporalRunState
-    from ralf_agent.types import RunDiagnostics, RunSnapshot
+    from relf_agent import Runtime
+    from relf_agent.temporal import TemporalEngine
+    from relf_agent.temporal_state import TemporalRunState
+    from relf_agent.types import RunDiagnostics, RunSnapshot
 
     async def run():
         _, execution = session()
@@ -145,7 +145,7 @@ def test_cancelled_submit_keeps_frozen_intent_owned_until_runtime_detach(monkeyp
             await release.wait()
             return "namespace-uuid"
 
-        monkeypatch.setattr("ralf_agent.temporal_session_activities.namespace_id", namespace_id)
+        monkeypatch.setattr("relf_agent.temporal_session_activities.namespace_id", namespace_id)
         runtime = Runtime.from_temporal(engine)
         entry = await runtime.open_session(AgentSpec("answer", "Answer"), "chat", command_id="open")
         entered.clear()

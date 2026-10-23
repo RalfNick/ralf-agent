@@ -2,9 +2,9 @@ import asyncio
 
 import pytest
 
-from ralf_agent import temporal_deployment_protocol as deployment
-from ralf_agent import temporal_tool_execution as tools
-from ralf_agent.types import canonical
+from relf_agent import temporal_deployment_protocol as deployment
+from relf_agent import temporal_tool_execution as tools
+from relf_agent.types import canonical
 from tests.test_temporal_deployment_publication_cost import construct, count, profile_call
 
 

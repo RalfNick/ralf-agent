@@ -5,14 +5,14 @@ from dataclasses import asdict
 
 import pytest
 
-from ralf_agent.errors import DefinitionMismatch, ValidationError
-from ralf_agent.tools import ToolRegistry, ToolSpec
-from ralf_agent.types import AgentSpec, ModelResponse, Scope, WorkflowSpec
+from relf_agent.errors import DefinitionMismatch, ValidationError
+from relf_agent.tools import ToolRegistry, ToolSpec
+from relf_agent.types import AgentSpec, ModelResponse, Scope, WorkflowSpec
 
 
 def test_temporal_backend_exposes_explicit_async_network_controls():
-    assert importlib.util.find_spec("ralf_agent.temporal"), "Missing independent Temporal backend"
-    from ralf_agent.temporal import TemporalEngine
+    assert importlib.util.find_spec("relf_agent.temporal"), "Missing independent Temporal backend"
+    from relf_agent.temporal import TemporalEngine
 
     for name in (
         "submit",
@@ -50,13 +50,13 @@ def test_history_controls_are_initialized_before_workflow_run(monkeypatch):
     pytest.importorskip("temporalio")
     from types import SimpleNamespace
 
-    from ralf_agent import TemporalRuntime
-    from ralf_agent.temporal_workflow import (
+    from relf_agent import TemporalRuntime
+    from relf_agent.temporal_workflow import (
         TemporalCommandRegistryWorkflow,
         TemporalRunWorkflow,
         workflow,
     )
-    from ralf_agent.types import submission_request
+    from relf_agent.types import submission_request
 
     scope = asdict(Scope())
     request = submission_request(AgentSpec("a", "Answer"), "task", budget=8, session_id=None)
@@ -93,7 +93,7 @@ def test_history_controls_are_initialized_before_workflow_run(monkeypatch):
 
 
 def test_runtime_release_is_detached_and_configuration_drift_is_refused():
-    from ralf_agent.temporal_activities import TemporalRuntime
+    from relf_agent.temporal_activities import TemporalRuntime
 
     provider = Provider()
     runtime = TemporalRuntime(providers={"default": provider}, tools=registry())
@@ -106,9 +106,9 @@ def test_runtime_release_is_detached_and_configuration_drift_is_refused():
 
 
 def test_temporal_refuses_unsupported_definition_before_any_network_operation():
-    from ralf_agent.temporal import TemporalEngine
-    from ralf_agent.temporal_activities import TemporalRuntime
-    from ralf_agent.workflow import GraphNode, GraphWorkflowSpec
+    from relf_agent.temporal import TemporalEngine
+    from relf_agent.temporal_activities import TemporalRuntime
+    from relf_agent.workflow import GraphNode, GraphWorkflowSpec
 
     runtime = TemporalRuntime(providers={"default": Provider()}, tools=registry())
     engine = TemporalEngine(object(), task_queue="test", release=runtime.manifest)
@@ -119,7 +119,7 @@ def test_temporal_refuses_unsupported_definition_before_any_network_operation():
 
 @pytest.mark.parametrize("policy", [lambda *_: True, lambda *_: iter(())])
 def test_tool_policy_requires_synchronously_completed_none_before_dispatch(policy):
-    from ralf_agent.temporal_activities import TemporalRuntime
+    from relf_agent.temporal_activities import TemporalRuntime
 
     calls = []
     tools = ToolRegistry()
@@ -154,7 +154,7 @@ def test_tool_policy_requires_synchronously_completed_none_before_dispatch(polic
 
 
 def test_model_activity_validates_output_schema_and_provider_usage():
-    from ralf_agent.temporal_activities import TemporalRuntime
+    from relf_agent.temporal_activities import TemporalRuntime
 
     runtime = TemporalRuntime(providers={"default": Provider()}, tools=registry())
     step = asdict(AgentSpec("a", "answer", output_schema={"type": "integer"}))
@@ -177,9 +177,9 @@ def test_model_activity_validates_output_schema_and_provider_usage():
 
 
 def test_workflow_state_owns_budget_receipts_and_preserves_original_action_on_unknown():
-    from ralf_agent.temporal_activities import TemporalRuntime
-    from ralf_agent.temporal_state import TemporalRunState
-    from ralf_agent.types import submission_request
+    from relf_agent.temporal_activities import TemporalRuntime
+    from relf_agent.temporal_state import TemporalRunState
+    from relf_agent.types import submission_request
 
     runtime = TemporalRuntime(providers={"default": Provider()}, tools=registry())
     request = submission_request(AgentSpec("a", "answer", tools=("read",)), "hi", budget=3)
@@ -228,9 +228,9 @@ def test_workflow_state_owns_budget_receipts_and_preserves_original_action_on_un
 
 
 def test_sequential_state_passes_validated_output_to_next_agent():
-    from ralf_agent.temporal_activities import TemporalRuntime
-    from ralf_agent.temporal_state import TemporalRunState
-    from ralf_agent.types import submission_request
+    from relf_agent.temporal_activities import TemporalRuntime
+    from relf_agent.temporal_state import TemporalRunState
+    from relf_agent.types import submission_request
 
     runtime = TemporalRuntime(providers={"default": Provider()}, tools=registry())
     request = submission_request(
@@ -251,9 +251,9 @@ def test_sequential_state_passes_validated_output_to_next_agent():
 
 
 def state_with_tool():
-    from ralf_agent.temporal_activities import TemporalRuntime
-    from ralf_agent.temporal_state import TemporalRunState
-    from ralf_agent.types import submission_request
+    from relf_agent.temporal_activities import TemporalRuntime
+    from relf_agent.temporal_state import TemporalRunState
+    from relf_agent.types import submission_request
 
     runtime = TemporalRuntime(providers={"default": Provider()}, tools=registry())
     value = TemporalRunState(
@@ -292,7 +292,7 @@ def test_cancel_keeps_pending_late_tool_evidence_and_immutable_terminal():
 
 
 def test_duplicate_rejected_command_preserves_original_receipt_and_conflicts():
-    from ralf_agent.errors import IdempotencyConflict
+    from relf_agent.errors import IdempotencyConflict
 
     value, action = state_with_tool()
     payload = {
@@ -310,7 +310,7 @@ def test_duplicate_rejected_command_preserves_original_receipt_and_conflicts():
 
 
 def test_no_write_registration_without_explicit_durable_journal():
-    from ralf_agent.temporal_activities import TemporalRuntime
+    from relf_agent.temporal_activities import TemporalRuntime
 
     tools = ToolRegistry()
     tools.register(ToolSpec("write", "write", {"type": "object"}, effect="queryable_write"), read)
@@ -330,8 +330,8 @@ def test_query_reconciliation_drive_waits_for_evidence_in_history():
 
 
 def test_worker_identity_cannot_override_pinned_release_build_id():
-    from ralf_agent.temporal import build_temporal_worker
-    from ralf_agent.temporal_activities import TemporalRuntime
+    from relf_agent.temporal import build_temporal_worker
+    from relf_agent.temporal_activities import TemporalRuntime
 
     if not importlib.util.find_spec("temporalio"):
         pytest.skip("optional Temporal SDK not installed")
@@ -341,8 +341,8 @@ def test_worker_identity_cannot_override_pinned_release_build_id():
 
 
 def test_scoped_registry_refuses_cross_run_and_cross_kind_command_reuse():
-    from ralf_agent.errors import AuthorizationDenied, IdempotencyConflict
-    from ralf_agent.temporal_state import TemporalCommandRegistryState
+    from relf_agent.errors import AuthorizationDenied, IdempotencyConflict
+    from relf_agent.temporal_state import TemporalCommandRegistryState
 
     commands = TemporalCommandRegistryState(asdict(Scope()), capacity=2)
     request = {
@@ -378,9 +378,9 @@ def restricted(name, *args, **kwargs):
         raise ImportError("optional dependency deliberately unavailable")
     return original(name, *args, **kwargs)
 builtins.__import__ = restricted
-from ralf_agent.temporal import TemporalEngine
-from ralf_agent.temporal_activities import TemporalRuntime
-from ralf_agent.temporal_journal import PostgresEffectJournal
+from relf_agent.temporal import TemporalEngine
+from relf_agent.temporal_activities import TemporalRuntime
+from relf_agent.temporal_journal import PostgresEffectJournal
 assert TemporalEngine and TemporalRuntime and PostgresEffectJournal
 """
     result = subprocess.run([sys.executable, "-c", script], capture_output=True, text=True)
@@ -388,8 +388,8 @@ assert TemporalEngine and TemporalRuntime and PostgresEffectJournal
 
 
 def test_shared_session_requirement_is_refused_before_any_network_operation():
-    from ralf_agent.temporal import TemporalEngine
-    from ralf_agent.temporal_activities import TemporalRuntime
+    from relf_agent.temporal import TemporalEngine
+    from relf_agent.temporal_activities import TemporalRuntime
 
     runtime = TemporalRuntime(providers={"default": Provider()}, tools=registry())
     engine = TemporalEngine(object(), task_queue="test", release=runtime.manifest)
@@ -400,8 +400,8 @@ def test_shared_session_requirement_is_refused_before_any_network_operation():
 
 
 def test_temporal_capability_matrix_is_explicit_and_detached():
-    from ralf_agent.temporal import TemporalEngine
-    from ralf_agent.temporal_activities import TemporalRuntime
+    from relf_agent.temporal import TemporalEngine
+    from relf_agent.temporal_activities import TemporalRuntime
 
     runtime = TemporalRuntime(providers={"default": Provider()}, tools=registry())
     engine = TemporalEngine(object(), task_queue="test", release=runtime.manifest)
@@ -428,7 +428,7 @@ def test_temporal_capability_matrix_is_explicit_and_detached():
 
 
 def test_custom_harness_and_context_are_explicitly_refused():
-    from ralf_agent.temporal_activities import TemporalRuntime
+    from relf_agent.temporal_activities import TemporalRuntime
 
     with pytest.raises(ValidationError, match="native harness"):
         TemporalRuntime(providers={"default": Provider()}, tools=registry(), harness=object())
@@ -439,8 +439,8 @@ def test_custom_harness_and_context_are_explicitly_refused():
 
 
 def test_network_schema_references_are_refused_before_history_execution():
-    from ralf_agent.temporal import TemporalEngine
-    from ralf_agent.temporal_activities import TemporalRuntime
+    from relf_agent.temporal import TemporalEngine
+    from relf_agent.temporal_activities import TemporalRuntime
 
     runtime = TemporalRuntime(providers={"default": Provider()}, tools=registry())
     engine = TemporalEngine(object(), task_queue="test", release=runtime.manifest)
@@ -450,8 +450,8 @@ def test_network_schema_references_are_refused_before_history_execution():
 
 
 def test_invalid_published_tool_manifest_is_a_typed_preflight_failure():
-    from ralf_agent.temporal import TemporalEngine
-    from ralf_agent.temporal_activities import TemporalRuntime
+    from relf_agent.temporal import TemporalEngine
+    from relf_agent.temporal_activities import TemporalRuntime
 
     runtime = TemporalRuntime(providers={"default": Provider()}, tools=registry())
     release = runtime.manifest
@@ -461,9 +461,9 @@ def test_invalid_published_tool_manifest_is_a_typed_preflight_failure():
 
 
 def test_model_json_string_schema_is_normalized_once_by_history_authority():
-    from ralf_agent.temporal_activities import TemporalRuntime
-    from ralf_agent.temporal_state import TemporalRunState
-    from ralf_agent.types import submission_request
+    from relf_agent.temporal_activities import TemporalRuntime
+    from relf_agent.temporal_state import TemporalRunState
+    from relf_agent.types import submission_request
 
     class StringProvider(Provider):
         async def complete(self, messages, tools):
@@ -535,7 +535,7 @@ class JournalContractFixture:
 
 
 def journal_runtime(journal, calls):
-    from ralf_agent.temporal_activities import TemporalRuntime
+    from relf_agent.temporal_activities import TemporalRuntime
 
     async def handler(arguments, context):
         calls.append(context.effect_key)
@@ -571,8 +571,8 @@ def test_journal_received_requires_completed_none_and_closes_nested_coroutine():
     lazy = delayed_receipt()
     journal = JournalContractFixture(received=lazy)
     runtime, _ = journal_runtime(journal, calls)
-    from ralf_agent.temporal_state import TemporalRunState
-    from ralf_agent.types import submission_request
+    from relf_agent.temporal_state import TemporalRunState
+    from relf_agent.types import submission_request
 
     agent = AgentSpec("a", "write", tools=("write",))
     state = TemporalRunState(

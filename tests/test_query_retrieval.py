@@ -4,8 +4,8 @@ from dataclasses import replace
 
 import pytest
 
-from ralf_agent import Document, InMemoryKnowledgeStore, LexicalRetriever, RetrievalQuery, Scope
-from ralf_agent.errors import DefinitionMismatch, ProviderError, ValidationError
+from relf_agent import Document, InMemoryKnowledgeStore, LexicalRetriever, RetrievalQuery, Scope
+from relf_agent.errors import DefinitionMismatch, ProviderError, ValidationError
 
 
 def source():
@@ -16,7 +16,7 @@ def source():
 
 
 def test_query_expansion_retrieves_synonym_and_keeps_original_output_bounds():
-    from ralf_agent import AliasQueryTransform, QueryTransformRetriever
+    from relf_agent import AliasQueryTransform, QueryTransformRetriever
 
     async def run():
         store, base = source()
@@ -38,7 +38,7 @@ def test_query_expansion_retrieves_synonym_and_keeps_original_output_bounds():
     "value", ["car", (), ("car", "car"), ("",), (True,), tuple(map(str, range(5))), ("\ud800",)]
 )
 def test_invalid_transform_outputs_never_reach_source(value):
-    from ralf_agent import QueryTransformRetriever
+    from relf_agent import QueryTransformRetriever
 
     class Transform:
         identity = {"kind": "fixture", "version": "1"}
@@ -61,7 +61,7 @@ def test_invalid_transform_outputs_never_reach_source(value):
 
 
 def test_sync_transform_returning_coroutine_is_rejected():
-    from ralf_agent import QueryTransformRetriever
+    from relf_agent import QueryTransformRetriever
 
     class Transform:
         identity = {"kind": "fixture", "version": "1"}
@@ -84,7 +84,7 @@ def test_sync_transform_returning_coroutine_is_rejected():
 
 @pytest.mark.parametrize("change", ["source", "method", "transform"])
 def test_async_transform_drift_rejects_before_source_dispatch(change):
-    from ralf_agent import QueryTransformRetriever
+    from relf_agent import QueryTransformRetriever
 
     async def run():
         _, base = source()
@@ -111,7 +111,7 @@ def test_async_transform_drift_rejects_before_source_dispatch(change):
 
 
 def test_previous_candidates_are_validated_again_after_later_query_await():
-    from ralf_agent import AliasQueryTransform, QueryTransformRetriever
+    from relf_agent import AliasQueryTransform, QueryTransformRetriever
 
     async def run():
         store, base = source()
@@ -131,7 +131,7 @@ def test_previous_candidates_are_validated_again_after_later_query_await():
 
 
 def test_malformed_child_result_and_failure_do_not_degrade():
-    from ralf_agent import QueryTransformRetriever
+    from relf_agent import QueryTransformRetriever
 
     async def run():
         _, base = source()
@@ -165,14 +165,14 @@ def test_malformed_child_result_and_failure_do_not_degrade():
     ],
 )
 def test_invalid_fanout_bounds_are_rejected(options):
-    from ralf_agent import QueryTransformRetriever
+    from relf_agent import QueryTransformRetriever
 
     with pytest.raises(ValidationError):
         QueryTransformRetriever(source()[1], **options)
 
 
 def test_multiquery_budget_and_duplicate_source_conflicts_cannot_expand_evidence():
-    from ralf_agent import QueryTransformRetriever
+    from relf_agent import QueryTransformRetriever
 
     class Transform:
         identity = {"kind": "fixture", "version": "1"}
@@ -202,7 +202,7 @@ def test_multiquery_budget_and_duplicate_source_conflicts_cannot_expand_evidence
 
 
 def test_earlier_candidate_expiry_during_later_validation_prevents_disclosure():
-    from ralf_agent import QueryTransformRetriever
+    from relf_agent import QueryTransformRetriever
 
     async def run():
         store, base = source()
@@ -240,7 +240,7 @@ def test_earlier_candidate_expiry_during_later_validation_prevents_disclosure():
     ],
 )
 def test_same_identity_native_resources_cannot_change_during_transform(change):
-    from ralf_agent import (
+    from relf_agent import (
         HashEmbeddingProvider,
         HybridRetriever,
         InMemoryVectorIndex,
@@ -291,7 +291,7 @@ def test_same_identity_native_resources_cannot_change_during_transform(change):
 def test_mutating_validator_cannot_validate_current_body_and_disclose_stale_body():
     from dataclasses import asdict
 
-    from ralf_agent import QueryTransformRetriever
+    from relf_agent import QueryTransformRetriever
 
     async def run():
         store, base = source()

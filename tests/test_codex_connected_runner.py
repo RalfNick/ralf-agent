@@ -5,21 +5,21 @@ import sys
 
 import pytest
 
-from ralf_agent.errors import DefinitionMismatch, ValidationError
-from ralf_agent.runner_journal import RunnerJournal
+from relf_agent.errors import DefinitionMismatch, ValidationError
+from relf_agent.runner_journal import RunnerJournal
 
 
 def runner_type():
-    assert importlib.util.find_spec("ralf_agent.codex_connected_runner") is not None, (
+    assert importlib.util.find_spec("relf_agent.codex_connected_runner") is not None, (
         "managed connected Runner is missing"
     )
-    from ralf_agent.codex_connected_runner import ConnectedCodexCodingRunner
+    from relf_agent.codex_connected_runner import ConnectedCodexCodingRunner
 
     return ConnectedCodexCodingRunner
 
 
 def connection():
-    from ralf_agent.codex_model_connection import CodexModelConnection
+    from relf_agent.codex_model_connection import CodexModelConnection
 
     return CodexModelConnection(
         "https://api.deepseek.com", "deepseek-flash", "CODING_TEST_KEY", "coding-model", "1"
@@ -144,7 +144,7 @@ def test_security_global_change_is_refused_before_credentials(
             docker_host="unix:///fixture/docker.sock",
             connection=connection(),
         )
-        module = importlib.import_module("ralf_agent." + module_name)
+        module = importlib.import_module("relf_agent." + module_name)
         monkeypatch.setattr(module, name, replacement)
         with pytest.raises(DefinitionMismatch):
             _ = runner.identity

@@ -5,8 +5,8 @@ from types import MethodType
 
 import pytest
 
-from ralf_agent.errors import DefinitionMismatch
-from ralf_agent.temporal import TemporalEngine
+from relf_agent.errors import DefinitionMismatch
+from relf_agent.temporal import TemporalEngine
 
 from .test_temporal_agent_controls import system
 

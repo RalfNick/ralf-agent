@@ -2,8 +2,8 @@
 
 import pytest
 
-from ralf_agent import AgentSpec, GraphNode, GraphWorkflowSpec
-from ralf_agent.errors import DefinitionMismatch
+from relf_agent import AgentSpec, GraphNode, GraphWorkflowSpec
+from relf_agent.errors import DefinitionMismatch
 from tests.test_local_delegated_coding import LifecycleRunner, coding_engine
 
 
@@ -72,7 +72,7 @@ def test_complex_record_cannot_drop_original_composition_protocol(tmp_path):
 def test_bound_direct_tool_graph_keeps_host_tool_grant_without_agent_runner_role(tmp_path):
     import asyncio
 
-    from ralf_agent import BoundDefinition
+    from relf_agent import BoundDefinition
 
     resource = LifecycleRunner()
     runtime, provider = coding_engine(tmp_path, resource)
@@ -102,8 +102,8 @@ def test_child_cannot_replace_original_parent_escrow_before_native_dispatch(tmp_
     import asyncio
     import copy
 
-    from ralf_agent import TeamSpec
-    from ralf_agent.types import digest
+    from relf_agent import TeamSpec
+    from relf_agent.types import digest
 
     runtime, provider = coding_engine(tmp_path, LifecycleRunner())
     try:
@@ -133,8 +133,8 @@ def test_child_cannot_replace_original_parent_escrow_before_native_dispatch(tmp_
 def test_owned_parallel_cleanup_keeps_original_quiescence_receipt_access(tmp_path):
     import asyncio
 
-    from ralf_agent.errors import ValidationError
-    from ralf_agent.runtime_lifecycle import BuildContext, RuntimeInstance
+    from relf_agent.errors import ValidationError
+    from relf_agent.runtime_lifecycle import BuildContext, RuntimeInstance
     from tests.test_coding_lifecycle import Journal, OwnedRunner
 
     async def execute():

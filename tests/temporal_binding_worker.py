@@ -5,7 +5,7 @@ import os
 import sqlite3
 from pathlib import Path
 
-from ralf_agent import (
+from relf_agent import (
     AgentBindingDescriptor,
     AgentSpec,
     BindingCatalog,
@@ -19,8 +19,8 @@ from ralf_agent import (
     ToolRegistry,
     WorkflowSpec,
 )
-from ralf_agent.temporal import build_temporal_worker
-from ralf_agent.temporal_activities import TemporalRuntime
+from relf_agent.temporal import build_temporal_worker
+from relf_agent.temporal_activities import TemporalRuntime
 from tests.test_composite_data_context import Provider, agent, registry
 from tests.test_managed_data_context import context
 from tests.test_temporal_binding_isolation import LabelContext

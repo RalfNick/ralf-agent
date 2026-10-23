@@ -4,9 +4,9 @@ from dataclasses import asdict
 
 import pytest
 
-import ralf_agent as r
-from ralf_agent.errors import ValidationError
-from ralf_agent.types import submission_request
+import relf_agent as r
+from relf_agent.errors import ValidationError
+from relf_agent.types import submission_request
 
 
 def api():

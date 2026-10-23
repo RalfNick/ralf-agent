@@ -6,7 +6,7 @@ from types import SimpleNamespace
 
 import pytest
 
-from ralf_agent import DeploymentAdmissionPolicy, Scope, TemporalRuntime, ToolRegistry
+from relf_agent import DeploymentAdmissionPolicy, Scope, TemporalRuntime, ToolRegistry
 from tests.test_temporal_engine import Provider
 
 
@@ -16,9 +16,9 @@ def _optional_sdk():
 
 
 def test_verified_descendant_command_uses_original_epoch_after_reset(monkeypatch):
-    from ralf_agent import temporal_deployment_submissions as transport
-    from ralf_agent.temporal import TemporalEngine
-    from ralf_agent.temporal_state import WORKFLOW_NAME
+    from relf_agent import temporal_deployment_submissions as transport
+    from relf_agent.temporal import TemporalEngine
+    from relf_agent.temporal_state import WORKFLOW_NAME
 
     async def run():
         events = []

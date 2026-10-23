@@ -6,10 +6,10 @@ import os
 
 import temporal_worker_fixture as native
 
-from ralf_agent import ModelResponse
-from ralf_agent.governance import TemporalExecutionPolicy
-from ralf_agent.temporal import build_temporal_worker
-from ralf_agent.temporal_activities import TemporalRuntime
+from relf_agent import ModelResponse
+from relf_agent.governance import TemporalExecutionPolicy
+from relf_agent.temporal import build_temporal_worker
+from relf_agent.temporal_activities import TemporalRuntime
 
 
 class CompositeProvider(native.FixtureProvider):
@@ -81,7 +81,7 @@ class CompositeProvider(native.FixtureProvider):
                 await asyncio.sleep(value["model_delay"])
                 return ModelResponse(output={"slow": "complete"})
             if isinstance(value, dict) and value.get("tool"):
-                from ralf_agent import ToolCall
+                from relf_agent import ToolCall
 
                 print("TEMPORAL_PROVIDER_CALLED", flush=True)
                 return ModelResponse(tool_calls=[ToolCall("write", value["arguments"])])
@@ -95,7 +95,7 @@ async def runtime(*, rag_collection=None):
     collection = rag_collection or os.environ.get("RALF_TEST_RAG_COLLECTION")
     knowledge, resources = None, []
     if collection:
-        from ralf_agent import (
+        from relf_agent import (
             HashEmbeddingProvider,
             KnowledgeContext,
             PostgresKnowledgeStore,

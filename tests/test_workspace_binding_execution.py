@@ -5,7 +5,7 @@ import json
 
 import pytest
 
-from ralf_agent import (
+from relf_agent import (
     AgentBindingDescriptor,
     AgentDefinition,
     AgentSpec,
@@ -30,7 +30,7 @@ from ralf_agent import (
     WorkspaceToolSource,
     register_tool_source,
 )
-from ralf_agent.errors import DefinitionMismatch
+from relf_agent.errors import DefinitionMismatch
 
 
 class Reader:
@@ -226,7 +226,7 @@ def test_tool_set_intersection_cannot_be_expanded_by_workspace(tmp_path, workspa
         ),
     )
     with engine(tmp_path / "intersection.sqlite", registry, catalog) as runtime:
-        from ralf_agent.errors import AuthorizationDenied
+        from relf_agent.errors import AuthorizationDenied
 
         with pytest.raises(AuthorizationDenied):
             runtime.submit(wrapped, "q", command_id="submit")

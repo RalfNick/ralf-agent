@@ -6,10 +6,10 @@ from types import SimpleNamespace
 
 import pytest
 
-from ralf_agent import temporal_deployment_execution as sdk
-from ralf_agent import temporal_deployment_execution_state as pure
-from ralf_agent.errors import DefinitionMismatch, ValidationError
-from ralf_agent.types import digest
+from relf_agent import temporal_deployment_execution as sdk
+from relf_agent import temporal_deployment_execution_state as pure
+from relf_agent.errors import DefinitionMismatch, ValidationError
+from relf_agent.types import digest
 from tests.test_temporal_session_deployment_dto import origin, reservation
 from tests.test_temporal_session_deployment_state import session_state, submit_session
 
@@ -157,7 +157,7 @@ def test_business_child_inherits_origin_and_keeps_actual_business_parent():
 
 
 def test_sdk_start_binding_reads_exact_original_session_root_and_rechecks_origin(monkeypatch):
-    from ralf_agent import temporal_session_deployment_verification as verification
+    from relf_agent import temporal_session_deployment_verification as verification
 
     intent, metadata, state = original()
     initialize(state, metadata, coordinator(intent))

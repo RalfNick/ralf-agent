@@ -19,7 +19,7 @@ FactIndexMetadataStore / AsyncFactIndexMetadataStore 定义 load 的已完成 re
 SDK 可分别注入同步／异步数据、任意合规 Embedding 和 VectorIndex；Hash 是离线词项基线。
 
 ```python
-from ralf_agent import (
+from relf_agent import (
     FactIndexCatalog,
     HashEmbeddingProvider,
     IndexedMemoryStore,

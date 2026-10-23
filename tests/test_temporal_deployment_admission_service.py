@@ -9,10 +9,10 @@ from datetime import timedelta
 
 import pytest
 
-from ralf_agent.governance import DeploymentAdmissionPolicy
-from ralf_agent.temporal import replay_temporal_history
-from ralf_agent.temporal_deployment_admission import registry_id, root_run_id
-from ralf_agent.temporal_state import COMMAND_REGISTRY_NAME
+from relf_agent.governance import DeploymentAdmissionPolicy
+from relf_agent.temporal import replay_temporal_history
+from relf_agent.temporal_deployment_admission import registry_id, root_run_id
+from relf_agent.temporal_state import COMMAND_REGISTRY_NAME
 
 pytestmark = pytest.mark.skipif(
     not os.getenv("RALF_TEST_TEMPORAL_ADDRESS"), reason="requires actual Temporal Service"
@@ -39,8 +39,8 @@ async def _clients(count=1):
 def _worker(client, queue):
     from temporalio.worker import Worker
 
-    from ralf_agent.temporal import _workflow_runner
-    from ralf_agent.temporal_workflow import TemporalCommandRegistryWorkflow
+    from relf_agent.temporal import _workflow_runner
+    from relf_agent.temporal_workflow import TemporalCommandRegistryWorkflow
 
     return Worker(
         client,

@@ -26,8 +26,8 @@ CLI／示例会收敛输出公开错误码，避免泄露服务异常、凭据�
 对生成项目，在项目根目录运行；这里 `RUN_ID` 为实际运行 ID：
 
 ```bash
-ralf --db .ralf/runs.sqlite --factory agent_app.runtime:create_engine --format text inspect RUN_ID
-ralf --db .ralf/runs.sqlite events RUN_ID --after 0 --limit 100
+relf --db .ralf/runs.sqlite --factory agent_app.runtime:create_engine --format text inspect RUN_ID
+relf --db .ralf/runs.sqlite events RUN_ID --after 0 --limit 100
 ```
 
 `inspect/status/events` 使用只读 SQLite，当前只观察默认本地 Scope。自定义 Scope／非 SQLite 存储需要使用原 SDK 配置；独立通用 Read API 尚未发布。观察命令不创建不存在的数据库，也不运行工厂代码。
@@ -46,8 +46,8 @@ ralf --db .ralf/runs.sqlite events RUN_ID --after 0 --limit 100
 使用 Profile 配置时，观察命令不需要先装配模型；即使当前配置文件不可用，仍可用同一绝对 `--db` 执行 `status/inspect/events`。继续执行则必须恢复原 Run 对应的 Profile 和组件，不能拿新默认替代缺失的旧版本。示例：
 
 ```bash
-ralf --db /ABSOLUTE/PATH/runs.sqlite --format text inspect RUN_ID
-ralf --db /ABSOLUTE/PATH/runs.sqlite --config /ABSOLUTE/PATH/runtime.toml resume RUN_ID
+relf --db /ABSOLUTE/PATH/runs.sqlite --format text inspect RUN_ID
+relf --db /ABSOLUTE/PATH/runs.sqlite --config /ABSOLUTE/PATH/runtime.toml resume RUN_ID
 ```
 
 持久 Session／Turn 的观察超时、忙碌状态及恢复见[Session 指南](session-api.md)；显式用户提问使用[原问题的输入控制](user-input.md)回答，重新提交一个任务不能代替回答原问题。
@@ -59,8 +59,8 @@ recorded_evidence 表示已收到、已耐久保存但尚未采纳的模型响�
 进程在 `waiting_approval` 时可以正常关闭。新进程加载同一个工厂，针对原 Action 作出决定：
 
 ```bash
-ralf --db .ralf/runs.sqlite --factory agent_app.runtime:create_engine approve RUN_ID ACTION_ID --digest OPERATION_DIGEST --command-id approve-001
-ralf --db .ralf/runs.sqlite --factory agent_app.runtime:create_engine resume RUN_ID
+relf --db .ralf/runs.sqlite --factory agent_app.runtime:create_engine approve RUN_ID ACTION_ID --digest OPERATION_DIGEST --command-id approve-001
+relf --db .ralf/runs.sqlite --factory agent_app.runtime:create_engine resume RUN_ID
 ```
 
 拒绝使用同一命令加 `--reject`，并使用该决定自己的 command_id。审批摘要必须来自原 pending；审批 `applied` 仅确认决定消费，恢复后才能知道业务结果。
@@ -115,7 +115,7 @@ with create_engine(".ralf/runs.sqlite") as engine:
 取消是停止后续工作：
 
 ```bash
-ralf --db .ralf/runs.sqlite --factory agent_app.runtime:create_engine cancel RUN_ID --command-id cancel-001
+relf --db .ralf/runs.sqlite --factory agent_app.runtime:create_engine cancel RUN_ID --command-id cancel-001
 ```
 
 同步 handler 的执行线程不能被 asyncio 强制停止。取消调用方 Task、取消整个事件循环或关闭循环，都不代表实际线程已退出；框架管理的工具、核验和 ThreadedMemoryAdapter 调用会继续持有执行归属。

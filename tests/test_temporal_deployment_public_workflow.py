@@ -6,8 +6,8 @@ from types import SimpleNamespace
 import pytest
 
 pytest.importorskip("temporalio")
-from ralf_agent.temporal_deployment_release_state import public
-from ralf_agent.temporal_workflow import TemporalRunWorkflow, workflow
+from relf_agent.temporal_deployment_release_state import public
+from relf_agent.temporal_workflow import TemporalRunWorkflow, workflow
 
 
 def instance():
@@ -27,7 +27,7 @@ def instance():
 
 
 def test_original_call_and_seal_updates_are_owned_and_wake_progress(monkeypatch):
-    from ralf_agent import temporal_deployment_release_state as state
+    from relf_agent import temporal_deployment_release_state as state
 
     value = instance()
     observed = []
@@ -56,7 +56,7 @@ def test_release_request_bypasses_business_carrier_only_for_fixed_release_name(m
         return {"ok": True}
 
     monkeypatch.setattr(workflow, "execute_activity", execute)
-    from ralf_agent.temporal_deployment_release import RELEASE_ACTIVITY
+    from relf_agent.temporal_deployment_release import RELEASE_ACTIVITY
 
     request = {
         "mode": "release",
@@ -79,7 +79,7 @@ def test_public_start_evidence_is_separate_from_original_request_and_receipt():
     value.state.request = {"original": "request"}
     value.state.deployment_activity_timeout = 7
     value.state.deployment_task_queue = "first"
-    from ralf_agent.types import digest
+    from relf_agent.types import digest
 
     result = value.view({"scope": value.state.scope, "kind": "deployment_start"})
     assert result == {

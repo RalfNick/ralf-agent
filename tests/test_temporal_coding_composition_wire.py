@@ -6,20 +6,20 @@ from dataclasses import asdict
 
 import pytest
 
-from ralf_agent import AgentSpec, GraphNode, GraphWorkflowSpec, Scope, TemporalProfile
-from ralf_agent.errors import DefinitionMismatch
-from ralf_agent.postgres_runner_journal import PostgresRunnerJournal
-from ralf_agent.runtime_builder import ComponentRegistry
-from ralf_agent.temporal_builder import TemporalRuntimeBuilder
-from ralf_agent.temporal_coding_composition_control import _validate_proof
-from ralf_agent.temporal_coding_composition_state import (
+from relf_agent import AgentSpec, GraphNode, GraphWorkflowSpec, Scope, TemporalProfile
+from relf_agent.errors import DefinitionMismatch
+from relf_agent.postgres_runner_journal import PostgresRunnerJournal
+from relf_agent.runtime_builder import ComponentRegistry
+from relf_agent.temporal_builder import TemporalRuntimeBuilder
+from relf_agent.temporal_coding_composition_control import _validate_proof
+from relf_agent.temporal_coding_composition_state import (
     initialize,
     initialize_namespace,
     physical_stop_view,
 )
-from ralf_agent.temporal_journal import PostgresEffectJournal
-from ralf_agent.temporal_parent_state import TemporalParentState
-from ralf_agent.types import digest, submission_request
+from relf_agent.temporal_journal import PostgresEffectJournal
+from relf_agent.temporal_parent_state import TemporalParentState
+from relf_agent.types import digest, submission_request
 from tests.test_temporal_coding_factories import Connection, entry, publish_initialization
 from tests.test_temporal_engine import Provider
 

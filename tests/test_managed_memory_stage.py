@@ -3,7 +3,7 @@ import importlib
 
 import pytest
 
-from ralf_agent import (
+from relf_agent import (
     AgentSpec,
     InMemoryMemory,
     LocalEngine,
@@ -14,12 +14,12 @@ from ralf_agent import (
     ToolRegistry,
     WorkflowSpec,
 )
-from ralf_agent.errors import AuthorizationDenied, DefinitionMismatch, ValidationError
+from relf_agent.errors import AuthorizationDenied, DefinitionMismatch, ValidationError
 from tests.helpers import ScriptedProvider
 
 
 def policy(memory, **kwargs):
-    cls = importlib.import_module("ralf_agent.managed_memory").ManagedMemoryPolicy
+    cls = importlib.import_module("relf_agent.managed_memory").ManagedMemoryPolicy
     return cls(memory, **kwargs)
 
 
@@ -63,7 +63,7 @@ def test_stage_timeout_is_bounded(timeout):
 
 
 def test_facts_view_cannot_be_used_as_write_target():
-    from ralf_agent.binding_data import FactsView
+    from relf_agent.binding_data import FactsView
 
     memory = InMemoryMemory()
     with pytest.raises(ValidationError):
@@ -95,9 +95,9 @@ def test_optional_store_extension_must_be_explicit(tmp_path):
 
 
 def test_stage_binding_ref_disabled_and_pinned_manifest(tmp_path):
-    from ralf_agent.binding_catalog import BindingCatalog
-    from ralf_agent.binding_definitions import AgentDefinition
-    from ralf_agent.binding_types import AgentBindingDescriptor, BindingSelection
+    from relf_agent.binding_catalog import BindingCatalog
+    from relf_agent.binding_definitions import AgentDefinition
+    from relf_agent.binding_types import AgentBindingDescriptor, BindingSelection
 
     memory = InMemoryMemory()
     stage = policy(memory, namespace="observations")
@@ -127,7 +127,7 @@ def test_stage_binding_ref_disabled_and_pinned_manifest(tmp_path):
 
 
 def test_unsupported_composite_store_refuses_before_schema_or_run_admission(tmp_path, monkeypatch):
-    from ralf_agent import GraphNode, GraphWorkflowSpec
+    from relf_agent import GraphNode, GraphWorkflowSpec
 
     spec = GraphWorkflowSpec("g", [GraphNode("a", agent=AgentSpec("a", "Answer"))])
     monkeypatch.setattr(SQLiteStore, "composite_memory_stage_version", None)
@@ -186,7 +186,7 @@ def test_sequence_has_separate_source_stages(tmp_path):
 
 
 def test_lost_ack_terminal_restart_only_queries_and_settles_exact_evidence(tmp_path):
-    from ralf_agent.errors import MemoryBackendError
+    from relf_agent.errors import MemoryBackendError
 
     class LostAck(InMemoryMemory):
         writes = 0
@@ -214,7 +214,7 @@ def test_lost_ack_terminal_restart_only_queries_and_settles_exact_evidence(tmp_p
 
 @pytest.mark.parametrize("mutation", ["value", "expiry", "journal", "marker"])
 def test_unknown_recovery_rejects_changed_or_missing_evidence(tmp_path, mutation):
-    from ralf_agent.errors import MemoryBackendError
+    from relf_agent.errors import MemoryBackendError
 
     class LostAck(InMemoryMemory):
         def put_fact(self, *args, **kwargs):
@@ -254,9 +254,9 @@ def test_unknown_recovery_rejects_changed_or_missing_evidence(tmp_path, mutation
 def test_lazy_or_fabricated_proposals_are_auxiliary_failures(tmp_path):
     from contextlib import contextmanager
 
-    from ralf_agent.memory_extraction import FactProposal
+    from relf_agent.memory_extraction import FactProposal
 
-    cls = importlib.import_module("ralf_agent.managed_memory").ManagedMemoryPolicy
+    cls = importlib.import_module("relf_agent.managed_memory").ManagedMemoryPolicy
 
     class Lazy(cls):
         @contextmanager
@@ -309,8 +309,8 @@ def test_cancel_during_write_retains_evidence_and_does_not_upgrade_business(tmp_
 
 
 def test_facade_observes_and_explicitly_recovers_auxiliary_receipts(tmp_path):
-    from ralf_agent import Runtime
-    from ralf_agent.errors import MemoryBackendError
+    from relf_agent import Runtime
+    from relf_agent.errors import MemoryBackendError
     from tests.test_remote_session_recovery import settled
 
     class LostAck(InMemoryMemory):
@@ -338,8 +338,8 @@ def test_facade_observes_and_explicitly_recovers_auxiliary_receipts(tmp_path):
 def test_threaded_memory_retains_lease_when_event_loop_tasks_cancel(tmp_path):
     import threading
 
-    from ralf_agent import ThreadedMemoryAdapter
-    from ralf_agent.errors import CoordinatorBusy
+    from relf_agent import ThreadedMemoryAdapter
+    from relf_agent.errors import CoordinatorBusy
 
     class Slow(InMemoryMemory):
         def __init__(self):
@@ -420,9 +420,9 @@ def test_crash_between_receipt_and_settlement_recovers_without_rewrite(tmp_path)
 
 
 def test_expired_skipped_stage_recovery_is_stable(tmp_path, monkeypatch):
-    cls = importlib.import_module("ralf_agent.managed_memory").ManagedMemoryPolicy
+    cls = importlib.import_module("relf_agent.managed_memory").ManagedMemoryPolicy
     clock = [1]
-    monkeypatch.setattr("ralf_agent.managed_memory_stage.time.time", lambda: clock[0])
+    monkeypatch.setattr("relf_agent.managed_memory_stage.time.time", lambda: clock[0])
 
     class SlowSelection(cls):
         def propose(self, evidence):

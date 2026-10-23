@@ -7,9 +7,9 @@ from types import SimpleNamespace
 import pytest
 from temporalio import activity
 
-from ralf_agent import temporal_control_activities as control
-from ralf_agent.errors import DefinitionMismatch, ValidationError
-from ralf_agent.temporal_parent_state import CONTROL_ACTIVITY
+from relf_agent import temporal_control_activities as control
+from relf_agent.errors import DefinitionMismatch, ValidationError
+from relf_agent.temporal_parent_state import CONTROL_ACTIVITY
 
 SECRET = "sensitive-request-and-exception-body"
 

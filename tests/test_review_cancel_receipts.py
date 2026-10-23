@@ -4,10 +4,10 @@ from dataclasses import replace
 import httpx
 import pytest
 
-from ralf_agent import AgentSpec, LocalEngine, ModelResponse, Scope, SQLiteStore, ToolRegistry
-from ralf_agent.a2a import A2AApplication
-from ralf_agent.handoff import SQLiteInbox
-from ralf_agent.task_controls import TaskControlBridge
+from relf_agent import AgentSpec, LocalEngine, ModelResponse, Scope, SQLiteStore, ToolRegistry
+from relf_agent.a2a import A2AApplication
+from relf_agent.handoff import SQLiteInbox
+from relf_agent.task_controls import TaskControlBridge
 
 
 @pytest.mark.parametrize("failed", [False, True])

@@ -6,16 +6,16 @@ from types import SimpleNamespace
 
 import pytest
 
-from ralf_agent import temporal_coding_composition_control as composition_control
-from ralf_agent import temporal_coding_composition_state as composition_state
-from ralf_agent import temporal_deployment_coding_bridge as bridge
-from ralf_agent import temporal_deployment_coding_validation as validation
-from ralf_agent import temporal_deployment_control_projection as projection
-from ralf_agent import temporal_deployment_control_transport as transport
-from ralf_agent import temporal_deployment_execution as execution
-from ralf_agent.errors import DefinitionMismatch
-from ralf_agent.temporal_parent_state import PARENT_WORKFLOW_NAME
-from ralf_agent.types import digest
+from relf_agent import temporal_coding_composition_control as composition_control
+from relf_agent import temporal_coding_composition_state as composition_state
+from relf_agent import temporal_deployment_coding_bridge as bridge
+from relf_agent import temporal_deployment_coding_validation as validation
+from relf_agent import temporal_deployment_control_projection as projection
+from relf_agent import temporal_deployment_control_transport as transport
+from relf_agent import temporal_deployment_execution as execution
+from relf_agent.errors import DefinitionMismatch
+from relf_agent.temporal_parent_state import PARENT_WORKFLOW_NAME
+from relf_agent.types import digest
 from tests import test_temporal_session_coding_child_identity as child_fixture
 from tests import test_temporal_session_coding_projection as sdk_fixture
 from tests.test_temporal_deployment_control_transport_projection import setup
@@ -74,7 +74,7 @@ def environment(monkeypatch):
         status=WorkflowExecutionStatus.RUNNING,
         raw_info=SimpleNamespace(first_run_id="child-epoch"),
     )
-    from ralf_agent.temporal_state import WORKFLOW_NAME
+    from relf_agent.temporal_state import WORKFLOW_NAME
 
     descriptor.workflow_type = WORKFLOW_NAME
     client.descriptions["child"] = descriptor

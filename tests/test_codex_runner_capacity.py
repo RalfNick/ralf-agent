@@ -12,7 +12,7 @@ from pathlib import Path
 
 import pytest
 
-from ralf_agent.errors import DefinitionMismatch, RuntimeClosed, ValidationError
+from relf_agent.errors import DefinitionMismatch, RuntimeClosed, ValidationError
 
 DISPATCH = "a" * 64
 RUNNER = "b" * 64
@@ -20,7 +20,7 @@ GENERATION = "c" * 32
 
 
 def capacity_type():
-    name = "ralf_agent.codex_runner_capacity"
+    name = "relf_agent.codex_runner_capacity"
     assert importlib.util.find_spec(name) is not None, "RootCapacity is not implemented"
     return importlib.import_module(name).RootCapacity
 
@@ -255,7 +255,7 @@ def test_foreign_or_incomplete_fence_cannot_clear_obligation(root, changes):
 
 def child_owner(root):
     script = """import json,sys
-from ralf_agent.codex_runner_capacity import RootCapacity
+from relf_agent.codex_runner_capacity import RootCapacity
 c=RootCapacity(sys.argv[1],root_pin=json.loads(sys.argv[2]),dispatch_digest='a'*64,runner_digest='b'*64,generation='c'*32)
 claim=c.try_acquire(); c.mark_native_intent(claim['token'])
 print(json.dumps(claim),flush=True)

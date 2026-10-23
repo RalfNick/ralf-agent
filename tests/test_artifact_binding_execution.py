@@ -7,8 +7,8 @@ import weakref
 
 import pytest
 
-import ralf_agent as r
-from ralf_agent.errors import AuthorizationDenied, DefinitionMismatch, RalfError
+import relf_agent as r
+from relf_agent.errors import AuthorizationDenied, DefinitionMismatch, RalfError
 
 from .test_workspace_binding_execution import definition as workspace_definition
 from .test_workspace_binding_execution import finish
@@ -51,7 +51,7 @@ def definition(kind, mode="ref"):
             if mode == "ref"
             else r.BindingSelection.disabled().to_dict()
         )
-    from ralf_agent.binding_definitions import decode_definition
+    from relf_agent.binding_definitions import decode_definition
 
     return decode_definition(value)
 
@@ -216,7 +216,7 @@ def test_missing_original_or_denied_namespace_refuses_before_run(tmp_path):
         with engine(tmp_path / "denied.sqlite", catalog, tools, context) as runtime:
             wrapped = definition("agent").to_dict()
             wrapped["bindings"]["artifacts"]["selector"] = {"namespace": "beta"}
-            from ralf_agent.binding_definitions import decode_definition
+            from relf_agent.binding_definitions import decode_definition
 
             with pytest.raises(AuthorizationDenied):
                 runtime.submit(decode_definition(wrapped), "read", command_id="s")

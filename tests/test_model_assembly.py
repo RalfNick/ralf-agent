@@ -6,9 +6,9 @@ import sys
 import httpx
 import pytest
 
-from ralf_agent import AgentSpec, RuntimeBuilder, RuntimeProfile
-from ralf_agent.errors import ValidationError
-from ralf_agent.starter import create_starter
+from relf_agent import AgentSpec, RuntimeBuilder, RuntimeProfile
+from relf_agent.errors import ValidationError
+from relf_agent.starter import create_starter
 
 from .test_starter import installed_wheel as _installed_wheel
 from .test_starter import subprocess_result
@@ -95,7 +95,7 @@ def test_deepseek_preset_sends_disabled_thinking_and_correct_token_parameter():
         )
 
     async def run():
-        api = importlib.import_module("ralf_agent.providers")
+        api = importlib.import_module("relf_agent.providers")
         async with httpx.AsyncClient(transport=httpx.MockTransport(reply)) as client:
             provider = api.DeepSeekChatProvider("fixture", api_key="dummy", client=client)
             assert (await provider.complete([{"role": "user", "content": "q"}], [])).output == "ok"
