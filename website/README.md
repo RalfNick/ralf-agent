@@ -55,7 +55,7 @@ PUBLIC_SITE_URL=https://relfagent.com npm run build
 
 采用 [Workers Static Assets](https://developers.cloudflare.com/workers/static-assets/)，`wrangler.jsonc` 只托管 `dist/` 静态资源，无 Worker 业务代码、数据库或秘密绑定。目录式 URL 使用尾斜线，未知路径返回自定义 404；`public/_headers` 定义响应头与构建资产缓存。
 
-官网已于 **2026-10-23** 首次通过 Cloudflare 控制台上传 `dist/` 上线，生产 Worker 为 `ralf-agent-website`。主域名为 [relfagent.com](https://relfagent.com/)，中英文入口分别为 [/zh/](https://relfagent.com/zh/) 和 [/en/](https://relfagent.com/en/)。Workers Builds 连接成功后由正式分支更新触发发布；手工上传或 Wrangler 部署保留为维护方式。
+官网已于 **2026-10-23** 首次通过 Cloudflare 控制台上传 `dist/` 上线，生产 Worker 为 `ralf-agent-website`。主域名为 [relfagent.com](https://relfagent.com/)，中英文入口分别为 [/zh/](https://relfagent.com/zh/) 和 [/en/](https://relfagent.com/en/)。同日已连接 Workers Builds，由 `main` 分支的网站相关更新触发检查、构建和发布；手工上传或 Wrangler 部署保留为维护方式。
 
 区域内已配置以下跳转，均保留路径与查询字符串：
 
@@ -88,7 +88,7 @@ npm run cf:dev
 
 GitHub Actions 与 Cloudflare 共用 `npm run verify`：静态检查 → 单元测试 → 双语源文档同步检查 → 固定 SDK 的离线教程 → Astro/Pagefind 构建 → 公开 GitHub 文档基线核验 → Wrangler dry run。任一步失败立即终止。`npm run verify:production` 额外要求 `PUBLIC_SITE_URL` 精确为 `https://relfagent.com`，避免正式站生成 noindex 或错误 canonical。
 
-在**现有** Worker 的 Settings → Build 连接仓库，使用以下配置：
+**现有** Worker 的 Settings → Build 已连接仓库，保存以下配置；实际发布是否完成，以构建记录为准：
 
 | 配置项 | 值 |
 | --- | --- |
