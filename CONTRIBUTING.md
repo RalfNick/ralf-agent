@@ -19,7 +19,7 @@
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
-python -m pip install -e '.[dev]'
+python -m pip install -e '.[dev,pdf,tokenizer,skills,temporal]'
 ```
 
 产品代码在 `src/ralf_agent/`，回归测试在 `tests/`，源码示例在 `examples/`，功能文档在 `docs/`。涉及执行保证前，阅读[总体设计](architecture/design.md)、[Run 命令契约](architecture/specs/run-command-contract.md)、[Action 恢复契约](architecture/specs/action-recovery-contract.md)、[Runner 契约](architecture/specs/runner-capability-contract.md)与[当前支持状态](docs/implementation-status.md)。
@@ -35,7 +35,7 @@ python -m ruff format --check .
 python -m build
 ```
 
-当前基础 CI 使用 Linux、Python 3.11／3.12／3.13，安装 `.[dev,pdf,tokenizer,skills]`；其他安装、服务和契约检查见[CI 配置](.github/workflows/ci.yml)。外部服务测试可能因缺少配置而跳过，跳过不视为服务能力验收。打包与安装后验证见[发布指南](docs/releasing.md)。
+当前基础 CI 使用 Linux、Python 3.11／3.12／3.13，安装 `.[dev,pdf,tokenizer,skills,temporal]`，与上述开发环境一致。全量测试在收集时需要 Temporal SDK；安装 `temporal` extra 不会启动或连接 Temporal 服务，也不会改变 SDK 的基础依赖。其他安装、服务和契约检查见[CI 配置](.github/workflows/ci.yml)。外部服务测试可能因缺少配置而跳过，跳过不视为服务能力验收。打包与安装后验证见[发布指南](docs/releasing.md)。
 
 只修改文字、导航或链接时，检查链接、锚点与 `git diff --check`；修改示例命令时实际运行对应的最小示例。分类、写法和参考项目见[文档维护指南](docs/documentation-guide.md)，无需为文字调整运行全量产品测试。
 
