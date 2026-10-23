@@ -10,7 +10,7 @@ dev70 增加多版本 `TemporalProfileHost`，保留原队列并按原 Run／Ses
 ## 安装与最小示例
 
 ```sh
-pip install 'ralf-agent[temporal]'
+pip install 'relf-agent[temporal]'
 python -m ralf_agent.temporal_profile_example --data-dir ./profile-demo
 # 启动自己的 Temporal 后，显式指定服务地址：
 python -m ralf_agent.temporal_profile_example --data-dir ./profile-demo --address localhost:7233

@@ -10,7 +10,7 @@ python -m pip install -e '.[pdf]'
 python -m pip install 'dist/ralf_agent-0.1.0.dev53-py3-none-any.whl[pdf]'
 ```
 
-未安装或不支持的 pypdf 版本返回 `ValidationError`，提示 `ralf-agent[pdf]`。
+未安装或不支持的 pypdf 版本返回 `ValidationError`，提示 `relf-agent[pdf]`。
 支持 pypdf>=6.20,<7；实际验收版本6.20.0。原文本／HTML／DOCX 和 Agent 使用不需要此 extra。
 适配器身份固定实际依赖版本、完整配置、宿主 RTL 设置、策略和自身辅助实现；注册后的版本、入口、配置、RTL 或 helper 变化会拒绝继续确认原 pipeline。
 该身份不归档依赖代码，也不认证任意库内部运行时猴子补丁；保留原发布环境仍是应用责任。

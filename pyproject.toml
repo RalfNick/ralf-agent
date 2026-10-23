@@ -3,8 +3,8 @@ requires = ["setuptools>=77"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "ralf-agent"
-version = "0.1.0a4"
+name = "relf-agent"
+version = "0.1.0a5"
 description = "Relf-Agent: reliable and extensible lifecycle framework for intelligent agents"
 readme = "README.md"
 requires-python = ">=3.11"
@@ -22,11 +22,11 @@ classifiers = [
 dependencies = ["httpx>=0.27,<1", "jsonschema>=4.23,<5"]
 
 [project.urls]
-Homepage = "https://github.com/RalfNick/relf-agent"
+Homepage = "https://relfagent.com"
 Repository = "https://github.com/RalfNick/relf-agent"
 Issues = "https://github.com/RalfNick/relf-agent/issues"
-Documentation = "https://github.com/RalfNick/relf-agent/blob/feat/m1-local-runtime/docs/README.md"
-Changelog = "https://github.com/RalfNick/relf-agent/blob/feat/m1-local-runtime/CHANGELOG.md"
+Documentation = "https://github.com/RalfNick/relf-agent/blob/main/docs/README.md"
+Changelog = "https://github.com/RalfNick/relf-agent/blob/main/CHANGELOG.md"
 
 [project.optional-dependencies]
 skills = ["PyYAML>=6,<7"]

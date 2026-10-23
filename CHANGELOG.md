@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.0a5 — Distribution rename candidate
+
+- Rename the Python distribution to `relf-agent`; retain `ralf_agent`, `ralf` and existing execution protocol identities. Update install guidance and metadata URLs without adding capabilities.
+- Freeze separate renamed wheel/sdist and explicit distribution-aware gate/preflight/publication contracts. Add manual a5 workflows; retain original a4 archives, manifests, completed Linux evidence and all historical failures.
+- Local validation does not qualify a5 Linux/native CI, account permissions or public installation. Existing wider SDK CI failures remain tracked separately; no remote execution or publication in this preparation.
+
 ## 0.1.0a4 — Alpha preparation (not published)
 
 - Preserve valid rejected cancellation receipts through TaskControlBridge and recognize both Local and legacy Temporal refusal formats in A2A.

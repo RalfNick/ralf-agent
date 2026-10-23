@@ -157,7 +157,7 @@ if __name__ == "__main__":
 
 _README = """# Independent Session adapter application
 
-Install ralf-agent and run these commands from this directory. `agent_app/adapter.py`
+Install relf-agent and run these commands from this directory. `agent_app/adapter.py`
 contains the full independently editable SQLite data source and structural Session
 Store. It directly implements scoped messages, CAS, stable message dedupe and exact
 version 1 receipts; it never delegates Session storage to a native SDK backend.

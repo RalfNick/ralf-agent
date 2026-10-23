@@ -13,7 +13,7 @@ Plan 默认使用原规则 DAG，Team 使用固定 Supervisor；自主模型规�
 ## 安装后直接运行
 
 ```sh
-pip install ralf-agent
+pip install relf-agent
 ralf-evaluate-rag --offline
 ralf-evaluate-orchestration --offline --kind plan-and-execute
 ralf-evaluate-orchestration --offline --kind team

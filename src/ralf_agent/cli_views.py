@@ -265,7 +265,7 @@ def render_result(result):
             return "\n".join(
                 [
                     f"Created offline Temporal starter: {result['directory']}",
-                    "Install ralf-agent[temporal] and set RALF_TEMPORAL_ADDRESS to your Service.",
+                    "Install relf-agent[temporal] and set RALF_TEMPORAL_ADDRESS to your Service.",
                     "  " + shlex.join(["cd", result["directory"]]),
                     "  " + shlex.join(["python", "-m", result["module"], "worker"]),
                     "In another terminal from the same directory:",
@@ -276,7 +276,7 @@ def render_result(result):
             return "\n".join(
                 [
                     f"Created offline A2A service starter: {result['directory']}",
-                    "Install ralf-agent[server] and set RALF_A2A_TOKEN locally in both terminals.",
+                    "Install relf-agent[server] and set RALF_A2A_TOKEN locally in both terminals.",
                     "  " + shlex.join(["cd", result["directory"]]),
                     "  " + shlex.join(["python", "-m", result["module"], "serve"]),
                     "In another terminal from the same directory:",

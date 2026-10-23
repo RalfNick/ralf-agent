@@ -35,10 +35,12 @@ def prepare(wheel, sdist, source, spec, output):
         "public_upload": False,
     }
     try:
+        distribution = gate.distribution_name(spec)
+        result["distribution_name"] = distribution
         with tempfile.TemporaryDirectory(prefix="ralf-release-preflight-") as temporary:
             gate.prepare_artifacts(wheel, sdist, Path(temporary), spec)
         project = tomllib.loads((source / "pyproject.toml").read_text())["project"]
-        if project["name"] != "ralf-agent" or project["version"] != spec["version"]:
+        if project["name"] != distribution or project["version"] != spec["version"]:
             raise gate.GateError("source_version_mismatch")
         package = source / "src/ralf_agent"
         products = {
@@ -51,7 +53,7 @@ def prepare(wheel, sdist, source, spec, output):
             or gate.digest(products) != spec["product_tree_sha256"]
         ):
             raise gate.GateError("source_product_tree_mismatch")
-        prefix = f"ralf_agent-{spec['version']}"
+        prefix = f"{distribution.replace('-', '_')}-{spec['version']}"
         with zipfile.ZipFile(wheel) as archive, tarfile.open(sdist, "r:gz") as tar:
             metadata = email.message_from_bytes(archive.read(prefix + ".dist-info/METADATA"))
             if metadata["License-Expression"] != "Apache-2.0":

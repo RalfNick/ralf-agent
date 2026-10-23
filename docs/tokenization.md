@@ -49,7 +49,7 @@ def assemble_token_components(tokenizer: TextTokenizer):
 公开组合 identity 为独立副本。不同模型 tokenizer 由宿主在装配阶段显式准备，
 纯计量不能下载词表、读库或调用模型。Python 适配器仍是可信宿主代码。
 
-可选安装 `pip install 'ralf-agent[tokenizer]'` 使用 TiktokenTokenizer：
+可选安装 `pip install 'relf-agent[tokenizer]'` 使用 TiktokenTokenizer：
 
 ```python
 from ralf_agent import TiktokenTokenizer

@@ -168,7 +168,7 @@ def test_default_manifest_preserves_original_alpha2_after_new_source_versions(ga
     original = json.loads((ROOT / "tools/release_gate_manifest.alpha1.json").read_text())
     project = tomllib.loads((ROOT / "pyproject.toml").read_text())["project"]
     assert current["version"] == "0.1.0a2"
-    assert project["version"] == "0.1.0a4"
+    assert project["version"] == "0.1.0a5"
     assert set(current["artifacts"]) == {
         "ralf_agent-0.1.0a2-py3-none-any.whl",
         "ralf_agent-0.1.0a2.tar.gz",

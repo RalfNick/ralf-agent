@@ -12,7 +12,7 @@ Relf-Agent 是开源 Python Agent 框架。你定义模型、业务工具与任�
 
 全称是 **Reliable and Extensible Lifecycle Framework for Intelligent Agents**，即**可靠、可扩展的智能体全生命周期框架**。定位是：**灵活构建智能体，可靠运行智能应用。** 模型推理、规划与成员协作提供智能能力，可替换组件支持业务定制，持久执行负责审批与恢复。
 
-项目原名 Ralf-Agent，仓库现为 `RalfNick/relf-agent`。安装包仍为 `ralf-agent`，Python 导入为 `ralf_agent`，命令为 `ralf`。本站教程仍采用下方标注的 SDK 0.1.0a1 固定基线；最新公开版本见 [0.1.0a2 Alpha](https://github.com/RalfNick/relf-agent/releases/tag/v0.1.0a2)，不以品牌更新代替版本与恢复验收。
+项目原名 Ralf-Agent，仓库现为 `RalfNick/relf-agent`。本指南固定a1与公开a2使用`ralf-agent`；a5候选发行名改为`relf-agent`，Python导入仍为`ralf_agent`，命令仍为`ralf`。本站教程仍采用下方标注的 SDK 0.1.0a1 固定基线；最新公开版本见 [0.1.0a2 Alpha](https://github.com/RalfNick/relf-agent/releases/tag/v0.1.0a2)，不以品牌更新代替版本与恢复验收。
 
 一个典型工单流程是：读取工单 → 检索运维手册 → 提出变更 → 人工审批 → 执行工具 → 检查结果。可以先用一个 Agent 完成，再把固定步骤组合成 Workflow；需要成员协作时，再加入 Plan 或 Team。
 

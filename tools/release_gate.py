@@ -102,8 +102,15 @@ def check_junit(path, expected):
     return counts
 
 
-def extract_checks(sdist, target, version):
-    prefix = f"ralf_agent-{version}/"
+def distribution_name(spec):
+    name = spec.get("distribution_name", "ralf-agent")
+    if name not in ("ralf-agent", "relf-agent"):
+        raise GateError("unsupported_distribution_name")
+    return name
+
+
+def extract_checks(sdist, target, version, distribution="ralf-agent"):
+    prefix = f"{distribution.replace('-', '_')}-{version}/"
     contents, seen = {}, set()
     with tarfile.open(sdist, "r:gz") as stream:
         for member in stream:
@@ -170,13 +177,13 @@ def prepare_artifacts(wheel, sdist, target, spec):
     for artifact in (wheel, sdist):
         if spec["artifacts"].get(artifact.name) != file_digest(artifact):
             raise GateError("artifact_sha256_mismatch")
+    distribution = distribution_name(spec)
+    prefix = f"{distribution.replace('-', '_')}-{spec['version']}"
     with zipfile.ZipFile(wheel) as archive:
         if len(archive.namelist()) != len(set(archive.namelist())):
             raise GateError("duplicate_wheel_member")
-        metadata = email.message_from_bytes(
-            archive.read(f"ralf_agent-{spec['version']}.dist-info/METADATA")
-        )
-        if metadata["Name"] != "ralf-agent" or metadata["Version"] != spec["version"]:
+        metadata = email.message_from_bytes(archive.read(prefix + ".dist-info/METADATA"))
+        if metadata["Name"] != distribution or metadata["Version"] != spec["version"]:
             raise GateError("package_version_mismatch")
         products = {
             name.removeprefix("ralf_agent/"): hashlib.sha256(archive.read(name)).hexdigest()
@@ -185,7 +192,7 @@ def prepare_artifacts(wheel, sdist, target, spec):
         }
     if len(products) != spec["product_files"] or digest(products) != spec["product_tree_sha256"]:
         raise GateError("product_tree_mismatch")
-    tests = extract_checks(sdist, target, spec["version"])
+    tests = extract_checks(sdist, target, spec["version"], distribution)
     if digest(tests) != spec["test_tree_sha256"]:
         raise GateError("test_tree_mismatch")
     corrections = apply_test_corrections(target, spec, tests)
@@ -215,7 +222,7 @@ import hashlib,importlib.metadata,importlib.util,json,pathlib,ralf_agent,sys,sys
 root=pathlib.Path(ralf_agent.__file__).resolve().parent
 spec=json.loads(pathlib.Path(sys.argv[1]).read_text())
 assert root.is_relative_to(pathlib.Path(sysconfig.get_path('purelib')))
-assert ralf_agent.__version__==importlib.metadata.version('ralf-agent')==spec['version']
+assert ralf_agent.__version__==importlib.metadata.version(spec.get('distribution_name','ralf-agent'))==spec['version']
 products={str(p.relative_to(root)):hashlib.sha256(p.read_bytes()).hexdigest() for p in root.rglob('*') if p.is_file() and p.suffix in ('.py','.json')}
 actual=hashlib.sha256(json.dumps(products,sort_keys=True,separators=(',',':'),ensure_ascii=True).encode()).hexdigest()
 assert len(products)==spec['product_files'] and actual==spec['product_tree_sha256']
@@ -265,7 +272,7 @@ def execute(args, output, result, spec):
         requirements = work / "requirements.lock"
         requirements.write_text(
             lock.read_text()
-            + f"\nralf-agent @ {args.wheel.as_uri()} --hash=sha256:{file_digest(args.wheel)}\n"
+            + f"\n{distribution_name(spec)} @ {args.wheel.as_uri()} --hash=sha256:{file_digest(args.wheel)}\n"
         )
         home = work / "home"
         home.mkdir()

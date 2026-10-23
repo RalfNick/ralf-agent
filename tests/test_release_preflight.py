@@ -26,27 +26,29 @@ def preflight(monkeypatch):
 
 @pytest.fixture
 def candidate(tmp_path, request):
-    version = getattr(request, "param", "0.1.0a1")
+    identity = getattr(request, "param", "0.1.0a1")
+    version, distribution = identity if isinstance(identity, tuple) else (identity, "ralf-agent")
+    prefix = f"{distribution.replace('-', '_')}-{version}"
     source = tmp_path / "source"
     package = source / "src/ralf_agent"
     package.mkdir(parents=True)
     product = f'__version__ = "{version}"\n'.encode()
     (package / "__init__.py").write_bytes(product)
-    (source / "pyproject.toml").write_text(f'[project]\nname="ralf-agent"\nversion="{version}"\n')
+    (source / "pyproject.toml").write_text(
+        f'[project]\nname="{distribution}"\nversion="{version}"\n'
+    )
     for name in ["LICENSE", "NOTICE"]:
         (source / name).write_text(name + " original\n")
-    wheel = tmp_path / f"ralf_agent-{version}-py3-none-any.whl"
+    wheel = tmp_path / f"{prefix}-py3-none-any.whl"
     with zipfile.ZipFile(wheel, "w") as z:
         z.writestr("ralf_agent/__init__.py", product)
         z.writestr(
-            f"ralf_agent-{version}.dist-info/METADATA",
-            f"Name: ralf-agent\nVersion: {version}\nLicense-Expression: Apache-2.0\n",
+            f"{prefix}.dist-info/METADATA",
+            f"Name: {distribution}\nVersion: {version}\nLicense-Expression: Apache-2.0\n",
         )
         for name in ["LICENSE", "NOTICE"]:
-            z.writestr(
-                f"ralf_agent-{version}.dist-info/licenses/" + name, (source / name).read_bytes()
-            )
-    sdist = tmp_path / f"ralf_agent-{version}.tar.gz"
+            z.writestr(f"{prefix}.dist-info/licenses/" + name, (source / name).read_bytes())
+    sdist = tmp_path / f"{prefix}.tar.gz"
     tests = {
         "tests/context_crash_assertions.py": b"# helper",
         "tests/test_starter.py": b"# test",
@@ -57,7 +59,7 @@ def candidate(tmp_path, request):
             **tests,
             **{n: (source / n).read_bytes() for n in ["LICENSE", "NOTICE"]},
         }.items():
-            info = tarfile.TarInfo(f"ralf_agent-{version}/" + name)
+            info = tarfile.TarInfo(f"{prefix}/" + name)
             info.size = len(content)
             tar.addfile(info, io.BytesIO(content))
     import release_gate
@@ -75,6 +77,8 @@ def candidate(tmp_path, request):
         ),
         "deferred": ["function-fingerprint qualification", "S2"],
     }
+    if distribution != "ralf-agent":
+        spec["distribution_name"] = distribution
     return source, wheel, sdist, spec
 
 

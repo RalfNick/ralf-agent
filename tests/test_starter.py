@@ -93,7 +93,7 @@ def installed_wheel(tmp_path_factory):
             "--no-index",
             "--no-deps",
             "--no-cache-dir",
-            next(wheels.glob("ralf_agent-*.whl")),
+            next(wheels.glob("relf_agent-*.whl")),
         ],
         cwd=work,
     )

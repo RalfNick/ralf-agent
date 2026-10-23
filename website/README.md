@@ -2,7 +2,7 @@
 
 独立的 Astro 静态官网。当前展示品牌为 **Relf-Agent**：**Reliable and Extensible Lifecycle Framework for Intelligent Agents**，可靠、可扩展的智能体全生命周期框架。定位：灵活构建智能体，可靠运行智能应用。
 
-原项目名为 Ralf-Agent；`ralf-agent` 安装包、`ralf_agent` 导入、`ralf` CLI 与原 SDK 保持。仓库已更名为 [RalfNick/relf-agent](https://github.com/RalfNick/relf-agent)，`repository.json` 与当前页面链接已同步。源码默认分支为 `main`，基于已审核的 `b545aba`；原开发分支继续保留。官网 **[relfagent.com](https://relfagent.com/)** 已上线，本批同步已使用的域名配置与维护说明。教程继续固定原 a1 基线；公开安装仍使用 a2，a4 仅完成候选本地验证与源码推送，未公开发行。旧计划／审查与 Cloudflare 资源名保留。无需服务端、模型密钥或 Cloudflare 账户即可本地查看。
+原项目名为 Ralf-Agent；a5发行名为`relf-agent`，保留`ralf_agent`导入与`ralf`CLI；原a1／a2／a3／a4仍使用`ralf-agent`。仓库已更名为 [RalfNick/relf-agent](https://github.com/RalfNick/relf-agent)，`repository.json` 与当前页面链接已同步。源码默认分支为 `main`，基于已审核的 `b545aba`；原开发分支继续保留。官网 **[relfagent.com](https://relfagent.com/)** 已上线，本批同步已使用的域名配置与维护说明。教程继续固定原 a1 基线；公开安装仍使用 a2，当前a5独立准备新包与本地验收，不继承a4已完成的Linux／原生CI资格，账号配置、上传及公开安装仍待完成。旧计划／审查与 Cloudflare 资源名保留。无需服务端、模型密钥或 Cloudflare 账户即可本地查看。
 
 首次手工上线的现场证据见[上线验收记录](reviews/2026-10-23-cloudflare-launch.md)及其 HTTP 明细。自动构建入口、检查门禁和 Cloudflare 连接参数见下方“自动构建与发布”；连接状态与实际发布结果以 Cloudflare 构建记录为准。
 

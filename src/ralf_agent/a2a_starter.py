@@ -97,7 +97,7 @@ def main():
             try:
                 import uvicorn
             except ImportError:
-                parser.error("Install ralf-agent[server] to serve HTTP")
+                parser.error("Install relf-agent[server] to serve HTTP")
             service = create_service(args.db, f"http://127.0.0.1:{args.port}/rpc")
             # This local authority is a single-worker application instance.
             uvicorn.run(service, host="127.0.0.1", port=args.port, lifespan="on", access_log=False)
@@ -108,7 +108,7 @@ def main():
 ''',
     "README.md": """# Local A2A service starter
 
-Install ralf-agent[server]. Set RALF_A2A_TOKEN locally to a fresh owner credential
+Install relf-agent[server]. Set RALF_A2A_TOKEN locally to a fresh owner credential
 in both terminals; no token is generated or printed by this application.
 Run from this directory:
 

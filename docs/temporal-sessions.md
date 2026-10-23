@@ -7,7 +7,7 @@ Session 协调 Workflow 保存绑定、串行 Turn、启动意图和 Conversatio
 
 ## 显式启用与首用
 
-安装 `ralf-agent[temporal]`，宿主提供 Service、Client、Provider、ToolRegistry 和 Worker。
+安装 `relf-agent[temporal]`，宿主提供 Service、Client、Provider、ToolRegistry 和 Worker。
 `enable_sessions=True` 将 `session_protocol=1` 和显式 `dispatch_admission="history-1"` 固定在发布中；默认关闭，
 原 temporal-1/2/3 default/raw releases 与 raw `session_id` 保持其旧行为。
 

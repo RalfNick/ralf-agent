@@ -258,7 +258,7 @@ _FILES = {
     "agent_app/runtime.py": _RUNTIME,
     "README.md": """# My Agent application
 
-This starter runs offline with the installed `ralf-agent` SDK. It reads a test
+This starter runs offline with the installed `relf-agent` SDK. It reads a test
 ticket, waits for explicit approval, applies one local SQLite change, and verifies
 the receipt. No external model or credentials are needed.
 
@@ -518,7 +518,7 @@ _RAG_FILES = {
     "agent_app/runtime.py": _RAG_RUNTIME,
     "README.md": """# My knowledge Agent
 
-This application uses the installed `ralf-agent` SDK, a local SQLite knowledge
+This application uses the installed `relf-agent` SDK, a local SQLite knowledge
 database, and real lexical retrieval. Its offline Provider copies retrieved
 evidence and cites document ID, version and source URI. It refuses to answer
 without evidence. No model, embedding service, credentials or repository checkout

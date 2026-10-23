@@ -25,7 +25,7 @@ def _files(nested):
     files["workflow.json"] = json.dumps(spec, indent=2, ensure_ascii=False) + "\n"
     files["README.md"] = """# Offline DAG/nesting starter
 
-Run from this directory after installing ralf-agent:
+Run from this directory after installing relf-agent:
 
 ```shell
 python -m agent_app --input hello --command-id first

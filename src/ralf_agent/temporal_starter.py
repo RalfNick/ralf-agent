@@ -66,7 +66,7 @@ async def run(args):
     address=args.address or os.environ.get("RALF_TEMPORAL_ADDRESS")
     if not address:raise ValidationError("Set RALF_TEMPORAL_ADDRESS or --address explicitly")
     try:from temporalio.client import Client
-    except ImportError:raise ValidationError("Install ralf-agent[temporal]") from None
+    except ImportError:raise ValidationError("Install relf-agent[temporal]") from None
     runtime=create_runtime()
     client=await Client.connect(address)
     release=runtime.orchestration_release
@@ -109,7 +109,7 @@ def main():
 ''',
     "README.md": """# Explicit Temporal starter
 
-Install ralf-agent[temporal] and provide an actual Temporal Service.
+Install relf-agent[temporal] and provide an actual Temporal Service.
 Set RALF_TEMPORAL_ADDRESS locally, for example to your localhost development service.
 No Service, model call, worker or storage connection starts on package import.
 Run from this directory in separate terminals with the same workspace/principal:

@@ -36,11 +36,11 @@ def _library():
     try:
         module = importlib.import_module("pypdf")
     except ImportError:
-        raise ValidationError("PDF parsing requires optional ralf-agent[pdf]") from None
+        raise ValidationError("PDF parsing requires optional relf-agent[pdf]") from None
     version = getattr(module, "__version__", "")
     match = re.fullmatch(r"6\.(\d+)\.(\d+)", version)
     if not match or int(match[1]) < 20:
-        raise ValidationError("PDF parsing requires ralf-agent[pdf] with pypdf>=6.20,<7")
+        raise ValidationError("PDF parsing requires relf-agent[pdf] with pypdf>=6.20,<7")
     return module
 
 

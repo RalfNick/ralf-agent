@@ -29,7 +29,7 @@ class TiktokenTokenizer:
         try:
             import tiktoken
         except ImportError:
-            raise ValidationError("Install ralf-agent[tokenizer] for TiktokenTokenizer") from None
+            raise ValidationError("Install relf-agent[tokenizer] for TiktokenTokenizer") from None
         if not isinstance(name, str) or not name.strip() or len(name) > 128:
             raise ValidationError("Tokenizer requires a bounded encoding name")
         if not isinstance(pat_str, str) or not pat_str or len(pat_str) > 16384:

@@ -246,7 +246,7 @@ def adapter_contract_files():
         ".gitignore": ".ralf/\n__pycache__/\n",
         "README.md": """# Independent adapter contract application
 
-Install ralf-agent, then run from this directory. No service, model or embedding
+Install relf-agent, then run from this directory. No service, model or embedding
 credentials are used. `agent_app/adapter.py` contains a genuinely independent,
 editable SQLite source and structural Retriever; it does not wrap an SDK
 KnowledgeStore or Retriever. Its lexical ranking is a wiring example.

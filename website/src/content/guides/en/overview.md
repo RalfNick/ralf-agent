@@ -12,7 +12,7 @@ Relf-Agent is an open-source Python agent framework. You define models, business
 
 The name expands to **Reliable and Extensible Lifecycle Framework for Intelligent Agents**. **Build intelligent agents. Run them reliably.** Model reasoning, planning and member collaboration provide intelligence; replaceable components support customization; durable execution handles approval and recovery.
 
-Previously named Ralf-Agent, the project now lives at `RalfNick/relf-agent`. The distribution remains `ralf-agent`, imports remain `ralf_agent`, and the CLI remains `ralf`. These tutorials retain the labeled SDK 0.1.0a1 baseline; the latest public release is [0.1.0a2 Alpha](https://github.com/RalfNick/relf-agent/releases/tag/v0.1.0a2). A brand update does not change version or recovery qualifications.
+Previously named Ralf-Agent, the project now lives at `RalfNick/relf-agent`. The pinned a1 tutorials and public a2 archive use `ralf-agent`; the a5 candidate distribution is `relf-agent`, while imports remain `ralf_agent` and the CLI remains `ralf`. These tutorials retain the labeled SDK 0.1.0a1 baseline; the latest public release is [0.1.0a2 Alpha](https://github.com/RalfNick/relf-agent/releases/tag/v0.1.0a2). A brand update does not change version or recovery qualifications.
 
 A ticket flow might read a ticket, retrieve a runbook, propose a change, wait for approval, execute a tool and inspect the result. Start with one agent. Compose fixed steps into a workflow, then add plans or teams when the task needs delegation.
 

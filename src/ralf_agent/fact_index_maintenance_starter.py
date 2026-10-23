@@ -257,7 +257,7 @@ _README = """# Automatic native Facts index wiring
 Install the locally built wheel and create this application:
 
 ```sh
-python -m pip install /path/to/ralf_agent-0.1.0.dev98-py3-none-any.whl
+python -m pip install /path/to/relf_agent-0.1.0a5-py3-none-any.whl
 ralf init application --template memory-index
 cd application
 python -m agent_app run --format toml --command-prefix first

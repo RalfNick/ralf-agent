@@ -84,7 +84,7 @@ asyncio.run(run(parser.parse_args()))
 """,
     "README.md": """# Observable starter
 
-Install ralf-agent, then run `python -m agent_app` from this directory.
+Install relf-agent, then run `python -m agent_app` from this directory.
 The model is a deterministic fixture with one typed read-only lookup tool;
 `model_quality` is null. Output is NDJSON committed events followed by the result.
 Run the same command again to reuse its original receipt, or provide a new

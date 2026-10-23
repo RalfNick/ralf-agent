@@ -61,7 +61,7 @@ proof of conformance.
 
 ## Redis Streams
 
-Install `ralf-agent[redis]` and connect with
+Install `relf-agent[redis]` and connect with
 `await RedisStreamsBus.connect(url, backend_id="my-mq-v1")`. The caller owns clients
 passed directly unless `owns_client=True`; close failures retain a retry path.
 Groups, pending entries, bounded idle claims, owner-checked ack and atomic publish
@@ -101,5 +101,5 @@ original receipt and never resubmits. Source/client ownership is explicit and
 borrowed by default. Downstream business effects still need idempotency or evidence.
 
 Real Redis process-death recovery, HTTP loopback discovery/dedup/cancel and custom
-sync/async composition contracts are covered by tests. `ralf-agent[server]` provides
+sync/async composition contracts are covered by tests. `relf-agent[server]` provides
 an optional ASGI runner; no socket or network service starts on base import.

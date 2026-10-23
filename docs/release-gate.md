@@ -1,6 +1,8 @@
 # 可复现的 Local SDK 发布门禁
 
-**当前 a4 候选：** `tools/release_gate_manifest.alpha4.json` 独立固定包含近期修复的 wheel／sdist、产品与测试输入；运行时必须显式传入 `--manifest`。原 311 基础／16 恢复／两 starter 和 Linux 2 CPU／2 GiB／swap0／串行断网门槛不变。macOS、Linux ARM64、原生 AMD64 分别取证，不借用 a2／a3 成绩。当前实际结果及待执行步骤见[a4 清单](alpha4-validation-status.md)，执行命令见[a4 说明](releases/0.1.0a4.md)。本批不触发远端 CI 或公开发布。
+**当前a5改名候选：** 显式使用`tools/release_gate_manifest.alpha5.json`与两份`relf_agent-0.1.0a5`原归档，`distribution_name=relf-agent`；导入仍为`ralf_agent`，CLI仍为`ralf`。原311基础／16恢复／两starter、依赖锁与Linux2CPU／2GiB／swap0／串行断网要求保持。新包必须独立验收，不借用a4平台或CI成绩；当前结果见[a5清单](alpha5-validation-status.md)。历史manifest没有distribution_name时仍按`ralf-agent`处理，旧包与下方记录不重写。
+
+**历史a4候选：** `tools/release_gate_manifest.alpha4.json` 独立固定包含近期修复的 wheel／sdist、产品与测试输入；运行时必须显式传入 `--manifest`。原 311 基础／16 恢复／两 starter 和 Linux 2 CPU／2 GiB／swap0／串行断网门槛不变。macOS与Linux ARM64／原生AMD64三Python版本分别通过，不借用 a2／a3 成绩；原生门禁为[run39892578674／attempt1](https://github.com/RalfNick/relf-agent/actions/runs/39892578674)，原包与报告已取回复核。当前结果与发行待办见[a4 清单](alpha4-validation-status.md)，执行命令见[a4 说明](releases/0.1.0a4.md)。本批不公开发布。
 
 原 a3 发布暂停，冻结包、`release_gate_manifest.alpha3.json` 和三条原手动流程保留为历史候选；维护源码含后续修复，不能用原 a3 manifest 给它签发资格。默认 manifest 仍固定 a2，不隐式切换任何历史工作流。
 

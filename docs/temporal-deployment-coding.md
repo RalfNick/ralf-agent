@@ -14,7 +14,7 @@ Scope 由可信宿主提供，不是配置文件自报的权限。部署总量�
 
 ## 内置 Profile 与 SDK 装配
 
-安装 `ralf-agent[temporal]`。应用提供 Temporal SDK Client、PostgreSQL 和既有 Docker 环境。以下变量是应用已核对的固定资源：`runner_root` 为当前用户拥有的0700非符号链接绝对目录；`docker_executable` 与 `docker_host` 为实际固定客户端及 Unix socket。长期恢复应使用保留的私有目录。环境准备遵循[固定环境指南](codex-coding-environment.md)与[检查指南](codex-coding-preflight.md)，不自动下载资产。
+安装 `relf-agent[temporal]`。应用提供 Temporal SDK Client、PostgreSQL 和既有 Docker 环境。以下变量是应用已核对的固定资源：`runner_root` 为当前用户拥有的0700非符号链接绝对目录；`docker_executable` 与 `docker_host` 为实际固定客户端及 Unix socket。长期恢复应使用保留的私有目录。环境准备遵循[固定环境指南](codex-coding-environment.md)与[检查指南](codex-coding-preflight.md)，不自动下载资产。
 
 下例使用已经存在的 `postgres`、`codex-coding-postgres` 与 `bounded` 适配器。`APP_PG_DSN` 是环境变量名称，值由宿主管理，不写入 Profile。`offline-echo` 仅演示装配，不会请求 Coding 工具；它不证明原生认证、远端模型协议兼容或真实任务质量。需要显式模型连接时使用[连接指南](codex-model-connection.md)中已有的 connected-postgres 工厂，不从本例推断任何 endpoint／model 兼容。
 

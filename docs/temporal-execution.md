@@ -23,7 +23,7 @@ Actions, approvals, credit reservations, evidence adoption and terminal decision
 in its History. Model/tool Activities use registered components; they do not wrap
 LocalEngine or open a local execution store.
 
-Install `ralf-agent[temporal]`; provide your Temporal Service and worker registration.
+Install `relf-agent[temporal]`; provide your Temporal Service and worker registration.
 The SDK starts no server or worker implicitly. A minimal worker uses:
 
 ```python

@@ -42,7 +42,7 @@ def main(argv=None):
 ''',
     "README.md": """# Automatic sourced memory
 
-Run `python -m agent_app` from this directory after installing ralf-agent.
+Run `python -m agent_app` from this directory after installing relf-agent.
 The offline provider returns fixture preferences; rule extraction has zero model
 calls. SQLite execution and facts persist under `.ralf/runs.sqlite`. Repeat the
 command or restart the process to recover the same task and memory observations.

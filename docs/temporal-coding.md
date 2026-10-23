@@ -40,7 +40,7 @@ Runner 的异步 History 入口与 Local 共用原生执行循环及纯阶段规
 
 ## 固定部署前提
 
-安装 `ralf-agent[temporal]`，由宿主提供 Temporal Service、PostgreSQL 与 SDK Client。
+安装 `relf-agent[temporal]`，由宿主提供 Temporal Service、PostgreSQL 与 SDK Client。
 以下示例只装配并展示定义，使用 `offline-echo`；它不请求 Coding 工具，不证明原生
 认证或任务质量。示例不依赖仓库 examples。
 

@@ -8,13 +8,13 @@
 
 Relf-Agent 把模型决策、工具调用、人工审批和业务结果保存为明确的执行步骤，让 Agent 任务在进程重启后继续。模型、工具、上下文、记忆和检索组件可以独立替换，从本地 SQLite 的单 Agent 逐步组合到 Workflow、Plan／Team 与 Temporal 执行。
 
-原项目名为 Ralf-Agent，仓库现为 [RalfNick/relf-agent](https://github.com/RalfNick/relf-agent)。安装包仍为 `ralf-agent`，Python 导入仍为 `ralf_agent`，命令仍为 `ralf`，已发布制品及恢复标识保持不变。详见[名称与兼容边界](https://github.com/RalfNick/relf-agent/blob/main/docs/project-naming.md)。
+原项目名为 Ralf-Agent，仓库现为 [RalfNick/relf-agent](https://github.com/RalfNick/relf-agent)。从 `0.1.0a5` 起发行包名为 `relf-agent`；Python 导入仍为 `ralf_agent`，命令仍为 `ralf`。历史 a2／a3／a4 使用 `ralf-agent`，原制品及恢复标识保持不变。详见[名称与兼容边界](https://github.com/RalfNick/relf-agent/blob/main/docs/project-naming.md)。
 
 [官网](https://relfagent.com/) · [快速开始](#快速开始) · [文档目录](https://github.com/RalfNick/relf-agent/blob/main/docs/README.md) · [示例](https://github.com/RalfNick/relf-agent/blob/main/examples/README.md) · [贡献指南](https://github.com/RalfNick/relf-agent/blob/main/CONTRIBUTING.md) · [更新记录](https://github.com/RalfNick/relf-agent/blob/main/CHANGELOG.md)
 
-> 当前源码版本为 **0.1.0a4 Alpha**，包含近期公共契约修复及 Coding 测试夹具修正。各版本的候选／公开状态、安装入口与验收范围以[发行记录](https://github.com/RalfNick/relf-agent/blob/main/docs/releasing.md)和[a4 说明](https://github.com/RalfNick/relf-agent/blob/main/docs/releases/0.1.0a4.md)为准；下方固定安装示例使用已核验的 **[a2 原包](https://github.com/RalfNick/relf-agent/releases/tag/v0.1.0a2)**。API 与部署能力仍在演进，使用范围见[实现清单](https://github.com/RalfNick/relf-agent/blob/main/docs/implementation-status.md)。默认本地入门无需模型密钥、Redis、Temporal 或 Docker。
+> 当前源码版本为 **0.1.0a5 Alpha**，承接 a4 修复并统一发行名与安装提示，不新增功能。各版本的候选／公开状态、安装入口与验收范围以[发行记录](https://github.com/RalfNick/relf-agent/blob/main/docs/releasing.md)和[a5 说明](https://github.com/RalfNick/relf-agent/blob/main/docs/releases/0.1.0a5.md)为准；下方固定安装示例使用已核验的 **[a2 原包](https://github.com/RalfNick/relf-agent/releases/tag/v0.1.0a2)**。API 与部署能力仍在演进，使用范围见[实现清单](https://github.com/RalfNick/relf-agent/blob/main/docs/implementation-status.md)。默认本地入门无需模型密钥、Redis、Temporal 或 Docker。
 
-> 源码默认分支为 `main`，基于已审核的 `b545aba`；原 `feat/m1-local-runtime` 分支保留，以维持既有包内链接。官网已经上线。a4 源码推送、网站上线和 SDK 制品公开发行分别验收，当前公开安装仍使用下方 a2 原包。
+> 源码默认分支为 `main`，基于已审核的 `b545aba`；原 `feat/m1-local-runtime` 分支保留，以维持既有包内链接。官网已经上线。a5 制品、平台与公开发行分别验收，当前公开安装仍使用下方 a2 原包。
 
 ## 为什么使用 Relf-Agent
 

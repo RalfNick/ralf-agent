@@ -4,11 +4,11 @@
 
 Relf-Agent 需要 Python 3.11+。本地开发使用 Linux 或 macOS，本轮实测平台见[Alpha范围](releases/0.1.0a2.md)，CI配置不等于已运行通过；CI的Python版本与检查以[贡献指南](../CONTRIBUTING.md)和[工作流](../.github/workflows/ci.yml)为准。
 
-## 当前 a4 本地候选与原制品
+## 当前 a5 改名候选与原制品
 
-当前源码版本 `0.1.0a4` 包含 `210a79e` 公共契约修复和 `672d0cf` Coding 测试夹具修正。独立本地 wheel／sdist 及精确 SHA 见[a4 说明](releases/0.1.0a4.md)，实际安装、平台及待发布状态见[a4 清单](alpha4-validation-status.md)。源码已推送至默认 `main`，原开发分支保留；本轮不触发远端 CI 或公开发布 a4，`pip install ralf-agent==0.1.0a4` 不是当前公开安装入口。
+当前源码为 `relf-agent==0.1.0a5`，保留 `ralf_agent` 导入和 `ralf` CLI；继承 a4 功能，只统一发行元数据、安装提示和发布流程。原 wheel／sdist、实际本地验证和外部待办见[a5说明](releases/0.1.0a5.md)与[a5清单](alpha5-validation-status.md)。本轮不推送、触发远端CI或公开发布，`pip install relf-agent==0.1.0a5` 尚不是已验收的公开安装入口。
 
-原 a2／a3 包和全部历史失败保留；原 a3 不含近期修复且发布暂停。公开安装仍是下方 a2 URL；本地新包不能沿用旧包成绩或旧 Worker 资格。
+原a4的Linux ARM64／原生AMD64三Python版本成绩属于其原包，详见[a4清单](alpha4-validation-status.md)，不沿用为a5资格。a2／a3／a4的原包、manifest、历史失败与恢复环境保持；公开安装仍使用下方a2 URL。新旧发行共享导入文件和CLI，请使用独立虚拟环境，不要共装`ralf-agent`和`relf-agent`。
 
 ## 从公开 Alpha 安装
 
@@ -46,12 +46,12 @@ ralf --version
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
-python -m pip install "/path/to/ralf_agent-0.1.0a4-py3-none-any.whl"
+python -m pip install "/path/to/relf_agent-0.1.0a5-py3-none-any.whl"
 ralf --version
 ralf init my-agent
 ```
 
-当前本地候选为 0.1.0a4，目录及 SHA 校验见[a4 说明](releases/0.1.0a4.md)；公开安装推荐仍为 a2，见[发布指南](releasing.md)。dev123及更早目录属于历史制品，不要仅按同名 wheel 选择。GitHub Release的对应原包已公开核验；PyPI未发布。wheel 包含独立工程生成器，仓库 `examples/` 通过源码获取。
+当前本地候选为`relf-agent==0.1.0a5`，目录及SHA校验见[a5说明](releases/0.1.0a5.md)；公开安装推荐仍为 a2，见[发布指南](releasing.md)。dev123及更早目录属于历史制品，不要仅按同名 wheel 选择。GitHub Release的对应原包已公开核验；PyPI未发布。wheel 包含独立工程生成器，仓库 `examples/` 通过源码获取。
 
 ## 按需安装可选依赖
 
@@ -75,7 +75,7 @@ ralf init my-agent
 
 | 现象 | 检查方式 |
 | --- | --- |
-| 找不到 `ralf` | 激活安装时使用的虚拟环境，执行 `python -m pip show ralf-agent` 确认环境 |
+| 找不到 `ralf` | 激活安装时使用的虚拟环境，执行 `python -m pip show relf-agent`（原a2／a4环境查`ralf-agent`） 确认环境 |
 | 无法导入 `agent_app.runtime` | 在生成项目的目录中执行；`--factory` 指向该工程原工厂 |
 | 无法导入 `examples` | 使用源码仓库并从根目录执行，或改用 wheel 中的 `ralf init` 模板 |
 | 提示缺少可选模块 | 根据上表安装 extra，再按对应指南配置外部资源 |

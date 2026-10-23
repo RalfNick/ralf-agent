@@ -6,6 +6,7 @@ include tools/release_preflight.py
 include tools/stage_alpha1_candidate.py
 include tools/check_alpha3_publication.py tools/release_gate_manifest.alpha3.json
 include tools/check_alpha4_publication.py tools/release_gate_manifest.alpha4.json
+include tools/check_alpha5_publication.py tools/release_gate_manifest.alpha5.json
 include tools/release_gate_manifest.json tools/release_gate_manifest.alpha1.json tools/release_gate_manifest.alpha2-original.json tools/release_gate_requirements.lock
 recursive-include architecture *.md
 recursive-include docs *.md

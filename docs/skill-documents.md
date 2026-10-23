@@ -6,7 +6,7 @@
 它属于有界文档接入；目录加载和正文读取仍使用原 `SkillToolSource`、审批和执行恢复链路。
 
 源码开发安装：`python -m pip install -e '.[dev,skills]'`；wheel／已发布包安装：
-`python -m pip install 'ralf-agent[skills]'`。YAML 是可选依赖，核心导入和现有 JSON 文件目录不依赖它。
+`python -m pip install 'relf-agent[skills]'`。YAML 是可选依赖，核心导入和现有 JSON 文件目录不依赖它。
 默认文件适配缺少 PyYAML 时会在打开目录前明确拒绝；不会降级成不完整解析。
 
 ## 最小文件目录

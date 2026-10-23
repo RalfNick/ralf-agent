@@ -12,7 +12,7 @@ Use **Python 3.11 or newer** in a virtual environment. The local introduction us
 
 Relf-Agent is in Alpha. APIs and deployment combinations continue to evolve. See the repository's [implementation status (Chinese)](repo:docs/implementation-status.md) for the actual verification scope of each combination.
 
-The display brand changed from Ralf-Agent to Relf-Agent, and the repository is now `RalfNick/relf-agent`. The `ralf-agent` distribution, `ralf_agent` imports and `ralf` CLI remain unchanged. Do not use `pip install relf-agent`, `import relf_agent` or a `relf` command. The original SDK still prints Ralf-Agent in `ralf --version`.
+The project was renamed from Ralf-Agent to Relf-Agent, and the repository is now `RalfNick/relf-agent`. This pinned a1 tutorial and the public a2 package use `ralf-agent`. The a5 candidate distribution is `relf-agent`; `ralf_agent` imports and the `ralf` CLI stay unchanged. No `relf_agent` import or `relf` command is added. Original SDK output is retained for historical versions.
 
 ## Install from source
 
@@ -30,7 +30,7 @@ This documentation baseline is SDK **0.1.0a1**, commit `0b9b6c9682c40285d91994cd
 
 > This guide pins the original a1 source, not a public a1 package. The latest [0.1.0a2 Alpha](https://github.com/RalfNick/relf-agent/releases/tag/v0.1.0a2) is publicly available through GitHub Release; its release notes provide the verified installation command. PyPI remains unpublished, so `pip install ralf-agent` is not this guide's verified entry point.
 
-> The separate `0.1.0a4` candidate includes the public-contract and Coding-fixture fixes. Its preparation source has been pushed and the current default source branch is `main`. See the current release status in `docs/alpha4-validation-status.md` of the maintenance checkout for actual local, platform and publication evidence. Original a3 packages remain unchanged and on hold. This guide retains its a1 tutorial baseline and the verified public a2 installation; local a4 checks do not qualify Linux or public distribution.
+> The renamed candidate is `relf-agent==0.1.0a5`. See `docs/alpha5-validation-status.md` in the maintenance checkout for actual local, platform and publication evidence. Original a4 archives and Linux/native-CI results remain separate and do not qualify a5. This guide keeps its pinned a1 tutorial and verified public a2 installation. Use a separate environment for a5; do not co-install the two distributions.
 
 If you have a local wheel, install it in a virtual environment with `python -m pip install /actual/path/package.whl`. Verify its source and version.
 

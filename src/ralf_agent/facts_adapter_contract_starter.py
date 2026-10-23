@@ -155,7 +155,7 @@ if __name__ == "__main__":
 
 _README = """# Independent Facts adapter application
 
-Install ralf-agent and run these commands from this directory. The full SQLite
+Install relf-agent and run these commands from this directory. The full SQLite
 source and core/managed Facts adapter are editable in `agent_app/adapter.py`.
 They store facts independently of native SDK Memory. The original Local engine
 owns Runs, Actions, command receipts, memory stages and budget settlement.

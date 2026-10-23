@@ -1,6 +1,6 @@
 # Distributed composition — dev17 preview
 
-Install `ralf-agent[temporal]` and provide a Temporal Service. Native Agent/sequence
+Install `relf-agent[temporal]` and provide a Temporal Service. Native Agent/sequence
 use the existing `runtime.manifest`; Graph/Team/Dynamic use the explicit
 `runtime.orchestration_release`. A registered Parent Workflow owns its plan,
 child intents, scoped commands and budget in History. It starts actual Child

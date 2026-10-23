@@ -1,0 +1,123 @@
+{
+  "schema_version": 1,
+  "version": "0.1.0a5",
+  "artifact_source_commit": "f026f4c7b942cefdc1001128e609e95e4bafdc97",
+  "artifacts": {
+    "relf_agent-0.1.0a5-py3-none-any.whl": "c8f4dcda76c7fd9f2d23ecd9d64c27604f3cbda802c1c62a3223785c9ed5cee5",
+    "relf_agent-0.1.0a5.tar.gz": "b7a810784ae86fb0d1e1cc191e27e1281df4c6595b77ec498f1ac93346cae577"
+  },
+  "product_files": 442,
+  "product_tree_sha256": "c9709d04c34739700fb7dd08067f36be4367e0ca7b0d7140b4eb6779a4ad88f4",
+  "test_tree_sha256": "6ab0d370703746fad26fe7207a2784628e35f8446185f2badc0dc9e23d2a7a31",
+  "tests": {
+    "main": {
+      "selectors": [
+        "tests/test_async_adapter_combinations.py",
+        "tests/test_tool_sources.py",
+        "tests/test_mcp.py",
+        "tests/test_memory_pipeline.py",
+        "tests/test_runtime_capabilities.py",
+        "tests/test_extension_contracts.py",
+        "tests/test_support_journey.py",
+        "tests/test_agent_sessions.py",
+        "tests/test_workflow_adoption.py",
+        "tests/test_orchestration.py",
+        "tests/test_managed_data_context.py",
+        "tests/test_context_artifact_review.py",
+        "tests/test_composite_data_context.py",
+        "tests/test_local_approval_values.py",
+        "tests/test_local_deadline_facade.py",
+        "tests/test_component_validation.py",
+        "tests/test_scoped_semantic_recall.py",
+        "tests/test_composite_session_recovery.py"
+      ],
+      "deselect": [
+        "tests/test_scoped_semantic_recall.py::test_temporal_scoped_semantic_context_survives_state_restore_without_reembedding"
+      ],
+      "count": 311,
+      "node_ids_sha256": "e256798bd6320b827682989458e2bf698aed1bbd2c33c7444d4826e528cd0b70"
+    },
+    "related": {
+      "selectors": [
+        "tests/test_h3_context_process.py",
+        "tests/test_file_artifacts.py::test_composite_file_offload_recovers_without_repeating_business_or_artifact_write"
+      ],
+      "deselect": [],
+      "count": 16,
+      "node_ids_sha256": "d9056e7a4290a7fe3674ef49aaf946bb18f69454db414203a238ce6949f4b42c"
+    }
+  },
+  "starter_cases": 2,
+  "platforms": [
+    {
+      "system": "Linux",
+      "machine": "aarch64",
+      "python": [
+        "3.11",
+        "3.12",
+        "3.13"
+      ]
+    },
+    {
+      "system": "Darwin",
+      "machine": "arm64",
+      "python": [
+        "3.12"
+      ]
+    },
+    {
+      "system": "Linux",
+      "machine": "x86_64",
+      "python": [
+        "3.11",
+        "3.12",
+        "3.13"
+      ]
+    }
+  ],
+  "deferred": [],
+  "not_qualified": [
+    "a5 native remote CI pending actual report",
+    "a5 Linux ARM64 pending actual report",
+    "a5 Linux AMD64 pending actual report",
+    "PyPI and TestPyPI upload and installation",
+    "Windows",
+    "real models and unselected services",
+    "existing wider SDK CI failures remain open; see 2026-10-23-sdk-ci-dependency-fix.md"
+  ],
+  "linux_container_limits": {
+    "cpus": 2,
+    "memory_bytes": 2147483648,
+    "swap_bytes": 0
+  },
+  "linux_arm64_images": {
+    "3.11": "sha256:0a310eeecf4e1f5a0743f9a6520c90c88d089c903ca5fd283f501e3a805f5f89",
+    "3.12": "sha256:34386ef0cb081344d7ec1c103ba398e6e9f64e9ab3a1509accc92a4e24a07258",
+    "3.13": "sha256:a1165e272e578941b84abc79e4ab38a0305cd12803a5c4247979ac7655f4d641"
+  },
+  "linux_amd64_images": {
+    "3.11": "docker.io/library/python@sha256:0a310eeecf4e1f5a0743f9a6520c90c88d089c903ca5fd283f501e3a805f5f89",
+    "3.12": "docker.io/library/python@sha256:34386ef0cb081344d7ec1c103ba398e6e9f64e9ab3a1509accc92a4e24a07258",
+    "3.13": "docker.io/library/python@sha256:a1165e272e578941b84abc79e4ab38a0305cd12803a5c4247979ac7655f4d641"
+  },
+  "artifact_source_kind": "release_worktree",
+  "artifact_manifest_role": "external_delivery",
+  "separate_qualification": {
+    "function_fingerprint": {
+      "version": "0.1.0a2.dev2",
+      "scope": "macOS ARM64 / CPython 3.12.7; original digest semantics, bounded cache, installed contracts",
+      "new_artifact_qualification": false
+    },
+    "S2": {
+      "version": "0.1.0a2.dev19",
+      "wheel_sha256": "58f12c5f0cf406aa2d8c2ef37ff22219a6836dd0885cd9de4650b46fd5acbb0e",
+      "scope": "selected macOS ARM64 / Python 3.12 / Temporal + PostgreSQL; 18 of 18",
+      "new_artifact_qualification": false
+    }
+  },
+  "test_corrections": [],
+  "gate_revision": 1,
+  "distribution_name": "relf-agent",
+  "build_input_manifest_sha256": "a24bc912fc58bb435c0a59d81519eca65cc8d6d83909f58ebff030a580630886",
+  "source_inputs_sha256": "bb9297cbf9f7345980724130fc309c27e16de177ae485295ed0af1f1c37d93cc"
+}

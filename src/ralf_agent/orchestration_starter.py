@@ -81,7 +81,7 @@ def _files(kind):
         ".gitignore": ".ralf/\n__pycache__/\n",
         "README.md": f"""# Offline {kind} starter
 
-Install ralf-agent in your Python environment, then run from this directory:
+Install relf-agent in your Python environment, then run from this directory:
 
 ```shell
 python -m agent_app --input hello --command-id first

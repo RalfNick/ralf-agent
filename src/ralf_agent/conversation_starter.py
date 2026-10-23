@@ -160,7 +160,7 @@ default_namespace = "sales"
 """,
     "README.md": """# Durable Session starter
 
-Install `ralf-agent` and run from this directory. The default Provider is offline
+Install `relf-agent` and run from this directory. The default Provider is offline
 echo; the app makes no network/model calls and has no business write tool.
 
 ```sh

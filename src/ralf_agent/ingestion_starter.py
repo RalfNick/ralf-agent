@@ -72,7 +72,7 @@ def ingestion_files(rag_runtime, rag_files):
         + _INGEST_MAIN,
         "README.md": """# My document Agent
 
-Install ralf-agent and run from this application directory. The default corpus
+Install relf-agent and run from this application directory. The default corpus
 is empty. Explicitly select your own UTF-8 text/Markdown/HTML, DOCX or text PDF file (maximum 1MiB):
 
 ```sh
@@ -89,7 +89,7 @@ table cells, including finite content-control wrappers. Direct hidden runs, dele
 and moved-from content are excluded; it never opens
 attachments, executes Office fields or follows relationships. It does not render Word
 styles/layout or read headers, notes, images or arbitrary Office formats.
-Text PDF requires `ralf-agent[pdf]` (pypdf>=6.20,<7); the core SDK does not require
+Text PDF requires `relf-agent[pdf]` (pypdf>=6.20,<7); the core SDK does not require
 this dependency. Strict unencrypted PDF text is extracted in page order; no OCR,
 layout rendering, script/attachment execution or URL fetching. Empty/no-text,
 encrypted, malformed and over-limit sources are rejected. Parsing caps pages,

@@ -1,6 +1,6 @@
 # Relf-Agent 文档
 
-[官网](https://relfagent.com/) 已上线，源码默认分支为 `main`。独立 [0.1.0a4 本地候选](releases/0.1.0a4.md)已完成本地验证并推送准备代码，平台与公开发行待办见[验收清单](alpha4-validation-status.md)。原 a2 仍为公开安装入口，原 a3 制品和历史记录保留。
+[官网](https://relfagent.com/) 已上线，源码默认分支为`main`。当前准备[relf-agent 0.1.0a5改名候选](releases/0.1.0a5.md)，实际本地／平台／发布状态见[a5清单](alpha5-validation-status.md)。原a4的同包Linux验收与原制品保持，原a2仍是公开安装入口。
 
 [项目首页](../README.md) · [示例目录](../examples/README.md) · [贡献指南](../CONTRIBUTING.md)
 
@@ -12,8 +12,10 @@
 
 | 文档 | 解决的问题 |
 | --- | --- |
-| [0.1.0a4 本地候选](releases/0.1.0a4.md) | 近期修复、独立原包与有限首版范围 |
-| [Alpha 4 验收清单](alpha4-validation-status.md) | 实际本地结果、待执行平台和发布步骤 |
+| [0.1.0a5改名候选](releases/0.1.0a5.md) | 发行名、导入与CLI兼容及独立制品 |
+| [Alpha 5验收清单](alpha5-validation-status.md) | 本地结果和外部待办 |
+| [0.1.0a4历史候选](releases/0.1.0a4.md) | 近期修复、独立原包与有限首版范围 |
+| [Alpha 4 验收清单](alpha4-validation-status.md) | 实际本地／Linux结果和未完成发布步骤 |
 | [0.1.0a3 历史候选](releases/0.1.0a3.md) | 新品牌／PyPI 元数据、精确制品与原有功能边界 |
 | [Alpha 3 验收清单](alpha3-validation-status.md) | 本地结果与尚未执行的远端／上传步骤 |
 | [PyPI 发布准备](pypi-publishing.md) | 账号、Trusted Publisher、手动门禁与公开安装核对 |

@@ -20,5 +20,5 @@ def test_pdf_missing_optional_dependency_is_typed_and_sdk_stays_usable(monkeypat
     assert (
         ralf_agent.TextDocumentParser().parse(SourceDocument("a", b"text")).document.text == "text"
     )
-    with pytest.raises(ValidationError, match=r"ralf-agent\[pdf\]"):
+    with pytest.raises(ValidationError, match=r"relf-agent\[pdf\]"):
         parser()
