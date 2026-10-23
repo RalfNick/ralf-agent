@@ -1,10 +1,10 @@
 # 能力范围与剩余验收清单
 
-**当前维护：** a3 准备代码 `eb62d57` 已推送，未执行远端 CI 或公开发行。随后[review 修复](../architecture/reviews/2026-10-22-alpha-review-contract-fixes.md)收紧现有取消回执、starter 首用、Agent 工具入口及内置检索方法漂移边界，不扩功能、不关闭新的 R 项。修复仅在维护源码，原 a2／a3 包不含修复；原 a3 发布暂停，未来交付需唯一新版本及独立验收。a2 公开入口保留，平台／账户／上传状态见[a3 清单](alpha3-validation-status.md)；本批只本地提交。
+**当前维护（2026-10-23）：** 按授权准备包含 `210a79e` 公共契约修复及 `672d0cf` Coding 测试夹具修正的独立 `0.1.0a4`。本批只统一版本、制品、固定门禁和发布材料，不扩功能、不关闭新的 R 项，不推送、运行远端 CI 或公开发布。a2 公开入口及 a2／a3 原包和失败记录保持；a3 发布暂停，a4 使用自己的精确 SHA 与实际报告。进度和外部待办见[a4 清单](alpha4-validation-status.md)。
 
-本批补齐Coding合成CLI准备与失败装配顺序，产品和原期限不改；最终完整离线 **14,089通过／891条件跳过／零失败与错误**，原五项全部通过。原五项失败及中间一轮Workspace超时保留，历史瞬态原因不追认；见[取证与完整复验](../architecture/reviews/2026-10-22-coding-regression-fixture-readiness.md)。不新增R项完成资格，不准备a4，不改写原dev19的所选S2或原a2／a3制品验收。
+本批补齐Coding合成CLI准备与失败装配顺序，产品和原期限不改；最终完整离线 **14,089通过／891条件跳过／零失败与错误**，原五项全部通过。原五项失败及中间一轮Workspace超时保留，历史瞬态原因不追认；见[取证与完整复验](../architecture/reviews/2026-10-22-coding-regression-fixture-readiness.md)。该源码回归不新增R项完成资格，也不代签新a4安装、平台或原dev19所选S2资格；原a2／a3验收不改写。
 
-**当前收尾（2026-10-22）：** 本轮首版交付事项已收口：a2原两包保持，原生AMD64／ARM64三Python基础门禁通过；原缺Temporal SDK的指纹单项已独立补齐；[GitHub Alpha](https://github.com/RalfNick/relf-agent/releases/tag/v0.1.0a2)和匿名公开安装已完成。额外源码全量14,003通过／891条件跳过。PyPI、独立采用、完整M1及长期R01–R26仍单独开放，不自动扩展本轮任务。状态见[验证清单](alpha2-validation-status.md)，证据见[公开交付记录](../architecture/reviews/2026-10-22-alpha2-public-release.md)。原S2所选18/18和所有历史失败保持。
+**历史a2收尾（2026-10-22）：** 本轮首版交付事项已收口：a2原两包保持，原生AMD64／ARM64三Python基础门禁通过；原缺Temporal SDK的指纹单项已独立补齐；[GitHub Alpha](https://github.com/RalfNick/relf-agent/releases/tag/v0.1.0a2)和匿名公开安装已完成。额外源码全量14,003通过／891条件跳过。PyPI、独立采用、完整M1及长期R01–R26仍单独开放，不自动扩展本轮任务。状态见[验证清单](alpha2-validation-status.md)，证据见[公开交付记录](../architecture/reviews/2026-10-22-alpha2-public-release.md)。原S2所选18/18和所有历史失败保持。
 
 **历史dev13结果（2026-10-21）：** 同一私有a2.dev13（SHA `a4f5fec1ebd0a5783e88c839984f8e582ed24529fad47cf2f7c06769bfbdd8af`），442产品字节不变、不重建制品。用户仅将S2既有统一Activity80改90，其余期限保持，SDK默认不变。并行诊断1通过／374.414秒；首项1通过／436.114秒并清理后才运行剩余17项，结果15通过／2失败／零跳过，正式矩阵合计 **16/18通过**。矩阵并行图再次通过／352.956秒，原递归及冷交接第二Turn仍在ready80失败，关闭CloseIncomplete；两意外schema及hard-kill精确预期保留均保存，自有服务已停止、零停止错误。受影响源码及同包隔离安装各134通过／零跳过；本轮未重跑无筛选全量，前批13819通过／891缺配置跳过仅为历史证据。未找到可安全删去的重复校验，本轮没有追加产品修复，不将性能波动归因于单一配置或将旧失败报绿。**S2／P3-2／第三阶段仍开放**，不推送或公开发布；见[本批记录](../architecture/reviews/2026-10-21-s2-activity90.md)。
 

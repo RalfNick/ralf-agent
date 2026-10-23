@@ -15,6 +15,7 @@ STAGING_PREFIXES = {
     "0.1.0a1": "ralf-alpha1-private-stage-",
     "0.1.0a2": "ralf-alpha2-private-stage-",
     "0.1.0a3": "ralf-alpha3-private-stage-",
+    "0.1.0a4": "ralf-alpha4-private-stage-",
 }
 
 

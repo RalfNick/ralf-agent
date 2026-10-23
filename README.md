@@ -12,7 +12,7 @@ Relf-Agent 把模型决策、工具调用、人工审批和业务结果保存为
 
 [快速开始](#快速开始) · [文档目录](https://github.com/RalfNick/relf-agent/blob/feat/m1-local-runtime/docs/README.md) · [示例](https://github.com/RalfNick/relf-agent/blob/feat/m1-local-runtime/examples/README.md) · [贡献指南](https://github.com/RalfNick/relf-agent/blob/feat/m1-local-runtime/CONTRIBUTING.md) · [更新记录](https://github.com/RalfNick/relf-agent/blob/feat/m1-local-runtime/CHANGELOG.md)
 
-> 当前源码版本为 **0.1.0a3 Alpha**，统一新品牌和 Python 包元数据。各版本的候选／公开状态、安装入口与验收范围以[发行记录](https://github.com/RalfNick/relf-agent/blob/feat/m1-local-runtime/docs/releasing.md)和[a3 说明](https://github.com/RalfNick/relf-agent/blob/feat/m1-local-runtime/docs/releases/0.1.0a3.md)为准；下方固定安装示例使用已核验的 **[a2 原包](https://github.com/RalfNick/relf-agent/releases/tag/v0.1.0a2)**。API 与部署能力仍在演进，使用范围见[实现清单](https://github.com/RalfNick/relf-agent/blob/feat/m1-local-runtime/docs/implementation-status.md)。默认本地入门无需模型密钥、Redis、Temporal 或 Docker。
+> 当前源码版本为 **0.1.0a4 Alpha**，包含近期公共契约修复及 Coding 测试夹具修正。各版本的候选／公开状态、安装入口与验收范围以[发行记录](https://github.com/RalfNick/relf-agent/blob/feat/m1-local-runtime/docs/releasing.md)和[a4 说明](https://github.com/RalfNick/relf-agent/blob/feat/m1-local-runtime/docs/releases/0.1.0a4.md)为准；下方固定安装示例使用已核验的 **[a2 原包](https://github.com/RalfNick/relf-agent/releases/tag/v0.1.0a2)**。API 与部署能力仍在演进，使用范围见[实现清单](https://github.com/RalfNick/relf-agent/blob/feat/m1-local-runtime/docs/implementation-status.md)。默认本地入门无需模型密钥、Redis、Temporal 或 Docker。
 
 ## 为什么使用 Relf-Agent
 

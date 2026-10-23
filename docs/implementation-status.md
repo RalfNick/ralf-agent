@@ -1,8 +1,8 @@
 # Implementation status — Local SDK Alpha
 
-**当前维护（2026-10-22）：** 原 a3 准备提交 `eb62d57` 已推送，未触发远端 CI 或公开发布。随后维护源码修复取消拒绝回执、starter 提示和 Agent 工具入口三个 P2，补内置检索组合直接方法漂移检查；见[修复与验证](../architecture/reviews/2026-10-22-alpha-review-contract-fixes.md)。不增加能力、依赖、Schema 或执行权威。a2 是现有公开入口；原 a3 冻结包不含修复，发布暂停。源码暂保留 a3 版本号但不作为新候选，本批仅本地提交，制品与平台状态见[a3 清单](alpha3-validation-status.md)。下方 a2／dev19 的验收仍属于原制品。
+**当前维护（2026-10-23）：** 准备独立 `0.1.0a4` 候选，包含 `210a79e` 取消回执、starter 提示、Agent 工具入口和内置检索直接方法漂移修复，以及 `672d0cf` Coding 测试夹具准备与失败装配修正。不增加能力、依赖、Schema 或执行权威；本批产品相对修复后基线仅版本赋值变化。原 a2 是现有公开入口，原 a3 两包及失败保留但发布暂停。a4 制品、本地安装及未完成平台／发布状态见[a4 清单](alpha4-validation-status.md)，下方原制品资格不自动继承。
 
-前批公共契约修复的源码／安装各69通过，相邻检索316通过／22配置跳过。随后补齐合成Coding CLI就绪与失败装配顺序，442产品文件未改，新增7项反例；最终完整离线回归 **14,089通过／891条件跳过／零失败与错误**，原五项全部通过。原五项及中间一轮Workspace超时均保留，历史瞬态原因未能追认；宿主睡眠时序、固定输入复验及范围见[本批记录](../architecture/reviews/2026-10-22-coding-regression-fixture-readiness.md)。本批不准备a4，不把源码测试作为原a3候选或真实服务的放行资格。
+前批公共契约修复的源码／安装各69通过，相邻检索316通过／22配置跳过。随后补齐合成Coding CLI就绪与失败装配顺序，442产品文件未改，新增7项反例；最终完整离线回归 **14,089通过／891条件跳过／零失败与错误**，原五项全部通过。原五项及中间一轮Workspace超时均保留，历史瞬态原因未能追认；宿主睡眠时序、固定输入复验及范围见[本批记录](../architecture/reviews/2026-10-22-coding-regression-fixture-readiness.md)。上述源码回归不作为原 a3 或新 a4 候选安装、平台或真实服务的放行资格。
 
 **当前公开Alpha（2026-10-22）：** [0.1.0a2](https://github.com/RalfNick/relf-agent/releases/tag/v0.1.0a2)已由RalfNick发行，原两包及SDK不改。原生AMD64／ARM64三Python版本分别各311＋16及两starter通过；Temporal指纹单项已按匹配SDK独立补验。公开URL普通安装、两条恢复starter和五阶段重复提交通过；额外源码全量14,003通过／891条件跳过。PyPI、独立采用和完整M1未验收；详见[当前验证清单](alpha2-validation-status.md)及[公开交付记录](../architecture/reviews/2026-10-22-alpha2-public-release.md)。原a1／dev19及全部历史失败和未知义务保留。
 

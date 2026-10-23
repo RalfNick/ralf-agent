@@ -1,0 +1,139 @@
+name: alpha4-manual-pypi-publication
+
+"on":
+  workflow_dispatch:
+    inputs:
+      gate_run_id:
+        description: Successful alpha4-release-gate run on this exact commit
+        required: true
+        type: string
+      gate_run_attempt:
+        description: Exact successful run attempt, including artifact evidence
+        required: true
+        type: string
+      index:
+        description: Requires a matching Trusted Publisher and protected environment
+        required: true
+        default: testpypi
+        type: choice
+        options:
+          - testpypi
+          - pypi
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: alpha4-pypi-${{ inputs.index }}
+  cancel-in-progress: false
+
+jobs:
+  verify:
+    if: github.repository == 'RalfNick/relf-agent'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    outputs:
+      wheel_sha: ${{ steps.digests.outputs.wheel_sha }}
+      sdist_sha: ${{ steps.digests.outputs.sdist_sha }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: '3.12'
+      - name: Receive the exact native-qualified packages
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: ralf-alpha4-qualified-${{ inputs.gate_run_id }}-${{ inputs.gate_run_attempt }}
+          repository: ${{ github.repository }}
+          run-id: ${{ inputs.gate_run_id }}
+          github-token: ${{ github.token }}
+          path: ${{ runner.temp }}/qualified-candidate
+      - name: Receive the matching native reports
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: alpha4-native-amd64-evidence-${{ inputs.gate_run_id }}-${{ inputs.gate_run_attempt }}
+          repository: ${{ github.repository }}
+          run-id: ${{ inputs.gate_run_id }}
+          github-token: ${{ github.token }}
+          path: ${{ runner.temp }}/qualified-evidence
+      - name: Verify run identity, native reports and frozen artifact bytes
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          GATE_RUN_ID: ${{ inputs.gate_run_id }}
+          GATE_RUN_ATTEMPT: ${{ inputs.gate_run_attempt }}
+          CHECKOUT_SHA: ${{ github.sha }}
+        run: |
+          python tools/check_alpha4_publication.py \
+            --candidate "$RUNNER_TEMP/qualified-candidate" \
+            --evidence "$RUNNER_TEMP/qualified-evidence/native-amd64" \
+            --run-id "$GATE_RUN_ID" --run-attempt "$GATE_RUN_ATTEMPT" \
+            --checkout-sha "$CHECKOUT_SHA" --output "$RUNNER_TEMP/verified-publication"
+      - name: Check actual upload metadata without rebuilding
+        run: |
+          python -m pip --isolated install --index-url https://pypi.org/simple twine==7.0.0
+          python -m twine check --strict \
+            "$RUNNER_TEMP/verified-publication/candidate/ralf_agent-0.1.0a4-py3-none-any.whl" \
+            "$RUNNER_TEMP/verified-publication/candidate/ralf_agent-0.1.0a4.tar.gz"
+      - name: Export the verified frozen digests
+        id: digests
+        run: |
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          spec = json.loads(Path('tools/release_gate_manifest.alpha4.json').read_text())
+          with Path(os.environ['GITHUB_OUTPUT']).open('a') as output:
+              output.write('wheel_sha=' + spec['artifacts']['ralf_agent-0.1.0a4-py3-none-any.whl'] + '\n')
+              output.write('sdist_sha=' + spec['artifacts']['ralf_agent-0.1.0a4.tar.gz'] + '\n')
+          PY
+      - name: Handoff only the two verified archives
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: ralf-alpha4-publish-input-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/verified-publication/candidate
+          if-no-files-found: error
+          retention-days: 14
+
+  publish:
+    needs: verify
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    environment:
+      name: ${{ inputs.index }}
+    permissions:
+      contents: read
+      actions: read
+      id-token: write
+    steps:
+      - name: Receive verified files from this workflow only
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: ralf-alpha4-publish-input-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/pypi-upload
+      - name: Recheck exact file set and hashes after transfer
+        env:
+          EXPECTED_WHEEL_SHA: ${{ needs.verify.outputs.wheel_sha }}
+          EXPECTED_SDIST_SHA: ${{ needs.verify.outputs.sdist_sha }}
+        run: |
+          python3 - <<'PY'
+          import hashlib, os
+          from pathlib import Path
+          root = Path(os.environ['RUNNER_TEMP']) / 'pypi-upload'
+          expected = {
+              'ralf_agent-0.1.0a4-py3-none-any.whl': os.environ['EXPECTED_WHEEL_SHA'],
+              'ralf_agent-0.1.0a4.tar.gz': os.environ['EXPECTED_SDIST_SHA'],
+          }
+          assert {p.name for p in root.iterdir()} == set(expected), 'unexpected_upload_file'
+          for name, sha in expected.items():
+              path = root / name
+              assert path.is_file() and not path.is_symlink(), 'invalid_upload_file'
+              assert hashlib.sha256(path.read_bytes()).hexdigest() == sha, 'upload_sha_mismatch'
+          PY
+      - name: Publish already-qualified archives through OIDC
+        uses: pypa/gh-action-pypi-publish@7245906fb61fa33a13554f9d5fb856fe61758086 # official release/v1
+        with:
+          packages-dir: ${{ runner.temp }}/pypi-upload/
+          repository-url: ${{ inputs.index == 'pypi' && 'https://upload.pypi.org/legacy/' || 'https://test.pypi.org/legacy/' }}

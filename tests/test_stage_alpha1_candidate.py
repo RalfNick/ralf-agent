@@ -148,3 +148,21 @@ def test_private_stage_rejects_cross_version_or_unknown_alpha(
         staging.stage(17, output, spec, lambda _: release, blobs.__getitem__)
     assert not (output / "candidate").exists()
     assert json.loads((output / "proof.json").read_text())["status"] == "failed"
+
+
+@pytest.mark.parametrize(
+    "tag", ["ralf-alpha4-private-stage-test", "ralf-alpha3-private-stage-test"]
+)
+def test_alpha4_staging_isolated_from_alpha3(staging, inputs, tmp_path, tag):
+    spec, release, blobs = inputs
+    spec["version"] = "0.1.0a4"
+    release["tag_name"] = tag
+    output = tmp_path / "a4"
+    if "alpha3" in tag:
+        with pytest.raises(RuntimeError, match="private_staging_release_mismatch"):
+            staging.stage(17, output, spec, lambda _: release, blobs.__getitem__)
+        assert not (output / "candidate").exists()
+    else:
+        receipt = staging.stage(17, output, spec, lambda _: release, blobs.__getitem__)
+        assert receipt["status"] == "verified_original_candidate"
+        assert {p.name for p in (output / "candidate").iterdir()} == set(spec["artifacts"])

@@ -30,7 +30,7 @@ ralf --version
 
 > 当前指南固定原 a1 源码，不把它描述成公开发行包。最新 [0.1.0a2 Alpha](https://github.com/RalfNick/relf-agent/releases/tag/v0.1.0a2) 已通过 GitHub Release 公开交付，安装命令见其发布说明；PyPI 尚未发布，`pip install ralf-agent` 不是本指南的已验证入口。
 
-> 原 `0.1.0a3` 准备提交 `eb62d57` 已推送，未公开发布。后续维护源码包含未发行的 review 修复，原 a3 包不含修复且发布暂停；下一交付需唯一新版本和独立验收。它不替换本指南的 a1 教程基线或 a2 公开安装成绩。
+> 当前独立准备 `0.1.0a4`，包含公共契约及 Coding 夹具修复；本地／平台／发布状态以维护 checkout 中 `docs/alpha4-validation-status.md` 的记录为准。原 a3 包不含修复、保留且发布暂停。本指南继续固定原 a1 教程基线；公开安装仍使用已核验的 a2，a4 的本地验证不代签 Linux 或公开发行。
 
 如果已经获得本地 wheel，可以在虚拟环境中用 `python -m pip install /实际路径/包名.whl` 安装，并核对制品来源与版本。
 

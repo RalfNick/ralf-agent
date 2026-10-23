@@ -1,12 +1,16 @@
 # 预览版本验证与发布
 
-**当前维护状态：a3 准备提交 `eb62d57` 已推送，后续 review 修复仅本地提交。** 新品牌、PyPI 元数据和冻结流程见[a3 说明](releases/0.1.0a3.md)、[验收清单](alpha3-validation-status.md)和[账号／发布准备](pypi-publishing.md)。原 `dist/alpha3-candidate/` 与 `tools/release_gate_manifest.alpha3.json` 保留为历史候选，未执行远端门禁或公开发布；候选不含本批修复，发布推进暂停。当前源码版本号暂保留 a3，本轮不构建新发行制品；修复后的交付需另起唯一版本和独立验收。固定预检对当前源码与原包不一致应拒绝，不能修改 SHA 或借用旧成绩放行。下方 a2 及历史记录不回写。
+**当前维护：独立 `0.1.0a4` Local SDK Alpha 候选。** 包含 `210a79e` 公共契约修复及 `672d0cf` Coding 测试夹具修正；SDK 相对这两个修复提交只调整包版本，不改依赖、Schema 或执行身份。新包目录 `dist/alpha4-candidate/`，固定门禁显式选择 `tools/release_gate_manifest.alpha4.json`。两包 SHA、实际安装结果与未完成步骤见[a4 说明](releases/0.1.0a4.md)、[验收清单](alpha4-validation-status.md)和[PyPI 准备](pypi-publishing.md)。本批只做本地准备和提交，不推送、触发远端 CI 或公开发布。
+
+原 a2／a3 包、历史失败和旧 manifest 保留。原 a3 准备提交 `eb62d57` 已推送，但两包不含后续修复，发布暂停；不能重新使用 a3 版本号、覆盖原包或借旧成绩放行 a4。默认 manifest 继续固定 a2，a4 必须显式传入新 manifest；sdist 内是构建输入快照，执行放行使用最终外置 manifest。
 
 **当前推荐：`0.1.0a2` Local SDK Alpha。** 包含`8e09ec7`的近期修复，SDK仅版本调整；范围见[当前Alpha说明](releases/0.1.0a2.md)。发行源码`1b72c05`已按授权推送；原a1、dev19及全部失败分别保留。本轮已按新授权完成必要推送、固定CI与GitHub预发行，平台关口、门禁修订2与当前结果见[验证清单](alpha2-validation-status.md)，不能沿用原a1成绩。
 
 **公开入口：** [v0.1.0a2](https://github.com/RalfNick/relf-agent/releases/tag/v0.1.0a2)，精确wheel URL及实测安装步骤见[安装指南](installation.md#从公开-alpha-安装)。Tag固定验收代码3a92720；当前文档维护不移动Tag或改写原包。GitHub预发行及匿名安装已完成，PyPI未发布。验收见[公开交付记录](../architecture/reviews/2026-10-22-alpha2-public-release.md)。
 
 ## 当前a2本地交付
+
+以下是原 a2 交付记录，保持历史锚点；当前本地候选为上文 a4。
 
 新交付目录为`dist/alpha2-candidate/`，只选其中精确wheel／sdist，核对`SHA256SUMS`及`delivery.json`。发行来源为`8e09ec7`加本批发行工作区，完整输入摘要见`source-inputs.json`，不能将原提交或其原dev19 wheel冒充a2。交付包内版本均为`0.1.0a2`，原a1包不覆盖。
 

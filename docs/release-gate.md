@@ -1,6 +1,8 @@
 # 可复现的 Local SDK 发布门禁
 
-**原 a3 候选：** 准备提交 `eb62d57` 已推送，但候选未公开且发布暂停；维护源码已有后续 review 修复，不匹配原包。`tools/release_gate_manifest.alpha3.json` 保留原固定输入，不能用于给维护源码签发修复后资格；包含修复的下一交付需唯一新版本和独立门禁。原 311／16／两 starter、Linux 2CPU／2GiB／swap0／串行断网要求不变，默认 manifest 仍固定原 a2。原三条手动流程及实际状态见[a3 清单](alpha3-validation-status.md)与[PyPI 准备](pypi-publishing.md)；本轮不推送或运行远端流程。
+**当前 a4 候选：** `tools/release_gate_manifest.alpha4.json` 独立固定包含近期修复的 wheel／sdist、产品与测试输入；运行时必须显式传入 `--manifest`。原 311 基础／16 恢复／两 starter 和 Linux 2 CPU／2 GiB／swap0／串行断网门槛不变。macOS、Linux ARM64、原生 AMD64 分别取证，不借用 a2／a3 成绩。当前实际结果及待执行步骤见[a4 清单](alpha4-validation-status.md)，执行命令见[a4 说明](releases/0.1.0a4.md)。本批不触发远端 CI 或公开发布。
+
+原 a3 发布暂停，冻结包、`release_gate_manifest.alpha3.json` 和三条原手动流程保留为历史候选；维护源码含后续修复，不能用原 a3 manifest 给它签发资格。默认 manifest 仍固定 a2，不隐式切换任何历史工作流。
 
 **当前发行：`0.1.0a2`。** 默认`tools/release_gate_manifest.json`固定新候选，原a1 manifest逐字节保存在`tools/release_gate_manifest.alpha1.json`。原a1完整通过成绩仍只属于原包；原a1手动工作流固定checkout到`0b9b6c9`，不处理a2。本轮已按用户授权完成独立a2手动CI及GitHub预发行；见[公开交付](../architecture/reviews/2026-10-22-alpha2-public-release.md)。
 

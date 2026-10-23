@@ -4,9 +4,11 @@
 
 Relf-Agent 需要 Python 3.11+。本地开发使用 Linux 或 macOS，本轮实测平台见[Alpha范围](releases/0.1.0a2.md)，CI配置不等于已运行通过；CI的Python版本与检查以[贡献指南](../CONTRIBUTING.md)和[工作流](../.github/workflows/ci.yml)为准。
 
-## 原 a3 候选与维护源码
+## 当前 a4 本地候选与原制品
 
-原 `0.1.0a3` 准备提交 `eb62d57` 已推送，未运行远端门禁或公开发布。后续维护源码包含[未发行修复](../architecture/reviews/2026-10-22-alpha-review-contract-fixes.md)，原 a2／a3 冻结包不含这些修复。原 a3 发布暂停；下一交付需唯一新版本及独立验收。源码版本号暂保留 a3，源码安装与原 a3 wheel 不是同一产品快照，不能仅凭版本号互认。公开入口仍是下方的原 a2 URL；不要将 `pip install ralf-agent==0.1.0a3` 当作可用入口。原包及 SHA 仅作历史核对，见[a3 说明](releases/0.1.0a3.md)。
+当前源码版本 `0.1.0a4` 包含 `210a79e` 公共契约修复和 `672d0cf` Coding 测试夹具修正。独立本地 wheel／sdist 及精确 SHA 见[a4 说明](releases/0.1.0a4.md)，实际安装、平台及待发布状态见[a4 清单](alpha4-validation-status.md)。本批不推送、触发远端 CI 或公开发布；`pip install ralf-agent==0.1.0a4` 不是当前公开安装入口。
+
+原 a2／a3 包和全部历史失败保留；原 a3 不含近期修复且发布暂停。公开安装仍是下方 a2 URL；本地新包不能沿用旧包成绩或旧 Worker 资格。
 
 ## 从公开 Alpha 安装
 
@@ -44,12 +46,12 @@ ralf --version
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
-python -m pip install "/path/to/ralf_agent-0.1.0a2-py3-none-any.whl"
+python -m pip install "/path/to/ralf_agent-0.1.0a4-py3-none-any.whl"
 ralf --version
 ralf init my-agent
 ```
 
-当前推荐公开的 0.1.0a2 Local 基础 SDK Alpha，目录及 SHA 校验见[发布指南](releasing.md#当前a2本地交付)。dev123及更早目录属于历史制品，不要仅按同名 wheel 选择。GitHub Release的对应原包已公开核验；PyPI未发布。wheel 包含独立工程生成器，仓库 `examples/` 通过源码获取。
+当前本地候选为 0.1.0a4，目录及 SHA 校验见[a4 说明](releases/0.1.0a4.md)；公开安装推荐仍为 a2，见[发布指南](releasing.md)。dev123及更早目录属于历史制品，不要仅按同名 wheel 选择。GitHub Release的对应原包已公开核验；PyPI未发布。wheel 包含独立工程生成器，仓库 `examples/` 通过源码获取。
 
 ## 按需安装可选依赖
 

@@ -1,5 +1,7 @@
 # Relf-Agent 文档
 
+当前准备独立 [0.1.0a4 本地候选](releases/0.1.0a4.md)，实际范围与待办见[验收清单](alpha4-validation-status.md)。原 a2 仍为公开安装入口，原 a3 制品和历史记录保留。
+
 [项目首页](../README.md) · [示例目录](../examples/README.md) · [贡献指南](../CONTRIBUTING.md)
 
 可靠、可扩展的智能体全生命周期框架。展示名称由 Ralf-Agent 更新为 Relf-Agent；包名、导入路径与 CLI 保持，见[名称与兼容边界](project-naming.md)。
@@ -10,7 +12,9 @@
 
 | 文档 | 解决的问题 |
 | --- | --- |
-| [0.1.0a3 本地发行候选](releases/0.1.0a3.md) | 新品牌／PyPI 元数据、精确制品与原有功能边界 |
+| [0.1.0a4 本地候选](releases/0.1.0a4.md) | 近期修复、独立原包与有限首版范围 |
+| [Alpha 4 验收清单](alpha4-validation-status.md) | 实际本地结果、待执行平台和发布步骤 |
+| [0.1.0a3 历史候选](releases/0.1.0a3.md) | 新品牌／PyPI 元数据、精确制品与原有功能边界 |
 | [Alpha 3 验收清单](alpha3-validation-status.md) | 本地结果与尚未执行的远端／上传步骤 |
 | [PyPI 发布准备](pypi-publishing.md) | 账号、Trusted Publisher、手动门禁与公开安装核对 |
 | [0.1.0a2 Alpha 范围与候选](releases/0.1.0a2.md) | 首版范围、已测平台、实验性能力及本地制品／公开发行边界 |

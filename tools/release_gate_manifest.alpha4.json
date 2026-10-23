@@ -1,0 +1,121 @@
+{
+  "schema_version": 1,
+  "version": "0.1.0a4",
+  "artifact_source_commit": "672d0cfb1f956cdd7fd0f6036a46bbc2424c0e72",
+  "artifacts": {
+    "ralf_agent-0.1.0a4-py3-none-any.whl": "053b5d536de35a1a8969afd766ddfa40a03f010bad52ac72f368fb3406a217a2",
+    "ralf_agent-0.1.0a4.tar.gz": "53e0e824657b39be237157427b437b8a69949e5557fa9599d8523fdd2ec67b7e"
+  },
+  "product_files": 442,
+  "product_tree_sha256": "305e91e684e1b9dfbbd715713b34b621c6fd9feec6b55fd9647fdf62f41a909e",
+  "test_tree_sha256": "0f87115ac9dd7143a6504dd7dce9c21b5196ebe32d54bb54cb1d83277be52bac",
+  "tests": {
+    "main": {
+      "selectors": [
+        "tests/test_async_adapter_combinations.py",
+        "tests/test_tool_sources.py",
+        "tests/test_mcp.py",
+        "tests/test_memory_pipeline.py",
+        "tests/test_runtime_capabilities.py",
+        "tests/test_extension_contracts.py",
+        "tests/test_support_journey.py",
+        "tests/test_agent_sessions.py",
+        "tests/test_workflow_adoption.py",
+        "tests/test_orchestration.py",
+        "tests/test_managed_data_context.py",
+        "tests/test_context_artifact_review.py",
+        "tests/test_composite_data_context.py",
+        "tests/test_local_approval_values.py",
+        "tests/test_local_deadline_facade.py",
+        "tests/test_component_validation.py",
+        "tests/test_scoped_semantic_recall.py",
+        "tests/test_composite_session_recovery.py"
+      ],
+      "deselect": [
+        "tests/test_scoped_semantic_recall.py::test_temporal_scoped_semantic_context_survives_state_restore_without_reembedding"
+      ],
+      "count": 311,
+      "node_ids_sha256": "e256798bd6320b827682989458e2bf698aed1bbd2c33c7444d4826e528cd0b70"
+    },
+    "related": {
+      "selectors": [
+        "tests/test_h3_context_process.py",
+        "tests/test_file_artifacts.py::test_composite_file_offload_recovers_without_repeating_business_or_artifact_write"
+      ],
+      "deselect": [],
+      "count": 16,
+      "node_ids_sha256": "d9056e7a4290a7fe3674ef49aaf946bb18f69454db414203a238ce6949f4b42c"
+    }
+  },
+  "starter_cases": 2,
+  "platforms": [
+    {
+      "system": "Linux",
+      "machine": "aarch64",
+      "python": [
+        "3.11",
+        "3.12",
+        "3.13"
+      ]
+    },
+    {
+      "system": "Darwin",
+      "machine": "arm64",
+      "python": [
+        "3.12"
+      ]
+    },
+    {
+      "system": "Linux",
+      "machine": "x86_64",
+      "python": [
+        "3.11",
+        "3.12",
+        "3.13"
+      ]
+    }
+  ],
+  "deferred": [],
+  "not_qualified": [
+    "a4 native remote CI pending actual report",
+    "a4 Linux ARM64 pending actual report",
+    "a4 Linux AMD64 pending actual report",
+    "PyPI and TestPyPI upload and installation",
+    "Windows",
+    "real models and unselected services"
+  ],
+  "linux_container_limits": {
+    "cpus": 2,
+    "memory_bytes": 2147483648,
+    "swap_bytes": 0
+  },
+  "linux_arm64_images": {
+    "3.11": "sha256:0a310eeecf4e1f5a0743f9a6520c90c88d089c903ca5fd283f501e3a805f5f89",
+    "3.12": "sha256:34386ef0cb081344d7ec1c103ba398e6e9f64e9ab3a1509accc92a4e24a07258",
+    "3.13": "sha256:a1165e272e578941b84abc79e4ab38a0305cd12803a5c4247979ac7655f4d641"
+  },
+  "linux_amd64_images": {
+    "3.11": "docker.io/library/python@sha256:0a310eeecf4e1f5a0743f9a6520c90c88d089c903ca5fd283f501e3a805f5f89",
+    "3.12": "docker.io/library/python@sha256:34386ef0cb081344d7ec1c103ba398e6e9f64e9ab3a1509accc92a4e24a07258",
+    "3.13": "docker.io/library/python@sha256:a1165e272e578941b84abc79e4ab38a0305cd12803a5c4247979ac7655f4d641"
+  },
+  "artifact_source_kind": "release_worktree",
+  "artifact_manifest_role": "external_delivery",
+  "separate_qualification": {
+    "function_fingerprint": {
+      "version": "0.1.0a2.dev2",
+      "scope": "macOS ARM64 / CPython 3.12.7; original digest semantics, bounded cache, installed contracts",
+      "new_artifact_qualification": false
+    },
+    "S2": {
+      "version": "0.1.0a2.dev19",
+      "wheel_sha256": "58f12c5f0cf406aa2d8c2ef37ff22219a6836dd0885cd9de4650b46fd5acbb0e",
+      "scope": "selected macOS ARM64 / Python 3.12 / Temporal + PostgreSQL; 18 of 18",
+      "new_artifact_qualification": false
+    }
+  },
+  "test_corrections": [],
+  "gate_revision": 1,
+  "build_input_manifest_sha256": "a275f15c505e5bc14c55f97eca59cf036a8adb747d582512544871c8d493fdaa",
+  "source_inputs_sha256": "5d1138695788e01275bc7479458354a32b0e2061fac0fcd42f61d58e1c7d47bf"
+}

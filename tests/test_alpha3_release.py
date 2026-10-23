@@ -9,11 +9,11 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 
 
-def test_alpha3_metadata_and_installed_entry_version_agree():
+def test_current_metadata_and_installed_entry_version_agree():
     import ralf_agent
 
     project = tomllib.loads((ROOT / "pyproject.toml").read_text())["project"]
-    assert project["version"] == ralf_agent.__version__ == "0.1.0a3"
+    assert project["version"] == ralf_agent.__version__ == "0.1.0a4"
     assert project["name"] == "ralf-agent"
     assert project["scripts"]["ralf"] == "ralf_agent.cli:main"
     assert project["description"].startswith("Relf-Agent:")
@@ -26,7 +26,7 @@ def test_package_long_description_document_links_resolve_outside_github():
     links = re.findall(r"\]\(([^)]+)\)", readme)
     relative = [url for url in links if not url.startswith(("https://", "http://", "#"))]
     assert relative == [], f"PyPI cannot resolve repository-relative links: {relative}"
-    assert "0.1.0a3" in readme
+    assert "0.1.0a4" in readme
     assert "Reliable and Extensible Lifecycle Framework for Intelligent Agents" in readme
 
 
