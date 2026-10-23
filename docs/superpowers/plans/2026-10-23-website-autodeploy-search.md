@@ -31,7 +31,7 @@
 
 - [x] Search: write failing lifecycle/timeout tests, implement a shared bootstrap helper, wire intent/idle warming and separate startup/query budgets, run tests and browser checks.
 - [x] Pipeline: add a shared fail-fast verification command and Cloudflare dependency bootstrap; update GitHub checks and document production root/runtime/env/watch-path configuration; test failure propagation.
-- [ ] Integration: commit only this task's files, make the verified changes available on main without mixing concurrent edits, grant the required repository/deployment permissions with action-time confirmation if needed, connect Workers Builds and run a real automatic production build.
+- [x] Integration: commit only this task's files, make the verified changes available on main without mixing concurrent edits, grant the required repository/deployment permissions with action-time confirmation if needed, connect Workers Builds and run a real automatic production build.
 - [ ] Acceptance: verify deployed commit/assets, bilingual search (including retry), HTTPS/www redirects and failure-gate evidence; record results.
 
 ## Decisions and Evidence
@@ -43,3 +43,5 @@
 - Browser checks passed with the first Pagefind module deliberately delayed 13 seconds; a failed fragment request exposed retry, and retry recovered with the original Chinese query preserved.
 - Independent read-only review found no actionable correctness issues in search lifecycle or the fail-fast pipeline.
 - Cloudflare watch paths use its simple wildcard syntax (`website/*`, `docs/*`, `src/ralf_agent/*`), while GitHub Actions uses globstar patterns.
+- User confirmed both repository access and the managed Workers Builds token. Commit 59a7b9b triggered build 32066289-4714-4ceb-86fd-cd13035086de and successfully published version c94ad1e7-0bc8-49b6-a195-611dd96fae84.
+- Production acceptance found that startup kept the input disabled. The follow-up keeps the field editable and queues the current query; a deliberately delayed 13-second Chinese startup accepted send_input immediately and automatically returned three results without retry.

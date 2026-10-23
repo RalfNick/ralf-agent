@@ -9,7 +9,7 @@ const { locale } = Astro.props; const zh = locale === 'zh';
   <div id="search-ui">
     <form class="doc-search-form" role="search">
       <label class="sr-only" for="search-query">{zh ? '搜索文档' : 'Search documentation'}</label>
-      <input id="search-query" class="doc-search-input" type="search" placeholder={zh ? '搜索安装、审批、恢复…' : 'Search installation, approvals, recovery…'} autocomplete="off" disabled aria-describedby="search-status"/>
+      <input id="search-query" class="doc-search-input" type="search" placeholder={zh ? '搜索安装、审批、恢复…' : 'Search installation, approvals, recovery…'} autocomplete="off" aria-describedby="search-status"/>
       <button class="doc-search-clear" type="button" data-search-clear>{zh ? '清空' : 'Clear'}</button>
     </form>
     <ol class="doc-search-results" aria-label={zh ? '搜索结果' : 'Search results'}></ol>
@@ -44,7 +44,8 @@ const { locale } = Astro.props; const zh = locale === 'zh';
     const current = ++request;
     const query = input?.value.trim() ?? '';
     results?.replaceChildren();
-    if (!index) { dialog?.removeAttribute('aria-busy'); return; }
+    // Keep the loading status while remembering edits for the first ready query.
+    if (!index) return;
     if (!query) { dialog?.removeAttribute('aria-busy'); if (message) message.textContent = zh ? '输入关键词，搜索当前语言的文档。' : 'Enter a keyword to search documentation in this language.'; return; }
     if (message) message.textContent = zh ? '搜索中…' : 'Searching…';
     dialog?.setAttribute('aria-busy', 'true');
@@ -73,22 +74,21 @@ const { locale } = Astro.props; const zh = locale === 'zh';
     loading = true;
     ++request; clearTimeout(debounce);
     dialog.setAttribute('aria-busy', 'true');
-    if (input) input.disabled = true;
     if (fallback) fallback.hidden = true;
     if (retry) retry.disabled = true;
     if (message) message.textContent = zh ? '正在加载搜索索引…' : 'Loading search index…';
     try {
       index = await bootstrap.load();
     } catch (error) { unavailable(error); }
-    finally { loading = false; dialog.removeAttribute('aria-busy'); if (retry) retry.disabled = false; if (input) input.disabled = false; }
+    finally { loading = false; dialog.removeAttribute('aria-busy'); if (retry) retry.disabled = false; }
     if (index) { if (dialog.open) input?.focus(); await search(); }
   }
   async function openSearch() {
     if (!dialog || dialog.open) return;
     trigger = document.activeElement as HTMLElement;
     dialog.showModal();
-    if (index) input?.focus();
-    else await loadSearch();
+    input?.focus();
+    if (!index) await loadSearch();
   }
   input?.addEventListener('input', () => { ++request; clearTimeout(debounce); debounce = setTimeout(search, 200); });
   document.querySelector('.doc-search-form')?.addEventListener('submit', (event) => { event.preventDefault(); clearTimeout(debounce); search(); });
