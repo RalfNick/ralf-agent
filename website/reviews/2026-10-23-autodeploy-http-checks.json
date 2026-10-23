@@ -1,0 +1,667 @@
+{
+  "source_commit": "732a9655a75db118a1867c0d3035ab195b86b7fd",
+  "checked_at": "2026-10-23T03:45:43.489Z",
+  "assets": 84,
+  "redirects": 9,
+  "worker": "ralf-agent-website",
+  "build_id": "26e22af4-3a4a-4746-9afa-ab7e87d1ab65",
+  "worker_version": "fa6cb1ef-ad5a-46d1-a294-097d61799f99",
+  "checks": [
+    {
+      "url": "https://relfagent.com/_astro/Base.DB5Oryv8.css",
+      "attempts": 1,
+      "passed": true,
+      "status": 200,
+      "sha256": "bd68532b0444cc7a8bb3aba94076ee773673f2cee57561062d6a364f030fdce1"
+    },
+    {
+      "url": "https://relfagent.com/_astro/Search.astro_astro_type_script_index_0_lang.DVnUe6sK.js",
+      "attempts": 1,
+      "passed": true,
+      "status": 200,
+      "sha256": "e72ec3c9e90b7b0b4920c5302f20d99703e0a88ee8410a2a7a62d7f7ed747320"
+    },
+    {
+      "url": "https://relfagent.com/en/docs/api-reference/",
+      "attempts": 1,
+      "passed": true,
+      "status": 200,
+      "sha256": "1f513fab7b3a4a94cf9f326fe8751df3563bc1a0f15a118b53ca89d0b6d3a07c"
+    },
+    {
+      "url": "https://relfagent.com/en/docs/app-tutorial/",
+      "attempts": 1,
+      "passed": true,
+      "status": 200,
+      "sha256": "373e14cd211f9ec8915de9ea34fc7fc5a2decb1bc3f96b6768ee335c4374fdf7"
+    },
+    {
+      "url": "https://relfagent.com/en/docs/concepts/",
+      "attempts": 1,
+      "passed": true,
+      "status": 200,
+      "sha256": "670dbf274d95764f693d799a68817894bfbaa495145ae72996a4d9885322541d"
+    },
+    {
+      "url": "https://relfagent.com/en/docs/installation/",
+      "attempts": 1,
+      "passed": true,
+      "status": 200,
+      "sha256": "0b804ffd830431fe71fbda911fac87c0686141a1a11543f42ea47f1eedfcffe9"
+    },
+    {
+      "url": "https://relfagent.com/en/docs/integrations/",
+      "attempts": 1,
+      "passed": true,
+      "status": 200,
+      "sha256": "fea82d964f46764354edc5204f332bdec5018963e6c6b5406924f2d47e25ce8a"
+    },
+    {
+      "url": "https://relfagent.com/en/docs/models-tools/",
+      "attempts": 1,
+      "passed": true,
+      "status": 200,
+      "sha256": "4ec13db652dade8c3b714ea2f9dc607276adba4bd4c27ce398acb52210ab0fb5"
+    },
+    {
+      "url": "https://relfagent.com/en/docs/operations/",
+      "attempts": 1,
+      "passed": true,
+      "status": 200,
+      "sha256": "acd45627ab288dca9217889aaf3403890b23713bb10a31ea4337ba4a6b443775"
+    },
+    {
+      "url": "https://relfagent.com/en/docs/overview/",
+      "attempts": 1,
+      "passed": true,
+      "status": 200,
+      "sha256": "e9d8825a0f865748a99d17994fb2c5f6d5b24d700b3653e88ad3660f98b30e11"
+    },
+    {
+      "url": "https://relfagent.com/en/docs/quickstart/",
+      "attempts": 1,
+      "passed": true,
+      "status": 200,
+      "sha256": "803c53603632de500ead11f7b9ecdcdb700aa365ab4ac028e4e44563392365eb"
+    },
+    {
+      "url": "https://relfagent.com/en/docs/recovery/",
+      "attempts": 1,
+      "passed": true,
+      "status": 200,
+      "sha256": "2f5500a3c646780bc75b8cde0649bfee281c5660735bb4697ba58edb49796572"
+    },
+    {
+      "url": "https://relfagent.com/en/docs/sessions-memory/",
+      "attempts": 1,
+      "passed": true,
+      "status": 200,
+      "sha256": "30670e0d9de872c7ec6ffa85b8d0dbbc0f996b7d65602cbceab8ced5204f7635"
+    },
+    {
+      "url": "https://relfagent.com/en/docs/testing/",
+      "attempts": 1,
+      "passed": true,
+      "status": 200,
+      "sha256": "8f3de2d9a557f89b92c232e641ceb66793576aa438acb4f0d36e4628bbd462dc"
+    },
+    {
+      "url": "https://relfagent.com/en/docs/user-input/",
+      "attempts": 1,
+      "passed": true,
+      "status": 200,
+      "sha256": "ed4a045968d779b7050b5512676250fe386f4741fbdbb3915f9d0104e93486f1"
+    },
+    {
+      "url": "https://relfagent.com/en/docs/workflows/",
+      "attempts": 1,
+      "passed": true,
+      "status": 200,
+      "sha256": "f21a5712c5e1a14e2deee9fed1dcaa7a5e7f32baaf4925c4701a5fffe14014dc"
+    },
+    {
+      "url": "https://relfagent.com/en/",
+      "attempts": 1,
+      "passed": true,
+      "status": 200,
+      "sha256": "9d45c31e92ccfb8453492f26acfa56f05a61150aa92a5dab89b922fc5a48b07c"
+    },
+    {
+      "url": "https://relfagent.com/favicon.svg",
+      "attempts": 1,
+      "passed": true,
+      "status": 200,
+      "sha256": "cb3afd1e67662a02e1f057489ef0e0ecde14b5b947cdebb631866bfeeff2317d"
+    },
+    {
+      "url": "https://relfagent.com/",
+      "attempts": 1,
+      "passed": true,
+      "status": 200,
+      "sha256": "430aba2eb593e5bba665221013124c9aa1ba7b494e1bfd3c3da5bf2dc87f3ab5"
+    },
+    {
+      "url": "https://relfagent.com/og.png",
+      "attempts": 1,
+      "passed": true,
+      "status": 200,
+      "sha256": "4f7aafc8ff55eb0637f5e2ada5324fdf3ca909d0d98222428bd037cc3c713098"
+    },
+    {
+      "url": "https://relfagent.com/og.svg",
+      "attempts": 1,
+      "passed": true,
+      "status": 200,
+      "sha256": "92c0b1afd8a6162ed237c4f7e547f4bb2d07855c643f90f750d76e822a871a06"
+    },
+    {
+      "url": "https://relfagent.com/pagefind/fragment/en_128e287.pf_fragment",
+      "attempts": 1,
+      "passed": true,
+      "status": 200,
+      "sha256": "94bf5d004789644ea70a8fd6a0385c94b2549d728d257e2c98d6243465a4e5ba"
+    },
+    {
+      "url": "https://relfagent.com/pagefind/fragment/en_279cec9.pf_fragment",
+      "attempts": 1,
+      "passed": true,
+      "status": 200,
+      "sha256": "9072921dfef86e76847179888ccb2b98fb64c294bb2559f9fd065ac513e7eb09"
+    },
+    {
+      "url": "https://relfagent.com/pagefind/fragment/en_31e36d7.pf_fragment",
+      "attempts": 1,
+      "passed": true,
+      "status": 200,
+      "sha256": "9504e36e5617093dbc34ffbdc25f503f5795927facfff10b076ae0aefa44a351"
+    },
+    {
+      "url": "https://relfagent.com/pagefind/fragment/en_3d85aa4.pf_fragment",
+      "attempts": 1,
+      "passed": true,
+      "status": 200,
+      "sha256": "8cc6486224002354f838ed67c934b4bb34290071bd1f1419c4031c7a22769f4a"
+    },
+    {
+      "url": "https://relfagent.com/pagefind/fragment/en_3f4f914.pf_fragment",
+      "attempts": 1,
+      "passed": true,
+      "status": 200,
+      "sha256": "227747a41ecfd4d49f1ec34b56a0db3868ffbd2f03bcae11009fe915f03c95b3"
+    },
+    {
+      "url": "https://relfagent.com/pagefind/fragment/en_49ca369.pf_fragment",
+      "attempts": 1,
+      "passed": true,
+      "status": 200,
+      "sha256": "963b1007c8b99cf84247688d08ae3f68ed8fecb64ce55a91410fca92678dc396"
+    },
+    {
+      "url": "https://relfagent.com/pagefind/fragment/en_50498dd.pf_fragment",
+      "attempts": 1,
+      "passed": true,
+      "status": 200,
+      "sha256": "bbcd08ea040d24f7695dc3ce6b12915cc1698c09747cb4accd0c824012487af6"
+    },
+    {
+      "url": "https://relfagent.com/pagefind/fragment/en_5cfe605.pf_fragment",
+      "attempts": 1,
+      "passed": true,
+      "status": 200,
+      "sha256": "9ba9fb2d5e576bc3f7355ab8bf660f812031dc1cf205224901108810e647f70f"
+    },
+    {
+      "url": "https://relfagent.com/pagefind/fragment/en_8e563da.pf_fragment",
+      "attempts": 1,
+      "passed": true,
+      "status": 200,
+      "sha256": "ed03b79ed98f5579a3cde009918ff306a88ae345fafc0271f29649dfc47ded5c"
+    },
+    {
+      "url": "https://relfagent.com/pagefind/fragment/en_8f7e502.pf_fragment",
+      "attempts": 1,
+      "passed": true,
+      "status": 200,
+      "sha256": "415838beae613dce97eb2b4cb232c6d1e6a965878d90c4d40590fd8633edbda9"
+    },
+    {
+      "url": "https://relfagent.com/pagefind/fragment/en_9449034.pf_fragment",
+      "attempts": 1,
+      "passed": true,
+      "status": 200,
+      "sha256": "5d1c58973cc94317a45042a248035d99d36b403078fb244d34099fd5a22bd66b"
+    },
+    {
+      "url": "https://relfagent.com/pagefind/fragment/en_a3431ec.pf_fragment",
+      "attempts": 1,
+      "passed": true,
+      "status": 200,
+      "sha256": "d4f532e5035fb4c339884304cdf346630b67c04a81dbc84989d4a04dc16eae2f"
+    },
+    {
+      "url": "https://relfagent.com/pagefind/fragment/en_b4bb262.pf_fragment",
+      "attempts": 1,
+      "passed": true,
+      "status": 200,
+      "sha256": "f9bcf2a37e2f83ba039dcbad1fb493d33199be68d2e88a957c8584fc6c6b4c32"
+    },
+    {
+      "url": "https://relfagent.com/pagefind/fragment/en_f564cc7.pf_fragment",
+      "attempts": 1,
+      "passed": true,
+      "status": 200,
+      "sha256": "25b105d1792b22fa767361bb826e306f59097378caa1224970d810e31e9b050d"
+    },
+    {
+      "url": "https://relfagent.com/pagefind/fragment/zh-cn_1271792.pf_fragment",
+      "attempts": 1,
+      "passed": true,
+      "status": 200,
+      "sha256": "7d4cd5c5e2380a2c38029b24dead4ca7ac684d1bd739baa03ce3a087e1738a86"
+    },
+    {
+      "url": "https://relfagent.com/pagefind/fragment/zh-cn_27bcf99.pf_fragment",
+      "attempts": 1,
+      "passed": true,
+      "status": 200,
+      "sha256": "ec8fdb9adf1c09dd4033f26d94096c03dfebec184ae4c52dcfd4ad548b03ac38"
+    },
+    {
+      "url": "https://relfagent.com/pagefind/fragment/zh-cn_2bae8fe.pf_fragment",
+      "attempts": 1,
+      "passed": true,
+      "status": 200,
+      "sha256": "2b4e5afa23e849307a6192f2e6f1e36d6002bacb070064530faa092e8f660d6f"
+    },
+    {
+      "url": "https://relfagent.com/pagefind/fragment/zh-cn_4a61f62.pf_fragment",
+      "attempts": 1,
+      "passed": true,
+      "status": 200,
+      "sha256": "7fc0806dd5642f0837620731996679e52f4bf1035d111b05f0dea8f3a7511169"
+    },
+    {
+      "url": "https://relfagent.com/pagefind/fragment/zh-cn_4d76fdb.pf_fragment",
+      "attempts": 1,
+      "passed": true,
+      "status": 200,
+      "sha256": "49910ece68a6ec5837032231eb631d221576519eb600bb41dd57e151cb108933"
+    },
+    {
+      "url": "https://relfagent.com/pagefind/fragment/zh-cn_6696892.pf_fragment",
+      "attempts": 1,
+      "passed": true,
+      "status": 200,
+      "sha256": "e8b5f9fda15aee39baac5a65471adb228f0f291192c6992c36aef0cddcb6499e"
+    },
+    {
+      "url": "https://relfagent.com/pagefind/fragment/zh-cn_69e0e48.pf_fragment",
+      "attempts": 1,
+      "passed": true,
+      "status": 200,
+      "sha256": "d5e51b11cdde7bbaa82f5e67318d93f4da7cff749c1cff0d49ee2fdc8a90360f"
+    },
+    {
+      "url": "https://relfagent.com/pagefind/fragment/zh-cn_7279765.pf_fragment",
+      "attempts": 1,
+      "passed": true,
+      "status": 200,
+      "sha256": "dd981a9d62ee98851c8a3b18a1971d211d708b7c0f7854e8e30c852a4328ba27"
+    },
+    {
+      "url": "https://relfagent.com/pagefind/fragment/zh-cn_7c50fb3.pf_fragment",
+      "attempts": 1,
+      "passed": true,
+      "status": 200,
+      "sha256": "69f9c172eb65742858292212a4dbecec49eee99ae7642eb4c27279714c9c48e8"
+    },
+    {
+      "url": "https://relfagent.com/pagefind/fragment/zh-cn_8b6c42c.pf_fragment",
+      "attempts": 1,
+      "passed": true,
+      "status": 200,
+      "sha256": "ec4f1766cf5e6f578e4aa964916d22083e6364d111357495088b8218ed400fd2"
+    },
+    {
+      "url": "https://relfagent.com/pagefind/fragment/zh-cn_c0534af.pf_fragment",
+      "attempts": 1,
+      "passed": true,
+      "status": 200,
+      "sha256": "e39ef9755b6eee6824473dbf3bafc1255a0178f72ac68c6576efbbcba299a993"
+    },
+    {
+      "url": "https://relfagent.com/pagefind/fragment/zh-cn_c8bb481.pf_fragment",
+      "attempts": 1,
+      "passed": true,
+      "status": 200,
+      "sha256": "6bea5d11de4d0ad14140538fd730ecd20156fbd5c1f95fdffe4606507295fbc0"
+    },
+    {
+      "url": "https://relfagent.com/pagefind/fragment/zh-cn_c91e8f8.pf_fragment",
+      "attempts": 1,
+      "passed": true,
+      "status": 200,
+      "sha256": "2c3012b1ba2de409d909325f526e29a8cc0855e5c0047412dadc52caa4d79da5"
+    },
+    {
+      "url": "https://relfagent.com/pagefind/fragment/zh-cn_ed908bf.pf_fragment",
+      "attempts": 1,
+      "passed": true,
+      "status": 200,
+      "sha256": "3967555e3c7ee11e6632c63722f28f7c0a0f11a58ffc14d6454fe97a6b74edda"
+    },
+    {
+      "url": "https://relfagent.com/pagefind/index/en_88ad7fe.pf_index",
+      "attempts": 1,
+      "passed": true,
+      "status": 200,
+      "sha256": "64a8e50a8e7f74f1e972ddf7598ff15de76f0dfd9ab85b26faffc7a0dd9990bd"
+    },
+    {
+      "url": "https://relfagent.com/pagefind/index/en_94d7784.pf_index",
+      "attempts": 1,
+      "passed": true,
+      "status": 200,
+      "sha256": "af43fd4d332081fd9c60ced8c12ce802aa2bf97069d866b1c06be14bc637920f"
+    },
+    {
+      "url": "https://relfagent.com/pagefind/index/zh-cn_323f70d.pf_index",
+      "attempts": 1,
+      "passed": true,
+      "status": 200,
+      "sha256": "0ea3de23da04d26119032e5ceb0f5b0aab94e511e70fd46b773187ce2ee57bc6"
+    },
+    {
+      "url": "https://relfagent.com/pagefind/index/zh-cn_52ee4fa.pf_index",
+      "attempts": 1,
+      "passed": true,
+      "status": 200,
+      "sha256": "0e46d778f8554be998cbda852b2f87d4089843128b2141353da290170bd5d602"
+    },
+    {
+      "url": "https://relfagent.com/pagefind/pagefind-component-ui.css",
+      "attempts": 1,
+      "passed": true,
+      "status": 200,
+      "sha256": "de389c7e5d87d6e2b10d65fb1e36e8989a12a2ad8dd6239b7e070d81fb5d8b0d"
+    },
+    {
+      "url": "https://relfagent.com/pagefind/pagefind-component-ui.js",
+      "attempts": 1,
+      "passed": true,
+      "status": 200,
+      "sha256": "958620129dd14bd851805daeb12ce708bd63b9287325d1d5ae6f73a04d1723f8"
+    },
+    {
+      "url": "https://relfagent.com/pagefind/pagefind-entry.json",
+      "attempts": 1,
+      "passed": true,
+      "status": 200,
+      "sha256": "92232f4be54052c4379e098e0d8210918e844e4dfea45ba465886596e4366ccd"
+    },
+    {
+      "url": "https://relfagent.com/pagefind/pagefind-highlight.js",
+      "attempts": 1,
+      "passed": true,
+      "status": 200,
+      "sha256": "04741266a86911636cefc41c8b407e380dda99b7d208724f700f94cdf57e37b5"
+    },
+    {
+      "url": "https://relfagent.com/pagefind/pagefind-modular-ui.css",
+      "attempts": 1,
+      "passed": true,
+      "status": 200,
+      "sha256": "653ab29e4de5629f6ddf5f6fcdf5d2b3eb539a8c07fff8a56b8ce2156a570788"
+    },
+    {
+      "url": "https://relfagent.com/pagefind/pagefind-modular-ui.js",
+      "attempts": 1,
+      "passed": true,
+      "status": 200,
+      "sha256": "f3efa0f74b305ccab0bc9edc7c09ab69867180b4c43093d84bb9b508ac4ec32c"
+    },
+    {
+      "url": "https://relfagent.com/pagefind/pagefind-ui.css",
+      "attempts": 1,
+      "passed": true,
+      "status": 200,
+      "sha256": "e113b816110ed07b017613e901addfe635350f2a5b84990aa76c91a74b158084"
+    },
+    {
+      "url": "https://relfagent.com/pagefind/pagefind-ui.js",
+      "attempts": 1,
+      "passed": true,
+      "status": 200,
+      "sha256": "2efa93f2e80a199ca742a69bd4cfffabc5c591ebe7763f64f7c655fd00d2209f"
+    },
+    {
+      "url": "https://relfagent.com/pagefind/pagefind-worker.js",
+      "attempts": 1,
+      "passed": true,
+      "status": 200,
+      "sha256": "f7aa3d2d6d127f6a3e1c81214ab0778c839ddd8ac2b9b40855e79081ee3d88f2"
+    },
+    {
+      "url": "https://relfagent.com/pagefind/pagefind.en_dcab175384.pf_meta",
+      "attempts": 1,
+      "passed": true,
+      "status": 200,
+      "sha256": "fc2a087376c4955c9c7ea62544215883bb56517b025eb1786c89333ff9acea7b"
+    },
+    {
+      "url": "https://relfagent.com/pagefind/pagefind.js",
+      "attempts": 1,
+      "passed": true,
+      "status": 200,
+      "sha256": "b3823d248c1a8b2b7427993880b7ebf6f000e0df1b4ef92edf55769dcb8a4247"
+    },
+    {
+      "url": "https://relfagent.com/pagefind/pagefind.zh-cn_cd9abe474a3cc.pf_meta",
+      "attempts": 1,
+      "passed": true,
+      "status": 200,
+      "sha256": "8458f5efee2c32c52a066a66b42b23e977f0b8728605e8f25ce4187ca707708b"
+    },
+    {
+      "url": "https://relfagent.com/pagefind/wasm.en.pagefind",
+      "attempts": 1,
+      "passed": true,
+      "status": 200,
+      "sha256": "bb16c9e6d3d214d4d05cccca51df7b487b86b3657318da767f6ca9e0a2e7259d"
+    },
+    {
+      "url": "https://relfagent.com/pagefind/wasm.unknown.pagefind",
+      "attempts": 1,
+      "passed": true,
+      "status": 200,
+      "sha256": "3a74cefceacd066e8d3bc8c52e7bc1c869544ca3d9031b44a9b7136356d5d7f4"
+    },
+    {
+      "url": "https://relfagent.com/robots.txt",
+      "attempts": 1,
+      "passed": true,
+      "status": 200,
+      "sha256": "c649be1ff2db1666643d44590a70974228c3bb8f82280dafd1ee55bfbdc8685e"
+    },
+    {
+      "url": "https://relfagent.com/sitemap.xml",
+      "attempts": 1,
+      "passed": true,
+      "status": 200,
+      "sha256": "03ada172399f01d93c1a3bc528c59ecbd7d5776e0e184bf9d37567860a28a02f"
+    },
+    {
+      "url": "https://relfagent.com/zh/docs/api-reference/",
+      "attempts": 1,
+      "passed": true,
+      "status": 200,
+      "sha256": "5a78acb94eba26009f22bd17991a0ddf43a0b22a72797e75f6a066708c91cbe8"
+    },
+    {
+      "url": "https://relfagent.com/zh/docs/app-tutorial/",
+      "attempts": 1,
+      "passed": true,
+      "status": 200,
+      "sha256": "075019a40dbc387bce6324fbb84887b65f039c9af335d2bb5f35293158dd1fc8"
+    },
+    {
+      "url": "https://relfagent.com/zh/docs/concepts/",
+      "attempts": 1,
+      "passed": true,
+      "status": 200,
+      "sha256": "6ce2c7b70b6d4f027a22bd3f39f7de6bab7c8c9e2d62938610ba08821a9ebf41"
+    },
+    {
+      "url": "https://relfagent.com/zh/docs/installation/",
+      "attempts": 1,
+      "passed": true,
+      "status": 200,
+      "sha256": "0df186f65f302b724650ea934f628be4544e6b2b4c09970ae3dc659c0b364e61"
+    },
+    {
+      "url": "https://relfagent.com/zh/docs/integrations/",
+      "attempts": 1,
+      "passed": true,
+      "status": 200,
+      "sha256": "5e76af8ac0b4fa1f2c3837b8ea0938aa4e6d5142f93627b76e854a5ae117796e"
+    },
+    {
+      "url": "https://relfagent.com/zh/docs/models-tools/",
+      "attempts": 1,
+      "passed": true,
+      "status": 200,
+      "sha256": "c565f360a959ce21c3d46f77b46cfbd0fc0cee232d967266fb69b98c242e6162"
+    },
+    {
+      "url": "https://relfagent.com/zh/docs/operations/",
+      "attempts": 1,
+      "passed": true,
+      "status": 200,
+      "sha256": "575c2d61e10cf731a7a943e92087158de6d4746e546af575bfbbd0bb8d042e9e"
+    },
+    {
+      "url": "https://relfagent.com/zh/docs/overview/",
+      "attempts": 1,
+      "passed": true,
+      "status": 200,
+      "sha256": "77fa7f7ee906444ad81cf2df7265f5c84a2b668537f2c20c77a48af4a397d786"
+    },
+    {
+      "url": "https://relfagent.com/zh/docs/quickstart/",
+      "attempts": 1,
+      "passed": true,
+      "status": 200,
+      "sha256": "c9419753061c0d0691077946c6059cd766ad1ac6a8c02db407551eb44128c293"
+    },
+    {
+      "url": "https://relfagent.com/zh/docs/recovery/",
+      "attempts": 1,
+      "passed": true,
+      "status": 200,
+      "sha256": "3f9408d3ec62ce8f3157f11e5b40e572abeccf75ad062c5c00ca8d09f42efce6"
+    },
+    {
+      "url": "https://relfagent.com/zh/docs/sessions-memory/",
+      "attempts": 1,
+      "passed": true,
+      "status": 200,
+      "sha256": "9583674e5192422f6830a7c58be9bb6320648dee897ce1c4f2099eefa31ac02b"
+    },
+    {
+      "url": "https://relfagent.com/zh/docs/testing/",
+      "attempts": 1,
+      "passed": true,
+      "status": 200,
+      "sha256": "69e46279c74c7a7df3b6762c4dd16ab32fc7db6ccd5498064d3d3d2475788fe7"
+    },
+    {
+      "url": "https://relfagent.com/zh/docs/user-input/",
+      "attempts": 1,
+      "passed": true,
+      "status": 200,
+      "sha256": "22ae31c97ce070e7c46eac0137ceaedcf92ea9e413ff7cf2c776c9982748c282"
+    },
+    {
+      "url": "https://relfagent.com/zh/docs/workflows/",
+      "attempts": 1,
+      "passed": true,
+      "status": 200,
+      "sha256": "772ba19140c7afac6b5c172d2b1f354f8f6deb0d9c22335c57d0bb7d46dd542d"
+    },
+    {
+      "url": "https://relfagent.com/zh/",
+      "attempts": 1,
+      "passed": true,
+      "status": 200,
+      "sha256": "430aba2eb593e5bba665221013124c9aa1ba7b494e1bfd3c3da5bf2dc87f3ab5"
+    },
+    {
+      "url": "http://relfagent.com/",
+      "attempts": 1,
+      "passed": true,
+      "status": 301
+    },
+    {
+      "url": "http://relfagent.com/en/docs/api-reference/?utm_source=deploy&probe=1",
+      "attempts": 1,
+      "passed": true,
+      "status": 301
+    },
+    {
+      "url": "http://relfagent.com/zh/docs/quickstart/?q=approval%20resume&x=1",
+      "attempts": 1,
+      "passed": true,
+      "status": 301
+    },
+    {
+      "url": "http://www.relfagent.com/",
+      "attempts": 1,
+      "passed": true,
+      "status": 301
+    },
+    {
+      "url": "http://www.relfagent.com/en/docs/api-reference/?utm_source=deploy&probe=1",
+      "attempts": 1,
+      "passed": true,
+      "status": 301
+    },
+    {
+      "url": "http://www.relfagent.com/zh/docs/quickstart/?q=approval%20resume&x=1",
+      "attempts": 1,
+      "passed": true,
+      "status": 301
+    },
+    {
+      "url": "https://www.relfagent.com/",
+      "attempts": 1,
+      "passed": true,
+      "status": 301
+    },
+    {
+      "url": "https://www.relfagent.com/en/docs/api-reference/?utm_source=deploy&probe=1",
+      "attempts": 1,
+      "passed": true,
+      "status": 301
+    },
+    {
+      "url": "https://www.relfagent.com/zh/docs/quickstart/?q=approval%20resume&x=1",
+      "attempts": 1,
+      "passed": true,
+      "status": 301
+    },
+    {
+      "url": "https://relfagent.com/__deployment_acceptance_missing__/",
+      "attempts": 1,
+      "passed": true,
+      "status": 404,
+      "sha256": "1a7519f41f9a9f2ae364f23aa640ff407d621e7133bfcb050663136d51868565"
+    },
+    {
+      "url": "https://relfagent.com/en/docs/quickstart",
+      "attempts": 1,
+      "passed": true,
+      "status": 307
+    }
+  ],
+  "failures": []
+}
