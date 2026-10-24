@@ -2,11 +2,11 @@
 
 [文档目录](README.md) · [安装与可选依赖](installation.md) · [核心概念](concepts.md)
 
-本文面向 **0.1.0a6 Alpha 新入口候选**，需要 Python 3.11+。本教程使用本地 SQLite；先用离线项目完成提交、审批和恢复，再接入自己的模型与工具，不需要 Redis、PostgreSQL、Temporal 或 Docker。[基础能力入口](basic-capabilities.md)列出默认组合与定制路径；知识问答可从 [RAG 模板教程](recall-and-rag.md) 开始；无需改 Python 的版本配置从 [运行装配模板](runtime-assembly.md) 开始。其他平台与部署组合的验证范围见[实现清单](implementation-status.md)。
+本文面向 **0.1.0a7 Alpha 候选**，需要 Python 3.11+。本教程使用本地 SQLite；先用离线项目完成提交、审批和恢复，再接入自己的模型与工具，不需要 Redis、PostgreSQL、Temporal 或 Docker。[基础能力入口](basic-capabilities.md)列出默认组合与定制路径；知识问答可从 [RAG 模板教程](recall-and-rag.md) 开始；无需改 Python 的版本配置从 [运行装配模板](runtime-assembly.md) 开始。其他平台与部署组合的验证范围见[实现清单](implementation-status.md)。
 
 真实模型可用 `relf init my-model-agent --template model` 生成独立项目，先替换 model/协议/凭据环境变量；配置限制与验证等级见 [模型接入](model-adapters.md)。生成模板不执行收费请求，也不表示账户与型号已验证。
 
-本教程要求包含a6的源码或本地原wheel；旧公开a2使用旧导入／命令，不与以下步骤混用，历史入口见[安装指南](installation.md#从公开-alpha-安装)。PyPI 尚未发布，不要把 `pip install relf-agent` 当作已验证的安装方式。
+本教程要求 a7 源码快照或本地原 wheel；a6 已有相同入口，但不含本次中断清理修复。旧公开 a2 使用旧导入／命令，不与以下步骤混用，历史入口见[安装指南](installation.md#从公开-alpha-安装)。PyPI 尚未发布，不要把 `pip install relf-agent` 当作已验证的安装方式。
 
 ## 1. 安装：wheel 使用者与源码开发者
 
@@ -17,15 +17,14 @@
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
-python -m pip install "/path/to/relf_agent-0.1.0a6-py3-none-any.whl"
+python -m pip install "/path/to/relf_agent-0.1.0a7-py3-none-any.whl"
 relf --version
 ```
 
-**从源码开始：** 必须选择包含a6的源码；当前本地准备未推送时，远端默认分支尚不包含这次入口迁移。
+**从源码开始：** 使用本地准备的 a7 工作区或解压后的 a7 sdist，替换下方绝对路径。a7 尚未推送时，远端默认分支仍是先前版本；直接 clone 不能获得本次候选。安装后应确认 `relf --version` 为 `0.1.0a7`。
 
 ```bash
-git clone https://github.com/RalfNick/relf-agent.git
-cd relf-agent
+cd /ABS/path/to/relf-agent-a7
 python3 -m venv .venv
 source .venv/bin/activate
 python -m pip install -e .

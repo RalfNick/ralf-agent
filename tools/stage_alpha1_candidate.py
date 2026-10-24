@@ -18,6 +18,7 @@ STAGING_PREFIXES = {
     "0.1.0a4": "ralf-alpha4-private-stage-",
     "0.1.0a5": "relf-alpha5-private-stage-",
     "0.1.0a6": "relf-alpha6-private-stage-",
+    "0.1.0a7": "relf-alpha7-private-stage-",
 }
 
 
@@ -42,7 +43,7 @@ def stage(release_id, output, spec, fetch_json, fetch_blob):
             prefix is None
             or (spec.get("version") == "0.1.0a5" and spec.get("distribution_name") != "relf-agent")
             or (
-                spec.get("version") == "0.1.0a6"
+                spec.get("version") in {"0.1.0a6", "0.1.0a7"}
                 and any(
                     spec.get(key) != value
                     for key, value in {

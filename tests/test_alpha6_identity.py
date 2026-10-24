@@ -22,7 +22,7 @@ def test_new_module_runs_the_cli_and_preserves_runtime_directory(tmp_path):
         timeout=20,
     )
     assert result.returncode == 0, result.stderr
-    assert result.stdout.strip() == "Relf-Agent 0.1.0a6"
+    assert result.stdout.strip() == "Relf-Agent 0.1.0a7"
     assert list(tmp_path.iterdir()) == []
 
 

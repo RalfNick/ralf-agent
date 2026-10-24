@@ -1,6 +1,6 @@
 # Relf-Agent 文档
 
-[官网](https://relfagent.com/) 已上线并迁移固定 a6 源码教程，源码默认分支为 `main`。[relf-agent 0.1.0a6](releases/0.1.0a6.md) 是当前冻结候选，Python 导入 `relf_agent`、CLI `relf`；维护源码额外包含尚未进入原包的中断清理修复，见[当前摘要](implementation-status.md#当前交付摘要)及[a6 清单](alpha6-validation-status.md)。原 a2 仍是 GitHub 公开安装入口，使用其原导入、命令和固定教程；各历史原包与成绩保持。
+[官网](https://relfagent.com/) 已上线，继续使用固定 a6 源码教程，源码默认分支为 `main`。当前准备包含 `2d17808` 中断清理修复的独立 [relf-agent 0.1.0a7](releases/0.1.0a7.md) 候选；导入 `relf_agent`、CLI `relf` 保持，实际结果见[当前摘要](implementation-status.md#当前交付摘要)及[a7 清单](alpha7-validation-status.md)。原 a6 制品保留，原 a2 仍是 GitHub 公开安装入口，使用其原导入、命令和固定教程。
 
 [项目首页](../README.md) · [示例目录](../examples/README.md) · [贡献指南](../CONTRIBUTING.md)
 
@@ -12,6 +12,8 @@
 
 | 文档 | 解决的问题 |
 | --- | --- |
+| [0.1.0a7 修复候选](releases/0.1.0a7.md) | 中断清理修复、独立制品与冻结门禁 |
+| [Alpha 7 验收清单](alpha7-validation-status.md) | 本地安装和外部待办 |
 | [0.1.0a6入口统一](releases/0.1.0a6.md) | 新导入、CLI与独立制品 |
 | [Alpha 6验收清单](alpha6-validation-status.md) | 本地结果和外部待办 |
 | [0.1.0a5历史改名候选](releases/0.1.0a5.md) | 发行名、导入与CLI兼容及独立制品 |

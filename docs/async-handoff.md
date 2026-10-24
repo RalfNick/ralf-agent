@@ -9,7 +9,7 @@ See [the transport contract](remote-handoff.md) and [Temporal's supported subset
 ## Default installed service
 
 Install your preview wheel with the `server` extra, then generate an independent
-application. For a wheel installation, use `python -m pip install "./relf_agent-0.1.0a6-py3-none-any.whl[server]"` with your local wheel path. Source installation and application generation:
+application. For a wheel installation, use `python -m pip install "./relf_agent-0.1.0a7-py3-none-any.whl[server]"` with your local wheel path. Source installation and application generation:
 
 ```shell
 python -m pip install -e '.[server]'

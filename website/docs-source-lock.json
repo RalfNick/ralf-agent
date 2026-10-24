@@ -15,9 +15,9 @@
       "sources": {
         "docs/agent-api.md": "2c06e453655715184bf3adc09ead2d3deb37ed313f6710b9149d5e4be981eee1",
         "docs/api-reference.md": "4b58a291e767efc77b3362d6ddae7d908b5f6bc0be7e069c312d8f43318fb462",
-        "docs/getting-started.md": "e4220d7f0271be1b8ab72d489c26095178b0dddbab6e70499e2c26de13fb3480",
+        "docs/getting-started.md": "59fc227fd24093bb9e3355794a313dfdda5cd0be3effe2ae67c1f01cc051c163",
         "docs/recovery-guide.md": "bda5652b2ba4ce5406ace3165cbd78f7e110cd5e3f77476c46fa616b31e6b76a",
-        "docs/runtime-assembly.md": "b7ee6b61d0466ad9643525fe15a55201213d1ae7ce471bfad32c3c723f5f19b1",
+        "docs/runtime-assembly.md": "af035a613d7c66db7d5df485180b8cfa41fe2cdbf368628a1f069849f38f732e",
         "docs/sdk-model-tools.md": "0a50f0ce22e30527657626367de512fb43a36ffdce7d128850328b1c014b8f0f",
         "docs/session-api.md": "e9c5995bd6ad9150391b1e7310d541f96f748081d8cba2df72c80dc0bd2f7e45",
         "docs/user-input.md": "42cea73dcc429db441a2aedfd6d72f59b3317fa4375bcbdf2893a83a0834790c"
@@ -30,7 +30,7 @@
       },
       "sources": {
         "docs/agent-api.md": "2c06e453655715184bf3adc09ead2d3deb37ed313f6710b9149d5e4be981eee1",
-        "docs/installation.md": "f61dc33d7c10fd8777442ad46443ad2e37cca1d3453e3da49f97c491d6031d88",
+        "docs/installation.md": "96ca5ac0148e3ffd534b5a09dbc90e99686430aa0d0053a0c653cd7fec863cec",
         "docs/managed-memory.md": "c0d80a31c782104c2ab01ba811b156a221137dbb05bf79b49d5e1465332999b9",
         "docs/orchestration.md": "58aacef85c1dac185992e0ef1aa92389313896a3be150d414909bb0bbbd719c8",
         "docs/recall-and-rag.md": "3b5069ce3e488164a86bf5b52485aa58bd5e77b7628ffff027db2d0d31e429a6",
@@ -58,8 +58,8 @@
       },
       "sources": {
         "docs/alpha6-validation-status.md": "258c8d60dc1af8ed96b7de4b293fb6634ef6ea73d0f98fbfcd690166739723b3",
-        "docs/getting-started.md": "e4220d7f0271be1b8ab72d489c26095178b0dddbab6e70499e2c26de13fb3480",
-        "docs/installation.md": "f61dc33d7c10fd8777442ad46443ad2e37cca1d3453e3da49f97c491d6031d88",
+        "docs/getting-started.md": "59fc227fd24093bb9e3355794a313dfdda5cd0be3effe2ae67c1f01cc051c163",
+        "docs/installation.md": "96ca5ac0148e3ffd534b5a09dbc90e99686430aa0d0053a0c653cd7fec863cec",
         "docs/releases/0.1.0a6.md": "6b582a84f10d1cc1735d71a68eda6dada59f48ddd89a04a70482f00f16f1de08"
       }
     },
@@ -70,7 +70,7 @@
       },
       "sources": {
         "docs/cli-tools.md": "8d2dfe00cde83832d85b6d45772c2230b238d255c574af93b663b293dd6003e5",
-        "docs/extending.md": "a49fde06090e7c43b312d263dfd43ef92e5c8f9125cfbe37903ddd09b28810bb",
+        "docs/extending.md": "d7e66182026705b3f12a919e99abdd51815baf2566e8a3802ddd9e384dc67652",
         "docs/http-tools.md": "65f67d3f2eed29bb7a91fa49c74a2f7eff916bb265795fa58a745992ad33e1db",
         "docs/managed-tools.md": "30765f9782b2a58277c7f10362be3d9345d87ce0d8caec7673d2aa8edc30c21c",
         "docs/mcp-http.md": "cb5527eed888ed15fad8518810970147d8070ba861db989ff4fc32484694562e",
@@ -87,9 +87,9 @@
         "en": "5ab6fcbf57fd3587761bea01506da4d105ddd6d59b7f3dd8ed32364f5e01fea3"
       },
       "sources": {
-        "README.md": "318e3d495523c3c66292356719cd7aeff1fd06bf31b902bb5aec318ccbd4d3d0",
+        "README.md": "f174ea1ef031eb100dfb2704edd520a6dd622cd1566622c489c142cc596534c3",
         "docs/completion-verification.md": "22c10c5277f9968d9070c425814f678d9e39c1e84babd2558c8c81fcd6e947f8",
-        "docs/getting-started.md": "e4220d7f0271be1b8ab72d489c26095178b0dddbab6e70499e2c26de13fb3480",
+        "docs/getting-started.md": "59fc227fd24093bb9e3355794a313dfdda5cd0be3effe2ae67c1f01cc051c163",
         "docs/model-adapters.md": "fe2172291438c7d2420ba13b81134367920f0558b00fe2728c8a282956727d82",
         "docs/sdk-model-tools.md": "0a50f0ce22e30527657626367de512fb43a36ffdce7d128850328b1c014b8f0f"
       }
@@ -104,7 +104,7 @@
         "docs/agent-limits.md": "456dbc1dde6357cf1a2dd318b298a9e6b68bdaa3dec1ad8d9ccefa10cc597472",
         "docs/recovery-guide.md": "bda5652b2ba4ce5406ace3165cbd78f7e110cd5e3f77476c46fa616b31e6b76a",
         "docs/releases/0.1.0a6.md": "6b582a84f10d1cc1735d71a68eda6dada59f48ddd89a04a70482f00f16f1de08",
-        "docs/runtime-assembly.md": "b7ee6b61d0466ad9643525fe15a55201213d1ae7ce471bfad32c3c723f5f19b1",
+        "docs/runtime-assembly.md": "af035a613d7c66db7d5df485180b8cfa41fe2cdbf368628a1f069849f38f732e",
         "docs/temporal-execution.md": "bfc3451fb27b5601aee91ac98db49e764b0501d1ffa471ed2a71d69ea4a0c90c"
       }
     },
@@ -114,7 +114,7 @@
         "en": "a091cb07c1d42752e444450234a44f427cc0326ab66a222f36771848beef0977"
       },
       "sources": {
-        "docs/basic-capabilities.md": "cbe1d6134d93a942f77fed1d7a3c55f82d43360daada19b1d8603229bfb29929",
+        "docs/basic-capabilities.md": "265bf6ee21a16e39d1ded897c15fc07936ea5e5a651443999903f497c32958f7",
         "docs/concepts.md": "ad1881ff612c4e4b15de63cf840dcbe3f93740b47de0164fd38e852e19802d48",
         "docs/releases/0.1.0a6.md": "6b582a84f10d1cc1735d71a68eda6dada59f48ddd89a04a70482f00f16f1de08",
         "docs/support-journey.md": "44c151ec64ab9a75add7bd332616661caca6aeddb48b774d84a3dd51550d5b19"
@@ -126,8 +126,8 @@
         "en": "4ee0c8c108256a8b727cfb95c7b8a61347fb755f1c42c2893bf96d9abc53bb68"
       },
       "sources": {
-        "docs/getting-started.md": "e4220d7f0271be1b8ab72d489c26095178b0dddbab6e70499e2c26de13fb3480",
-        "docs/installation.md": "f61dc33d7c10fd8777442ad46443ad2e37cca1d3453e3da49f97c491d6031d88",
+        "docs/getting-started.md": "59fc227fd24093bb9e3355794a313dfdda5cd0be3effe2ae67c1f01cc051c163",
+        "docs/installation.md": "96ca5ac0148e3ffd534b5a09dbc90e99686430aa0d0053a0c653cd7fec863cec",
         "docs/recovery-guide.md": "bda5652b2ba4ce5406ace3165cbd78f7e110cd5e3f77476c46fa616b31e6b76a"
       }
     },
@@ -138,7 +138,7 @@
       },
       "sources": {
         "docs/concepts.md": "ad1881ff612c4e4b15de63cf840dcbe3f93740b47de0164fd38e852e19802d48",
-        "docs/getting-started.md": "e4220d7f0271be1b8ab72d489c26095178b0dddbab6e70499e2c26de13fb3480",
+        "docs/getting-started.md": "59fc227fd24093bb9e3355794a313dfdda5cd0be3effe2ae67c1f01cc051c163",
         "docs/recovery-guide.md": "bda5652b2ba4ce5406ace3165cbd78f7e110cd5e3f77476c46fa616b31e6b76a"
       }
     },
@@ -149,7 +149,7 @@
       },
       "sources": {
         "docs/context-artifacts.md": "9b5824232b7de2091a7d4f205735a7f16228dce24e08e39f83a5dfaa4b753dd8",
-        "docs/document-ingestion.md": "17c9db761165d2de4dabb26605c1165dbab100e04d80731c450ec61535ea95e6",
+        "docs/document-ingestion.md": "1d1d906eeff7f864d6d6eb2178aaaaced446106e043d1e8514e7998042ef3298",
         "docs/docx-ingestion.md": "72f1470de40412255b98ffe07a31ecd56285681d0005b18b908dd299beb47b19",
         "docs/html-ingestion.md": "dd1cce79bc93b49d210680a57925624a0d0e331240f1a57612a2f16be7a66d08",
         "docs/hybrid-retrieval.md": "a905310792f99387a7ed20fbae4e8cb2e011d69ebd78a78f53d8333ea9360746",

@@ -1,5 +1,9 @@
 # 可复现的 Local SDK 发布门禁
 
+**当前 a7 候选（2026-10-24）：** 使用 `tools/release_gate_manifest.alpha7.json` 与两份 `relf_agent-0.1.0a7` 原包。发行名、导入和 CLI 为 `relf-agent`／`relf_agent`／`relf`；纳入 `2d17808` 中断清理修复，不扩展功能。原 311 基础／16 恢复／两 starter 保持，新增独立 9 项中断清理阶段。Linux 仍为 2 CPU／2 GiB／swap0、断网、Python 3.11–3.13 串行。实际本地成绩与未执行的平台见 [a7 清单](alpha7-validation-status.md)，远端流程见 [PyPI 准备](pypi-publishing.md)。本批不推送、触发远端 CI 或公开发布。
+
+以下为 a6 及更早候选的历史范围和记录；其中“当前”仅指原批次，不授予 a7 资格。默认 manifest 仍固定原 a2，运行 a7 必须显式传入 `--manifest tools/release_gate_manifest.alpha7.json`。
+
 **当前a6入口迁移（2026-10-23）：** `relf-agent==0.1.0a6`统一Python导入`relf_agent`、CLI`relf`／`relf-*`。仅移动已有实现和公共入口，不扩功能；`RALF_*`、`.ralf`、数据库及协议标识保持。新旧任务使用独立版本环境，不提供自动History或指纹迁移。原a5及更早制品、记录和历史失败保留。当前独立制品、实际验收和待办见[a6说明](releases/0.1.0a6.md)、[a6清单](alpha6-validation-status.md)和[PyPI准备](pypi-publishing.md)。本轮只本地提交，不推送、触发远端CI、配置账号或公开发布。
 
 以下a5及更早条目保留其各批次范围，不作为a6实际资格。

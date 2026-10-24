@@ -33,7 +33,7 @@
 
 先修复基础链路中可复现的失败、接入障碍和文档错误；执行相关回归与必要的安装后验证。已有接口能满足的需求，优先补示例和修复，不再增加一层通用封装。
 
-所选 Temporal Coding Session 已在 dev19 按用户修订的 Activity90／整链600秒门槛完成同包18/18验收，原360秒失败及各旧候选失败保留。a2 已完成所选平台门禁与 GitHub 公开安装；当前冻结候选为 `relf-agent==0.1.0a6`，使用 `relf_agent` 导入和 `relf` 命令，原 a3–a5 包保持。官网已迁移固定 a6 源码教程；a6 自己的原生 AMD64／远端门禁及公开上传、安装仍待验收，见[a6 清单](alpha6-validation-status.md)。当前维护源码另修复同步装配中断清理，不扩功能，也未写入原 a6 包。长期 R01–R26 及各原阶段证据保持独立范围，见[当前交付摘要](implementation-status.md#当前交付摘要)。
+所选 Temporal Coding Session 已在 dev19 按用户修订的 Activity90／整链600秒门槛完成同包18/18验收，原360秒失败及各旧候选失败保留。a2 已完成所选平台门禁与 GitHub 公开安装；当前准备 `relf-agent==0.1.0a7`，纳入 `2d17808` 的同步装配中断清理修复，不扩功能。导入 `relf_agent`、CLI `relf` 保持，原 a3–a6 包不改。官网继续固定 a6 源码教程；a7 本地和外部资格见[a7 清单](alpha7-validation-status.md)。长期 R01–R26 及各原阶段证据保持独立范围，见[当前交付摘要](implementation-status.md#当前交付摘要)。
 
 ## 基础用法检查记录（2026-10-16）
 

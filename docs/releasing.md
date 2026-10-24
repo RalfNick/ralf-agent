@@ -1,5 +1,11 @@
 # 预览版本验证与发布
 
+**当前候选（2026-10-24）：`relf-agent==0.1.0a7`。** 纳入 `2d17808` 的装配中断清理修复，沿用 `relf_agent`、`relf` 及原执行协议，不扩功能。独立目录 `dist/alpha7-candidate/` 和 `tools/release_gate_manifest.alpha7.json` 固定新两包；原 311／16／两 starter 加独立 9 项中断清理，原期限和 Linux 2 CPU／2 GiB 条件保持。实际成绩、SHA 与外部待办见[a7 说明](releases/0.1.0a7.md)、[a7 清单](alpha7-validation-status.md)及[准备记录](../architecture/reviews/2026-10-24-alpha7-candidate.md)。
+
+仅手动 `alpha7-stage-candidate.yml` → `alpha7-release-gate.yml` → `alpha7-pypi-publish.yml`，使用同一提交、准确 run／attempt 和两份原包；账号及流程见[PyPI 准备](pypi-publishing.md)。本轮只本地提交，不推送或公开发布；远端 CI 需另行授权。原 a6 及更早制品、manifest、工作流与历史成绩保持。官网继续固定已部署的 a6 源码，网站部署不授予 a7 SDK 资格。
+
+## a6 及更早准备记录（历史）
+
 **当前维护（2026-10-24）：** a6 后未发行源码修复同步装配中断清理，并统一当前文档。没有重建 a6 或准备新候选；原 a6 两包、外置 manifest 和历史失败保持。维护源码产品树已不同于原包，原 a6 远端门禁须选择产品匹配的固定源码，不以修改原 SHA 或重建同版本包接纳补丁。后续候选另行冻结、命名和验收。[a6 清单](alpha6-validation-status.md)区分原包资格、已完成的网站部署与 SDK 待办，[维护记录](../architecture/reviews/2026-10-24-alpha6-review-fixes.md)记录本次范围。本次仅本地提交，不推送或公开发布。
 
 **当前a6入口迁移（2026-10-23）：** `relf-agent==0.1.0a6`统一Python导入`relf_agent`、CLI`relf`／`relf-*`。仅移动已有实现和公共入口，不扩功能；`RALF_*`、`.ralf`、数据库及协议标识保持。新旧任务使用独立版本环境，不提供自动History或指纹迁移。原a5及更早制品、记录和历史失败保留。当前独立制品、实际验收和待办见[a6说明](releases/0.1.0a6.md)、[a6清单](alpha6-validation-status.md)和[PyPI准备](pypi-publishing.md)。本轮只本地提交，不推送、触发远端CI、配置账号或公开发布。

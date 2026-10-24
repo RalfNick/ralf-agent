@@ -13,7 +13,7 @@ def test_alpha4_metadata_and_installed_entry_version_agree():
     import relf_agent
 
     project = tomllib.loads((ROOT / "pyproject.toml").read_text())["project"]
-    assert project["version"] == relf_agent.__version__ == "0.1.0a6"
+    assert project["version"] == relf_agent.__version__ == "0.1.0a7"
     assert project["name"] == "relf-agent"
     assert project["scripts"]["relf"] == "relf_agent.cli:main"
     assert project["description"].startswith("Relf-Agent:")
@@ -26,7 +26,7 @@ def test_package_long_description_document_links_resolve_outside_github():
     links = re.findall(r"\]\(([^)]+)\)", readme)
     relative = [url for url in links if not url.startswith(("https://", "http://", "#"))]
     assert relative == [], f"PyPI cannot resolve repository-relative links: {relative}"
-    assert "0.1.0a6" in readme
+    assert "0.1.0a7" in readme
     assert "Reliable and Extensible Lifecycle Framework for Intelligent Agents" in readme
 
 
