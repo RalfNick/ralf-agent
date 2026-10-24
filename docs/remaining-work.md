@@ -1,5 +1,7 @@
 # 能力范围与剩余验收清单
 
+**2026-10-24 当前维护：** 同步装配中断清理、连续教程版本和网站状态的 review 修复，属于 a6 后未发行源码，不关闭新的 R 项。冻结 a6 原制品、manifest 与历史成绩保持；官网已迁移并部署固定 a6 教程，SDK 的原生 AMD64／远端门禁及公开发行仍待验收。当前事实以[唯一交付摘要](implementation-status.md#当前交付摘要)为准；以下日期段落保持原批次语义。维护回归见[本次记录](../architecture/reviews/2026-10-24-alpha6-review-fixes.md)。
+
 **当前a6入口迁移（2026-10-23）：** `relf-agent==0.1.0a6`统一Python导入`relf_agent`、CLI`relf`／`relf-*`。仅移动已有实现和公共入口，不扩功能；`RALF_*`、`.ralf`、数据库及协议标识保持。新旧任务使用独立版本环境，不提供自动History或指纹迁移。原a5及更早制品、记录和历史失败保留。当前独立制品、实际验收和待办见[a6说明](releases/0.1.0a6.md)、[a6清单](alpha6-validation-status.md)和[PyPI准备](pypi-publishing.md)。本轮只本地提交，不推送、触发远端CI、配置账号或公开发布。
 
 以下a5及更早条目保留其各批次范围，不作为a6实际资格。

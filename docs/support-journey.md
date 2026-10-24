@@ -2,13 +2,15 @@
 
 [文档目录](README.md) · [安装](installation.md) · [扩展方式](extending.md#先选择扩展方式)
 
-本文面向 0.1.0a1 Alpha 本地候选 的 Local 基础 SDK。先按[首用教程](getting-started.md)用现有 starter 完成审批与恢复，再使用同一个工单 `INC-001` 学习组件组合。这里没有新的框架入口或适配器，只有应用代码。
+本文面向 **0.1.0a6 及后续维护源码**的 Local 基础 SDK，使用 `relf_agent` 导入和 `relf` 命令。先按[安装指南](installation.md)准备对应环境，再按[首用教程](getting-started.md)用现有 starter 完成审批与恢复，使用同一个工单 `INC-001` 学习组件组合。这里没有新的框架入口或适配器，只有应用代码。
+
+使用历史公开 a2 包时，保留独立环境，改读[固定 a2 提交的原教程](https://github.com/RalfNick/relf-agent/blob/3a92720b63c5ac5aa27edc33a18b8d03396a81ff/docs/support-journey.md)，并下载[同一提交的原示例](https://github.com/RalfNick/relf-agent/blob/3a92720b63c5ac5aa27edc33a18b8d03396a81ff/examples/support_journey.py)。a1–a5 使用旧导入 `ralf_agent`，不能运行本页链接的 a6 示例；其他历史包使用各自归档内的教程和代码。不要通过给旧环境添加新模块来续跑旧 Run。
 
 遇到错误时从[现象与下一步](recovery-guide.md#按现象定位下一步)定位。相同命令回读历史结果、观察超时后继续等待、恢复原匹配配置，是这条路径的共同规则。
 
 ## 准备同一个应用文件
 
-安装推荐 wheel 或源码包后，将 [support_journey.py](../examples/support_journey.py) 下载／复制到自己的工作目录。文件仅依赖已安装 SDK 和标准库，不导入 `examples`；源码包也包含该文件。wheel 不包含仓库 examples，无需为运行它复制整个仓库。
+安装 a6 SDK 或当前维护源码后，将 [support_journey.py](../examples/support_journey.py) 下载／复制到自己的工作目录。若使用冻结 a6 wheel，也可下载[固定 a6 提交的示例](https://github.com/RalfNick/relf-agent/blob/ba1c81fca67e15e70c1d51d0f4ecbbbcbbb37239/examples/support_journey.py)。文件仅依赖已安装 SDK 和标准库，不导入 `examples`；源码包也包含该文件。wheel 不包含仓库 examples，无需为运行它复制整个仓库。
 
 后续命令均在这个文件所在目录执行。所有步骤使用同一工单与只读 Python 工具；不同阶段使用独立 SQLite 文件，避免把新的定义或配置偷偷用于旧 Run／Session。默认目录 `.ralf/support-journey/` 保存执行记录、Session、知识和 Facts，不需要额外数据库服务。
 

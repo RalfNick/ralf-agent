@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased — a6 后维护
+
+- 同步 RuntimeBuilder 在工厂或清理受到 KeyboardInterrupt、CancelledError、SystemExit 中断时保留资源清理责任；清理成功后原样传播中断，未完成时提供可重试的 cleanup 句柄。
+- 明确连续教程的 a6 环境和历史 a2 固定示例，更新官网迁移、部署及当前验收状态。
+- 不增加功能、依赖或协议，不重建或覆盖原 a6 wheel／sdist；维护源码尚未形成新的发行候选。
+
 ## 0.1.0a6 — 公共入口统一候选
 
 - Python包统一为`relf_agent`，CLI及工具统一为`relf`／`relf-*`；发行名仍为`relf-agent`。

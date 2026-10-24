@@ -900,7 +900,7 @@ class RuntimeBuilder:
                 policies_selected="user_input_policies" in profile.components,
             )
             return RuntimeInstance(candidate, context)
-        except Exception as exc:
+        except BaseException as exc:
             # A rejected value without close cannot own execution resources.
             # Close the authority we created instead; actual close-capable
             # engines retain ownership until their close completes.
@@ -908,9 +908,9 @@ class RuntimeBuilder:
             cleanup = RuntimeInstance(owner, context, drain_engine=False)
             try:
                 cleanup.close()
-            except Exception as cleanup_error:
+            except BaseException as cleanup_error:
                 raise RuntimeBuildError(cleanup) from cleanup_error
-            if isinstance(exc, RalfError):
+            if isinstance(exc, RalfError) or not isinstance(exc, Exception):
                 raise
             raise RuntimeBuildError(cleanup) from exc
 

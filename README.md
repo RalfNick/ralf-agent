@@ -14,6 +14,8 @@ Relf-Agent 把模型决策、工具调用、人工审批和业务结果保存为
 
 > 当前源码版本为 **0.1.0a6 Alpha**，承接 a5 并统一 Python／CLI 入口，不新增功能。各版本的候选／公开状态、安装入口与验收范围以[发行记录](https://github.com/RalfNick/relf-agent/blob/main/docs/releasing.md)和[a6 说明](https://github.com/RalfNick/relf-agent/blob/main/docs/releases/0.1.0a6.md)为准；原公开历史制品为 **[a2 原包](https://github.com/RalfNick/relf-agent/releases/tag/v0.1.0a2)**。API 与部署能力仍在演进，使用范围见[实现清单](https://github.com/RalfNick/relf-agent/blob/main/docs/implementation-status.md)。默认本地入门无需模型密钥、Redis、Temporal 或 Docker。
 
+> 当前维护源码另包含 **a6 后未发行的装配中断清理修复**；已冻结 a6 wheel／sdist 不含该修复，版本字段不代表字节相同。原包、维护源码和官网固定教程分别核对，见[当前交付摘要](https://github.com/RalfNick/relf-agent/blob/main/docs/implementation-status.md#当前交付摘要)。
+
 > 源码默认分支为 `main`，基于已审核的 `b545aba`；原 `feat/m1-local-runtime` 分支保留，以维持既有包内链接。官网已经上线。a6 制品、平台与公开发行分别验收；原公开 a2 使用旧入口，不与当前源码示例混用。
 
 ## 为什么使用 Relf-Agent

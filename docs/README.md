@@ -1,6 +1,6 @@
 # Relf-Agent 文档
 
-[官网](https://relfagent.com/) 已上线，源码默认分支为`main`。当前准备[relf-agent 0.1.0a6入口统一候选](releases/0.1.0a6.md)，Python导入`relf_agent`、CLI`relf`，实际本地／平台／发布状态见[a6清单](alpha6-validation-status.md)。原a4的同包Linux验收与原制品保持，原a2仍是公开安装入口。
+[官网](https://relfagent.com/) 已上线并迁移固定 a6 源码教程，源码默认分支为 `main`。[relf-agent 0.1.0a6](releases/0.1.0a6.md) 是当前冻结候选，Python 导入 `relf_agent`、CLI `relf`；维护源码额外包含尚未进入原包的中断清理修复，见[当前摘要](implementation-status.md#当前交付摘要)及[a6 清单](alpha6-validation-status.md)。原 a2 仍是 GitHub 公开安装入口，使用其原导入、命令和固定教程；各历史原包与成绩保持。
 
 [项目首页](../README.md) · [示例目录](../examples/README.md) · [贡献指南](../CONTRIBUTING.md)
 

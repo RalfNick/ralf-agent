@@ -108,6 +108,8 @@ Chat adapter 接收 model、base_url、max_output_tokens、token_parameter、tim
 
 `BuildContext.own(resource)` 只接管显式声明的同步 close 资源，去重后逆序清理；close 必须返回 None。RuntimeInstance 先关闭引擎，成功后才关闭附属资源。附属关闭失败时实例已停止，只允许重试 close；已完成清理的资源不再关闭。构造或清理失败的 RuntimeBuildError 提供 cleanup 句柄，可在故障解除后重试 `.cleanup.close()`；未返回的工厂内部资源仍由工厂自己负责。
 
+a6 后的未发行维护源码补齐同步 `build` 的中断路径：工厂抛出 `KeyboardInterrupt`／`asyncio.CancelledError`／`SystemExit` 时，也清理已登记资源；清理成功后原样传播中断。关闭 Engine 或附属资源时再次中断，返回 `RuntimeBuildError.cleanup` 供重试；Engine 尚未关闭时仍保留租约。原冻结 a6 包不包含此修复，见[修复记录](../architecture/reviews/2026-10-24-alpha6-review-fixes.md)。
+
 async close 客户端可以在 abuild 中用 own_async 注册，通过 async with/aclose 管理；不能直接传给同步 own 或 build。未登记客户端仍由应用管理，见[异步资源指南](async-assembly.md)。服务仍应停止新请求，完成／取消自己的 Task，等待 `wait_for_threads`，再关闭 runtime。自定义执行后端须实现同样的执行归属和关闭语义。
 
 ExecutionStore 的操作必须同步；CoordinatorLease 的 acquire/release 和 Store.close 只有真正完成后返回 None 才有效。async、generator、上下文管理器或其他惰性返回值不会被引擎等待或进入。关闭未完成时保留租约、禁止继续执行，修正适配器后可重试 close；存储已关闭时只重试租约释放。
